@@ -1,0 +1,655 @@
+{
+  "generatedUtc": "pinned",
+  "pageCount": 216,
+  "aggregateMeanDriftPt": 0.048,
+  "pages": {
+    "test-pdfs/redaction-synthetic/B1-helvetica-bold12-original-black-on-white-mid-David.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica-bold12-original-black-on-white-mid-James.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica-bold12-original-black-on-white-mid-John.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica-bold12-original-black-on-white-mid-Joseph.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica-bold12-original-black-on-white-mid-Michael.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica-bold12-original-black-on-white-mid-Richard.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica-bold12-original-black-on-white-mid-Robert.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica-bold12-original-black-on-white-mid-William.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica12-original-black-on-white-mid-David.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica12-original-black-on-white-mid-James.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica12-original-black-on-white-mid-John.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica12-original-black-on-white-mid-Joseph.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica12-original-black-on-white-mid-Michael.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica12-original-black-on-white-mid-Richard.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica12-original-black-on-white-mid-Robert.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica12-original-black-on-white-mid-William.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica18-original-black-on-white-mid-David.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica18-original-black-on-white-mid-James.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica18-original-black-on-white-mid-John.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica18-original-black-on-white-mid-Joseph.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica18-original-black-on-white-mid-Michael.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica18-original-black-on-white-mid-Richard.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica18-original-black-on-white-mid-Robert.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica18-original-black-on-white-mid-William.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica8-original-black-on-white-mid-David.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica8-original-black-on-white-mid-James.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica8-original-black-on-white-mid-John.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica8-original-black-on-white-mid-Joseph.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica8-original-black-on-white-mid-Michael.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica8-original-black-on-white-mid-Richard.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica8-original-black-on-white-mid-Robert.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-helvetica8-original-black-on-white-mid-William.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-italic12-original-black-on-white-mid-David.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-italic12-original-black-on-white-mid-James.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-italic12-original-black-on-white-mid-John.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-italic12-original-black-on-white-mid-Joseph.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-italic12-original-black-on-white-mid-Michael.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-italic12-original-black-on-white-mid-Richard.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-italic12-original-black-on-white-mid-Robert.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-italic12-original-black-on-white-mid-William.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-roman12-original-black-on-white-mid-David.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-roman12-original-black-on-white-mid-James.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-roman12-original-black-on-white-mid-John.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-roman12-original-black-on-white-mid-Joseph.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-roman12-original-black-on-white-mid-Michael.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-roman12-original-black-on-white-mid-Richard.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-roman12-original-black-on-white-mid-Robert.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B1-times-roman12-original-black-on-white-mid-William.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B2-helvetica12-original-black-on-white-mid-Christopher.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B2-helvetica12-original-black-on-white-mid-Elizabeth.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B2-helvetica12-original-black-on-white-mid-Jennifer.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B2-helvetica12-original-black-on-white-mid-Kimberly.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B2-helvetica12-original-black-on-white-mid-Margaret.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B2-helvetica12-original-black-on-white-mid-Michelle.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B2-helvetica12-original-black-on-white-mid-Patricia.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B2-helvetica12-original-black-on-white-mid-Stephanie.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B6-helvetica12-original-black-on-white-mid-KwbfjL.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B6-helvetica12-original-black-on-white-mid-Pvgnyt.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B6-helvetica12-original-black-on-white-mid-XqmzdR.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B6-helvetica12-original-black-on-white-mid-Zdxkqw.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B7-helvetica12-original-black-on-white-mid-David.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B7-helvetica12-original-black-on-white-mid-James.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B7-helvetica12-original-black-on-white-mid-John.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B7-helvetica12-original-black-on-white-mid-Joseph.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B7-helvetica12-original-black-on-white-mid-Michael.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B7-helvetica12-original-black-on-white-mid-Richard.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B7-helvetica12-original-black-on-white-mid-Robert.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/B7-helvetica12-original-black-on-white-mid-William.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bc-courier12-original-black-on-white-mid-David.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bc-courier12-original-black-on-white-mid-James.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bc-courier12-original-black-on-white-mid-John.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bc-courier12-original-black-on-white-mid-Joseph.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bc-courier12-original-black-on-white-mid-Michael.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bc-courier12-original-black-on-white-mid-Richard.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bc-courier12-original-black-on-white-mid-Robert.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bc-courier12-original-black-on-white-mid-William.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bd-helvetica12-original-black-on-white-mid-01_15_1987.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bd-helvetica12-original-black-on-white-mid-02_27_1990.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bd-helvetica12-original-black-on-white-mid-03_11_1968.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bd-helvetica12-original-black-on-white-mid-06_19_1983.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bd-helvetica12-original-black-on-white-mid-07_22_1975.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bd-helvetica12-original-black-on-white-mid-09_30_2001.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bd-helvetica12-original-black-on-white-mid-11_08_1954.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bd-helvetica12-original-black-on-white-mid-12_03_1992.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bn-helvetica12-original-black-on-white-mid-1029384756.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bn-helvetica12-original-black-on-white-mid-3782822463.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bn-helvetica12-original-black-on-white-mid-4012884012.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bn-helvetica12-original-black-on-white-mid-4444333322.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bn-helvetica12-original-black-on-white-mid-5555341220.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bn-helvetica12-original-black-on-white-mid-6011000990.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bn-helvetica12-original-black-on-white-mid-8842019375.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bn-helvetica12-original-black-on-white-mid-9998887776.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-end-David.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-end-James.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-end-John.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-end-Joseph.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-end-Michael.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-end-Richard.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-end-Robert.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-end-William.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-start-David.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-start-James.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-start-John.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-start-Joseph.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-start-Michael.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-start-Richard.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-start-Robert.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/redaction-synthetic/Bp-helvetica12-original-black-on-white-line-start-William.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf#1": {
+      "maxDriftFloorPt": 5.38
+    },
+    "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf#10": {
+      "maxDriftFloorPt": 3.17
+    },
+    "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf#15": {
+      "maxDriftFloorPt": 10.74
+    },
+    "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf#19": {
+      "maxDriftFloorPt": 5.19
+    },
+    "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf#20": {
+      "maxDriftFloorPt": 6.08
+    },
+    "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf#21": {
+      "maxDriftFloorPt": 1.35
+    },
+    "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf#4": {
+      "maxDriftFloorPt": 3.74
+    },
+    "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf#6": {
+      "maxDriftFloorPt": 3.2
+    },
+    "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf#8": {
+      "maxDriftFloorPt": 9.72
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#100": {
+      "maxDriftFloorPt": 14.58
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#102": {
+      "maxDriftFloorPt": 21.87
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#103": {
+      "maxDriftFloorPt": 1.86
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#106": {
+      "maxDriftFloorPt": 22.96
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#107": {
+      "maxDriftFloorPt": 4.99
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#109": {
+      "maxDriftFloorPt": 0.31
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#110": {
+      "maxDriftFloorPt": 11.42
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#111": {
+      "maxDriftFloorPt": 11.08
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#115": {
+      "maxDriftFloorPt": 4.45
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#116": {
+      "maxDriftFloorPt": 0.4
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#117": {
+      "maxDriftFloorPt": 1.86
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#12": {
+      "maxDriftFloorPt": 0.45
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#16": {
+      "maxDriftFloorPt": 7.22
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#22": {
+      "maxDriftFloorPt": 3.75
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#24": {
+      "maxDriftFloorPt": 4.43
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#33": {
+      "maxDriftFloorPt": 5
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#34": {
+      "maxDriftFloorPt": 3.9
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#39": {
+      "maxDriftFloorPt": 3.89
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#44": {
+      "maxDriftFloorPt": 0.09
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#45": {
+      "maxDriftFloorPt": 3.75
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#50": {
+      "maxDriftFloorPt": 2.25
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#51": {
+      "maxDriftFloorPt": 2.25
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#52": {
+      "maxDriftFloorPt": 1.37
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#53": {
+      "maxDriftFloorPt": 1.4
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#54": {
+      "maxDriftFloorPt": 2.25
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#55": {
+      "maxDriftFloorPt": 2.25
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#56": {
+      "maxDriftFloorPt": 2.25
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#57": {
+      "maxDriftFloorPt": 0.76
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#58": {
+      "maxDriftFloorPt": 0.76
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#59": {
+      "maxDriftFloorPt": 1.4
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#6": {
+      "maxDriftFloorPt": 0.22
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#60": {
+      "maxDriftFloorPt": 1.8
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#63": {
+      "maxDriftFloorPt": 20.78
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#64": {
+      "maxDriftFloorPt": 3.89
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#67": {
+      "maxDriftFloorPt": 1.44
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#81": {
+      "maxDriftFloorPt": 0.18
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#82": {
+      "maxDriftFloorPt": 4.99
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#86": {
+      "maxDriftFloorPt": 0.22
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#87": {
+      "maxDriftFloorPt": 8.08
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#91": {
+      "maxDriftFloorPt": 0.49
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#94": {
+      "maxDriftFloorPt": 10.54
+    },
+    "test-pdfs/smoke/irs-1040-instructions.pdf#96": {
+      "maxDriftFloorPt": 1.86
+    },
+    "test-pdfs/smoke/irs-1040.pdf#1": {
+      "maxDriftFloorPt": 1.4
+    },
+    "test-pdfs/smoke/irs-1040.pdf#2": {
+      "maxDriftFloorPt": 0.15
+    },
+    "test-pdfs/smoke/irs-pub509-2026.pdf#10": {
+      "maxDriftFloorPt": 0.81
+    },
+    "test-pdfs/smoke/irs-pub509-2026.pdf#11": {
+      "maxDriftFloorPt": 1.3
+    },
+    "test-pdfs/smoke/irs-w4.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/smoke/irs-w4.pdf#2": {
+      "maxDriftFloorPt": 0.34
+    },
+    "test-pdfs/smoke/irs-w4.pdf#3": {
+      "maxDriftFloorPt": 0.39
+    },
+    "test-pdfs/smoke/irs-w4.pdf#4": {
+      "maxDriftFloorPt": 0.49
+    },
+    "test-pdfs/smoke/irs-w4.pdf#5": {
+      "maxDriftFloorPt": 0.95
+    },
+    "test-pdfs/smoke/irs-w9.pdf#1": {
+      "maxDriftFloorPt": 3.99
+    },
+    "test-pdfs/smoke/irs-w9.pdf#2": {
+      "maxDriftFloorPt": 0.26
+    },
+    "test-pdfs/smoke/irs-w9.pdf#3": {
+      "maxDriftFloorPt": 0.16
+    },
+    "test-pdfs/smoke/irs-w9.pdf#4": {
+      "maxDriftFloorPt": 0.28
+    },
+    "test-pdfs/smoke/irs-w9.pdf#5": {
+      "maxDriftFloorPt": 1
+    },
+    "test-pdfs/smoke/irs-w9.pdf#6": {
+      "maxDriftFloorPt": 0.29
+    },
+    "test-pdfs/smoke/scotus-trump-v-anderson.pdf#4": {
+      "maxDriftFloorPt": 1.17
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#10": {
+      "maxDriftFloorPt": 0.84
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#100": {
+      "maxDriftFloorPt": 1.47
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#102": {
+      "maxDriftFloorPt": 3.81
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#103": {
+      "maxDriftFloorPt": 0.71
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#107": {
+      "maxDriftFloorPt": 0.6
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#109": {
+      "maxDriftFloorPt": 1.55
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#11": {
+      "maxDriftFloorPt": 1.11
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#111": {
+      "maxDriftFloorPt": 0.92
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#113": {
+      "maxDriftFloorPt": 0.88
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#114": {
+      "maxDriftFloorPt": 0.83
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#115": {
+      "maxDriftFloorPt": 1.07
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#117": {
+      "maxDriftFloorPt": 1.31
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#119": {
+      "maxDriftFloorPt": 0.16
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#19": {
+      "maxDriftFloorPt": 0.8
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#26": {
+      "maxDriftFloorPt": 1.4
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#37": {
+      "maxDriftFloorPt": 0.82
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#40": {
+      "maxDriftFloorPt": 0.77
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#42": {
+      "maxDriftFloorPt": 0.83
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#51": {
+      "maxDriftFloorPt": 2.38
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#55": {
+      "maxDriftFloorPt": 1.1
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#64": {
+      "maxDriftFloorPt": 0.7
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#67": {
+      "maxDriftFloorPt": 1.75
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#68": {
+      "maxDriftFloorPt": 0.69
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#75": {
+      "maxDriftFloorPt": 1.27
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#76": {
+      "maxDriftFloorPt": 0.87
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#77": {
+      "maxDriftFloorPt": 0.89
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#80": {
+      "maxDriftFloorPt": 0.96
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#83": {
+      "maxDriftFloorPt": 0.91
+    },
+    "test-pdfs/smoke/scotus-trump-v-us.pdf#9": {
+      "maxDriftFloorPt": 6.11
+    },
+    "test-pdfs/smoke/state-ds11-passport.pdf#1": {
+      "maxDriftFloorPt": 0.16
+    },
+    "test-pdfs/smoke/state-ds11-passport.pdf#2": {
+      "maxDriftFloorPt": 0.05
+    },
+    "test-pdfs/smoke/state-ds11-passport.pdf#3": {
+      "maxDriftFloorPt": 0.05
+    },
+    "test-pdfs/smoke/state-ds11-passport.pdf#4": {
+      "maxDriftFloorPt": 0.23
+    },
+    "test-pdfs/smoke/state-ds11-passport.pdf#5": {
+      "maxDriftFloorPt": 7.48
+    },
+    "test-pdfs/smoke/state-ds11-passport.pdf#6": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/smoke/state-ds82-passport-renewal.pdf#1": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/smoke/state-ds82-passport-renewal.pdf#2": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/smoke/state-ds82-passport-renewal.pdf#3": {
+      "maxDriftFloorPt": 0
+    },
+    "test-pdfs/smoke/state-ds82-passport-renewal.pdf#4": {
+      "maxDriftFloorPt": 0.12
+    },
+    "test-pdfs/smoke/state-ds82-passport-renewal.pdf#5": {
+      "maxDriftFloorPt": 8.86
+    },
+    "test-pdfs/smoke/state-ds82-passport-renewal.pdf#6": {
+      "maxDriftFloorPt": 0
+    }
+  }
+}
