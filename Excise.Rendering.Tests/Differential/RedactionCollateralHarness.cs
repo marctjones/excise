@@ -75,10 +75,16 @@ public class RedactionCollateralHarness
     /// </summary>
     private static readonly HashSet<string> CountDisagreesWithOracle = new(StringComparer.Ordinal)
     {
-        "issue1350.pdf",      // 'your': excise 36, mutool 9
-        "issue14297.pdf",     // 'write': excise 15, mutool 3
-        "issue14821.pdf",     // 'text': excise 97, mutool 96
-        "ZapfDingbats.pdf",   // 'document': excise 4, mutool 3
+        // #1101 tiling multiplier FIXED (RedactText tallies only matches
+        // visible in each page's window). issue14297.pdf was pure tiling
+        // (15 = 5×3) and now agrees — its entry was deleted. issue1350.pdf's
+        // 3× multiplier is gone (36→12), but a BASE extraction disagreement
+        // survives: excise still finds 12 'your' on page 1's own window where
+        // mutool finds 9 (the Form-XObject-double-draw hypothesis in #1101,
+        // still unconfirmed — a distinct mechanism from the tiling fix).
+        "issue1350.pdf",      // 'your': excise 12 (was 36), mutool 9 — base disagreement
+        "issue14821.pdf",     // 'text': excise 97, mutool 96 — off-by-one, distinct mechanism
+        "ZapfDingbats.pdf",   // 'document': excise 4, mutool 3 — #1099
     };
 
     /// <summary>
