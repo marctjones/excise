@@ -320,6 +320,9 @@ run_t1() {
     # Skips loudly (exit 0) when pdftotext or the corpus is absent, like the
     # extraction-parity gate.
     run_step "copy-whitespace-parity" scripts/check-copy-whitespace-parity.sh
+    # #1104: per-glyph advance parity vs mutool -- the ruler for the font
+    # cluster (catches metric drift a character-count gate cannot see).
+    run_step "advance-parity" scripts/check-advance-parity.sh
     run_step "skip-budget-core" scripts/check-skip-budget.sh Excise.Core.Tests/Excise.Core.Tests.csproj
     # #655: Excise.Core.Tests was the only project this gate watched — Excise.
     # Rendering.Tests (~114 Assert.SkipWhen/SkipUnless call sites) and
