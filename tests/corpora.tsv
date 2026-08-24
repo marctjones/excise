@@ -32,7 +32,7 @@ pdfium-lib	tool	tools/vendor	download-pdfium.sh	8M	BSD-3-Clause	prebuilt PDFium 
 tessdata	tool	tessdata	download-tessdata.sh	15M	Apache-2.0	tesseract language data for the OCR path
 dlib-slovenia	planned	test-pdfs/dlib-slovenia	#1108	?	public	invisible text (render mode 3) over scans — a REDACTION LEAK CARRIER
 itext-regression	planned	test-pdfs/itext	#1109	?	mixed	~4000 classified PDFs incl. a good encrypted set (#1048, #1095)
-pdfua-matterhorn	planned	test-pdfs/pdfua	#1110	?	PDF-Association	tagged PDFs; /ActualText and /Alt, the #636 carriers
-gwg-processing-steps	planned	test-pdfs/gwg-steps	#1111	?	GWG	ISO 19593-1 optional content layers; the includeHiddenLayers path
-safedocs	planned	test-pdfs/safedocs	#1112	?	mixed	SafeDocs issue-tracker corpus; 32K unusual/malformed files
-govdocs1	planned	test-pdfs/govdocs1	#1113	?	US-Gov-PublicDomain	231K real .gov PDFs; producer diversity and the x-ray sweep target
+pdfua-matterhorn	planned	test-pdfs/pdfua	#1110 (RC16, deferred)	?	PDF-Association	tagged PDFs; /ActualText and /Alt, the #636 carriers
+gwg-processing-steps	planned	test-pdfs/gwg-steps	#1111 (RC16, deferred)	?	GWG	ISO 19593-1 optional content layers; the includeHiddenLayers path
+safedocs	planned	test-pdfs/safedocs	#1112 (RC16, deferred)	?	mixed	SafeDocs issue-tracker corpus; 32K unusual/malformed files
+govdocs1	planned	test-pdfs/govdocs1	#1113 (RC16, deferred)	?	US-Gov-PublicDomain	231K real .gov PDFs; producer diversity and the x-ray sweep target
