@@ -36,5 +36,5 @@ dlib-slovenia	planned	test-pdfs/dlib-slovenia	#1108	?	public	invisible text (ren
 itext	extended	test-pdfs/itext	download-itext-corpus.sh	1M	AGPL-fixtures	iText encrypted-PDF fixtures: AES-128/256, AES-256 PDF2.0, RC4-40/128 (#1048, #1095)
 pdfua-matterhorn	planned	test-pdfs/pdfua	#1110 (RC16, deferred)	?	PDF-Association	tagged PDFs; /ActualText and /Alt, the #636 carriers
 gwg-processing-steps	planned	test-pdfs/gwg-steps	#1111 (RC16, deferred)	?	GWG	ISO 19593-1 optional content layers; the includeHiddenLayers path
-safedocs	planned	test-pdfs/safedocs	#1112 (RC16, deferred)	?	mixed	SafeDocs issue-tracker corpus; 32K unusual/malformed files
-govdocs1	planned	test-pdfs/govdocs1	#1113 (RC16, deferred)	?	US-Gov-PublicDomain	231K real .gov PDFs; producer diversity and the x-ray sweep target
+safedocs	extended	test-pdfs/safedocs	download-safedocs.sh	~200M	CommonCrawl-ToU	malformed-PDF subset (qpdf-flagged) for removal-path robustness, the #1039 class (#1112)
+govdocs1	extended	test-pdfs/govdocs1	download-govdocs1.sh	~100M	US-Gov-PublicDomain	text-bearing producer-diverse .gov PDF subset; redaction-target diversity + x-ray sweep (#1113)

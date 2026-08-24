@@ -59,16 +59,21 @@ by what each would catch **for a redaction tool**, not by size or fame.
 | **Digital Library of Slovenia** | #1108 | invisible text (render mode 3) over scans — a redaction *leak carrier*, and `HiddenTextDetector` / `audit` currently have no corpus at all |
 | **iText regression suite** | #1109 | ~4,000 classified PDFs including a good encrypted set — #1048 and #1095 run against nine fixtures today |
 
-**Four are deferred to RC16**, each with a trigger rather than a date. Fetching
-corpora before an instrument can read them buys coverage we cannot use, and
-this machine has a disk budget:
+**Two shipped** (#1112/#1113) as CURATED subsets, not mirrors — each corpus is
+bulk (GovDocs1 ~1M mixed files, SafeDocs ~8M web PDFs), so the download scripts
+fetch one source zip, keep only the bench-relevant subset, and drop the rest:
+
+| corpus | fetch | the subset, and why |
+|---|---|---|
+| **GovDocs1** | `scripts/corpus.sh fetch govdocs1` | real .gov PDFs with extractable text, spread across distinct `/Producer`s and size-capped — redaction-*target* diversity (every producer lays glyphs out differently) plus real documents for the x-ray bad-redaction sweep. Public domain. |
+| **SafeDocs** | `scripts/corpus.sh fetch safedocs` | only the PDFs `qpdf --check` flags as malformed-but-openable — removal-path *robustness*, the #1039 class (a tolerated construct that leaks and destroys text at once). Clean PDFs are dropped; GovDocs1 covers clean-and-diverse. Common Crawl ToU. |
+
+**Two remain deferred to RC16**, each with a trigger rather than a date:
 
 | corpus | issue | trigger |
 |---|---|---|
 | PDF/UA + Matterhorn | #1110 | a structure-tree leak we cannot reproduce on the #636 fixtures |
 | GWG Processing Steps | #1111 | a measured optional-content leak or collateral case |
-| SafeDocs | #1112 | a robustness defect our current malformed corpora miss |
-| GovDocs1 | #1113 | x-ray wired (#1122) and wanting real bad redactions to test `audit` against |
 
 Deliberately skipped entirely: PDF/VT, 3D, HisDoc1B, the table-recognition
 sets. They test things excise does not claim to do.
