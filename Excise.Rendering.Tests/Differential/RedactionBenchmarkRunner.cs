@@ -665,6 +665,19 @@ public sealed class RedactionBenchmarkRunner
         var opts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         File.WriteAllLines(path, rows.Select(r => JsonSerializer.Serialize(r, opts)));
         _out.WriteLine($"rows → {path}");
+
+        // #1123: turn the rows into the FAILURE TAXONOMY — named classes with a
+        // stratum and a percentage, read back from the results.jsonl so the
+        // scorecard is the same one anyone can re-run over the file.
+        var scoreRows = RedactionScorecard.Parse(File.ReadAllLines(path));
+        var cov = RedactionScorecard.CoverageOf(scoreRows);
+        _out.WriteLine("");
+        _out.WriteLine($"SCORECARD (#1123) — measured {cov.Measured}, errored {cov.Errored}, " +
+                       $"tools [{string.Join(", ", cov.ToolsSeen)}]");
+        var taxonomy = RedactionScorecard.FailureTaxonomy(scoreRows);
+        if (taxonomy.Count == 0)
+            _out.WriteLine("  no failure classes occurred on this run");
+        foreach (var line in taxonomy) _out.WriteLine($"  {line}");
     }
 
     /// <summary>
