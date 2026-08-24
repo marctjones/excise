@@ -79,6 +79,24 @@ public class UnredactCommandTests
     }
 
     [Fact]
+    public void CertainMode_QuantifiesTheChannel_FullyRecoverableCountAndBits()
+    {
+        // #1126 — the audit answers "how much, by what channel", not just yes/no.
+        var pdf = WriteFakeRedaction();
+        try
+        {
+            var (exit, output) = Run(pdf, "--mode", "certain", "--json");
+            exit.Should().Be(3);
+            output.Should().Contain("\"quantification\"", "the quantification block is the #1126 output");
+            output.Should().Contain("\"fullyRecoverable\": 1",
+                "text present under a box is fully recoverable — one finding, no bits to guess");
+            output.Should().Contain("\"widthResidueBitsTotal\": 0",
+                "a text-present finding leaves no width residue to quantify in bits");
+        }
+        finally { File.Delete(pdf); }
+    }
+
+    [Fact]
     public void ResidueMode_WithoutDictionary_FailsCleanly()
     {
         var pdf = WriteFakeRedaction();
