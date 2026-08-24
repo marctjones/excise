@@ -360,3 +360,4 @@ Excise.Rendering.Tests.Visual.TamReviewCffSubsetTests.TamReviewPage17_BodyParagr
 Excise.Rendering.Tests.Differential.ResidueRecoveryRecallTests.RecallAtN_PerBand_AgainstConstructedGroundTruth   # #1133 needs the generated corpus (scripts/gen-redaction-corpus.py) [requires: corpus:redaction-synthetic]
 Excise.Rendering.Tests.Differential.ToolResistanceComparisonTests.ResistancePerBand_ExciseVsPyMuPdf   # #1136 needs the generated corpus + PyMuPDF venv [requires: corpus:redaction-synthetic file:tools/vendor/xray-venv/bin/python]
 Excise.Rendering.Tests.Differential.AdvanceParityTests.PerGlyphAdvanceParity_AgainstMutool   # #1104 needs mutool + the smoke/sample/synthetic corpora [requires: tool:mutool corpus:smoke]
+Excise.Rendering.Tests.Differential.UnredactMethodComparisonTests.ExactMetrics_vs_PixelTolerance_NarrowingPower   # deterministic width-fit comparison, no corpus/tool needed [requires: none]
