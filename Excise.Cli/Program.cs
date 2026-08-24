@@ -1652,11 +1652,20 @@ partial class Program
             DefaultValueFactory = _ => 200,
         };
         var jsonOption = new Option<bool>("--json") { Description = "Machine-readable JSON output" };
+        var ocrOption = new Option<bool>("--ocr")
+        {
+            // #1137: a black box over a SCANNED page has no glyphs, so
+            // HiddenTextDetector and the residue engine both see nothing. The
+            // OCR differential renders the page with overlays stripped and reads
+            // the image underneath — recall the glyph-based channels cannot get.
+            // Opt-in because OCR is slow and needs tesseract on PATH.
+            Description = "certain mode: also run the OCR differential (scanned redactions). Needs tesseract.",
+        };
 
         var command = new Command("unredact",
             "Recover or estimate text a redaction leaked (audit; reports constraints, not asserted secrets)")
         {
-            fileArg, modeOption, dictOption, toleranceOption, maxOption, jsonOption,
+            fileArg, modeOption, dictOption, toleranceOption, maxOption, jsonOption, ocrOption,
         };
 
         command.SetAction(parseResult =>
@@ -1667,6 +1676,7 @@ partial class Program
             var tol = parseResult.GetValue(toleranceOption);
             var maxC = parseResult.GetValue(maxOption);
             var json = parseResult.GetValue(jsonOption);
+            var useOcr = parseResult.GetValue(ocrOption);
 
             if (!file.Exists) { Console.Error.WriteLine($"File not found: {file.FullName}"); Environment.ExitCode = 1; return; }
             if (mode is not ("certain" or "residue" or "both"))
@@ -1682,6 +1692,22 @@ partial class Program
                     foreach (var h in Excise.Core.Text.Segmentation.HiddenTextDetector.Scan(doc))
                         certain.Add(new { page = h.PageNumber, text = h.Text, hiddenBy = h.HiddenBy,
                             x = Math.Round(h.BoundingBox.Left, 1), y = Math.Round(h.BoundingBox.Bottom, 1) });
+
+                    // #1137 Use A — the OCR differential is a CERTAIN channel: it
+                    // reports text that is actually present, read off the image
+                    // under a stripped overlay on a scanned page. It never
+                    // estimates, so it belongs here and not in residue.
+                    if (useOcr)
+                    {
+                        var ocr = new PdfOcrService();
+                        if (!ocr.IsAvailable())
+                        { Console.Error.WriteLine("--ocr needs tesseract on PATH (e.g. `brew install tesseract`)."); Environment.ExitCode = 2; return; }
+                        var bytes = File.ReadAllBytes(file.FullName);
+                        foreach (var h in new DifferentialOcrAuditor(ocr).Scan(bytes))
+                            certain.Add(new { page = h.PageNumber, text = h.Text, hiddenBy = "ocr-differential",
+                                x = Math.Round(h.BoundingBox.Left, 1), y = Math.Round(h.BoundingBox.Bottom, 1),
+                                confidence = Math.Round(h.Confidence, 1) });
+                    }
                 }
 
                 if (mode is "residue" or "both")
