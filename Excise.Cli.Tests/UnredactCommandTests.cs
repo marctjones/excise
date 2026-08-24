@@ -176,6 +176,39 @@ public class UnredactCommandTests
         output.Should().Contain("CERTAIN");
     }
 
+    [Fact]
+    public void ResidueMode_RecoversTheRedactedWordFromTheWidthLeak_ExitCode4()
+    {
+        // #1127 (Marc: recover text). Redact a word with excise, then recover it
+        // from the width gap excise leaves — the adversarial proof that the width
+        // channel #1116 measured is exploitable, end to end through the CLI.
+        var src = Path.Combine(Path.GetTempPath(), $"rec-src-{Guid.NewGuid():N}.pdf");
+        var dst = Path.Combine(Path.GetTempPath(), $"rec-dst-{Guid.NewGuid():N}.pdf");
+        var dict = Path.Combine(Path.GetTempPath(), $"rec-dict-{Guid.NewGuid():N}.txt");
+        try
+        {
+            // Contiguous so the removed span is exactly the word's width.
+            File.WriteAllBytes(src, Encoding.Latin1.GetBytes(
+                "%PDF-1.7\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
+                "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
+                "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+                "/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>\nendobj\n" +
+                "4 0 obj\n<< /Length 46 >>\nstream\nBT /F1 18 Tf 72 700 Td (AAASECRETWORDZZZ) Tj ET\nendstream\nendobj\n" +
+                "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n" +
+                "trailer\n<< /Size 6 /Root 1 0 R >>\n%%EOF"));
+            File.WriteAllText(dict, "SECRETWORD\nHELLOWORLD\nBANANARAMA\nTESTINGXYZ\n");
+
+            RunRedact(src, dst, "SECRETWORD");
+
+            var (exit, output) = Run(dst, "--mode", "residue", "--dictionary", dict);
+            exit.Should().Be(4, "residue-only recovery -> exit 4");
+            output.Should().Contain("RECOVERED \"SECRETWORD\"",
+                "the width gap admits exactly one dictionary word — excise recovers what it redacted");
+            output.Should().Contain("1 RECOVERED", "the quantification headline counts the recovery");
+        }
+        finally { File.Delete(src); File.Delete(dst); File.Delete(dict); }
+    }
+
     private static void RunRedact(string src, string dst, string term)
     {
         var psi = new ProcessStartInfo("dotnet")
