@@ -39,7 +39,7 @@ def main() -> int:
             # answering the same question.
             hits = page.search_for(term, flags=pymupdf.TEXT_PRESERVE_WHITESPACE)
             for rect in hits:
-                page.add_redact_annot(rect)
+                page.add_redact_annot(rect, fill=(0, 0, 0))  # #1121 fairness: black box, PyMuPDF's default fill is WHITE; no measured metric (leak/collateral/OCR) depends on fill
             if hits:
                 # PDF_REDACT_IMAGE_REMOVE is what the PyMuPDF docs recommend
                 # when the intent is removal rather than covering.
