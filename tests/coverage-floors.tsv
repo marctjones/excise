@@ -82,7 +82,9 @@
 #
 # THE FAILURE MODE TO WATCH
 #
-# `ci` is enforced on every push, so it gets attention. `full` is read by the
+# `ci` is enforced on the release path (release.yml `coverage-floors` job,
+# relocated from per-push CI in #1171), so it still gets attention when a
+# release is cut. `full` is read by the
 # release path (docs/RELEASE_CHECKLIST.md) as an OBSERVATION, not a blocker, and
 # is read far less often — so `full` is where rot hides. If `full` and `ci` ever
 # converge, that is not coverage improving; it is the differential tests having

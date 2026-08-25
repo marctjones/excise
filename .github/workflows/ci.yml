@@ -272,18 +272,14 @@ jobs:
           AVALONIA_TEST_COLLECT_COVERAGE: '1'
           AVALONIA_TEST_RESULTS_DIR: ${{ github.workspace }}/coverage-avalonia
 
-      # Coverage floor, `ci` PROFILE (#909). Same idiom as the Excise.Rendering
-      # step further down: read coverlet's raw per-package cobertura output
-      # directly, no reportgenerator merge needed. The floor is a BOOTSTRAP
-      # value, not a CI read yet — see tests/coverage-floors.tsv for why, and
-      # `scripts/check-coverage-floor.sh --update` to replace it with the
-      # first real one.
-      - name: Coverage floor (Excise.Avalonia, ci profile)
-        # Moved off per-push CI (#1171): calibrated for the corpus-less runner,
-        # only reachable in this Linux job, and unmaintainable from a macOS-only
-        # setup. Coverage is still collected and uploaded as an artifact below;
-        # the floor is to be enforced at release + local per #1171.
-        run: echo "Excise.Avalonia coverage floor moved off per-push CI (#1171)"
+      # Coverage floors moved to the RELEASE path (#1171). The `ci`-profile
+      # per-assembly floors (Avalonia, Rendering, Ocr, App) are enforced in
+      # .github/workflows/release.yml's `coverage-floors` job — a corpus-less
+      # ubuntu runner that matches the profile these floors were calibrated for
+      # (see tests/coverage-floors.tsv) — not on every push. This Linux job
+      # still COLLECTS coverage (the steps below) and uploads it as an artifact;
+      # only the floor ENFORCEMENT relocated, so a macOS-only maintainer is not
+      # blocked by a gate calibrated for a runner only that runner reaches.
 
       - name: Run Excise.Rendering.Tests (deterministic only)
         run: |
@@ -305,29 +301,7 @@ jobs:
             --results-directory coverage-rendering/ \
             --logger "console;verbosity=normal"
 
-      # Coverage floor, `ci` PROFILE. Excise.Core has had a ratchet since #603;
-      # Rendering, App, Avalonia and Ocr had none, so 79-87% coverage was free
-      # to drift with nothing noticing. Core itself drifted to 89.78% once and
-      # it took someone looking to find it.
-      #
-      # The PROFILE is the point. This step measures 54.36% where a
-      # corpus-equipped machine measures 87.49% unfiltered. One floor would
-      # either fail CI forever or go blind to regressions in precisely the
-      # differential tests that exist because excise must not be its own
-      # oracle. See tests/coverage-floors.tsv.
-      #
-      # ⚠️ The gap is TWO mechanisms, and only the second is visible here:
-      #   1. 54.36 -> 78.41  tests that SKIP on this runner for want of a
-      #                      corpus or tool. They are NOT excluded by the
-      #                      filter above — they run and skip, silently.
-      #   2. 78.41 -> 87.49  the Corpus/Differential/Benchmark/Visual classes
-      #                      the filter excludes by name.
-      # Reproducing the filter on a dev machine therefore gives 78.41%, not
-      # 54.36%. A `ci` floor derived that way is wrong by 24 points, which is
-      # how this gate red-lit CI for four commits after it was added.
-      - name: Coverage floor (Excise.Rendering, ci profile)
-        # Moved off per-push CI (#1171) — see the Avalonia floor note above.
-        run: echo "Excise.Rendering coverage floor moved off per-push CI (#1171)"
+      # (Excise.Rendering `ci` coverage floor enforced on the release path; #1171.)
 
       # Skip budget (#619, #655): Excise.Rendering.Tests has ~114
       # Assert.SkipWhen/SkipUnless call sites and had no gate watching them —
@@ -389,19 +363,7 @@ jobs:
             --results-directory coverage-ocr/ \
             --logger "console;verbosity=normal" || true
 
-      # Coverage floor, `ci` PROFILE (#909). This runner has no tesseract
-      # install step, so tesseract-gated tests (Assert.SkipUnless(TesseractAvailable))
-      # skip here the way corpus-gated Rendering tests do — the same
-      # environment split, a different tool. The floor is a BOOTSTRAP value,
-      # not a CI read yet — see tests/coverage-floors.tsv.
-      #
-      # No `|| true` here even though the test step above has one: that
-      # tolerates individual test failures, but a total collection failure
-      # (e.g. the test host crashing before any coverage is written) should
-      # still fail loudly.
-      - name: Coverage floor (Excise.Ocr, ci profile)
-        # Moved off per-push CI (#1171) — see the Avalonia floor note above.
-        run: echo "Excise.Ocr coverage floor moved off per-push CI (#1171)"
+      # (Excise.Ocr `ci` coverage floor enforced on the release path; #1171.)
 
       - name: Run Excise.App.Tests (headless with xvfb)
         # Skipped for library-only changes (see "Detect changed areas"); always
@@ -427,15 +389,10 @@ jobs:
             --results-directory Excise.App.Tests/TestResults \
             --blame-hang-timeout 120000
 
-      # Coverage floor, `ci` PROFILE (#909). Carries the SAME condition as the
-      # run above by necessity, not preference: on a library-only PR that step
-      # never runs, so this one would find no report and fail on every such
-      # PR if it ran unconditionally — the App.Tests conditional problem this
-      # issue names, decided by matching rather than fighting it. The floor is
-      # a BOOTSTRAP value, not a CI read yet — see tests/coverage-floors.tsv.
-      - name: Coverage floor (Excise.App, ci profile)
-        # Moved off per-push CI (#1171) — see the Avalonia floor note above.
-        run: echo "Excise.App coverage floor moved off per-push CI (#1171)"
+      # (Excise.App `ci` coverage floor enforced on the release path; #1171.
+      #  On a tag build release.yml runs App.Tests unconditionally, so the
+      #  library-only gui-conditional that complicated this gate here does not
+      #  apply there.)
 
       # Skip budget (#619, #655): tests/skip-allowlist/Excise.App.Tests.txt
       # already existed (from earlier ad-hoc bookkeeping) but nothing ever
