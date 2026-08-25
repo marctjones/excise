@@ -154,7 +154,11 @@ public class OperationReconstructor
             var canPositionGlyphs = segment.IsCidFont && hasCompleteSourceBytes;
             if (canPositionGlyphs)
             {
-                foreach (var match in glyphs)
+                // #1156: one physical glyph decoded to several characters (a
+                // ligature, Letter.Value "ft") appears as several LetterMatches
+                // sharing one Letter and one source code. Re-showing each match
+                // would replay that code once per character, doubling the glyph.
+                foreach (var match in CollapseToDistinctGlyphs(glyphs))
                 {
                     AddPosition(match.Letter.StartX + dx, match.Letter.StartY);
                     ops.Add(new ContentOperator("Tj", new PdfObject[]
@@ -171,7 +175,17 @@ public class OperationReconstructor
             // can't be re-encoded without the original code mapping. When the
             // segment carries raw bytes we emit them as a hex string; otherwise
             // the plain Tj string path handles simple fonts.
-            var rawBytes = segment.GetRawBytes();
+            //
+            // #1156: a ligature (one code decoded to a multi-character
+            // Letter.Value like "ft") is carried by several consecutive
+            // LetterMatches that share one Letter and one source code.
+            // GetRawBytes concatenates every match's bytes, so it would emit the
+            // ligature code once per decoded character — doubling the glyph in
+            // surviving text (after→aftfter). Collapse to one emission per
+            // physical glyph. This is a no-op for runs whose matches all
+            // reference distinct Letters, so byte-preservation is unchanged
+            // wherever no ligature is present.
+            var rawBytes = ConcatDistinctGlyphBytes(glyphs);
             bool useRawBytes = rawBytes.Length > 0 &&
                                (hasCompleteSourceBytes || segment.IsCidFont || segment.HasToUnicode);
 
@@ -236,4 +250,39 @@ public class OperationReconstructor
         var right = seg.LetterMatches.Max(m => m.Letter.StartX + m.Letter.Width);
         return Math.Max(0, right - left);
     }
+
+    /// <summary>
+    /// #1156 — collapse a run of <see cref="LetterMatch"/>es to one representative
+    /// per physical glyph. <see cref="LetterFinder"/> emits one match per decoded
+    /// CHARACTER, so a ligature glyph (one source code, a multi-character
+    /// <see cref="Letter.Value"/> such as "ft") is carried by several consecutive
+    /// matches that reference the SAME extracted <see cref="Letter"/> instance.
+    /// A multi-character glyph always occupies contiguous character positions and
+    /// a single glyph rectangle, so it can never straddle a keep/remove segment
+    /// boundary — consecutive same-<see cref="Letter"/> dedupe within a segment is
+    /// therefore complete. Distinct glyphs are distinct Letter instances (even two
+    /// occurrences of the same character), so reference equality is the exact test.
+    /// </summary>
+    private static IEnumerable<LetterMatch> CollapseToDistinctGlyphs(List<LetterMatch> matches)
+    {
+        Letter? previous = null;
+        foreach (var match in matches)
+        {
+            if (previous != null && ReferenceEquals(match.Letter, previous))
+                continue;
+            previous = match.Letter;
+            yield return match;
+        }
+    }
+
+    /// <summary>
+    /// Concatenate the source bytes of a segment's matches, emitting each physical
+    /// glyph's code exactly once (#1156). Mirrors <see cref="TextSegment.GetRawBytes"/>
+    /// but collapses the per-character duplication a ligature would otherwise cause.
+    /// </summary>
+    private static byte[] ConcatDistinctGlyphBytes(List<LetterMatch> matches) =>
+        CollapseToDistinctGlyphs(matches)
+            .Where(m => m.RawBytes != null)
+            .SelectMany(m => m.RawBytes!)
+            .ToArray();
 }
