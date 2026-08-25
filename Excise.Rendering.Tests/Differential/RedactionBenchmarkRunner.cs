@@ -760,15 +760,14 @@ public sealed class RedactionBenchmarkRunner
         if (!GhostscriptReferenceRenderer.IsAvailable) return -1;
         try
         {
-            PdfRectangle region; double pageHeight;
+            IReadOnlyList<PdfRectangle> regions; double pageHeight;
             using (var doc = PdfDocument.Open(inputPath))
             {
                 if (doc.PageCount < 1) return -1;
                 var page = doc.GetPage(1);
                 pageHeight = page.Height;
-                var box = FirstMatchBoxOnPage1(page, term);
-                if (box == null) return -1;
-                region = box.Value;
+                regions = AllMatchBoxesOnPage1(page, term);
+                if (regions.Count == 0) return -1;
             }
             using var before = GhostscriptReferenceRenderer.RenderPage(inputPath, 1, dpi: 150);
             using var after = GhostscriptReferenceRenderer.RenderPage(outputPath, 1, dpi: 150);
@@ -778,15 +777,27 @@ public sealed class RedactionBenchmarkRunner
             if (before.Width != after.Width || before.Height != after.Height) return 1.0;
 
             const double scale = 150.0 / 72.0;
-            var m = region.Normalize();
-            int mx0 = (int)(m.Left * scale) - 2, mx1 = (int)(m.Right * scale) + 2;
-            int my0 = (int)((pageHeight - m.Top) * scale) - 2, my1 = (int)((pageHeight - m.Bottom) * scale) + 2;
+            // Mask EVERY occurrence's covering box, not just the first — the other
+            // occurrences are legitimate redactions, not surviving-content change.
+            var masks = new List<(int x0, int y0, int x1, int y1)>();
+            foreach (var region in regions)
+            {
+                var m = region.Normalize();
+                masks.Add(((int)(m.Left * scale) - 2, (int)((pageHeight - m.Top) * scale) - 2,
+                           (int)(m.Right * scale) + 2, (int)((pageHeight - m.Bottom) * scale) + 2));
+            }
+            bool Masked(int x, int y)
+            {
+                foreach (var (x0, y0, x1, y1) in masks)
+                    if (x >= x0 && x <= x1 && y >= y0 && y <= y1) return true;
+                return false;
+            }
 
             long diff = 0, total = 0;
             for (int y = 0; y < before.Height; y++)
             for (int x = 0; x < before.Width; x++)
             {
-                if (x >= mx0 && x <= mx1 && y >= my0 && y <= my1) continue;   // masked region
+                if (Masked(x, y)) continue;   // masked redaction region(s)
                 total++;
                 var a = before.GetPixel(x, y);
                 var b = after.GetPixel(x, y);
@@ -812,55 +823,75 @@ public sealed class RedactionBenchmarkRunner
         if (tess == null) return -1;
         try
         {
-            PdfRectangle region; double pageHeight;
+            IReadOnlyList<PdfRectangle> regions; double pageHeight;
             using (var doc = PdfDocument.Open(inputPath))
             {
                 if (doc.PageCount < 1) return -1;
                 var page = doc.GetPage(1);
                 pageHeight = page.Height;
-                var box = FirstMatchBoxOnPage1(page, term);
-                if (box == null) return -1;
-                region = box.Value;
+                regions = AllMatchBoxesOnPage1(page, term);
+                if (regions.Count == 0) return -1;
             }
             using var after = GhostscriptReferenceRenderer.RenderPage(outputPath, 1, dpi: 200);
             if (after == null) return -1;
 
             const double scale = 200.0 / 72.0;
-            var m = region.Normalize();
-            // Pad generously — OCR needs whitespace around the glyphs to segment.
-            int x0 = Math.Max(0, (int)(m.Left * scale) - 6);
-            int x1 = Math.Min(after.Width - 1, (int)(m.Right * scale) + 6);
-            int y0 = Math.Max(0, (int)((pageHeight - m.Top) * scale) - 6);
-            int y1 = Math.Min(after.Height - 1, (int)((pageHeight - m.Bottom) * scale) + 6);
-            if (x1 <= x0 || y1 <= y0) return -1;
-
-            using var crop = new SKBitmap(x1 - x0 + 1, y1 - y0 + 1);
-            for (int y = y0; y <= y1; y++)
-                for (int x = x0; x <= x1; x++)
-                    crop.SetPixel(x - x0, y - y0, after.GetPixel(x, y));
-
-            var png = Path.Combine(Path.GetTempPath(), $"vis-{Guid.NewGuid():N}.png");
-            try
+            // OCR EVERY occurrence's region, not just the first: a secret removed
+            // in one place but left legible in another is still a visual leak.
+            // Capped so a term appearing dozens of times on page 1 doesn't spawn
+            // dozens of tesseract calls; a legible secret is almost always caught
+            // in the first few, and the cap is logged as a limitation, not hidden.
+            const int MaxRegions = 12;
+            var measuredAny = false;
+            foreach (var region in regions.Take(MaxRegions))
             {
-                using (var img = SKImage.FromBitmap(crop))
-                using (var data = img.Encode(SKEncodedImageFormat.Png, 100))
-                using (var fs = File.Create(png))
-                    data.SaveTo(fs);
+                var m = region.Normalize();
+                // Pad generously — OCR needs whitespace around the glyphs to segment.
+                int x0 = Math.Max(0, (int)(m.Left * scale) - 6);
+                int x1 = Math.Min(after.Width - 1, (int)(m.Right * scale) + 6);
+                int y0 = Math.Max(0, (int)((pageHeight - m.Top) * scale) - 6);
+                int y1 = Math.Min(after.Height - 1, (int)((pageHeight - m.Bottom) * scale) + 6);
+                if (x1 <= x0 || y1 <= y0) continue;
 
-                var psi = new System.Diagnostics.ProcessStartInfo(tess)
-                { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
-                foreach (var a in new[] { png, "stdout", "--psm", "6" }) psi.ArgumentList.Add(a);
-                using var proc = System.Diagnostics.Process.Start(psi);
-                if (proc == null) return -1;
-                var outT = proc.StandardOutput.ReadToEndAsync();
-                proc.StandardError.ReadToEndAsync();
-                if (!proc.WaitForExit(30_000)) { try { proc.Kill(true); } catch { } return -1; }
-                var text = outT.GetAwaiter().GetResult();
-                return text.Contains(term, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+                using var crop = new SKBitmap(x1 - x0 + 1, y1 - y0 + 1);
+                for (int y = y0; y <= y1; y++)
+                    for (int x = x0; x <= x1; x++)
+                        crop.SetPixel(x - x0, y - y0, after.GetPixel(x, y));
+
+                var readable = OcrRegionContains(tess, crop, term);
+                if (readable == 1) return 1;          // legible anywhere ⇒ leak
+                if (readable == 0) measuredAny = true; // ran clean here
             }
-            finally { try { File.Delete(png); } catch { } }
+            return measuredAny ? 0 : -1;
         }
         catch { return -1; }
+    }
+
+    /// <summary>Encode <paramref name="crop"/> to PNG, OCR it, and report whether
+    /// <paramref name="term"/> is legible. 1 legible, 0 not, -1 the OCR failed.</summary>
+    private static int OcrRegionContains(string tess, SKBitmap crop, string term)
+    {
+        var png = Path.Combine(Path.GetTempPath(), $"vis-{Guid.NewGuid():N}.png");
+        try
+        {
+            using (var img = SKImage.FromBitmap(crop))
+            using (var data = img.Encode(SKEncodedImageFormat.Png, 100))
+            using (var fs = File.Create(png))
+                data.SaveTo(fs);
+
+            var psi = new System.Diagnostics.ProcessStartInfo(tess)
+            { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+            foreach (var a in new[] { png, "stdout", "--psm", "6" }) psi.ArgumentList.Add(a);
+            using var proc = System.Diagnostics.Process.Start(psi);
+            if (proc == null) return -1;
+            var outT = proc.StandardOutput.ReadToEndAsync();
+            proc.StandardError.ReadToEndAsync();
+            if (!proc.WaitForExit(30_000)) { try { proc.Kill(true); } catch { } return -1; }
+            var text = outT.GetAwaiter().GetResult();
+            return text.Contains(term, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+        }
+        catch { return -1; }
+        finally { try { File.Delete(png); } catch { } }
     }
 
     private static string? ResolveTesseract()
@@ -907,6 +938,38 @@ public sealed class RedactionBenchmarkRunner
             return new PdfRectangle(left, bottom, right, top);
         }
         return null;
+    }
+
+    /// <summary>
+    /// EVERY occurrence of <paramref name="term"/> on page 1, not just the first.
+    /// The render-fidelity axis must mask them all: a term redacted in N places
+    /// leaves N covering boxes, and masking only one makes the other N-1 read as
+    /// surviving-content damage (the false 4.8% on a 41×-"COVID" page). Same
+    /// line-by-baseline grouping as <see cref="FirstMatchBoxOnPage1"/>.
+    /// </summary>
+    private static IReadOnlyList<PdfRectangle> AllMatchBoxesOnPage1(PdfPage page, string term)
+    {
+        var boxes = new List<PdfRectangle>();
+        foreach (var line in page.Letters
+                     .GroupBy(l => Math.Round(l.GlyphRectangle.Bottom, 0))
+                     .OrderByDescending(g => g.Key))
+        {
+            var ordered = line.OrderBy(l => l.GlyphRectangle.Left).ToList();
+            var text = string.Concat(ordered.Select(l => l.Value));
+            var from = 0;
+            while (true)
+            {
+                var idx = text.IndexOf(term, from, StringComparison.OrdinalIgnoreCase);
+                if (idx < 0) break;
+                var run = ordered.Skip(idx).Take(term.Length).ToList();
+                from = idx + Math.Max(1, term.Length);
+                if (run.Count == 0) continue;
+                boxes.Add(new PdfRectangle(
+                    run.Min(l => l.GlyphRectangle.Left), run.Min(l => l.GlyphRectangle.Bottom),
+                    run.Max(l => l.GlyphRectangle.Right), run.Max(l => l.GlyphRectangle.Top)));
+            }
+        }
+        return boxes;
     }
 
     private static double InkFractionIn(SKBitmap bmp, PdfRectangle box, double pageHeight)

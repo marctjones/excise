@@ -37,6 +37,62 @@ public class RedactionRenderAxesTests
         return ms.ToArray();
     }
 
+    // The secret repeated down the page, each line flanked by survivor words. This
+    // is the shape that produced the false 4.8% render-delta on a 41×-"COVID" page:
+    // masking only the FIRST occurrence let the other redaction boxes read as
+    // surviving-content damage.
+    private static byte[] MultiOccurrenceFixture(int lines)
+    {
+        var sb = new StringBuilder("BT /F1 18 Tf ");
+        for (var i = 0; i < lines; i++)
+        {
+            var y = 740 - i * 30;
+            sb.Append($"1 0 0 1 72 {y} Tm (keep AAA {Secret} keep BBB) Tj ");
+        }
+        sb.Append("ET\n");
+        var content = Encoding.Latin1.GetBytes(sb.ToString());
+        using var ms = new MemoryStream();
+        void W(string s) => ms.Write(Encoding.Latin1.GetBytes(s));
+        W("%PDF-1.7\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+        W("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+        W("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
+          + "/Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n");
+        W($"4 0 obj\n<< /Length {content.Length} >>\nstream\n"); ms.Write(content); W("\nendstream\nendobj\n");
+        W("5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n");
+        W("trailer\n<< /Root 1 0 R /Size 6 >>\n%%EOF\n");
+        return ms.ToArray();
+    }
+
+    [Fact]
+    public void SurvivingRenderDelta_MasksEveryOccurrence_NotJustTheFirst()
+    {
+        Assert.SkipUnless(GhostscriptReferenceRenderer.IsAvailable, "ghostscript not installed");
+
+        var input = Path.Combine(Path.GetTempPath(), $"rax-multi-in-{Guid.NewGuid():N}.pdf");
+        var output = Path.Combine(Path.GetTempPath(), $"rax-multi-out-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            // 10 occurrences of the secret, each with intact survivor words.
+            File.WriteAllBytes(input, MultiOccurrenceFixture(10));
+            using (var doc = PdfDocument.Open(File.ReadAllBytes(input)))
+            {
+                doc.RedactText(Secret);
+                using var fs = File.Create(output);
+                doc.Save(fs);
+            }
+
+            var delta = RedactionBenchmarkRunner.MeasureSurvivingRenderDelta(input, output, Secret);
+            delta.Should().BeGreaterThanOrEqualTo(0, "the axis must have measured");
+            // Before the fix this spiked because 9 of the 10 covering boxes were
+            // counted as surviving-content change. With all occurrences masked the
+            // genuinely-surviving words (keep/AAA/keep/BBB) are unchanged.
+            delta.Should().BeLessThan(0.02,
+                "every occurrence's covering box must be masked — the other redactions " +
+                "are not surviving-content damage");
+        }
+        finally { File.Delete(input); File.Delete(output); }
+    }
+
     [Fact]
     public void CleanGlyphRemoval_LeavesSurvivingRenderIntact_AndTheSecretUnreadable()
     {
