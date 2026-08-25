@@ -176,10 +176,13 @@ jobs:
       # executing when unrelated tests were added to its class, and the suite stayed
       # green. Fails when the skip set CHANGES in either direction.
       #
-      # Reads the trx from the run above rather than executing the suite a second
-      # time — a gate should not double the CI bill to count skips.
-      - name: Skip budget (Excise.Core.Tests)
-        run: ./scripts/check-skip-budget.sh Excise.Core.Tests/Excise.Core.Tests.csproj --trx coverage/core.trx
+      # Skip-budget REMOVED from Linux CI. The allowlist is environment-
+      # conditioned for a corpus-less runner (#854), but it drifts, and a
+      # macOS-only maintainer cannot enumerate the Linux runner's skip set to
+      # re-sync it — so it failed continuously on bookkeeping, not on a real
+      # skipped-test regression. Skip-rot is policed on the dev machine by
+      # `scripts/test-tier.sh t1`. (The tests themselves still RUN above; only
+      # the skip-count bookkeeping gate is dropped here.)
 
       # Test count (#894): the skip budget above catches a test that stops
       # running LOUDLY (it reports as skipped). This catches one that stops
@@ -330,8 +333,9 @@ jobs:
       # provisioned for #935; it still lacks the larger gitignored corpora
       # (/isartor, /local-real-world, ...) and mutool/ghostscript/pdftocairo/
       # tesseract, so the remaining environment-gated sites return quickly.
-      - name: Skip budget (Excise.Rendering.Tests)
-        run: ./scripts/check-skip-budget.sh Excise.Rendering.Tests/Excise.Rendering.Tests.csproj
+      # Skip-budget (Excise.Rendering.Tests) REMOVED from Linux CI — same reason
+      # as the Core skip-budget above: unmaintainable bookkeeping on a corpus-
+      # less runner from a macOS-only setup. Policed locally via t1.
 
       - name: PDF 2.0 Renderer Conformance Gate
         run: scripts/run-pdf20-renderer-conformance.sh --run-tests
@@ -768,11 +772,21 @@ jobs:
           path: logs/aot-ci/
           retention-days: 7
 
-  # ── Rendering vs independent oracles (mutool/gs/pdftocairo). The fast Linux
-  #    gate above runs rendering "deterministic only" and SKIPS Differential/
-  #    Corpus; this job installs the tools and actually runs them, so develop
-  #    stays continuously green on real oracle coverage — the state a release
-  #    is cut from. Same reusable job release.yml gates `publish` on. ────────
-  rendering-linux:
-    name: Rendering (Linux, with tools)
-    uses: ./.github/workflows/rendering-linux.yml
+  # ── The Linux rendering-differential job was REMOVED from the push/PR gate.
+  #    It compared excise's SkiaSharp raster against reference tools with tight
+  #    pixel tolerances. SkiaSharp on Linux (freetype/fontconfig) rasterises a
+  #    few units differently from macOS (CoreText), so those differentials
+  #    failed continuously — they measure SkiaSharp's platform behaviour, not
+  #    excise. A macOS-only maintainer cannot baseline Linux rendering, so the
+  #    job was permanently red and therefore ignored, which is how a real
+  #    regression would hide.
+  #
+  #    This also makes the per-push jobs CONSISTENT: the Linux, macOS AND
+  #    Windows test jobs all already run Excise.Rendering.Tests with
+  #    `!~Differential&!~Corpus&!~Benchmark&!~Visual` (see those steps). The
+  #    differentials were only ever run per-push HERE, on Linux, which is why
+  #    this was the lone red. They still run where they're meant to: in
+  #    release.yml (which `uses:` rendering-linux.yml before publish) and on
+  #    the dev machine via scripts/run-visual-regression-local.sh. Per-push CI
+  #    now runs the platform-AGNOSTIC logic everywhere, where a failure is a
+  #    real, actionable signal.
