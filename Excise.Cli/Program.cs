@@ -733,12 +733,26 @@ partial class Program
                 "same signature as a real redaction leak. Without this flag, that case fails closed.",
             DefaultValueFactory = _ => false,
         };
+        var noBoxOption = new Option<bool>("--no-box")
+        {
+            // #1158 — glyph removal is unconditional; this only skips the cosmetic
+            // covering rectangle. Useful for proving the box is not the mechanism:
+            // the render shows blank space exactly where the text was.
+            Description = "Remove the text but draw NO covering rectangle (glyph removal is unchanged).",
+            DefaultValueFactory = _ => false,
+        };
+        var boxColorOption = new Option<string?>("--box-color")
+        {
+            // #1158 — parity with tools that expose a fill color (e.g. PyMuPDF `fill=`).
+            Description = "Covering-box fill color: 'black' (default), 'white', or 'R,G,B' with each " +
+                "component 0-255. Ignored with --no-box.",
+        };
 
         var command = new Command(
             "redact",
             "Remove text from a PDF (glyph-level removal; text extraction will not find it)")
         {
-            inputArg, outputArg, textArg, caseSensitiveOption, closeWidthOption, passwordOption, allowDecryptOption, strictOption, allowLowConfidenceOption
+            inputArg, outputArg, textArg, caseSensitiveOption, closeWidthOption, passwordOption, allowDecryptOption, strictOption, allowLowConfidenceOption, noBoxOption, boxColorOption
         };
 
         command.SetAction(parseResult =>
@@ -752,6 +766,8 @@ partial class Program
             var allowDecrypt = parseResult.GetValue(allowDecryptOption);
             var strict = parseResult.GetValue(strictOption);
             var allowLowConfidence = parseResult.GetValue(allowLowConfidenceOption);
+            var noBox = parseResult.GetValue(noBoxOption);
+            var boxColorSpec = parseResult.GetValue(boxColorOption);
             if (!input.Exists)
             {
                 Console.Error.WriteLine($"File not found: {input.FullName}");
@@ -764,10 +780,26 @@ partial class Program
                 Environment.ExitCode = 1;
                 return;
             }
+            if (noBox && boxColorSpec != null)
+            {
+                // A redaction tool must never silently ignore a flag the user
+                // passed — an ignored --box-color could read as "the box is that
+                // colour" when in fact there is no box at all (#1158).
+                Console.Error.WriteLine("--no-box and --box-color are mutually exclusive: --no-box draws no box to colour.");
+                Environment.ExitCode = 1;
+                return;
+            }
+            (double R, double G, double B)? boxColor = null;
+            if (boxColorSpec != null && !TryParseBoxColor(boxColorSpec, out boxColor, out var colorError))
+            {
+                Console.Error.WriteLine($"Invalid --box-color '{boxColorSpec}': {colorError}");
+                Environment.ExitCode = 1;
+                return;
+            }
 
             try
             {
-                var (count, carrierNotes) = RunRedactWithNotes(input.FullName, output.FullName, text, caseSensitive, allowDecrypt, strict, allowLowConfidence, password, closeWidth);
+                var (count, carrierNotes) = RunRedactWithNotes(input.FullName, output.FullName, text, caseSensitive, allowDecrypt, strict, allowLowConfidence, password, closeWidth, drawBox: !noBox, boxColor: boxColor);
                 Console.WriteLine($"Redacted {count} occurrence(s) of '{text}'");
                 foreach (var note in carrierNotes)
                     Console.WriteLine($"  note: {note}");
@@ -796,6 +828,49 @@ partial class Program
     internal sealed class LowConfidenceExtractionException(string message) : InvalidOperationException(message);
 
     /// <summary>
+    /// Parse a <c>--box-color</c> spec into PDF <c>rg</c> components (0..1).
+    /// Accepts <c>black</c>, <c>white</c>, or <c>R,G,B</c> with each component an
+    /// integer 0-255. Exposed internally so the parse itself is directly
+    /// testable without invoking a full redaction (#1158).
+    /// </summary>
+    internal static bool TryParseBoxColor(
+        string spec, out (double R, double G, double B)? color, out string? error)
+    {
+        color = null;
+        error = null;
+        var trimmed = (spec ?? "").Trim();
+        switch (trimmed.ToLowerInvariant())
+        {
+            case "black":
+                color = (0.0, 0.0, 0.0);
+                return true;
+            case "white":
+                color = (1.0, 1.0, 1.0);
+                return true;
+        }
+
+        var parts = trimmed.Split(',');
+        if (parts.Length != 3)
+        {
+            error = "expected 'black', 'white', or three comma-separated components 'R,G,B' (0-255)";
+            return false;
+        }
+
+        var channels = new double[3];
+        for (int i = 0; i < 3; i++)
+        {
+            if (!int.TryParse(parts[i].Trim(), out var v) || v < 0 || v > 255)
+            {
+                error = "each of R,G,B must be an integer 0-255";
+                return false;
+            }
+            channels[i] = v / 255.0;
+        }
+        color = (channels[0], channels[1], channels[2]);
+        return true;
+    }
+
+    /// <summary>
     /// Core redact-a-file operation — open, call Excise.Core's text
     /// redaction, save. Exposed internally for tests.
     ///
@@ -811,9 +886,10 @@ partial class Program
     internal static int RunRedact(
         string inputPath, string outputPath, string text, bool caseSensitive,
         bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false,
-        string? password = null, bool closeWidth = false)
+        string? password = null, bool closeWidth = false,
+        bool drawBox = true, (double R, double G, double B)? boxColor = null)
         => RunRedactWithNotes(inputPath, outputPath, text, caseSensitive,
-               allowDecrypt, strict, allowLowConfidence, password, closeWidth).Count;
+               allowDecrypt, strict, allowLowConfidence, password, closeWidth, drawBox, boxColor).Count;
 
     /// <summary>
     /// Redact, and also report the carriers the redaction could not examine
@@ -829,7 +905,8 @@ partial class Program
     internal static (int Count, IReadOnlyList<string> CarrierNotes) RunRedactWithNotes(
         string inputPath, string outputPath, string text, bool caseSensitive,
         bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false,
-        string? password = null, bool closeWidth = false)
+        string? password = null, bool closeWidth = false,
+        bool drawBox = true, (double R, double G, double B)? boxColor = null)
     {
         using var doc = OpenInputForOutput(inputPath, outputPath, password);
 
@@ -854,7 +931,7 @@ partial class Program
         // #1089: the CLI prints VERIFIED removals. The old count was matches
         // located per pass -- how one occurrence printed as "Redacted 3" (#1043)
         // and how a term that was never removed still reported success.
-        var redaction = doc.RedactText(text, caseSensitive, closeWidth: closeWidth);
+        var redaction = doc.RedactText(text, caseSensitive, drawBlackRect: drawBox, closeWidth: closeWidth, boxColor: boxColor);
         var count = redaction.VerifiedRemovals;
 
         // #916/#905 — collect what the redaction could not examine BEFORE

@@ -3,6 +3,8 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Cli;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Cli.Tests;
@@ -428,5 +430,172 @@ public class RedactCommandTests : IDisposable
         var raw = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
         raw.Should().NotContain("TARGET",
             "all three occurrences must be removed from the content stream");
+    }
+
+    // ---------------------------------------------------------------------
+    // #1158 — --no-box / --box-color.
+    //
+    // The covering rectangle is COSMETIC. --no-box must never weaken content
+    // removal — it only skips the visual box. The fixture's base content stream
+    // is pure text (BT/Tf/Td/Tj/ET, see TestPdfBuilder), so any fill rectangle
+    // in the output is one AppendBlackRectangle added and nothing else.
+    // ---------------------------------------------------------------------
+
+    /// <summary>
+    /// Count the RGB-fill covering rectangles (an rg color op followed by a
+    /// rectangle and a fill) that redaction appended to a saved page, and the
+    /// color each was drawn with. On the text-only fixture the base stream has
+    /// none, so a non-empty result is exactly the boxes redaction added.
+    /// </summary>
+    private static IReadOnlyList<(double R, double G, double B)> AppendedFillBoxColors(string pdfPath)
+    {
+        using var doc = PdfDocument.Open(File.ReadAllBytes(pdfPath));
+        var ops = doc.GetPage(1).GetContentStream().Operators;
+        var boxes = new List<(double, double, double)>();
+        (double R, double G, double B)? pendingRgb = null;
+        var sawRect = false;
+        foreach (var op in ops)
+        {
+            switch (op.Name)
+            {
+                case "rg":
+                    pendingRgb = (op.Operands[0].GetNumber(), op.Operands[1].GetNumber(), op.Operands[2].GetNumber());
+                    sawRect = false;
+                    break;
+                case "re":
+                    sawRect = true;
+                    break;
+                case "f":
+                case "F":
+                case "f*":
+                    if (pendingRgb != null && sawRect)
+                        boxes.Add(pendingRgb.Value);
+                    break;
+            }
+        }
+        return boxes;
+    }
+
+    [Fact]
+    public void RunRedact_NoBox_RemovesTextFromSavedBytes_AndDrawsNoRectangle()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
+
+        int count = Program.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false, drawBox: false);
+
+        count.Should().Be(1);
+
+        // (a) The SECURITY invariant: --no-box must NOT weaken removal. Search
+        //     the SAVED bytes, including inside compressed streams, in every
+        //     carrier. A tool must not be its own oracle for the property it
+        //     exists to guarantee, but this scanner reads the file directly
+        //     (ZLibStream, not excise's own filters) — CLAUDE.md carrier #1.
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "SECRET")
+            .Should().BeEmpty("--no-box removes the box, never the content");
+
+        // (b) No covering rectangle was drawn.
+        AppendedFillBoxColors(outputPath).Should().BeEmpty(
+            "--no-box means no fill rectangle over the redacted region");
+    }
+
+    [Fact]
+    public void RunRedact_DefaultBox_DrawsBlackRectangle_AndRemovesText()
+    {
+        // The control for the test above: default behaviour is UNCHANGED — a
+        // black box is still drawn. This pins that --no-box did not silently
+        // become the default.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
+
+        int count = Program.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false);
+
+        count.Should().Be(1);
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "SECRET").Should().BeEmpty();
+
+        var boxes = AppendedFillBoxColors(outputPath);
+        boxes.Should().NotBeEmpty("the default still draws a covering box");
+        boxes.Should().OnlyContain(c => c.R == 0 && c.G == 0 && c.B == 0, "default box is black");
+    }
+
+    [Fact]
+    public void RunRedact_BoxColorWhite_DrawsWhiteRectangle_AndRemovesText()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
+
+        int count = Program.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false,
+            drawBox: true, boxColor: (1.0, 1.0, 1.0));
+
+        count.Should().Be(1);
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "SECRET").Should().BeEmpty(
+            "a white box is still a redaction — the glyphs are gone, not merely hidden");
+
+        var boxes = AppendedFillBoxColors(outputPath);
+        boxes.Should().NotBeEmpty();
+        boxes.Should().OnlyContain(c => c.R == 1 && c.G == 1 && c.B == 1, "box color white -> rg 1 1 1");
+    }
+
+    [Theory]
+    [InlineData("black", 0.0, 0.0, 0.0)]
+    [InlineData("white", 1.0, 1.0, 1.0)]
+    [InlineData("BLACK", 0.0, 0.0, 0.0)]     // case-insensitive
+    [InlineData("255,0,0", 1.0, 0.0, 0.0)]
+    [InlineData("0, 255, 0", 0.0, 1.0, 0.0)] // whitespace tolerated
+    [InlineData("128,128,128", 128 / 255.0, 128 / 255.0, 128 / 255.0)]
+    public void TryParseBoxColor_AcceptsNamedAndRgb(string spec, double r, double g, double b)
+    {
+        Program.TryParseBoxColor(spec, out var color, out var error).Should().BeTrue();
+        error.Should().BeNull();
+        color.Should().NotBeNull();
+        color!.Value.R.Should().BeApproximately(r, 1e-9);
+        color.Value.G.Should().BeApproximately(g, 1e-9);
+        color.Value.B.Should().BeApproximately(b, 1e-9);
+    }
+
+    [Theory]
+    [InlineData("red")]          // unknown name
+    [InlineData("1,2")]          // too few components
+    [InlineData("1,2,3,4")]      // too many components
+    [InlineData("300,0,0")]      // out of 0-255 range
+    [InlineData("-1,0,0")]       // negative
+    [InlineData("1.5,0,0")]      // non-integer
+    [InlineData("a,b,c")]        // non-numeric
+    public void TryParseBoxColor_RejectsBadSpec(string spec)
+    {
+        Program.TryParseBoxColor(spec, out var color, out var error).Should().BeFalse();
+        color.Should().BeNull();
+        error.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_NoBoxAndBoxColorTogether_IsRejected()
+    {
+        // A redaction tool must never silently ignore a flag the user passed.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
+
+        var prevErr = Console.Error;
+        var capturedErr = new StringWriter();
+        Console.SetError(capturedErr);
+        try
+        {
+            await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--no-box", "--box-color", "white"
+            });
+        }
+        finally
+        {
+            Console.SetError(prevErr);
+        }
+
+        capturedErr.ToString().Should().Contain("mutually exclusive");
+        File.Exists(outputPath).Should().BeFalse("a rejected invocation writes no output");
+        Environment.ExitCode = 0;
     }
 }
