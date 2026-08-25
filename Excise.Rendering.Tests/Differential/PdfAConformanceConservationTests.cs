@@ -4,6 +4,9 @@ using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Operations;
+using Excise.Core.Security;
+using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
 using Xunit;
 
@@ -102,6 +105,110 @@ public class PdfAConformanceConservationTests
         {
             try { File.Delete(output); } catch { /* best effort */ }
         }
+    }
+
+    // ── #1057: the same conservation contract, per assembly operation. merge and
+    //    split found #1056; encrypt asserts the OPPOSITE (PDF/A forbids
+    //    encryption, so conformance MUST be withdrawn, not silently faked); redact
+    //    was already measured clean and is gated here for free. ──────────────────
+
+    [Theory]
+    [MemberData(nameof(Fixtures))]
+    public void Merge_SingleInput_DoesNotLoseConformance(string relative) =>
+        RunConservationRow(relative, (src, outPath) =>
+        {
+            using var doc = PdfDocument.Open(File.ReadAllBytes(src));
+            using var merged = PdfDocumentMerger.Merge(
+                new[] { (doc, (IReadOnlyList<int>)Enumerable.Range(0, doc.PageCount).ToList()) });
+            merged.Save(outPath);
+        });
+
+    [Theory]
+    [MemberData(nameof(Fixtures))]
+    public void Split_SinglePages_DoesNotLoseConformance(string relative) =>
+        RunConservationRow(relative, (src, outPath) =>
+        {
+            using var doc = PdfDocument.Open(File.ReadAllBytes(src));
+            var fragments = PdfDocumentSplitter.SplitToSinglePages(doc);
+            try { fragments[0].Save(outPath); }
+            finally { foreach (var f in fragments) f.Dispose(); }
+        });
+
+    [Theory]
+    [MemberData(nameof(Fixtures))]
+    public void Encrypt_WithdrawsConformance(string relative) =>
+        RunConservationRow(relative, (src, outPath) =>
+        {
+            using var doc = PdfDocument.Open(File.ReadAllBytes(src));
+            doc.Save(outPath, new PdfEncryptionOptions
+            {
+                UserPassword = "pw",
+                Algorithm = PdfEncryptionAlgorithm.Aes256,
+            });
+        }, expectConformanceLost: true);
+
+    [Theory]
+    [MemberData(nameof(Fixtures))]
+    public void Redact_DoesNotLoseConformance(string relative) =>
+        RunConservationRow(relative, (src, outPath) =>
+        {
+            using var doc = PdfDocument.Open(File.ReadAllBytes(src));
+            var term = FirstWord(doc);
+            if (term != null) doc.RedactText(term);   // a no-op (no term) must conserve too
+            doc.Save(outPath);
+        });
+
+    private static string? FirstWord(PdfDocument doc)
+    {
+        if (doc.PageCount < 1) return null;
+        var text = string.Concat(doc.GetPage(1).Letters.Select(l => l.Value));
+        var m = System.Text.RegularExpressions.Regex.Match(text, "[A-Za-z]{4,}");
+        return m.Success ? m.Value : null;
+    }
+
+    /// <summary>Apply <paramref name="operation"/> to a conforming fixture and
+    /// assert veraPDF's verdict on the output: same flavour and still passing
+    /// (conservation), unless <paramref name="expectConformanceLost"/> — then it
+    /// must NOT pass (the encrypt case). Skips loudly where veraPDF/corpus/term
+    /// is absent.</summary>
+    private void RunConservationRow(string relative, Action<string, string> operation,
+        bool expectConformanceLost = false)
+    {
+        Assert.SkipUnless(VeraPdfReferenceValidator.IsAvailable, "verapdf not installed");
+        var path = Resolve(Path.Combine(CorpusRoot, relative));
+        Assert.SkipWhen(path == null, "veraPDF corpus not present");
+
+        var before = VeraPdfReferenceValidator.Validate(path!);
+        Assert.SkipWhen(before is null or { Ran: false }, "verapdf could not judge the input");
+        Assert.SkipWhen(!before!.Passed, $"input does not conform ({before.Flavour}); nothing to conserve");
+
+        var output = Path.Combine(Path.GetTempPath(), $"excise-pdfa-op-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            operation(path!, output);
+            var after = VeraPdfReferenceValidator.Validate(output);
+            after.Should().NotBeNull();
+
+            if (expectConformanceLost)
+            {
+                // Encryption is forbidden in PDF/A: veraPDF either cannot validate
+                // the encrypted file at all (no verdict) or reports non-conformant.
+                // Both mean the claim was withdrawn; the failure to prevent is a
+                // still-PASSING verdict on an encrypted file.
+                (after!.Ran && after.Passed).Should().BeFalse(
+                    "PDF/A forbids encryption — an encrypted output must not still validate as PDF/A");
+            }
+            else
+            {
+                after!.Ran.Should().BeTrue($"verapdf must be able to judge what excise wrote: {after.Failure}");
+                after.Flavour.Should().Be(before.Flavour,
+                    "the pdfaid flavour must survive — a fall back to '1b' is #1056's " +
+                    "identification-lost signature");
+                after.Passed.Should().BeTrue(
+                    $"a valid PDF/A-{before.Flavour} must not be downgraded by this operation");
+            }
+        }
+        finally { try { File.Delete(output); } catch { /* best effort */ } }
     }
 
     private static string? Resolve(string rel)

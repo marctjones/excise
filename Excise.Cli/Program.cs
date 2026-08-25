@@ -999,6 +999,15 @@ partial class Program
             {
                 int pageCount = RunMerge(inputs, output.FullName, ignorePermissions);
                 Console.WriteLine($"Merged {inputs.Length} document(s), {pageCount} page(s) total");
+                // #1058: name the primary source's catalog entries that assembly
+                // does NOT conserve, so the loss is reported rather than silent.
+                using (var primary = PdfDocument.Open(inputs[0]))
+                {
+                    var dropped = PdfDocumentMerger.CatalogEntriesNotConserved(primary);
+                    if (dropped.Count > 0)
+                        Console.WriteLine($"  note: not conserved from the primary source's catalog: "
+                            + string.Join(", ", dropped.Select(d => "/" + d)));
+                }
                 Console.WriteLine($"Output: {output.FullName}");
             }
             catch (Exception ex)
@@ -1158,6 +1167,16 @@ partial class Program
                 Console.WriteLine($"Split into {written.Count} file(s)");
                 foreach (var path in written)
                     Console.WriteLine($"  {path}");
+                // #1059/#1058: name the source catalog entries not conserved into
+                // the split outputs (e.g. /StructTreeRoot — accessibility — or a
+                // /Dests that would dangle onto a removed page).
+                using (var src = PdfDocument.Open(input.FullName))
+                {
+                    var dropped = PdfDocumentMerger.CatalogEntriesNotConserved(src);
+                    if (dropped.Count > 0)
+                        Console.WriteLine($"  note: not conserved into the split outputs: "
+                            + string.Join(", ", dropped.Select(d => "/" + d)));
+                }
             }
             catch (Exception ex)
             {
