@@ -569,7 +569,8 @@
                                 IsVisible="{Binding IsTypewriterStyleInspectorVisible}">
                         <TextBlock Text="Size" VerticalAlignment="Center" FontSize="11"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <NumericUpDown Value="{Binding TypewriterFontSize}"
+                        <NumericUpDown x:Name="TypewriterFontSizeUpDown"
+                                       Value="{Binding TypewriterFontSize}"
                                        Minimum="4" Maximum="96" Increment="1"
                                        FormatString="0" Width="104"
                                        VerticalAlignment="Center"
@@ -577,7 +578,8 @@
                                        AutomationProperties.HelpText="Font size of the active type-over text box"
                                        ToolTip.Tip="Font size of the active text box"/>
 
-                        <ComboBox SelectedIndex="{Binding TypewriterAlignmentIndex}"
+                        <ComboBox x:Name="TypewriterAlignmentComboBox"
+                                  SelectedIndex="{Binding TypewriterAlignmentIndex}"
                                   MinWidth="92" VerticalAlignment="Center"
                                   AutomationProperties.Name="Typewriter Text Alignment"
                                   AutomationProperties.HelpText="Text alignment of the active type-over text box"
@@ -587,7 +589,8 @@
                             <ComboBoxItem Content="Right"/>
                         </ComboBox>
 
-                        <Button Classes="modern-button" Padding="8,6"
+                        <Button x:Name="TypewriterColorFlyoutButton"
+                                Classes="modern-button" Padding="8,6"
                                 VerticalAlignment="Center"
                                 AutomationProperties.Name="Typewriter Text Color"
                                 AutomationProperties.HelpText="Text colour of the active type-over text box"
@@ -729,7 +732,8 @@
                         <PathIcon Classes="toolbar-icon" Data="{StaticResource IconForm}"/>
                     </Button>
 
-                    <ComboBox SelectedIndex="0"
+                    <ComboBox x:Name="FormFieldTypeComboBox"
+                              SelectedIndex="0"
                               IsVisible="{Binding IsFormAuthoringMode}"
                               IsEnabled="{Binding IsDocumentLoaded}"
                               SelectionChanged="OnFormFieldTypeChanged"
