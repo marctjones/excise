@@ -37,23 +37,28 @@ internal static class SavedPdfLeakScanner
     {
         var hits = new List<string>();
 
+        // Search the ENCODED BYTES of the term, not a decoded string of the whole
+        // haystack. Decoding a >1GB stream to a string overflows
+        // Latin1Encoding.GetString (a real crash the benchmark hit on a large
+        // corpus file); a byte-level substring search is size-safe AND avoids
+        // three full-array allocations per scan. Ordinal string.Contains and a
+        // byte-exact IndexOf are equivalent for these fixed-encoding patterns.
+        var latin1Bytes = Encoding.Latin1.GetBytes(term);
+        var utf16Bytes = Encoding.BigEndianUnicode.GetBytes(term);
+        var utf8Bytes = Encoding.UTF8.GetBytes(term);
+
         void Scan(byte[] haystack, string where)
         {
-            var text = Encoding.Latin1.GetString(haystack);
-            if (text.Contains(term, StringComparison.Ordinal))
+            if (ContainsBytes(haystack, latin1Bytes))
                 hits.Add($"{where}: ASCII");
-
             // UTF-16BE is how a PDF text string carries non-Latin-1 content;
             // /Info, /Contents and outline titles all use it routinely.
-            var utf16 = Encoding.BigEndianUnicode.GetString(haystack);
-            if (utf16.Contains(term, StringComparison.Ordinal))
+            if (ContainsBytes(haystack, utf16Bytes))
                 hits.Add($"{where}: UTF-16BE");
-
             // UTF-8 is what an XMP /Metadata stream carries (§14.3.2), and it
             // differs from Latin-1 for exactly the non-ASCII terms these tests
             // exist for — Arabic, CJK, accented Latin.
-            var utf8 = Encoding.UTF8.GetString(haystack);
-            if (utf8.Contains(term, StringComparison.Ordinal))
+            if (ContainsBytes(haystack, utf8Bytes))
                 hits.Add($"{where}: UTF-8");
         }
 
@@ -164,6 +169,24 @@ internal static class SavedPdfLeakScanner
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Byte-exact substring search. Size-safe on multi-hundred-MB haystacks
+    /// where decoding to a string would overflow (see <see cref="FindTerm"/>).
+    /// An empty needle never matches — a term with no bytes is not a leak.
+    /// </summary>
+    private static bool ContainsBytes(byte[] haystack, byte[] needle)
+    {
+        if (needle.Length == 0) return false;
+        for (var i = 0; i <= haystack.Length - needle.Length; i++)
+        {
+            var ok = true;
+            for (var j = 0; j < needle.Length; j++)
+                if (haystack[i + j] != needle[j]) { ok = false; break; }
+            if (ok) return true;
+        }
+        return false;
     }
 
     private static int IndexOf(byte[] haystack, string needle, int from)
