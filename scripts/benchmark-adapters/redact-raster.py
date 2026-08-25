@@ -16,6 +16,15 @@ fidelity did you keep while getting Leak down" — the actual question.
 Rasterisation uses PyMuPDF purely as a renderer here; the redaction is the
 rasterise-everything policy, not PyMuPDF's redaction API (that is the pymupdf
 adapter).
+
+Re-embedded page images are JPEG-compressed, not raw RGB (#1152). A raw
+150-DPI Letter page is ~6 MB of samples; on the multi-hundred-page books in the
+corpus (business-success-with-open-source_P1.0.pdf = 455 pages, producingoss.pdf
+= 232 pages) that produced multi-GB output and overflowed the leak scanner.
+JPEG cuts each page to tens of KB. Lossy is safe here BY CONSTRUCTION: every
+hit is painted solid black in PIXEL space BEFORE the page is encoded, so the
+glyph pixels are already gone — JPEG cannot resurrect what was overwritten, and
+this baseline never carries a text layer either way.
 """
 import sys
 
@@ -25,6 +34,10 @@ except ImportError:                                   # older wheels
     import fitz as pymupdf
 
 DPI = 150
+# JPEG quality for the re-embedded page raster (#1152). 80 keeps the anchor a
+# faithful rasterised document while collapsing 6 MB/page of raw RGB to tens of
+# KB. The redaction is unaffected — the region is blacked out before encoding.
+JPEG_QUALITY = 80
 
 
 def main() -> int:
@@ -56,7 +69,11 @@ def main() -> int:
                 if not pr.is_empty:
                     pix.set_rect(pr, (0, 0, 0))
             newpage = out.new_page(width=page.rect.width, height=page.rect.height)
-            newpage.insert_image(page.rect, pixmap=pix)
+            # Re-embed as JPEG, not raw RGB (#1152): pass compressed image bytes
+            # via `stream=` instead of the uncompressed `pixmap=`. get_pixmap has
+            # no alpha here, so JPEG (which cannot carry alpha) is always valid.
+            jpeg = pix.tobytes("jpeg", jpg_quality=JPEG_QUALITY)
+            newpage.insert_image(page.rect, stream=jpeg)
         out.save(dst)
     except Exception as exc:                           # noqa: BLE001
         print(f"raster redaction failed: {type(exc).__name__}: {exc}", file=sys.stderr)
