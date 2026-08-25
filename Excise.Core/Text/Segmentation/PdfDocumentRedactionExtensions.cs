@@ -65,7 +65,10 @@ public static class PdfDocumentRedactionExtensions
     /// <param name="text">The text to redact.</param>
     /// <param name="caseSensitive">Whether matching is case-sensitive.</param>
     /// <param name="strategy">Strategy for selecting glyphs to remove when bounding boxes overlap.</param>
-    /// <param name="drawBlackRect">Whether to append a visual black rectangle overlay.</param>
+    /// <param name="drawBlackRect">Whether to append a visual covering rectangle overlay.</param>
+    /// <param name="boxColor">Fill color (RGB components 0..1) of the covering rectangle when
+    /// <paramref name="drawBlackRect"/> is true. Null (the default) draws black. The box is
+    /// cosmetic — glyph removal is unconditional (#1158).</param>
     /// <param name="includeHiddenLayers">Whether to include text in Optional Content Groups
     /// (OCGs) that are OFF by default. When true, this closes a security gap where content
     /// on hidden layers is invisible in the default view but fully extractable via other tools.
@@ -87,7 +90,8 @@ public static class PdfDocumentRedactionExtensions
         bool drawBlackRect = true,
         bool includeHiddenLayers = true,
         bool scrubDocumentCarriers = true,
-        bool closeWidth = false)   // #1145 — opt-in width-closing (destroys the residue channel)
+        bool closeWidth = false,   // #1145 — opt-in width-closing (destroys the residue channel)
+        (double R, double G, double B)? boxColor = null)   // #1158 — covering-box fill, RGB 0..1; null = black
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
@@ -221,7 +225,7 @@ public static class PdfDocumentRedactionExtensions
                     }
 
                     if (drawBlackRect)
-                        foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox);
+                        foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox, boxColor);
 
                     // #1101: count what this page's window shows, not the full
                     // shared canvas. Removal above already took every match.
@@ -396,12 +400,13 @@ public static class PdfDocumentRedactionExtensions
     /// <c>q 0 0 0 rg X Y W H re f Q</c> sequence. Used as a cosmetic
     /// overlay on top of structural glyph removal.
     /// </summary>
-    private static void AppendBlackRectangle(PdfPage page, PdfRectangle rect)
+    private static void AppendBlackRectangle(PdfPage page, PdfRectangle rect, (double R, double G, double B)? boxColor = null)
     {
+        var (r, g, b) = boxColor ?? (0.0, 0.0, 0.0);
         var content = page.GetContentStream();
         var ops = content.Operators.ToList();
         ops.Add(ContentOperator.SaveState());
-        ops.Add(ContentOperator.SetFillRgb(0, 0, 0));
+        ops.Add(ContentOperator.SetFillRgb(r, g, b));
         ops.Add(ContentOperator.Rectangle(
             rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom));
         ops.Add(ContentOperator.Fill());

@@ -1890,7 +1890,10 @@ namespace Excise.Core.Text.Segmentation
     }
     public static class PdfDocumentRedactionExtensions
     {
-        public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true, bool closeWidth = false) { }
+        public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true, bool closeWidth = false, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})] System.ValueTuple<double, double, double>? boxColor = default) { }
     }
     public static class PdfPageRedactionExtensions
     {
