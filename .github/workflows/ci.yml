@@ -7,6 +7,15 @@ on:
       - develop
   pull_request:
 
+# A new push to a branch/PR cancels its still-running CI run. Without this, a
+# burst of pushes stacks full 4-job runs that saturate the runner pool and crawl
+# for over an hour on contention (observed 2026-08-25 — four pushes in ~50 min
+# left every run's Excise.Core.Tests step "in_progress" for 90+ min, though it
+# passes locally in ~80s). Standard practice; only the newest run per ref runs.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   DOTNET_VERSION: '10.0.x'
   # ReactiveUI/Splat's author signing certificate was revoked upstream,
