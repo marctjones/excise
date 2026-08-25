@@ -68,12 +68,16 @@ fetch one source zip, keep only the bench-relevant subset, and drop the rest:
 | **GovDocs1** | `scripts/corpus.sh fetch govdocs1` | real .gov PDFs with extractable text, spread across distinct `/Producer`s and size-capped — redaction-*target* diversity (every producer lays glyphs out differently) plus real documents for the x-ray bad-redaction sweep. Public domain. |
 | **SafeDocs** | `scripts/corpus.sh fetch safedocs` | only the PDFs `qpdf --check` flags as malformed-but-openable — removal-path *robustness*, the #1039 class (a tolerated construct that leaks and destroys text at once). Clean PDFs are dropped; GovDocs1 covers clean-and-diverse. Common Crawl ToU. |
 
-**Two remain deferred to RC16**, each with a trigger rather than a date:
+**PDF/UA + Matterhorn shipped** (#1110): `scripts/corpus.sh fetch pdfua-matterhorn`
+extracts the PDF_UA-1/PDF_UA-2 trees from the veraPDF corpus (CC BY 4.0) — 428
+tagged PDFs, every one carrying `/StructTreeRoot`, `/ActualText` or `/Alt`, the
+#636 carriers plus the Matterhorn structure-tree edge cases.
+
+**One remains deferred to RC16**, with a trigger rather than a date:
 
 | corpus | issue | trigger |
 |---|---|---|
-| PDF/UA + Matterhorn | #1110 | a structure-tree leak we cannot reproduce on the #636 fixtures |
-| GWG Processing Steps | #1111 | a measured optional-content leak or collateral case |
+| GWG Processing Steps | #1111 | a measured optional-content leak or collateral case (and likely needs a GWG membership) |
 
 Deliberately skipped entirely: PDF/VT, 3D, HisDoc1B, the table-recognition
 sets. They test things excise does not claim to do.
