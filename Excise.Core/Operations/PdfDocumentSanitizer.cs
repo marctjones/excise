@@ -84,6 +84,7 @@ public static class PdfDocumentSanitizer
         changed |= ScrubStructTree(document, actionable, caseSensitive);       // #1151
         changed |= ScrubJavaScript(document, actionable, caseSensitive);       // #1151
         changed |= ScrubEmbeddedFiles(document, actionable, caseSensitive);    // #1151
+        changed |= ScrubActionUris(document, actionable, caseSensitive);       // #1168
         return changed;
     }
 
@@ -513,6 +514,98 @@ public static class PdfDocumentSanitizer
             stack.Push(action.GetOptional("Next"));
         }
 
+        return changed;
+    }
+
+    /// <summary>
+    /// #1168 — a URI action (§12.6.4.7) can restate a redacted term in its
+    /// <c>/URI</c> far from a page annotation's <c>/A</c>, which #1155 covered.
+    /// This reaches every OTHER action-dictionary location the spec allows one
+    /// in: catalog <c>/OpenAction</c> and <c>/AA</c> (§12.6), each page's
+    /// <c>/AA</c>, each annotation's <c>/A</c> and <c>/AA</c> (§12.6.3), each
+    /// AcroForm field's <c>/A</c> and <c>/AA</c> (walking <c>/Kids</c>), and each
+    /// outline item's <c>/A</c> (§12.3.3). Every hit routes through
+    /// <see cref="ScrubUriAction"/>, which already follows the <c>/Next</c> chain
+    /// and dedups — re-scrubbing the annotation <c>/A</c> that
+    /// <see cref="ScrubAnnotationContents"/> already handled is a harmless no-op
+    /// (the term is gone), so this owns the complete set without the two methods
+    /// having to agree on annotation enumeration.
+    /// </summary>
+    private static bool ScrubActionUris(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    {
+        var changed = false;
+        var catalog = document.Catalog;
+
+        // Catalog-level: /OpenAction (may instead be a destination array, which
+        // has no /URI — ScrubUriAction ignores it) and document /AA.
+        changed |= ScrubUriAction(document, catalog?.GetOptional("OpenAction"), terms, caseSensitive);
+        changed |= ScrubAdditionalActions(document, catalog?.GetOptional("AA"), terms, caseSensitive);
+
+        // Every page and its annotations.
+        for (int i = 1; i <= document.PageCount; i++)
+        {
+            var page = document.GetPage(i);
+            changed |= ScrubAdditionalActions(document, page.Dictionary.GetOptional("AA"), terms, caseSensitive);
+
+            if (document.Resolve(page.Dictionary.GetOptional("Annots") ?? PdfNull.Instance) is PdfArray annots)
+                foreach (var annotObj in annots)
+                    if (document.Resolve(annotObj) is PdfDictionary annot)
+                    {
+                        changed |= ScrubUriAction(document, annot.GetOptional("A"), terms, caseSensitive);
+                        changed |= ScrubAdditionalActions(document, annot.GetOptional("AA"), terms, caseSensitive);
+                    }
+        }
+
+        // AcroForm fields — a non-terminal field carries no widget on a page, so
+        // the annotation walk above does not reach it. Walk /Fields and /Kids.
+        if (document.Resolve(catalog?.GetOptional("AcroForm") ?? PdfNull.Instance) is PdfDictionary acro
+            && document.Resolve(acro.GetOptional("Fields") ?? PdfNull.Instance) is PdfArray fields)
+        {
+            var fieldStack = new Stack<PdfObject>();
+            foreach (var f in fields) fieldStack.Push(f);
+            var visitedFields = new HashSet<PdfDictionary>();
+            var guard = 0;
+            while (fieldStack.Count > 0 && guard++ < 100_000)
+            {
+                if (document.Resolve(fieldStack.Pop()) is not PdfDictionary field || !visitedFields.Add(field)) continue;
+                changed |= ScrubUriAction(document, field.GetOptional("A"), terms, caseSensitive);
+                changed |= ScrubAdditionalActions(document, field.GetOptional("AA"), terms, caseSensitive);
+                if (document.Resolve(field.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
+                    foreach (var k in kids) fieldStack.Push(k);
+            }
+        }
+
+        // Outline items — /A can be a URI action; ScrubOutlines only touches
+        // /Title. Walk the /First + /Next + /First(child) tree.
+        if (document.Resolve(catalog?.GetOptional("Outlines") ?? PdfNull.Instance) is PdfDictionary outlines)
+        {
+            var stack = new Stack<PdfObject>();
+            if (outlines.GetOptional("First") is { } first) stack.Push(first);
+            var visited = new HashSet<PdfDictionary>();
+            var guard = 0;
+            while (stack.Count > 0 && guard++ < 100_000)
+            {
+                if (document.Resolve(stack.Pop()) is not PdfDictionary item || !visited.Add(item)) continue;
+                changed |= ScrubUriAction(document, item.GetOptional("A"), terms, caseSensitive);
+                if (item.GetOptional("Next") is { } next) stack.Push(next);
+                if (item.GetOptional("First") is { } child) stack.Push(child);
+            }
+        }
+
+        return changed;
+    }
+
+    /// <summary>
+    /// #1168 — an additional-actions (<c>/AA</c>) dictionary (§12.6.3) maps
+    /// trigger names (<c>/E</c>, <c>/X</c>, <c>/WC</c>, …) to action dictionaries.
+    /// Scrub the URI of each entry's action (and its <c>/Next</c> chain).
+    /// </summary>
+    private static bool ScrubAdditionalActions(PdfDocument document, PdfObject? aaObj, IReadOnlyList<string> terms, bool caseSensitive)
+    {
+        if (document.Resolve(aaObj ?? PdfNull.Instance) is not PdfDictionary aa) return false;
+        var changed = false;
+        foreach (var key in aa.Keys)
+            changed |= ScrubUriAction(document, aa.GetOptional(key.Value), terms, caseSensitive);
         return changed;
     }
 
