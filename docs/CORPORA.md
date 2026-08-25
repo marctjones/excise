@@ -46,18 +46,33 @@ have.
 | **federal** | 11M | everyday federal forms, AcroForm-heavy |
 | **local-real-world** | 9M | long real documents |
 | **altona / ghent** | 576M | print/colour and PDF/X; rendering fidelity only |
+| **dlib-slovenia** | ~14M | dLib.si digitised scans with an invisible OCR text layer (render mode 3) — a redaction *leak carrier* for `HiddenTextDetector` / `audit`; Public Domain Mark only |
 
 ## What we should add, and why
 
 Chosen from the [PDF Association's index of 46 corpora](https://github.com/pdf-association/pdf-corpora)
 by what each would catch **for a redaction tool**, not by size or fame.
 
-**Two are earned now** — each maps to an open defect with no corpus behind it:
+**One is earned now** — it maps to an open defect with no corpus behind it:
 
 | corpus | issue | why it matters here |
 |---|---|---|
-| **Digital Library of Slovenia** | #1108 | invisible text (render mode 3) over scans — a redaction *leak carrier*, and `HiddenTextDetector` / `audit` currently have no corpus at all |
 | **iText regression suite** | #1109 | ~4,000 classified PDFs including a good encrypted set — #1048 and #1095 run against nine fixtures today |
+
+**Digital Library of Slovenia shipped** (#1108): `scripts/corpus.sh fetch
+dlib-slovenia` fetches a small CURATED seed of dLib.si documents — historical
+Slovenian print digitised as a page-image scan with an OCR'd text layer painted
+over it in text render mode 3 (invisible), the classic redaction leak carrier
+`HiddenTextDetector` / `audit` otherwise had no corpus for. Verified on the
+seeds: e.g. `DOC-04EH0WRK` carries 2 invisible `3 Tr` runs over 2 scan images;
+some seeds are image-only public-domain scans that exercise the OCR path
+instead, and the script records which is which per file. dLib serves each PDF
+from `/stream/<URN>/<UUID>/PDF` (session cookie + Referer required), and each
+item's rights are re-checked at fetch — **only Public Domain Mark items are
+downloaded** ([Rights.aspx?q=PDM](https://www.dlib.si/Rights.aspx?q=PDM): free
+of copyright, reproduce/modify/distribute for any purpose, no permission
+needed); a non-PDM seed is refused and trips the run. Not a mirror — dLib has
+millions of items; extend `DLIB_SEEDS` in the script to grow the corpus.
 
 **Two shipped** (#1112/#1113) as CURATED subsets, not mirrors — each corpus is
 bulk (GovDocs1 ~1M mixed files, SafeDocs ~8M web PDFs), so the download scripts

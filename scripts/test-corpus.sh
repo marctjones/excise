@@ -49,7 +49,7 @@ fi
 
 # 2. Unfulfilled requests are never exit 0.
 expect_exit 1 "unknown corpus fails"            /bin/bash "$CORPUS" fetch definitely-not-a-corpus
-expect_exit 3 "planned corpus does not succeed" /bin/bash "$CORPUS" fetch dlib-slovenia
+expect_exit 3 "planned corpus does not succeed" /bin/bash "$CORPUS" fetch gwg-processing-steps
 expect_exit 2 "fetch with no arguments fails"   /bin/bash "$CORPUS" fetch
 expect_exit 2 "unknown tier fails"              /bin/bash "$CORPUS" fetch --tier nonsense
 
