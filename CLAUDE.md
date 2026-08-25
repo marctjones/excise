@@ -1098,10 +1098,13 @@ This redaction implementation:
 - ✅ Removes content from PDF structure (not just visual covering)
 - ✅ Handles text, graphics, and images
 - ✅ Scrubs document-level text carriers by default — `/Info`, XMP `/Metadata`,
-  `/Outlines` bookmark titles, annotation `/Contents` (#608,
-  `PdfDocumentSanitizer`, `SanitizeMetadata = true`); `RemoveAllMetadata`
-  strips them wholesale
-- ✅ Scrubs the structure tree (`/ActualText`, `/Alt`) (#636)
+  `/Outlines` bookmark titles, annotation `/Contents`, and link-action `/A /URI`
+  (#608 + #1155, `PdfDocumentSanitizer`, `SanitizeMetadata = true`; indirect
+  string carriers are resolved before reading — the #1155 gap); `RemoveAllMetadata`
+  strips them wholesale. ⚠️ #1168 tracks the remaining URI-action locations
+  (outline `/A`, catalog `/OpenAction`, `/AA`); #1169 tracks the per-carrier
+  policy UX (stripping a term from a known URL can REVEAL it).
+- ✅ Scrubs the structure tree (`/ActualText`, `/Alt`, `/E`) (#636 + #1155)
 - ✅ Scrubs embedded files/attachments **by default** in the GUI redaction-copy
   flow — `RedactedCopySafetyService` (`ScrubAttachments = true`) →
   `PdfDocument.ScrubMetadata(scrubAttachments: true)` /

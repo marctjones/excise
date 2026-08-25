@@ -281,9 +281,11 @@ public static class PdfDocumentRedactionExtensions
         };
     }
 
-    /// <summary>The document-level carriers #608 was filed for.</summary>
+    /// <summary>The document-level carriers the term is scrubbed from and
+    /// reported on: #608's set (/Info, XMP, outline titles, annotation
+    /// /Contents) plus link-action URIs (#1155).</summary>
     private static readonly string[] DocumentCarriers =
-        { "/Info", "XMP /Metadata", "/Outlines titles", "annotation /Contents" };
+        { "/Info", "XMP /Metadata", "/Outlines titles", "annotation /Contents", "link /A /URI" };
 
     /// <summary>
     /// Occurrences of <paramref name="text"/> still findable on the page AFTER
