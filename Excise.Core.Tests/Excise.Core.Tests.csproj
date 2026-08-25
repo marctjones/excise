@@ -54,6 +54,11 @@
          depending on a system-installed font: the prior tests hard-coded
          a Linux-only path and silently skipped on macOS/Windows. -->
     <EmbeddedResource Include="Fixtures/Fonts/DejaVuSans.ttf" />
+    <!-- #1048: a V=4/R=4/AESV2 PDF whose cross-reference data is an xref STREAM.
+         qpdf-generated (empty password, AES, object streams), the exact shape
+         that crashed redaction on Save. Checked in so the pin runs without the
+         gitignored corpus or a qpdf on the test machine. -->
+    <EmbeddedResource Include="Fixtures/EncryptedV4AesXrefStream.pdf" />
 
     <!-- Real CFF-flavored OpenType ('OTTO') font data for the CFF-OpenType
          embedding path (TrueTypeFontFile.IsCff, PdfTrueTypeFont's FontFile3

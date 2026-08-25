@@ -1196,7 +1196,7 @@ public class PdfDocument : IDisposable
             // same per-object key — walk the dict and decrypt them in place.
             // The /Encrypt dict itself is exempt (its strings are read with
             // a one-shot lexer in Open() before we have a handler).
-            if (_securityHandler != null)
+            if (_securityHandler != null && !IsExemptFromEncryption(obj))
             {
                 int objNum = indirectObj.ObjectNumber;
                 int gen = indirectObj.Generation;
@@ -1938,6 +1938,28 @@ public class PdfDocument : IDisposable
     /// that keystream regardless of how deeply they're nested in dicts
     /// or arrays.
     /// </summary>
+    /// <summary>
+    /// §7.5.8.2 / §7.6.2: streams that are NEVER encrypted, so the security
+    /// handler must skip them entirely — body AND dictionary strings. Applying
+    /// AES-CBC to their unencrypted bytes throws "input data is not a complete
+    /// block" (#1048, hit on Save's <see cref="GetAllObjects"/> which is the
+    /// first path to touch the xref-stream object). Skipping the string pass
+    /// too is load-bearing: an xref stream's dictionary IS the trailer and
+    /// carries /ID, and that ID feeds R=4 key derivation — "decrypting" it
+    /// would silently write an undecryptable file, worse than the crash.
+    ///   • cross-reference streams (/Type /XRef) — always exempt.
+    ///   • the /Metadata stream when /EncryptMetadata is explicitly false
+    ///     (absent means true, i.e. still encrypted — do NOT exempt then).
+    /// </summary>
+    private bool IsExemptFromEncryption(PdfObject obj)
+    {
+        if (obj is not PdfStream stream) return false;
+        var type = stream.GetNameOrNull("Type");
+        if (type == "XRef") return true;
+        if (type == "Metadata" && _securityHandler is { EncryptMetadata: false }) return true;
+        return false;
+    }
+
     private void DecryptStringsInPlace(PdfObject root, int objNum, int gen)
     {
         if (_securityHandler == null) return;
