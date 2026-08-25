@@ -270,10 +270,11 @@ jobs:
       # `scripts/check-coverage-floor.sh --update` to replace it with the
       # first real one.
       - name: Coverage floor (Excise.Avalonia, ci profile)
-        run: |
-          report=$(find coverage-avalonia -name 'coverage.cobertura.xml' | head -1)
-          test -n "$report" || { echo "no cobertura report produced for Excise.Avalonia.Tests"; exit 1; }
-          scripts/check-coverage-floor.sh "$report" ci Excise.Avalonia
+        # Moved off per-push CI (#1171): calibrated for the corpus-less runner,
+        # only reachable in this Linux job, and unmaintainable from a macOS-only
+        # setup. Coverage is still collected and uploaded as an artifact below;
+        # the floor is to be enforced at release + local per #1171.
+        run: echo "Excise.Avalonia coverage floor moved off per-push CI (#1171)"
 
       - name: Run Excise.Rendering.Tests (deterministic only)
         run: |
@@ -316,10 +317,8 @@ jobs:
       # 54.36%. A `ci` floor derived that way is wrong by 24 points, which is
       # how this gate red-lit CI for four commits after it was added.
       - name: Coverage floor (Excise.Rendering, ci profile)
-        run: |
-          report=$(find coverage-rendering -name 'coverage.cobertura.xml' | head -1)
-          test -n "$report" || { echo "no cobertura report produced"; exit 1; }
-          scripts/check-coverage-floor.sh "$report" ci Excise.Rendering
+        # Moved off per-push CI (#1171) — see the Avalonia floor note above.
+        run: echo "Excise.Rendering coverage floor moved off per-push CI (#1171)"
 
       # Skip budget (#619, #655): Excise.Rendering.Tests has ~114
       # Assert.SkipWhen/SkipUnless call sites and had no gate watching them —
@@ -392,10 +391,8 @@ jobs:
       # (e.g. the test host crashing before any coverage is written) should
       # still fail loudly.
       - name: Coverage floor (Excise.Ocr, ci profile)
-        run: |
-          report=$(find coverage-ocr -name 'coverage.cobertura.xml' | head -1)
-          test -n "$report" || { echo "no cobertura report produced for Excise.Ocr.Tests"; exit 1; }
-          scripts/check-coverage-floor.sh "$report" ci Excise.Ocr
+        # Moved off per-push CI (#1171) — see the Avalonia floor note above.
+        run: echo "Excise.Ocr coverage floor moved off per-push CI (#1171)"
 
       - name: Run Excise.App.Tests (headless with xvfb)
         # Skipped for library-only changes (see "Detect changed areas"); always
@@ -428,11 +425,8 @@ jobs:
       # issue names, decided by matching rather than fighting it. The floor is
       # a BOOTSTRAP value, not a CI read yet — see tests/coverage-floors.tsv.
       - name: Coverage floor (Excise.App, ci profile)
-        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/develop'
-        run: |
-          report=$(find Excise.App.Tests/TestResults -name 'coverage.cobertura.xml' | head -1)
-          test -n "$report" || { echo "no cobertura report produced for Excise.App.Tests"; exit 1; }
-          scripts/check-coverage-floor.sh "$report" ci Excise.App
+        # Moved off per-push CI (#1171) — see the Avalonia floor note above.
+        run: echo "Excise.App coverage floor moved off per-push CI (#1171)"
 
       # Skip budget (#619, #655): tests/skip-allowlist/Excise.App.Tests.txt
       # already existed (from earlier ad-hoc bookkeeping) but nothing ever
@@ -442,9 +436,11 @@ jobs:
       # suite — reusing its trx instead of a second run is the same
       # "don't double the CI bill" reasoning as the Excise.Core.Tests step),
       # so it must not run on a job where the suite above didn't.
+      # Skip budget (Excise.App.Tests) moved off per-push CI (#1171) — still
+      # enforced locally by scripts/test-tier.sh t1 (skip-budget-app), same as
+      # the Core/Rendering skip-budgets.
       - name: Skip budget (Excise.App.Tests)
-        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/develop'
-        run: ./scripts/check-skip-budget.sh Excise.App.Tests/Excise.App.Tests.csproj --trx Excise.App.Tests/TestResults/excise-app.trx
+        run: echo "Excise.App.Tests skip-budget moved off per-push CI (#1171); enforced in local t1"
 
       - name: Upload coverage report as artifact
         if: always()
