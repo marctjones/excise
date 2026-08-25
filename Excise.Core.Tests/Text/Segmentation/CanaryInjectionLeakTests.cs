@@ -52,6 +52,11 @@ public class CanaryInjectionLeakTests
         OutlineTitle,       // #608
         OutlineTitleIndirect, // /Title stored as an indirect string object — #1155
         LinkUri,            // link annotation /A /URI — #1155
+        OpenActionUri,      // catalog /OpenAction /URI — #1168
+        CatalogAaUri,       // catalog /AA /WC /URI — #1168
+        AnnotAaUri,         // annotation /AA /Bl /URI — #1168
+        FieldActionUri,     // AcroForm field /A /URI — #1168
+        OutlineActionUri,   // outline item /A /URI (not /Title) — #1168
         EmbeddedFile,       // never tested before #1115
         JavaScript,         // never tested before #1115
     }
@@ -86,6 +91,11 @@ public class CanaryInjectionLeakTests
     [InlineData(Carrier.OutlineTitle)]
     [InlineData(Carrier.OutlineTitleIndirect)]
     [InlineData(Carrier.LinkUri)]
+    [InlineData(Carrier.OpenActionUri)]
+    [InlineData(Carrier.CatalogAaUri)]
+    [InlineData(Carrier.AnnotAaUri)]
+    [InlineData(Carrier.FieldActionUri)]
+    [InlineData(Carrier.OutlineActionUri)]
     [InlineData(Carrier.EmbeddedFile)]
     [InlineData(Carrier.JavaScript)]
     public void RedactingTheCanary_RemovesItFromEveryCarrier(Carrier carrier)
@@ -299,6 +309,48 @@ public class CanaryInjectionLeakTests
                 pageExtras.Append($" /Annots [{an} 0 R]");
                 extraObjects.Add($"{an} 0 obj\n<< /Type /Annot /Subtype /Link /Rect [72 700 200 720] " +
                     $"/A << /S /URI /URI (https://example.com/{Canary}/page) >> >>\nendobj\n");
+                break;
+            }
+            case Carrier.OpenActionUri:
+            {
+                // #1168: the document-open action (§12.6) can be a URI action.
+                catalogExtras.Append($" /OpenAction << /S /URI /URI (https://example.com/{Canary}/open) >>");
+                break;
+            }
+            case Carrier.CatalogAaUri:
+            {
+                // #1168: catalog /AA (§12.6.3) — /WC (will-close) URI action.
+                catalogExtras.Append($" /AA << /WC << /S /URI /URI (https://example.com/{Canary}/wc) >> >>");
+                break;
+            }
+            case Carrier.AnnotAaUri:
+            {
+                // #1168: a widget/link annotation's additional actions — /Bl on
+                // blur — carry a URI action reached by neither /Contents nor /A.
+                int an = Reserve();
+                pageExtras.Append($" /Annots [{an} 0 R]");
+                extraObjects.Add($"{an} 0 obj\n<< /Type /Annot /Subtype /Link /Rect [72 700 200 720] " +
+                    $"/AA << /Bl << /S /URI /URI (https://example.com/{Canary}/bl) >> >> >>\nendobj\n");
+                break;
+            }
+            case Carrier.FieldActionUri:
+            {
+                // #1168: an AcroForm field's /A URI action.
+                int fld = Reserve();
+                catalogExtras.Append($" /AcroForm << /Fields [{fld} 0 R] >>");
+                extraObjects.Add($"{fld} 0 obj\n<< /FT /Btn /T (btn1) " +
+                    $"/A << /S /URI /URI (https://example.com/{Canary}/field) >> >>\nendobj\n");
+                break;
+            }
+            case Carrier.OutlineActionUri:
+            {
+                // #1168: a bookmark whose action is a URI (/A /S /URI), distinct
+                // from the /Title carrier ScrubOutlines already handles.
+                int ol = Reserve(); int item = Reserve();
+                catalogExtras.Append($" /Outlines {ol} 0 R");
+                extraObjects.Add($"{ol} 0 obj\n<< /Type /Outlines /First {item} 0 R /Last {item} 0 R /Count 1 >>\nendobj\n");
+                extraObjects.Add($"{item} 0 obj\n<< /Title (Bookmark) /Parent {ol} 0 R " +
+                    $"/A << /S /URI /URI (https://example.com/{Canary}/outline) >> >>\nendobj\n");
                 break;
             }
             case Carrier.EmbeddedFile:
