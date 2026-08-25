@@ -24,8 +24,10 @@ namespace Excise.Core.Security;
 /// PDF 2.0 (R=6) is materially different from R=2/3/4: 48-byte /U /O,
 /// new /UE /OE entries holding the encrypted file key, and the chained
 /// SHA-256/384/512 hash from Algorithm 2.B replacing the old MD5-50x
-/// loop. R=5 (an Adobe Extension Level 3 transitional spec) is buggy
-/// and not implemented.
+/// loop. R=5 (an Adobe Extension Level 3 transitional spec, AES-256 as
+/// Acrobat 9 shipped it before ISO 32000-2 settled on R=6) shares that
+/// whole flow but uses a single SHA-256 in place of Algorithm 2.B; it is
+/// supported for decryption and re-encrypts to R=6 (#1128).
 /// </summary>
 public sealed class PdfStandardSecurityHandler
 {
@@ -439,19 +441,20 @@ public sealed class PdfStandardSecurityHandler
     }
 
     /// <summary>
-    /// PDF 2.0 (V=5 R=6) handler: Algorithm 11 / 12 password validation
-    /// using the SHA-256-based chained hash (Algorithm 2.B), then AES-256
-    /// decryption of /UE to recover the file encryption key. Per spec
-    /// §7.6.3.1, V=5 uses the file key directly as the AES-256 cipher
-    /// key — no Algorithm 1 per-object derivation.
+    /// V=5 handler (R=5 and R=6): Algorithm 11 / 12 password validation via
+    /// <see cref="ComputeR5R6Hash"/> — Algorithm 2.B (iterated) for R=6, a
+    /// single SHA-256 for R=5 — then AES-256 decryption of /UE to recover the
+    /// file encryption key. Per spec §7.6.3.1, V=5 uses the file key directly
+    /// as the AES-256 cipher key — no Algorithm 1 per-object derivation.
     /// </summary>
     private static PdfStandardSecurityHandler BuildR6(PdfDictionary encryptDict, byte[] userPassword)
     {
         int r = encryptDict.GetInt("R");
-        if (r != 6)
+        if (r != 5 && r != 6)
             throw new PdfEncryptionNotSupportedException(
-                $"V=5 with R={r} is not supported. Only R=6 (PDF 2.0) is implemented; " +
-                "R=5 was a transitional Adobe extension and is not standards-compliant.");
+                $"V=5 with R={r} is not supported. Only R=5 (transitional Adobe " +
+                "Extension Level 3, AES-256 as Acrobat 9 shipped it) and R=6 (PDF 2.0) " +
+                "are implemented.");
 
         var u = GetByteString(encryptDict, "U", 48);
         var o = GetByteString(encryptDict, "O", 48);
@@ -464,7 +467,7 @@ public sealed class PdfStandardSecurityHandler
         // U[40..48] = key salt
         var validationSalt = new byte[8];
         Array.Copy(u, 32, validationSalt, 0, 8);
-        var userValidation = ComputeR6Hash(userPassword, validationSalt, Array.Empty<byte>());
+        var userValidation = ComputeR5R6Hash(userPassword, validationSalt, Array.Empty<byte>(), r);
         if (!ConstantTimeEquals(userValidation, 0, u, 0, 32))
         {
             // Algorithm 12: try the owner password (rare for empty-pwd files).
@@ -478,7 +481,7 @@ public sealed class PdfStandardSecurityHandler
         // decrypt /UE to get the file encryption key.
         var keySalt = new byte[8];
         Array.Copy(u, 40, keySalt, 0, 8);
-        var intermediateKey = ComputeR6Hash(userPassword, keySalt, Array.Empty<byte>());
+        var intermediateKey = ComputeR5R6Hash(userPassword, keySalt, Array.Empty<byte>(), r);
 
         var fileKey = AesCbcDecryptNoPadZeroIv(intermediateKey, ue);
         if (fileKey.Length != 32)
@@ -487,8 +490,22 @@ public sealed class PdfStandardSecurityHandler
 
         bool encryptMetadata = !encryptDict.ContainsKey("EncryptMetadata") ||
                                encryptDict.GetBool("EncryptMetadata");
-        return new PdfStandardSecurityHandler(5, 6, 32, fileKey, usesAes: true, encryptMetadata);
+        return new PdfStandardSecurityHandler(5, r, 32, fileKey, usesAes: true, encryptMetadata);
     }
+
+    /// <summary>
+    /// The V=5 password/key hash, dispatched by revision. R=6 uses the
+    /// iterated Algorithm 2.B (<see cref="ComputeR6Hash"/>); R=5 — the Adobe
+    /// Extension Level 3 transitional spec, AES-256 as Acrobat 9 shipped it
+    /// (2008–2010) before ISO 32000-2 settled on R=6 — uses a single SHA-256
+    /// of (password ‖ salt ‖ userKey). The surrounding Algorithm 11/12 flow
+    /// (48-byte /U /O, /UE→file-key, direct file key) is identical for both,
+    /// so only the hash differs. (#1128)
+    /// </summary>
+    private static byte[] ComputeR5R6Hash(byte[] password, byte[] salt, byte[] userKey, int revision)
+        => revision == 5
+            ? SHA256.HashData(ConcatBytes(password, salt, userKey))
+            : ComputeR6Hash(password, salt, userKey);
 
     /// <summary>
     /// Algorithm 2.B (PDF 2.0 §7.6.4.3.3): chained SHA-256/384/512 +

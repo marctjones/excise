@@ -110,16 +110,12 @@ public class EncryptedRedactionOutputIntegrityTests
         // #1100's two entries were DELETED here once the standard-14 metrics
         // landed — the reverse check demanded it, which is the whole reason it
         // exists: a fixed defect must not keep its document out of the gate.
-        ["PdfEncryptingTest__cmp_encryptWithPasswordAes256.pdf"] =
-            "#1128 — V=5 R=5, AES-256 as Acrobat 9 shipped it before ISO 32000-2 settled " +
-            "on R=6. excise REFUSES it cleanly with an accurate message rather than " +
-            "producing a file that looks redacted and is not, which is the right " +
-            "behaviour for an unsupported revision — but the document cannot be " +
-            "redacted at all. The other four algorithms in this fixture set pass.",
-        ["encrypted.pdf"] =
-            "#1048 — CryptographicException 'input data is not a complete block' from " +
-            "AesCbcDecrypt while redacting. This gate is what first reproduced it outside " +
-            "a hand-written fixture.",
+        // #1128 (V=5 R=5 AES-256, Acrobat 9 transitional) was DELETED here once
+        // R=5 decryption landed — the reverse check demanded it. R=5 now opens,
+        // redacts, and re-encrypts to R=6 (the standards-compliant successor).
+        // #1048 (encrypted.pdf — 'input data is not a complete block' from
+        // AesCbcDecrypt on the exempt xref stream) was DELETED here once the
+        // encryption-exemption fix landed; the reverse check demanded it too.
     };
 
     [Theory]
