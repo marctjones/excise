@@ -241,6 +241,7 @@ run_t0() {
     # corpus destination must be gitignored. It caught one on its first run.
     run_step "corpus-registry" scripts/corpus.sh verify
     run_step "corpus-selftest" scripts/test-corpus.sh
+    run_step "bench-tiers-verify" scripts/verify-bench-tiers.sh
     run_step "font-width-sync" scripts/check-font-width-sync.sh
     # #940: prove the Roslyn reachability pass reports a dead root and its
     # dead leaf in one closure, without paying the whole-solution cost in t0.
