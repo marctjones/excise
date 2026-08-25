@@ -715,21 +715,19 @@ public sealed class RedactionBenchmarkRunner
         if (!GhostscriptReferenceRenderer.IsAvailable) return (-1, -1);
         try
         {
-            PdfRectangle region;
+            IReadOnlyList<PdfRectangle> regions;
             double pageHeight;
             using (var doc = PdfDocument.Open(path))
             {
                 if (doc.PageCount < 1) return (-1, -1);
                 var page = doc.GetPage(1);
                 pageHeight = page.Height;
-                var box = FirstMatchBoxOnPage1(page, term);
-                if (box == null) return (-1, -1);   // term is not on page 1
-                region = box.Value;
+                regions = AllMatchBoxesOnPage1(page, term);
+                if (regions.Count == 0) return (-1, -1);   // term is not on page 1
             }
 
             using var before = GhostscriptReferenceRenderer.RenderPage(path, 1, dpi: 150);
             if (before == null) return (-1, -1);
-            var inkBefore = InkFractionIn(before, region, pageHeight);
 
             var tmp = Path.Combine(Path.GetTempPath(), $"excise-ink-{Guid.NewGuid():N}.pdf");
             try
@@ -740,8 +738,20 @@ public sealed class RedactionBenchmarkRunner
                     doc.Save(tmp);
                 }
                 using var after = GhostscriptReferenceRenderer.RenderPage(tmp, 1, dpi: 150);
-                if (after == null) return (inkBefore, -1);
-                return (inkBefore, InkFractionIn(after, region, pageHeight));
+                // Report the WORST occurrence: the region left with the most ink
+                // after removal. Residue on any occurrence is residue — sampling
+                // only the first would miss a glyph left standing further down.
+                var worstBefore = 0.0; var worstAfter = 0.0;
+                foreach (var region in regions)
+                {
+                    var a = after == null ? -1 : InkFractionIn(after, region, pageHeight);
+                    if (a > worstAfter) { worstAfter = a; worstBefore = InkFractionIn(before, region, pageHeight); }
+                }
+                if (after == null) return (InkFractionIn(before, regions[0], pageHeight), -1);
+                // All occurrences cleanly removed ⇒ worstAfter stayed 0; still
+                // report a representative before so the pair is meaningful.
+                if (worstBefore == 0.0) worstBefore = InkFractionIn(before, regions[0], pageHeight);
+                return (worstBefore, worstAfter);
             }
             finally { try { File.Delete(tmp); } catch { /* best effort */ } }
         }
@@ -913,39 +923,12 @@ public sealed class RedactionBenchmarkRunner
     }
 
     /// <summary>
-    /// The union rectangle of the first occurrence of <paramref name="term"/> on
-    /// page 1, or null if it is not there. Lines by baseline, ordered by x — the
-    /// same grouping the residue engine uses — so a term split across a TJ array
-    /// still unions to one box.
-    /// </summary>
-    private static PdfRectangle? FirstMatchBoxOnPage1(PdfPage page, string term)
-    {
-        foreach (var line in page.Letters
-                     .GroupBy(l => Math.Round(l.GlyphRectangle.Bottom, 0))
-                     .OrderByDescending(g => g.Key))
-        {
-            var ordered = line.OrderBy(l => l.GlyphRectangle.Left).ToList();
-            var text = string.Concat(ordered.Select(l => l.Value));
-            var idx = text.IndexOf(term, StringComparison.OrdinalIgnoreCase);
-            if (idx < 0) continue;
-
-            var run = ordered.Skip(idx).Take(term.Length).ToList();
-            if (run.Count == 0) continue;
-            var left = run.Min(l => l.GlyphRectangle.Left);
-            var right = run.Max(l => l.GlyphRectangle.Right);
-            var bottom = run.Min(l => l.GlyphRectangle.Bottom);
-            var top = run.Max(l => l.GlyphRectangle.Top);
-            return new PdfRectangle(left, bottom, right, top);
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// EVERY occurrence of <paramref name="term"/> on page 1, not just the first.
-    /// The render-fidelity axis must mask them all: a term redacted in N places
-    /// leaves N covering boxes, and masking only one makes the other N-1 read as
-    /// surviving-content damage (the false 4.8% on a 41×-"COVID" page). Same
-    /// line-by-baseline grouping as <see cref="FirstMatchBoxOnPage1"/>.
+    /// EVERY occurrence of <paramref name="term"/> on page 1. All three render
+    /// axes mask/scan them all: a term redacted in N places leaves N covering
+    /// boxes, and masking only one makes the other N-1 read as surviving-content
+    /// damage (the false 4.8% on a 41×-"COVID" page). Lines by baseline, ordered
+    /// by x — the same grouping the residue engine uses — so a term split across
+    /// a TJ array still unions to one box.
     /// </summary>
     private static IReadOnlyList<PdfRectangle> AllMatchBoxesOnPage1(PdfPage page, string term)
     {
