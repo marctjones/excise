@@ -62,13 +62,12 @@ public class CanaryInjectionLeakTests
     // enforced below: a listed carrier that has become clean FAILS until its
     // entry is deleted, so the checklist can never drift back to claiming
     // coverage it lost. Each MUST carry an issue number. All four are #1151.
-    private static readonly Dictionary<Carrier, string> KnownLeaks = new()
-    {
-        [Carrier.StructActualText] = "#1151",  // #636 scrubber not wired into ScrubTerms
-        [Carrier.AcroFormValue]    = "#1151",  // /V scrubbed only by the area path (#1038)
-        [Carrier.EmbeddedFile]     = "#1151",  // attachments untouched by RedactText (cf. #467)
-        [Carrier.JavaScript]       = "#1151",  // JS action bodies never scrubbed
-    };
+    // #1151 CLOSED — all four carriers the #1115 checklist found are now scrubbed
+    // by ScrubTerms and stay clean, verified here: StructActualText
+    // (ScrubStructTree), AcroFormValue (/V,/DV), JavaScript (ScrubJavaScript),
+    // EmbeddedFile (ScrubEmbeddedFiles removes the matching attachment). An entry
+    // reappearing here is a regression; the checklist enforces both directions.
+    private static readonly Dictionary<Carrier, string> KnownLeaks = new();
 
     [Theory]
     [InlineData(Carrier.PageContent)]
@@ -133,6 +132,47 @@ public class CanaryInjectionLeakTests
         hits.Should().BeEmpty(
             $"redacting the canary must remove it from the {carrier} carrier — a survival " +
             "here is a definite leak (the token cannot occur incidentally)");
+    }
+
+    [Fact]
+    public void EmbeddedFileScrub_RemovesTheAttachmentWithTheTerm_KeepsUnrelatedOnes()
+    {
+        // #1151 — selective, not wholesale: an attachment containing the term is
+        // removed; an UNRELATED attachment must survive (over-removal is
+        // collateral). Two attachments, one carries the canary.
+        var content = "BT /F1 14 Tf 72 700 Td (Body text) Tj ET\n";
+        var body = Encoding.Latin1.GetBytes(content);
+        var secret = $"note: {Canary}\n";
+        var keep = "unrelated attachment content\n";
+        var pdf = Encoding.Latin1.GetBytes(
+            "%PDF-1.7\n" +
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R /Names << /EmbeddedFiles 6 0 R >> >>\nendobj\n" +
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n" +
+            $"4 0 obj\n<< /Length {body.Length} >>\nstream\n{content}endstream\nendobj\n" +
+            "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n" +
+            "6 0 obj\n<< /Names [(secret.txt) 7 0 R (keep.txt) 8 0 R] >>\nendobj\n" +
+            "7 0 obj\n<< /Type /Filespec /F (secret.txt) /EF << /F 9 0 R >> >>\nendobj\n" +
+            "8 0 obj\n<< /Type /Filespec /F (keep.txt) /EF << /F 10 0 R >> >>\nendobj\n" +
+            $"9 0 obj\n<< /Type /EmbeddedFile /Length {secret.Length} >>\nstream\n{secret}endstream\nendobj\n" +
+            $"10 0 obj\n<< /Type /EmbeddedFile /Length {keep.Length} >>\nstream\n{keep}endstream\nendobj\n" +
+            "trailer\n<< /Root 1 0 R /Size 11 >>\n%%EOF\n");
+
+        byte[] saved;
+        using (var doc = PdfDocument.Open(pdf))
+        {
+            doc.RedactText(Canary);
+            using var ms = new MemoryStream();
+            doc.Save(ms);
+            saved = ms.ToArray();
+        }
+
+        SavedPdfLeakScanner.FindTerm(saved, Canary).Should().BeEmpty(
+            "the attachment carrying the term must be removed");
+        using var re = PdfDocument.Open(saved);
+        re.GetEmbeddedFiles().Should().ContainSingle(f => f.FileName == "keep.txt",
+            "the unrelated attachment must survive — removal is selective, not wholesale");
     }
 
     // ── fixture assembly ────────────────────────────────────────────────────
