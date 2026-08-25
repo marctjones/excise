@@ -50,6 +50,8 @@ public class CanaryInjectionLeakTests
         XmpCatalog,         // catalog /Metadata — #608
         XmpPage,            // page /Metadata — #1129 (fixed this session)
         OutlineTitle,       // #608
+        OutlineTitleIndirect, // /Title stored as an indirect string object — #1155
+        LinkUri,            // link annotation /A /URI — #1155
         EmbeddedFile,       // never tested before #1115
         JavaScript,         // never tested before #1115
     }
@@ -82,6 +84,8 @@ public class CanaryInjectionLeakTests
     [InlineData(Carrier.XmpCatalog)]
     [InlineData(Carrier.XmpPage)]
     [InlineData(Carrier.OutlineTitle)]
+    [InlineData(Carrier.OutlineTitleIndirect)]
+    [InlineData(Carrier.LinkUri)]
     [InlineData(Carrier.EmbeddedFile)]
     [InlineData(Carrier.JavaScript)]
     public void RedactingTheCanary_RemovesItFromEveryCarrier(Carrier carrier)
@@ -268,6 +272,33 @@ public class CanaryInjectionLeakTests
                 catalogExtras.Append($" /Outlines {ol} 0 R");
                 extraObjects.Add($"{ol} 0 obj\n<< /Type /Outlines /First {item} 0 R /Last {item} 0 R /Count 1 >>\nendobj\n");
                 extraObjects.Add($"{item} 0 obj\n<< /Title ({Canary}) /Parent {ol} 0 R >>\nendobj\n");
+                break;
+            }
+            case Carrier.OutlineTitleIndirect:
+            {
+                // #1155: the corpus (foss-primer) stores every bookmark title as
+                // an INDIRECT string object — /Title N 0 R, not /Title (literal).
+                // GetStringOrNull returns null on that shape, so ScrubOutlines
+                // walked past the carrier while the direct-literal OutlineTitle
+                // fixture above stayed green. This is the fixture that reproduces
+                // the leak the suite missed.
+                int ol = Reserve(); int item = Reserve(); int titleStr = Reserve();
+                catalogExtras.Append($" /Outlines {ol} 0 R");
+                extraObjects.Add($"{ol} 0 obj\n<< /Type /Outlines /First {item} 0 R /Last {item} 0 R /Count 1 >>\nendobj\n");
+                extraObjects.Add($"{item} 0 obj\n<< /Title {titleStr} 0 R /Parent {ol} 0 R >>\nendobj\n");
+                extraObjects.Add($"{titleStr} 0 obj\n({Canary})\nendobj\n");
+                break;
+            }
+            case Carrier.LinkUri:
+            {
+                // #1155: irs-1040-instructions restated the redacted term in a
+                // link annotation's URI action (/A /S /URI /URI (…term…)). The
+                // annotation /Contents loop scrubbed /Contents and left /A /URI —
+                // an intra-annotation asymmetry.
+                int an = Reserve();
+                pageExtras.Append($" /Annots [{an} 0 R]");
+                extraObjects.Add($"{an} 0 obj\n<< /Type /Annot /Subtype /Link /Rect [72 700 200 720] " +
+                    $"/A << /S /URI /URI (https://example.com/{Canary}/page) >> >>\nendobj\n");
                 break;
             }
             case Carrier.EmbeddedFile:

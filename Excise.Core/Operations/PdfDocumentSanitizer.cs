@@ -95,7 +95,7 @@ public static class PdfDocumentSanitizer
         var changed = false;
         foreach (var key in InfoKeys)
         {
-            var value = info.GetStringOrNull(key);
+            var value = ResolveStringOrNull(document, info, key);
             if (string.IsNullOrEmpty(value)) continue;
 
             var scrubbed = Excise(value, terms, caseSensitive);
@@ -371,6 +371,24 @@ public static class PdfDocumentSanitizer
         haystack.IndexOf(term, caseSensitive
             ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase) >= 0;
 
+    /// <summary>
+    /// Read a string value, RESOLVING an indirect reference first — the load-
+    /// bearing difference from <see cref="PdfDictionary.GetStringOrNull"/>, which
+    /// returns null the moment the value is stored as <c>N 0 R</c> rather than a
+    /// literal.
+    ///
+    /// <para>#1155: foss-primer stores every bookmark title as an indirect string
+    /// object (<c>/Title 60 0 R</c> → <c>60 0 obj (Familiarize yourself…)</c>),
+    /// and <see cref="ScrubOutlines"/> read those with <c>GetStringOrNull</c>, got
+    /// null, and walked past a real carrier while reporting the scrub complete.
+    /// The <c>CanaryInjectionLeakTests</c> suite missed it because its fixture
+    /// writes the title as a DIRECT literal (<c>/Title (canary)</c>). /Info values
+    /// and annotation /Contents can be indirect for the same reason, so every
+    /// string-valued carrier in this file must resolve before it reads.</para>
+    /// </summary>
+    private static string? ResolveStringOrNull(PdfDocument document, PdfDictionary dict, string key) =>
+        document.Resolve(dict.GetOptional(key) ?? PdfNull.Instance) is PdfString s ? s.Value : null;
+
     private static bool ScrubOutlines(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
     {
         if (document.Resolve(document.Catalog.GetOptional("Outlines") ?? PdfNull.Instance) is not PdfDictionary outlines)
@@ -386,7 +404,7 @@ public static class PdfDocumentSanitizer
                 if (document.Resolve(node) is not PdfDictionary item) return;
                 if (!visited.Add(item)) return;   // guard against malformed cyclic /Next chains
 
-                var title = item.GetStringOrNull("Title");
+                var title = ResolveStringOrNull(document, item, "Title");
                 if (!string.IsNullOrEmpty(title))
                 {
                     var scrubbed = Excise(title, terms, caseSensitive);
@@ -426,7 +444,7 @@ public static class PdfDocumentSanitizer
                 // /Contents is the comment text; /T is the author-supplied title.
                 foreach (var key in new[] { "Contents", "T" })
                 {
-                    var value = annot.GetStringOrNull(key);
+                    var value = ResolveStringOrNull(document, annot, key);
                     if (string.IsNullOrEmpty(value)) continue;
 
                     var scrubbed = Excise(value, terms, caseSensitive);
@@ -439,7 +457,60 @@ public static class PdfDocumentSanitizer
 
                     changed = true;
                 }
+
+                // #1155: a link annotation's URI action carries the same string
+                // as its /Contents (irs-1040-instructions restated
+                // "https://www.irs.gov/your-account" in both). The loop above
+                // excised /Contents and left /A /URI holding the term — an
+                // intra-annotation asymmetry, and exactly the kind the carrier
+                // policy calls a leak (the page and /Contents matched by
+                // substring; the URI must too). Scrub the /URI with identical
+                // semantics.
+                changed |= ScrubUriAction(document, annot.GetOptional("A"), terms, caseSensitive);
             }
+        }
+
+        return changed;
+    }
+
+    /// <summary>
+    /// #1155 — excise the term from a URI action's <c>/URI</c> string (§12.6.4.7),
+    /// following the <c>/Next</c> chain (§12.6.3) so a term in a chained action is
+    /// reached too. The action may be an indirect reference or an array of them.
+    /// </summary>
+    private static bool ScrubUriAction(
+        PdfDocument document, PdfObject? actionObj, IReadOnlyList<string> terms, bool caseSensitive)
+    {
+        var changed = false;
+        var visited = new HashSet<PdfDictionary>();
+        var stack = new Stack<PdfObject?>();
+        stack.Push(actionObj);
+
+        while (stack.Count > 0)
+        {
+            var resolved = document.Resolve(stack.Pop() ?? PdfNull.Instance);
+            if (resolved is PdfArray arr)
+            {
+                foreach (var a in arr) stack.Push(a);
+                continue;
+            }
+            if (resolved is not PdfDictionary action || !visited.Add(action)) continue;
+
+            var uri = ResolveStringOrNull(document, action, "URI");
+            if (!string.IsNullOrEmpty(uri))
+            {
+                var scrubbed = Excise(uri, terms, caseSensitive);
+                if (scrubbed != uri)
+                {
+                    if (scrubbed.Length == 0)
+                        action.Remove("URI");
+                    else
+                        action["URI"] = new PdfString(scrubbed);
+                    changed = true;
+                }
+            }
+
+            stack.Push(action.GetOptional("Next"));
         }
 
         return changed;
