@@ -166,6 +166,18 @@ public sealed class RedactionBenchmarkRunner
         // remove the term from carriers, not the carriers themselves.
         public string StructuralDropped { get; init; } = "";
 
+        // SURVIVING-CONTENT CONSERVATION (#1157) — the conservation law: a word
+        // present in the input that did NOT contain the redacted term must
+        // survive unchanged in the output. Checked = untouched word occurrences
+        // in the input; Damaged = how many failed to appear (same spelling, same
+        // count) in the output — corruption the collateral axis misses because it
+        // counts character LOSS and a duplicated ligature (#1156) ADDS characters.
+        // Text-based, tool-agnostic, graded against the independent extractor on
+        // both sides. Damaged>0 is surviving-content corruption.
+        public int SurvivingWordsChecked { get; init; }
+        public int SurvivingWordsDamaged { get; init; }
+        public string SurvivingWordsDamagedExamples { get; init; } = "";
+
         public string? Error { get; init; }
     }
 
@@ -517,6 +529,12 @@ public sealed class RedactionBenchmarkRunner
             var survivingRenderDelta = MeasureSurvivingRenderDelta(path, output, term);
             var visualReadable = MeasureVisualReadable(path, output, term);
 
+            // ── SURVIVING-CONTENT CONSERVATION (#1157): did untargeted words
+            //    survive UNCHANGED? Catches corruption (ligature dup #1156,
+            //    substitution) the loss-based collateral axis nets to ~zero.
+            var (survChecked, survDamaged, survExamples) =
+                MeasureSurvivingWordFidelity(before, after, term);
+
             // ── STRUCTURAL (#1117): did the redaction drop a structure the
             //    text diff cannot see? Best-effort — a parse failure on either
             //    side is not a structural finding.
@@ -574,6 +592,9 @@ public sealed class RedactionBenchmarkRunner
                 StructuralDropped = structuralDropped,
                 SurvivingRenderDelta = survivingRenderDelta,
                 VisualTermReadable = visualReadable,
+                SurvivingWordsChecked = survChecked,
+                SurvivingWordsDamaged = survDamaged,
+                SurvivingWordsDamagedExamples = survExamples,
             };
         }
         finally { try { File.Delete(output); } catch { /* best effort */ } }
@@ -817,6 +838,92 @@ public sealed class RedactionBenchmarkRunner
             return total == 0 ? 0 : (double)diff / total;
         }
         catch { return -1; }
+    }
+
+    /// <summary>
+    /// SURVIVING-CONTENT CONSERVATION axis (#1157) — every word in the input that
+    /// did NOT itself contain the redacted term must survive unchanged in the
+    /// output. A word that vanishes or is altered (ligature duplication #1156,
+    /// substitution, a dropped glyph) is surviving-content corruption the
+    /// collateral axis misses: that axis counts character LOSS, and a duplicated
+    /// ligature ADDS characters, netting ~zero.
+    ///
+    /// <para>Text-based and tool-agnostic — grades any redactor's output text
+    /// against the input text, with the independent extractor (mutool) as the
+    /// oracle on BOTH sides (no self-oracle). Returns (Checked, Damaged): Checked
+    /// = untouched word occurrences in the input, Damaged = how many did not
+    /// appear with the same spelling and count in the output. Order-independent
+    /// (multiset), so a multi-column reflow in read order does not read as damage.
+    /// Damaged &gt; 0 is corruption.</para>
+    /// </summary>
+    internal static (int Checked, int Damaged, string Examples) MeasureSurvivingWordFidelity(
+        string before, string after, string term)
+    {
+        if (string.IsNullOrEmpty(before) || string.IsNullOrEmpty(term))
+            return (0, 0, "");
+
+        // Char ranges the term occupies in the input. A word overlapping one was
+        // touched by the redaction and is exempt from conservation — it was
+        // legitimately removed or split.
+        var touched = new List<(int Start, int End)>();
+        var ti = 0;
+        while ((ti = before.IndexOf(term, ti, StringComparison.OrdinalIgnoreCase)) >= 0)
+        { touched.Add((ti, ti + term.Length)); ti += Math.Max(1, term.Length); }
+
+        bool Overlaps(int s, int e)
+        {
+            foreach (var (ts, te) in touched)
+                if (s < te && ts < e) return true;
+            return false;
+        }
+
+        // Untouched-word multiset from the input. A word is a maximal run of
+        // letters/digits; length >= 2 keeps single-char extraction noise out.
+        var untouched = new Dictionary<string, int>();
+        foreach (var (word, s, e) in Words(before))
+        {
+            if (word.Length < 2 || Overlaps(s, e)) continue;
+            var k = word.ToLowerInvariant();
+            untouched[k] = untouched.GetValueOrDefault(k) + 1;
+        }
+        if (untouched.Count == 0) return (0, 0, "");
+
+        var present = new Dictionary<string, int>();
+        foreach (var (word, _, _) in Words(after))
+        {
+            if (word.Length < 2) continue;
+            var k = word.ToLowerInvariant();
+            present[k] = present.GetValueOrDefault(k) + 1;
+        }
+
+        int checkedCount = 0, damaged = 0;
+        var examples = new List<string>();
+        foreach (var (w, cB) in untouched)
+        {
+            checkedCount += cB;
+            var cA = present.GetValueOrDefault(w);
+            if (cA < cB)
+            {
+                damaged += cB - cA;
+                if (examples.Count < 8) examples.Add($"{w}x{cB - cA}");
+            }
+        }
+        return (checkedCount, damaged, string.Join(",", examples));
+    }
+
+    private static IEnumerable<(string Word, int Start, int End)> Words(string text)
+    {
+        int i = 0, n = text.Length;
+        while (i < n)
+        {
+            if (char.IsLetterOrDigit(text[i]))
+            {
+                int s = i;
+                while (i < n && char.IsLetterOrDigit(text[i])) i++;
+                yield return (text[s..i], s, i);
+            }
+            else i++;
+        }
     }
 
     /// <summary>
@@ -1090,6 +1197,25 @@ public sealed class RedactionBenchmarkRunner
         _out.WriteLine($"VISUAL READABILITY — the term is still OCR-legible in the output despite redaction: {visLeaks.Count}");
         foreach (var g in visLeaks.GroupBy(r => r.Tool).OrderBy(g => g.Key, StringComparer.Ordinal))
             _out.WriteLine($"  {g.Key}: {g.Count()} case(s) where the secret renders readable");
+
+        // SURVIVING-CONTENT CONSERVATION (#1157) — did untargeted words survive
+        // UNCHANGED? Damaged>0 is corruption (ligature dup #1156, substitution, a
+        // dropped glyph) the loss-based collateral axis nets to ~zero. Per tool.
+        // A tool that produces no extractable text (raster) reads as fully
+        // damaged — the honest statement that it destroys the text layer.
+        var survMeasured = ok.Where(r => r.SurvivingWordsChecked > 0).ToList();
+        _out.WriteLine("");
+        _out.WriteLine("SURVIVING-CONTENT CONSERVATION — untargeted words that did NOT survive unchanged, per tool:");
+        foreach (var g in survMeasured.GroupBy(r => r.Tool).OrderBy(g => g.Key, StringComparer.Ordinal))
+        {
+            var withDamage = g.Where(r => r.SurvivingWordsDamaged > 0).ToList();
+            var totalDamaged = g.Sum(r => r.SurvivingWordsDamaged);
+            _out.WriteLine($"  {g.Key,-10} {withDamage.Count}/{g.Count()} cases corrupt surviving text " +
+                           $"({totalDamaged} word-occurrences total)");
+            foreach (var r in withDamage.OrderByDescending(r => r.SurvivingWordsDamaged).Take(8))
+                _out.WriteLine($"     CORRUPT {r.Corpus}/{r.Document}|{r.Term,-16} " +
+                               $"{r.SurvivingWordsDamaged} lost/altered: {r.SurvivingWordsDamagedExamples}");
+        }
 
         // WHERE THEY DISAGREE is the actionable part: a case both tools handle
         // identically teaches nothing, and a case only one of them fails is a
