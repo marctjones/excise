@@ -81,6 +81,9 @@ public static class PdfDocumentSanitizer
         changed |= ScrubOutlines(document, actionable, caseSensitive);
         changed |= ScrubAnnotationContents(document, actionable, caseSensitive);
         changed |= ScrubFormFieldNames(document, actionable, caseSensitive);
+        changed |= ScrubStructTree(document, actionable, caseSensitive);       // #1151
+        changed |= ScrubJavaScript(document, actionable, caseSensitive);       // #1151
+        changed |= ScrubEmbeddedFiles(document, actionable, caseSensitive);    // #1151
         return changed;
     }
 
@@ -175,6 +178,7 @@ public static class PdfDocumentSanitizer
             if (document.Resolve(stack.Pop()) is not PdfDictionary node || !visited.Add(node))
                 continue;
 
+            // /T, /TU are labels — trailing residue after a cut is noise, so trim.
             foreach (var key in new[] { "T", "TU" })
             {
                 if (document.Resolve(node.GetOptional(key) ?? PdfNull.Instance) is not PdfString str)
@@ -185,11 +189,187 @@ public static class PdfDocumentSanitizer
                 changed = true;
             }
 
+            // #1151: /V and /DV (the field VALUE and default value) are carriers
+            // too — the #1115 canary survived there because only the AREA path
+            // (#1038) scrubbed /V, so a value whose widget does not overlap a box
+            // leaked. These are SEMANTIC values, so cut without trimming, exactly
+            // as #1038 does — "Fallback SECRET" becomes "Fallback ", not
+            // "Fallback" (and a second pass over an already-cut value is a no-op).
+            foreach (var key in new[] { "V", "DV" })
+            {
+                if (document.Resolve(node.GetOptional(key) ?? PdfNull.Instance) is not PdfString str)
+                    continue;
+                var scrubbed = ExciseNoTrim(str.Value, terms, caseSensitive);
+                if (scrubbed == str.Value) continue;
+                node.SetString(key, scrubbed);
+                changed = true;
+            }
+
             if (document.Resolve(node.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
                 foreach (var k in kids) stack.Push(k);
         }
         return changed;
     }
+
+    /// <summary>
+    /// #1151 — the structure tree restates text OUTSIDE the content stream in
+    /// <c>/ActualText</c>, <c>/Alt</c> and <c>/E</c> (§14.9.4), and it survives
+    /// glyph removal untouched (#636). #636's scrubber is AREA-based; this is the
+    /// document-level, term-based one RedactText was missing — walk /StructTreeRoot
+    /// through /K and cut the term from those three keys.
+    /// </summary>
+    private static bool ScrubStructTree(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    {
+        if (document.Resolve(document.Catalog?.GetOptional("StructTreeRoot") ?? PdfNull.Instance)
+            is not PdfDictionary root)
+            return false;
+
+        var changed = false;
+        var visited = new HashSet<PdfDictionary>();
+        var stack = new Stack<PdfObject>();
+        stack.Push(root);
+        while (stack.Count > 0)
+        {
+            if (document.Resolve(stack.Pop()) is not PdfDictionary node || !visited.Add(node))
+                continue;
+            foreach (var key in new[] { "ActualText", "Alt", "E" })
+            {
+                if (document.Resolve(node.GetOptional(key) ?? PdfNull.Instance) is not PdfString str)
+                    continue;
+                var scrubbed = Excise(str.Value, terms, caseSensitive);
+                if (scrubbed == str.Value) continue;
+                node.SetString(key, scrubbed);
+                changed = true;
+            }
+            var kids = document.Resolve(node.GetOptional("K") ?? PdfNull.Instance);
+            if (kids is PdfArray arr) foreach (var k in arr) stack.Push(k);
+            else if (kids is PdfDictionary d) stack.Push(d);
+        }
+        return changed;
+    }
+
+    /// <summary>
+    /// #1151 — JavaScript actions carry text in their <c>/JS</c> source. A
+    /// document-level <c>/Names/JavaScript</c> name tree, plus <c>/OpenAction</c>
+    /// and catalog <c>/AA</c>, can restate a redacted string; cut it out (the
+    /// source is plain text, unlike an embedded binary).
+    /// </summary>
+    private static bool ScrubJavaScript(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    {
+        var changed = false;
+        var visited = new HashSet<PdfDictionary>();
+        var stack = new Stack<PdfObject>();
+
+        var names = document.Resolve(document.Catalog?.GetOptional("Names") ?? PdfNull.Instance) as PdfDictionary;
+        if (names != null) stack.Push(names.GetOptional("JavaScript") ?? PdfNull.Instance);
+        if (document.Catalog?.GetOptional("OpenAction") is { } oa) stack.Push(oa);
+        if (document.Catalog?.GetOptional("AA") is { } aa) stack.Push(aa);
+
+        var guard = 0;
+        while (stack.Count > 0 && guard++ < 100_000)
+        {
+            var obj = document.Resolve(stack.Pop());
+            if (obj is PdfDictionary node)
+            {
+                if (!visited.Add(node)) continue;
+                if (document.Resolve(node.GetOptional("JS") ?? PdfNull.Instance) is PdfString js)
+                {
+                    var scrubbed = Excise(js.Value, terms, caseSensitive);
+                    if (scrubbed != js.Value) { node.SetString("JS", scrubbed); changed = true; }
+                }
+                // Name-tree nodes (/Names, /Kids) and action chains (/Next).
+                foreach (var key in new[] { "Names", "Kids", "Next" })
+                    if (node.GetOptional(key) is { } sub) stack.Push(sub);
+            }
+            else if (obj is PdfArray a)
+            {
+                foreach (var e in a) stack.Push(e);
+            }
+        }
+        return changed;
+    }
+
+    /// <summary>
+    /// #1151 — an embedded file is a whole-binary carrier: you cannot surgically
+    /// cut a term out of arbitrary bytes without risking corruption, so the safe
+    /// action (the carrier policy: under-redaction over fidelity) is to REMOVE
+    /// the attachment whose content contains the term — and ONLY that one, not
+    /// the wholesale strip <c>RemoveAllMetadata</c> does. Matches on the decoded
+    /// content, so an unrelated attachment survives.
+    /// </summary>
+    private static bool ScrubEmbeddedFiles(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    {
+        var files = document.GetEmbeddedFiles();
+        if (files.Count == 0) return false;
+
+        var remove = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        foreach (var f in files)
+        {
+            if (f.Bytes == null || f.Bytes.Length == 0) continue;
+            var latin1 = Encoding.Latin1.GetString(f.Bytes);
+            var utf8 = Encoding.UTF8.GetString(f.Bytes);
+            if (terms.Any(t => Contains(latin1, t, caseSensitive) || Contains(utf8, t, caseSensitive)))
+                remove.Add(f.RawDictionary);
+        }
+        if (remove.Count == 0) return false;
+
+        var changed = false;
+        if (document.Resolve(document.Catalog?.GetOptional("Names") ?? PdfNull.Instance) is PdfDictionary names
+            && document.Resolve(names.GetOptional("EmbeddedFiles") ?? PdfNull.Instance) is PdfDictionary tree)
+            changed |= FilterEmbeddedFileTree(document, tree, remove);
+
+        changed |= FilterAssociatedFiles(document, document.Catalog, remove);
+        for (var p = 1; p <= document.PageCount; p++)
+            changed |= FilterAssociatedFiles(document, document.GetPage(p).Dictionary, remove);
+        return changed;
+    }
+
+    // Remove (name, filespec) pairs whose resolved filespec is in `remove` from a
+    // /Names/EmbeddedFiles name-tree node, recursing through /Kids.
+    private static bool FilterEmbeddedFileTree(PdfDocument document, PdfDictionary node, HashSet<PdfDictionary> remove)
+    {
+        var changed = false;
+        if (document.Resolve(node.GetOptional("Names") ?? PdfNull.Instance) is PdfArray pairs)
+        {
+            var kept = new PdfArray();
+            for (var i = 0; i + 1 < pairs.Count; i += 2)
+            {
+                if (document.Resolve(pairs[i + 1]) is PdfDictionary fs && remove.Contains(fs))
+                {
+                    changed = true;   // drop this (name, filespec) pair
+                    continue;
+                }
+                kept.Add(pairs[i]);
+                kept.Add(pairs[i + 1]);
+            }
+            if (changed) node.Set("Names", kept);
+        }
+        if (document.Resolve(node.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
+            foreach (var k in kids)
+                if (document.Resolve(k) is PdfDictionary kd)
+                    changed |= FilterEmbeddedFileTree(document, kd, remove);
+        return changed;
+    }
+
+    // Remove matching filespecs from an /AF (associated files) array (§7.7.4).
+    private static bool FilterAssociatedFiles(PdfDocument document, PdfDictionary? owner, HashSet<PdfDictionary> remove)
+    {
+        if (owner == null || document.Resolve(owner.GetOptional("AF") ?? PdfNull.Instance) is not PdfArray af)
+            return false;
+        var kept = new PdfArray();
+        var changed = false;
+        foreach (var e in af)
+        {
+            if (document.Resolve(e) is PdfDictionary fs && remove.Contains(fs)) { changed = true; continue; }
+            kept.Add(e);
+        }
+        if (changed) owner.Set("AF", kept);
+        return changed;
+    }
+
+    private static bool Contains(string haystack, string term, bool caseSensitive) =>
+        haystack.IndexOf(term, caseSensitive
+            ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase) >= 0;
 
     private static bool ScrubOutlines(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
     {
@@ -274,5 +454,20 @@ public static class PdfDocumentSanitizer
         foreach (var term in terms)
             result = result.Replace(term, string.Empty, comparison);
         return result.Trim();
+    }
+
+    /// <summary>
+    /// #1151 — cut the term but preserve surrounding whitespace, for SEMANTIC
+    /// values (/V, /DV) where a trailing space is part of the value and #1038's
+    /// area path keeps it. Idempotent: no match leaves the string identical, so a
+    /// second scrub pass cannot mutate an already-cut value.
+    /// </summary>
+    private static string ExciseNoTrim(string value, IReadOnlyList<string> terms, bool caseSensitive)
+    {
+        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        var result = value;
+        foreach (var term in terms)
+            result = result.Replace(term, string.Empty, comparison);
+        return result;
     }
 }
