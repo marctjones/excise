@@ -21,6 +21,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- ONE leak scanner, compiled into every test assembly that needs it.
+         Duplicating it is the drift shape this project keeps paying for.
+         Precedent: the same link in Excise.Rendering.Tests. Used by the
+         #1158 no-box test to prove glyph removal is unweakened. -->
+    <Compile Include="../Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs" Link="TestSupport/SavedPdfLeakScanner.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Excise.Cli\Excise.Cli.csproj" />
     <ProjectReference Include="..\Excise.Core\Excise.Core.csproj" />
     <ProjectReference Include="..\tools\Excise.ImageInspection\Excise.ImageInspection.csproj" />
