@@ -322,8 +322,17 @@ public sealed class RedactionBenchmarkRunner
         var rows = new List<Row>();
         var docsSeen = 0;
 
+        // Optional bounds for a tractable baseline (the render+OCR axes are
+        // heavy): REDACTION_BENCH_CORPORA restricts the corpus set,
+        // REDACTION_BENCH_TAKE caps files per corpus. Deterministic either way —
+        // the file list is still ordered-then-taken, so runs stay comparable.
+        var onlyCorpora = Environment.GetEnvironmentVariable("REDACTION_BENCH_CORPORA")
+            ?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var takeCap = int.TryParse(Environment.GetEnvironmentVariable("REDACTION_BENCH_TAKE"), out var tc) ? tc : int.MaxValue;
+
         foreach (var (corpus, take) in Corpora)
         {
+            if (onlyCorpora is { Length: > 0 } && !onlyCorpora.Contains(corpus)) continue;
             var dir = Path.Combine(root, "test-pdfs", corpus);
             if (!Directory.Exists(dir)) { _out.WriteLine($"absent: {corpus}"); continue; }
 
@@ -331,7 +340,7 @@ public sealed class RedactionBenchmarkRunner
             // runs cannot be compared and the numbers mean nothing.
             var files = Directory.GetFiles(dir, "*.pdf", SearchOption.AllDirectories)
                                  .OrderBy(f => f, StringComparer.Ordinal)
-                                 .Take(take);
+                                 .Take(Math.Min(take, takeCap));
 
             foreach (var file in files)
             {
