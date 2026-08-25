@@ -639,6 +639,12 @@ public sealed class RedactionBenchmarkRunner
             var i = 0;
             while ((i = text.IndexOf(term, i, StringComparison.Ordinal)) >= 0)
             {
+                // A term that IS a PDF name token (/Form, /Type — §7.3.5) is
+                // STRUCTURE, not surviving content: `/Subtype /Form` matches the
+                // term "Form", but scrubbing it would corrupt the XObject. It's a
+                // benchmark false positive, not a leak (#1155). Record it so the
+                // "unplaced" fallback below doesn't then treat it as one.
+                if (i > 0 && text[i - 1] == '/') { contexts.Add("name-token"); i += term.Length; continue; }
                 var before = text[Math.Max(0, i - 300)..i];
                 var benign = BenignContexts.FirstOrDefault(b => before.Contains(b, StringComparison.Ordinal));
                 if (benign != null) { contexts.Add("font:" + benign.Trim('/', ' ', '[')); }
