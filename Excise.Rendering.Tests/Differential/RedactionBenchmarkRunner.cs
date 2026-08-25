@@ -1223,6 +1223,29 @@ public sealed class RedactionBenchmarkRunner
                                $"{r.SurvivingWordsDamaged} lost/altered: {r.SurvivingWordsDamagedExamples}");
         }
 
+        // COUNT ACCURACY (#1101) — does the tool's REPORTED removal count match
+        // the independent oracle's occurrence count? excise over-reports (12 for
+        // a term mutool counts 9) when a run is OVERPRINTED — page.Letters holds
+        // the coincident duplicate glyphs, so the same occurrence is found more
+        // than once. The count is the one number `excise redact` prints and a
+        // user acts on; an inflated count is a silent trust defect that no leak,
+        // collateral, or conservation axis catches. Only rows where the oracle
+        // sees the term (OracleBefore > 0) and the tool reports a removal.
+        var countRows = ok.Where(r => r.OracleBefore > 0 && r.Reported > 0).ToList();
+        _out.WriteLine("");
+        _out.WriteLine("COUNT ACCURACY (#1101) — reported removals vs independent occurrence count, per tool:");
+        foreach (var g in countRows.GroupBy(r => r.Tool).OrderBy(g => g.Key, StringComparer.Ordinal))
+        {
+            var mismatch = g.Where(r => r.Reported != r.OracleBefore).ToList();
+            var over = mismatch.Count(r => r.Reported > r.OracleBefore);
+            _out.WriteLine($"  {g.Key,-10} {mismatch.Count}/{g.Count()} cases reported != oracle " +
+                           $"({over} OVER-reported — the #1101 inflation signature)");
+            foreach (var r in mismatch.OrderByDescending(r => Math.Abs(r.Reported - r.OracleBefore)).Take(8))
+                _out.WriteLine($"     COUNT {r.Corpus}/{r.Document}|{r.Term,-16} " +
+                               $"reported {r.Reported} vs oracle {r.OracleBefore} " +
+                               $"(delta {r.Reported - r.OracleBefore:+0;-0})");
+        }
+
         // WHERE THEY DISAGREE is the actionable part: a case both tools handle
         // identically teaches nothing, and a case only one of them fails is a
         // defect with a reproduction attached.
