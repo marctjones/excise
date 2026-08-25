@@ -152,6 +152,15 @@ public static class PdfDocumentRedactionExtensions
                     var contentAreas = new List<PdfRectangle>();
                     var markerAreas = new List<PdfRectangle>();
                     var pageVisibleMatches = 0;
+                    // #1101: centers of matches already tallied on this pass, so
+                    // an OVERPRINT — the identical run drawn twice at the same
+                    // position (issue1350.pdf draws "…your ID" at 252.0 76.976 Td
+                    // twice, faux-bold) — is counted once. This is distinct from
+                    // the cross-page tiling the crop window handles, and from
+                    // issue14297's genuine tiled copies, which sit at DIFFERENT
+                    // positions and stay separate. Two different visible words
+                    // can never share a position, so coincidence ⟺ overprint.
+                    var countedCenters = new List<(double X, double Y)>();
                     foreach (var matchLetters in matches)
                     {
                         var bbox = BoundingBoxOf(matchLetters);
@@ -167,7 +176,22 @@ public static class PdfDocumentRedactionExtensions
                         var cy = (bbox.Bottom + bbox.Top) / 2.0;
                         if (cx >= cropWindow.Left && cx <= cropWindow.Right &&
                             cy >= cropWindow.Bottom && cy <= cropWindow.Top)
-                            pageVisibleMatches++;
+                        {
+                            // #1101: count coincident boxes once (overprint).
+                            // Tolerance is 2 pt — overprints are pixel-exact
+                            // (same Td), while distinct occurrences of one term
+                            // are line-height or word-width apart. Removal below
+                            // is unconditional regardless of this tally.
+                            const double overprintTol = 2.0;
+                            var overprint = countedCenters.Any(c =>
+                                Math.Abs(c.X - cx) <= overprintTol &&
+                                Math.Abs(c.Y - cy) <= overprintTol);
+                            if (!overprint)
+                            {
+                                countedCenters.Add((cx, cy));
+                                pageVisibleMatches++;
+                            }
+                        }
 
                         if (IsInteractiveOnlyMatch(matchLetters))
                             // TERM-aware (#1038). The area-only form deletes the
