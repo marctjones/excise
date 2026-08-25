@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Excise.TestSupport;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
@@ -80,9 +81,11 @@ public class RedactionCopyRecoveryTests
 
             // ── Redact the term and save a fresh redacted file ──
             RedactAndSave(originalPath, redactedPath);
-            // Independent check that the term really left the saved structure.
-            ExtractAllText(redactedPath).Should().NotContain(Secret,
-                "the saved redacted file must not carry the term in its content stream");
+            // Independent check that the term really left the saved structure —
+            // a decompressing byte scan (#1049), so "copy can't recover it" below
+            // means the term is GONE, not merely that the copy path is broken.
+            SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(redactedPath), Secret).Should().BeEmpty(
+                "the saved redacted file must not carry the term in any carrier, incl. compressed streams");
 
             // ── Phase 2: the copy path CANNOT recover it from the redacted file ──
             await vm.LoadDocumentAsync(redactedPath);
@@ -156,12 +159,6 @@ public class RedactionCopyRecoveryTests
         var report = doc.RedactText(Secret);
         report.MatchesLocated.Should().BeGreaterThan(0, "the redaction engine must locate and remove the term");
         doc.Save(outPath);
-    }
-
-    private static string ExtractAllText(string path)
-    {
-        using var doc = PdfDocument.Open(File.ReadAllBytes(path));
-        return string.Concat(doc.GetPage(1).Letters.Select(l => l.Value));
     }
 
     private static void CreateSecretPdf(string path)

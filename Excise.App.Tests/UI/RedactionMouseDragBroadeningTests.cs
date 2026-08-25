@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Excise.TestSupport;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
@@ -63,7 +64,13 @@ public class RedactionMouseDragBroadeningTests
                 "both mouse-drawn redactions must be applied from one session");
             text.Should().Contain("KEEPTOP").And.Contain("KEEPBOTTOM",
                 "content outside both boxes must survive");
-            SavedBytes(outPath).Should().NotContain("SECRETONE").And.NotContain("SECRETTWO");
+            // Independent, decompressing oracle (#1049): the term must be gone
+            // from the SAVED BYTES including inside FlateDecode streams, not just
+            // from excise's own extraction above.
+            var savedOne = File.ReadAllBytes(outPath);
+            SavedPdfLeakScanner.FindTerm(savedOne, "SECRETONE").Should().BeEmpty(
+                "the mouse-drawn redaction must REMOVE the glyphs, not hide them");
+            SavedPdfLeakScanner.FindTerm(savedOne, "SECRETTWO").Should().BeEmpty();
         }
         finally { window.Close(); }
     }
@@ -93,7 +100,8 @@ public class RedactionMouseDragBroadeningTests
             var text = SavedText(outPath);
             text.Should().NotContain("ZOOMSECRET", "the box drawn at non-default zoom must map to the glyphs under it");
             text.Should().Contain("KEEPZOOM").And.Contain("KEEPLOW", "content outside the box must survive");
-            SavedBytes(outPath).Should().NotContain("ZOOMSECRET");
+            SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outPath), "ZOOMSECRET").Should().BeEmpty(
+                "the box drawn at non-default zoom must remove the glyphs from the saved bytes");
         }
         finally { window.Close(); }
     }
@@ -122,7 +130,8 @@ public class RedactionMouseDragBroadeningTests
                 "on a /Rotate 90 page the on-screen box must map through the rotation to the right glyphs");
             text.Should().Contain("KEEPROT").And.Contain("KEEPROT2",
                 "only the targeted word may be removed on a rotated page");
-            SavedBytes(outPath).Should().NotContain("ROTSECRET");
+            SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outPath), "ROTSECRET").Should().BeEmpty(
+                "on a /Rotate 90 page the redaction must remove the glyphs from the saved bytes");
         }
         finally { window.Close(); }
     }
@@ -178,8 +187,6 @@ public class RedactionMouseDragBroadeningTests
         using var saved = PdfDocument.Open(File.ReadAllBytes(path));
         return string.Concat(saved.GetPage(1).Letters.Select(l => l.Value));
     }
-
-    private static string SavedBytes(string path) => Encoding.Latin1.GetString(File.ReadAllBytes(path));
 
     /// <summary>The content-space bounding box of the first run of letters spelling <paramref name="word"/>.</summary>
     private static PdfRectangle ContentRectOf(PdfPage page, string word)
