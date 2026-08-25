@@ -29,7 +29,8 @@
             <!-- Current password (only relevant on an already-encrypted document) -->
             <StackPanel Spacing="4" IsVisible="{Binding IsEncrypted}" IsEnabled="{Binding CanEditOptions}">
                 <TextBlock Text="Current password:" FontWeight="Medium" Foreground="#d0d0d0"/>
-                <TextBox Text="{Binding CurrentPassword}"
+                <TextBox x:Name="CurrentPasswordBox"
+                         Text="{Binding CurrentPassword}"
                          PasswordChar="•"
                          PlaceholderText="Required to change or remove protection"
                          AutomationProperties.Name="Current Password"
@@ -40,7 +41,8 @@
             <StackPanel Spacing="8" IsEnabled="{Binding CanEditOptions}">
                 <StackPanel Spacing="4">
                     <TextBlock Text="New user password (required to open):" FontWeight="Medium" Foreground="#d0d0d0"/>
-                    <TextBox Text="{Binding NewUserPassword}"
+                    <TextBox x:Name="NewUserPasswordBox"
+                             Text="{Binding NewUserPassword}"
                              PasswordChar="•"
                              PlaceholderText="Leave blank for no open password"
                              AutomationProperties.Name="New User Password"
@@ -48,7 +50,8 @@
                 </StackPanel>
                 <StackPanel Spacing="4">
                     <TextBlock Text="New owner password (permissions):" FontWeight="Medium" Foreground="#d0d0d0"/>
-                    <TextBox Text="{Binding NewOwnerPassword}"
+                    <TextBox x:Name="NewOwnerPasswordBox"
+                             Text="{Binding NewOwnerPassword}"
                              PasswordChar="•"
                              PlaceholderText="Leave blank for no owner password"
                              AutomationProperties.Name="New Owner Password"
@@ -56,7 +59,8 @@
                 </StackPanel>
                 <StackPanel Spacing="4">
                     <TextBlock Text="Algorithm:" FontWeight="Medium" Foreground="#d0d0d0"/>
-                    <ComboBox ItemsSource="{Binding Algorithms}"
+                    <ComboBox x:Name="AlgorithmComboBox"
+                              ItemsSource="{Binding Algorithms}"
                               SelectedItem="{Binding Algorithm}"
                               AutomationProperties.Name="Encryption Algorithm"
                               AutomationProperties.HelpText="AES-256 (PDF 2.0, default) or AES-128 for older readers."
