@@ -35,12 +35,25 @@ namespace Excise.Core.Fonts;
 /// every letter of the Helvetica table this replaces. These are metric facts
 /// about the standard 14, not font programs; no font data is embedded.</para>
 ///
-/// <para><b>Scope, deliberately.</b> Codes 32-126 only, which is the range
-/// where StandardEncoding, WinAnsiEncoding and MacRomanEncoding all agree, so
-/// no encoding lookup is needed to be correct. Codes outside it need the font's
-/// /Encoding to resolve a glyph name and are left to the caller's existing
-/// fallback rather than guessed at — being confidently wrong in a new way is
-/// not an improvement on being obviously wrong in an old one.</para>
+/// <para><b>The 32-126 fast path.</b> The code-indexed tables above cover codes
+/// 32-126, very nearly the range where StandardEncoding, WinAnsiEncoding and
+/// MacRomanEncoding agree, so a width is correct there without resolving the
+/// font's /Encoding. (Two codes, 39 and 96, actually diverge — WinAnsi's
+/// quotesingle/grave vs the Standard quoteright/quoteleft these tables encode —
+/// but that is a glyph-identity choice baked into the checked-in values, not a
+/// width error, and <see cref="TryGetWidth"/> keeps it byte-for-byte.)</para>
+///
+/// <para><b>Above 126 (#1106).</b> The encodings genuinely diverge — code 0xE9
+/// is eacute in WinAnsi and something else in StandardEncoding — so a width
+/// there requires a glyph name. <see cref="TryGetWidth"/> now resolves codes
+/// 128-255 through WinAnsiEncoding (the standard-14 default this cascade already
+/// assumes elsewhere) to a glyph name, then to a width from the
+/// <see cref="UpperGlyphWidths"/> AFM table, killing the last silently-guessed
+/// range in the non-embedded standard-14 path. <see cref="TryGetWidthByGlyphName"/>
+/// exposes the name→width step directly, which is the seam an /Encoding
+/// /Differences remap resolves through once a caller passes the resolved name.
+/// Symbol and ZapfDingbats use their own encodings, so their upper range still
+/// fails closed rather than being read through WinAnsi names.</para>
 /// </summary>
 internal static class StandardFontMetrics
 {
@@ -212,21 +225,286 @@ internal static class StandardFontMetrics
          415,  392,  392,  668,  668,  // 122-126
     };
 
+    // glyph name -> advance (1000ths of em) for the eight Latin standard-14
+    // faces, in this column order:
+    //   0 Times-Roman 1 Times-Bold 2 Times-Italic 3 Times-BoldItalic
+    //   4 Helvetica 5 Helvetica-Bold 6 Helvetica-Oblique 7 Helvetica-BoldOblique
+    // Values verbatim from the Adobe Core-14 AFMs (StartFontMetrics 4.1,
+    // (c) Adobe 1985-1997), the same provenance as the code tables above.
+    // Covers exactly the 123 glyph names reachable through WinAnsiEncoding
+    // codes 128-255 (#1106). Courier is monospaced (600) and handled without
+    // a table; Symbol/ZapfDingbats use their own encodings and fail closed.
+    private static readonly Dictionary<string, short[]> UpperGlyphWidths = new()
+    {
+        { "AE", new short[] {  889, 1000,  889,  944, 1000, 1000, 1000, 1000 } },
+        { "Aacute", new short[] {  722,  722,  611,  667,  667,  722,  667,  722 } },
+        { "Acircumflex", new short[] {  722,  722,  611,  667,  667,  722,  667,  722 } },
+        { "Adieresis", new short[] {  722,  722,  611,  667,  667,  722,  667,  722 } },
+        { "Agrave", new short[] {  722,  722,  611,  667,  667,  722,  667,  722 } },
+        { "Aring", new short[] {  722,  722,  611,  667,  667,  722,  667,  722 } },
+        { "Atilde", new short[] {  722,  722,  611,  667,  667,  722,  667,  722 } },
+        { "Ccedilla", new short[] {  667,  722,  667,  667,  722,  722,  722,  722 } },
+        { "Eacute", new short[] {  611,  667,  611,  667,  667,  667,  667,  667 } },
+        { "Ecircumflex", new short[] {  611,  667,  611,  667,  667,  667,  667,  667 } },
+        { "Edieresis", new short[] {  611,  667,  611,  667,  667,  667,  667,  667 } },
+        { "Egrave", new short[] {  611,  667,  611,  667,  667,  667,  667,  667 } },
+        { "Eth", new short[] {  722,  722,  722,  722,  722,  722,  722,  722 } },
+        { "Euro", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "Iacute", new short[] {  333,  389,  333,  389,  278,  278,  278,  278 } },
+        { "Icircumflex", new short[] {  333,  389,  333,  389,  278,  278,  278,  278 } },
+        { "Idieresis", new short[] {  333,  389,  333,  389,  278,  278,  278,  278 } },
+        { "Igrave", new short[] {  333,  389,  333,  389,  278,  278,  278,  278 } },
+        { "Ntilde", new short[] {  722,  722,  667,  722,  722,  722,  722,  722 } },
+        { "OE", new short[] {  889, 1000,  944,  944, 1000, 1000, 1000, 1000 } },
+        { "Oacute", new short[] {  722,  778,  722,  722,  778,  778,  778,  778 } },
+        { "Ocircumflex", new short[] {  722,  778,  722,  722,  778,  778,  778,  778 } },
+        { "Odieresis", new short[] {  722,  778,  722,  722,  778,  778,  778,  778 } },
+        { "Ograve", new short[] {  722,  778,  722,  722,  778,  778,  778,  778 } },
+        { "Oslash", new short[] {  722,  778,  722,  722,  778,  778,  778,  778 } },
+        { "Otilde", new short[] {  722,  778,  722,  722,  778,  778,  778,  778 } },
+        { "Scaron", new short[] {  556,  556,  500,  556,  667,  667,  667,  667 } },
+        { "Thorn", new short[] {  556,  611,  611,  611,  667,  667,  667,  667 } },
+        { "Uacute", new short[] {  722,  722,  722,  722,  722,  722,  722,  722 } },
+        { "Ucircumflex", new short[] {  722,  722,  722,  722,  722,  722,  722,  722 } },
+        { "Udieresis", new short[] {  722,  722,  722,  722,  722,  722,  722,  722 } },
+        { "Ugrave", new short[] {  722,  722,  722,  722,  722,  722,  722,  722 } },
+        { "Yacute", new short[] {  722,  722,  556,  611,  667,  667,  667,  667 } },
+        { "Ydieresis", new short[] {  722,  722,  556,  611,  667,  667,  667,  667 } },
+        { "Zcaron", new short[] {  611,  667,  556,  611,  611,  611,  611,  611 } },
+        { "aacute", new short[] {  444,  500,  500,  500,  556,  556,  556,  556 } },
+        { "acircumflex", new short[] {  444,  500,  500,  500,  556,  556,  556,  556 } },
+        { "acute", new short[] {  333,  333,  333,  333,  333,  333,  333,  333 } },
+        { "adieresis", new short[] {  444,  500,  500,  500,  556,  556,  556,  556 } },
+        { "ae", new short[] {  667,  722,  667,  722,  889,  889,  889,  889 } },
+        { "agrave", new short[] {  444,  500,  500,  500,  556,  556,  556,  556 } },
+        { "aring", new short[] {  444,  500,  500,  500,  556,  556,  556,  556 } },
+        { "atilde", new short[] {  444,  500,  500,  500,  556,  556,  556,  556 } },
+        { "brokenbar", new short[] {  200,  220,  275,  220,  260,  280,  260,  280 } },
+        { "bullet", new short[] {  350,  350,  350,  350,  350,  350,  350,  350 } },
+        { "ccedilla", new short[] {  444,  444,  444,  444,  500,  556,  500,  556 } },
+        { "cedilla", new short[] {  333,  333,  333,  333,  333,  333,  333,  333 } },
+        { "cent", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "circumflex", new short[] {  333,  333,  333,  333,  333,  333,  333,  333 } },
+        { "copyright", new short[] {  760,  747,  760,  747,  737,  737,  737,  737 } },
+        { "currency", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "dagger", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "daggerdbl", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "degree", new short[] {  400,  400,  400,  400,  400,  400,  400,  400 } },
+        { "dieresis", new short[] {  333,  333,  333,  333,  333,  333,  333,  333 } },
+        { "divide", new short[] {  564,  570,  675,  570,  584,  584,  584,  584 } },
+        { "eacute", new short[] {  444,  444,  444,  444,  556,  556,  556,  556 } },
+        { "ecircumflex", new short[] {  444,  444,  444,  444,  556,  556,  556,  556 } },
+        { "edieresis", new short[] {  444,  444,  444,  444,  556,  556,  556,  556 } },
+        { "egrave", new short[] {  444,  444,  444,  444,  556,  556,  556,  556 } },
+        { "ellipsis", new short[] { 1000, 1000,  889, 1000, 1000, 1000, 1000, 1000 } },
+        { "emdash", new short[] { 1000, 1000,  889, 1000, 1000, 1000, 1000, 1000 } },
+        { "endash", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "eth", new short[] {  500,  500,  500,  500,  556,  611,  556,  611 } },
+        { "exclamdown", new short[] {  333,  333,  389,  389,  333,  333,  333,  333 } },
+        { "florin", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "germandbls", new short[] {  500,  556,  500,  500,  611,  611,  611,  611 } },
+        { "guillemotleft", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "guillemotright", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "guilsinglleft", new short[] {  333,  333,  333,  333,  333,  333,  333,  333 } },
+        { "guilsinglright", new short[] {  333,  333,  333,  333,  333,  333,  333,  333 } },
+        { "hyphen", new short[] {  333,  333,  333,  333,  333,  333,  333,  333 } },
+        { "iacute", new short[] {  278,  278,  278,  278,  278,  278,  278,  278 } },
+        { "icircumflex", new short[] {  278,  278,  278,  278,  278,  278,  278,  278 } },
+        { "idieresis", new short[] {  278,  278,  278,  278,  278,  278,  278,  278 } },
+        { "igrave", new short[] {  278,  278,  278,  278,  278,  278,  278,  278 } },
+        { "logicalnot", new short[] {  564,  570,  675,  606,  584,  584,  584,  584 } },
+        { "macron", new short[] {  333,  333,  333,  333,  333,  333,  333,  333 } },
+        { "mu", new short[] {  500,  556,  500,  576,  556,  611,  556,  611 } },
+        { "multiply", new short[] {  564,  570,  675,  570,  584,  584,  584,  584 } },
+        { "ntilde", new short[] {  500,  556,  500,  556,  556,  611,  556,  611 } },
+        { "oacute", new short[] {  500,  500,  500,  500,  556,  611,  556,  611 } },
+        { "ocircumflex", new short[] {  500,  500,  500,  500,  556,  611,  556,  611 } },
+        { "odieresis", new short[] {  500,  500,  500,  500,  556,  611,  556,  611 } },
+        { "oe", new short[] {  722,  722,  667,  722,  944,  944,  944,  944 } },
+        { "ograve", new short[] {  500,  500,  500,  500,  556,  611,  556,  611 } },
+        { "onehalf", new short[] {  750,  750,  750,  750,  834,  834,  834,  834 } },
+        { "onequarter", new short[] {  750,  750,  750,  750,  834,  834,  834,  834 } },
+        { "onesuperior", new short[] {  300,  300,  300,  300,  333,  333,  333,  333 } },
+        { "ordfeminine", new short[] {  276,  300,  276,  266,  370,  370,  370,  370 } },
+        { "ordmasculine", new short[] {  310,  330,  310,  300,  365,  365,  365,  365 } },
+        { "oslash", new short[] {  500,  500,  500,  500,  611,  611,  611,  611 } },
+        { "otilde", new short[] {  500,  500,  500,  500,  556,  611,  556,  611 } },
+        { "paragraph", new short[] {  453,  540,  523,  500,  537,  556,  537,  556 } },
+        { "periodcentered", new short[] {  250,  250,  250,  250,  278,  278,  278,  278 } },
+        { "perthousand", new short[] { 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000 } },
+        { "plusminus", new short[] {  564,  570,  675,  570,  584,  584,  584,  584 } },
+        { "questiondown", new short[] {  444,  500,  500,  500,  611,  611,  611,  611 } },
+        { "quotedblbase", new short[] {  444,  500,  556,  500,  333,  500,  333,  500 } },
+        { "quotedblleft", new short[] {  444,  500,  556,  500,  333,  500,  333,  500 } },
+        { "quotedblright", new short[] {  444,  500,  556,  500,  333,  500,  333,  500 } },
+        { "quoteleft", new short[] {  333,  333,  333,  333,  222,  278,  222,  278 } },
+        { "quoteright", new short[] {  333,  333,  333,  333,  222,  278,  222,  278 } },
+        { "quotesinglbase", new short[] {  333,  333,  333,  333,  222,  278,  222,  278 } },
+        { "registered", new short[] {  760,  747,  760,  747,  737,  737,  737,  737 } },
+        { "scaron", new short[] {  389,  389,  389,  389,  500,  556,  500,  556 } },
+        { "section", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "space", new short[] {  250,  250,  250,  250,  278,  278,  278,  278 } },
+        { "sterling", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "thorn", new short[] {  500,  556,  500,  500,  556,  611,  556,  611 } },
+        { "threequarters", new short[] {  750,  750,  750,  750,  834,  834,  834,  834 } },
+        { "threesuperior", new short[] {  300,  300,  300,  300,  333,  333,  333,  333 } },
+        { "tilde", new short[] {  333,  333,  333,  333,  333,  333,  333,  333 } },
+        { "trademark", new short[] {  980, 1000,  980, 1000, 1000, 1000, 1000, 1000 } },
+        { "twosuperior", new short[] {  300,  300,  300,  300,  333,  333,  333,  333 } },
+        { "uacute", new short[] {  500,  556,  500,  556,  556,  611,  556,  611 } },
+        { "ucircumflex", new short[] {  500,  556,  500,  556,  556,  611,  556,  611 } },
+        { "udieresis", new short[] {  500,  556,  500,  556,  556,  611,  556,  611 } },
+        { "ugrave", new short[] {  500,  556,  500,  556,  556,  611,  556,  611 } },
+        { "yacute", new short[] {  500,  500,  444,  444,  500,  556,  500,  556 } },
+        { "ydieresis", new short[] {  500,  500,  444,  444,  500,  556,  500,  556 } },
+        { "yen", new short[] {  500,  500,  500,  500,  556,  556,  556,  556 } },
+        { "zcaron", new short[] {  444,  444,  389,  389,  500,  500,  500,  500 } },
+    };
+
+    // WinAnsiEncoding (CP1252) character code -> glyph name for codes 128-255
+    // (PDF 32000-1 Annex D.2). 0xA0->space and 0xAD->hyphen per Adobe's
+    // definition; codes 127/129/141/143/144/157 are unassigned and absent,
+    // so a width for them fails closed rather than guessing.
+    private static readonly Dictionary<int, string> WinAnsiUpper = new()
+    {
+        { 128, "Euro" }, { 130, "quotesinglbase" }, { 131, "florin" }, { 132, "quotedblbase" },
+        { 133, "ellipsis" }, { 134, "dagger" }, { 135, "daggerdbl" }, { 136, "circumflex" },
+        { 137, "perthousand" }, { 138, "Scaron" }, { 139, "guilsinglleft" }, { 140, "OE" },
+        { 142, "Zcaron" }, { 145, "quoteleft" }, { 146, "quoteright" }, { 147, "quotedblleft" },
+        { 148, "quotedblright" }, { 149, "bullet" }, { 150, "endash" }, { 151, "emdash" },
+        { 152, "tilde" }, { 153, "trademark" }, { 154, "scaron" }, { 155, "guilsinglright" },
+        { 156, "oe" }, { 158, "zcaron" }, { 159, "Ydieresis" }, { 160, "space" },
+        { 161, "exclamdown" }, { 162, "cent" }, { 163, "sterling" }, { 164, "currency" },
+        { 165, "yen" }, { 166, "brokenbar" }, { 167, "section" }, { 168, "dieresis" },
+        { 169, "copyright" }, { 170, "ordfeminine" }, { 171, "guillemotleft" }, { 172, "logicalnot" },
+        { 173, "hyphen" }, { 174, "registered" }, { 175, "macron" }, { 176, "degree" },
+        { 177, "plusminus" }, { 178, "twosuperior" }, { 179, "threesuperior" }, { 180, "acute" },
+        { 181, "mu" }, { 182, "paragraph" }, { 183, "periodcentered" }, { 184, "cedilla" },
+        { 185, "onesuperior" }, { 186, "ordmasculine" }, { 187, "guillemotright" }, { 188, "onequarter" },
+        { 189, "onehalf" }, { 190, "threequarters" }, { 191, "questiondown" }, { 192, "Agrave" },
+        { 193, "Aacute" }, { 194, "Acircumflex" }, { 195, "Atilde" }, { 196, "Adieresis" },
+        { 197, "Aring" }, { 198, "AE" }, { 199, "Ccedilla" }, { 200, "Egrave" },
+        { 201, "Eacute" }, { 202, "Ecircumflex" }, { 203, "Edieresis" }, { 204, "Igrave" },
+        { 205, "Iacute" }, { 206, "Icircumflex" }, { 207, "Idieresis" }, { 208, "Eth" },
+        { 209, "Ntilde" }, { 210, "Ograve" }, { 211, "Oacute" }, { 212, "Ocircumflex" },
+        { 213, "Otilde" }, { 214, "Odieresis" }, { 215, "multiply" }, { 216, "Oslash" },
+        { 217, "Ugrave" }, { 218, "Uacute" }, { 219, "Ucircumflex" }, { 220, "Udieresis" },
+        { 221, "Yacute" }, { 222, "Thorn" }, { 223, "germandbls" }, { 224, "agrave" },
+        { 225, "aacute" }, { 226, "acircumflex" }, { 227, "atilde" }, { 228, "adieresis" },
+        { 229, "aring" }, { 230, "ae" }, { 231, "ccedilla" }, { 232, "egrave" },
+        { 233, "eacute" }, { 234, "ecircumflex" }, { 235, "edieresis" }, { 236, "igrave" },
+        { 237, "iacute" }, { 238, "icircumflex" }, { 239, "idieresis" }, { 240, "eth" },
+        { 241, "ntilde" }, { 242, "ograve" }, { 243, "oacute" }, { 244, "ocircumflex" },
+        { 245, "otilde" }, { 246, "odieresis" }, { 247, "divide" }, { 248, "oslash" },
+        { 249, "ugrave" }, { 250, "uacute" }, { 251, "ucircumflex" }, { 252, "udieresis" },
+        { 253, "yacute" }, { 254, "thorn" }, { 255, "ydieresis" },
+    };
+
     /// <summary>
     /// The advance for <paramref name="charCode"/> in <paramref name="baseFont"/>,
     /// or false when this class has nothing authoritative to say — an unknown
-    /// family, or a code outside 32-126.
+    /// family, or a code this class cannot resolve to a glyph name.
     /// </summary>
     public static bool TryGetWidth(string? baseFont, int charCode, out double width)
     {
         width = 0;
-        if (baseFont == null || charCode < First || charCode > Last) return false;
+        if (baseFont == null) return false;
 
-        var table = TableFor(baseFont);
-        if (table == null) return false;
+        // 32-126 fast path — the code-indexed tables, byte-for-byte as before.
+        // Deliberately NOT routed through the WinAnsi name lookup below: codes
+        // 39 and 96 carry the Standard quoteright/quoteleft glyphs in these
+        // tables, and re-resolving them as WinAnsi quotesingle/grave would
+        // silently change two long-pinned values (#1106).
+        if (charCode >= First && charCode <= Last)
+        {
+            var table = TableFor(baseFont);
+            if (table == null) return false;
+            width = table[charCode - First];
+            return true;
+        }
 
-        width = table[charCode - First];
-        return true;
+        // 128-255 (#1106): the encodings diverge, so resolve the code to a glyph
+        // name through WinAnsiEncoding (the standard-14 default), then the name
+        // to a width. Codes 127 and the unassigned WinAnsi slots have no name
+        // and fail closed.
+        if (charCode > Last && WinAnsiUpper.TryGetValue(charCode, out var glyphName))
+            return TryGetWidthByGlyphName(baseFont, glyphName, out width);
+
+        return false;
+    }
+
+    /// <summary>
+    /// The advance for a glyph named <paramref name="glyphName"/> in
+    /// <paramref name="baseFont"/>, from the Adobe AFM metrics — the name→width
+    /// step an /Encoding /Differences remap resolves through. True only for the
+    /// Latin standard-14 faces (and Courier, monospaced 600) on a glyph name the
+    /// AFM covers; Symbol, ZapfDingbats and unknown families fail closed rather
+    /// than guess.
+    /// </summary>
+    public static bool TryGetWidthByGlyphName(string? baseFont, string? glyphName, out double width)
+    {
+        width = 0;
+        if (baseFont == null || glyphName == null) return false;
+
+        var name = StripSubsetPrefix(baseFont);
+
+        // Courier: monospaced, every glyph advances 600 — but only vouch for a
+        // glyph name the standard-14 metrics actually recognise, so garbage
+        // still fails closed.
+        if (Has(name, "Courier") || Has(name, "Mono"))
+        {
+            if (UpperGlyphWidths.ContainsKey(glyphName))
+            {
+                width = 600;
+                return true;
+            }
+            return false;
+        }
+
+        var faceIndex = LatinFaceIndex(name);
+        if (faceIndex < 0) return false; // Symbol, ZapfDingbats, unknown
+
+        if (UpperGlyphWidths.TryGetValue(glyphName, out var widths))
+        {
+            width = widths[faceIndex];
+            return true;
+        }
+        return false;
+    }
+
+    private static string StripSubsetPrefix(string baseFont) =>
+        baseFont.Length > 7 && baseFont[6] == '+' ? baseFont[7..] : baseFont;
+
+    /// <summary>
+    /// Column index into <see cref="UpperGlyphWidths"/> for a Latin standard-14
+    /// face, or -1 for Courier / Symbol / ZapfDingbats / unknown. Mirrors the
+    /// family and style resolution in <see cref="TableFor"/>.
+    /// </summary>
+    private static int LatinFaceIndex(string name)
+    {
+        var bold = name.Contains("Bold", StringComparison.OrdinalIgnoreCase);
+        var italic = name.Contains("Italic", StringComparison.OrdinalIgnoreCase)
+                  || name.Contains("Oblique", StringComparison.OrdinalIgnoreCase);
+
+        if (Has(name, "Times") || Has(name, "Serif") && !Has(name, "SansSerif"))
+            return (bold, italic) switch
+            {
+                (true, true) => 3,   // Times-BoldItalic
+                (true, false) => 1,  // Times-Bold
+                (false, true) => 2,  // Times-Italic
+                _ => 0,              // Times-Roman
+            };
+
+        if (Has(name, "Helvetica") || Has(name, "Arial"))
+            return (bold, italic) switch
+            {
+                (true, true) => 7,   // Helvetica-BoldOblique
+                (true, false) => 5,  // Helvetica-Bold
+                (false, true) => 6,  // Helvetica-Oblique
+                _ => 4,              // Helvetica
+            };
+
+        return -1;
     }
 
     /// <summary>
