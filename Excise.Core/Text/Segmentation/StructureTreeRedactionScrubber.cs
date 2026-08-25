@@ -132,7 +132,11 @@ internal static class StructureTreeRedactionScrubber
         var changed = false;
         foreach (var carrier in carriers)
         {
-            var value = elem.GetStringOrNull(carrier);
+            // Resolve first: /ActualText, /Alt and /E may be stored as indirect
+            // string objects, and GetStringOrNull returns null on those, walking
+            // past the carrier (#1155 — the same indirect-ref gap that let a
+            // bookmark title survive in PdfDocumentSanitizer).
+            var value = (doc.Resolve(elem.GetOptional(carrier) ?? PdfNull.Instance) as PdfString)?.Value;
             if (value == null) continue;
 
             // Pass 2 — content-matching: does the carrier still spell out
