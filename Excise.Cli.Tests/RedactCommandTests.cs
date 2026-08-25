@@ -572,6 +572,69 @@ public class RedactCommandTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_Redact_NoBoxFlag_EndToEnd_RemovesTextAndDrawsNoBox()
+    {
+        // Exercises the full CLI path: option registration -> GetValue(noBox)
+        // -> drawBox: !noBox -> RunRedactWithNotes -> RedactText. A transposed
+        // argument here would pass the RunRedact-level tests while --no-box
+        // silently drew a box, which on a redaction tool is exactly the kind of
+        // "the plumbing exists but is mis-wired" gap worth pinning.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
+
+        var prevOut = Console.Out;
+        Console.SetOut(new StringWriter());
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--no-box"
+            });
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+        }
+
+        exitCode.Should().Be(0);
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "SECRET").Should().BeEmpty();
+        AppendedFillBoxColors(outputPath).Should().BeEmpty("--no-box draws no covering rectangle");
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_BoxColorRgb_EndToEnd_DrawsThatColor()
+    {
+        // The full CLI path for --box-color, including TryParseBoxColor being
+        // fed the flag's value and the parsed color reaching the box.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
+
+        var prevOut = Console.Out;
+        Console.SetOut(new StringWriter());
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--box-color", "255,0,0"
+            });
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+        }
+
+        exitCode.Should().Be(0);
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "SECRET").Should().BeEmpty();
+        var boxes = AppendedFillBoxColors(outputPath);
+        boxes.Should().NotBeEmpty();
+        boxes.Should().OnlyContain(c => c.R == 1 && c.G == 0 && c.B == 0, "255,0,0 -> rg 1 0 0");
+    }
+
+    [Fact]
     public async Task RunAsync_Redact_NoBoxAndBoxColorTogether_IsRejected()
     {
         // A redaction tool must never silently ignore a flag the user passed.
