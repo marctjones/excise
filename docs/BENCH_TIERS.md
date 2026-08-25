@@ -49,6 +49,15 @@ when a corpus that actually contains leaked redactions is fetched (GovDocs1,
 which x-ray was built to sweep at scale on RECAP). The mechanism is in place; the
 tier is honestly reported as 0 until then.
 
+## OCG — optional-content coverage (#1111)
+
+`tier-ocg.tsv`: documents with real `/OCProperties` / `/OCGs` structure — the
+`includeHiddenLayers` path redaction defaults to. GWG's own Processing-Steps
+sample set is membership-gated (its public URL 404s), so rather than chase it,
+this takes the equivalent from corpora we already hold (pdf.js, veraPDF, Ghent,
+Poppler, PDFium) — 40 optional-content documents, reproducibly selected like the
+tiers above.
+
 ## Sizing, and the honest caveat
 
 Target ~200–250 documents × 3–5 targets ≈ **800–1,000 cases**. Present manifests

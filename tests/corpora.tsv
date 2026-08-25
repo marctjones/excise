@@ -35,6 +35,6 @@ redaction-synthetic	core	test-pdfs/redaction-synthetic	gen-redaction-corpus.py	3
 dlib-slovenia	planned	test-pdfs/dlib-slovenia	#1108	?	public	invisible text (render mode 3) over scans — a REDACTION LEAK CARRIER
 itext	extended	test-pdfs/itext	download-itext-corpus.sh	1M	AGPL-fixtures	iText encrypted-PDF fixtures: AES-128/256, AES-256 PDF2.0, RC4-40/128 (#1048, #1095)
 pdfua-matterhorn	extended	test-pdfs/pdfua	download-pdfua-matterhorn.sh	~30M	CC-BY-4.0	tagged PDFs; /ActualText and /Alt (the #636 carriers) + Matterhorn structure-tree edge cases (#1110)
-gwg-processing-steps	planned	test-pdfs/gwg-steps	#1111 (RC16, deferred)	?	GWG	ISO 19593-1 optional content layers; the includeHiddenLayers path
+gwg-processing-steps	planned	test-pdfs/gwg-steps	#1111 (source membership-gated; OCG need met by tests/bench-tiers/tier-ocg.tsv)	?	GWG	ISO 19593-1 optional content; public sample 404s — see tier-ocg
 safedocs	extended	test-pdfs/safedocs	download-safedocs.sh	~200M	CommonCrawl-ToU	malformed-PDF subset (qpdf-flagged) for removal-path robustness, the #1039 class (#1112)
 govdocs1	extended	test-pdfs/govdocs1	download-govdocs1.sh	~100M	US-Gov-PublicDomain	text-bearing producer-diverse .gov PDF subset; redaction-target diversity + x-ray sweep (#1113)

@@ -31,6 +31,12 @@ TIER_B_CORPORA = ["federal", "local-real-world", "smoke", "sample-pdfs", "pdfua"
 TIER_C_CORPORA = ["isartor", "pdfjs", "pdfium", "safedocs"]
 # Tier D: sweep these for OTHER people's leaked redactions.
 TIER_D_CORPORA = ["federal", "local-real-world", "smoke", "pdfua", "poppler", "govdocs1"]
+# OCG (#1111): documents with real optional-content structure — the
+# includeHiddenLayers path redaction defaults to. GWG's own sample set is
+# membership-gated (its public URL 404s), so per no-third-party-errands we take
+# the equivalent from corpora we already hold.
+OCG_CORPORA = ["pdfjs", "verapdf-corpus", "ghent", "poppler", "pdfium"]
+OCG_CAP = 40
 
 B_CAP, C_CAP, D_CAP = 150, 30, 200
 B_PER_PRODUCER = 6
@@ -152,13 +158,34 @@ def build_d():
     write("d", rows)
 
 
+def has_ocg(p: Path) -> bool:
+    try:
+        raw = p.read_bytes()
+        return b"/OCProperties" in raw or b"/OCGs" in raw
+    except Exception:
+        return False
+
+
+def build_ocg():
+    rows = []
+    for corpus in OCG_CORPORA:
+        for p in pdfs(corpus):
+            if len(rows) >= OCG_CAP:
+                break
+            if p.stat().st_size > 8 << 20 or not has_ocg(p):
+                continue
+            rows.append((corpus, str(p.relative_to(CORPORA / corpus)), sha256(p), "optional-content"))
+    write("ocg", rows)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--tier", choices=["b", "c", "d", "all"], default="all")
+    ap.add_argument("--tier", choices=["b", "c", "d", "ocg", "all"], default="all")
     a = ap.parse_args()
     if a.tier in ("b", "all"): build_b()
     if a.tier in ("c", "all"): build_c()
     if a.tier in ("d", "all"): build_d()
+    if a.tier in ("ocg", "all"): build_ocg()
 
 
 if __name__ == "__main__":
