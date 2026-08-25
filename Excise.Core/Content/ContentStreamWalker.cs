@@ -164,6 +164,15 @@ internal sealed class ContentStreamWalker
     // unparseable one, so a bad font is not re-parsed on every glyph.
     private readonly Dictionary<PdfDictionary, Fonts.TrueTypeFontFile?> _embeddedTtfCache =
         new(ReferenceEqualityComparer.Instance);
+    // #1148: parsed embedded CFF/OpenType-CFF programs (/FontFile3), keyed by
+    // FontDescriptor — the other half of #1102. A CFF carries no hmtx, so the
+    // Type2 charstring is the only advance source when a /FontFile3 simple font
+    // ships no /Widths. null cached for descriptors with no /FontFile3, an
+    // unparseable program, or a CID-keyed CFF (its advances are unreachable
+    // here — the 2-byte /W+/DW branch returns first), so a bad font is not
+    // re-parsed on every glyph.
+    private readonly Dictionary<PdfDictionary, Fonts.CffParser.CffFontInfo?> _embeddedCffCache =
+        new(ReferenceEqualityComparer.Instance);
     // #1103: the horizontal scale (FontMatrix[0], the `a` term) that maps a
     // Type3 font's glyph-space /Widths to text space (§9.6.5). NaN cached for a
     // non-Type3 font so GetCharWidth's hot path skips the /FontMatrix read
@@ -1768,6 +1777,65 @@ internal sealed class ContentStreamWalker
     }
 
     /// <summary>
+    /// #1148 — advance width (1000ths of em) for <paramref name="charCode"/>
+    /// from the embedded CFF/OpenType-CFF program in
+    /// <paramref name="fontDescriptor"/> (/FontFile3), or 0 when there is no
+    /// /FontFile3, it will not parse, the CFF is CID-keyed, or the glyph is not
+    /// found. Parsed program cached per descriptor. The TrueType twin
+    /// (<see cref="EmbeddedTrueTypeAdvance"/>) maps a code to a glyph through the
+    /// program's cmap; a CFF has none, so the code is decoded to Unicode and
+    /// then to a glyph NAME (§9.6.6 / the Adobe Glyph List), which the CFF
+    /// charset resolves to a gid.
+    /// </summary>
+    private double EmbeddedCffAdvance(PdfDictionary fontDescriptor, int charCode)
+    {
+        if (!_embeddedCffCache.TryGetValue(fontDescriptor, out var cff))
+        {
+            cff = null;
+            try
+            {
+                var ffObj = _page != null
+                    ? _page.Document.Resolve(fontDescriptor.GetOptional("FontFile3") ?? PdfNull.Instance)
+                    : fontDescriptor.GetOptional("FontFile3");
+                if (ffObj is PdfStream ff)
+                    cff = Fonts.CffParser.Parse(ff.DecodedData);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException) { cff = null; }
+            // A CID-keyed CFF has no glyph names to map a simple code through,
+            // and its advances are unreachable on this path anyway (the 2-byte
+            // /W+/DW branch of GetCharWidth returns first). Cache it as absent so
+            // it is not re-parsed. Explicit intent, not the only guard —
+            // GlyphNameToIndex is empty for CID-keyed fonts regardless.
+            if (cff != null && cff.IsCidKeyed)
+                cff = null;
+            _embeddedCffCache[fontDescriptor] = cff;
+        }
+        if (cff == null || cff.UnitsPerEm <= 0) return 0;
+
+        // Map the code to a glyph NAME. CFF has no cmap: decode the code to
+        // Unicode (honours /Encoding and /ToUnicode), invert to an AGL glyph
+        // name, else fall back to the algorithmic uniXXXX name — then let the
+        // font's own charset (GlyphNameToIndex) resolve the gid. Any miss falls
+        // to 0, never to a guessed width.
+        var uni = _decoder.Decode(charCode, charCode, _registeredCidToUnicode);
+        if (string.IsNullOrEmpty(uni)) return 0;
+        var cp = char.ConvertToUtf32(uni, 0);
+        // A code that decodes to more than one code point (a ligature like
+        // "fi") names no single glyph — resolving the first code point would
+        // return f's advance for the fi cell. Return 0 (no rung) rather than a
+        // confidently-wrong width.
+        if (uni.Length != (cp > 0xFFFF ? 2 : 1)) return 0;
+
+        var gid = 0;
+        var name = Text.AdobeGlyphList.ToGlyphName(cp);
+        if (name != null) cff.GlyphNameToIndex.TryGetValue(name, out gid);
+        if (gid == 0 && cp <= 0xFFFF) cff.GlyphNameToIndex.TryGetValue($"uni{cp:X4}", out gid);
+        if (gid == 0) return 0; // gid 0 is .notdef — treat as a miss.
+
+        return cff.AdvanceWidth(gid) * 1000.0 / cff.UnitsPerEm;
+    }
+
+    /// <summary>
     /// #1103 — the factor that turns a Type3 glyph-space /Widths value into the
     /// 1000ths-of-an-em convention the rest of <see cref="GetCharWidth"/> uses,
     /// i.e. <c>FontMatrix[0] * 1000</c>. Returns 1.0 (a no-op) for any non-Type3
@@ -1854,12 +1922,19 @@ internal sealed class ContentStreamWalker
 
             // #1102: the embedded font program is the authoritative width for a
             // font with no /Widths -- consulted BEFORE /MissingWidth (a blanket
-            // default) and the standard-14 guess. Only for simple TrueType
-            // (/FontFile2); CFF (/FontFile3) has no width accessor yet.
+            // default) and the standard-14 guess. #1102 covers simple TrueType
+            // (/FontFile2); #1148 adds CFF/OpenType-CFF (/FontFile3).
             if (fontDescriptor != null)
             {
                 var embedded = EmbeddedTrueTypeAdvance(fontDescriptor, charCode);
                 if (embedded > 0) return embedded;
+
+                // #1148: the /FontFile3 (CFF) rung. Placement AFTER the /Widths
+                // and /FontFile2 reads keeps every already-resolved path
+                // byte-identical -- a descriptor with no /FontFile3 caches null
+                // and returns 0 here.
+                var embeddedCff = EmbeddedCffAdvance(fontDescriptor, charCode);
+                if (embeddedCff > 0) return embeddedCff;
             }
 
             if (fontDescriptor != null)

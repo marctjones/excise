@@ -41,6 +41,45 @@ internal static class AdobeGlyphList
         return null;
     }
 
+    /// <summary>
+    /// #1148 — the reverse of <see cref="ToUnicode"/>: a Unicode code point → the
+    /// PostScript glyph name that produces it, for the CFF width rung which must
+    /// turn a decoded code point into a name to look up in the font's
+    /// <c>charset</c> (a CFF carries no cmap). Returns null when the code point is
+    /// not in the AGL subset; the caller then tries the algorithmic
+    /// <c>uniXXXX</c> convention before giving up.
+    /// </summary>
+    /// <remarks>
+    /// The failure direction is safe: a wrong or missing name makes the font's
+    /// name→gid lookup miss, which falls through to <c>uniXXXX</c> and then to a
+    /// 0 advance (no rung) — never to a confidently-wrong width. The map is built
+    /// deterministically (ordinal name order, first name wins per code point) so
+    /// a code point that several AGL names share resolves to the same name across
+    /// runs; only single-code-point AGL values are inverted.
+    /// </remarks>
+    public static string? ToGlyphName(int codePoint) =>
+        UnicodeToName.TryGetValue(codePoint, out var name) ? name : null;
+
+    private static Dictionary<int, string> BuildReverse()
+    {
+        var map = new Dictionary<int, string>();
+        foreach (var kv in NameToUnicode.OrderBy(kv => kv.Key, System.StringComparer.Ordinal))
+        {
+            var s = kv.Value;
+            if (string.IsNullOrEmpty(s))
+                continue;
+            // Only invert values that are a single Unicode code point — a
+            // surrogate pair (length 2 with a high surrogate lead) is still one.
+            var single = char.IsHighSurrogate(s[0]) ? s.Length == 2 : s.Length == 1;
+            if (!single)
+                continue;
+            var cp = char.ConvertToUtf32(s, 0);
+            if (!map.ContainsKey(cp))
+                map[cp] = kv.Key;
+        }
+        return map;
+    }
+
     private static readonly Dictionary<string, string> NameToUnicode = new()
     {
         // ASCII punctuation / digits / letters (StandardEncoding & WinAnsiEncoding agree here)
@@ -343,4 +382,9 @@ internal static class AdobeGlyphList
         ["arrowdown"] = "↓",
         ["arrowboth"] = "↔",
     };
+
+    // Built once from NameToUnicode. Declared AFTER it so the static field
+    // initializer runs after NameToUnicode is populated (initializers execute in
+    // textual order).
+    private static readonly Dictionary<int, string> UnicodeToName = BuildReverse();
 }
