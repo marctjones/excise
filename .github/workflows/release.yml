@@ -39,6 +39,139 @@ jobs:
     name: Rendering gate (Linux, with tools)
     uses: ./.github/workflows/rendering-linux.yml
 
+  # ── 0b. Coverage floors, `ci` PROFILE (#1171). RELOCATED here from the
+  #       per-push Linux job in ci.yml. Per-push CI on a corpus-less runner
+  #       could not maintain these floors from a macOS-only setup, so they
+  #       were neutered there; this job re-homes them on the RELEASE path,
+  #       where they run rarely and where a red floor blocking installers is
+  #       the intended behaviour. `publish` depends on this job.
+  #
+  #       Why HERE and not release-smoke.sh: the floor VALUES are `ci`-profile
+  #       numbers (tests/coverage-floors.tsv) and a `ci` number is only
+  #       meaningful against a CORPUS-LESS coverage report — the documented
+  #       0.76 incident (a floor read from a corpus-equipped environment) is
+  #       exactly what that file warns against. This ubuntu-latest runner has
+  #       no corpora/reference tools, matching the profile. release-smoke.sh
+  #       runs on a corpus-equipped dev machine (the `full` profile), so `ci`
+  #       floors would pass vacuously there.
+  #
+  #       The floors for Rendering/App/Avalonia/Ocr are BOOTSTRAP values today
+  #       (Rendering 0.52 read off CI; the other three 0.01 placeholders).
+  #       After this job's first green run, replace each with a real CI read:
+  #         scripts/check-coverage-floor.sh <artifact> ci <Assembly> --update
+  coverage-floors:
+    name: Coverage floors (ci profile)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache nuget
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-linux-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-linux-
+
+      - name: Install xvfb for headless UI tests
+        # Excise.Avalonia.Tests (accessibility HeadlessUnitTestSession) and the
+        # Excise.App.Tests headless suite both need a display; same as ci.yml.
+        run: sudo apt-get install -y xvfb
+
+      - name: Install smoke rendering oracles for coverage parity
+        # The Excise.Rendering `ci` floor (0.5436) was READ OFF the per-push
+        # Linux job, which provisions these before its Rendering coverage run.
+        # Some smoke-corpus/tool-gated tests live in classes the deterministic
+        # filter does NOT exclude by name — they run or skip based on what is
+        # present. Matching that provisioning here keeps this job measuring the
+        # SAME population the floor was calibrated against, so a corpus we
+        # forgot cannot manufacture a below-floor false regression (the 0.76
+        # incident shape; see tests/coverage-floors.tsv).
+        run: |
+          scripts/download-smoke-corpus.sh --require-all
+          scripts/download-pdfbox.sh
+          scripts/download-pdfium.sh
+
+      - name: Restore packages
+        run: dotnet restore
+
+      - name: Build (Debug)
+        run: dotnet build excise.sln -c Debug
+
+      # ── Excise.Avalonia ──────────────────────────────────────────────
+      - name: Run Excise.Avalonia.Tests
+        run: |
+          xvfb-run -a scripts/run-avalonia-tests-linux.sh
+        env:
+          AVALONIA_TEST_COLLECT_COVERAGE: '1'
+          AVALONIA_TEST_RESULTS_DIR: ${{ github.workspace }}/coverage-avalonia
+
+      - name: Coverage floor (Excise.Avalonia, ci profile)
+        run: |
+          report=$(find coverage-avalonia -name 'coverage.cobertura.xml' | head -1)
+          test -n "$report" || { echo "no cobertura report produced for Excise.Avalonia.Tests"; exit 1; }
+          scripts/check-coverage-floor.sh "$report" ci Excise.Avalonia
+
+      # ── Excise.Rendering ─────────────────────────────────────────────
+      # The PROFILE is the point. This step measures ~54% on a corpus-less
+      # runner where a corpus-equipped machine measures ~87% unfiltered; the
+      # `ci` floor is calibrated for the former. See tests/coverage-floors.tsv.
+      # Same deterministic filter ci.yml uses (Corpus/Differential/Benchmark/
+      # Visual excluded — they need mutool/corpora absent here).
+      - name: Run Excise.Rendering.Tests (deterministic only)
+        run: |
+          dotnet test Excise.Rendering.Tests --no-build -c Debug \
+            --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory coverage-rendering/ \
+            --logger "console;verbosity=normal"
+
+      - name: Coverage floor (Excise.Rendering, ci profile)
+        run: |
+          report=$(find coverage-rendering -name 'coverage.cobertura.xml' | head -1)
+          test -n "$report" || { echo "no cobertura report produced for Excise.Rendering.Tests"; exit 1; }
+          scripts/check-coverage-floor.sh "$report" ci Excise.Rendering
+
+      # ── Excise.Ocr ───────────────────────────────────────────────────
+      # No tesseract on this runner, so tesseract-gated tests skip — same
+      # environment split as the corpus-gated Rendering tests. `|| true`
+      # tolerates individual test failures; the floor step below still fails
+      # loudly if collection produced no report at all.
+      - name: Run Excise.Ocr.Tests
+        run: |
+          dotnet test Excise.Ocr.Tests --no-build -c Debug \
+            --collect:"XPlat Code Coverage" \
+            --results-directory coverage-ocr/ \
+            --logger "console;verbosity=normal" || true
+
+      - name: Coverage floor (Excise.Ocr, ci profile)
+        run: |
+          report=$(find coverage-ocr -name 'coverage.cobertura.xml' | head -1)
+          test -n "$report" || { echo "no cobertura report produced for Excise.Ocr.Tests"; exit 1; }
+          scripts/check-coverage-floor.sh "$report" ci Excise.Ocr
+
+      # ── Excise.App ───────────────────────────────────────────────────
+      # Unconditional here (unlike ci.yml, which gated this on GUI-path
+      # changes): a tag build always runs the full suite, so the library-only
+      # conditional that complicated the gate on per-push does not apply.
+      - name: Run Excise.App.Tests (headless with xvfb)
+        run: |
+          xvfb-run -a dotnet test Excise.App.Tests --no-build -c Debug \
+            --collect:"XPlat Code Coverage" \
+            --logger "console;verbosity=normal" \
+            --logger "trx;LogFileName=excise-app.trx" \
+            --results-directory Excise.App.Tests/TestResults \
+            --blame-hang-timeout 120000
+
+      - name: Coverage floor (Excise.App, ci profile)
+        run: |
+          report=$(find Excise.App.Tests/TestResults -name 'coverage.cobertura.xml' | head -1)
+          test -n "$report" || { echo "no cobertura report produced for Excise.App.Tests"; exit 1; }
+          scripts/check-coverage-floor.sh "$report" ci Excise.App
+
   # ── 1. Build the Ubuntu .deb installer ───────────────────────────────
   linux-deb:
     name: Linux .deb (x64)
@@ -321,7 +454,7 @@ jobs:
   # ── 4. Attach installers to the GitHub release ──────────────────────
   publish:
     name: Attach to GitHub release
-    needs: [rendering-gate, linux-deb, windows-exe, macos-app]
+    needs: [rendering-gate, coverage-floors, linux-deb, windows-exe, macos-app]
     runs-on: ubuntu-latest
     # Only auto-create a release when the trigger was a tag push or a
     # release event. workflow_dispatch reruns just produce artifacts you
