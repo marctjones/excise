@@ -1201,6 +1201,7 @@ namespace Excise.Core.Operations
 {
     public static class PdfDocumentMerger
     {
+        public static System.Collections.Generic.IReadOnlyList<string> CatalogEntriesNotConserved(Excise.Core.Document.PdfDocument source) { }
         public static Excise.Core.Document.PdfDocument Merge([System.Runtime.CompilerServices.TupleElementNames(new string[] {
                 "Document",
                 "PageIndices"})] System.Collections.Generic.IReadOnlyList<System.ValueTuple<Excise.Core.Document.PdfDocument, System.Collections.Generic.IReadOnlyList<int>>> sources) { }

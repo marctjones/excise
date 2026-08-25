@@ -751,8 +751,6 @@ namespace Excise.App.ViewModels
     public sealed class LicenseManifest
     {
         public LicenseManifest() { }
-        [System.Text.Json.Serialization.JsonPropertyName("generatedAt")]
-        public string? GeneratedAt { get; set; }
         [System.Text.Json.Serialization.JsonPropertyName("packages")]
         public System.Collections.Generic.List<Excise.App.ViewModels.ThirdPartyPackage> Packages { get; set; }
         [System.Text.Json.Serialization.JsonPropertyName("project")]
