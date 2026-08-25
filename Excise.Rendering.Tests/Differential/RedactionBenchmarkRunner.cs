@@ -145,6 +145,21 @@ public sealed class RedactionBenchmarkRunner
         public double InkFractionBeforeRegion { get; init; } = -1;
         public double InkFractionInRegion { get; init; } = -1;
 
+        // RENDER FIDELITY — does the SURVIVING content still render correctly?
+        // Fraction of pixels OUTSIDE the redacted region that differ between the
+        // before and after render (an independent renderer). Low = the rest of
+        // the page is untouched; high = the redaction mispositioned text, broke a
+        // font, or drew over neighbours (#942/#1100/#167 as a RENDER defect, which
+        // qpdf-validity and text-extraction both miss). Per-tool. -1 = not measured.
+        public double SurvivingRenderDelta { get; init; } = -1;
+
+        // VISUAL READABILITY — is the secret still READABLE IN PIXELS after
+        // redaction? OCR the term's region in the rendered output: 1 = the term
+        // is legible (a visual leak the text axes cannot see — vector/raster
+        // residue, or a transparent cover), 0 = not legible, -1 = not measured.
+        // Per-tool, on the output AS IT SHIPS.
+        public int VisualTermReadable { get; init; } = -1;
+
         // STRUCTURAL (#1117) — structures a text diff cannot see (pages, links,
         // bookmarks, form fields, attachments, PDF/A). "" = conserved; otherwise
         // the specific drops, e.g. "bookmarks 3->0, pdf/a lost". Redaction should
@@ -480,6 +495,11 @@ public sealed class RedactionBenchmarkRunner
             // ── VISUAL (#1141): is the region blank once the box is off? ──
             var (inkBefore, inkAfter) = MeasureInkAxis(path, term, tool);
 
+            // Per-tool render axes: does the SURVIVING page still render correctly,
+            // and is the secret still READABLE in pixels?
+            var survivingRenderDelta = MeasureSurvivingRenderDelta(path, output, term);
+            var visualReadable = MeasureVisualReadable(path, output, term);
+
             // ── STRUCTURAL (#1117): did the redaction drop a structure the
             //    text diff cannot see? Best-effort — a parse failure on either
             //    side is not a structural finding.
@@ -501,7 +521,9 @@ public sealed class RedactionBenchmarkRunner
             var glyphsAfter = MutoolGlyphPositions.ExtractPage(output, 1);
             var gapPreserved = MutoolGlyphPositions.LayoutGapPreserved(glyphsBefore, glyphsAfter);
 
-            var recoverable = leakText || badRedactions > 0 || leakBytes;
+            // A term still LEGIBLE in the rendered pixels is recoverable too — the
+            // visual leak the text oracles cannot see.
+            var recoverable = leakText || badRedactions > 0 || leakBytes || visualReadable == 1;
             var verdict =
                 recoverable ? Differential.RedactionBenchmarkRunner.Verdict.Recoverable
                 : gapPreserved == true ? Differential.RedactionBenchmarkRunner.Verdict.RemovedWithResidue
@@ -533,6 +555,8 @@ public sealed class RedactionBenchmarkRunner
                 InkFractionBeforeRegion = inkBefore,
                 InkFractionInRegion = inkAfter,
                 StructuralDropped = structuralDropped,
+                SurvivingRenderDelta = survivingRenderDelta,
+                VisualTermReadable = visualReadable,
             };
         }
         finally { try { File.Delete(output); } catch { /* best effort */ } }
@@ -674,6 +698,139 @@ public sealed class RedactionBenchmarkRunner
             finally { try { File.Delete(tmp); } catch { /* best effort */ } }
         }
         catch { return (-1, -1); }
+    }
+
+    /// <summary>
+    /// RENDER-FIDELITY axis — the fraction of pixels OUTSIDE the redacted region
+    /// that changed between the before and after render. The redacted region
+    /// itself is masked (change there is the point); everything else must be
+    /// identical, or the redaction damaged the surviving render. Per-tool, on the
+    /// tool's actual output. -1 when not measurable.
+    /// </summary>
+    internal static double MeasureSurvivingRenderDelta(string inputPath, string outputPath, string term)
+    {
+        if (!GhostscriptReferenceRenderer.IsAvailable) return -1;
+        try
+        {
+            PdfRectangle region; double pageHeight;
+            using (var doc = PdfDocument.Open(inputPath))
+            {
+                if (doc.PageCount < 1) return -1;
+                var page = doc.GetPage(1);
+                pageHeight = page.Height;
+                var box = FirstMatchBoxOnPage1(page, term);
+                if (box == null) return -1;
+                region = box.Value;
+            }
+            using var before = GhostscriptReferenceRenderer.RenderPage(inputPath, 1, dpi: 150);
+            using var after = GhostscriptReferenceRenderer.RenderPage(outputPath, 1, dpi: 150);
+            if (before == null || after == null) return -1;
+            // A changed page size is itself a surviving-render change (a tool that
+            // reflowed or rasterised to a different geometry).
+            if (before.Width != after.Width || before.Height != after.Height) return 1.0;
+
+            const double scale = 150.0 / 72.0;
+            var m = region.Normalize();
+            int mx0 = (int)(m.Left * scale) - 2, mx1 = (int)(m.Right * scale) + 2;
+            int my0 = (int)((pageHeight - m.Top) * scale) - 2, my1 = (int)((pageHeight - m.Bottom) * scale) + 2;
+
+            long diff = 0, total = 0;
+            for (int y = 0; y < before.Height; y++)
+            for (int x = 0; x < before.Width; x++)
+            {
+                if (x >= mx0 && x <= mx1 && y >= my0 && y <= my1) continue;   // masked region
+                total++;
+                var a = before.GetPixel(x, y);
+                var b = after.GetPixel(x, y);
+                if (Math.Abs(a.Red - b.Red) > 24 || Math.Abs(a.Green - b.Green) > 24 || Math.Abs(a.Blue - b.Blue) > 24)
+                    diff++;
+            }
+            return total == 0 ? 0 : (double)diff / total;
+        }
+        catch { return -1; }
+    }
+
+    /// <summary>
+    /// VISUAL-READABILITY axis — OCR the term's region in the RENDERED output. If
+    /// tesseract can read the term back, the secret survives visually even when
+    /// no text carrier holds it (vector/raster residue, or a see-through cover).
+    /// Per-tool, on the output as it ships. Returns 1 legible, 0 not, -1 not
+    /// measurable.
+    /// </summary>
+    internal static int MeasureVisualReadable(string inputPath, string outputPath, string term)
+    {
+        if (!GhostscriptReferenceRenderer.IsAvailable) return -1;
+        var tess = ResolveTesseract();
+        if (tess == null) return -1;
+        try
+        {
+            PdfRectangle region; double pageHeight;
+            using (var doc = PdfDocument.Open(inputPath))
+            {
+                if (doc.PageCount < 1) return -1;
+                var page = doc.GetPage(1);
+                pageHeight = page.Height;
+                var box = FirstMatchBoxOnPage1(page, term);
+                if (box == null) return -1;
+                region = box.Value;
+            }
+            using var after = GhostscriptReferenceRenderer.RenderPage(outputPath, 1, dpi: 200);
+            if (after == null) return -1;
+
+            const double scale = 200.0 / 72.0;
+            var m = region.Normalize();
+            // Pad generously — OCR needs whitespace around the glyphs to segment.
+            int x0 = Math.Max(0, (int)(m.Left * scale) - 6);
+            int x1 = Math.Min(after.Width - 1, (int)(m.Right * scale) + 6);
+            int y0 = Math.Max(0, (int)((pageHeight - m.Top) * scale) - 6);
+            int y1 = Math.Min(after.Height - 1, (int)((pageHeight - m.Bottom) * scale) + 6);
+            if (x1 <= x0 || y1 <= y0) return -1;
+
+            using var crop = new SKBitmap(x1 - x0 + 1, y1 - y0 + 1);
+            for (int y = y0; y <= y1; y++)
+                for (int x = x0; x <= x1; x++)
+                    crop.SetPixel(x - x0, y - y0, after.GetPixel(x, y));
+
+            var png = Path.Combine(Path.GetTempPath(), $"vis-{Guid.NewGuid():N}.png");
+            try
+            {
+                using (var img = SKImage.FromBitmap(crop))
+                using (var data = img.Encode(SKEncodedImageFormat.Png, 100))
+                using (var fs = File.Create(png))
+                    data.SaveTo(fs);
+
+                var psi = new System.Diagnostics.ProcessStartInfo(tess)
+                { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+                foreach (var a in new[] { png, "stdout", "--psm", "6" }) psi.ArgumentList.Add(a);
+                using var proc = System.Diagnostics.Process.Start(psi);
+                if (proc == null) return -1;
+                var outT = proc.StandardOutput.ReadToEndAsync();
+                proc.StandardError.ReadToEndAsync();
+                if (!proc.WaitForExit(30_000)) { try { proc.Kill(true); } catch { } return -1; }
+                var text = outT.GetAwaiter().GetResult();
+                return text.Contains(term, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+            }
+            finally { try { File.Delete(png); } catch { } }
+        }
+        catch { return -1; }
+    }
+
+    private static string? ResolveTesseract()
+    {
+        foreach (var c in new[] { Environment.GetEnvironmentVariable("EXCISE_TESSERACT"), "tesseract", "/opt/homebrew/bin/tesseract" })
+        {
+            if (string.IsNullOrWhiteSpace(c)) continue;
+            try
+            {
+                using var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(c, "--version")
+                { RedirectStandardError = true, RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true });
+                if (p == null) continue;
+                p.WaitForExit(10_000);
+                if (p.ExitCode == 0) return c;
+            }
+            catch { }
+        }
+        return null;
     }
 
     /// <summary>
@@ -821,6 +978,24 @@ public sealed class RedactionBenchmarkRunner
         _out.WriteLine($"STRUCTURAL — redactions that dropped an unseen structure: {structuralDrops.Count}");
         foreach (var r in structuralDrops.Take(20))
             _out.WriteLine($"  STRUCT {r.Tool} {r.Corpus}/{r.Document}|{r.Term}: {r.StructuralDropped}");
+
+        // RENDER FIDELITY — did the redaction damage how the SURVIVING page looks?
+        _out.WriteLine("");
+        _out.WriteLine("RENDER FIDELITY — surviving-content pixel change (masking the redacted region), per tool:");
+        foreach (var g in ok.Where(r => r.SurvivingRenderDelta >= 0).GroupBy(r => r.Tool).OrderBy(g => g.Key, StringComparer.Ordinal))
+        {
+            var vals = g.Select(r => r.SurvivingRenderDelta).OrderBy(x => x).ToList();
+            var median = vals[vals.Count / 2];
+            var damaged = g.Count(r => r.SurvivingRenderDelta > 0.02);
+            _out.WriteLine($"  {g.Key,-10} median {median:P2}   {damaged}/{vals.Count} with >2% surviving-render change");
+        }
+
+        // VISUAL READABILITY — is the secret still legible in the rendered pixels?
+        var visLeaks = ok.Where(r => r.VisualTermReadable == 1).ToList();
+        _out.WriteLine("");
+        _out.WriteLine($"VISUAL READABILITY — the term is still OCR-legible in the output despite redaction: {visLeaks.Count}");
+        foreach (var g in visLeaks.GroupBy(r => r.Tool).OrderBy(g => g.Key, StringComparer.Ordinal))
+            _out.WriteLine($"  {g.Key}: {g.Count()} case(s) where the secret renders readable");
 
         // WHERE THEY DISAGREE is the actionable part: a case both tools handle
         // identically teaches nothing, and a case only one of them fails is a
