@@ -154,9 +154,12 @@ public class SecurityHandlerEdgeTests
     }
 
     [Fact]
-    public void Build_V5WithR5_ThrowsNotSupported()
+    public void Build_V5WithR5_IsAccepted_NotRefusedForTheRevision()
     {
-        // R=5 was Adobe's transitional extension; only R=6 is standard.
+        // #1128: R=5 (Adobe Extension Level 3, AES-256 as Acrobat 9 shipped it)
+        // is now supported for decryption. A minimal dict PASSES the revision
+        // gate and fails later on the missing /U (a malformed-dict error), NOT
+        // with the old "R=5 not supported" refusal.
         var dict = new PdfDictionary
         {
             ["Filter"] = new PdfName("Standard"),
@@ -166,7 +169,9 @@ public class SecurityHandlerEdgeTests
         };
 
         var act = () => PdfStandardSecurityHandler.Build(dict, new byte[16], Array.Empty<byte>());
-        act.Should().Throw<PdfEncryptionNotSupportedException>().WithMessage("*R=5*");
+        act.Should().Throw<PdfParseException>().WithMessage("*U*",
+            "R=5 now passes the revision gate and fails on the missing /U — if it were " +
+            "still refused it would throw PdfEncryptionNotSupportedException instead");
     }
 
     [Fact]
