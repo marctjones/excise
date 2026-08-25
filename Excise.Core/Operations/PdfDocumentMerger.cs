@@ -30,7 +30,10 @@ public static class PdfDocumentMerger
         if (sources == null || sources.Count == 0)
             throw new ArgumentException("At least one source document is required.", nameof(sources));
 
-        var target = PdfDocument.CreateNew();
+        // Carry the primary source's PDF version forward: a PDF/A-4 (PDF 2.0)
+        // source assembled into a default 1.7 target fails veraPDF clause 6.1.2
+        // (header must be %PDF-2.n) before any catalog check (#1056).
+        var target = PdfDocument.CreateNew(sources[0].Document.Version);
         var (cloner, clonedRefsBySource) = ClonePagesInto(target, sources);
 
         // Phase 3: splice each source's outline (bookmark) subtree onto
@@ -50,8 +53,84 @@ public static class PdfDocumentMerger
             MergeAcroForm(target, doc, cloner, ClonedRefsFor(clonedRefsBySource, doc), usedTopLevelFieldNames);
         }
 
+        // Phase 5 (#1056/#1058): conserve the PRIMARY (first) source's
+        // page-independent catalog identity — chiefly /Metadata (XMP pdfaid) and
+        // /OutputIntents (ICC), whose silent loss stripped a merged document's
+        // PDF/A conformance. First-source-wins by policy; a multi-input merge may
+        // still carry a pdfaid claim the combined output no longer satisfies —
+        // that is documented behaviour, not solved here.
+        var firstSource = sources[0].Document;
+        ConserveCatalogIdentity(target, firstSource, cloner, ClonedRefsFor(clonedRefsBySource, firstSource));
+
         return target;
     }
+
+    /// <summary>Catalog entries the assembler rebuilds or merges specially, so
+    /// they must NOT be blind-copied from the source.</summary>
+    private static readonly HashSet<string> AssemblerOwnedCatalogKeys =
+        new(StringComparer.Ordinal) { "Type", "Pages", "Outlines", "AcroForm" };
+
+    /// <summary>PAGE-INDEPENDENT catalog entries safe to carry verbatim into an
+    /// assembled output. Chiefly the PDF/A carriers /Metadata and /OutputIntents.
+    /// XMP is copied verbatim: correct for the pdfaid identification (#1056);
+    /// #1059's caveat (descriptive XMP like dc:title/page-count may no longer fit
+    /// a page SUBSET) is left as documented behaviour — rewriting XMP is out of
+    /// scope.</summary>
+    private static readonly HashSet<string> ConservedCatalogKeys =
+        new(StringComparer.Ordinal)
+        {
+            "Metadata", "OutputIntents", "Lang", "ViewerPreferences",
+            "PageLayout", "PageMode", "Version", "Extensions",
+        };
+
+    /// <summary>
+    /// Deep-clone the source catalog's page-independent identity entries
+    /// (<see cref="ConservedCatalogKeys"/>) into <paramref name="target"/>,
+    /// without clobbering entries the assembler already set. Returns the names of
+    /// catalog entries that were DROPPED rather than conserved — so the loss is
+    /// NAMED, not silent (the #1058 grievance is the silence, not the omission).
+    ///
+    /// <para>Deliberately NOT conserved, because each references pages or objects
+    /// an assembled output remaps or removes — copying one confidently-wrong is
+    /// worse than dropping it: <c>/Names /Dests /OpenAction /AA</c> dangle onto
+    /// removed/renumbered pages (and /AA·/Names/JavaScript are term carriers);
+    /// <c>/PageLabels</c> is keyed by page index, so a subset mislabels;
+    /// <c>/StructTreeRoot</c> + <c>/MarkInfo</c> travel together (a Marked claim
+    /// with no tree is false, and remapping the tree is out of scope — #1059
+    /// notes the accessibility loss); <c>/OCProperties</c> is tied to page
+    /// content; <c>/Perms</c> may carry a DocMDP certification invalid over any
+    /// assembled output. Remapping these is a separate, larger effort.</para>
+    /// </summary>
+    internal static IReadOnlyList<string> ConserveCatalogIdentity(
+        PdfDocument target, PdfDocument source, PdfObjectCloner cloner,
+        Dictionary<(int, int), PdfReference> clonedRefs)
+    {
+        var dropped = new List<string>();
+        foreach (var key in source.Catalog.Keys)
+        {
+            var name = key.Value;
+            if (AssemblerOwnedCatalogKeys.Contains(name)) continue;
+            if (!ConservedCatalogKeys.Contains(name)) { dropped.Add(name); continue; }
+            if (target.Catalog.GetOptional(name) != null) continue;   // don't clobber
+            var sourceObj = source.Catalog.GetOptional(name);
+            if (sourceObj == null) continue;
+            target.Catalog[name] = cloner.CloneObject(source, sourceObj, clonedRefs);
+        }
+        dropped.Sort(StringComparer.Ordinal);
+        return dropped;
+    }
+
+    /// <summary>The source catalog entries an assembly operation does NOT
+    /// conserve — neither <see cref="ConservedCatalogKeys"/> nor assembler-owned.
+    /// Exposed so a CLI can NAME the loss (#1058) rather than drop it silently.
+    /// Sorted, distinct, without the leading slash.</summary>
+    public static IReadOnlyList<string> CatalogEntriesNotConserved(PdfDocument source) =>
+        source.Catalog.Keys
+            .Select(k => k.Value)
+            .Where(n => !AssemblerOwnedCatalogKeys.Contains(n) && !ConservedCatalogKeys.Contains(n))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToList();
 
     /// <summary>
     /// Phases 1+2 only: reserve a stable target reference for every page

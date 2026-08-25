@@ -99,8 +99,15 @@ public static class PdfDocumentSplitter
             foreach (var indices in pageGroups)
             {
                 if (indices.Count == 0) continue;
-                var target = PdfDocument.CreateNew();
-                PdfDocumentMerger.ClonePagesInto(target, [(source, indices)]);
+                // Carry the source PDF version forward (PDF/A-4 needs %PDF-2.n).
+                var target = PdfDocument.CreateNew(source.Version);
+                var (cloner, clonedRefsBySource) =
+                    PdfDocumentMerger.ClonePagesInto(target, [(source, indices)]);
+                // #1059: conserve the source's page-independent identity
+                // (/Metadata, /OutputIntents, …) into each subset — otherwise a
+                // valid PDF/A input splits into outputs conforming to nothing.
+                PdfDocumentMerger.ConserveCatalogIdentity(
+                    target, source, cloner, clonedRefsBySource[source]);
                 fragments.Add(target);
             }
         }
