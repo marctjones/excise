@@ -54,7 +54,8 @@
                         <!-- Render Cache -->
                         <StackPanel Spacing="8">
                             <TextBlock Text="Render Cache Size" FontWeight="Medium"/>
-                            <NumericUpDown Value="{Binding RenderCacheMax}"
+                            <NumericUpDown x:Name="RenderCacheSizeUpDown"
+                                           Value="{Binding RenderCacheMax}"
                                            Minimum="1" Maximum="200"
                                            Increment="5"
                                            FormatString="0"
@@ -89,7 +90,8 @@
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Reading Order" FontWeight="Medium"/>
-                            <ComboBox ItemsSource="{Binding ReadingOrderStrategyOptions}"
+                            <ComboBox x:Name="ReadingOrderStrategyComboBox"
+                                      ItemsSource="{Binding ReadingOrderStrategyOptions}"
                                       SelectedItem="{Binding SelectedReadingOrderStrategy}"
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Reading Order Strategy"
@@ -102,7 +104,8 @@
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Whitespace" FontWeight="Medium"/>
-                            <ComboBox ItemsSource="{Binding WhitespaceModeOptions}"
+                            <ComboBox x:Name="WhitespaceModeComboBox"
+                                      ItemsSource="{Binding WhitespaceModeOptions}"
                                       SelectedItem="{Binding SelectedWhitespaceMode}"
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Copy Whitespace Mode"
