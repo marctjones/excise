@@ -1,9 +1,13 @@
+using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Parsing;
 using Excise.Core.Security;
+using Excise.Core.Text.Segmentation;
 using Xunit;
 
 namespace Excise.Core.Tests.Security;
@@ -149,6 +153,48 @@ public sealed class EncryptionPreservationTests
 
         using var reopened = PdfDocument.Open(resaved);
         reopened.IsEncrypted.Should().BeFalse("the parameterless Save contract is plaintext output");
+    }
+
+    [Fact]
+    public void RedactEncryptedV4AesXrefStreamSource_DoesNotThrow_AndStaysEncrypted()
+    {
+        // #1048: a V=4/R=4/AESV2 source whose cross-reference data is an xref
+        // STREAM crashed on Save. GetAllObjects() reached the xref-stream object
+        // and AES-decrypted it — but §7.5.8.2 makes cross-reference streams
+        // exempt from encryption, so AES-CBC threw "input data is not a complete
+        // block" on its unencrypted bytes. excise cannot EMIT this shape (it
+        // writes classic xref when encrypting), so the fixture is qpdf-generated
+        // and checked in — no gitignored corpus, no qpdf on the test machine.
+        var encrypted = LoadEmbeddedFixture("EncryptedV4AesXrefStream.pdf");
+        Encoding.Latin1.GetString(encrypted).Should().Contain("/XRef",
+            "the reproduction needs a cross-reference STREAM (the exempt object), not a classic table");
+
+        using var doc = PdfDocument.Open(encrypted, "");
+        doc.RedactText("REDACTME");
+
+        // #643: an encrypted source re-encrypts like the source. This Save — the
+        // GetAllObjects walk inside it — is exactly where #1048 threw.
+        var options = doc.GetReEncryptionOptions("");
+        options.Should().NotBeNull("an encrypted source must produce re-encryption options");
+        var outBytes = doc.SaveToBytes(options!);
+
+        using var reopened = PdfDocument.Open(outBytes, "");
+        reopened.GetReEncryptionOptions("")!.Algorithm.Should().Be(
+            PdfEncryptionAlgorithm.Aes128,
+            "the output must stay encrypted and keep the source's V=4 AES-128 (#643)");
+        reopened.GetPage(1).Text.Should().NotContain("REDACTME", "the redacted term must be gone")
+            .And.Contain("keep", "surviving text must remain");
+    }
+
+    private static byte[] LoadEmbeddedFixture(string fileName)
+    {
+        var asm = Assembly.GetExecutingAssembly();
+        var name = asm.GetManifestResourceNames()
+            .Single(n => n.EndsWith(fileName, StringComparison.Ordinal));
+        using var s = asm.GetManifestResourceStream(name)!;
+        using var ms = new MemoryStream();
+        s.CopyTo(ms);
+        return ms.ToArray();
     }
 
     private static byte[] SaveEncrypted(string text, PdfEncryptionOptions options)
