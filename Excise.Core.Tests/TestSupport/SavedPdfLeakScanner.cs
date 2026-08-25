@@ -137,7 +137,13 @@ internal static class SavedPdfLeakScanner
 
             var raw = new byte[end - body];
             Array.Copy(saved, body, raw, 0, raw.Length);
-            bodies.Add(Encoding.Latin1.GetString(TryInflate(raw) ?? raw));
+            var decoded = TryInflate(raw) ?? raw;
+            // Decoding a >1GB body to a string overflows Latin1 GetString. A
+            // stream that large is a ballooned-output pathology, not real text
+            // to scan; skip it rather than crash. Small-fixture callers never
+            // trip this.
+            if (decoded.LongLength <= 256L * 1024 * 1024)
+                bodies.Add(Encoding.Latin1.GetString(decoded));
 
             i = end + "endstream".Length;
         }

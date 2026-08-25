@@ -434,6 +434,14 @@ public sealed class RedactionBenchmarkRunner
                     cleanSuccess = false;
                 }
                 savedBytes = File.ReadAllBytes(output);
+                // A redacted output vastly larger than its input is a defect in
+                // its own right (a ≤7MB input ballooning past 1GB crashed the
+                // baseline twice). Name it in the log so it is diagnosable, not
+                // just survivable.
+                var inLen = new FileInfo(path).Length;
+                if (savedBytes.LongLength > 256L * 1024 * 1024 || savedBytes.LongLength > inLen * 20)
+                    _out.WriteLine($"WARN oversized-output {tool} {corpus}/{name} [{term}]: " +
+                        $"in={inLen / 1048576.0:F1}MB out={savedBytes.LongLength / 1048576.0:F1}MB");
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
@@ -627,7 +635,16 @@ public sealed class RedactionBenchmarkRunner
             }
         }
 
-        ScanSurface(System.Text.Encoding.Latin1.GetString(saved), "file");
+        // Decoding the whole file to a string overflows past ~1GB (Latin1
+        // GetString). FindTerm already proved the leak byte-safely; on an
+        // oversized output, skip the raw-surface context walk and let the
+        // stream bodies (inflated individually, each far smaller) place it —
+        // or fall through to the honest "unplaced" label below.
+        const long RawScanCap = 256L * 1024 * 1024;
+        if (saved.LongLength <= RawScanCap)
+            ScanSurface(System.Text.Encoding.Latin1.GetString(saved), "file");
+        else
+            contexts.Add("oversized-file");
         foreach (var body in SavedPdfLeakScanner.StreamBodies(saved))
             ScanSurface(body, "stream");
 
@@ -648,9 +665,31 @@ public sealed class RedactionBenchmarkRunner
     /// </summary>
     private static int CountByteOccurrences(byte[] saved, string term)
     {
-        var n = CountOccurrences(System.Text.Encoding.Latin1.GetString(saved), term);
+        // Count in the ENCODED BYTES of the raw file, not a decoded string of it:
+        // Latin1Encoding.GetString overflows on a >1GB corpus file (a real crash
+        // the baseline hit). The per-stream bodies are inflated individually and
+        // are each far smaller, so they stay string-based.
+        var n = CountByteOccurrences(saved, System.Text.Encoding.Latin1.GetBytes(term));
         foreach (var body in SavedPdfLeakScanner.StreamBodies(saved))
             n += CountOccurrences(body, term);
+        return n;
+    }
+
+    /// <summary>Case-insensitive (ASCII-folded) byte-level occurrence count —
+    /// size-safe on multi-hundred-MB haystacks where decoding to a string would
+    /// overflow. Non-overlapping, matching <see cref="CountOccurrences"/>.</summary>
+    private static int CountByteOccurrences(byte[] haystack, byte[] needle)
+    {
+        if (needle.Length == 0) return 0;
+        static byte Fold(byte b) => (byte)(b >= (byte)'A' && b <= (byte)'Z' ? b + 32 : b);
+        int n = 0;
+        for (var i = 0; i <= haystack.Length - needle.Length; i++)
+        {
+            var ok = true;
+            for (var j = 0; j < needle.Length; j++)
+                if (Fold(haystack[i + j]) != Fold(needle[j])) { ok = false; break; }
+            if (ok) { n++; i += needle.Length - 1; }
+        }
         return n;
     }
 
