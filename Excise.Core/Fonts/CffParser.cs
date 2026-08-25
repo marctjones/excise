@@ -38,6 +38,27 @@ internal static class CffParser
         // with TextEncoding.GlyphId). Built from the charset table when
         // <see cref="IsCidKeyed"/> is true. CID 0 → glyph 0 (.notdef).
         public Dictionary<int, int>? CidToGlyph;
+
+        // #1148 — per-glyph advance width in font units (glyph index → advance).
+        // Interpreted from the Type2 charstrings (nominalWidthX + charstring
+        // width operand, else defaultWidthX); CFF carries no hmtx table, so the
+        // charstring is the ONLY source of advance for a /FontFile3 program with
+        // no PDF /Widths array. Empty for CID-keyed fonts and non-Type2
+        // charstrings — see the AdvanceWidths comment in Parse for why.
+        public int[] AdvanceWidths = Array.Empty<int>();
+
+        // Design grid the advance widths are expressed in (the 1/FontMatrix[0]
+        // em, 1000 for the near-universal [0.001 0 0 0.001 0 0]). Mirrors
+        // TrueTypeFontFile.UnitsPerEm so a caller converts to the 1000ths-of-em
+        // width-cascade convention identically: AdvanceWidth(g) * 1000 / UnitsPerEm.
+        public int UnitsPerEm = 1000;
+
+        // #1148 — advance width (font units) for <paramref name="glyphIndex"/>,
+        // or 0 when the index is out of range or no widths were interpreted.
+        // Deliberately mirrors <see cref="TrueTypeFontFile.AdvanceWidth"/> so the
+        // embedded-CFF width rung is the same three lines as the TrueType one.
+        public int AdvanceWidth(int glyphIndex) =>
+            (uint)glyphIndex < (uint)AdvanceWidths.Length ? AdvanceWidths[glyphIndex] : 0;
     }
 
     public static CffFontInfo? Parse(byte[] cff)
@@ -65,8 +86,10 @@ internal static class CffParser
             // String INDEX — additional strings beyond the 391 standard ones.
             var stringIndex = ReadIndex(ref reader);
 
-            // Global Subr INDEX (skipped — charstring interpretation only).
-            SkipIndex(ref reader);
+            // Global Subr INDEX — captured (not skipped) so #1148's Type2 width
+            // interpreter can follow a callgsubr; a glyph's advance can sit on
+            // the stack when the width-deciding operator lives inside a subr.
+            var globalSubrs = ReadIndex(ref reader);
 
             // CharStrings offset is a required entry in Top DICT (operator 17).
             if (!topDict.TryGetValue(17, out var csOp) || csOp.Count == 0) return null;
@@ -170,6 +193,37 @@ internal static class CffParser
                 yMax = ClampShort(bb[3]);
             }
 
+            // #1148 — interpret per-glyph advance widths from the Type2
+            // charstrings. CFF has no hmtx, so this is the only advance source
+            // for a /FontFile3 program with no PDF /Widths array.
+            //
+            // CID-keyed is deliberately skipped: its per-glyph Private DICTs live
+            // behind FDArray/FDSelect, AND the width cascade never reaches an
+            // embedded-program rung for a 2-byte font — it returns from the
+            // /W + /DW (_cidMetrics) branch first — so a CID-CFF advance here
+            // would be unreachable. Non-Type2 charstrings (CharstringType != 2,
+            // Top DICT op 12 6) are skipped for lack of a Type1 interpreter.
+            // Either way AdvanceWidths stays empty and AdvanceWidth returns 0,
+            // the "unknown" the caller already handles.
+            int[] advanceWidths = Array.Empty<int>();
+            int charstringType = topDict.TryGetValue(1206, out var ctOp) && ctOp.Count > 0
+                ? (int)ctOp[0] : 2;
+            if (!isCidKeyed && charstringType == 2)
+            {
+                // Isolated so a malformed charstring/Private DICT costs only the
+                // widths (accessor returns 0, the handled "unknown"), never the
+                // whole parse — rendering and subsetting callers must still get
+                // their glyph-name map from a font whose metrics happen to be bad.
+                try
+                {
+                    advanceWidths = InterpretAdvanceWidths(cff, topDict, globalSubrs, charStringsOffset, numGlyphs);
+                }
+                catch (Exception ex) when (ex is not OutOfMemoryException)
+                {
+                    advanceWidths = Array.Empty<int>();
+                }
+            }
+
             return new CffFontInfo
             {
                 NumGlyphs = numGlyphs,
@@ -178,6 +232,13 @@ internal static class CffParser
                 GlyphNames = glyphNames,
                 IsCidKeyed = isCidKeyed,
                 CidToGlyph = cidToGlyph,
+                // CFF FontMatrix is stored as reals, which ParseDict flattens to
+                // 0; rather than mis-read it, assume the standard 1000-unit em
+                // ([0.001 0 0 0.001 0 0]), true for effectively every embedded
+                // /FontFile3. A non-standard FontMatrix would scale the advance —
+                // an accepted limitation, mirrored by the FontBBox 1000 default.
+                UnitsPerEm = 1000,
+                AdvanceWidths = advanceWidths,
             };
         }
         catch (Exception __ex) when (__ex is not OutOfMemoryException)
@@ -266,6 +327,175 @@ internal static class CffParser
         for (int i = 0; i <= count; i++)
             offsets[i] = r.ReadOffset(offSize);
         r.Seek(r.Position + offsets[count] - 1);
+    }
+
+    // --- #1148: Type2 charstring advance-width interpretation ---
+
+    /// <summary>
+    /// Advance width (font units) per glyph index, read from the Type2
+    /// charstrings. Reads the non-CID Private DICT (defaultWidthX op 20,
+    /// nominalWidthX op 21, local Subrs op 19) then interprets each charstring
+    /// far enough to recover its optional leading width operand.
+    /// </summary>
+    private static int[] InterpretAdvanceWidths(
+        byte[] cff, Dictionary<int, List<double>> topDict,
+        List<byte[]> globalSubrs, int charStringsOffset, int numGlyphs)
+    {
+        int defaultWidthX = 0, nominalWidthX = 0;
+        var localSubrs = new List<byte[]>();
+
+        // Private DICT: Top DICT op 18 = [size, offset], offset from the CFF start.
+        if (topDict.TryGetValue(18, out var pv) && pv.Count >= 2)
+        {
+            int privSize = (int)pv[0];
+            int privOffset = (int)pv[1];
+            if (privOffset >= 0 && privSize > 0 && (long)privOffset + privSize <= cff.Length)
+            {
+                var privBytes = new byte[privSize];
+                Array.Copy(cff, privOffset, privBytes, 0, privSize);
+                var privDict = ParseDict(privBytes);
+                if (privDict.TryGetValue(20, out var dw) && dw.Count > 0) defaultWidthX = (int)dw[0];
+                if (privDict.TryGetValue(21, out var nw) && nw.Count > 0) nominalWidthX = (int)nw[0];
+                // Local Subrs op 19: offset is relative to the Private DICT start.
+                if (privDict.TryGetValue(19, out var ls) && ls.Count > 0)
+                {
+                    int lsOffset = privOffset + (int)ls[0];
+                    if (lsOffset >= 0 && lsOffset < cff.Length)
+                    {
+                        var r = new CffReader(cff);
+                        r.Seek(lsOffset);
+                        localSubrs = ReadIndex(ref r);
+                    }
+                }
+            }
+        }
+
+        var csReader = new CffReader(cff);
+        csReader.Seek(charStringsOffset);
+        var charStrings = ReadIndex(ref csReader);
+
+        var widths = new int[numGlyphs];
+        int lbias = SubrBias(localSubrs.Count);
+        int gbias = SubrBias(globalSubrs.Count);
+        for (int g = 0; g < numGlyphs; g++)
+        {
+            widths[g] = g < charStrings.Count
+                ? Type2CharstringWidth(charStrings[g], localSubrs, globalSubrs, lbias, gbias, nominalWidthX, defaultWidthX)
+                : defaultWidthX;
+        }
+        return widths;
+    }
+
+    // Type2 local/global subr number bias (Adobe TN#5177 §4.7).
+    private static int SubrBias(int count) =>
+        count < 1240 ? 107 : count < 33900 ? 1131 : 32768;
+
+    /// <summary>
+    /// The advance width encoded in a single Type2 charstring: nominalWidthX
+    /// plus the optional leading width operand, or defaultWidthX when absent.
+    /// The width, when present, is the extra first operand before the FIRST of
+    /// {hstem/vstem/hstemhm/vstemhm, hintmask/cntrmask, [hv]moveto/rmoveto,
+    /// endchar}, so interpretation stops at that operator — no stem counting or
+    /// mask-byte skipping needed. Follows callsubr/callgsubr on a shared operand
+    /// stack because the deciding operator may live inside a subr while the
+    /// width sits below the subr index. Any unexpected operator, or a malformed
+    /// program, falls back to defaultWidthX; a recursion cap and step budget
+    /// keep a hostile font from hanging (Pitfall 3).
+    /// </summary>
+    private static int Type2CharstringWidth(
+        byte[] charString, List<byte[]> local, List<byte[]> global,
+        int lbias, int gbias, int nominalWidthX, int defaultWidthX)
+    {
+        var stack = new List<double>(48);
+        int width = defaultWidthX;
+        bool decided = false;
+        int steps = 0;
+
+        void Run(byte[] code, int depth)
+        {
+            if (decided || depth > 10) return;
+            int i = 0;
+            while (i < code.Length && !decided)
+            {
+                if (++steps > 200_000) { decided = true; return; }
+                int b = code[i++];
+
+                if (b == 28)
+                {
+                    if (i + 1 >= code.Length) { decided = true; return; }
+                    stack.Add((short)((code[i] << 8) | code[i + 1]));
+                    i += 2;
+                    continue;
+                }
+                if (b >= 32)
+                {
+                    double val;
+                    if (b <= 246) val = b - 139;
+                    else if (b <= 250) { if (i >= code.Length) { decided = true; return; } val = (b - 247) * 256 + code[i++] + 108; }
+                    else if (b <= 254) { if (i >= code.Length) { decided = true; return; } val = -(b - 251) * 256 - code[i++] - 108; }
+                    else
+                    {
+                        if (i + 3 >= code.Length) { decided = true; return; }
+                        int fixed1616 = (code[i] << 24) | (code[i + 1] << 16) | (code[i + 2] << 8) | code[i + 3];
+                        i += 4;
+                        val = fixed1616 / 65536.0;
+                    }
+                    stack.Add(val);
+                    continue;
+                }
+
+                // Operator.
+                switch (b)
+                {
+                    case 1: case 3: case 18: case 23: // hstem vstem hstemhm vstemhm
+                    case 19: case 20:                 // hintmask cntrmask (implicit vstem)
+                        if ((stack.Count & 1) == 1) width = nominalWidthX + (int)stack[0];
+                        decided = true;
+                        return;
+                    case 21: // rmoveto (2 args)
+                        if (stack.Count > 2) width = nominalWidthX + (int)stack[0];
+                        decided = true;
+                        return;
+                    case 22: case 4: // hmoveto vmoveto (1 arg)
+                        if (stack.Count > 1) width = nominalWidthX + (int)stack[0];
+                        decided = true;
+                        return;
+                    case 14: // endchar (0 args, or 4 for seac)
+                        if (stack.Count == 1 || stack.Count == 5) width = nominalWidthX + (int)stack[0];
+                        decided = true;
+                        return;
+                    case 10: // callsubr
+                        if (stack.Count > 0)
+                        {
+                            int idx = (int)stack[^1] + lbias;
+                            stack.RemoveAt(stack.Count - 1);
+                            if ((uint)idx < (uint)local.Count) Run(local[idx], depth + 1);
+                        }
+                        else { decided = true; return; }
+                        break;
+                    case 29: // callgsubr
+                        if (stack.Count > 0)
+                        {
+                            int idx = (int)stack[^1] + gbias;
+                            stack.RemoveAt(stack.Count - 1);
+                            if ((uint)idx < (uint)global.Count) Run(global[idx], depth + 1);
+                        }
+                        else { decided = true; return; }
+                        break;
+                    case 11: // return
+                        return;
+                    default:
+                        // Anything else before the first width-deciding operator
+                        // (including a 12-escape arithmetic/flex op) cannot carry
+                        // a width — bail to defaultWidthX rather than guess.
+                        decided = true;
+                        return;
+                }
+            }
+        }
+
+        Run(charString, 0);
+        return width;
     }
 
     // --- DICT parsing ---
