@@ -5,7 +5,6 @@ using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
-using Avalonia.Input;
 using Avalonia.LogicalTree;
 
 namespace Excise.App.Tests.UI.InteractionCoverage;
