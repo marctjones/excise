@@ -145,6 +145,18 @@ public sealed class RedactionBenchmarkRunner
         public double InkFractionBeforeRegion { get; init; } = -1;
         public double InkFractionInRegion { get; init; } = -1;
 
+        // BOX-FIT / OVER-COVERAGE (#1163 follow-up) — the complement of the ink
+        // axis. The ink axis measures ink LEFT INSIDE the term (under-coverage /
+        // visual leak); this measures ink the tool ADDED OUTSIDE the glyphs — an
+        // oversized mark. Ratio of newly-inked "spill" pixels (former whitespace
+        // the mark blackened) to the term's real ink within the mark footprint,
+        // on independent pdfium (BSD) renders of the tool's ACTUAL output — never
+        // graded against the tool's own match geometry. A tight glyph-hugging
+        // mark scores near 0; an oversized box (pymupdf's are) scores high. This
+        // quantifies the "are we judging pymupdf fairly" question as a number.
+        // -1 = not measurable (no mark on page 1, or no renderer).
+        public double BoxOverCoverage { get; init; } = -1;
+
         // RENDER FIDELITY — does the SURVIVING content still render correctly?
         // Fraction of pixels OUTSIDE the redacted region that differ between the
         // before and after render (an independent renderer). Low = the rest of
@@ -524,6 +536,10 @@ public sealed class RedactionBenchmarkRunner
             // ── VISUAL (#1141): is the region blank once the box is off? ──
             var (inkBefore, inkAfter) = MeasureInkAxis(path, term, tool);
 
+            // ── BOX-FIT (#1163): does the tool's mark spill past the glyphs? ──
+            // Measured on the tool's ACTUAL output (with whatever box it draws).
+            var boxOverCoverage = MeasureBoxFit(path, output, term);
+
             // Per-tool render axes: does the SURVIVING page still render correctly,
             // and is the secret still READABLE in pixels?
             var survivingRenderDelta = MeasureSurvivingRenderDelta(path, output, term);
@@ -589,6 +605,7 @@ public sealed class RedactionBenchmarkRunner
                 InputQpdfOk = inputQpdf?.Success ?? false,
                 InkFractionBeforeRegion = inkBefore,
                 InkFractionInRegion = inkAfter,
+                BoxOverCoverage = boxOverCoverage,
                 StructuralDropped = structuralDropped,
                 SurvivingRenderDelta = survivingRenderDelta,
                 VisualTermReadable = visualReadable,
@@ -783,6 +800,71 @@ public sealed class RedactionBenchmarkRunner
             finally { try { File.Delete(tmp); } catch { /* best effort */ } }
         }
         catch { return (-1, -1); }
+    }
+
+    /// <summary>
+    /// BOX-FIT / OVER-COVERAGE axis (#1163 follow-up). Tool-agnostic and
+    /// independent: renders the input (before) and the tool's ACTUAL output with
+    /// its mark (after) via pdfium (BSD), then compares the mark against where ink
+    /// really was — never against the tool's own match geometry (the guardrail:
+    /// a tool must not grade its box against the geometry that drew the box).
+    ///
+    /// A redaction mark is a solid fill. Over former GLYPHS it is dark→dark
+    /// (invisible to a diff); over former WHITESPACE it is light→dark — that
+    /// newly-inked "spill" IS the over-coverage. Its bounding box frames the
+    /// mark footprint; within that footprint the ink present BEFORE is the term's
+    /// real ink. Ratio = spill / real-ink: a tight glyph-hugging mark leaves only
+    /// thin inter-glyph gaps (low ratio); an oversized box floods the margins
+    /// (high ratio). -1 when not measurable (no mark on page 1, or no renderer).
+    /// </summary>
+    internal static double MeasureBoxFit(string inputPath, string outputPath, string term)
+    {
+        // pdfium (BSD-3), not Ghostscript (AGPL): a redaction mark is content, so
+        // an independent PERMISSIVELY-licensed renderer is enough, and it is not
+        // excise's own Skia (this axis must not become a Skia-vs-others test —
+        // both sides render through the same engine, so its quirks cancel).
+        if (!PdfiumNativeReferenceRenderer.IsAvailable) return -1;
+        try
+        {
+            using var before = PdfiumNativeReferenceRenderer.RenderPage(inputPath, 1, dpi: 150);
+            using var after = PdfiumNativeReferenceRenderer.RenderPage(outputPath, 1, dpi: 150);
+            if (before == null || after == null) return -1;
+
+            int w = Math.Min(before.Width, after.Width);
+            int h = Math.Min(before.Height, after.Height);
+            if (w <= 0 || h <= 0) return -1;
+
+            static bool Dark(SKColor p) => p.Red < 200 || p.Green < 200 || p.Blue < 200;
+
+            // Pass 1 — the mark's spill onto former whitespace, and its bounds.
+            long spill = 0;
+            int minX = w, minY = h, maxX = -1, maxY = -1;
+            for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                if (!Dark(before.GetPixel(x, y)) && Dark(after.GetPixel(x, y)))
+                {
+                    spill++;
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+            // Below a floor, there is no mark on page 1 (term elsewhere, or the
+            // tool drew none — glyph-only removal); anti-alias shimmer alone
+            // stays under it. Not a fit measurement.
+            if (spill < 16 || maxX < minX) return -1;
+
+            // Pass 2 — the term's real ink within the mark footprint.
+            long termInk = 0;
+            for (int y = minY; y <= maxY; y++)
+            for (int x = minX; x <= maxX; x++)
+                if (Dark(before.GetPixel(x, y))) termInk++;
+
+            return termInk == 0 ? -1 : (double)spill / termInk;
+        }
+        catch { return -1; }
     }
 
     /// <summary>
@@ -1175,6 +1257,28 @@ public sealed class RedactionBenchmarkRunner
                     $"  INK {r.Corpus}/{r.Document}|{r.Term,-16} " +
                     $"{r.InkFractionBeforeRegion:P1} → {r.InkFractionInRegion:P1} " +
                     $"(text axis says leak={r.LeakOracleText})");
+        }
+
+        // BOX-FIT (#1163): over-coverage — how far each tool's mark spills past
+        // the glyphs. Per tool, so an oversized-box tool (pymupdf) is visible
+        // next to a glyph-tight one (excise). Higher = more spill.
+        var boxMeasured = ok.Where(r => r.BoxOverCoverage >= 0).ToList();
+        if (boxMeasured.Count > 0)
+        {
+            _out.WriteLine("");
+            _out.WriteLine($"BOX-FIT — mark over-coverage (spill onto whitespace ÷ term ink), " +
+                           $"per tool (measured {boxMeasured.Count} rows; higher = looser box):");
+            foreach (var g in boxMeasured.GroupBy(r => r.Tool).OrderBy(g => g.Key))
+            {
+                var vals = g.Select(r => r.BoxOverCoverage).OrderBy(v => v).ToList();
+                var median = vals[vals.Count / 2];
+                var p90 = vals[Math.Min(vals.Count - 1, (int)(vals.Count * 0.9))];
+                _out.WriteLine($"  {g.Key,-8} median {median:F2}  p90 {p90:F2}  " +
+                               $"max {vals[^1]:F2}  (n={vals.Count})");
+            }
+            foreach (var r in boxMeasured.OrderByDescending(r => r.BoxOverCoverage).Take(10))
+                _out.WriteLine($"  BOXFIT {r.Tool,-8} {r.Corpus}/{r.Document}|{r.Term,-16} " +
+                               $"over-coverage {r.BoxOverCoverage:F2}");
         }
 
         // STRUCTURAL (#1117): redactions that dropped a structure the text diff
