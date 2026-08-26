@@ -512,10 +512,18 @@ public sealed class RedactionBenchmarkRunner
             var leakBytes = rawLeak && probeUsable;
             var leakText = after.Contains(term, StringComparison.OrdinalIgnoreCase);
 
-            var xray = XRayBadRedactionDetector.Inspect(output);
-            // null and empty mean opposite things: -1 records "no oracle", 0
-            // records "the oracle ran and found none".
-            var badRedactions = xray == null ? -1 : xray.Count;
+            // #1176: judge the DELTA, not the state. A bad-redaction already in
+            // the INPUT was inherited from the source, not created by this tool —
+            // charging it penalises every tool for the document's pre-existing
+            // artifacts (TAMReview.pdf ships 22 image-over-whitespace regions,
+            // which mis-graded excise 97% when it was clean). And a finding whose
+            // covered "text" is only whitespace is not a recoverable secret.
+            // Count only NEW, non-whitespace bad redactions. null still means "no
+            // oracle" (-1); 0 means "oracle ran, found none this tool caused".
+            var xrayOut = XRayBadRedactionDetector.Inspect(output);
+            var badRedactions = xrayOut == null
+                ? -1                                                  // null = no oracle (unchanged)
+                : NewNonWhitespaceBadRedactions(XRayBadRedactionDetector.Inspect(path), xrayOut);
 
             var channels = new List<string>();
             if (leakBytes) channels.Add("saved-bytes");
@@ -752,6 +760,25 @@ public sealed class RedactionBenchmarkRunner
     /// excise (we cannot turn off a competitor's box), only page 1, only when a
     /// renderer is installed; otherwise (-1, -1), the axis's "not measured".
     /// </summary>
+    /// <summary>
+    /// #1176 FAIR bad-redaction count: only bad redactions this tool CREATED and
+    /// that hide real text. Judges the delta (subtracts findings already in the
+    /// input, matched by page + covered text) and drops whitespace-only findings
+    /// (a box over blank space is not a recoverable secret). Pure function of the
+    /// two x-ray finding sets, so it is unit-tested without the x-ray tool.
+    /// </summary>
+    internal static int NewNonWhitespaceBadRedactions(
+        IReadOnlyList<XRayBadRedactionDetector.BadRedaction>? input,
+        IReadOnlyList<XRayBadRedactionDetector.BadRedaction> output)
+    {
+        var preExisting = input == null
+            ? new HashSet<(int, string)>()
+            : input.Select(b => (b.Page, b.Text.Trim())).ToHashSet();
+        return output.Count(b =>
+            b.Text.Trim().Length > 0 &&
+            !preExisting.Contains((b.Page, b.Text.Trim())));
+    }
+
     internal static (double before, double after) MeasureInkAxis(
         string path, string term, string tool)
     {
