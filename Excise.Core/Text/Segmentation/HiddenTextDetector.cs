@@ -260,6 +260,7 @@ public static class HiddenTextDetector
             }
             if (reported) continue;
 
+            var reportedB = false;
             foreach (var o in obstructions)
             {
                 if (o.Index >= t.Index) continue;                 // earlier: behind the text
@@ -269,8 +270,31 @@ public static class HiddenTextDetector
                 {
                     records.Add(new HiddenTextRecord(pageNumber, run.Value.Text, run.Value.Box,
                         $"low-contrast text ({DescribeColor(t.Fill)}) on {DescribeColor(o.Fill)} background"));
+                    reportedB = true;
                     break;
                 }
+            }
+            if (reportedB) continue;
+
+            // Pairing C (#1180): READABLE text on an earlier DARK, box-sized fill
+            // — a visible FAILED redaction (white text drawn on a black box).
+            // The text is legible, so it is neither occluded (A) nor low-contrast
+            // (B); both miss it. Distinguished from a legitimate dark banner or
+            // colour-inverted heading by requiring the fill to be DARK and sized
+            // to the text (a redaction box), not a wide background. A de-redaction
+            // audit must surface it: a box with legible text on it is a redaction
+            // that did not take.
+            foreach (var o in obstructions)
+            {
+                if (o.Index >= t.Index) continue;
+                if (Contrast(t.Fill, o.Fill) < LowContrastThreshold) continue;   // B owns the faint case
+                if (Luminance(o.Fill) >= DarkFillThreshold) continue;            // redaction boxes are dark
+                var run = CoveredRun(t, o.Bbox);
+                if (run == null) continue;
+                if (Area(o.Bbox) > RedactionBoxAreaRatio * Area(run.Value.Box)) continue;  // box-sized, not a banner
+                records.Add(new HiddenTextRecord(pageNumber, run.Value.Text, run.Value.Box,
+                    $"readable text ({DescribeColor(t.Fill)}) on a redaction-shaped {DescribeColor(o.Fill)} fill"));
+                break;
             }
         }
 
@@ -317,6 +341,16 @@ public static class HiddenTextDetector
     /// near-matching colours.
     /// </summary>
     private const double LowContrastThreshold = 0.20;
+
+    // #1180: a redaction box is DARK and sized to the text it covers. These
+    // separate a VISIBLE failed redaction (readable text on a black box) from a
+    // legitimate dark banner (wide relative to the run) or an inverted heading.
+    private const double DarkFillThreshold = 0.35;
+    private const double RedactionBoxAreaRatio = 4.0;
+
+    private static double Luminance(Rgb c) => 0.299 * c.R + 0.587 * c.G + 0.114 * c.B;
+    private static double Area(PdfRectangle r)
+    { var n = r.Normalize(); return (n.Right - n.Left) * (n.Top - n.Bottom); }
 
     /// <summary>Euclidean RGB distance of two fills; 0 identical, ~1.73 max.</summary>
     private static double Contrast(Rgb a, Rgb b)
