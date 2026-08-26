@@ -1766,11 +1766,21 @@ partial class Program
             // Opt-in because OCR is slow and needs tesseract on PATH.
             Description = "certain mode: also run the OCR differential (scanned redactions). Needs tesseract.",
         };
+        var noCorroborationOption = new Option<bool>("--no-corroboration")
+        {
+            // GROUND TRUTH: a residue candidate excise cannot corroborate with an
+            // INDEPENDENT witness (mutool's own glyph positions) is excise
+            // vouching for itself — the exact self-oracle trap. The engine
+            // defaults corroboration ON; the CLI must not silently turn it off.
+            // Opt out only when mutool is unavailable and an uncorroborated,
+            // clearly-labelled estimate is still wanted.
+            Description = "residue mode: report width candidates WITHOUT independent (mutool) corroboration",
+        };
 
         var command = new Command("unredact",
             "Recover or estimate text a redaction leaked (audit; reports constraints, not asserted secrets)")
         {
-            fileArg, modeOption, dictOption, toleranceOption, maxOption, jsonOption, ocrOption,
+            fileArg, modeOption, dictOption, toleranceOption, maxOption, jsonOption, ocrOption, noCorroborationOption,
         };
 
         command.SetAction(parseResult =>
@@ -1782,6 +1792,7 @@ partial class Program
             var maxC = parseResult.GetValue(maxOption);
             var json = parseResult.GetValue(jsonOption);
             var useOcr = parseResult.GetValue(ocrOption);
+            var noCorroboration = parseResult.GetValue(noCorroborationOption);
 
             if (!file.Exists) { Console.Error.WriteLine($"File not found: {file.FullName}"); Environment.ExitCode = 1; return; }
             if (mode is not ("certain" or "residue" or "both"))
@@ -1797,6 +1808,16 @@ partial class Program
                     foreach (var h in Excise.Core.Text.Segmentation.HiddenTextDetector.Scan(doc))
                         certain.Add(new { page = h.PageNumber, text = h.Text, hiddenBy = h.HiddenBy,
                             x = Math.Round(h.BoundingBox.Left, 1), y = Math.Round(h.BoundingBox.Bottom, 1) });
+
+                    // CARRIER channel — text physically present in a document
+                    // carrier the visible page never shows (/ActualText, /Alt, /E
+                    // in the structure tree; annotation /Contents). RC18 lists
+                    // "unscrubbed carriers" as a CERTAIN source; these are the
+                    // exact carriers the scrubbers are meant to clear, so a hit
+                    // here is a redaction that rewrote the page and missed one.
+                    foreach (var c in Excise.Core.Text.Segmentation.CarrierTextRecovery.Scan(doc))
+                        certain.Add(new { page = c.PageNumber, text = c.Text, hiddenBy = c.Carrier,
+                            x = 0.0, y = 0.0 });
 
                     // #1137 Use A — the OCR differential is a CERTAIN channel: it
                     // reports text that is actually present, read off the image
@@ -1824,7 +1845,7 @@ partial class Program
                     var recs = Excise.Rendering.Differential.ResidueRecoveryEngine.Recover(
                         file.FullName, words,
                         new Excise.Rendering.Differential.ResidueRecoveryEngine.Options(
-                            ExactTolerancePt: tol, MaxCandidates: maxC, RequireMutoolCorroboration: false));
+                            ExactTolerancePt: tol, MaxCandidates: maxC, RequireMutoolCorroboration: !noCorroboration));
                     foreach (var r in recs)
                         residue.Add(new { page = r.Gap.Page, gapWidthPt = Math.Round(r.Gap.GapWidthPt, 2),
                             font = r.Gap.Font, sizePt = r.Gap.SizePt, metricSource = r.Gap.MetricSource.ToString(),
@@ -1858,6 +1879,12 @@ partial class Program
                 // certain findings are recovered verbatim; a width gap with one
                 // admissible word is recovered too.
                 recovered = certain.Count + uniqueRecoveries,
+                // Ground-truth posture: were residue candidates checked against an
+                // INDEPENDENT witness (mutool glyph positions), or is this excise
+                // vouching for itself? Surfaced so a reviewer can weigh it.
+                corroboration = (mode is "residue" or "both")
+                    ? (noCorroboration ? "off — uncorroborated width estimate" : "mutool (independent)")
+                    : "n/a (certain mode)",
             };
 
             if (json)

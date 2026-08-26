@@ -1814,6 +1814,17 @@ namespace Excise.Core.Text.Segmentation
         public string? RefusedReason { get; init; }
         public bool Scrubbed { get; init; }
     }
+    public static class CarrierTextRecovery
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierText> Scan(Excise.Core.Document.PdfDocument doc) { }
+        public readonly struct CarrierText : System.IEquatable<Excise.Core.Text.Segmentation.CarrierTextRecovery.CarrierText>
+        {
+            public CarrierText(string Carrier, string Text, int PageNumber) { }
+            public string Carrier { get; init; }
+            public int PageNumber { get; init; }
+            public string Text { get; init; }
+        }
+    }
     public enum GlyphOverlapType
     {
         None = 0,
