@@ -377,6 +377,48 @@ public sealed class AdversarialRedactionRegressionTests
         saved.Should().Contain("VISIBLE");
     }
 
+    [Fact]
+    public void RedactText_ScrubsInlineActualText_ButKeepsUnrelatedSpans()
+    {
+        // #1182: /ActualText carried INLINE in the content stream as a BDC
+        // property list (§14.9.4) — not on a StructElem — survived glyph removal.
+        // excise reported IsCleanSuccess=true while an accessibility-aware reader
+        // recovered the "redacted" name straight out of the marked content. The
+        // structure-tree scrubber (#636) never reaches the inline form.
+        //
+        // The control span (UNRELATEDLABEL) must SURVIVE: scrubbing keys off the
+        // removed text, not "delete every /ActualText on the page".
+        var pdf = Build(
+            Obj("<< /Type /Catalog /Pages 2 0 R >>"),
+            Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+            Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+                "/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>"),
+            Stream("",
+                "/Span << /ActualText (INLINESECRET) >> BDC\n" +
+                "BT /F1 12 Tf 72 700 Td (INLINESECRET) Tj ET\n" +
+                "EMC\n" +
+                "/Span << /ActualText (UNRELATEDLABEL) >> BDC\n" +
+                "BT /F1 12 Tf 72 660 Td (UNRELATEDLABEL) Tj ET\n" +
+                "EMC\n"),
+            Obj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"));
+
+        Encoding.Latin1.GetString(pdf).Should().Contain("INLINESECRET");
+
+        using var doc = PdfDocument.Open(pdf);
+        doc.RedactText("INLINESECRET", drawBlackRect: false).VerifiedRemovals
+            .Should().BeGreaterThan(0);
+        var saved = doc.SaveToBytes();
+
+        // Carrier-agnostic, decompress-aware — the inline /ActualText is inside a
+        // /FlateDecode content stream after save, invisible to a raw grep (#1049).
+        SavedPdfLeakScanner.FindTerm(saved, "INLINESECRET").Should().BeEmpty(
+            "the inline marked-content /ActualText must be scrubbed, not just the glyphs");
+
+        // No over-scrub: the unrelated span keeps its /ActualText.
+        SavedPdfLeakScanner.FindTerm(saved, "UNRELATEDLABEL").Should().NotBeEmpty(
+            "an /ActualText that does not restate a redacted term must survive");
+    }
+
     private static string Obj(string body) => body;
 
     private static PdfRectangle BoundingBoxOf(IReadOnlyList<Excise.Core.Text.Letter> letters)
