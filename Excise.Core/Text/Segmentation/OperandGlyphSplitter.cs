@@ -35,9 +35,17 @@ namespace Excise.Core.Text.Segmentation;
 /// </summary>
 internal static class OperandGlyphSplitter
 {
+    // #1091 instrumentation (test-only): how often the split is ATTEMPTED and how
+    // often it actually FIRES, so a measurement can confirm the primary path is
+    // used rather than silently falling back to reconstruction on real input.
+    internal static long Attempts;
+    internal static long Splits;
+    internal static void ResetCounters() { Attempts = 0; Splits = 0; }
+
     public static ContentOperator? TrySplit(ContentOperator op, IReadOnlyList<LetterMatch> toRemove)
     {
         if (toRemove.Count == 0) return null;
+        System.Threading.Interlocked.Increment(ref Attempts);
 
         // Every match must know where its code lives (#1092). A synthetic letter
         // (AcroForm/annotation) has no backing operand byte and returns -1.
@@ -136,6 +144,7 @@ internal static class OperandGlyphSplitter
 
         if (!anyRemoved) return null;
 
+        System.Threading.Interlocked.Increment(ref Splits);
         return new ContentOperator("TJ", new PdfObject[] { new PdfArray(outElements) })
         {
             BoundingBox = op.BoundingBox,
