@@ -332,6 +332,10 @@ public sealed class RedactionBenchmarkRunner
     {
         ("smoke", 20), ("federal", 20), ("local-real-world", 10),
         ("itext", 15), ("pdfjs", 40), ("pdfium", 25), ("poppler", 15),
+        // Adversarial carrier traps (#1183) -- one fixture per place a secret
+        // can hide that a redactor is likely to MISS. Surveys pymupdf/iText on
+        // the same carriers CanaryInjectionLeakTests asserts on for excise.
+        ("redaction-adversarial", 100),
     };
 
     [Fact]
@@ -410,6 +414,21 @@ public sealed class RedactionBenchmarkRunner
         if (openError != null)
         {
             yield return new Row { Tool = tool, Document = name, Corpus = corpus, Error = openError };
+            yield break;
+        }
+
+        // The adversarial carrier corpus names its ONE secret in the filename
+        // (<carrier>--<TOKEN>.pdf) and hides it where an extractor may not sample
+        // it (Tr 3 invisible text, /ActualText, XMP, a bookmark title). It bypasses
+        // BOTH the oracle term-sampling AND the length floor -- these fixtures are
+        // ~650 bytes with <200 oracle chars, so the floor would silently drop every
+        // one (#1183). The point is a KNOWN term in a hard carrier, not a sampled one.
+        if (corpus == "redaction-adversarial")
+        {
+            var token = Path.GetFileNameWithoutExtension(name);
+            var sep = token.IndexOf("--", StringComparison.Ordinal);
+            if (sep >= 0) token = token[(sep + 2)..];
+            yield return MeasureCase(path, corpus, name, token, before, pageCount, tool);
             yield break;
         }
 
@@ -508,7 +527,17 @@ public sealed class RedactionBenchmarkRunner
             var bytesBefore = CountByteOccurrences(File.ReadAllBytes(path), term);
             var bytesAfter = CountByteOccurrences(savedBytes, term);
             var textBefore = CountOccurrences(before, term);
-            var probeUsable = bytesBefore > 0 && bytesBefore <= textBefore;
+            // The adversarial corpus (#1183) plants ONE known secret that ALSO
+            // lives in a carrier the oracle cannot see -- so bytesBefore > textBefore
+            // is the property under test, not a disqualifier. The probe-usability
+            // heuristic exists to reject FREQUENCY-SAMPLED words that happen to
+            // live in JS/field-names; a planted canary is a usable probe by
+            // construction. Without this bypass the guard suppresses precisely the
+            // carrier leaks the corpus was built to surface (measured: pymupdf
+            // leaves the secret in XMP and the bookmark title, and the bench read
+            // it as clean).
+            var probeUsable = corpus == "redaction-adversarial"
+                || (bytesBefore > 0 && bytesBefore <= textBefore);
             var leakBytes = rawLeak && probeUsable;
             var leakText = after.Contains(term, StringComparison.OrdinalIgnoreCase);
 
