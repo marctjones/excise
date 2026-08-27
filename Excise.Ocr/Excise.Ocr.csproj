@@ -9,6 +9,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Excise.Core\Excise.Core.csproj" />
     <ProjectReference Include="..\Excise.Rendering\Excise.Rendering.csproj" />
+    <!-- Opt-in in-process OCR fast path (#1139). The subprocess path below is
+         the default; this reference only supplies the FFI backend when a caller
+         asks for it. -->
+    <ProjectReference Include="..\Excise.Ocr.Native\Excise.Ocr.Native.csproj" />
   </ItemGroup>
 
   <ItemGroup>
