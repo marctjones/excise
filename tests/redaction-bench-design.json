@@ -165,9 +165,9 @@
         },
         "shared-form-xobject": {
           "target": 1,
-          "source": "real",
+          "source": "synth",
           "research": "Cat2-corruption",
-          "note": "Form XObject Do'd from >1 page (rare in public test corpora; 1 real found)"
+          "note": "Form XObject Do'd from >1 page with the term INSIDE the shared form. Shared forms are common in real corpora, but tying a clean redaction term to the shared form's content (vs page body) is not reliably verifiable across qpdf object renumbering \u2014 covered by a controlled synthetic fixture."
         },
         "incremental-update": {
           "target": 2,
