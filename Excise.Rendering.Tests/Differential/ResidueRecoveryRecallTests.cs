@@ -36,34 +36,12 @@ public sealed class ResidueRecoveryRecallTests
         return d?.FullName ?? AppContext.BaseDirectory;
     }
 
-    private static readonly string[] Names =
-        ("James John Robert Michael William David Richard Joseph Thomas Charles " +
-         "Christopher Daniel Matthew Anthony Donald Mark Paul Steven Andrew Kenneth " +
-         "Mary Patricia Jennifer Linda Elizabeth Barbara Susan Jessica Sarah Karen " +
-         "Nancy Lisa Betty Margaret Sandra Ashley Kimberly Emily Donna Michelle " +
-         "Louise Farrar Anne Dorothy Carol Amanda Melissa Deborah Stephanie").Split(' ');
-
-    private static readonly string[] Dates =
-        { "01/15/1987","12/03/1992","07/22/1975","09/30/2001","03/11/1968","11/08/1954","06/19/1983","02/27/1990" };
-    private static readonly string[] Digits =
-        { "4012884012","5555341220","6011000990","3782822463","8842019375","1029384756","9998887776","4444333322" };
-
-    // The candidate set MUST be the one the answer was drawn from (#1134): recall
-    // against a different dictionary measures coverage, not width discrimination.
-    // Keyed off the manifest's `dictionary` field (#1134), which now records
-    // the closed set the answer was actually drawn from.
-    private static IReadOnlyList<string> DictionaryFor(string kind) => kind switch
-    {
-        "dict" or "dict-long" => Names,
-        "date" => Dates,
-        "digits" => Digits,
-        // NOT Random: a proper "answer not in the dictionary" control searches
-        // the realistic attacker dictionary (names), where the random secret is
-        // structurally absent. Scoring it against its own set made recovery
-        // trivially guaranteed and defeated the control (caught on first run).
-        "random" => Names,
-        _ => Names,
-    };
+    // #1181: the candidate sets moved to SyntheticCorpusDictionaries so the
+    // scorecard's residue driver scores recall against the SAME set the answer
+    // was drawn from. The candidate set MUST match the manifest's `dictionary`
+    // field (#1134) — a different dictionary measures coverage, not width
+    // discrimination, and defeats the negative controls.
+    private static IReadOnlyList<string> DictionaryFor(string kind) => SyntheticCorpusDictionaries.For(kind);
 
     [Fact]
     public void RecallAtN_PerBand_AgainstConstructedGroundTruth()
