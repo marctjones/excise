@@ -160,7 +160,7 @@ internal static class StructureTreeRedactionScrubber
     /// Walks the page's operators keeping a marked-content stack, exactly as a
     /// renderer would, so nesting is handled.
     /// </summary>
-    internal static HashSet<int> CollectAffectedMcids(PdfPage page, PdfRectangle area)
+    private static HashSet<int> CollectAffectedMcids(PdfPage page, PdfRectangle area)
     {
         var affected = new HashSet<int>();
         var stack = new Stack<int?>();
@@ -197,7 +197,7 @@ internal static class StructureTreeRedactionScrubber
         return affected;
     }
 
-    internal static int? ExtractMcid(ContentOperator op)
+    private static int? ExtractMcid(ContentOperator op)
     {
         // BDC operands: /Tag <</MCID n>>  — the property list may also be a
         // named resource, which carries no inline MCID for us to read.
