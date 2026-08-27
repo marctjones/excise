@@ -48,3 +48,33 @@ test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/
 test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG160_Transp_Basic_BM_DeviceCMYK_Non-knockout_X4.pdf	Workgroup	medium	tj-kerning-heavy	'Workgroup' split across a TJ array of 12 pieces (7 kern adjustments), spans element boundaries; mutool extracts it
 test-pdfs/pdfua/7.2-t21-pass-a.pdf	Replacement	hard	actualtext-struct	StructElem /ActualText + visible glyphs
 test-pdfs/pdfua/7.2-t21-pass-b.pdf	Replacement	hard	actualtext-struct	StructElem /ActualText + visible glyphs
+#
+# --- second mining pass: medium (ligatures/dense/small) + hard (xmp/info/incremental) + top-ups ---
+test-pdfs/poppler/unittestcases/signature/valid/detached.pdf	signature	hard	incremental-update	2 startxref / 2 %%EOF / /Prev present; mutool extracts 'signature' 1x from visible page; term bytes present before first %%EOF (prior revision retains pre-redaction bytes)
+test-pdfs/pdfjs/issue21126.pdf	rotated	hard	incremental-update	2 startxref / 2 %%EOF / 1 /Prev; not linearized; mutool text has 'rotated' 1x; term present in pre-first-%%EOF revision bytes
+test-pdfs/pdfua/7.2-t23-fail-a.pdf	Expansion	hard	incremental-update	2 startxref / 2 %%EOF / /Prev in trailer; mutool renders 'Expansion' as visible text 1x; term in prior-revision bytes before first %%EOF
+test-pdfs/pdfjs/bug2014080.pdf	sample	hard	incremental-update	2 startxref / 2 %%EOF / 1 /Prev; not linearized; mutool text has 'sample' 1x; term retained in pre-first-%%EOF revision
+test-pdfs/federal/cms-40b-medicare-part-b.pdf	Medicare	hard	xmp-metadata	term in XMP dc:subject/dc:title packet (<?xpacket..</x:xmpmeta>) AND mutool visible text (16 hits); real CMS form metadata
+test-pdfs/pdfjs/issue17730.pdf	Antenna	hard	xmp-metadata	term in XMP dc:title rdf:li 'Links in PDF - Antenna House, Inc.' AND mutool visible text (6 hits)
+test-pdfs/altona/altona_measure_1v1a.pdf	Altona	hard	xmp-metadata	term present in XMP packet AND mutool visible text (2 hits); Altona measurement test file
+test-pdfs/pdfjs/issue14847.pdf	Benutzerhandbuch	hard	xmp-metadata	distinctive German term in XMP packet AND mutool visible text (4 hits)
+test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/ReadMes/GWG051_Font_subset_PSnames_ident_Font-report.pdf	subset	hard	xmp-metadata	term in XMP packet AND mutool visible text (9 hits)
+test-pdfs/federal/irs-w9.pdf	Taxpayer	hard	info-dict	term in /Info /Subject 'Request for Taxpayer Identification Number...' (mutool show trailer/Info) AND mutool visible text (12 hits)
+test-pdfs/federal/scotus-trump-v-anderson.pdf	Anderson	hard	info-dict	term in /Info /Title '23-719 Trump v. Anderson' AND mutool visible case caption text (15 hits)
+test-pdfs/federal/uscis-i-9.pdf	Eligibility	hard	info-dict	term in /Info /Subject and /Title 'Form I-9, Employment Eligibility Verification' AND mutool visible text (1 hit)
+test-pdfs/federal/irs-1040-instructions.pdf	Coverdell	medium	dense-multicolumn	p25 dense 2-col instruction page: 106 numeric-operand Td line steps (qpdf --pages 25 + qdf); mutool p25 extracts 'Coverdell' (doc freq 5)
+test-pdfs/federal/irs-1040-instructions.pdf	Surviving	medium	dense-multicolumn	p15 dense multi-column page: 94 numeric Td line steps; mutool p15 extracts 'Surviving' (doc freq 3)
+test-pdfs/federal/irs-pub509-2026.pdf	Estimated	medium	dense-multicolumn	p6 dense tax-calendar page: 148 numeric Td line steps; mutool p6 extracts 'Estimated' (doc freq 3)
+test-pdfs/federal/irs-pub509-2026.pdf	October	medium	dense-multicolumn	p10 dense calendar page: 57 numeric Td line steps; mutool p10 extracts 'October' 7x (doc freq 20)
+test-pdfs/pdfjs/issue12007_reduced.pdf	Credit	medium	small-glyph	mutool stext line 'Bank Credit Card' rendered at font size=3.58pt (well under 5pt); mutool text extracts 'Credit' (doc freq 1)
+test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG162_Transp_Basic_BM_DeviceCMYK_Isolate_X4.pdf	appears	medium	small-glyph	stext run 'If an X appears, render' at size=3.87pt; mutool text extracts 'appears' (doc freq 1)
+test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/3-ICC-CMS/Test pages/Ghent_PDF-Output-Test-V50_ICC-CMS_X4.pdf	Darken	medium	small-glyph	stext blend-mode label 'Darken' at size=4.0pt; mutool text extracts 'Darken' (doc freq 2)
+test-pdfs/altona/eci_altona-test-suite-v2_technical2_x4.pdf	isolated	medium	small-glyph	stext micro-label 'non-isolated' at size=4.5pt; mutool text extracts 'isolated' (doc freq 6)
+test-pdfs/federal/cms-40b-medicare-part-b.pdf	Office	medium	ligatures	font ToUnicode bfchar <1E> -> <006600660069> = 'ffi' (ONE glyph code = 3 chars); mutool extracts full 'Office' (freq 1) so the ffi run is a single glyph
+test-pdfs/federal/cdc-vis-covid-19.pdf	difficulty	medium	ligatures	ToUnicode maps single glyph code to 'ffi' (006600660069) and 'fi'; mutool extracts full 'difficulty' (freq 2) - the ffi is one glyph, char count > glyph count in that run
+test-pdfs/pdfjs/issue11718_reduced.pdf	different	medium	ligatures	ToUnicode bfchar maps one code to 'ff' (00660066, 1 glyph = 2 chars); mutool extracts full 'different' (freq 1)
+test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/ReadMes/GWG050_Font_Substitution_ReadMe.pdf	different	medium	ligatures	ToUnicode bfchar <1D> -> <00660066> = 'ff' (1 glyph = 2 chars); mutool extracts full 'different' (freq 1)
+test-pdfs/poppler/unittestcases/searchAcrossLinesDoubleColumn.pdf	modified	medium	ligatures	font Encoding /Differences names single ligature glyphs /fi /fl /ffi /ff; 'modified' rendered with one 'fi' glyph; mutool extracts full word (freq 1)
+test-pdfs/pdfium/annotation_highlight_long_content.pdf	highlight	medium	cid-type0	Type0/CIDFont; extracted but CID-encoded
+test-pdfs/pdfium/annotation_stamp_with_ap.pdf	Adobe	medium	tj-kerning-heavy	word split across 6+ TJ pieces
+test-pdfs/pdfium/rotated_text.pdf	Hello	medium	rotated-scaled-text	rotated Tm (non-zero b/c)
