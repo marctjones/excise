@@ -450,6 +450,39 @@ public sealed class AdversarialRedactionRegressionTests
             "a /Text annotation's /RC rich-text carrier must be scrubbed like its /Contents");
     }
 
+    [Theory]
+    [InlineData("listbox_form.pdf", "Saskatchewan")]   // choice field /Opt option
+    [InlineData("issue15053.pdf", "toggled")]          // widget /MK /CA caption
+    public void RedactText_ScrubsFormCarriersBeyondValue(string file, string term)
+    {
+        // #1194: form/widget string carriers beyond /V — a choice field's /Opt
+        // (list of options) and a widget /MK /CA caption. Real bench fixtures
+        // (pdfium/pdfjs); skip when the corpus is absent.
+        var root = RepoRoot();
+        var path = System.IO.Path.Combine(root, "test-pdfs", "pdfium", file);
+        if (!System.IO.File.Exists(path))
+            path = System.IO.Path.Combine(root, "test-pdfs", "pdfjs", file);
+        Xunit.Assert.SkipUnless(System.IO.File.Exists(path),
+            $"corpus fixture {file} absent [requires: corpus:pdfium]");
+
+        using var doc = PdfDocument.Open(System.IO.File.ReadAllBytes(path));
+        doc.RedactText(term, drawBlackRect: false);
+        var saved = doc.SaveToBytes();
+
+        Encoding.Latin1.GetString(saved).Should().NotContain(term,
+            $"a form/widget carrier (/Opt or /MK /CA) holding '{term}' must be scrubbed");
+        // still a valid document.
+        using var reopened = PdfDocument.Open(saved);
+        reopened.PageCount.Should().BeGreaterThan(0);
+    }
+
+    private static string RepoRoot()
+    {
+        var d = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
+        while (d != null && !System.IO.Directory.Exists(System.IO.Path.Combine(d.FullName, ".git"))) d = d.Parent;
+        return d!.FullName;
+    }
+
     private static string Obj(string body) => body;
 
     private static PdfRectangle BoundingBoxOf(IReadOnlyList<Excise.Core.Text.Letter> letters)

@@ -465,6 +465,55 @@ public static class PdfDocumentSanitizer
                     changed = true;
                 }
 
+                // #1194: the widget's appearance-characteristics captions (/MK /CA
+                // normal, /AC down, /RC rollover — §12.5.6.19 / §12.7.4.3) are the
+                // button's visible LABEL, a separate string carrier. issue15053 kept
+                // "This Button can be toggled" in /MK /CA after /V was scrubbed.
+                if (document.Resolve(annot.GetOptional("MK") ?? PdfNull.Instance) is PdfDictionary mk)
+                {
+                    foreach (var capKey in new[] { "CA", "AC", "RC" })
+                    {
+                        var cap = (document.Resolve(mk.GetOptional(capKey) ?? PdfNull.Instance) as PdfString)?.Value;
+                        if (string.IsNullOrEmpty(cap)) continue;
+                        var scrubbedCap = Excise(cap, terms, caseSensitive);
+                        if (scrubbedCap == cap) continue;
+                        mk[capKey] = new PdfString(scrubbedCap);
+                        changed = true;
+                    }
+                }
+
+                // #1194: a choice field's /Opt is the list of selectable options
+                // (§12.7.4.4) — an array of strings OR [export, display] pairs.
+                // listbox_form kept "Saskatchewan" in /Opt after redaction; the
+                // find-step never saw it (not page content). Excise the term from
+                // each option string, keeping the array structure so the form is
+                // not corrupted. /Opt may sit on the widget (merged) or the parent
+                // field.
+                var optHolder = annot.ContainsKey("Opt") ? annot
+                    : document.Resolve(annot.GetOptional("Parent") ?? PdfNull.Instance) as PdfDictionary;
+                if (optHolder != null &&
+                    document.Resolve(optHolder.GetOptional("Opt") ?? PdfNull.Instance) is PdfArray opt)
+                {
+                    for (var oi = 0; oi < opt.Count; oi++)
+                    {
+                        var item = document.Resolve(opt[oi]);
+                        if (item is PdfString os)
+                        {
+                            var so = Excise(os.Value, terms, caseSensitive);
+                            if (so != os.Value) { opt[oi] = new PdfString(so); changed = true; }
+                        }
+                        else if (item is PdfArray pair)   // [export, display]
+                        {
+                            for (var pi = 0; pi < pair.Count; pi++)
+                                if (document.Resolve(pair[pi]) is PdfString ps)
+                                {
+                                    var sp = Excise(ps.Value, terms, caseSensitive);
+                                    if (sp != ps.Value) { pair[pi] = new PdfString(sp); changed = true; }
+                                }
+                        }
+                    }
+                }
+
                 // #1155: a link annotation's URI action carries the same string
                 // as its /Contents (irs-1040-instructions restated
                 // "https://www.irs.gov/your-account" in both). The loop above
