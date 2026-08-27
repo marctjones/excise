@@ -16,13 +16,13 @@
       "purpose": "Calibration floor \u2014 collateral / false-positive baseline. Every tool should pass. Terms MUST be single-carrier (byte occurrences <= visible occurrences) so a leak here is a real defect, not a hidden copy.",
       "categories": {
         "easy-plain-body": {
-          "target": 5,
+          "target": 3,
           "source": "real",
           "research": "calibration",
-          "note": "standard-14/Type1 body-text word"
+          "note": "Type1/standard-14 body-text word (scarce in real PDFs \u2014 most embed TrueType)"
         },
         "easy-truetype": {
-          "target": 4,
+          "target": 6,
           "source": "real",
           "research": "calibration",
           "note": "embedded TrueType, WinAnsi"

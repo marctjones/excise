@@ -78,3 +78,25 @@ test-pdfs/poppler/unittestcases/searchAcrossLinesDoubleColumn.pdf	modified	mediu
 test-pdfs/pdfium/annotation_highlight_long_content.pdf	highlight	medium	cid-type0	Type0/CIDFont; extracted but CID-encoded
 test-pdfs/pdfium/annotation_stamp_with_ap.pdf	Adobe	medium	tj-kerning-heavy	word split across 6+ TJ pieces
 test-pdfs/pdfium/rotated_text.pdf	Hello	medium	rotated-scaled-text	rotated Tm (non-zero b/c)
+#
+# --- easy tier (calibration; single-carrier verified byte<=visible) ---
+test-pdfs/smoke/irs-w4.pdf	sections	easy	easy-plain-body	Type1/std-14, single-carrier
+test-pdfs/federal/scotus-trump-v-us.pdf	OCTOBER	easy	easy-truetype	embedded TrueType, single-carrier
+test-pdfs/federal/state-ds11-passport.pdf	legibly	easy	easy-truetype	embedded TrueType, single-carrier
+test-pdfs/smoke/cdc-vis-covid-19.pdf	VACCINE	easy	easy-truetype	embedded TrueType, single-carrier
+test-pdfs/smoke/irs-1040-instructions.pdf	Future	easy	easy-truetype	embedded TrueType, single-carrier
+test-pdfs/federal/scotus-trump-v-us.pdf	connection	easy	easy-multi-occurrence	appears 6x, single-carrier
+test-pdfs/federal/state-ds11-passport.pdf	Department	easy	easy-multi-occurrence	appears 8x, single-carrier
+test-pdfs/smoke/cdc-vis-covid-19.pdf	Vaccine	easy	easy-multi-occurrence	appears 6x, single-carrier
+test-pdfs/smoke/irs-pub509-2026.pdf	General	easy	easy-multi-occurrence	appears 6x, single-carrier
+test-pdfs/federal/scotus-trump-v-us.pdf	20543	easy	easy-numeric	numeric in body, single-carrier
+test-pdfs/federal/state-ds11-passport.pdf	5504	easy	easy-numeric	numeric in body, single-carrier
+test-pdfs/smoke/cdc-vis-covid-19.pdf	7967	easy	easy-numeric	numeric in body, single-carrier
+test-pdfs/smoke/irs-1040-instructions.pdf	250250025	easy	easy-numeric	numeric in body, single-carrier
+test-pdfs/federal/scotus-trump-v-us.pdf	feasible	easy	easy-standalone	standalone, single-carrier
+test-pdfs/federal/state-ds11-passport.pdf	National	easy	easy-standalone	standalone, single-carrier
+test-pdfs/smoke/cdc-vis-covid-19.pdf	STATEMENT	easy	easy-standalone	standalone, single-carrier
+test-pdfs/smoke/irs-1040-instructions.pdf	INSTRUCTIONS	easy	easy-standalone	standalone, single-carrier
+test-pdfs/pdfjs/ZapfDingbats.pdf	Character	easy	easy-plain-body	Type1/std-14, single-carrier
+test-pdfs/pdfjs/blendmode.pdf	Examples	easy	easy-plain-body	Type1/std-14, single-carrier
+test-pdfs/pdfium/bug_650.pdf	AutoCAD	easy	easy-truetype	embedded TrueType, single-carrier
