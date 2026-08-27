@@ -93,6 +93,21 @@ public class Letter
     /// </summary>
     public bool IsInHiddenOptionalContent { get; set; }
 
+    /// <summary>#1091/#1092 — byte offset of this glyph's CODE within its string
+    /// operand, for operand-level rewrite (the TJ-split). NOT the character
+    /// index: for multi-byte/CID codes the two differ. -1 when unknown (a
+    /// synthetic AcroForm/annotation letter that no content-stream operand backs).</summary>
+    public int OperandByteOffset { get; set; } = -1;
+
+    /// <summary>#1091/#1092 — which TJ array element the glyph's string was, or -1
+    /// for a plain Tj / a synthetic letter.</summary>
+    public int TjElementIndex { get; set; } = -1;
+
+    /// <summary>#1091 — the glyph's raw horizontal advance in thousandths of text
+    /// space (§9.4.4 w0), the unit a TJ number is expressed in, so removing a run
+    /// can compensate its total advance with one adjustment (#1045).</summary>
+    public double DisplacementThousandths { get; set; }
+
     /// <summary>
     /// The baseline start point of the glyph.
     /// </summary>

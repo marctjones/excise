@@ -76,6 +76,22 @@ internal static class AppearanceStreamRedactor
         }
         catch { return false; }
 
+        // Verify the term is actually GONE from the rewritten stream — not by
+        // comparing bytes (re-serialisation reformats whitespace even when
+        // nothing was removed), but by re-extracting. If the term survives, it
+        // is drawn by a nested Form XObject this stream only invokes with Do (a
+        // signature /AP/N → /FRM Do, #669): the split can't reach it. Do NOT
+        // claim success — return false so the caller drops /AP (leak-safe),
+        // which prunes the nested form and takes the term with it.
+        try
+        {
+            var after = new TextExtractor(page) { IncludeFormFieldValues = false }
+                .ExtractLettersFrom(newBytes, resources);
+            if (PdfDocumentRedactionExtensions.FindTextMatches(after, term, caseSensitive).Count >= matches.Count)
+                return false;
+        }
+        catch { return false; }
+
         // Replace the content, stored UNCOMPRESSED so the writer emits it
         // verbatim (the old /Filter no longer describes these bytes).
         ap.SetDecodedData(newBytes);
