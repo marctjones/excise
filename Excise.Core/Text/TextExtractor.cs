@@ -563,7 +563,17 @@ public class TextExtractor
             IsInHiddenOptionalContent = _hiddenOptionalContentDepth > 0,
             IsCidFont = glyph.IsCidFont,
             // #776: the innermost enclosing /MCID span, for the a11y bridge.
-            MarkedContentId = _currentMcid
+            MarkedContentId = _currentMcid,
+            // #1091/#1092: where this glyph's code lives, for the operand rewrite.
+            OperandByteOffset = glyph.OperandByteOffset,
+            TjElementIndex = glyph.TjElementIndex,
+            // #1091 advance compensation: the FULL §9.4.4 advance in TJ-number
+            // units, so -sum over a removed run restores the exact pen movement
+            // and following text does not shift. w0 alone misses the spacing
+            // term (Tc + Tw), which a TJ number expresses as spacing·1000/Tfs
+            // (Th cancels between the glyph advance and the TJ compensation).
+            DisplacementThousandths = glyph.DisplacementThousandths
+                + (glyph.FontSize > 1e-6 ? glyph.Spacing * 1000.0 / glyph.FontSize : 0)
         });
     }
 

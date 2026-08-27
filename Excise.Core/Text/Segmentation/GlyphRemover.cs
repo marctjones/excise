@@ -191,13 +191,27 @@ public class GlyphRemover
                 .ToList();
             if (matchesToRemove.Count == 0) continue;
 
-            // #1044 SPIKE: try blanking the matched codes IN PLACE before
-            // falling back to restructuring. Restructuring is where every known
-            // collateral defect lives -- #1038's 5-36% loss, #1039's
-            // unterminated blocks, Pitfall 2's missing Tf. Byte replacement
-            // touches nothing but the matched glyphs, so the damage is
-            // structurally bounded. Refused (null) for anything where a decoded
-            // index is not a byte offset; see GlyphBlanker.
+            // #1091: operand-level TJ-split — the PRIMARY removal path. It
+            // byte-splices the matched glyphs out of the operator's own operand
+            // and replaces each removed run with ONE advance adjustment (#1045),
+            // WITHOUT touching the operator's place in the stream, its BT/ET, or
+            // its Tf state. Restructuring — where every known collateral defect
+            // lives (#1038's 5-36% loss, #1039, Pitfall 2) — is confined to the
+            // reported fallback below. Correct for Type0/CID via the #1092 byte
+            // offset. Returns null (falls back) where it can't safely split.
+            // A malformed (implicitly-ended, no ET) block goes to reconstruction,
+            // which REPAIRS it (§9.4 forbids an unterminated BT); the split keeps
+            // operators in place and would leave the input's invalidity intact.
+            var splitOp = block.ImplicitEnd ? null : OperandGlyphSplitter.TrySplit(op, matchesToRemove);
+            if (splitOp != null)
+            {
+                blankedOperators[idx] = splitOp;
+                continue;
+            }
+
+            // #1044 SPIKE (now secondary to the split): blank the matched codes
+            // in place. Refused (null) for anything where a decoded index is not
+            // a byte offset; see GlyphBlanker.
             if (BlankInPlace)
             {
                 var blankedOp = GlyphBlanker.TryBlank(op, matchesToRemove);

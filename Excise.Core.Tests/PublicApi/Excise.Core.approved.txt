@@ -1721,6 +1721,7 @@ namespace Excise.Core.Text
         public Letter(string value, Excise.Core.Document.PdfRectangle glyphRectangle, double fontSize, string fontName, double startX, double startY, double width, int characterCode, int codeByteLength = 1) { }
         public int CharacterCode { get; }
         public int CodeByteLength { get; }
+        public double DisplacementThousandths { get; set; }
         public Excise.Core.Document.PdfPoint EndBaseLine { get; }
         public string FontName { get; }
         public double FontSize { get; }
@@ -1728,9 +1729,11 @@ namespace Excise.Core.Text
         public bool IsCidFont { get; set; }
         public bool IsInHiddenOptionalContent { get; set; }
         public int? MarkedContentId { get; set; }
+        public int OperandByteOffset { get; set; }
         public Excise.Core.Document.PdfPoint StartBaseLine { get; }
         public double StartX { get; }
         public double StartY { get; }
+        public int TjElementIndex { get; set; }
         public string Value { get; }
         public double Width { get; }
         public override string ToString() { }
