@@ -1466,6 +1466,37 @@ public sealed class RedactionBenchmarkRunner
         }
 
         _out.WriteLine("");
+        _out.WriteLine("SECURITY x FIDELITY — the two dimensions, measured INDEPENDENTLY.");
+        _out.WriteLine("A redactor has two jobs: remove the secret (security) AND leave a document");
+        _out.WriteLine("that still renders correctly (fidelity). These trade off and are NOT summed.");
+        _out.WriteLine("Text-preservation is reported SEPARATELY from render-fidelity: rasterising is a");
+        _out.WriteLine("valid maximally-secure fallback whose cost is text-selectability BY DESIGN, so");
+        _out.WriteLine("its text-kept=0 is a property, not a penalty. It still must render correctly.");
+        _out.WriteLine($"{"tool",-10} {"secure",8} {"renders-ok",11} {"text-kept",10}  note");
+        foreach (var g in rows.GroupBy(r => r.Tool).OrderBy(g => g.Key, StringComparer.Ordinal))
+        {
+            var good = g.Where(r => r.Error == null).ToList();
+            if (good.Count == 0) continue;
+            // SECURITY: no leak on ANY channel — text carriers, visual ink, image-baked OCR.
+            var secure = good.Count(r => !r.LeakSavedBytes && !r.LeakOracleText
+                && r.LeakBadRedactions <= 0 && r.VisualTermReadable != 1 && r.ImageBakedReadable != 1);
+            // RENDER FIDELITY: the SURVIVING page renders correctly (small render delta) and the
+            // tool did not newly break structure. This is where raster SUCCEEDS — it renders
+            // identically. Measured only where a render delta exists.
+            var rf = good.Where(r => r.SurvivingRenderDelta >= 0).ToList();
+            var rendersOk = rf.Count(r => r.SurvivingRenderDelta < 0.02 && !(r.InputQpdfOk && !r.QpdfOk));
+            // TEXT PRESERVATION: untargeted text survives AS SELECTABLE TEXT (low collateral, no
+            // word damage). Raster scores 0 here BY DESIGN — that is the trade-off, not a defect.
+            var textKept = good.Count(r => r.CollateralFraction < 0.02 && r.SurvivingWordsDamaged == 0);
+            string P(int a, int b) => b == 0 ? "n/a" : $"{100.0 * a / b:F0}%";
+            var note = g.Key == "raster"
+                ? "rasterises all -> text-kept 0 BY DESIGN; secure + renders-ok is the point"
+                : "";
+            _out.WriteLine($"{g.Key,-10} {P(secure, good.Count),8} {P(rendersOk, rf.Count),11} " +
+                           $"{P(textKept, good.Count),10}  {note}");
+        }
+
+        _out.WriteLine("");
         _out.WriteLine("RECOVERABLE, by how the text was read back:");
         foreach (var g in ok.Where(r => r.Verdict == nameof(Verdict.Recoverable))
                             .GroupBy(r => r.Tool).OrderBy(g => g.Key, StringComparer.Ordinal))
