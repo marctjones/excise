@@ -348,7 +348,7 @@ public static class PdfDocumentRedactionExtensions
     /// <summary>
     /// Bounding box that encloses all <paramref name="letters"/>.
     /// </summary>
-    private static PdfRectangle BoundingBoxOf(IReadOnlyList<Letter> letters)
+    internal static PdfRectangle BoundingBoxOf(IReadOnlyList<Letter> letters)
     {
         return new PdfRectangle(
             letters.Min(l => l.GlyphRectangle.Left),

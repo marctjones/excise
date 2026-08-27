@@ -373,7 +373,7 @@ namespace Excise.Core.Content
     }
     public class ContentStreamParser
     {
-        public ContentStreamParser(byte[] content, Excise.Core.Document.PdfPage? page = null) { }
+        public ContentStreamParser(byte[] content, Excise.Core.Document.PdfPage? page = null, Excise.Core.Primitives.PdfDictionary? resources = null) { }
         public int MaxNestingDepth { get; set; }
         public Excise.Core.Content.ContentStream Parse(System.Threading.CancellationToken cancellationToken = default) { }
     }
@@ -1761,6 +1761,7 @@ namespace Excise.Core.Text
         public TextExtractor(Excise.Core.Document.PdfPage page) { }
         public bool IncludeFormFieldValues { get; set; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> ExtractLetters(System.Threading.CancellationToken cancellationToken = default) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> ExtractLettersFrom(byte[] content, Excise.Core.Primitives.PdfDictionary? resources, System.Threading.CancellationToken cancellationToken = default) { }
         public string ExtractText(System.Threading.CancellationToken cancellationToken = default) { }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Word> ExtractWords(System.Threading.CancellationToken cancellationToken = default) { }
     }

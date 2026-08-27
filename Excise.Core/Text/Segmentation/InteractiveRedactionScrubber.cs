@@ -45,12 +45,13 @@ internal static class InteractiveRedactionScrubber
     /// rectangle cannot: cut the matched substring out of each value string and
     /// leave the rest of the field intact.</para>
     ///
-    /// <para><b>/AP is still dropped, deliberately.</b> The appearance stream
-    /// holds the term as drawn GLYPHS, and rewriting it is a separate piece of
-    /// work; deleting it plus <c>/NeedAppearances</c> is the leak-safe move
-    /// available today, and it is what already happened. So this change is
-    /// strictly an improvement on every axis — same carriers dropped, minus the
-    /// data destruction.</para>
+    /// <para><b>/AP is now rewritten, not dropped (#1098).</b> The appearance
+    /// stream holds the term as drawn GLYPHS; the glyph-removal engine cuts them
+    /// out of the appearance's own content (via <see cref="AppearanceStreamRedactor"/>)
+    /// so the field still renders its remaining text in readers that ignore
+    /// <c>/NeedAppearances</c>. It falls back to dropping <c>/AP</c> (the old
+    /// leak-safe move) only when the appearance is not text-extractable — a
+    /// subsetted font with no ToUnicode, the #637 limitation.</para>
     /// </summary>
     public static bool ScrubTerm(PdfPage page, PdfRectangle area, string term, bool caseSensitive)
     {
@@ -185,6 +186,11 @@ internal static class InteractiveRedactionScrubber
         catch (Exception ex) when (ex is not OutOfMemoryException) { return false; }
 
         var changed = false;
+        // #1098: a single-widget field often merges the field and widget into
+        // ONE dictionary, so its /AP is reached twice (as field, as widget).
+        // Rewriting removes the term the first time; the second pass would find
+        // no match and drop the appearance we just fixed. Process each /AP once.
+        var processedAp = new HashSet<PdfDictionary>();
         foreach (var field in fields)
         {
             var widgets = field.Widgets.Count > 0
@@ -216,6 +222,7 @@ internal static class InteractiveRedactionScrubber
 
             CaptureObjectGraph(page.Document, field.RawDictionary.GetOptional("AP"), pruneCandidates);
 
+            var defaultResources = GetAcroFormDefaultResources(page.Document);
             if (term != null)
             {
                 // #1038: cut the term out, keep the rest of the value. See
@@ -224,17 +231,20 @@ internal static class InteractiveRedactionScrubber
                     page.Document, field.RawDictionary, "V", term, caseSensitive, pruneCandidates);
                 changed |= RedactStringEntry(
                     page.Document, field.RawDictionary, "DV", term, caseSensitive, pruneCandidates);
+                // #1098: rewrite the appearance to remove the term's GLYPHS so
+                // the field still renders its remaining text in readers that
+                // ignore /NeedAppearances. Drops /AP (leak-safe) only if the
+                // rewrite can't be done.
+                changed |= RewriteOrDropAppearance(
+                    page, field.RawDictionary, defaultResources, term, caseSensitive, processedAp);
             }
             else
             {
                 changed |= field.RawDictionary.Remove("V");
                 changed |= field.RawDictionary.Remove("DV");
+                // Area mode knows only a rectangle, so the whole appearance goes.
+                changed |= field.RawDictionary.Remove("AP");
             }
-
-            // Dropped in both modes. The appearance draws the term as glyphs
-            // and nothing here rewrites those; /NeedAppearances below is what
-            // gets the redacted value back on screen.
-            changed |= field.RawDictionary.Remove("AP");
 
             // Choice fields (combo/list boxes) restate every option string in
             // /Opt independent of /V — a list box's full option list is what
@@ -255,7 +265,9 @@ internal static class InteractiveRedactionScrubber
             foreach (var widget in field.WidgetDictionaries)
             {
                 CaptureObjectGraph(page.Document, widget.GetOptional("AP"), pruneCandidates);
-                changed |= widget.Remove("AP");
+                changed |= term != null
+                    ? RewriteOrDropAppearance(page, widget, defaultResources, term, caseSensitive, processedAp)
+                    : widget.Remove("AP");
             }
         }
 
@@ -263,6 +275,35 @@ internal static class InteractiveRedactionScrubber
             page.Document.SetAcroFormNeedAppearances();
 
         return changed;
+    }
+
+    /// <summary>The AcroForm default resources (/DR) — the fonts a producer may
+    /// share across fields rather than duplicate in each appearance stream.</summary>
+    private static PdfDictionary? GetAcroFormDefaultResources(PdfDocument doc)
+    {
+        if (doc.Resolve(doc.Catalog?.GetOptional("AcroForm") ?? PdfNull.Instance) is PdfDictionary acro)
+            return doc.Resolve(acro.GetOptional("DR") ?? PdfNull.Instance) as PdfDictionary;
+        return null;
+    }
+
+    /// <summary>
+    /// #1098 — rewrite the holder's <c>/AP</c> to remove the term's glyphs, or
+    /// drop it (leak-safe) if the rewrite can't be done. Each appearance is
+    /// touched at most once (<paramref name="processedAp"/>): a rewrite removes
+    /// the term, so a second pass over the same shared dict would find no match
+    /// and wrongly drop the appearance it just fixed.
+    /// </summary>
+    private static bool RewriteOrDropAppearance(
+        PdfPage page, PdfDictionary holder, PdfDictionary? defaultResources,
+        string term, bool caseSensitive, HashSet<PdfDictionary> processedAp)
+    {
+        if (page.Document.Resolve(holder.GetOptional("AP") ?? PdfNull.Instance) is not PdfDictionary ap)
+            return false;   // nothing to touch
+        if (!processedAp.Add(ap))
+            return false;   // already handled via the merged field/widget dict
+        if (AppearanceStreamRedactor.RedactTerm(page, ap, defaultResources, term, caseSensitive))
+            return true;    // rewritten in place, kept
+        return holder.Remove("AP");   // couldn't rewrite -> drop
     }
 
     private static bool RemoveIntersectingAnnotations(
