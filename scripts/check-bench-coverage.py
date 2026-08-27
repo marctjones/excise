@@ -22,7 +22,8 @@ ADV = os.path.join(ROOT, "test-pdfs", "redaction-adversarial")
 
 # A design category whose synthetic fixture is named differently in the generator.
 SYNTH_PREFIX = {"alt-text": "alt-inline", "ocg-hidden": "ocg-hidden",
-                "embedded-file": "embedded-file", "actualtext-inline": "actualtext"}
+                "embedded-file": "embedded-file", "actualtext-inline": "actualtext",
+                "invisible-text": "invisible-text", "stacked-overlapping": "stacked-duplicate"}
 
 
 def load_manifest_counts():
