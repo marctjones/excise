@@ -208,6 +208,7 @@ namespace Excise.Rendering.Differential
     }
     public static class ResidueRecoveryEngine
     {
+        public static Excise.Rendering.Differential.ResidueRecoveryEngine.Recovery ApplyContextPrior(Excise.Rendering.Differential.ResidueRecoveryEngine.Recovery recovery, System.Collections.Generic.IReadOnlyList<string> contextTokens) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Rendering.Differential.ResidueRecoveryEngine.Recovery> Recover(string pdfPath, System.Collections.Generic.IReadOnlyList<string> dictionary, Excise.Rendering.Differential.ResidueRecoveryEngine.Options? options = null) { }
         public readonly struct Gap : System.IEquatable<Excise.Rendering.Differential.ResidueRecoveryEngine.Gap>
         {
@@ -237,9 +238,10 @@ namespace Excise.Rendering.Differential
         }
         public sealed class Recovery : System.IEquatable<Excise.Rendering.Differential.ResidueRecoveryEngine.Recovery>
         {
-            public Recovery(Excise.Rendering.Differential.ResidueRecoveryEngine.Gap Gap, System.Collections.Generic.IReadOnlyList<string> CandidatesFit, int CandidatesConsidered, double ResidualEntropyBits, string Status) { }
+            public Recovery(Excise.Rendering.Differential.ResidueRecoveryEngine.Gap Gap, System.Collections.Generic.IReadOnlyList<string> CandidatesFit, int CandidatesConsidered, double ResidualEntropyBits, double ContextAdjustedBits, string Status) { }
             public int CandidatesConsidered { get; init; }
             public System.Collections.Generic.IReadOnlyList<string> CandidatesFit { get; init; }
+            public double ContextAdjustedBits { get; init; }
             public Excise.Rendering.Differential.ResidueRecoveryEngine.Gap Gap { get; init; }
             public double ResidualEntropyBits { get; init; }
             public string Status { get; init; }
