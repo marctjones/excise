@@ -443,10 +443,43 @@ public static class PdfDocumentRedactionExtensions
         // RedactText reports success — Limitations #1, exactly.
         var (view, spanStart, spanEnd) = CollapseOverprintedGlyphs(letters);
 
+        // #1177: insert an INFERRED word space where a horizontal gap separates
+        // two same-line glyphs, exactly as JoinText does. Without it the search
+        // runs over the SPACELESS glyph concatenation, so "your software" reads as
+        // "yoursoftware" and a search for "yours" matches across the word boundary
+        // — foss-primer reported 29 "yours" (your+software/server/self) where the
+        // page shows 7. The inferred space maps to the PREVIOUS letter (it adds no
+        // real letter), so a match's removed slice is unchanged; a needle without
+        // that space simply cannot span the gap, and a multi-word needle now CAN
+        // match a space-glyph-less PDF.
+        // #1177: median left-to-right advance over SAME-LINE adjacent glyphs, so a
+        // word gap is judged RELATIVE to the document's own spacing (JoinText's
+        // WordGapAdvanceFactor rule). An absolute font-size fraction misfires on
+        // uniformly loose spacing (a per-glyph-Tm fixture at 7pt pitch reads every
+        // narrow glyph's trailing gap as a space); the relative rule does not.
+        var advances = new List<double>();
+        for (var k = 1; k < view.Count; k++)
+        {
+            if (string.IsNullOrWhiteSpace(view[k - 1].Value) || string.IsNullOrWhiteSpace(view[k].Value))
+                continue;
+            var pa = view[k - 1].GlyphRectangle.Normalize();
+            var ca = view[k].GlyphRectangle.Normalize();
+            if (Math.Abs((pa.Bottom + pa.Top) / 2 - (ca.Bottom + ca.Top) / 2)
+                > 0.5 * Math.Max(view[k - 1].FontSize, view[k].FontSize)) continue;   // same line only
+            var adv = ca.Left - pa.Left;
+            if (adv > 0) advances.Add(adv);
+        }
+        var medianAdvance = MedianAdvance(advances);
+
         var sb = new StringBuilder(view.Count);
         var characterToLetter = new List<int>(view.Count);
         for (var letterIndex = 0; letterIndex < view.Count; letterIndex++)
         {
+            if (letterIndex > 0 && IsInferredWordGap(view[letterIndex - 1], view[letterIndex], medianAdvance))
+            {
+                sb.Append(' ');
+                characterToLetter.Add(letterIndex - 1);
+            }
             var value = view[letterIndex].Value;
             sb.Append(value);
             for (var charIndex = 0; charIndex < value.Length; charIndex++)
@@ -608,6 +641,39 @@ public static class PdfDocumentRedactionExtensions
     /// Whitespace boundaries are allowed to jump so wrapped phrase searches
     /// retain their existing behavior.
     /// </summary>
+    /// <summary>
+    /// #1177: a horizontal word gap between two SAME-LINE glyphs — the boundary
+    /// JoinText inserts a space at (§ ~0.25em, matching poppler). Neither glyph is
+    /// already whitespace (a real space glyph separates on its own). A vertical gap
+    /// (line wrap) is NOT a word gap: a term wrapped across a line must still match.
+    /// </summary>
+    private static bool IsInferredWordGap(Letter prev, Letter cur, double medianAdvance)
+    {
+        if (string.IsNullOrWhiteSpace(prev.Value) || string.IsNullOrWhiteSpace(cur.Value))
+            return false;
+        var a = prev.GlyphRectangle.Normalize();
+        var b = cur.GlyphRectangle.Normalize();
+        var fontSize = Math.Max(prev.FontSize, cur.FontSize);
+        if (fontSize <= 0) return false;
+        // Same line only — a line wrap is not a word gap (a wrapped term must match).
+        if (Math.Abs((a.Bottom + a.Top) / 2 - (b.Bottom + b.Top) / 2) > 0.5 * fontSize) return false;
+        // Must be a real forward gap (overlapping/overprinted stamps are never a gap).
+        if (b.Left <= a.Right) return false;
+        // Relative to the line's own advance (JoinText's WordGapAdvanceFactor, tuned 1.25);
+        // fall back to a font-size fraction only when no median is available.
+        var advance = b.Left - a.Left;
+        return medianAdvance > 0
+            ? advance > medianAdvance * 1.25
+            : b.Left - a.Right > 0.25 * fontSize;
+    }
+
+    private static double MedianAdvance(List<double> advances)
+    {
+        if (advances.Count == 0) return 0;
+        advances.Sort();
+        return advances[advances.Count / 2];
+    }
+
     private static bool IsSpatiallyCoherent(IReadOnlyList<Letter> letters)
     {
         for (var i = 1; i < letters.Count; i++)
