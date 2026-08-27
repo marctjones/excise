@@ -442,8 +442,14 @@ public static class PdfDocumentSanitizer
             {
                 if (document.Resolve(annotObj) is not PdfDictionary annot) continue;
 
-                // /Contents is the comment text; /T is the author-supplied title.
-                foreach (var key in new[] { "Contents", "T" })
+                // /Contents is the comment text; /T is the author-supplied title;
+                // /RC is the RICH-TEXT variant of the comment (§12.7.3.4 / §12.5.6.2)
+                // — an XHTML string that RESTATES /Contents and is a separate carrier.
+                // #1185: a /Text sticky note kept "sticky note test1" in /RC after
+                // /Contents was scrubbed, an intra-annotation asymmetry exactly like
+                // the /A /URI one below. Excising the term from the raw string works
+                // whether the value is plain or XHTML markup.
+                foreach (var key in new[] { "Contents", "T", "RC" })
                 {
                     var value = ResolveStringOrNull(document, annot, key);
                     if (string.IsNullOrEmpty(value)) continue;

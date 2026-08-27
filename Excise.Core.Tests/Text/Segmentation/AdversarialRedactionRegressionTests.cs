@@ -419,6 +419,37 @@ public sealed class AdversarialRedactionRegressionTests
             "an /ActualText that does not restate a redacted term must survive");
     }
 
+    [Fact]
+    public void RedactText_ScrubsAnnotationRichText_NotJustContents()
+    {
+        // #1185: a /Text sticky note (NOT /FreeText — deliberately not surfaced as
+        // page letters, #660) carries the secret in BOTH /Contents and /RC (the
+        // XHTML rich-text variant, §12.5.6.2). RedactText finds 0 page matches, so
+        // the annotation is not removed wholesale — only the document-carrier scrub
+        // runs, and it excised /Contents but left /RC, an intra-annotation asymmetry
+        // the carrier policy calls a leak. Found by the #1185 bench on real pdfjs
+        // sticky notes (issue17069 'sticky', file_pdfjs_test 'Source').
+        var pdf = Build(
+            Obj("<< /Type /Catalog /Pages 2 0 R >>"),
+            Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+            Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+                "/Contents 4 0 R /Annots [5 0 R] /Resources << >> >>"),
+            Stream("", "BT /F1 12 Tf 72 700 Td (Nothing to see) Tj ET"),
+            Obj("<< /Type /Annot /Subtype /Text /Rect [72 690 92 710] " +
+                "/Contents (STICKYSECRET here) " +
+                "/RC (<body><p style=\"color:#000000\">STICKYSECRET here</p></body>) >>"));
+
+        Encoding.Latin1.GetString(pdf).Should().Contain("STICKYSECRET");
+
+        using var doc = PdfDocument.Open(pdf);
+        // 0 page-content matches — the term lives only in the annotation carrier.
+        doc.RedactText("STICKYSECRET", drawBlackRect: false);
+        var saved = doc.SaveToBytes();
+
+        Encoding.Latin1.GetString(saved).Should().NotContain("STICKYSECRET",
+            "a /Text annotation's /RC rich-text carrier must be scrubbed like its /Contents");
+    }
+
     private static string Obj(string body) => body;
 
     private static PdfRectangle BoundingBoxOf(IReadOnlyList<Excise.Core.Text.Letter> letters)
