@@ -56,7 +56,15 @@ public static class ResidueRecoveryEngine
         IReadOnlyList<string> CandidatesFit,
         int CandidatesConsidered,
         double ResidualEntropyBits,
-        string Status);   // "ok" | "no-metric" | "no-gap"
+        // #1137 Use B: entropy AFTER an OCR-context prior re-weights the
+        // width-admissible set. Kept SEPARATE from ResidualEntropyBits — the
+        // width bits are the security number (what the redaction actually
+        // leaked); this is a labelled prior a reviewer can discount. Equals
+        // ResidualEntropyBits until ApplyContextPrior runs. Never smaller than
+        // the set allows and never rescues a width-excluded candidate: OCR only
+        // re-orders, width decides membership.
+        double ContextAdjustedBits,
+        string Status);   // "ok" | "no-metric" | "no-gap" | "no-fit"
 
     public sealed record Options(
         double ExactTolerancePt = 0.5,
@@ -303,7 +311,7 @@ public static class ResidueRecoveryEngine
     {
         if (gap.MetricSource == WidthMetricSource.Unknown)
             return new Recovery(gap, Array.Empty<string>(), dictionary.Count,
-                Bits(dictionary.Count), "no-metric");
+                Bits(dictionary.Count), Bits(dictionary.Count), "no-metric");
 
         var fit = new List<(string Word, double Delta)>();
         foreach (var word in dictionary)
@@ -319,8 +327,64 @@ public static class ResidueRecoveryEngine
         var ranked = fit.OrderBy(f => f.Delta).Take(opt.MaxCandidates)
                         .Select(f => f.Word).ToList();
 
+        var bits = Bits(Math.Max(1, ranked.Count));
+        // ContextAdjustedBits starts equal to the width bits — no prior applied
+        // yet. ApplyContextPrior lowers it (never below what the set allows).
         return new Recovery(gap, ranked, dictionary.Count,
-            Bits(Math.Max(1, ranked.Count)), ranked.Count == 0 ? "no-fit" : "ok");
+            bits, bits, ranked.Count == 0 ? "no-fit" : "ok");
+    }
+
+    /// <summary>
+    /// #1137 Use B — re-weight a recovery's width-admissible candidates with a
+    /// prior built from OCR of the gap's visible neighbourhood, WITHOUT changing
+    /// which candidates are admissible (width owns membership; OCR cannot rescue
+    /// a candidate the width filter excluded). Returns a new Recovery with the
+    /// candidates RE-ORDERED most-likely first and <c>ContextAdjustedBits</c> set
+    /// to the Shannon entropy of the resulting distribution — a labelled prior,
+    /// kept separate from the security number <c>ResidualEntropyBits</c>.
+    ///
+    /// <para>The prior: a redacted secret is unlikely to also sit in the CLEAR
+    /// nearby, so a candidate that appears in <paramref name="contextTokens"/> is
+    /// down-weighted. Deliberately simple — the architecture (width decides,
+    /// context only reorders) is the point, not a language model.</para>
+    /// </summary>
+    public static Recovery ApplyContextPrior(Recovery recovery, IReadOnlyList<string> contextTokens)
+    {
+        if (recovery.CandidatesFit.Count <= 1) return recovery;   // nothing to reorder or sharpen
+
+        var context = new HashSet<string>(
+            contextTokens ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+
+        // Weight: a candidate visible in the clear context is unlikely to be the
+        // thing someone bothered to redact. Everything else keeps the base weight.
+        const double presentPenalty = 0.15;
+        var weights = recovery.CandidatesFit
+            .Select(c => context.Contains(c) ? presentPenalty : 1.0)
+            .ToList();
+        var total = weights.Sum();
+        if (total <= 0) return recovery;
+
+        var reordered = recovery.CandidatesFit
+            .Zip(weights, (c, w) => (Candidate: c, Weight: w))
+            .OrderByDescending(x => x.Weight)      // stable within equal weights → tightest-fit order kept
+            .Select(x => x.Candidate)
+            .ToList();
+
+        // Shannon entropy of the normalised weights: a prior that concentrates
+        // mass lowers the effective uncertainty, but membership (recall@N) is
+        // unchanged. Never exceeds the uniform ResidualEntropyBits.
+        var entropy = 0.0;
+        foreach (var w in weights)
+        {
+            var p = w / total;
+            if (p > 0) entropy -= p * Math.Log2(p);
+        }
+
+        return recovery with
+        {
+            CandidatesFit = reordered,
+            ContextAdjustedBits = Math.Min(recovery.ResidualEntropyBits, entropy),
+        };
     }
 
     // ── width helpers, mirroring GetCharWidth's standard-14 rung ────────────

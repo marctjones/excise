@@ -1846,11 +1846,34 @@ partial class Program
                         file.FullName, words,
                         new Excise.Rendering.Differential.ResidueRecoveryEngine.Options(
                             ExactTolerancePt: tol, MaxCandidates: maxC, RequireMutoolCorroboration: !noCorroboration));
-                    foreach (var r in recs)
+
+                    // #1137 Use B: with --ocr, read the page's visible text and
+                    // re-weight the WIDTH-admissible candidates with it. Width
+                    // still owns the set and residualEntropyBits (the security
+                    // number); OCR only re-orders and fills contextAdjustedBits.
+                    IReadOnlyList<string>? ocrContext = null;
+                    if (useOcr)
+                    {
+                        var ctxOcr = new PdfOcrService(useNativeFastPath: true);
+                        if (ctxOcr.IsAvailable())
+                        {
+                            using var cdoc = PdfDocument.Open(file.FullName);
+                            ocrContext = ctxOcr.RecognizePage(cdoc.GetPage(1)).Words
+                                .Select(w => w.Text).Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
+                        }
+                    }
+
+                    foreach (var r0 in recs)
+                    {
+                        var r = ocrContext != null
+                            ? Excise.Rendering.Differential.ResidueRecoveryEngine.ApplyContextPrior(r0, ocrContext)
+                            : r0;
                         residue.Add(new { page = r.Gap.Page, gapWidthPt = Math.Round(r.Gap.GapWidthPt, 2),
                             font = r.Gap.Font, sizePt = r.Gap.SizePt, metricSource = r.Gap.MetricSource.ToString(),
                             candidatesFit = r.CandidatesFit.Count, residualEntropyBits = Math.Round(r.ResidualEntropyBits, 2),
+                            contextAdjustedBits = Math.Round(r.ContextAdjustedBits, 2),
                             candidates = r.CandidatesFit.Take(20).ToArray(), status = r.Status });
+                    }
                 }
             }
             catch (Exception ex) { Console.Error.WriteLine($"Error: {ex.Message}"); Environment.ExitCode = 1; return; }
