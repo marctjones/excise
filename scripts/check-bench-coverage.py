@@ -24,7 +24,8 @@ ADV = os.path.join(ROOT, "test-pdfs", "redaction-adversarial")
 SYNTH_PREFIX = {"alt-text": "alt-inline", "ocg-hidden": "ocg-hidden",
                 "embedded-file": "embedded-file", "actualtext-inline": "actualtext",
                 "invisible-text": "invisible-text", "stacked-overlapping": "stacked-duplicate",
-                "shared-form-xobject": "shared-form-xobject"}
+                "shared-form-xobject": "shared-form-xobject",
+                "image-baked-text": "image-baked-text"}
 
 
 def load_manifest_counts():
