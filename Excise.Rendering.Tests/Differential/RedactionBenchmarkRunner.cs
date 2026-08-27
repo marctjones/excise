@@ -633,9 +633,21 @@ public sealed class RedactionBenchmarkRunner
             // artifacts (TAMReview.pdf ships 22 image-over-whitespace regions,
             // which mis-graded excise 97% when it was clean). And a finding whose
             // covered "text" is only whitespace is not a recoverable secret.
+            // The heavy VISUAL/X-RAY axes (x-ray scans every page with a 60s
+            // timeout, x2; Ghostscript/OCR render page 1) dominate wall-clock on
+            // large multi-page docs — a 126-page instruction booklet x 4 tools
+            // could take hours. Skip them past a page threshold so the FAST leak
+            // axes (byte-scan, oracle-text, collateral — the survey's core) still
+            // run on EVERY doc. REDACTION_BENCH_HEAVY_MAXPAGES overrides (0 = never
+            // skip). A skipped axis records its unmeasured sentinel (-1/null), never
+            // a false clean.
+            var heavyMax = int.TryParse(Environment.GetEnvironmentVariable("REDACTION_BENCH_HEAVY_MAXPAGES"), out var hm) ? hm : 8;
+            var heavy = heavyMax <= 0 || pageCount <= heavyMax;
+            if (!heavy) _out.WriteLine($"heavy-axes-skipped {corpus}/{name} [{term}] ({pageCount}pp > {heavyMax})");
+
             // Count only NEW, non-whitespace bad redactions. null still means "no
             // oracle" (-1); 0 means "oracle ran, found none this tool caused".
-            var xrayOut = XRayBadRedactionDetector.Inspect(output);
+            var xrayOut = heavy ? XRayBadRedactionDetector.Inspect(output) : null;
             var badRedactions = xrayOut == null
                 ? -1                                                  // null = no oracle (unchanged)
                 : NewNonWhitespaceBadRedactions(XRayBadRedactionDetector.Inspect(path), xrayOut);
@@ -657,16 +669,16 @@ public sealed class RedactionBenchmarkRunner
             var inputQpdf = QpdfReferenceTool.Check(path);
 
             // ── VISUAL (#1141): is the region blank once the box is off? ──
-            var (inkBefore, inkAfter) = MeasureInkAxis(path, term, tool);
+            var (inkBefore, inkAfter) = heavy ? MeasureInkAxis(path, term, tool) : (-1.0, -1.0);
 
             // ── BOX-FIT (#1163): does the tool's mark spill past the glyphs? ──
             // Measured on the tool's ACTUAL output (with whatever box it draws).
-            var boxOverCoverage = MeasureBoxFit(path, output, term);
+            var boxOverCoverage = heavy ? MeasureBoxFit(path, output, term) : -1;
 
             // Per-tool render axes: does the SURVIVING page still render correctly,
             // and is the secret still READABLE in pixels?
-            var survivingRenderDelta = MeasureSurvivingRenderDelta(path, output, term);
-            var visualReadable = MeasureVisualReadable(path, output, term);
+            var survivingRenderDelta = heavy ? MeasureSurvivingRenderDelta(path, output, term) : -1;
+            var visualReadable = heavy ? MeasureVisualReadable(path, output, term) : -1;
 
             // ── SURVIVING-CONTENT CONSERVATION (#1157): did untargeted words
             //    survive UNCHANGED? Catches corruption (ligature dup #1156,
@@ -691,9 +703,11 @@ public sealed class RedactionBenchmarkRunner
             // a document whose page 1 reflows and whose page 4 does not will
             // read as "closed up", and the honest fix for that is #1116's
             // per-removal measurement rather than pretending this is exact.
-            var glyphsBefore = MutoolGlyphPositions.ExtractPage(path, 1);
-            var glyphsAfter = MutoolGlyphPositions.ExtractPage(output, 1);
-            var gapPreserved = MutoolGlyphPositions.LayoutGapPreserved(glyphsBefore, glyphsAfter);
+            var gapPreserved = heavy
+                ? MutoolGlyphPositions.LayoutGapPreserved(
+                    MutoolGlyphPositions.ExtractPage(path, 1),
+                    MutoolGlyphPositions.ExtractPage(output, 1))
+                : (bool?)null;
 
             // A term still LEGIBLE in the rendered pixels is recoverable too — the
             // visual leak the text oracles cannot see.
