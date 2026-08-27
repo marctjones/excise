@@ -483,6 +483,37 @@ public sealed class AdversarialRedactionRegressionTests
         return d!.FullName;
     }
 
+    [Fact]
+    public void RedactText_DoesNotMatchAcrossAWordGap_NoSpaceGlyph()
+    {
+        // #1177: two words positioned with a gap but NO space glyph — "your" then
+        // "software" — must NOT let a search for "yours" match across the boundary
+        // ("yoursoftware"). The match path used to run over the SPACELESS glyph
+        // concatenation; on foss-primer that reported "yours" 29x (your+software/
+        // server/self) where the page shows 7. FindTextMatches now infers the word
+        // gap the same way JoinText does.
+        var pdf = Build(
+            Obj("<< /Type /Catalog /Pages 2 0 R >>"),
+            Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+            Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+                "/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>"),
+            // "your" at x=100, "software" advanced 40u right — a clear gap, no space glyph.
+            Stream("", "BT /F1 12 Tf 100 700 Td (your) Tj 40 0 Td (software) Tj ET"),
+            Obj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"));
+
+        using (var probe = PdfDocument.Open(pdf))
+            // the search stream really is spaceless (guard: reproduces the trap)
+            string.Concat(probe.GetPage(1).Letters.Select(l => l.Value))
+                .Should().Contain("yoursoftware");
+
+        using var doc = PdfDocument.Open(pdf);
+        doc.RedactText("yours", drawBlackRect: false).VerifiedRemovals.Should().Be(0,
+            "'yours' must not match across the your|software word gap (#1177)");
+        // sanity: the real words still match.
+        using var doc2 = PdfDocument.Open(pdf);
+        doc2.RedactText("software", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
+    }
+
     private static string Obj(string body) => body;
 
     private static PdfRectangle BoundingBoxOf(IReadOnlyList<Excise.Core.Text.Letter> letters)
