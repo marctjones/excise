@@ -678,7 +678,17 @@ public sealed class RedactionBenchmarkRunner
 
             var alnumBefore = before.Count(char.IsLetterOrDigit);
             var alnumAfter = after.Count(char.IsLetterOrDigit);
-            var termCost = reported * term.Count(char.IsLetterOrDigit);
+            // #1193: term-cost is the term's OWN removal measured from the ACTUAL
+            // text delta (independent extractor before vs after), NOT the tool's
+            // self-reported count. A tool that under-reports (Type3 #1190, or a
+            // substituting /ActualText) used to have its correctly-removed term
+            // miscounted as collateral — 40-100% on cases that are in fact clean.
+            // Measuring the term's disappearance directly makes collateral immune
+            // to the tool's reporting: only text beyond the term counts.
+            var termLen = term.Count(char.IsLetterOrDigit);
+            var termOccBefore = CountOccurrences(before, term);
+            var termOccAfter = CountOccurrences(after, term);
+            var termCost = Math.Max(0, termOccBefore - termOccAfter) * termLen;
             var collateral = Math.Max(0, alnumBefore - alnumAfter - termCost);
 
             var qpdf = QpdfReferenceTool.Check(output);
