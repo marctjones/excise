@@ -49,7 +49,15 @@ internal readonly record struct WalkedGlyph(
     double DisplacementThousandths,
     double Spacing,
     bool IsVerticalWriting,
-    bool IsCidFont);
+    bool IsCidFont,
+    // #1092: where this glyph's CODE sits, for operand-level rewrite (#1091).
+    // OperandByteOffset is the byte offset of the code WITHIN its string operand
+    // (not a decoded character index — the two differ for multi-byte/CID codes,
+    // which is exactly where writing to the wrong one corrupts a neighbour).
+    // TjElementIndex is which TJ array element the string was, or -1 for a plain
+    // Tj/'/" show. Tracking only, computed on the one walk — no second parser.
+    int OperandByteOffset,
+    int TjElementIndex);
 
 /// <summary>
 /// What a <see cref="ContentStreamWalker"/> consumer implements. Implemented by
@@ -988,18 +996,19 @@ internal sealed class ContentStreamWalker
         // mangles any byte the heuristic maps above U+00FF (Latin-1 clamps it
         // to '?'), which garbled every multi-byte CJK code (#515).
         if (obj is PdfString ps)
-            ShowTextBytes(ps.Bytes, ref sink);
+            ShowTextBytes(ps.Bytes, -1, ref sink);   // -1: a plain Tj, not a TJ array element
     }
 
     private void ShowTextArray<TSink>(PdfArray arr, ref TSink sink)
         where TSink : struct, IContentStreamSink
     {
+        int elementIndex = 0;
         foreach (var item in arr)
         {
             if (item is PdfString ps)
             {
                 // Raw font-encoded bytes — see ShowTextObject (#515).
-                ShowTextBytes(ps.Bytes, ref sink);
+                ShowTextBytes(ps.Bytes, elementIndex, ref sink);
             }
             else if (item is PdfInteger pi)
             {
@@ -1009,10 +1018,11 @@ internal sealed class ContentStreamWalker
             {
                 ApplyTjAdjustment(pr.Value, ref sink);
             }
+            elementIndex++;   // #1092: every array item is an element, adjustments included
         }
     }
 
-    private void ShowTextBytes<TSink>(byte[] bytes, ref TSink sink)
+    private void ShowTextBytes<TSink>(byte[] bytes, int tjElementIndex, ref TSink sink)
         where TSink : struct, IContentStreamSink
     {
         sink.OnStringBegin();
@@ -1021,8 +1031,12 @@ internal sealed class ContentStreamWalker
         {
             // Registered CMap codespaces drive segmentation — mixed 1/2-byte
             // codes (90ms-RKSJ-H) would be garbled by a fixed stride (#515).
+            int offset = 0;   // #1092: byte offset of this code within the operand
             foreach (var (code, cid, byteLength) in _registeredEncodingCMap.DecodeDetailed(bytes))
-                EmitGlyph(code, cid, byteLength, ref sink);
+            {
+                EmitGlyph(code, cid, byteLength, offset, tjElementIndex, ref sink);
+                offset += byteLength;
+            }
         }
         else
         {
@@ -1032,7 +1046,7 @@ internal sealed class ContentStreamWalker
                 int charCode = _is2ByteFont
                     ? (bytes[i] << 8) | bytes[i + 1]
                     : bytes[i];
-                EmitGlyph(charCode, charCode, stride, ref sink);
+                EmitGlyph(charCode, charCode, stride, i, tjElementIndex, ref sink);  // #1092: i is the byte offset
             }
         }
 
@@ -1044,7 +1058,8 @@ internal sealed class ContentStreamWalker
     /// <paramref name="cid"/> equals <paramref name="charCode"/> except under a
     /// registered encoding CMap (#515); widths are CID-keyed (§9.7.4.3).
     /// </summary>
-    private void EmitGlyph<TSink>(int charCode, int cid, int byteLength, ref TSink sink)
+    private void EmitGlyph<TSink>(
+        int charCode, int cid, int byteLength, int operandByteOffset, int tjElementIndex, ref TSink sink)
         where TSink : struct, IContentStreamSink
     {
         var unicode = _decoder.Decode(charCode, cid, _registeredCidToUnicode);
@@ -1113,7 +1128,8 @@ internal sealed class ContentStreamWalker
             charCode, cid, byteLength, unicode,
             x, y, cell, glyphWidth,
             _fontSize, _fontName,
-            displacementThousandths, spacing, _isVerticalWriting, _isCidFont);
+            displacementThousandths, spacing, _isVerticalWriting, _isCidFont,
+            operandByteOffset, tjElementIndex);
         sink.OnGlyph(in glyph);
 
         // Advance the text position (§9.4.4).
