@@ -63,6 +63,13 @@ def leaked(r):
                 or (r.get("leakBadRedactions", 0) > 0)
                 or r.get("visualTermReadable") == 1 or r.get("imageBakedReadable") == 1)
 
+def letter(secure_frac):
+    if secure_frac is None: return None
+    p = secure_frac * 100
+    for thr, g in [(98,"A"),(95,"A-"),(90,"B+"),(85,"B"),(80,"B-"),(70,"C+"),(60,"C"),(50,"D"),(0,"F")]:
+        if p >= thr: return g
+    return "F"
+
 # leak rate by tier x tool  (tiers only meaningful for redaction-hard corpus)
 by_tier = {}
 tiers = sorted({r.get("difficulty", "") for r in ok if r.get("difficulty")})
@@ -87,6 +94,17 @@ for t in tools:
              "rendersOk": round(rok/len(rf), 3) if rf else None,
              "textKept": round(tk/len(g), 3), "n": len(g)}
 
+# security letter grade per tool: overall + per tier
+grades = {}
+for t in tools:
+    g = [r for r in ok if r["tool"] == t]
+    overall = (sum(1 for r in g if not leaked(r)) / len(g)) if g else None
+    tier_grades = {}
+    for tier in tiers:
+        sub = [r for r in g if r.get("difficulty") == tier]
+        tier_grades[tier] = letter(sum(1 for r in sub if not leaked(r))/len(sub)) if sub else None
+    grades[t] = {"overall": letter(overall), "byTier": tier_grades}
+
 entry = {
     "timestamp": ts,
     "excise": {"commit": commit, "describe": describe, "dirty": dirty == "true"},
@@ -96,7 +114,8 @@ entry = {
         "pymupdf": pymupdf, "tesseract": tess, "ghostscript": gs,
         "mutool": mutool, "qpdf": qpdf}.items() if v},
     "metrics": {"measured": len(ok), "errored": len(rows) - len(ok),
-                "leakByTierTool": by_tier, "securityFidelity": sf},
+                "leakByTierTool": by_tier, "securityFidelity": sf,
+                "securityGrade": grades},
     "archive": archive,
 }
 with open(history, "a") as f:
@@ -110,6 +129,9 @@ print(f"  measured {len(ok)}, errored {len(rows)-len(ok)}")
 for tier in tiers:
     cells = "  ".join(f"{t}={by_tier[tier][t][0]}/{by_tier[tier][t][1]}" for t in tools)
     print(f"  leak {tier:8} {cells}")
+for t in tools:
+    print(f"  grade {t:8} overall={grades[t]['overall']}  "
+          f"tiers={' '.join(f'{k}:{v}' for k,v in grades[t]['byTier'].items())}")
 print(f"  full rows -> {archive}")
 print(f"  history   -> {history}")
 PY
