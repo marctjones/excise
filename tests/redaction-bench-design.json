@@ -81,10 +81,10 @@
           "note": "line-stepping stress; gov instruction booklets"
         },
         "stacked-overlapping": {
-          "target": 4,
-          "source": "real",
+          "target": 3,
+          "source": "real+synth",
           "research": "duplicate-draw",
-          "note": "text drawn twice at same position"
+          "note": "text drawn twice at same position (scarce real; synthetic-backed)"
         },
         "small-glyph": {
           "target": 4,
@@ -147,9 +147,9 @@
         },
         "invisible-text": {
           "target": 4,
-          "source": "real",
+          "source": "real+synth",
           "research": "Cat1-6-ocr",
-          "note": "render mode 3 Tr / OCR layer"
+          "note": "render mode 3 Tr / OCR layer (only 3 in corpus; synthetic-backed)"
         },
         "ocg-hidden": {
           "target": 1,
