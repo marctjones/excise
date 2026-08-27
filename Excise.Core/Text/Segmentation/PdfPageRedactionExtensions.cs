@@ -120,6 +120,16 @@ public static class PdfPageRedactionExtensions
             if (content.Operators.Count == 0) return;
         }
 
+        // Pass 0.5: inline marked-content carriers (#1182/#1185). /ActualText,
+        // /Alt, /E in a content-stream BDC/DP property list survive glyph removal —
+        // the structure-tree scrubber reaches only StructElem carriers, not the
+        // inline form. Runs BEFORE the glyph pass, on the SAME operator list that
+        // still carries the glyph bounding boxes, so a carrier span is matched by
+        // the glyphs it ENCLOSES (/ActualText substitutes text that differs from
+        // the painted glyphs, so content-matching alone misses it). The dicts are
+        // mutated in place and flow through the glyph pass into the written stream.
+        MarkedContentCarrierScrubber.Scrub(content.Operators, page, area);
+
         IReadOnlyList<ContentOperator> working = content.Operators;
 
         // Pass 1: text glyph removal (if there's any text on the page).
@@ -135,14 +145,6 @@ public static class PdfPageRedactionExtensions
         // unit-square AABB overlaps the redaction area.
         working = ImageRedactor.ProcessOperations(working, page, area, strategy, out _);
         ImageRedactor.PruneUnusedImageXObjects(page, working);
-
-        // Pass 3: inline marked-content carriers (#1182). /ActualText, /Alt, /E in
-        // a content-stream BDC/DP property list survive glyph removal untouched —
-        // the structure-tree scrubber above reaches only StructElem carriers, not
-        // the inline form. Runs on the final operator list so carriers inlined
-        // from a flattened form are covered too. page still holds the pre-removal
-        // words + marked-content structure (SetContentStream is the last line).
-        MarkedContentCarrierScrubber.Scrub(working, page, area);
 
         page.SetContentStream(new ContentStream(working));
     }
@@ -190,6 +192,11 @@ public static class PdfPageRedactionExtensions
             if (content.Operators.Count == 0) return;
         }
 
+        // Pass 0.5: inline marked-content carriers (#1182/#1185), per area, BEFORE
+        // the glyph pass — see the single-area path for why enclosure not content.
+        foreach (var area in list)
+            MarkedContentCarrierScrubber.Scrub(content.Operators, page, area);
+
         IReadOnlyList<ContentOperator> working = content.Operators;
         var letters = page.Letters;
         if (letters.Count > 0)
@@ -202,11 +209,6 @@ public static class PdfPageRedactionExtensions
             working = ImageRedactor.ProcessOperations(working, page, area, strategy, out _);
 
         ImageRedactor.PruneUnusedImageXObjects(page, working);
-
-        // Pass 3: inline marked-content carriers (#1182), per area.
-        foreach (var area in list)
-            MarkedContentCarrierScrubber.Scrub(working, page, area);
-
         page.SetContentStream(new ContentStream(working));
     }
 }
