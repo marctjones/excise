@@ -780,6 +780,23 @@ public sealed class RedactionBenchmarkRunner
     /// SavedPdfLeakScanner was written to fix (#1049), reintroduced one layer
     /// up in the thing consuming it.</para>
     /// </summary>
+    /// <summary>
+    /// Whether the term at <paramref name="pos"/> sits INSIDE a PDF name token
+    /// (§7.3.5) — walk back through name-continuation bytes; reaching the leading
+    /// '/' before any whitespace or delimiter means it is a name, i.e. structure,
+    /// not surviving content. Catches "5504" inside /CREO_o5504 (#1185).
+    /// </summary>
+    private static bool IsInsideNameToken(string text, int pos)
+    {
+        for (var j = pos - 1; j >= 0; j--)
+        {
+            var c = text[j];
+            if (c == '/') return true;                          // reached the name's slash
+            if (char.IsWhiteSpace(c) || "()<>[]{}%".IndexOf(c) >= 0) return false;  // delimiter ends the name
+        }
+        return false;
+    }
+
     private static (bool Leaked, string Context) ClassifyByteHit(byte[] saved, string term)
     {
         if (SavedPdfLeakScanner.FindTerm(saved, term).Count == 0)
@@ -793,12 +810,13 @@ public sealed class RedactionBenchmarkRunner
             var i = 0;
             while ((i = text.IndexOf(term, i, StringComparison.Ordinal)) >= 0)
             {
-                // A term that IS a PDF name token (/Form, /Type — §7.3.5) is
-                // STRUCTURE, not surviving content: `/Subtype /Form` matches the
-                // term "Form", but scrubbing it would corrupt the XObject. It's a
-                // benchmark false positive, not a leak (#1155). Record it so the
-                // "unplaced" fallback below doesn't then treat it as one.
-                if (i > 0 && text[i - 1] == '/') { contexts.Add("name-token"); i += term.Length; continue; }
+                // A term INSIDE a PDF name token (§7.3.5) is STRUCTURE, not content:
+                // `/Subtype /Form` matches "Form" right after the slash, and
+                // `/CREO_o5504` (an InDesign/Creo marked-content id) matches "5504"
+                // MID-name. Both would corrupt structure if "scrubbed"; neither is a
+                // leak (#1155/#1185). Walk back through name-legal chars — reaching
+                // the leading '/' means we are inside a name token.
+                if (IsInsideNameToken(text, i)) { contexts.Add("name-token"); i += term.Length; continue; }
                 var before = text[Math.Max(0, i - 300)..i];
                 var benign = BenignContexts.FirstOrDefault(b => before.Contains(b, StringComparison.Ordinal));
                 if (benign != null) { contexts.Add("font:" + benign.Trim('/', ' ', '[')); }
