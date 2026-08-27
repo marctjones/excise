@@ -8,9 +8,9 @@
 # path <TAB> term <TAB> difficulty(hard|medium) <TAB> category <TAB> note
 #
 # --- HARD: term lives in a carrier beyond ordinary page content ---
-test-pdfs/pdfua/7.2-t21-fail-a.pdf	Replacement	hard	actualtext-inline	tagged PDF; term in StructElem/inline /ActualText + visible glyphs
+test-pdfs/pdfua/7.2-t21-fail-a.pdf	Replacement	hard	actualtext-struct	tagged PDF; term in StructElem/inline /ActualText + visible glyphs
 test-pdfs/pdfua/7.2-t30-pass-b.pdf	actualText	hard	actualtext-inline	tagged PDF/UA; /ActualText restates visible text
-test-pdfs/poppler/unittestcases/pdf20-utf8-test.pdf	Association	hard	actualtext-inline	PDF 2.0 UTF-8 tagged; /ActualText carrier + visible
+test-pdfs/poppler/unittestcases/pdf20-utf8-test.pdf	Association	hard	actualtext-struct	PDF 2.0; Figure /ActualText object (UTF-8 BOM) + visible
 #
 # --- mined from the corpus (scripts/mine-hard-redaction-cases.py); mutool/qpdf-verified ---
 test-pdfs/federal/cms-40b-medicare-part-b.pdf	Administration	hard	cid-type0	Type0+CIDFont fonts; mutool draw -F txt yields 'Administration' (x2) but it is NOT a literal in the decoded content stream (CID 2-byte hex shows) so byte-offset != char-index
@@ -46,3 +46,5 @@ test-pdfs/federal/cms-40b-medicare-part-b.pdf	address	medium	tj-kerning-heavy	'a
 test-pdfs/altona/altona_measure_1v1a.pdf	Characterization	medium	tj-kerning-heavy	'Characterization' split across a TJ array of 15 pieces, spans element boundaries; mutool extracts it
 test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG090_Font-Support_x3.pdf	multiple	medium	tj-kerning-heavy	'multiple' split across a TJ array of 24 pieces (19 kern adjustments), spans element boundaries; mutool extracts it
 test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG160_Transp_Basic_BM_DeviceCMYK_Non-knockout_X4.pdf	Workgroup	medium	tj-kerning-heavy	'Workgroup' split across a TJ array of 12 pieces (7 kern adjustments), spans element boundaries; mutool extracts it
+test-pdfs/pdfua/7.2-t21-pass-a.pdf	Replacement	hard	actualtext-struct	StructElem /ActualText + visible glyphs
+test-pdfs/pdfua/7.2-t21-pass-b.pdf	Replacement	hard	actualtext-struct	StructElem /ActualText + visible glyphs

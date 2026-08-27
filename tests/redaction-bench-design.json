@@ -98,13 +98,13 @@
       "purpose": "Carrier leaks + corruption/rendering risk \u2014 the secret survives in a carrier the tool did not scrub, or removal corrupts the file.",
       "categories": {
         "actualtext-inline": {
-          "target": 5,
-          "source": "real",
+          "target": 2,
+          "source": "real+synth",
           "research": "Cat1-top3",
-          "note": "/ActualText inline in a BDC property list"
+          "note": "/ActualText inline in a BDC property list (rare in real docs; mostly synthetic)"
         },
         "actualtext-struct": {
-          "target": 4,
+          "target": 5,
           "source": "real",
           "research": "Cat1-top3",
           "note": "/ActualText on a StructElem"
