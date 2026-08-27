@@ -971,7 +971,7 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 │   ├── PdfDocumentRedactionExtensions.cs  # doc.RedactText(word) entry point
 │   ├── StructureTreeRedactionScrubber.cs  # /ActualText, /Alt (#636)
 │   ├── InteractiveRedactionScrubber.cs    # annotations, form fields
-│   ├── ImageRedactor.cs            # raster/scanned pixel removal
+│   ├── ImageRedactor.cs            # drops whole image Do on overlap (NOT region-level; #1195)
 │   ├── FormXObjectFlattener.cs     # inlines forms so their text is reachable
 │   └── HiddenTextDetector.cs       # audit: visible-but-unextractable text
 ├── Content/
@@ -986,8 +986,8 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
-    ├── MutoolReferenceRenderer.cs        # 178 uses in Differential tests
-    ├── GhostscriptReferenceRenderer.cs   #  78
+    ├── MutoolReferenceRenderer.cs        # 179 uses in Differential tests
+    ├── GhostscriptReferenceRenderer.cs   #  81
     ├── PdftocairoReferenceRenderer.cs    #  50
     ├── PdftoppmReferenceRenderer.cs      #  18
     ├── MutoolTextExtractor.cs            # independent TEXT oracle

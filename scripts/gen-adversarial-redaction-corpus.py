@@ -277,6 +277,67 @@ def c_image_baked(t):
     ]
 
 
+def c_image_ocr_overlay(t):
+    # #1192 / #1195 shape, but with a Flate image Excise.Core CAN decode — so the
+    # region-level image-redaction path is testable without CCITT/JBIG2 codecs.
+    # A FULL-PAGE Flate scan with the term baked into the pixels AND surrounding
+    # baked text, under an invisible (Tr 3) OCR text layer positioned over the
+    # term. Correct redaction: find the term via the invisible layer, then black
+    # ONLY the term's rectangle in the image — deleting the whole image (current
+    # behaviour) destroys the surrounding baked text (measurable collateral).
+    # Requires PIL; the main loop skips this carrier if PIL is unavailable.
+    from PIL import Image, ImageDraw, ImageFont
+    import zlib
+    W, H = 1224, 1584          # 2x the 612x792 page, full-page scan
+    img = Image.new("L", (W, H), 255)
+    dr = ImageDraw.Draw(img)
+    fnt = None
+    for fp in ("/System/Library/Fonts/Supplemental/Arial.ttf",
+               "/Library/Fonts/Arial.ttf",
+               "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+               "/System/Library/Fonts/Helvetica.ttc"):
+        try:
+            fnt = ImageFont.truetype(fp, 44); break
+        except Exception:
+            pass
+    if fnt is None:
+        fnt = ImageFont.load_default()
+    # surrounding baked text (the collateral that whole-image deletion destroys)
+    for i, line in enumerate([
+            "PLAT OF SURVEY  -  parcel and easement schedule",
+            "Bearings and distances per record of survey.",
+            "Lot 14  Block 3   area 0.34 ac   zoning R-1",
+            "Utility easement 10 ft along the rear line.",
+            "Reference monument found at the NE corner."]):
+        dr.text((80, 120 + i*90), line, fill=0, font=fnt)
+    # the secret term, baked near the top-center
+    term_px = (80, 700)
+    dr.text(term_px, "%s LANE" % t, fill=0, font=fnt)
+    comp = zlib.compress(img.tobytes())
+    PW, PH = 612, 792
+    # map baked term pixel position -> page coords for the invisible overlay.
+    # image (cm PW PH) maps sample (sx,sy) [top-left origin] to page
+    # (sx/W*PW, PH - sy/H*PH).
+    tx = term_px[0] / W * PW
+    ty = PH - term_px[1] / H * PH
+    content = b("q %d 0 0 %d 0 0 cm /Im0 Do Q\n"
+                "BT /F1 12 Tf 3 Tr %.1f %.1f Td (%s) Tj 0 Tr ET\n"
+                % (PW, PH, tx, ty, t))
+    imgobj = (b("<< /Type /XObject /Subtype /Image /Width %d /Height %d "
+                "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode "
+                "/Length %d >>\nstream\n" % (W, H, len(comp))) + comp + b"\nendstream")
+    return [
+        b("<< /Type /Catalog /Pages 2 0 R >>"),
+        b("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+        b("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %d %d] "
+          "/Resources << /Font << /F1 5 0 R >> /XObject << /Im0 6 0 R >> >> "
+          "/Contents 4 0 R >>" % (PW, PH)),
+        (b("<< /Length %d >>\nstream\n" % len(content)) + content + b"\nendstream"),
+        FONT,
+        imgobj,
+    ]
+
+
 CARRIERS = {
     "invisible-text":      ("INVISIBLESECRET",   c_invisible),
     "stacked-duplicate":   ("STACKEDSECRET",     c_stacked),
@@ -293,6 +354,7 @@ CARRIERS = {
     "embedded-file":       ("EMBEDDEDSECRET",    c_embedded_file),
     "shared-form-xobject": ("SHAREDXOBJSECRET",  c_shared_xobject),
     "image-baked-text":    ("IMAGEBAKEDSECRET",  c_image_baked),
+    "image-ocr-overlay":   ("IMAGEOCROVERLAYSECRET", c_image_ocr_overlay),
 }
 
 
