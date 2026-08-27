@@ -506,6 +506,29 @@ public class TextExtractor
         return walker;
     }
 
+    /// <summary>
+    /// #1098 — extract letters from an APPEARANCE stream (or any Form XObject
+    /// content) that no page `Do` points at, using the appearance's OWN
+    /// <paramref name="resources"/> so its fonts resolve. Positions are in the
+    /// appearance's own coordinate space, which is exactly the space its glyph
+    /// operators live in — so the redaction that follows needs no coordinate
+    /// mapping (the whole reason #1098's fix is smaller than it looks). Reuses
+    /// the same walker + LetterSink as the page walk; does NOT emit the synthetic
+    /// AcroForm/annotation letters (those are the page's, not this stream's).
+    /// </summary>
+    public IReadOnlyList<Letter> ExtractLettersFrom(
+        byte[] content, Primitives.PdfDictionary? resources, CancellationToken cancellationToken = default)
+    {
+        _letters.Clear();
+        var walker = new ContentStreamWalker(content, _page);
+        if (resources != null) walker.PushResources(resources);
+        _walker = walker;
+        var sink = new LetterSink(this, walker);
+        walker.Walk(ref sink, cancellationToken);
+        BidiReorderer.ReorderVisualRtlRuns(_letters);
+        return _letters.AsReadOnly();
+    }
+
     private void ParseContentStream(CancellationToken cancellationToken)
     {
         var walker = CreateWalker(_contentStream);

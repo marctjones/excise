@@ -80,9 +80,13 @@ public class ContentStreamParser
     /// </summary>
     /// <param name="content">Raw content stream bytes.</param>
     /// <param name="page">Optional page reference for font resolution.</param>
-    public ContentStreamParser(byte[] content, PdfPage? page = null)
+    public ContentStreamParser(byte[] content, PdfPage? page = null, PdfDictionary? resources = null)
     {
         _walker = new ContentStreamWalker(content, page);
+        // #1098: an appearance stream is a Form XObject whose fonts live in its
+        // OWN /Resources, not the page's. Push them so glyphs decode when this
+        // parses a stream no `Do` on the page points at.
+        if (resources != null) _walker.PushResources(resources);
     }
 
     /// <summary>
