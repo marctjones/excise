@@ -143,6 +143,7 @@ Excise.Core	tests-only	XObjectOperators	triage:public library/domain API; tests 
 Excise.Ocr	tests-only	RecognizeDocument	triage:public OCR API; tests exercise contract, external callers may use it
 Excise.Ocr	tests-only	ScanFile	triage:public OCR API; tests exercise contract, external callers may use it
 Excise.Ocr	tests-only	Similarity	triage:public OCR API; tests exercise contract, external callers may use it
+Excise.Ocr.Native	tests-only	OcrRegion	#1139 public binding surface (text+confidence); production consumer is #1137 Use B (OCR context prior), deferred to main session. Word-level path uses OcrRegionTsv.
 Excise.Rendering	nowhere	CandidatesConsidered	#1146 residue CLI wires these
 Excise.Rendering	tests-only	BBoxHeight	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
 Excise.Rendering	tests-only	BBoxWidth	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
