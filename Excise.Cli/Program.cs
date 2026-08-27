@@ -1686,7 +1686,7 @@ partial class Program
             {
                 byte[]? bytes = null;
                 using var doc = PdfDocument.Open(file.FullName);
-                var structuralHits = HiddenTextDetector.Scan(doc);
+                var structuralHits = HiddenTextDetector.Scan(doc, includeVisibleFailedRedactions: true);
 
                 IReadOnlyList<DifferentialOcrHit> ocrHits = Array.Empty<DifferentialOcrHit>();
                 if (deep)
@@ -1805,7 +1805,7 @@ partial class Program
                 if (mode is "certain" or "both")
                 {
                     using var doc = PdfDocument.Open(file.FullName);
-                    foreach (var h in Excise.Core.Text.Segmentation.HiddenTextDetector.Scan(doc))
+                    foreach (var h in Excise.Core.Text.Segmentation.HiddenTextDetector.Scan(doc, includeVisibleFailedRedactions: true))
                         certain.Add(new { page = h.PageNumber, text = h.Text, hiddenBy = h.HiddenBy,
                             x = Math.Round(h.BoundingBox.Left, 1), y = Math.Round(h.BoundingBox.Bottom, 1) });
 

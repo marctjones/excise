@@ -449,7 +449,7 @@ partial class Program
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
         using var doc = OpenPdfDocument(input, step.Password);
-        var hits = HiddenTextDetector.Scan(doc);
+        var hits = HiddenTextDetector.Scan(doc, includeVisibleFailedRedactions: true);
         if (hits.Count > 0 && step.AllowFindings != true)
             throw new AutomationValidationException(
                 "HIDDEN_TEXT_FOUND",

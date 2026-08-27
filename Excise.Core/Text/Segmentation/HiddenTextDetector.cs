@@ -64,11 +64,17 @@ public static class HiddenTextDetector
         "visible text via (3,0) symbol cmap not recoverable by extraction — redaction may not reach it";
 
     /// <summary>Scan every page of <paramref name="document"/>.</summary>
-    public static IReadOnlyList<HiddenTextRecord> Scan(PdfDocument document)
+    /// <param name="includeVisibleFailedRedactions">#1184: when true, ALSO report
+    /// Pairing C — READABLE text on a redaction-shaped box (a visible failed
+    /// redaction, #1180). Default false keeps this a HIDDEN-text detector: a
+    /// legible box is not hidden, and folding it in broke the #1131 negative
+    /// controls. De-redaction AUDITS opt in; a hidden-text query does not.</param>
+    public static IReadOnlyList<HiddenTextRecord> Scan(PdfDocument document,
+        bool includeVisibleFailedRedactions = false)
     {
         var all = new List<HiddenTextRecord>();
         for (int p = 1; p <= document.PageCount; p++)
-            all.AddRange(ScanPage(document.GetPage(p), p));
+            all.AddRange(ScanPage(document.GetPage(p), p, includeVisibleFailedRedactions));
         return all;
     }
 
@@ -76,7 +82,8 @@ public static class HiddenTextDetector
     /// Scan a single page. <paramref name="pageNumber"/> is the 1-based
     /// page number to record in emitted records.
     /// </summary>
-    public static IReadOnlyList<HiddenTextRecord> ScanPage(PdfPage page, int pageNumber = 1)
+    public static IReadOnlyList<HiddenTextRecord> ScanPage(PdfPage page, int pageNumber = 1,
+        bool includeVisibleFailedRedactions = false)
     {
         var records = new List<HiddenTextRecord>();
         var ops = page.GetContentStream().Operators;
@@ -284,18 +291,19 @@ public static class HiddenTextDetector
             // to the text (a redaction box), not a wide background. A de-redaction
             // audit must surface it: a box with legible text on it is a redaction
             // that did not take.
-            foreach (var o in obstructions)
-            {
-                if (o.Index >= t.Index) continue;
-                if (Contrast(t.Fill, o.Fill) < LowContrastThreshold) continue;   // B owns the faint case
-                if (Luminance(o.Fill) >= DarkFillThreshold) continue;            // redaction boxes are dark
-                var run = CoveredRun(t, o.Bbox);
-                if (run == null) continue;
-                if (Area(o.Bbox) > RedactionBoxAreaRatio * Area(run.Value.Box)) continue;  // box-sized, not a banner
-                records.Add(new HiddenTextRecord(pageNumber, run.Value.Text, run.Value.Box,
-                    $"readable text ({DescribeColor(t.Fill)}) on a redaction-shaped {DescribeColor(o.Fill)} fill"));
-                break;
-            }
+            if (includeVisibleFailedRedactions)
+                foreach (var o in obstructions)
+                {
+                    if (o.Index >= t.Index) continue;
+                    if (Contrast(t.Fill, o.Fill) < LowContrastThreshold) continue;   // B owns the faint case
+                    if (Luminance(o.Fill) >= DarkFillThreshold) continue;            // redaction boxes are dark
+                    var run = CoveredRun(t, o.Bbox);
+                    if (run == null) continue;
+                    if (Area(o.Bbox) > RedactionBoxAreaRatio * Area(run.Value.Box)) continue;  // box-sized, not a banner
+                    records.Add(new HiddenTextRecord(pageNumber, run.Value.Text, run.Value.Box,
+                        $"readable text ({DescribeColor(t.Fill)}) on a redaction-shaped {DescribeColor(o.Fill)} fill"));
+                    break;
+                }
         }
 
         return records;
