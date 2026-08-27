@@ -124,3 +124,24 @@ test-pdfs/federal/irs-w4.pdf	Exemption	hard	no-tounicode	font /HelveticaNeueLTSt
 test-pdfs/pdfium/hello_world_split_streams.pdf	Greetings	hard	contents-array	page 1 /Contents is [6 0 R 7 0 R] (qpdf --json + raw show-object); 'Greetings, world!' lives in the SECOND array stream (obj 7); mutool extracts 'Greetings' (freq 1)
 test-pdfs/federal/scotus-trump-v-us.pdf	conspired	hard	contents-array	page 1 /Contents is an 8-ref array (qpdf --json pages.contents len 8); 'conspired' present as a literal across the array content streams; mutool extracts it (doc freq 4) — real Supreme Court opinion
 test-pdfs/pdfjs/comments.pdf	languages	hard	contents-array	page 1 /Contents is [594..605 0 R] 8-ref array (raw show-object confirms); 'languages' literal in the array content streams (not an annotation); mutool extracts it (page freq 6)
+#
+# --- depth expansion: additional reals for existing categories (#1185) ---
+test-pdfs/local-real-world/business-success-with-open-source_P1.0.pdf	Equipment	medium	cid-type0	Type0+CIDFont fonts present; mutool extracts 'Equipment' (3x) but NOT a literal in qpdf-expanded (--qdf --object-streams=disable --decode-level=all) content stream (CID 2-byte encoded)
+test-pdfs/federal/uscis-i-9.pdf	Secretary	medium	cid-type0	Type0+CIDFont present; mutool extracts 'Secretary' (1x), absent as literal in qpdf-expanded stream (CID-encoded show strings)
+test-pdfs/pdfjs/TAMReview.pdf	Metropolitan	medium	tj-kerning-heavy	'Metropolitan' reconstructs across 10 separate TJ string pieces (array has 28 pieces); does not fit in one piece; mutool extracts it (2x)
+test-pdfs/federal/scotus-trump-v-anderson.pdf	typographical	medium	tj-kerning-heavy	'typographical' spans 9 TJ string pieces (array has 27 pieces), across element boundaries; mutool reassembles+extracts it (1x)
+test-pdfs/altona/altona_technical_1v2_x3.pdf	Technical	medium	rotated-scaled-text	'(Altona Test Suite - "Technical" - ...) Tj' under Tm [0 4 -4 0] (90deg rotation, 4x scale); mutool extracts 'Technical' (2x)
+test-pdfs/pdfjs/freeculture.pdf	AFTERWORD	hard	outline-title	outline /Title 'AFTERWORD' (confirmed via mutool show outline) AND in mutool visible text (16 hits) - bookmark-title leak shape
+test-pdfs/pdfjs/basicapi.pdf	Paragraph	hard	outline-title	outline /Title 'Paragraph 1.1' (mutool show outline) AND in mutool visible text (2 hits)
+test-pdfs/pdfium/listbox_form.pdf	Saskatchewan	hard	acroform-value	AcroForm present; 'Saskatchewan' is a listbox choice field /V value (/FT /Ch), not page content
+test-pdfs/pdfjs/issue15053.pdf	toggled	hard	acroform-value	AcroForm present; 'toggled' is a text field /V value (/FT /Tx, /V 'This Message can be toggled.')
+test-pdfs/pdfjs/annotation-caret-ink.pdf	Caret	hard	annotation-contents	term in a /Caret annotation /Contents ('Caret content'); mutool text includes annotation contents so vis=1 comes from the carrier itself
+test-pdfs/pdfjs/annotation-highlight-without-appearance.pdf	Highlight	hard	annotation-contents	term in a /Highlight annotation /Contents encoded as hex UTF-16BE (<feff0048...>='Highlight content'); vis=1 via mutool including annotation text
+test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Ghent_PDF-Output-Suite-V50_ReadMeFirst.pdf	Output	hard	xmp-metadata	term inside the <?xpacket..</x:xmpmeta> XMP packet AND in mutool visible text (16 hits)
+test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/3-ICC-CMS/Patches/GWG206_ICC_V4-RGB-Image_x4.pdf	profile	hard	xmp-metadata	term inside the XMP packet (<?xpacket..</x:xmpmeta>) AND in mutool visible text (5 hits)
+test-pdfs/poppler/unittestcases/searchAcrossLinesDoubleColumn.pdf	Chromium	easy	easy-multi-occurrence	appears 5x in mutool visible text, single-carrier (B=5 in qpdf-expanded == V=5, no metadata/annot/field copy)
+test-pdfs/pdfjs/freeculture.pdf	violating	easy	easy-multi-occurrence	appears 8x in mutool visible text, single-carrier (B=8 == V=8)
+test-pdfs/pdfjs/TAMReview.pdf	Research	easy	easy-standalone	distinctive single word, single-carrier (B=2 == V=2, literal in content stream, no other carrier)
+test-pdfs/poppler/unittestcases/searchAcrossLinesDoubleColumn.pdf	subsystem	easy	easy-standalone	distinctive single word, single-carrier (B=2 == V=2)
+test-pdfs/pdfjs/freeculture.pdf	1967	easy	easy-numeric	realistic year, single-carrier (B=4 == V=4, no metadata/field copy)
+test-pdfs/pdfjs/TAMReview.pdf	1535	easy	easy-numeric	realistic number, single-carrier (B=1 <= V=2)
