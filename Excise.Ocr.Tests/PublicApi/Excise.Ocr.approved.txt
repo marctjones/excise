@@ -31,7 +31,8 @@ namespace Excise.Ocr
     }
     public sealed class PdfOcrService
     {
-        public PdfOcrService(string language = "eng", int dpi = 300, string tesseractPath = "tesseract", string? tessdataPrefix = null) { }
+        public PdfOcrService(string language = "eng", int dpi = 300, string tesseractPath = "tesseract", string? tessdataPrefix = null, bool useNativeFastPath = false) { }
+        public bool NativeFastPathActive { get; }
         public bool IsAvailable() { }
         public Excise.Ocr.OcrResult RecognizeBitmap(SkiaSharp.SKBitmap bitmap, double pageHeightPoints) { }
         public System.Collections.Generic.IEnumerable<Excise.Ocr.OcrResult> RecognizeDocument(Excise.Core.Document.PdfDocument document) { }

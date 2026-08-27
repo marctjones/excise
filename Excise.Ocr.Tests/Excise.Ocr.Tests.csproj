@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Excise.Ocr\Excise.Ocr.csproj" />
+    <ProjectReference Include="..\Excise.Ocr.Native\Excise.Ocr.Native.csproj" />
     <ProjectReference Include="..\Excise.Core\Excise.Core.csproj" />
   </ItemGroup>
 

@@ -1,0 +1,20 @@
+namespace Excise.Ocr.Native
+{
+    public sealed class NativeOcrEngine : System.IDisposable
+    {
+        public const int DefaultPageSegMode = 3;
+        public void Dispose() { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Text",
+                "Confidence"})]
+        public System.ValueTuple<string, float> OcrRegion(byte[] pixels, int width, int height, int pageSegMode = 3) { }
+        public string OcrRegionTsv(byte[] pixels, int width, int height, int pageSegMode = 3) { }
+        public static Excise.Ocr.Native.NativeOcrEngine Create(string language = "eng", int dpi = 300, string? datapath = null) { }
+        public static bool IsAvailable(string language = "eng") { }
+    }
+    public sealed class NativeOcrUnavailableException : System.Exception
+    {
+        public NativeOcrUnavailableException(string message) { }
+        public NativeOcrUnavailableException(string message, System.Exception inner) { }
+    }
+}
