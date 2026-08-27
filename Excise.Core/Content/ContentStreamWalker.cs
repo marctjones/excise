@@ -186,6 +186,9 @@ internal sealed class ContentStreamWalker
     // non-Type3 font so GetCharWidth's hot path skips the /FontMatrix read
     // entirely. Every other font type has the implicit [0.001 …] matrix, which
     // is why the rest of GetCharWidth treats /Widths as 1000ths of an em.
+    private readonly Dictionary<PdfDictionary, double> _type3HeightScaleCache =
+        new(ReferenceEqualityComparer.Instance);
+
     private readonly Dictionary<PdfDictionary, double> _type3WidthScaleCache =
         new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<PdfDictionary, Text.GlyphUnicodeDecoder> _decoderCache =
@@ -1081,7 +1084,13 @@ internal sealed class ContentStreamWalker
         var advanceTextSpace = _isVerticalWriting
             ? charWidth * _fontSize / 1000.0
             : charWidth * _fontSize * (_horizontalScaling / 100.0) / 1000.0;
-        var ascentTextSpace = _fontSize;
+        // #1190: for a Type3 font the ascent, like the advance width (#1103),
+        // must be scaled by the /FontMatrix — the vertical factor FontMatrix[3].
+        // Without it a 299 Tf Type3 glyph (glyph-space units) built a 299-unit-tall
+        // cell that pushed the centre off the page, so the #1101 visible-window
+        // match tally rejected it and RedactText reported 0 while still removing it.
+        // No-op (1.0) for non-Type3 and the ubiquitous [0.001 0 0 0.001] matrix.
+        var ascentTextSpace = _fontSize * Type3HeightScale(_currentFont);
 
         // Map both displacements through the text-matrix × CTM linear parts
         // before they touch the user-space pen position — adding the raw
@@ -1892,6 +1901,36 @@ internal sealed class ContentStreamWalker
         }
 
         _type3WidthScaleCache[font] = scale;
+        return scale;
+    }
+
+    /// <summary>
+    /// #1190 — the vertical mirror of <see cref="Type3WidthScale"/>: the glyph
+    /// cell's ascent is scaled by FontMatrix[3] (the y-scale, d term) * 1000, so a
+    /// Type3 glyph's height is in the same 1000ths-of-an-em convention as a normal
+    /// font. 1.0 (no-op) for non-Type3 and for [0.001 0 0 0.001 0 0].
+    /// </summary>
+    private double Type3HeightScale(PdfDictionary? font)
+    {
+        if (font == null) return 1.0;
+        if (_type3HeightScaleCache.TryGetValue(font, out var cached)) return cached;
+        double scale = 1.0;
+        if (font.GetNameOrNull("Subtype") == "Type3")
+        {
+            var fmObj = _page != null
+                ? _page.Document.Resolve(font.GetOptional("FontMatrix") ?? PdfNull.Instance)
+                : font.GetOptional("FontMatrix");
+            double d = 0.001;
+            if (fmObj is PdfArray fm && fm.Count >= 6)
+            {
+                bool allZero = true;
+                for (int i = 0; i < 6 && allZero; i++)
+                    if (fm.GetNumber(i) != 0) allZero = false;
+                if (!allZero) d = fm.GetNumber(3);
+            }
+            scale = d * 1000.0;
+        }
+        _type3HeightScaleCache[font] = scale;
         return scale;
     }
 
