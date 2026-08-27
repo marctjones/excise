@@ -68,7 +68,7 @@ public class UnredactionScorecardTests
     }
 
     [Fact]
-    public void ConsolidatedScorecard_CertainChannel_ExciseLeadsTheXRayReference()
+    public void ConsolidatedScorecard_CertainAndResidue_ExciseLeadsTheReferences()
     {
         var corpus = Path.Combine(RepoRoot(), "test-pdfs", "redaction-synthetic");
         var manifest = Path.Combine(corpus, "manifest.jsonl");
@@ -110,11 +110,36 @@ public class UnredactionScorecardTests
                 xr.Any(b => b.Text.Contains(c.Answer, StringComparison.OrdinalIgnoreCase))));
         }
 
+        // #1181: RESIDUE channel — excise's exact PDF metrics (±0.5pt) vs the
+        // pixel/OCR reference class (±2pt, the precision unredact.live/Edact-Ray
+        // achieve), scored on the width-preserving cases against the SAME closed
+        // dictionary the answer was drawn from. Capped per band for runtime; the
+        // full sweep is ResidueRecoveryRecallTests.
+        var residueCases = File.ReadAllLines(manifest).Where(l => l.Length > 0)
+            .Select(l => JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(l)!)
+            .Where(m => m["method"].GetString() == "width-preserving")
+            .Select(m => (Id: m["id"].GetString()!, Answer: m["answer"].GetString()!,
+                          Band: m["band"].GetString()!, Dict: m["dictionary"].GetString()!))
+            .Where(c => File.Exists(Path.Combine(corpus, c.Id + ".pdf")))
+            .GroupBy(c => c.Band).SelectMany(g => g.Take(4)).ToList();
+
+        foreach (var c in residueCases)
+        {
+            var pdf = Path.Combine(corpus, c.Id + ".pdf");
+            var dict = SyntheticCorpusDictionaries.For(c.Dict);
+            bool Recovered(double tol) =>
+                ResidueRecoveryEngine.Recover(pdf, dict,
+                    new ResidueRecoveryEngine.Options(ExactTolerancePt: tol, RequireMutoolCorroboration: false))
+                .Any(r => r.CandidatesFit.Contains(c.Answer, System.StringComparer.OrdinalIgnoreCase));
+            rows.Add(new Row("residue", c.Band, "excise", Recovered(0.5)));
+            rows.Add(new Row("residue", c.Band, "pixel-2pt", Recovered(2.0)));
+        }
+
         var grades = UnredactionScorecard.Score(rows);
-        var missing = new List<string> { "residue channel → ResidueRecoveryRecallTests", "tool-resistance → ToolResistanceComparisonTests" };
+        var missing = new List<string> { "tool-resistance → ToolResistanceComparisonTests" };
         if (!xrayAvailable) missing.Add("x-ray (certain reference) not installed");
         var coverage = new UnredactionScorecard.Coverage(
-            Channels: new[] { "certain" },
+            Channels: new[] { "certain", "residue" },
             Tools: rows.Select(r => r.Tool).Distinct().OrderBy(t => t).ToList(),
             MissingReferences: missing);
 
