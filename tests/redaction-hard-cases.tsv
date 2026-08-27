@@ -102,3 +102,25 @@ test-pdfs/pdfjs/blendmode.pdf	Examples	easy	easy-plain-body	Type1/std-14, single
 test-pdfs/pdfium/bug_650.pdf	AutoCAD	easy	easy-truetype	embedded TrueType, single-carrier
 test-pdfs/pdfium/annots.pdf	Annotations	easy	easy-multi-occurrence	appears 3x, single-carrier
 test-pdfs/federal/scotus-trump-v-anderson.pdf	Disqualification	easy	easy-truetype	TrueType CenturySchoolbook, single-carrier (agent-verified B=1 V=1)
+#
+# --- new structure types (#1185 depth expansion): type3, rotated-page, clipped, vertical-cjk, no-tounicode, contents-array ---
+test-pdfs/poppler/tests/type3.pdf	ababab	medium	type3-font	/Type3+/CharProcs in qpdf-expanded; whole page drawn with Type3 font (stext font name 'Type3 (9 0 R)'); mutool draw -F txt extracts 'ababab'
+test-pdfs/pdfjs/bug1001080.pdf	OpenAction	medium	type3-font	/Type3+/CharProcs present; stext attributes 'OpenAction' glyphs to a Type3 font block; mutool extracts it
+test-pdfs/pdfjs/issue19532.pdf	Talbahn	medium	type3-font	/Type3+/CharProcs present; 'Talbahn' drawn with a Type3 font (stext Type3 block); mutool extracts it (doc freq 1)
+test-pdfs/pdfjs/issue19634.pdf	guest	medium	type3-font	/Type3+/CharProcs present; 'guest' drawn with Type3 font (stext Type3 block, 10 glyph runs); mutool extracts it (freq 10)
+test-pdfs/poppler/unittestcases/orientation.pdf	Seascape	medium	rotated-page	page 4 has /Rotate 270 (mutool pages); mutool draw -F txt page 4 extracts 'Seascape' (freq 1)
+test-pdfs/pdfjs/issue14415.pdf	agreement	medium	rotated-page	page 1 /Rotate 180 (mutool pages); mutool extracts 'agreement' (freq 3) — real contract text on an inverted page
+test-pdfs/pdfjs/issue14497.pdf	Parklands	medium	rotated-page	page 1 /Rotate 90 (mutool pages); mutool extracts 'Parklands' (freq 1) — real land-survey doc, landscape-rotated
+test-pdfs/pdfjs/hello_world_rotated.pdf	world	medium	rotated-page	/Rotate 90 on the page (mutool pages); mutool extracts 'world' (freq 5)
+test-pdfs/altona/altona_technical_1v2_x3.pdf	Altona	medium	clipped-text	decompressed content stream has W n clip ops (34); 'Altona' shown as literal under an active clip (mutool trace: glyphs inside clip_path/pop_clip scope); mutool extracts it (freq 4)
+test-pdfs/altona/altona_visual_1v2a_x3.pdf	Hamburgefonsaltona	medium	clipped-text	W n clips present (564); 'Hamburgefonsaltona' drawn under an active clip (mutool trace clip scope, 8 runs) and present as stream literal; mutool extracts it (freq 8)
+test-pdfs/pdfjs/issue2462.pdf	Phase	medium	clipped-text	content stream shows '0 0 822 422 re / W n' then BT ... [(Phase 1)...(Phase 2)]TJ with no intervening Q — 'Phase' text run drawn under the active rectangular clip; mutool trace confirms clip; mutool extracts 'Phase' (freq 2)
+test-pdfs/pdfua/7.21.3.3-t02-fail-a.pdf	Hello	medium	vertical-cjk	/WMode 1 in qpdf-expanded font; stext reports wmode="1" lines; vertical layout so mutool emits one glyph per line — 'Hello' recovered in reading order (whitespace-stripped)
+test-pdfs/pdfjs/issue20930.pdf	ABCDE	medium	vertical-cjk	Type0 font /Encoding /Identity-V (vertical CMap); stext wmode="1"; glyphs A B C D E emitted one-per-line, 'ABCDE' recovered in reading order
+test-pdfs/verapdf-corpus/veraPDF-corpus-master/TWG test files/TWG test suite A008-pdfa1-pass-a.pdf	パーソナル	medium	vertical-cjk	Type0 /Identity-V vertical CMap, stext wmode="1" (38 lines); real vertical Japanese; katakana run 'パーソナル' recovered in reading order from mutool (one glyph per line, freq 1)
+test-pdfs/federal/irs-1040-instructions.pdf	Affordable	hard	no-tounicode	font /Arial-BoldMT is /TrueType with /FontFile2 embedded and NO /ToUnicode (qpdf); 'Affordable' drawn with it (stext font block); mutool still extracts via WinAnsiEncoding (doc freq 2)
+test-pdfs/pdfium/bug_1029.pdf	tablet	hard	no-tounicode	font 'Times-Roman' is /Type1 with /FontFile3 embedded, NO /ToUnicode and a non-name (dict/none) /Encoding (qpdf); 'tablet' drawn with it (stext); mutool extracts it (doc freq 3) — fragile, no ToUnicode fallback
+test-pdfs/federal/irs-w4.pdf	Exemption	hard	no-tounicode	font /HelveticaNeueLTStd-Bd is /Type1 with /FontFile3 embedded and NO /ToUnicode (qpdf); 'Exemption' drawn with it (stext block); mutool extracts via WinAnsiEncoding (doc freq 2)
+test-pdfs/pdfium/hello_world_split_streams.pdf	Greetings	hard	contents-array	page 1 /Contents is [6 0 R 7 0 R] (qpdf --json + raw show-object); 'Greetings, world!' lives in the SECOND array stream (obj 7); mutool extracts 'Greetings' (freq 1)
+test-pdfs/federal/scotus-trump-v-us.pdf	conspired	hard	contents-array	page 1 /Contents is an 8-ref array (qpdf --json pages.contents len 8); 'conspired' present as a literal across the array content streams; mutool extracts it (doc freq 4) — real Supreme Court opinion
+test-pdfs/pdfjs/comments.pdf	languages	hard	contents-array	page 1 /Contents is [594..605 0 R] 8-ref array (raw show-object confirms); 'languages' literal in the array content streams (not an annotation); mutool extracts it (page freq 6)
