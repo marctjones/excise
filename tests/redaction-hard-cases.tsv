@@ -8,9 +8,9 @@
 # path <TAB> term <TAB> difficulty(hard|medium) <TAB> category <TAB> note
 #
 # --- HARD: term lives in a carrier beyond ordinary page content ---
-test-pdfs/pdfua/7.2-t21-fail-a.pdf	Replacement	hard	actualtext	tagged PDF; term in StructElem/inline /ActualText + visible glyphs
-test-pdfs/pdfua/7.2-t30-pass-b.pdf	actualText	hard	actualtext	tagged PDF/UA; /ActualText restates visible text
-test-pdfs/poppler/unittestcases/pdf20-utf8-test.pdf	Association	hard	actualtext	PDF 2.0 UTF-8 tagged; /ActualText carrier + visible
+test-pdfs/pdfua/7.2-t21-fail-a.pdf	Replacement	hard	actualtext-inline	tagged PDF; term in StructElem/inline /ActualText + visible glyphs
+test-pdfs/pdfua/7.2-t30-pass-b.pdf	actualText	hard	actualtext-inline	tagged PDF/UA; /ActualText restates visible text
+test-pdfs/poppler/unittestcases/pdf20-utf8-test.pdf	Association	hard	actualtext-inline	PDF 2.0 UTF-8 tagged; /ActualText carrier + visible
 #
 # --- mined from the corpus (scripts/mine-hard-redaction-cases.py); mutool/qpdf-verified ---
 test-pdfs/federal/cms-40b-medicare-part-b.pdf	Administration	hard	cid-type0	Type0+CIDFont fonts; mutool draw -F txt yields 'Administration' (x2) but it is NOT a literal in the decoded content stream (CID 2-byte hex shows) so byte-offset != char-index
@@ -18,11 +18,11 @@ test-pdfs/federal/cdc-vis-covid-19.pdf	hospitalization	hard	cid-type0	Type0+CIDF
 test-pdfs/federal/state-ds82-passport-renewal.pdf	counterterrorism	hard	cid-type0	Type0+CIDFont; mutool extracts 'counterterrorism', not present literally in content stream (CID-encoded)
 test-pdfs/federal/irs-pub509-2026.pdf	MobileFriendlyForms	hard	cid-type0	Type0+CIDFont; mutool extracts 'MobileFriendlyForms', absent literally in decoded stream (CID-encoded)
 test-pdfs/altona/altona_technical_1v2_x3.pdf	Download	hard	cid-type0	Type0+CIDFont; mutool extracts 'Download', absent as literal in content stream (CID-encoded)
-test-pdfs/pdfium/bug_1206.pdf	Goodbye	hard	freetext-annotation	term lives in a /Text annotation /Contents ('Goodbye world'); mutool page-text extraction returns 0 hits (carrier-only, not in page content)
-test-pdfs/pdfjs/firefox_logo.pdf	Firefox	hard	freetext-annotation	term in a /Stamp annotation /Contents ('Firefox logo.'); absent from mutool page text (0 hits)
-test-pdfs/pdfjs/issue17069.pdf	sticky	hard	freetext-annotation	term in a genuine /FreeText annotation /Contents ('sticky note test1'); 0 hits in mutool page text
-test-pdfs/pdfjs/issue20062.pdf	rectangle	hard	freetext-annotation	term in a /Polygon markup annotation /Contents ('rectangle'); 0 hits in mutool page text
-test-pdfs/pdfjs/file_pdfjs_test.pdf	Source	hard	freetext-annotation	term in a /Text sticky-note annotation /Contents ('Source: https://developer.mozilla.org/...'); 0 hits in mutool page text
+test-pdfs/pdfium/bug_1206.pdf	Goodbye	hard	annotation-contents	term lives in a /Text annotation /Contents ('Goodbye world'); mutool page-text extraction returns 0 hits (carrier-only, not in page content)
+test-pdfs/pdfjs/firefox_logo.pdf	Firefox	hard	annotation-contents	term in a /Stamp annotation /Contents ('Firefox logo.'); absent from mutool page text (0 hits)
+test-pdfs/pdfjs/issue17069.pdf	sticky	hard	annotation-contents	term in a genuine /FreeText annotation /Contents ('sticky note test1'); 0 hits in mutool page text
+test-pdfs/pdfjs/issue20062.pdf	rectangle	hard	annotation-contents	term in a /Polygon markup annotation /Contents ('rectangle'); 0 hits in mutool page text
+test-pdfs/pdfjs/file_pdfjs_test.pdf	Source	hard	annotation-contents	term in a /Text sticky-note annotation /Contents ('Source: https://developer.mozilla.org/...'); 0 hits in mutool page text
 test-pdfs/pdfium/combobox_form.pdf	Banana	hard	acroform-value	AcroForm present; 'Banana' is a text/combo field /V value (not page content)
 test-pdfs/pdfium/text_form_multiple.pdf	Elephant	hard	acroform-value	AcroForm present; 'Elephant' is a text field /V value
 test-pdfs/pdfium/text_form_color.pdf	Mountain	hard	acroform-value	AcroForm present; 'Mountain' from text field /V value ('Mountain Lion')

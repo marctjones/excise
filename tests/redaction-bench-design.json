@@ -1,0 +1,181 @@
+{
+  "$schema": "internal \u2014 see scripts/check-bench-coverage.py",
+  "title": "Redaction benchmark composition design (#1185)",
+  "version": 1,
+  "rationale": "A robust redaction bench needs three difficulty tiers, each answering a different question, weighted by the research risk ranking (see memory redaction-hard-structures-research). EASY = calibration floor (collateral/false-positive baseline; every tool should pass). MEDIUM = geometry/encoding on the CORRECT carrier (shift, partial removal, collateral \u2014 where excise's #942 line-stepping lived). HARD = carrier leaks + corruption/rendering risk (where reference tools fail and excise's #636/#608/#1182 leaks lived). Coverage floor is >=3 per structure type to see a pattern, 5 for research top-risk types. Real-doc cases live in tests/redaction-hard-cases.tsv; synthetic one-carrier-in-isolation fixtures live in the redaction-adversarial generator.",
+  "sources": {
+    "real": "tests/redaction-hard-cases.tsv \u2014 publicly available real-world PDFs from the gitignored corpora (federal gov forms, pdfjs/pdfium/poppler/ghent/altona/pdfua/verapdf). Path + term checked in; PDFs are corpus, absent skips.",
+    "synth": "scripts/gen-adversarial-redaction-corpus.py \u2014 test-pdfs/redaction-adversarial/, one controlled fixture per carrier in isolation."
+  },
+  "excluded": {
+    "encrypted": "On hold since 2026-08-25 (no new encrypted-redaction work or bench axis). The reference adapters take (src,dst,term) with no password, so encrypted rows would be adapter-failed rows measuring nothing.",
+    "width-fingerprint": "Deferred. The de-redaction glyph-width side channel is the research #1 unhardened gap, but the bench has no axis that can measure it (byte/oracle/collateral/ink are blind to it) \u2014 fixtures would read clean on every tool. Needs a dedicated residue-recovery gate (ResidueRecoveryEngine), filed separately."
+  },
+  "tiers": {
+    "easy": {
+      "purpose": "Calibration floor \u2014 collateral / false-positive baseline. Every tool should pass. Terms MUST be single-carrier (byte occurrences <= visible occurrences) so a leak here is a real defect, not a hidden copy.",
+      "categories": {
+        "easy-plain-body": {
+          "target": 5,
+          "source": "real",
+          "research": "calibration",
+          "note": "standard-14/Type1 body-text word"
+        },
+        "easy-truetype": {
+          "target": 4,
+          "source": "real",
+          "research": "calibration",
+          "note": "embedded TrueType, WinAnsi"
+        },
+        "easy-multi-occurrence": {
+          "target": 5,
+          "source": "real",
+          "research": "collateral-floor",
+          "note": "term appears 3-10x; remove all, damage none"
+        },
+        "easy-numeric": {
+          "target": 4,
+          "source": "real",
+          "research": "realistic-target",
+          "note": "date/amount/ID digit run in body"
+        },
+        "easy-standalone": {
+          "target": 4,
+          "source": "real",
+          "research": "calibration",
+          "note": "distinctive single word in isolation"
+        }
+      }
+    },
+    "medium": {
+      "purpose": "Geometry/encoding stress on the CORRECT carrier \u2014 text is in page content but positioning/encoding makes clean glyph removal hard.",
+      "categories": {
+        "cid-type0": {
+          "target": 6,
+          "source": "real",
+          "research": "Cat3-encoding",
+          "note": "Type0/CID multi-byte; byte offset != char index"
+        },
+        "tj-kerning-heavy": {
+          "target": 6,
+          "source": "real",
+          "research": "Cat3-positioning",
+          "note": "word split across many TJ pieces"
+        },
+        "rotated-scaled-text": {
+          "target": 6,
+          "source": "real",
+          "research": "Cat3-matrix",
+          "note": "rotated/sheared/flipped/extreme-scale Tm"
+        },
+        "ligatures": {
+          "target": 4,
+          "source": "real",
+          "research": "Cat3-glyph",
+          "note": "fi/fl/ffi one glyph, many chars"
+        },
+        "dense-multicolumn": {
+          "target": 4,
+          "source": "real",
+          "research": "excise-942",
+          "note": "line-stepping stress; gov instruction booklets"
+        },
+        "stacked-overlapping": {
+          "target": 4,
+          "source": "real",
+          "research": "duplicate-draw",
+          "note": "text drawn twice at same position"
+        },
+        "small-glyph": {
+          "target": 4,
+          "source": "real",
+          "research": "Cat3",
+          "note": "very small font size / fine print"
+        }
+      }
+    },
+    "hard": {
+      "purpose": "Carrier leaks + corruption/rendering risk \u2014 the secret survives in a carrier the tool did not scrub, or removal corrupts the file.",
+      "categories": {
+        "actualtext-inline": {
+          "target": 5,
+          "source": "real",
+          "research": "Cat1-top3",
+          "note": "/ActualText inline in a BDC property list"
+        },
+        "actualtext-struct": {
+          "target": 4,
+          "source": "real",
+          "research": "Cat1-top3",
+          "note": "/ActualText on a StructElem"
+        },
+        "alt-text": {
+          "target": 3,
+          "source": "real+synth",
+          "research": "Cat1",
+          "note": "/Alt alternate description"
+        },
+        "outline-title": {
+          "target": 5,
+          "source": "real",
+          "research": "Cat1-2-astrazeneca",
+          "note": "bookmark /Title also in body"
+        },
+        "annotation-contents": {
+          "target": 5,
+          "source": "real",
+          "research": "Cat1-top7",
+          "note": "annotation /Contents or /RC"
+        },
+        "acroform-value": {
+          "target": 5,
+          "source": "real",
+          "research": "Cat1-top7",
+          "note": "form field /V value"
+        },
+        "xmp-metadata": {
+          "target": 4,
+          "source": "real",
+          "research": "Cat1-top7",
+          "note": "XMP /Metadata packet"
+        },
+        "info-dict": {
+          "target": 3,
+          "source": "real",
+          "research": "Cat1-top7",
+          "note": "/Info /Title /Author /Subject /Keywords"
+        },
+        "invisible-text": {
+          "target": 4,
+          "source": "real",
+          "research": "Cat1-6-ocr",
+          "note": "render mode 3 Tr / OCR layer"
+        },
+        "ocg-hidden": {
+          "target": 1,
+          "source": "synth",
+          "research": "Cat1",
+          "note": "optional-content layer OFF by default"
+        },
+        "embedded-file": {
+          "target": 2,
+          "source": "real+synth",
+          "research": "Cat1-top7",
+          "note": "secret in an attachment stream"
+        },
+        "shared-form-xobject": {
+          "target": 3,
+          "source": "real",
+          "research": "Cat2-corruption",
+          "note": "Form XObject Do'd from >1 page"
+        },
+        "incremental-update": {
+          "target": 2,
+          "source": "real",
+          "research": "Cat2-5-revisions",
+          "note": "prior revision retains pre-redaction bytes"
+        }
+      }
+    }
+  }
+}
