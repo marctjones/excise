@@ -136,6 +136,14 @@ public static class PdfPageRedactionExtensions
         working = ImageRedactor.ProcessOperations(working, page, area, strategy, out _);
         ImageRedactor.PruneUnusedImageXObjects(page, working);
 
+        // Pass 3: inline marked-content carriers (#1182). /ActualText, /Alt, /E in
+        // a content-stream BDC/DP property list survive glyph removal untouched —
+        // the structure-tree scrubber above reaches only StructElem carriers, not
+        // the inline form. Runs on the final operator list so carriers inlined
+        // from a flattened form are covered too. page still holds the pre-removal
+        // words + marked-content structure (SetContentStream is the last line).
+        MarkedContentCarrierScrubber.Scrub(working, page, area);
+
         page.SetContentStream(new ContentStream(working));
     }
 
@@ -194,6 +202,11 @@ public static class PdfPageRedactionExtensions
             working = ImageRedactor.ProcessOperations(working, page, area, strategy, out _);
 
         ImageRedactor.PruneUnusedImageXObjects(page, working);
+
+        // Pass 3: inline marked-content carriers (#1182), per area.
+        foreach (var area in list)
+            MarkedContentCarrierScrubber.Scrub(working, page, area);
+
         page.SetContentStream(new ContentStream(working));
     }
 }

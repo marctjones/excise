@@ -43,14 +43,14 @@ namespace Excise.Core.Text.Segmentation;
 internal static class StructureTreeRedactionScrubber
 {
     /// <summary>Text carriers on a structure element, in scrub order.</summary>
-    private static readonly string[] TextCarriers = { "ActualText", "Alt", "E" };
+    internal static readonly string[] TextCarriers = { "ActualText", "Alt", "E" };
 
     /// <summary>
     /// Shortest removed run we will content-match on. One- and two-character
     /// fragments ("a", "of") match almost any alternate description and would
     /// turn pass 2 into "delete the structure tree".
     /// </summary>
-    private const int MinMatchLength = 3;
+    internal const int MinMatchLength = 3;
 
     /// <summary>
     /// Scrub structure-tree text carriers covering <paramref name="area"/>.
@@ -160,7 +160,7 @@ internal static class StructureTreeRedactionScrubber
     /// Walks the page's operators keeping a marked-content stack, exactly as a
     /// renderer would, so nesting is handled.
     /// </summary>
-    private static HashSet<int> CollectAffectedMcids(PdfPage page, PdfRectangle area)
+    internal static HashSet<int> CollectAffectedMcids(PdfPage page, PdfRectangle area)
     {
         var affected = new HashSet<int>();
         var stack = new Stack<int?>();
@@ -197,7 +197,7 @@ internal static class StructureTreeRedactionScrubber
         return affected;
     }
 
-    private static int? ExtractMcid(ContentOperator op)
+    internal static int? ExtractMcid(ContentOperator op)
     {
         // BDC operands: /Tag <</MCID n>>  — the property list may also be a
         // named resource, which carries no inline MCID for us to read.
@@ -247,7 +247,7 @@ internal static class StructureTreeRedactionScrubber
     /// page's own letters, so it reflects what will actually be removed rather
     /// than what the caller intended.
     /// </summary>
-    private static IReadOnlyCollection<string> CollectRemovedText(PdfPage page, PdfRectangle area)
+    internal static IReadOnlyCollection<string> CollectRemovedText(PdfPage page, PdfRectangle area)
     {
         var removed = new HashSet<string>(StringComparer.Ordinal);
 

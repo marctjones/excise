@@ -45,7 +45,8 @@ public class CanaryInjectionLeakTests
         AcroFormValue,      // /V — #1038
         AcroFormFieldName,  // /T — #1130 (fixed this session)
         AcroFormTooltip,    // /TU — #1130
-        StructActualText,   // /ActualText — #636
+        StructActualText,   // /ActualText on a StructElem — #636
+        InlineActualText,   // /ActualText inline in a BDC property list — #1182
         InfoTitle,          // /Info — #608
         XmpCatalog,         // catalog /Metadata — #608
         XmpPage,            // page /Metadata — #1129 (fixed this session)
@@ -209,6 +210,14 @@ public class CanaryInjectionLeakTests
             // The XObject must actually be DRAWN, or its canary is never rendered,
             // never extracted, never matched — a fixture that proves nothing.
             Carrier.FormXObject => "q 1 0 0 1 100 600 cm /Fm0 Do Q\n",
+            Carrier.InlineActualText =>
+                // #1182 — the canary in an inline marked-content /ActualText, the
+                // form glyph removal passed through verbatim. Visible glyphs carry
+                // it too (that is what /ActualText substitutes for), so RedactText
+                // triggers the area scrub that must also strip the property list.
+                $"/Span << /ActualText ({Canary}) >> BDC\n" +
+                $"BT /F1 14 Tf 72 700 Td ({Canary}) Tj ET\n" +
+                "EMC\n",
             _ => "BT /F1 14 Tf 72 700 Td (Body text only) Tj ET\n",
         };
 
