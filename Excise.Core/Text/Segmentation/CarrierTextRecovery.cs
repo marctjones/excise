@@ -83,9 +83,15 @@ public static class CarrierTextRecovery
                 // /Contents is the note/markup text (§12.5.6). /T is skipped on
                 // purpose: on a widget it is the FIELD NAME (e.g. "btn1"), noise
                 // rather than hidden content.
-                var v = (doc.Resolve(annot.GetOptional("Contents") ?? PdfNull.Instance) as PdfString)?.Value;
-                if (!string.IsNullOrWhiteSpace(v))
-                    found.Add(new CarrierText("annotation /Contents", v!, i));
+                // /Contents is the comment text; /RC its XHTML rich-text restatement
+                // (§12.5.6.2) — a separate carrier the scrub handles (#1185), so the
+                // audit must see it too.
+                foreach (var key in new[] { "Contents", "RC" })
+                {
+                    var v = (doc.Resolve(annot.GetOptional(key) ?? PdfNull.Instance) as PdfString)?.Value;
+                    if (!string.IsNullOrWhiteSpace(v))
+                        found.Add(new CarrierText($"annotation /{key}", v!, i));
+                }
             }
         }
     }
