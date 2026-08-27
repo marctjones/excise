@@ -175,6 +175,10 @@ public sealed class RedactionBenchmarkRunner
         // residue, or a transparent cover), 0 = not legible, -1 = not measured.
         // Per-tool, on the output AS IT SHIPS.
         public int VisualTermReadable { get; init; } = -1;
+        /// <summary>#1185: term readable by OCR of the rasterised page but absent
+        /// from the text layer (image-baked / scanned). 1 still readable after
+        /// (leak), 0 removed, -1 not measured / not an image-baked case.</summary>
+        public int ImageBakedReadable { get; init; } = -1;
 
         // STRUCTURAL (#1117) — structures a text diff cannot see (pages, links,
         // bookmarks, form fields, attachments, PDF/A). "" = conserved; otherwise
@@ -354,6 +358,21 @@ public sealed class RedactionBenchmarkRunner
         var rows = new List<Row>();
         var docsSeen = 0;
 
+        // Stream results to disk AS THEY ARE PRODUCED so a long run is monitorable
+        // — `tail -f logs/redaction-benchmark/results.jsonl` shows live progress
+        // instead of nothing until the final write. WriteReport rewrites the same
+        // file at the end from the full set, so the two never diverge.
+        var resultsDir = Path.Combine(root, "logs", "redaction-benchmark");
+        Directory.CreateDirectory(resultsDir);
+        var resultsPath = Path.Combine(resultsDir, "results.jsonl");
+        var streamOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        File.WriteAllText(resultsPath, "");   // truncate: a fresh run starts clean, no stale rows
+        void Record(Row r)
+        {
+            rows.Add(r);
+            File.AppendAllText(resultsPath, JsonSerializer.Serialize(r, streamOpts) + "\n");
+        }
+
         // Optional bounds for a tractable baseline (the render+OCR axes are
         // heavy): REDACTION_BENCH_CORPORA restricts the corpus set,
         // REDACTION_BENCH_TAKE caps files per corpus. Deterministic either way —
@@ -379,7 +398,7 @@ public sealed class RedactionBenchmarkRunner
                 docsSeen++;
                 foreach (var tool in Tools())
                     foreach (var row in MeasureDocument(file, corpus, tool))
-                        rows.Add(row);
+                        Record(row);
             }
         }
 
@@ -404,7 +423,7 @@ public sealed class RedactionBenchmarkRunner
                 {
                     var row = MeasureKnownTerm(path, "redaction-hard", tool, hc.Term, hc.Difficulty);
                     if (row != null)
-                        rows.Add(row with { Difficulty = hc.Difficulty, HardCategory = hc.Category });
+                        Record(row with { Difficulty = hc.Difficulty, HardCategory = hc.Category });
                 }
             }
         }
@@ -680,6 +699,15 @@ public sealed class RedactionBenchmarkRunner
             var survivingRenderDelta = heavy ? MeasureSurvivingRenderDelta(path, output, term) : -1;
             var visualReadable = heavy ? MeasureVisualReadable(path, output, term) : -1;
 
+            // ── IMAGE-BAKED TEXT (#1185): a secret that exists ONLY as pixels in a
+            //    rasterised image has no text layer, so every text axis is blind to
+            //    it and the region-based visual axis finds no glyph box. Run a whole-
+            //    page OCR check ONLY when the term is ABSENT from the extracted text
+            //    (its sole presence would be pixels) — avoids a redundant full-page
+            //    OCR on ordinary text docs.
+            var imageBakedReadable = heavy && !before.Contains(term, StringComparison.OrdinalIgnoreCase)
+                ? MeasureImageBakedReadable(path, output, term) : -1;
+
             // ── SURVIVING-CONTENT CONSERVATION (#1157): did untargeted words
             //    survive UNCHANGED? Catches corruption (ligature dup #1156,
             //    substitution) the loss-based collateral axis nets to ~zero.
@@ -711,7 +739,8 @@ public sealed class RedactionBenchmarkRunner
 
             // A term still LEGIBLE in the rendered pixels is recoverable too — the
             // visual leak the text oracles cannot see.
-            var recoverable = leakText || badRedactions > 0 || leakBytes || visualReadable == 1;
+            var recoverable = leakText || badRedactions > 0 || leakBytes
+                || visualReadable == 1 || imageBakedReadable == 1;
             var verdict =
                 recoverable ? Differential.RedactionBenchmarkRunner.Verdict.Recoverable
                 : gapPreserved == true ? Differential.RedactionBenchmarkRunner.Verdict.RemovedWithResidue
@@ -746,6 +775,7 @@ public sealed class RedactionBenchmarkRunner
                 StructuralDropped = structuralDropped,
                 SurvivingRenderDelta = survivingRenderDelta,
                 VisualTermReadable = visualReadable,
+                ImageBakedReadable = imageBakedReadable,
                 SurvivingWordsChecked = survChecked,
                 SurvivingWordsDamaged = survDamaged,
                 SurvivingWordsDamagedExamples = survExamples,
@@ -1260,7 +1290,12 @@ public sealed class RedactionBenchmarkRunner
 
             var psi = new System.Diagnostics.ProcessStartInfo(tess)
             { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
-            foreach (var a in new[] { png, "stdout", "--psm", "6" }) psi.ArgumentList.Add(a);
+            // Pass the FILENAME with the temp dir as CWD, not an absolute path:
+            // some leptonica builds (macOS homebrew 1.87) fail to open an absolute
+            // /tmp path ("image file not found" on a file that exists), which would
+            // silently make every OCR axis return -1. Relative-from-CWD works.
+            psi.WorkingDirectory = Path.GetDirectoryName(png)!;
+            foreach (var a in new[] { Path.GetFileName(png), "stdout", "--psm", "6" }) psi.ArgumentList.Add(a);
             using var proc = System.Diagnostics.Process.Start(psi);
             if (proc == null) return -1;
             var outT = proc.StandardOutput.ReadToEndAsync();
@@ -1271,6 +1306,32 @@ public sealed class RedactionBenchmarkRunner
         }
         catch { return -1; }
         finally { try { File.Delete(png); } catch { } }
+    }
+
+    /// <summary>
+    /// #1185: is <paramref name="term"/> readable by OCR of the RASTERISED page but
+    /// absent from the text layer — i.e. baked into an image (a scan, or text in a
+    /// graphic)? Renders page 1 WHOLE and OCRs it, with no dependency on glyph
+    /// positions (which an image has none of, unlike <see cref="MeasureVisualReadable"/>).
+    /// -1 when OCR is unavailable OR the term is not OCR-readable in the INPUT
+    /// (nothing to measure); 1 when it is STILL readable in the OUTPUT (the tool did
+    /// not remove image-baked text — the #637 extraction bound made visible); 0 gone.
+    /// </summary>
+    internal static int MeasureImageBakedReadable(string inputPath, string outputPath, string term)
+    {
+        if (!GhostscriptReferenceRenderer.IsAvailable) return -1;
+        var tess = ResolveTesseract();
+        if (tess == null) return -1;
+        try
+        {
+            using var before = GhostscriptReferenceRenderer.RenderPage(inputPath, 1, dpi: 300);
+            if (before == null) return -1;
+            if (OcrRegionContains(tess, before, term) != 1) return -1;   // not readable in input ⇒ nothing to measure
+            using var after = GhostscriptReferenceRenderer.RenderPage(outputPath, 1, dpi: 300);
+            if (after == null) return -1;
+            return OcrRegionContains(tess, after, term) == 1 ? 1 : 0;     // still readable ⇒ leak
+        }
+        catch { return -1; }
     }
 
     private static string? ResolveTesseract()

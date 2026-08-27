@@ -28,19 +28,19 @@
           "note": "embedded TrueType, WinAnsi"
         },
         "easy-multi-occurrence": {
-          "target": 5,
+          "target": 7,
           "source": "real",
           "research": "collateral-floor",
           "note": "term appears 3-10x; remove all, damage none"
         },
         "easy-numeric": {
-          "target": 4,
+          "target": 6,
           "source": "real",
           "research": "realistic-target",
           "note": "date/amount/ID digit run in body"
         },
         "easy-standalone": {
-          "target": 4,
+          "target": 6,
           "source": "real",
           "research": "calibration",
           "note": "distinctive single word in isolation"
@@ -51,19 +51,19 @@
       "purpose": "Geometry/encoding stress on the CORRECT carrier \u2014 text is in page content but positioning/encoding makes clean glyph removal hard.",
       "categories": {
         "cid-type0": {
-          "target": 6,
+          "target": 8,
           "source": "real",
           "research": "Cat3-encoding",
           "note": "Type0/CID multi-byte; byte offset != char index"
         },
         "tj-kerning-heavy": {
-          "target": 6,
+          "target": 8,
           "source": "real",
           "research": "Cat3-positioning",
           "note": "word split across many TJ pieces"
         },
         "rotated-scaled-text": {
-          "target": 6,
+          "target": 8,
           "source": "real",
           "research": "Cat3-matrix",
           "note": "rotated/sheared/flipped/extreme-scale Tm"
@@ -91,6 +91,30 @@
           "source": "real",
           "research": "Cat3",
           "note": "very small font size / fine print"
+        },
+        "type3-font": {
+          "target": 4,
+          "source": "real+synth",
+          "research": "Cat2-type3",
+          "note": "Type3 font \u2014 glyphs are content-stream CharProcs, not a simple Tj to drop"
+        },
+        "rotated-page": {
+          "target": 4,
+          "source": "real",
+          "research": "Cat3-geometry",
+          "note": "/Rotate 90/180/270 \u2014 page rotation, redaction box must transform"
+        },
+        "clipped-text": {
+          "target": 3,
+          "source": "real+synth",
+          "research": "Cat3-clip",
+          "note": "text under an active clipping path (W/W*) \u2014 bbox vs visible mismatch"
+        },
+        "vertical-cjk": {
+          "target": 3,
+          "source": "real",
+          "research": "Cat3-wmode",
+          "note": "vertical writing mode (WMode 1) CJK \u2014 advance is along y, not x"
         }
       }
     },
@@ -116,25 +140,25 @@
           "note": "/Alt alternate description"
         },
         "outline-title": {
-          "target": 5,
+          "target": 7,
           "source": "real",
           "research": "Cat1-2-astrazeneca",
           "note": "bookmark /Title also in body"
         },
         "annotation-contents": {
-          "target": 5,
+          "target": 7,
           "source": "real",
           "research": "Cat1-top7",
           "note": "annotation /Contents or /RC"
         },
         "acroform-value": {
-          "target": 5,
+          "target": 7,
           "source": "real",
           "research": "Cat1-top7",
           "note": "form field /V value"
         },
         "xmp-metadata": {
-          "target": 4,
+          "target": 6,
           "source": "real",
           "research": "Cat1-top7",
           "note": "XMP /Metadata packet"
@@ -174,6 +198,24 @@
           "source": "real",
           "research": "Cat2-5-revisions",
           "note": "prior revision retains pre-redaction bytes"
+        },
+        "image-baked-text": {
+          "target": 1,
+          "source": "synth",
+          "research": "Cat1-6-ocr/637",
+          "note": "secret ONLY as pixels in a rasterised image (scan/baked graphic) \u2014 no text layer; findable only by OCR of the rendered page. Measured by the ImageBakedReadable axis (#1185)."
+        },
+        "no-tounicode": {
+          "target": 3,
+          "source": "real+synth",
+          "research": "Cat3-cmap/637",
+          "note": "subset font glyphs with NO /ToUnicode \u2014 extraction blind spot; term may not be recoverable as text at all"
+        },
+        "contents-array": {
+          "target": 3,
+          "source": "real",
+          "research": "Cat2-contents-array",
+          "note": "page /Contents is an ARRAY of streams; an operator/BT may span the boundary"
         }
       }
     }

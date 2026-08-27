@@ -237,6 +237,46 @@ def c_embedded_file(t):
     return objs
 
 
+
+def c_image_baked(t):
+    # The secret exists ONLY as pixels in a rasterised image — NO text layer.
+    # Text extraction sees nothing; only OCR of the rendered page recovers it.
+    # This is the #637 extraction-coverage bound in its starkest form: a term-
+    # based redactor that does not OCR images cannot find or remove it.
+    # Requires PIL; the main loop skips this carrier if PIL is unavailable.
+    from PIL import Image, ImageDraw, ImageFont
+    import zlib
+    W, H = 1600, 240
+    img = Image.new("L", (W, H), 255)
+    dr = ImageDraw.Draw(img)
+    fnt = None
+    for p in ("/System/Library/Fonts/Supplemental/Arial.ttf",
+              "/Library/Fonts/Arial.ttf",
+              "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+              "/System/Library/Fonts/Helvetica.ttc"):
+        try:
+            fnt = ImageFont.truetype(p, 90); break
+        except Exception:
+            pass
+    if fnt is None:
+        fnt = ImageFont.load_default()
+    dr.text((40, 60), "%s redact me" % t, fill=0, font=fnt)
+    comp = zlib.compress(img.tobytes())
+    PW, PH = 612, 92
+    content = b("q %d 0 0 %d 0 0 cm /Im0 Do Q\n" % (PW, PH))
+    imgobj = (b("<< /Type /XObject /Subtype /Image /Width %d /Height %d "
+                "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode "
+                "/Length %d >>\nstream\n" % (W, H, len(comp))) + comp + b"\nendstream")
+    return [
+        b("<< /Type /Catalog /Pages 2 0 R >>"),
+        b("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+        b("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %d %d] "
+          "/Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>" % (PW, PH)),
+        (b("<< /Length %d >>\nstream\n" % len(content)) + content + b"\nendstream"),
+        imgobj,
+    ]
+
+
 CARRIERS = {
     "invisible-text":      ("INVISIBLESECRET",   c_invisible),
     "stacked-duplicate":   ("STACKEDSECRET",     c_stacked),
@@ -252,6 +292,7 @@ CARRIERS = {
     "ocg-hidden":          ("OCGSECRET",         c_ocg_hidden),
     "embedded-file":       ("EMBEDDEDSECRET",    c_embedded_file),
     "shared-form-xobject": ("SHAREDXOBJSECRET",  c_shared_xobject),
+    "image-baked-text":    ("IMAGEBAKEDSECRET",  c_image_baked),
 }
 
 
@@ -265,12 +306,20 @@ def main():
 
     manifest = []
     for carrier, (token, fn) in sorted(CARRIERS.items()):
-        pdf = _pdf(fn(token))
+        try:
+            pdf = _pdf(fn(token))
+        except ImportError as e:
+            # image-baked-text needs PIL to rasterise. Skip gracefully — the design
+            # marks it synth, and check-bench-coverage.py will report it absent.
+            print(f"skip {carrier}: {e}")
+            continue
         # Guard: the token must be reachable before redaction. tj-perglyph splits
-        # it per-glyph BY DESIGN (that is the trap), so it has no contiguous copy;
-        # every glyph must still be present in order.
+        # it per-glyph BY DESIGN; image-baked-text renders it to PIXELS (no byte
+        # copy at all — that IS the trap). Both are exempt from byte presence.
         if carrier == "tj-perglyph":
             assert all(ch.encode() in pdf for ch in token), f"{carrier}: glyph missing"
+        elif carrier == "image-baked-text":
+            assert token.encode() not in pdf, f"{carrier}: token leaked as bytes (should be pixels only)"
         else:
             assert token.encode() in pdf, f"{carrier}: token not in fixture bytes"
         fname = f"{carrier}--{token}.pdf"
