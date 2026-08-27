@@ -392,14 +392,17 @@ public sealed class RedactionBenchmarkRunner
         // are the gitignored corpora, so absent files skip like any corpus case.
         if (onlyCorpora is null or { Length: 0 } || onlyCorpora.Contains("redaction-hard"))
         {
+            var onlyDifficulty = Environment.GetEnvironmentVariable("REDACTION_BENCH_DIFFICULTY")
+                ?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             foreach (var hc in ReadHardCases(root))
             {
+                if (onlyDifficulty is { Length: > 0 } && !onlyDifficulty.Contains(hc.Difficulty)) continue;
                 var path = Path.Combine(root, hc.Path);
                 if (!File.Exists(path)) { _out.WriteLine($"hard-case absent: {hc.Path}"); continue; }
                 docsSeen++;
                 foreach (var tool in Tools())
                 {
-                    var row = MeasureKnownTerm(path, "redaction-hard", tool, hc.Term);
+                    var row = MeasureKnownTerm(path, "redaction-hard", tool, hc.Term, hc.Difficulty);
                     if (row != null)
                         rows.Add(row with { Difficulty = hc.Difficulty, HardCategory = hc.Category });
                 }
@@ -444,7 +447,7 @@ public sealed class RedactionBenchmarkRunner
     /// oracle term-sampling and length floor — the term is chosen, not sampled.
     /// Returns null only if the document will not open.
     /// </summary>
-    private Row? MeasureKnownTerm(string path, string corpus, string tool, string term)
+    private Row? MeasureKnownTerm(string path, string corpus, string tool, string term, string difficulty)
     {
         var name = Path.GetFileName(path);
         int pageCount;
@@ -461,7 +464,7 @@ public sealed class RedactionBenchmarkRunner
             return new Row { Tool = tool, Document = name, Corpus = corpus, Term = term,
                              Error = $"open: {ex.GetType().Name}" };
         }
-        return MeasureCase(path, corpus, name, term, before, pageCount, tool);
+        return MeasureCase(path, corpus, name, term, before, pageCount, tool, difficulty);
     }
 
     private IEnumerable<Row> MeasureDocument(string path, string corpus, string tool)
@@ -516,7 +519,7 @@ public sealed class RedactionBenchmarkRunner
     }
 
     private Row MeasureCase(string path, string corpus, string name, string term,
-                            string before, int pageCount, string tool)
+                            string before, int pageCount, string tool, string difficulty = "")
     {
         var output = Path.Combine(Path.GetTempPath(), $"excise-bench-{Guid.NewGuid():N}.pdf");
         try
@@ -610,7 +613,16 @@ public sealed class RedactionBenchmarkRunner
             // carrier leaks the corpus was built to surface (measured: pymupdf
             // leaves the secret in XMP and the bookmark title, and the bench read
             // it as clean).
-            var probeUsable = corpus is "redaction-adversarial" or "redaction-hard"
+            // The probe-usability guard rejects a term whose byte occurrences the
+            // oracle cannot account for (it lives in JS/field-names/boilerplate) —
+            // right for sampled terms and for EASY/MEDIUM curated terms, which are
+            // chosen to sit in ordinary page content. It is bypassed ONLY where a
+            // carrier co-occurrence beyond the visible text is the PROPERTY UNDER
+            // TEST: the planted adversarial canaries, and HARD curated cases. A
+            // blanket bypass would score irs-w4 'married' (27 hits, also in
+            // embedded JavaScript) as a leak on every tool.
+            var probeUsable = corpus == "redaction-adversarial"
+                || (corpus == "redaction-hard" && difficulty == "hard")
                 || (bytesBefore > 0 && bytesBefore <= textBefore);
             var leakBytes = rawLeak && probeUsable;
             var leakText = after.Contains(term, StringComparison.OrdinalIgnoreCase);

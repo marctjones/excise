@@ -177,6 +177,45 @@ def c_outline(t):
     return objs
 
 
+
+def c_alt_inline(t):
+    # /Alt (alternate description) inline in a BDC property list, parallel to
+    # /ActualText but the accessibility ALT text carrier.
+    return base("/Span << /Alt (%s) >> BDC\n"
+                "BT /F1 12 Tf 72 700 Td (%s) Tj ET\n"
+                "EMC\n" % (t, t))
+
+
+
+def c_ocg_hidden(t):
+    # Optional-content group set OFF by default: the secret is drawn inside an
+    # /OC marked-content region tied to a hidden layer — invisible on screen,
+    # fully present and extractable.
+    objs = base("BT /F1 12 Tf 72 730 Td (Visible line) Tj ET\n"
+                "/OC /MC0 BDC\n"
+                "BT /F1 12 Tf 72 700 Td (%s) Tj ET\n"
+                "EMC\n" % t,
+                extra_objs=[b"<< /Type /OCG /Name (Hidden) >>"],
+                catalog_extra="/OCProperties << /OCGs [6 0 R] /D << /OFF [6 0 R] >> >> ")
+    # page needs /Resources /Properties /MC0 -> the OCG
+    objs[2] = b("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+                "/Resources << /Font << /F1 5 0 R >> /Properties << /MC0 6 0 R >> >> "
+                "/Contents 4 0 R >>")
+    return objs
+
+
+def c_embedded_file(t):
+    # The secret lives in an attached embedded file stream (/EmbeddedFiles), not
+    # the page — plus a visible body copy.
+    data = b("secret note: %s\n" % t)
+    ef = (b"<< /Type /EmbeddedFile /Length %d >>\nstream\n" % len(data)) + data + b"\nendstream"
+    filespec = b("<< /Type /Filespec /F (note.txt) /EF << /F 7 0 R >> >>")
+    objs = base("BT /F1 12 Tf 72 700 Td (Attachment holder %s) Tj ET\n" % t,
+                extra_objs=[filespec, ef],
+                catalog_extra="/Names << /EmbeddedFiles << /Names [(note.txt) 6 0 R] >> >> ")
+    return objs
+
+
 CARRIERS = {
     "invisible-text":      ("INVISIBLESECRET",   c_invisible),
     "stacked-duplicate":   ("STACKEDSECRET",     c_stacked),
@@ -188,6 +227,9 @@ CARRIERS = {
     "actualtext":          ("ACTUALTEXTSECRET",  c_actualtext),
     "xmp-metadata":        ("XMPCARRIERSECRET",  c_xmp),
     "outline-title":       ("OUTLINESECRET",     c_outline),
+    "alt-inline":          ("ALTSECRET",         c_alt_inline),
+    "ocg-hidden":          ("OCGSECRET",         c_ocg_hidden),
+    "embedded-file":       ("EMBEDDEDSECRET",    c_embedded_file),
 }
 
 
