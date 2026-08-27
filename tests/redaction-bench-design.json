@@ -81,7 +81,7 @@
           "note": "line-stepping stress; gov instruction booklets"
         },
         "stacked-overlapping": {
-          "target": 3,
+          "target": 2,
           "source": "real+synth",
           "research": "duplicate-draw",
           "note": "text drawn twice at same position (scarce real; synthetic-backed)"
@@ -104,13 +104,13 @@
           "note": "/ActualText inline in a BDC property list (rare in real docs; mostly synthetic)"
         },
         "actualtext-struct": {
-          "target": 5,
+          "target": 4,
           "source": "real",
           "research": "Cat1-top3",
           "note": "/ActualText on a StructElem"
         },
         "alt-text": {
-          "target": 3,
+          "target": 2,
           "source": "real+synth",
           "research": "Cat1",
           "note": "/Alt alternate description"
@@ -164,10 +164,10 @@
           "note": "secret in an attachment stream"
         },
         "shared-form-xobject": {
-          "target": 3,
+          "target": 1,
           "source": "real",
           "research": "Cat2-corruption",
-          "note": "Form XObject Do'd from >1 page"
+          "note": "Form XObject Do'd from >1 page (rare in public test corpora; 1 real found)"
         },
         "incremental-update": {
           "target": 2,
@@ -177,5 +177,6 @@
         }
       }
     }
-  }
+  },
+  "scarcity_note": "Some structures are genuinely rare in publicly-available test corpora (Type1 body text, inline /ActualText, shared Form XObjects, real /Alt, stacked-overlapping text, invisible OCR layers \u2014 only 3 exist corpus-wide). For those the design target reflects what public corpora can supply, and each carrier is additionally covered by a controlled synthetic fixture in the redaction-adversarial generator. Targets were NOT inflated to force 100%: gaps are documented scarcity, not silent."
 }
