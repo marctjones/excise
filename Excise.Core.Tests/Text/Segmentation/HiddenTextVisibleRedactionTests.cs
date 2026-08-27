@@ -39,7 +39,7 @@ public class HiddenTextVisibleRedactionTests
     {
         // Box 120 pt wide — sized to the word, a redaction shape.
         using var doc = PdfDocument.Open(WhiteOnBlack(boxX: 100, boxW: 120, "SECRET"));
-        var hits = HiddenTextDetector.Scan(doc);
+        var hits = HiddenTextDetector.Scan(doc, includeVisibleFailedRedactions: true);
 
         hits.Should().Contain(h => h.Text.Contains("SECRET") && h.HiddenBy.Contains("redaction-shaped"),
             "white text on a box sized to cover it is a redaction that did not take");
@@ -50,7 +50,7 @@ public class HiddenTextVisibleRedactionTests
     {
         // Box spans the full page width — a banner, not a redaction of the word.
         using var doc = PdfDocument.Open(WhiteOnBlack(boxX: 0, boxW: 612, "Heading"));
-        var hits = HiddenTextDetector.Scan(doc);
+        var hits = HiddenTextDetector.Scan(doc, includeVisibleFailedRedactions: true);
 
         hits.Should().NotContain(h => h.HiddenBy.Contains("redaction-shaped"),
             "a full-width dark banner is legitimate inverse-video, not a failed redaction");

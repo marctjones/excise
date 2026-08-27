@@ -161,7 +161,7 @@ public partial class MainWindowViewModel
         var highlights = new List<HiddenTextHighlight>();
 
         // Pass 1: structural — fast, exact characters, never wrong.
-        foreach (var h in Excise.Core.Text.Segmentation.HiddenTextDetector.ScanPage(page, pageNumber))
+        foreach (var h in Excise.Core.Text.Segmentation.HiddenTextDetector.ScanPage(page, pageNumber, includeVisibleFailedRedactions: true))
         {
             cancellationToken.ThrowIfCancellationRequested();
             highlights.Add(CreateHighlight(h.Text, h.BoundingBox, h.HiddenBy, pageNumber,

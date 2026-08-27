@@ -275,7 +275,7 @@ public sealed class RedactedCopySafetyService
 
         try
         {
-            hiddenTextFindingCount = HiddenTextDetector.Scan(document).Count;
+            hiddenTextFindingCount = HiddenTextDetector.Scan(document, includeVisibleFailedRedactions: true).Count;
             if (hiddenTextFindingCount > 0)
             {
                 warnings.Add($"{hiddenTextFindingCount} structurally hidden text finding(s) remain for manual review.");
