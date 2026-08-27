@@ -1,0 +1,48 @@
+# Curated HARD / MEDIUM real-world redaction cases for the bench (#1185).
+# Each row is a (file, term) pair chosen so the term lives in a structure that
+# makes CORRECT redaction hard — likely to leak in a carrier a tool doesn't
+# scrub, or to corrupt/destabilise output. Unlike a corpus scan the term is
+# CHOSEN, not sampled. Referenced PDFs are the gitignored corpora; absent files
+# skip. Regenerate/extend candidates with scripts/mine-hard-redaction-cases.py.
+#
+# path <TAB> term <TAB> difficulty(hard|medium) <TAB> category <TAB> note
+#
+# --- HARD: term lives in a carrier beyond ordinary page content ---
+test-pdfs/pdfua/7.2-t21-fail-a.pdf	Replacement	hard	actualtext	tagged PDF; term in StructElem/inline /ActualText + visible glyphs
+test-pdfs/pdfua/7.2-t30-pass-b.pdf	actualText	hard	actualtext	tagged PDF/UA; /ActualText restates visible text
+test-pdfs/poppler/unittestcases/pdf20-utf8-test.pdf	Association	hard	actualtext	PDF 2.0 UTF-8 tagged; /ActualText carrier + visible
+#
+# --- mined from the corpus (scripts/mine-hard-redaction-cases.py); mutool/qpdf-verified ---
+test-pdfs/federal/cms-40b-medicare-part-b.pdf	Administration	hard	cid-type0	Type0+CIDFont fonts; mutool draw -F txt yields 'Administration' (x2) but it is NOT a literal in the decoded content stream (CID 2-byte hex shows) so byte-offset != char-index
+test-pdfs/federal/cdc-vis-covid-19.pdf	hospitalization	hard	cid-type0	Type0+CIDFont; mutool extracts 'hospitalization', absent as literal in content stream (CID-encoded show strings)
+test-pdfs/federal/state-ds82-passport-renewal.pdf	counterterrorism	hard	cid-type0	Type0+CIDFont; mutool extracts 'counterterrorism', not present literally in content stream (CID-encoded)
+test-pdfs/federal/irs-pub509-2026.pdf	MobileFriendlyForms	hard	cid-type0	Type0+CIDFont; mutool extracts 'MobileFriendlyForms', absent literally in decoded stream (CID-encoded)
+test-pdfs/altona/altona_technical_1v2_x3.pdf	Download	hard	cid-type0	Type0+CIDFont; mutool extracts 'Download', absent as literal in content stream (CID-encoded)
+test-pdfs/pdfium/bug_1206.pdf	Goodbye	hard	freetext-annotation	term lives in a /Text annotation /Contents ('Goodbye world'); mutool page-text extraction returns 0 hits (carrier-only, not in page content)
+test-pdfs/pdfjs/firefox_logo.pdf	Firefox	hard	freetext-annotation	term in a /Stamp annotation /Contents ('Firefox logo.'); absent from mutool page text (0 hits)
+test-pdfs/pdfjs/issue17069.pdf	sticky	hard	freetext-annotation	term in a genuine /FreeText annotation /Contents ('sticky note test1'); 0 hits in mutool page text
+test-pdfs/pdfjs/issue20062.pdf	rectangle	hard	freetext-annotation	term in a /Polygon markup annotation /Contents ('rectangle'); 0 hits in mutool page text
+test-pdfs/pdfjs/file_pdfjs_test.pdf	Source	hard	freetext-annotation	term in a /Text sticky-note annotation /Contents ('Source: https://developer.mozilla.org/...'); 0 hits in mutool page text
+test-pdfs/pdfium/combobox_form.pdf	Banana	hard	acroform-value	AcroForm present; 'Banana' is a text/combo field /V value (not page content)
+test-pdfs/pdfium/text_form_multiple.pdf	Elephant	hard	acroform-value	AcroForm present; 'Elephant' is a text field /V value
+test-pdfs/pdfium/text_form_color.pdf	Mountain	hard	acroform-value	AcroForm present; 'Mountain' from text field /V value ('Mountain Lion')
+test-pdfs/pdfjs/issue17492.pdf	Garzas	hard	acroform-value	AcroForm present; 'Garzas' is a text field /V value
+test-pdfs/pdfjs/issue18036.pdf	certificate	hard	acroform-value	AcroForm present; 'certificate' inside a hex-encoded field /V (<FEFF...> UTF-16BE) reading 'This certificate or verification of insurance...'
+test-pdfs/federal/uscis-i-9.pdf	Employment	hard	outline-title	/Outlines bookmark /Title 'Form I-9, Employment Eligibility Verification' contains 'Employment' which also appears in mutool visible text (15 hits) — bookmark-title leak shape
+test-pdfs/pdfjs/TAMReview.pdf	Overview	hard	outline-title	outline /Title 'Overview of the Technology Acceptance Model...' token 'Overview' also in mutool visible text (4 hits)
+test-pdfs/federal/cdc-vis-covid-19.pdf	Vaccine	hard	outline-title	outline /Title 'Vaccine Information Statement: COVID-19'; 'Vaccine' also in mutool visible text (31 hits) — real-doc bookmark leak
+test-pdfs/pdfjs/bug1019475_1.pdf	Introduction	hard	outline-title	outline /Title 'Introduction'; token also in mutool visible text (1 hit)
+test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG091_FontSupport-OpenType_X4.pdf	OpenType	hard	outline-title	outline /Title 'GWG 9.1 - OpenType Font Support'; 'OpenType' also in mutool visible text (3 hits)
+test-pdfs/pdfjs/issue12963.pdf	V1HH	hard	invisible-text	content stream shows 'V1HH' under render mode '3 Tr' (invisible); mutool still extracts it (9 hits) — extractable but not inked
+test-pdfs/pdfjs/issue4684.pdf	broken	hard	invisible-text	'broken' shown under a '3 Tr' invisible text run; mutool extracts it (1 hit) though it is not painted
+test-pdfs/poppler/unittestcases/imageretrieve+attachment.pdf	STURBRIDGE	hard	invisible-text	'STURBRIDGE' drawn under '3 Tr' (invisible OCR-style layer over image); mutool extracts it (1 hit)
+test-pdfs/federal/irs-1040.pdf	Individual	medium	rotated-scaled-text	'Individual' drawn under a 90-deg-rotated text matrix Tm [0 7 -7 0] (b,c non-zero); mutool extracts it — axis-aligned bbox redaction is wrong here
+test-pdfs/federal/irs-w9.pdf	Print	medium	rotated-scaled-text	'Print' under rotated Tm [0 8 -8 0] (vertical text); mutool extracts it
+test-pdfs/federal/irs-w4.pdf	married	medium	rotated-scaled-text	'married' under a non-uniform-scale Tm [15.6 0 0 36.4] (a!=d); mutool extracts it (27 hits)
+test-pdfs/federal/irs-pub509-2026.pdf	Publication	medium	rotated-scaled-text	'Publication' under a flipped/mirrored Tm [1 0 0 -1] (negative d); mutool extracts it (43 hits)
+test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG090_Font-Support_x3.pdf	fifl	medium	rotated-scaled-text	'fifl' (ligature run) under a skewed Tm [6 0 1.28 6] (non-zero c shear); mutool extracts it
+test-pdfs/federal/scotus-trump-v-anderson.pdf	NOTICE	medium	tj-kerning-heavy	'NOTICE' split across a TJ array of 35 string pieces with kerning adjustments (spans element boundaries); mutool reassembles+extracts it
+test-pdfs/federal/cms-40b-medicare-part-b.pdf	address	medium	tj-kerning-heavy	'address' split across a TJ array of 13 pieces (12 kern adjustments), spans element boundaries; mutool extracts it
+test-pdfs/altona/altona_measure_1v1a.pdf	Characterization	medium	tj-kerning-heavy	'Characterization' split across a TJ array of 15 pieces, spans element boundaries; mutool extracts it
+test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG090_Font-Support_x3.pdf	multiple	medium	tj-kerning-heavy	'multiple' split across a TJ array of 24 pieces (19 kern adjustments), spans element boundaries; mutool extracts it
+test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG160_Transp_Basic_BM_DeviceCMYK_Non-knockout_X4.pdf	Workgroup	medium	tj-kerning-heavy	'Workgroup' split across a TJ array of 12 pieces (7 kern adjustments), spans element boundaries; mutool extracts it

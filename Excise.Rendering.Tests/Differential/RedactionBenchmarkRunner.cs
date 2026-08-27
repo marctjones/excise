@@ -98,6 +98,10 @@ public sealed class RedactionBenchmarkRunner
         public bool? GapPreserved { get; init; }
         public string Document { get; init; } = "";
         public string Corpus { get; init; } = "";
+        /// <summary>#1185 curated hard-case tier: "hard" | "medium" | "" (not a curated case).</summary>
+        public string Difficulty { get; init; } = "";
+        /// <summary>#1185 hard-case category (actualtext, cid-type0, freetext-annotation, …).</summary>
+        public string HardCategory { get; init; } = "";
         public string Term { get; init; } = "";
         public int Pages { get; init; }
 
@@ -379,6 +383,29 @@ public sealed class RedactionBenchmarkRunner
             }
         }
 
+        // #1185 — curated HARD / MEDIUM real-world cases. Unlike a corpus scan,
+        // these are specific (file, term) pairs chosen so the term lives in a
+        // structure that makes correct redaction hard: a tagged /ActualText, a
+        // Type0/CID multi-byte run, an annotation value, an outline title, an
+        // invisible OCR layer, rotated text, TJ-kerned splits. The manifest
+        // (tests/redaction-hard-cases.tsv) is checked in; the PDFs it points at
+        // are the gitignored corpora, so absent files skip like any corpus case.
+        if (onlyCorpora is null or { Length: 0 } || onlyCorpora.Contains("redaction-hard"))
+        {
+            foreach (var hc in ReadHardCases(root))
+            {
+                var path = Path.Combine(root, hc.Path);
+                if (!File.Exists(path)) { _out.WriteLine($"hard-case absent: {hc.Path}"); continue; }
+                docsSeen++;
+                foreach (var tool in Tools())
+                {
+                    var row = MeasureKnownTerm(path, "redaction-hard", tool, hc.Term);
+                    if (row != null)
+                        rows.Add(row with { Difficulty = hc.Difficulty, HardCategory = hc.Category });
+                }
+            }
+        }
+
         WriteReport(root, rows);
         Summarise(rows, docsSeen);
 
@@ -388,6 +415,53 @@ public sealed class RedactionBenchmarkRunner
         rows.Count.Should().BeGreaterThan(20,
             "the benchmark must actually exercise the corpora; a run that measured " +
             "almost nothing tells you nothing, and looks identical to a good result");
+    }
+
+    private readonly record struct HardCase(string Path, string Term, string Difficulty, string Category);
+
+    /// <summary>
+    /// #1185 — the curated hard/medium case manifest. Tab-separated:
+    /// path \t term \t difficulty \t category \t note. '#' comments and blanks
+    /// skipped. Paths are repo-relative; missing files skip at the call site.
+    /// </summary>
+    private static IEnumerable<HardCase> ReadHardCases(string root)
+    {
+        var manifest = Path.Combine(root, "tests", "redaction-hard-cases.tsv");
+        if (!File.Exists(manifest)) yield break;
+        foreach (var raw in File.ReadAllLines(manifest))
+        {
+            var line = raw.Trim();
+            if (line.Length == 0 || line[0] == '#') continue;
+            var parts = line.Split('\t');
+            if (parts.Length < 4) continue;
+            yield return new HardCase(parts[0].Trim(), parts[1].Trim(),
+                                      parts[2].Trim(), parts[3].Trim());
+        }
+    }
+
+    /// <summary>
+    /// Measure ONE known term on ONE document (curated hard case), bypassing the
+    /// oracle term-sampling and length floor — the term is chosen, not sampled.
+    /// Returns null only if the document will not open.
+    /// </summary>
+    private Row? MeasureKnownTerm(string path, string corpus, string tool, string term)
+    {
+        var name = Path.GetFileName(path);
+        int pageCount;
+        string before;
+        try
+        {
+            using var probe = PdfDocument.Open(path);
+            pageCount = probe.PageCount;
+            var pages = MutoolTextExtractor.ExtractAllPages(path, pageCount);
+            before = pages == null ? "" : string.Join("\n", pages);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return new Row { Tool = tool, Document = name, Corpus = corpus, Term = term,
+                             Error = $"open: {ex.GetType().Name}" };
+        }
+        return MeasureCase(path, corpus, name, term, before, pageCount, tool);
     }
 
     private IEnumerable<Row> MeasureDocument(string path, string corpus, string tool)
@@ -536,7 +610,7 @@ public sealed class RedactionBenchmarkRunner
             // carrier leaks the corpus was built to surface (measured: pymupdf
             // leaves the secret in XMP and the bookmark title, and the bench read
             // it as clean).
-            var probeUsable = corpus == "redaction-adversarial"
+            var probeUsable = corpus is "redaction-adversarial" or "redaction-hard"
                 || (bytesBefore > 0 && bytesBefore <= textBefore);
             var leakBytes = rawLeak && probeUsable;
             var leakText = after.Contains(term, StringComparison.OrdinalIgnoreCase);
