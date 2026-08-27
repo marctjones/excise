@@ -114,6 +114,27 @@ def c_formxobject(t):
     return objs
 
 
+def c_shared_xobject(t):
+    # One Form XObject (obj 7) Do'd from TWO pages (obj 3, obj 6). The secret is
+    # inside the SHARED form, so redacting it on one page must not corrupt the
+    # other page's use of the same object.
+    data = b("BT /F1 12 Tf 0 4 Td (%s) Tj ET" % t)
+    xobj = (b"<< /Type /XObject /Subtype /Form /BBox [0 0 300 20] "
+            b"/Resources << /Font << /F1 5 0 R >> >>"
+            + b(" /Length %d >>\nstream\n" % len(data)) + data + b"\nendstream")
+    pageres = ("/Resources << /Font << /F1 5 0 R >> /XObject << /Fm0 7 0 R >> >>")
+    return [
+        b("<< /Type /Catalog /Pages 2 0 R >>"),
+        b("<< /Type /Pages /Kids [3 0 R 6 0 R] /Count 2 >>"),
+        b("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " + pageres + " /Contents 4 0 R >>"),
+        content_obj("q 1 0 0 1 72 700 cm /Fm0 Do Q\n"),
+        FONT,
+        b("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " + pageres + " /Contents 8 0 R >>"),
+        xobj,
+        content_obj("q 1 0 0 1 72 500 cm /Fm0 Do Q\n"),
+    ]
+
+
 def c_annotation(t):
     ap = (b"<< /Type /XObject /Subtype /Form /BBox [0 0 300 20] "
           b"/Resources << /Font << /F1 5 0 R >> >>")
@@ -230,6 +251,7 @@ CARRIERS = {
     "alt-inline":          ("ALTSECRET",         c_alt_inline),
     "ocg-hidden":          ("OCGSECRET",         c_ocg_hidden),
     "embedded-file":       ("EMBEDDEDSECRET",    c_embedded_file),
+    "shared-form-xobject": ("SHAREDXOBJSECRET",  c_shared_xobject),
 }
 
 

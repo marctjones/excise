@@ -102,4 +102,3 @@ test-pdfs/pdfjs/blendmode.pdf	Examples	easy	easy-plain-body	Type1/std-14, single
 test-pdfs/pdfium/bug_650.pdf	AutoCAD	easy	easy-truetype	embedded TrueType, single-carrier
 test-pdfs/pdfium/annots.pdf	Annotations	easy	easy-multi-occurrence	appears 3x, single-carrier
 test-pdfs/federal/scotus-trump-v-anderson.pdf	Disqualification	easy	easy-truetype	TrueType CenturySchoolbook, single-carrier (agent-verified B=1 V=1)
-test-pdfs/pdfjs/freeculture.pdf	culture	hard	shared-form-xobject	Form XObject Do'd from >=2 pages
