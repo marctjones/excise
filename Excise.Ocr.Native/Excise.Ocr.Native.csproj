@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Excise.Ocr.Native (#1139): a direct, source-generated P/Invoke binding to
+    the tesseract C API (capi.h). No third-party wrapper is in the graph.
+
+    Licence: tesseract is Apache-2.0, leptonica is BSD-style. Both permissive,
+    no copyleft — this project only DECLARES the native entry points; the
+    libraries themselves are supplied by the host (brew/apt), never bundled.
+
+    AOT/trim posture: [LibraryImport] is source-generated marshalling, so the
+    binding carries no reflection and is trim/AOT-safe.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- LibraryImport for a SafeHandle return + pinned buffer handoff. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+</Project>

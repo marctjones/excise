@@ -35,6 +35,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{07C2787E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Excise.Reachability", "tools\Excise.Reachability\Excise.Reachability.csproj", "{B6488FC9-ACE2-44EA-8A5B-10F288BCE137}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Excise.Ocr.Native", "Excise.Ocr.Native\Excise.Ocr.Native.csproj", "{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -225,6 +227,18 @@ Global
 		{B6488FC9-ACE2-44EA-8A5B-10F288BCE137}.Release|x64.Build.0 = Release|Any CPU
 		{B6488FC9-ACE2-44EA-8A5B-10F288BCE137}.Release|x86.ActiveCfg = Release|Any CPU
 		{B6488FC9-ACE2-44EA-8A5B-10F288BCE137}.Release|x86.Build.0 = Release|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Debug|x64.Build.0 = Debug|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Debug|x86.Build.0 = Debug|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Release|x64.ActiveCfg = Release|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Release|x64.Build.0 = Release|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Release|x86.ActiveCfg = Release|Any CPU
+		{52B36032-F4B4-4E93-AC83-CE7F0513CBEF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

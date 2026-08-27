@@ -33,14 +33,34 @@ public sealed class PdfOcrService
     private readonly string _language;
     private readonly string _tesseractPath;
     private readonly string? _tessdataPrefix;
+    private readonly bool _useNativeFastPath;
 
-    public PdfOcrService(string language = "eng", int dpi = 300, string tesseractPath = "tesseract", string? tessdataPrefix = null)
+    /// <param name="useNativeFastPath">
+    /// Opt in to the in-process <c>Excise.Ocr.Native</c> FFI backend (#1139) for
+    /// bitmap OCR: pixels are handed straight to libtesseract with no PNG-to-disk
+    /// and no subprocess, which is the point when OCR-ing many small cropped gap
+    /// regions. Off by default — the subprocess path stays the safe default, and
+    /// this flag falls back to it silently when libtesseract is not present, so
+    /// enabling it never breaks an under-provisioned environment.
+    /// </param>
+    public PdfOcrService(string language = "eng", int dpi = 300, string tesseractPath = "tesseract", string? tessdataPrefix = null, bool useNativeFastPath = false)
     {
         _language = language;
         _dpi = dpi;
         _tesseractPath = tesseractPath;
         _tessdataPrefix = tessdataPrefix;
+        _useNativeFastPath = useNativeFastPath;
     }
+
+    /// <summary>
+    /// True when this instance is configured for the native fast path AND the
+    /// native backend actually loaded for this instance's language and tessdata
+    /// prefix (library + model present). When false, <see cref="RecognizeBitmap"/>
+    /// uses the subprocess path. The first access may construct and cache the
+    /// engine (loading the model); subsequent accesses are cheap.
+    /// </summary>
+    public bool NativeFastPathActive
+        => _useNativeFastPath && GetNativeEngine() != null;
 
     /// <summary>
     /// True if the <c>tesseract</c> CLI is reachable on PATH (or at the
@@ -93,6 +113,15 @@ public sealed class PdfOcrService
     public OcrResult RecognizeBitmap(SKBitmap bitmap, double pageHeightPoints)
     {
         if (bitmap == null) throw new ArgumentNullException(nameof(bitmap));
+
+        // Opt-in FFI fast path (#1139): hand a grayscale buffer straight to
+        // libtesseract, no PNG, no subprocess. Falls through to the subprocess
+        // path when not enabled or the native backend is unavailable.
+        if (NativeFastPathActive)
+        {
+            var native = TryRecognizeBitmapNative(bitmap, pageHeightPoints);
+            if (native != null) return native;
+        }
 
         var pngPath = Path.Combine(Path.GetTempPath(), $"excise-ocr-{Guid.NewGuid():N}.png");
         try
@@ -201,21 +230,102 @@ public sealed class PdfOcrService
         return ParseTsv(tsv, pageHeightPoints);
     }
 
+    // One native engine per (language, dpi) for the process. Init loads the
+    // trained model, so this is cached like a font engine rather than rebuilt
+    // per call. The engine is thread-safe (it serializes internally); the
+    // dictionary access is guarded here. Never disposed — it lives for the
+    // process, and its SafeHandle is released on shutdown.
+    private static readonly object _nativeEngineLock = new();
+    private static readonly Dictionary<(string, int, string), Native.NativeOcrEngine> _nativeEngines = new();
+
+    private Native.NativeOcrEngine? GetNativeEngine()
+    {
+        // Key on the tessdata prefix too: the native backend must honour the
+        // caller's tessdataPrefix exactly like the subprocess path, so two
+        // services with different model dirs get different engines.
+        var key = (_language, _dpi, _tessdataPrefix ?? "");
+        lock (_nativeEngineLock)
+        {
+            if (_nativeEngines.TryGetValue(key, out var existing)) return existing;
+            try
+            {
+                var engine = Native.NativeOcrEngine.Create(_language, _dpi, _tessdataPrefix);
+                _nativeEngines[key] = engine;
+                return engine;
+            }
+            catch (Native.NativeOcrUnavailableException)
+            {
+                return null;   // caller falls back to the subprocess path.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Bitmap OCR via the in-process FFI backend. Returns <c>null</c> to signal
+    /// "fall back to the subprocess path" (native unavailable). Uses PSM 6 for
+    /// parity with the subprocess <c>--psm 6</c>, and reuses <see cref="ParseTsv"/>
+    /// so word bboxes come out identical to the subprocess path.
+    /// </summary>
+    private OcrResult? TryRecognizeBitmapNative(SKBitmap bitmap, double pageHeightPoints)
+    {
+        var engine = GetNativeEngine();
+        if (engine == null) return null;
+
+        byte[] gray = ToGray8(bitmap, out int width, out int height);
+        // PSM 6 == "assume a single uniform block of text", matching the CLI path.
+        string tsv = engine.OcrRegionTsv(gray, width, height, pageSegMode: 6);
+        return ParseTsv(tsv, pageHeightPoints, hasHeader: false);
+    }
+
+    /// <summary>
+    /// Copy an <see cref="SKBitmap"/> into a tight, row-major 8-bit grayscale
+    /// buffer (one byte per pixel, stride == width) — the layout
+    /// <c>TessBaseAPISetImage</c> is fed with bytesPerPixel=1, bytesPerLine=width.
+    /// White background so any alpha flattens to paper, not black.
+    /// </summary>
+    private static byte[] ToGray8(SKBitmap source, out int width, out int height)
+    {
+        width = source.Width;
+        height = source.Height;
+
+        var info = new SKImageInfo(width, height, SKColorType.Gray8, SKAlphaType.Opaque);
+        using var gray = new SKBitmap(info);
+        using (var canvas = new SKCanvas(gray))
+        {
+            canvas.Clear(SKColors.White);
+            canvas.DrawBitmap(source, 0, 0);
+        }
+
+        int rowBytes = gray.RowBytes;
+        var src = gray.GetPixelSpan();
+        var dst = new byte[(long)width * height];
+        // Gray8 rows may be padded (RowBytes >= width); copy the leading
+        // `width` bytes of each row into a tight buffer.
+        for (int y = 0; y < height; y++)
+        {
+            src.Slice(y * rowBytes, width).CopyTo(dst.AsSpan(y * width, width));
+        }
+        return dst;
+    }
+
     /// <summary>
     /// Parse tesseract's TSV output. Columns (1-indexed):
     /// 1 level, 2 page_num, 3 block_num, 4 par_num, 5 line_num, 6 word_num,
     /// 7 left, 8 top, 9 width, 10 height, 11 conf, 12 text.
     /// Only rows at level 5 carry words.
     /// </summary>
-    private OcrResult ParseTsv(string tsv, double pageHeightPoints)
+    private OcrResult ParseTsv(string tsv, double pageHeightPoints, bool hasHeader = true)
     {
         var words = new List<OcrWord>();
         var textBuilder = new System.Text.StringBuilder();
         double pixelsPerPoint = _dpi / 72.0;
 
         var lines = tsv.Split('\n');
-        // Skip header line (lines[0]) plus any blank lines.
-        foreach (var raw in lines.Skip(1))
+        // The CLI's TSV renderer emits a `level\tpage_num\t...` header row;
+        // libtesseract's TessBaseAPIGetTsvText does NOT (its first line is
+        // already a data row). Skipping unconditionally would drop the first
+        // word from the native path — verified empirically (#1139).
+        foreach (var raw in (hasHeader ? lines.Skip(1) : lines))
         {
             var line = raw.TrimEnd('\r');
             if (line.Length == 0) continue;
