@@ -1692,7 +1692,7 @@ partial class Program
                 if (deep)
                 {
                     bytes = File.ReadAllBytes(file.FullName);
-                    var ocr = new PdfOcrService();
+                    var ocr = new PdfOcrService(useNativeFastPath: true);   // #1137: in-process FFI, auto-falls back to subprocess
                     if (!ocr.IsAvailable())
                     {
                         Console.Error.WriteLine(
@@ -1825,7 +1825,7 @@ partial class Program
                     // estimates, so it belongs here and not in residue.
                     if (useOcr)
                     {
-                        var ocr = new PdfOcrService();
+                        var ocr = new PdfOcrService(useNativeFastPath: true);   // #1137: in-process FFI, auto-falls back to subprocess
                         if (!ocr.IsAvailable())
                         { Console.Error.WriteLine("--ocr needs tesseract on PATH (e.g. `brew install tesseract`)."); Environment.ExitCode = 2; return; }
                         var bytes = File.ReadAllBytes(file.FullName);
