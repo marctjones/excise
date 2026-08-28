@@ -1209,6 +1209,7 @@ namespace Excise.Core.Operations
     public static class PdfDocumentSanitizer
     {
         public static bool ScrubTerms(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms, bool caseSensitive = false) { }
+        public static bool ScrubTerms(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms, bool caseSensitive, Excise.Core.Operations.RedactionCarriers carriers) { }
     }
     public static class PdfDocumentSplitter
     {
@@ -1216,6 +1217,22 @@ namespace Excise.Core.Operations
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitAtPageBoundaries(Excise.Core.Document.PdfDocument source, System.Collections.Generic.IReadOnlyList<int> startIndices) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitEveryNPages(Excise.Core.Document.PdfDocument source, int pagesPerChunk) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitToSinglePages(Excise.Core.Document.PdfDocument source) { }
+    }
+    [System.Flags]
+    public enum RedactionCarriers
+    {
+        None = 0,
+        Info = 1,
+        Xmp = 2,
+        Xfa = 4,
+        Outlines = 8,
+        Annotations = 16,
+        FormFields = 32,
+        StructTree = 64,
+        JavaScript = 128,
+        EmbeddedFiles = 256,
+        ActionUris = 512,
+        All = 1023,
     }
 }
 namespace Excise.Core.Parsing
@@ -1910,7 +1927,7 @@ namespace Excise.Core.Text.Segmentation
         public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true, bool closeWidth = false, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
                 "R",
                 "G",
-                "B"})] System.ValueTuple<double, double, double>? boxColor = default) { }
+                "B"})] System.ValueTuple<double, double, double>? boxColor = default, Excise.Core.Operations.RedactionCarriers carriers = 1023) { }
     }
     public static class PdfPageRedactionExtensions
     {
@@ -1939,6 +1956,7 @@ namespace Excise.Core.Text.Segmentation
                 "G",
                 "B"})]
         public System.ValueTuple<double, double, double>? BoxColor { get; init; }
+        public Excise.Core.Operations.RedactionCarriers Carriers { get; init; }
         public bool CaseSensitive { get; init; }
         public bool DrawBox { get; init; }
         public bool IncludeHiddenLayers { get; init; }

@@ -54,6 +54,34 @@ public sealed class AdversarialRedactionRegressionTests
     }
 
     [Fact]
+    public void RedactText_CarrierScope_DisabledCarrierIsReportedNotScrubbed()
+    {
+        // #1188: RedactionOptions.Carriers gates which document-level carriers
+        // the term scrub touches, and a disabled carrier is REPORTED as not
+        // scrubbed (never silently claimed clean).
+        byte[] Pdf() => Build(
+            Obj("<< /Type /Catalog /Pages 2 0 R >>"),
+            Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+            Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+                "/Resources << /Font << /F1 5 0 R >> >> >>"),
+            Stream("", "BT /F1 12 Tf 72 700 Td (SECRETWORD) Tj ET"),
+            Obj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"));
+
+        using var doc = PdfDocument.Open(Pdf());
+        var report = doc.RedactText("SECRETWORD", new RedactionOptions
+        {
+            Carriers = Excise.Core.Operations.RedactionCarriers.All
+                       & ~Excise.Core.Operations.RedactionCarriers.ActionUris,
+        });
+
+        var uri = report.Carriers.Single(c => c.Carrier == "link /A /URI");
+        uri.Scrubbed.Should().BeFalse("the URI carrier was disabled via Carriers (#1188)");
+        uri.RefusedReason.Should().Contain("disabled");
+        report.Carriers.Single(c => c.Carrier == "/Info").Scrubbed
+            .Should().BeTrue("carriers left enabled are still scrubbed");
+    }
+
+    [Fact]
     public void RedactText_CcittScan_ReportsImageRegionRedacted_NotWholeDrop()
     {
         // #1187/#1195 surfacing: a CCITT scan is region-redacted (image kept),

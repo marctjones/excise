@@ -63,6 +63,17 @@ public static class PdfDocumentSanitizer
     /// </param>
     public static bool ScrubTerms(
         PdfDocument document, IEnumerable<string> terms, bool caseSensitive = false)
+        => ScrubTerms(document, terms, caseSensitive, RedactionCarriers.All);
+
+    /// <summary>
+    /// As <see cref="ScrubTerms(PdfDocument, IEnumerable{string}, bool)"/>, but
+    /// scrubbing only the carriers in <paramref name="carriers"/> (#1188).
+    /// <see cref="RedactionCarriers.All"/> is the default and the safe choice —
+    /// disabling a carrier can leave the term in the document.
+    /// </summary>
+    public static bool ScrubTerms(
+        PdfDocument document, IEnumerable<string> terms, bool caseSensitive,
+        RedactionCarriers carriers)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(terms);
@@ -74,17 +85,19 @@ public static class PdfDocumentSanitizer
 
         if (actionable.Count == 0) return false;
 
+        bool On(RedactionCarriers c) => (carriers & c) != 0;
+
         var changed = false;
-        changed |= ScrubInfo(document, actionable, caseSensitive);
-        changed |= ScrubXmpMetadata(document, actionable, caseSensitive);
-        changed |= XfaXmlCarrier.ScrubTerms(document, actionable, caseSensitive).Changed;
-        changed |= ScrubOutlines(document, actionable, caseSensitive);
-        changed |= ScrubAnnotationContents(document, actionable, caseSensitive);
-        changed |= ScrubFormFieldNames(document, actionable, caseSensitive);
-        changed |= ScrubStructTree(document, actionable, caseSensitive);       // #1151
-        changed |= ScrubJavaScript(document, actionable, caseSensitive);       // #1151
-        changed |= ScrubEmbeddedFiles(document, actionable, caseSensitive);    // #1151
-        changed |= ScrubActionUris(document, actionable, caseSensitive);       // #1168
+        if (On(RedactionCarriers.Info)) changed |= ScrubInfo(document, actionable, caseSensitive);
+        if (On(RedactionCarriers.Xmp)) changed |= ScrubXmpMetadata(document, actionable, caseSensitive);
+        if (On(RedactionCarriers.Xfa)) changed |= XfaXmlCarrier.ScrubTerms(document, actionable, caseSensitive).Changed;
+        if (On(RedactionCarriers.Outlines)) changed |= ScrubOutlines(document, actionable, caseSensitive);
+        if (On(RedactionCarriers.Annotations)) changed |= ScrubAnnotationContents(document, actionable, caseSensitive);
+        if (On(RedactionCarriers.FormFields)) changed |= ScrubFormFieldNames(document, actionable, caseSensitive);
+        if (On(RedactionCarriers.StructTree)) changed |= ScrubStructTree(document, actionable, caseSensitive);       // #1151
+        if (On(RedactionCarriers.JavaScript)) changed |= ScrubJavaScript(document, actionable, caseSensitive);       // #1151
+        if (On(RedactionCarriers.EmbeddedFiles)) changed |= ScrubEmbeddedFiles(document, actionable, caseSensitive); // #1151
+        if (On(RedactionCarriers.ActionUris)) changed |= ScrubActionUris(document, actionable, caseSensitive);       // #1168
         return changed;
     }
 
