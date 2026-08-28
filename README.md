@@ -386,7 +386,6 @@ excise ocr scan.pdf
 ### Permissive third-party deps
 - **SkiaSharp 3.119.x** (MIT) — 2D graphics
 - **CSJ2K 3.x** (BSD) — managed JPEG 2000 / JPX image decoding
-- **Clipper2** (BSL 1.0) — Polygon clipping for redaction geometry
 - **BouncyCastle.Cryptography** (MIT) — CMS cryptography for digital-signature inspection
 - **Microsoft.CodeAnalysis.CSharp.Scripting** (MIT) — optional Roslyn scripting for GUI automation; enabled in Debug/test builds and opt-in for Release builds with `-p:EnableScripting=true`
 
@@ -617,7 +616,7 @@ What counts as the supported public contract:
 
 ## License
 
-MIT License. See [LICENSES.md](LICENSES.md) for the complete dependency-license inventory. All dependencies are permissive (MIT / Apache 2.0 / BSD-3 / BSL-1.0); no copyleft.
+MIT License. See [LICENSES.md](LICENSES.md) for the complete dependency-license inventory. All dependencies are permissive (MIT / BSD-2-Clause / BSD-3-Clause); no copyleft. Licence policy — permitted vs banned SPDX ids, enforced on every push — is in `tests/license-policy.tsv`.
 
 ## Contributing
 
