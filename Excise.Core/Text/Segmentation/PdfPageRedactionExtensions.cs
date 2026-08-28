@@ -67,6 +67,21 @@ public static class PdfPageRedactionExtensions
     /// (<c>RedactedCopySafetyService</c>) and under <c>RemoveAllMetadata</c>.
     /// </para>
     /// </remarks>
+    /// <summary>
+    /// Redact <paramref name="area"/> under a unified <see cref="RedactionOptions"/>
+    /// surface (#1187). Area redaction has no term, case, box or hidden-layer
+    /// concept, so only the geometry-relevant fields
+    /// (<see cref="RedactionOptions.Strategy"/>,
+    /// <see cref="RedactionOptions.ScrubDocumentCarriers"/>,
+    /// <see cref="RedactionOptions.Width"/>) apply; the rest are RedactText-only.
+    /// </summary>
+    public static void RedactArea(this PdfPage page, PdfRectangle area, RedactionOptions options)
+    {
+        if (options == null) throw new System.ArgumentNullException(nameof(options));
+        page.RedactAreaInternal(area, area, options.Strategy,
+            options.ScrubDocumentCarriers, options.CloseWidth);
+    }
+
     public static void RedactArea(
         this PdfPage page,
         PdfRectangle area,
@@ -170,6 +185,22 @@ public static class PdfPageRedactionExtensions
     /// <summary>
     /// Redact multiple areas in one glyph-reconstruction pass.
     /// </summary>
+    /// <summary>
+    /// Redact multiple areas under a unified <see cref="RedactionOptions"/>
+    /// surface (#1187). As with <see cref="RedactArea(PdfPage, PdfRectangle, RedactionOptions)"/>,
+    /// only the geometry-relevant fields apply.
+    /// </summary>
+    public static void RedactAreas(
+        this PdfPage page,
+        System.Collections.Generic.IEnumerable<PdfRectangle> areas,
+        RedactionOptions options)
+    {
+        if (options == null) throw new System.ArgumentNullException(nameof(options));
+        var list = areas.Select(a => a.Normalize()).ToList();
+        page.RedactAreasInternal(list, list, options.Strategy,
+            options.ScrubDocumentCarriers, options.CloseWidth);
+    }
+
     public static void RedactAreas(
         this PdfPage page,
         System.Collections.Generic.IEnumerable<PdfRectangle> areas,

@@ -1850,8 +1850,8 @@ namespace Excise.Core.Text.Segmentation
     }
     public static class HiddenTextDetector
     {
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.HiddenTextRecord> Scan(Excise.Core.Document.PdfDocument document) { }
-        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.HiddenTextRecord> ScanPage(Excise.Core.Document.PdfPage page, int pageNumber = 1) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.HiddenTextRecord> Scan(Excise.Core.Document.PdfDocument document, bool includeVisibleFailedRedactions = false) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.HiddenTextRecord> ScanPage(Excise.Core.Document.PdfPage page, int pageNumber = 1, bool includeVisibleFailedRedactions = false) { }
     }
     public sealed class HiddenTextRecord : System.IEquatable<Excise.Core.Text.Segmentation.HiddenTextRecord>
     {
@@ -1906,6 +1906,7 @@ namespace Excise.Core.Text.Segmentation
     }
     public static class PdfDocumentRedactionExtensions
     {
+        public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, Excise.Core.Text.Segmentation.RedactionOptions options) { }
         public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true, bool closeWidth = false, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
                 "R",
                 "G",
@@ -1913,7 +1914,9 @@ namespace Excise.Core.Text.Segmentation
     }
     public static class PdfPageRedactionExtensions
     {
+        public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.RedactionOptions options) { }
         public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true, bool closeWidth = false) { }
+        public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.RedactionOptions options) { }
         public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true, bool closeWidth = false) { }
     }
     public sealed class RedactionCarrierAudit : System.IEquatable<Excise.Core.Text.Segmentation.RedactionCarrierAudit>
@@ -1927,6 +1930,22 @@ namespace Excise.Core.Text.Segmentation
         public int UnexaminedXfaPacketCount { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> Describe() { }
         public static Excise.Core.Text.Segmentation.RedactionCarrierAudit Inspect(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string>? requestedTerms = null) { }
+    }
+    public sealed class RedactionOptions : System.IEquatable<Excise.Core.Text.Segmentation.RedactionOptions>
+    {
+        public RedactionOptions() { }
+        [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})]
+        public System.ValueTuple<double, double, double>? BoxColor { get; init; }
+        public bool CaseSensitive { get; init; }
+        public bool DrawBox { get; init; }
+        public bool IncludeHiddenLayers { get; init; }
+        public bool ScrubDocumentCarriers { get; init; }
+        public Excise.Core.Text.Segmentation.GlyphRemovalStrategy Strategy { get; init; }
+        public Excise.Core.Text.Segmentation.WidthPolicy Width { get; init; }
+        public static Excise.Core.Text.Segmentation.RedactionOptions Default { get; }
     }
     public enum RedactionOutcome
     {
@@ -1971,6 +1990,11 @@ namespace Excise.Core.Text.Segmentation
     {
         public TextSegmenter() { }
         public System.Collections.Generic.List<Excise.Core.Text.Segmentation.TextSegment> BuildSegments(string text, Excise.Core.Document.PdfRectangle operationBounds, System.Collections.Generic.List<Excise.Core.Text.Segmentation.LetterMatch> letterMatches, Excise.Core.Document.PdfRectangle redactionArea, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+    }
+    public enum WidthPolicy
+    {
+        CollapsePreserveLayout = 0,
+        CloseGap = 1,
     }
 }
 namespace Excise.Core.Validation

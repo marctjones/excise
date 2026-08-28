@@ -931,7 +931,18 @@ partial class Program
         // #1089: the CLI prints VERIFIED removals. The old count was matches
         // located per pass -- how one occurrence printed as "Redacted 3" (#1043)
         // and how a term that was never removed still reported success.
-        var redaction = doc.RedactText(text, caseSensitive, drawBlackRect: drawBox, closeWidth: closeWidth, boxColor: boxColor);
+        // #1187: build the unified RedactionOptions surface from the CLI flags.
+        // (Confidence policy is enforced above via RedactionConfidenceChecker —
+        // it needs OCR, which the Core engine has no dependency on.)
+        var redaction = doc.RedactText(text, new Excise.Core.Text.Segmentation.RedactionOptions
+        {
+            CaseSensitive = caseSensitive,
+            DrawBox = drawBox,
+            Width = closeWidth
+                ? Excise.Core.Text.Segmentation.WidthPolicy.CloseGap
+                : Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout,
+            BoxColor = boxColor,
+        });
         var count = redaction.VerifiedRemovals;
 
         // #916/#905 — collect what the redaction could not examine BEFORE
