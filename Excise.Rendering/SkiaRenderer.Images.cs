@@ -1056,10 +1056,10 @@ internal partial class RenderContext
 
             var estimatedTarget = EstimateImageDecodeSize(sourceWidth, sourceHeight);
             var image = desiredComponents == 1 && imageStream.GetOptional("SMask") != null
-                ? JpxDecoder.TryDecodeOpenJpegGray(imageStream.EncodedData)
+                ? JpxDecoder.TryDecodeOpenJpegGray(GetTerminalJpxData(imageStream))
                 : TryDecodeJpxWithOpenJpeg(imageStream, sourceWidth, sourceHeight, estimatedTarget.Width, estimatedTarget.Height, desiredComponents);
             if (image == null && (long)sourceWidth * sourceHeight <= MaxExpandedSoftMaskPixels)
-                image = JpxDecoder.TryDecodeManaged(imageStream.EncodedData, desiredComponents);
+                image = JpxDecoder.TryDecodeManaged(GetTerminalJpxData(imageStream), desiredComponents);
             if (image == null || sourceWidth <= 0 || sourceHeight <= 0 || image.Components <= 0)
                 return null;
 
@@ -1180,7 +1180,7 @@ internal partial class RenderContext
         int desiredComponents)
     {
         var reduceFactor = ChooseOpenJpegReduceFactor(sourceWidth, sourceHeight, targetWidth, targetHeight);
-        return JpxDecoder.TryDecodeOpenJpeg(imageStream.EncodedData, reduceFactor);
+        return JpxDecoder.TryDecodeOpenJpeg(GetTerminalJpxData(imageStream), reduceFactor);
     }
 
     private static int ChooseOpenJpegReduceFactor(int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
@@ -1497,7 +1497,7 @@ internal partial class RenderContext
 
         if (filters.Contains("JPXDecode"))
         {
-            var jpx = JpxDecoder.TryDecodeManaged(maskStream.EncodedData);
+            var jpx = JpxDecoder.TryDecodeManaged(GetTerminalJpxData(maskStream));
             if (jpx is { Components: > 0 } && jpx.ComponentData.Length > 0)
             {
                 var component = jpx.ComponentData[0];
@@ -1577,6 +1577,17 @@ internal partial class RenderContext
 
     private static byte[] GetTerminalDctData(Excise.Core.Primitives.PdfStream stream, IReadOnlyList<string> filters)
         => filters.Count == 1 ? stream.EncodedData : stream.DecodedData;
+
+    // The JPX codestream a chained image presents to CSJ2K/OpenJPEG is the bytes
+    // AFTER the generalized filters (ASCIIHex/ASCII85/LZW/Flate/RunLength) but
+    // BEFORE JPXDecode, which the filter pipeline passes through untouched
+    // (JpxFilterDecoder catches the deliberate NotSupportedException and returns
+    // its input). For a lone /JPXDecode the raw bytes already ARE the codestream;
+    // for a chain like [ASCIIHex LZW JPXDecode] the raw bytes are still
+    // outer-encoded and feeding them to the codec decodes to nothing — a blank
+    // image (jpx_lzw.pdf). Mirror of GetTerminalDctData; #1196.
+    private static byte[] GetTerminalJpxData(Excise.Core.Primitives.PdfStream stream)
+        => stream.Filters.Count == 1 ? stream.EncodedData : stream.DecodedData;
 
     private int? ResolveDctColorTransform(
         PdfStream stream,
