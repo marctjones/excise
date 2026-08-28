@@ -82,6 +82,29 @@ public static class PdfDocumentRedactionExtensions
     /// <returns>
     /// Total number of matches removed across all pages.
     /// </returns>
+    /// <summary>
+    /// Redact <paramref name="text"/> under a unified <see cref="RedactionOptions"/>
+    /// surface (#1187). Equivalent to the parameter overload; this is the
+    /// recommended entry point. The per-parameter overload is kept for source
+    /// compatibility and delegates here in spirit (it constructs the same call).
+    /// </summary>
+    public static RedactionReport RedactText(
+        this PdfDocument document,
+        string text,
+        RedactionOptions options)
+    {
+        if (options == null) throw new ArgumentNullException(nameof(options));
+        return document.RedactText(
+            text,
+            options.CaseSensitive,
+            options.Strategy,
+            options.DrawBox,
+            options.IncludeHiddenLayers,
+            options.ScrubDocumentCarriers,
+            options.CloseWidth,
+            options.BoxColor);
+    }
+
     public static RedactionReport RedactText(
         this PdfDocument document,
         string text,

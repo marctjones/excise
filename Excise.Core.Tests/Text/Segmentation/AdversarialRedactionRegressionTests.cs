@@ -54,6 +54,52 @@ public sealed class AdversarialRedactionRegressionTests
     }
 
     [Fact]
+    public void RedactText_OptionsOverload_ByteEquivalentToParamOverload()
+    {
+        // #1187: the RedactionOptions overload must be a pure surface over the
+        // parameter overload — same output, byte for byte, for the same settings.
+        byte[] MakePdf() => Build(
+            Obj("<< /Type /Catalog /Pages 2 0 R >>"),
+            Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+            Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+                "/Resources << /Font << /F1 5 0 R >> >> >>"),
+            Stream("", "BT /F1 12 Tf 72 700 Td (SECRETWORD and more) Tj ET"),
+            Obj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"));
+
+        using var d1 = PdfDocument.Open(MakePdf());
+        var r1 = d1.RedactText("SECRETWORD", caseSensitive: true,
+            strategy: GlyphRemovalStrategy.AnyOverlap, drawBlackRect: false,
+            includeHiddenLayers: true, scrubDocumentCarriers: false, closeWidth: true);
+        var b1 = d1.SaveToBytes();
+
+        using var d2 = PdfDocument.Open(MakePdf());
+        var r2 = d2.RedactText("SECRETWORD", new RedactionOptions
+        {
+            CaseSensitive = true,
+            Strategy = GlyphRemovalStrategy.AnyOverlap,
+            DrawBox = false,
+            IncludeHiddenLayers = true,
+            ScrubDocumentCarriers = false,
+            Width = WidthPolicy.CloseGap,
+        });
+        var b2 = d2.SaveToBytes();
+
+        r2.VerifiedRemovals.Should().Be(r1.VerifiedRemovals);
+        r2.MatchesLocated.Should().Be(r1.MatchesLocated);
+
+        // Same redaction output (a fresh save may differ only in the random
+        // trailer /ID, so compare the reopened page content, not raw bytes).
+        string Letters(byte[] pdf)
+        {
+            using var d = PdfDocument.Open(pdf);
+            return string.Concat(d.GetPage(1).Letters.Select(l => l.Value));
+        }
+        Letters(b2).Should().Be(Letters(b1),
+            "the options overload must produce the same redacted content as the param overload (#1187)");
+        Letters(b1).Should().NotContain("SECRETWORD", "the term was redacted in both");
+    }
+
+    [Fact]
     public void RedactArea_OverAcroFormField_RemovesValueAndAppearanceBytes()
     {
         var pdf = Build(
