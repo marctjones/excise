@@ -94,6 +94,59 @@ public class JpxSoftMaskRenderTests
         }
     }
 
+    /// <summary>
+    /// #1196 — a JPEG 2000 image behind a filter CHAIN (generalized filters
+    /// before the terminal JPXDecode) must decode, not render blank. The image
+    /// in jpx_lzw.pdf is /Filter [/ASCIIHexDecode /LZWDecode /JPXDecode] and
+    /// decodes (opj + mutool + poppler agree) to a flat value-76 full-page fill.
+    /// Before the fix the codec was fed the raw ASCIIHex+LZW bytes and produced
+    /// nothing, leaving a blank WHITE page. Rendered out of process, per #985.
+    /// </summary>
+    [Fact]
+    public void JpxImageInFilterChain_Decodes_NotBlank()
+    {
+        var fixture = SkiaRendererTests.FindRepoFile("test-pdfs", "pdfium", "jpx_lzw.pdf");
+        Assert.SkipWhen(fixture == null,
+            "No pdfium jpx_lzw fixture at test-pdfs/pdfium/jpx_lzw.pdf [requires: corpus:pdfium].");
+
+        var cli = FindCliAssembly();
+        cli.Should().NotBeNull("Excise.Cli must be built (#985 build-order ProjectReference)");
+
+        var output = Path.Combine(Path.GetTempPath(), $"excise-jpxchain-{Guid.NewGuid():N}.png");
+        try
+        {
+            var psi = new ProcessStartInfo("dotnet")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            };
+            foreach (var a in new[] { cli!, "render", fixture!, "--page", "1", "--dpi", "100", "-o", output })
+                psi.ArgumentList.Add(a);
+
+            using var proc = Process.Start(psi)!;
+            var stdout = proc.StandardOutput.ReadToEnd();
+            var stderr = proc.StandardError.ReadToEnd();
+            proc.WaitForExit(120_000).Should().BeTrue("the render must not hang");
+            proc.ExitCode.Should().Be(0, $"render must succeed. stdout={stdout} stderr={stderr}");
+            File.Exists(output).Should().BeTrue("the child must have written a raster");
+
+            using var bitmap = SKBitmap.Decode(output);
+            bitmap.Should().NotBeNull("the produced PNG must be decodable");
+
+            // The flat value-76 fill is neither "white" (>245) nor "dark" (<32),
+            // so the regression signal is the WHITE fraction: a blank page (the
+            // pre-fix bug) is ~all white; a decoded page is ~all filled gray.
+            var (whiteFraction, _) = SkiaRendererTests.MeasureWhiteAndDarkPixels(bitmap!);
+            whiteFraction.Should().BeLessThan(0.5,
+                "the chained JPX image must decode and fill the page, not render blank white (#1196)");
+        }
+        finally
+        {
+            try { File.Delete(output); } catch { /* best effort */ }
+        }
+    }
+
     private static string? FindCliAssembly()
     {
         var dir = Directory.GetCurrentDirectory();
