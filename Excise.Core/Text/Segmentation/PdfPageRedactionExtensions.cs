@@ -10,6 +10,15 @@ namespace Excise.Core.Text.Segmentation;
 /// area from the page's content stream — text-extraction tools reading the
 /// resulting PDF will see no trace of the removed glyphs.
 /// </summary>
+/// <summary>How many images a redaction pass region-edited vs dropped wholesale
+/// (#1187 surfacing of #1195). A wholesale drop on a term redaction is
+/// destructive collateral the report must not hide.</summary>
+internal readonly record struct ImageRedactionCounts(int RegionEdited, int RemovedWhole)
+{
+    public static ImageRedactionCounts operator +(ImageRedactionCounts a, ImageRedactionCounts b)
+        => new(a.RegionEdited + b.RegionEdited, a.RemovedWhole + b.RemovedWhole);
+}
+
 public static class PdfPageRedactionExtensions
 {
     /// <summary>
@@ -88,7 +97,9 @@ public static class PdfPageRedactionExtensions
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
         bool scrubDocumentCarriers = true,
         bool closeWidth = false)   // #1145 — opt-in width-closing
-        => page.RedactAreaInternal(area, area, strategy, scrubDocumentCarriers, closeWidth);
+    {
+        page.RedactAreaInternal(area, area, strategy, scrubDocumentCarriers, closeWidth);
+    }
 
     /// <summary>
     /// Core single-area redaction. <paramref name="area"/> drives the text /
@@ -98,7 +109,7 @@ public static class PdfPageRedactionExtensions
     /// <c>RedactText</c>. Public <see cref="RedactArea"/> passes the same rect
     /// for both.
     /// </summary>
-    internal static void RedactAreaInternal(
+    internal static ImageRedactionCounts RedactAreaInternal(
         this PdfPage page,
         PdfRectangle area,
         PdfRectangle imageArea,
@@ -133,7 +144,7 @@ public static class PdfPageRedactionExtensions
         // Short-circuit on empty pages — no ops means no work, and building
         // an empty content stream would overwrite any (legal-but-empty)
         // stream that was there.
-        if (content.Operators.Count == 0) return;
+        if (content.Operators.Count == 0) return default;
 
         // Pass 0: flatten Form XObjects overlapping the area (#355). Form
         // content streams are invisible to the text/image passes below, so a
@@ -150,7 +161,7 @@ public static class PdfPageRedactionExtensions
             // their content — flattening alone would leak the redacted text,
             // since the writer serializes every in-use object (no GC).
             FormXObjectFlattener.PruneInlinedForms(page, content.Operators, inlinedForms);
-            if (content.Operators.Count == 0) return;
+            if (content.Operators.Count == 0) return default;
         }
 
         // Pass 0.5: inline marked-content carriers (#1182/#1185). /ActualText,
@@ -176,10 +187,12 @@ public static class PdfPageRedactionExtensions
         // Pass 2: image XObject redaction (#279, region-level #1195). Uses
         // imageArea (the full glyph bbox), NOT the possibly-thin glyph-match
         // area, so region blackout covers the term's visible extent.
-        working = ImageRedactor.ProcessOperations(working, page, imageArea, strategy, out _);
+        working = ImageRedactor.ProcessOperations(
+            working, page, imageArea, strategy, out var imgRemoved, out var imgRegionEdited);
         ImageRedactor.PruneUnusedImageXObjects(page, working);
 
         page.SetContentStream(new ContentStream(working));
+        return new ImageRedactionCounts(imgRegionEdited, imgRemoved);
     }
 
     /// <summary>
@@ -219,7 +232,7 @@ public static class PdfPageRedactionExtensions
     /// same list for both; <c>RedactText</c> passes thin glyph centrelines and
     /// full glyph bboxes respectively.
     /// </summary>
-    internal static void RedactAreasInternal(
+    internal static ImageRedactionCounts RedactAreasInternal(
         this PdfPage page,
         System.Collections.Generic.IReadOnlyList<PdfRectangle> glyphAreas,
         System.Collections.Generic.IReadOnlyList<PdfRectangle> imageAreas,
@@ -231,13 +244,12 @@ public static class PdfPageRedactionExtensions
 
         var list = glyphAreas.Select(a => a.Normalize()).ToList();
         var imageList = imageAreas.Select(a => a.Normalize()).ToList();
-        if (list.Count == 0) return;
+        if (list.Count == 0) return default;
         if (list.Count == 1)
         {
-            page.RedactAreaInternal(
+            return page.RedactAreaInternal(
                 list[0], imageList.Count > 0 ? imageList[0] : list[0],
                 strategy, scrubDocumentCarriers, closeWidth);
-            return;
         }
 
         if (scrubDocumentCarriers)
@@ -249,7 +261,7 @@ public static class PdfPageRedactionExtensions
         }
 
         var content = page.GetContentStream();
-        if (content.Operators.Count == 0) return;
+        if (content.Operators.Count == 0) return default;
 
         foreach (var area in list)
         {
@@ -260,7 +272,7 @@ public static class PdfPageRedactionExtensions
             page.SetContentStream(new ContentStream(flattened));
             content = page.GetContentStream();
             FormXObjectFlattener.PruneInlinedForms(page, content.Operators, inlinedForms);
-            if (content.Operators.Count == 0) return;
+            if (content.Operators.Count == 0) return default;
         }
 
         // Pass 0.5: inline marked-content carriers (#1182/#1185), per area, BEFORE
@@ -278,10 +290,16 @@ public static class PdfPageRedactionExtensions
 
         // Image pass uses imageList (full glyph bboxes), not the glyph-match
         // areas — see RedactAreaInternal (#1195).
+        var imageCounts = default(ImageRedactionCounts);
         foreach (var imageArea in imageList)
-            working = ImageRedactor.ProcessOperations(working, page, imageArea, strategy, out _);
+        {
+            working = ImageRedactor.ProcessOperations(
+                working, page, imageArea, strategy, out var removed, out var regionEdited);
+            imageCounts += new ImageRedactionCounts(regionEdited, removed);
+        }
 
         ImageRedactor.PruneUnusedImageXObjects(page, working);
         page.SetContentStream(new ContentStream(working));
+        return imageCounts;
     }
 }

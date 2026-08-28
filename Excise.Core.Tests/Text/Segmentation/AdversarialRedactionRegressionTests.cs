@@ -54,6 +54,39 @@ public sealed class AdversarialRedactionRegressionTests
     }
 
     [Fact]
+    public void RedactText_CcittScan_ReportsImageRegionRedacted_NotWholeDrop()
+    {
+        // #1187/#1195 surfacing: a CCITT scan is region-redacted (image kept),
+        // so the report says so and reports NO destructive whole-image drop.
+        var path = Path.Combine(RepoRoot(), "test-pdfs", "poppler", "unittestcases",
+            "imageretrieve+attachment.pdf");
+        Assert.SkipUnless(File.Exists(path),
+            "CCITT scan fixture absent [requires: corpus:poppler]");
+        using var doc = PdfDocument.Open(path);
+        var report = doc.RedactText("STURBRIDGE");
+        report.ImageRegionsRedacted.Should().BeGreaterThan(0,
+            "a CCITT scan's term region is blacked out in place");
+        report.ImagesDroppedWhole.Should().Be(0, "the image is preserved, not dropped");
+    }
+
+    [Fact]
+    public void RedactText_Jbig2Scan_SurfacesWholeImageDrop()
+    {
+        // #1187/#1195: JBIG2 is not yet region-editable (#1197), so it falls back
+        // to whole-Do removal — destructive collateral that must be SURFACED, not
+        // hidden (carrier policy).
+        var path = Path.Combine(RepoRoot(), "test-pdfs", "pdfjs", "issue12963.pdf");
+        Assert.SkipUnless(File.Exists(path),
+            "JBIG2 scan fixture absent [requires: corpus:pdfjs]");
+        using var doc = PdfDocument.Open(path);
+        var report = doc.RedactText("V1HH");
+        report.ImagesDroppedWhole.Should().BeGreaterThan(0,
+            "a JBIG2 scan falls back to whole-Do removal (#1197)");
+        report.ToString().Should().Contain("whole image",
+            "the destructive fallback is surfaced in the report");
+    }
+
+    [Fact]
     public void RedactText_OptionsOverload_ByteEquivalentToParamOverload()
     {
         // #1187: the RedactionOptions overload must be a pure surface over the

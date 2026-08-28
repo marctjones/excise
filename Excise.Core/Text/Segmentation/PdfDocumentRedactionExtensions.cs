@@ -120,6 +120,7 @@ public static class PdfDocumentRedactionExtensions
 
         var pageResults = new List<PageRedactionResult>();
         var carrierResults = new List<CarrierResult>();
+        var imageCounts = default(ImageRedactionCounts);   // #1187/#1195 surfacing
 
         if (string.IsNullOrEmpty(text))
             return new RedactionReport
@@ -252,7 +253,7 @@ public static class PdfDocumentRedactionExtensions
                         // every RedactText call — including the documented case
                         // where a term below the sanitizer's 3-character floor
                         // deliberately leaves carriers alone.
-                        page.RedactAreasInternal(contentAreas, imageAreas, strategy, scrubDocumentCarriers: false, closeWidth: closeWidth);
+                        imageCounts += page.RedactAreasInternal(contentAreas, imageAreas, strategy, scrubDocumentCarriers: false, closeWidth: closeWidth);
                     }
 
                     if (drawBlackRect)
@@ -337,6 +338,8 @@ public static class PdfDocumentRedactionExtensions
             Term = text,
             Pages = pageResults,
             Carriers = carrierResults,
+            ImageRegionsRedacted = imageCounts.RegionEdited,
+            ImagesDroppedWhole = imageCounts.RemovedWhole,
         };
     }
 

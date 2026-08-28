@@ -71,6 +71,21 @@ public sealed class RedactionReport
     public required IReadOnlyList<CarrierResult> Carriers { get; init; }
 
     /// <summary>
+    /// Images whose term region was blacked out in place, preserving the rest of
+    /// the image (#1195). Informational.
+    /// </summary>
+    public int ImageRegionsRedacted { get; init; }
+
+    /// <summary>
+    /// Images dropped WHOLESALE because region-level redaction could not run
+    /// (a filter excise cannot yet re-encode faithfully — JBIG2/DCT/JPX, #1197).
+    /// A term redaction that deletes a whole image is destructive collateral the
+    /// user should know about, so it is surfaced here rather than hidden (the
+    /// carrier policy: report, do not silently guess).
+    /// </summary>
+    public int ImagesDroppedWhole { get; init; }
+
+    /// <summary>
     /// Occurrences excise located. NOT a success count — kept because the gap
     /// between this and <see cref="VerifiedRemovals"/> is the signal that
     /// something went wrong.
@@ -99,6 +114,8 @@ public sealed class RedactionReport
     {
         var parts = new List<string> { $"{VerifiedRemovals} removed" };
         if (Survived > 0) parts.Add($"{Survived} STILL PRESENT");
+        if (ImagesDroppedWhole > 0)
+            parts.Add($"{ImagesDroppedWhole} whole image(s) removed (region redaction unavailable)");
         foreach (var c in Carriers.Where(c => c.RefusedReason != null))
             parts.Add($"{c.Carrier} NOT scrubbed ({c.RefusedReason})");
         return string.Join("; ", parts);

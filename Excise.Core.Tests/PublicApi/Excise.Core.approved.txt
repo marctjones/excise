@@ -1957,6 +1957,8 @@ namespace Excise.Core.Text.Segmentation
     {
         public RedactionReport() { }
         public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierResult> Carriers { get; init; }
+        public int ImageRegionsRedacted { get; init; }
+        public int ImagesDroppedWhole { get; init; }
         public bool IsCleanSuccess { get; }
         public int MatchesLocated { get; }
         public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.PageRedactionResult> Pages { get; init; }
