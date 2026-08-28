@@ -318,11 +318,18 @@ def c_image_ocr_overlay(t):
     # map baked term pixel position -> page coords for the invisible overlay.
     # image (cm PW PH) maps sample (sx,sy) [top-left origin] to page
     # (sx/W*PW, PH - sy/H*PH).
+    # Size and place the invisible OCR text to MATCH the baked pixels, exactly
+    # as a real scan+OCR layer does — otherwise the invisible-text bbox and the
+    # visible ink disagree and the fixture cannot test image-region redaction
+    # (#1195). Baked glyph is 44px tall at top-left term_px in a WxH image.
+    baked_px = 44
+    font_pt = baked_px * PH / H                 # image px -> page pt
     tx = term_px[0] / W * PW
-    ty = PH - term_px[1] / H * PH
+    baseline_px = term_px[1] + baked_px * 0.8   # ~ascent below the glyph top
+    ty = PH - baseline_px / H * PH
     content = b("q %d 0 0 %d 0 0 cm /Im0 Do Q\n"
-                "BT /F1 12 Tf 3 Tr %.1f %.1f Td (%s) Tj 0 Tr ET\n"
-                % (PW, PH, tx, ty, t))
+                "BT /F1 %.1f Tf 3 Tr %.1f %.1f Td (%s) Tj 0 Tr ET\n"
+                % (PW, PH, font_pt, tx, ty, t))
     imgobj = (b("<< /Type /XObject /Subtype /Image /Width %d /Height %d "
                 "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode "
                 "/Length %d >>\nstream\n" % (W, H, len(comp))) + comp + b"\nendstream")

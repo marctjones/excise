@@ -154,6 +154,11 @@ public static class PdfDocumentRedactionExtensions
 
                 {
                     var contentAreas = new List<PdfRectangle>();
+                    // #1195: the image pass needs the full glyph bbox (real
+                    // height), not the thin glyph-match centreline in
+                    // contentAreas — else region blackout zeroes a 1-sample strip
+                    // and the term stays readable in a scanned image.
+                    var imageAreas = new List<PdfRectangle>();
                     var markerAreas = new List<PdfRectangle>();
                     var pageVisibleMatches = 0;
                     // #1101: centers of matches already tallied on this pass, so
@@ -204,9 +209,12 @@ public static class PdfDocumentRedactionExtensions
                             InteractiveRedactionScrubber.ScrubTerm(
                                 page, bbox, text, caseSensitive);
                         else
+                        {
                             contentAreas.Add(strategy == GlyphRemovalStrategy.FullyContained
                                 ? bbox
                                 : CenterlineBoxOf(matchLetters));
+                            imageAreas.Add(bbox); // full height for the image pass (#1195)
+                        }
                         markerAreas.Add(bbox);
                     }
 
@@ -221,7 +229,7 @@ public static class PdfDocumentRedactionExtensions
                         // every RedactText call — including the documented case
                         // where a term below the sanitizer's 3-character floor
                         // deliberately leaves carriers alone.
-                        page.RedactAreas(contentAreas, strategy, scrubDocumentCarriers: false, closeWidth: closeWidth);
+                        page.RedactAreasInternal(contentAreas, imageAreas, strategy, scrubDocumentCarriers: false, closeWidth: closeWidth);
                     }
 
                     if (drawBlackRect)

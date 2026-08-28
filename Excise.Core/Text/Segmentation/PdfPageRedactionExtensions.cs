@@ -73,10 +73,28 @@ public static class PdfPageRedactionExtensions
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
         bool scrubDocumentCarriers = true,
         bool closeWidth = false)   // #1145 — opt-in width-closing
+        => page.RedactAreaInternal(area, area, strategy, scrubDocumentCarriers, closeWidth);
+
+    /// <summary>
+    /// Core single-area redaction. <paramref name="area"/> drives the text /
+    /// carrier / glyph passes; <paramref name="imageArea"/> drives the image
+    /// pass (#1195). They differ only when the caller has a thin glyph-match
+    /// centreline for text but the full glyph bbox for images — see
+    /// <c>RedactText</c>. Public <see cref="RedactArea"/> passes the same rect
+    /// for both.
+    /// </summary>
+    internal static void RedactAreaInternal(
+        this PdfPage page,
+        PdfRectangle area,
+        PdfRectangle imageArea,
+        GlyphRemovalStrategy strategy,
+        bool scrubDocumentCarriers,
+        bool closeWidth)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
         area = area.Normalize();
+        imageArea = imageArea.Normalize();
 
         // Positionless document-level carriers (#897). Idempotent — RedactAreas
         // applies it once per rectangle — because both underlying operations
@@ -140,10 +158,10 @@ public static class PdfPageRedactionExtensions
             working = remover.ProcessOperations(working, letters, area, strategy);
         }
 
-        // Pass 2: image XObject removal (#279). Walks the operator list
-        // tracking CTM and drops image Do invocations whose transformed
-        // unit-square AABB overlaps the redaction area.
-        working = ImageRedactor.ProcessOperations(working, page, area, strategy, out _);
+        // Pass 2: image XObject redaction (#279, region-level #1195). Uses
+        // imageArea (the full glyph bbox), NOT the possibly-thin glyph-match
+        // area, so region blackout covers the term's visible extent.
+        working = ImageRedactor.ProcessOperations(working, page, imageArea, strategy, out _);
         ImageRedactor.PruneUnusedImageXObjects(page, working);
 
         page.SetContentStream(new ContentStream(working));
@@ -159,13 +177,35 @@ public static class PdfPageRedactionExtensions
         bool scrubDocumentCarriers = true,
         bool closeWidth = false)   // #1145 — opt-in width-closing
     {
+        var list = areas.Select(a => a.Normalize()).ToList();
+        page.RedactAreasInternal(list, list, strategy, scrubDocumentCarriers, closeWidth);
+    }
+
+    /// <summary>
+    /// Core multi-area redaction. <paramref name="glyphAreas"/> drive the text /
+    /// carrier / glyph passes; <paramref name="imageAreas"/> (index-aligned)
+    /// drive the image pass (#1195). Public <see cref="RedactAreas"/> passes the
+    /// same list for both; <c>RedactText</c> passes thin glyph centrelines and
+    /// full glyph bboxes respectively.
+    /// </summary>
+    internal static void RedactAreasInternal(
+        this PdfPage page,
+        System.Collections.Generic.IReadOnlyList<PdfRectangle> glyphAreas,
+        System.Collections.Generic.IReadOnlyList<PdfRectangle> imageAreas,
+        GlyphRemovalStrategy strategy,
+        bool scrubDocumentCarriers,
+        bool closeWidth)
+    {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
-        var list = areas.Select(a => a.Normalize()).ToList();
+        var list = glyphAreas.Select(a => a.Normalize()).ToList();
+        var imageList = imageAreas.Select(a => a.Normalize()).ToList();
         if (list.Count == 0) return;
         if (list.Count == 1)
         {
-            page.RedactArea(list[0], strategy, scrubDocumentCarriers, closeWidth);
+            page.RedactAreaInternal(
+                list[0], imageList.Count > 0 ? imageList[0] : list[0],
+                strategy, scrubDocumentCarriers, closeWidth);
             return;
         }
 
@@ -205,8 +245,10 @@ public static class PdfPageRedactionExtensions
             working = remover.ProcessOperations(working, letters, list, strategy);
         }
 
-        foreach (var area in list)
-            working = ImageRedactor.ProcessOperations(working, page, area, strategy, out _);
+        // Image pass uses imageList (full glyph bboxes), not the glyph-match
+        // areas — see RedactAreaInternal (#1195).
+        foreach (var imageArea in imageList)
+            working = ImageRedactor.ProcessOperations(working, page, imageArea, strategy, out _);
 
         ImageRedactor.PruneUnusedImageXObjects(page, working);
         page.SetContentStream(new ContentStream(working));

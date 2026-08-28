@@ -53,8 +53,24 @@ internal static class ImageRedactor
         PdfRectangle redactionArea,
         GlyphRemovalStrategy strategy,
         out int removedCount)
+        => ProcessOperations(operations, page, redactionArea, strategy, out removedCount, out _);
+
+    /// <summary>
+    /// As <see cref="ProcessOperations(IReadOnlyList{ContentOperator}, PdfPage, PdfRectangle, GlyphRemovalStrategy, out int)"/>,
+    /// additionally reporting how many images were REGION-redacted in place
+    /// (#1195) rather than dropped wholesale. Asserting this fired is what keeps
+    /// the fail-secure fallback from silently masking "the region path never ran".
+    /// </summary>
+    public static List<ContentOperator> ProcessOperations(
+        IReadOnlyList<ContentOperator> operations,
+        PdfPage page,
+        PdfRectangle redactionArea,
+        GlyphRemovalStrategy strategy,
+        out int removedCount,
+        out int regionEditedCount)
     {
         removedCount = 0;
+        regionEditedCount = 0;
         var output = new List<ContentOperator>(operations.Count);
 
         var ctm = Matrix23.Identity;
@@ -87,6 +103,23 @@ internal static class ImageRedactor
                 case "Do":
                     if (ShouldRemoveImageDo(op, page, ctm, redactionArea, strategy))
                     {
+                        // #1195: if the redaction area only PARTIALLY covers the
+                        // image, try to destroy just the covered samples instead
+                        // of dropping the whole image. Fail-secure: any decline
+                        // falls through to whole-Do removal below.
+                        var quad = TransformedUnitSquareAabb(ctm);
+                        if (!QuadFullyInside(quad, redactionArea)
+                            && ResolveImageStream(op, page) is { } image
+                            && ImageRegionRedactor.TryRegionRedact(
+                                   page, image, ctm.A, ctm.B, ctm.C, ctm.D, ctm.E, ctm.F,
+                                   redactionArea, out var newName))
+                        {
+                            output.Add(new ContentOperator(
+                                "Do", new PdfObject[] { new PdfName(newName) }));
+                            regionEditedCount++;
+                            continue;
+                        }
+
                         removedCount++;
                         continue; // drop it
                     }
@@ -187,6 +220,26 @@ internal static class ImageRedactor
             op.Name == "Do" &&
             op.Operands.Count > 0 &&
             string.Equals(op.GetName(0), name, StringComparison.Ordinal));
+
+    /// <summary>The image XObject a <c>Do</c> targets, or null if it is not an image.</summary>
+    private static PdfStream? ResolveImageStream(ContentOperator op, PdfPage page)
+    {
+        if (op.Operands.Count == 0) return null;
+        var name = op.GetName(0);
+        if (string.IsNullOrEmpty(name)) return null;
+        if (page.GetXObject(name) is not PdfStream stream) return null;
+        return string.Equals(stream.GetNameOrNull("Subtype"), "Image", StringComparison.Ordinal)
+            ? stream : null;
+    }
+
+    /// <summary>True when <paramref name="quad"/> lies entirely within <paramref name="area"/>.</summary>
+    private static bool QuadFullyInside(PdfRectangle quad, PdfRectangle area)
+    {
+        var q = quad.Normalize();
+        var a = area.Normalize();
+        return a.Contains(q.Left, q.Bottom) && a.Contains(q.Right, q.Top)
+            && a.Contains(q.Left, q.Top) && a.Contains(q.Right, q.Bottom);
+    }
 
     private static bool ShouldRemoveImageDo(
         ContentOperator op,
