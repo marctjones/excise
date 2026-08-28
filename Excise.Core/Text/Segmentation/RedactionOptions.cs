@@ -79,6 +79,13 @@ public sealed record RedactionOptions
     /// Enforced by: Core.</summary>
     public bool ScrubDocumentCarriers { get; init; } = true;
 
+    /// <summary>Which document-level text carriers the term scrub touches
+    /// (#1188). Default <see cref="Operations.RedactionCarriers.All"/> — the safe
+    /// choice; disabling a carrier can leave the term in the document (turn one
+    /// off only for the #1169 reveal-risk case). Enforced by: Core.</summary>
+    public Operations.RedactionCarriers Carriers { get; init; }
+        = Operations.RedactionCarriers.All;
+
     /// <summary>The all-defaults options — reproduces pre-#1187 behaviour.</summary>
     public static RedactionOptions Default { get; } = new();
 

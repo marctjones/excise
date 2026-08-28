@@ -102,7 +102,8 @@ public static class PdfDocumentRedactionExtensions
             options.IncludeHiddenLayers,
             options.ScrubDocumentCarriers,
             options.CloseWidth,
-            options.BoxColor);
+            options.BoxColor,
+            options.Carriers);
     }
 
     public static RedactionReport RedactText(
@@ -114,7 +115,9 @@ public static class PdfDocumentRedactionExtensions
         bool includeHiddenLayers = true,
         bool scrubDocumentCarriers = true,
         bool closeWidth = false,   // #1145 — opt-in width-closing (destroys the residue channel)
-        (double R, double G, double B)? boxColor = null)   // #1158 — covering-box fill, RGB 0..1; null = black
+        (double R, double G, double B)? boxColor = null,   // #1158 — covering-box fill, RGB 0..1; null = black
+        Excise.Core.Operations.RedactionCarriers carriers
+            = Excise.Core.Operations.RedactionCarriers.All)   // #1188 — per-carrier scrub scope
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
@@ -314,21 +317,24 @@ public static class PdfDocumentRedactionExtensions
             const int minTermLength = 3;
             if (text.Length < minTermLength)
             {
-                foreach (var carrier in DocumentCarriers)
+                foreach (var (carrier, _) in DocumentCarriers)
                     carrierResults.Add(new CarrierResult(carrier, false,
                         $"term is {text.Length} characters; the carrier scrub floor is {minTermLength}"));
             }
             else
             {
                 Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(
-                    document, new[] { text }, caseSensitive);
-                foreach (var carrier in DocumentCarriers)
-                    carrierResults.Add(new CarrierResult(carrier, true, null));
+                    document, new[] { text }, caseSensitive, carriers);
+                foreach (var (carrier, flag) in DocumentCarriers)
+                    carrierResults.Add((carriers & flag) != 0
+                        ? new CarrierResult(carrier, true, null)
+                        : new CarrierResult(carrier, false,
+                            "carrier disabled via RedactionOptions.Carriers (#1188)"));
             }
         }
         else
         {
-            foreach (var carrier in DocumentCarriers)
+            foreach (var (carrier, _) in DocumentCarriers)
                 carrierResults.Add(new CarrierResult(carrier, false,
                     "scrubDocumentCarriers: false was requested by the caller"));
         }
@@ -346,8 +352,17 @@ public static class PdfDocumentRedactionExtensions
     /// <summary>The document-level carriers the term is scrubbed from and
     /// reported on: #608's set (/Info, XMP, outline titles, annotation
     /// /Contents) plus link-action URIs (#1155).</summary>
-    private static readonly string[] DocumentCarriers =
-        { "/Info", "XMP /Metadata", "/Outlines titles", "annotation /Contents", "link /A /URI" };
+    // The document-level carriers RedactText REPORTS on, each mapped to its
+    // #1188 scope flag. (A representative subset — ScrubTerms scrubs more; this
+    // is what the report names.)
+    private static readonly (string Name, Excise.Core.Operations.RedactionCarriers Flag)[] DocumentCarriers =
+    {
+        ("/Info", Excise.Core.Operations.RedactionCarriers.Info),
+        ("XMP /Metadata", Excise.Core.Operations.RedactionCarriers.Xmp),
+        ("/Outlines titles", Excise.Core.Operations.RedactionCarriers.Outlines),
+        ("annotation /Contents", Excise.Core.Operations.RedactionCarriers.Annotations),
+        ("link /A /URI", Excise.Core.Operations.RedactionCarriers.ActionUris),
+    };
 
     /// <summary>
     /// Occurrences of <paramref name="text"/> still findable on the page AFTER
