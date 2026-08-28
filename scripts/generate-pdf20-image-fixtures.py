@@ -108,6 +108,15 @@ def fixtures() -> list[tuple[str, bytes]]:
             "\x00\x7f\x80",
         ),
         fixture(
+            # BrotliDecode is the filter PDF 2.0 (ISO 32000-2) ADDED; it was the
+            # only standard image filter with no fixture here. Data is the single
+            # DeviceGray sample 0x40 compressed with .NET BrotliStream (the same
+            # decoder excise uses), so it round-trips exactly.
+            "brotli-image.pdf",
+            "/Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /BrotliDecode",
+            bytes.fromhex("0b00804003").decode("latin-1"),
+        ),
+        fixture(
             "ccitt-image.pdf",
             "/Width 8 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /CCITTFaxDecode /DecodeParms << /K -1 /Columns 8 /BlackIs1 true >>",
             "\x00",
