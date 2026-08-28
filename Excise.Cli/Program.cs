@@ -966,6 +966,16 @@ partial class Program
                 carrierNotes.Add(
                     $"NOT SCRUBBED: {carrier.Carrier} -- {carrier.RefusedReason ?? "no reason recorded"}");
 
+        // #1187/#1195: a term over an image excise cannot region-edit (JBIG2/
+        // DCT/JPX, #1197) was removed by deleting the WHOLE image — secure but
+        // destructive collateral the user must be told about, not left to
+        // discover in the render.
+        if (redaction.ImagesDroppedWhole > 0)
+            carrierNotes.Add(
+                $"WHOLE IMAGE REMOVED: {redaction.ImagesDroppedWhole} image(s) were deleted " +
+                "entirely because region-level redaction is not available for their encoding " +
+                "(e.g. JBIG2). The term is gone, but so is the surrounding image content.");
+
         // #1089: one line that answers "is this file safe to hand over?".
         // Everything above reports a PART of the outcome; a user reading a
         // list of notes has to work out for themselves whether any of them
