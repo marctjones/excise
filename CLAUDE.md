@@ -971,7 +971,8 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 │   ├── PdfDocumentRedactionExtensions.cs  # doc.RedactText(word) entry point
 │   ├── StructureTreeRedactionScrubber.cs  # /ActualText, /Alt (#636)
 │   ├── InteractiveRedactionScrubber.cs    # annotations, form fields
-│   ├── ImageRedactor.cs            # drops whole image Do on overlap (NOT region-level; #1195)
+│   ├── ImageRedactor.cs            # image Do: region-blackout (Flate/CCITT) or whole-Do drop (#1195)
+│   ├── ImageRegionRedactor.cs      # decode→zero the term rect→re-encode Flate; fail-secure length gate (#1195)
 │   ├── FormXObjectFlattener.cs     # inlines forms so their text is reachable
 │   └── HiddenTextDetector.cs       # audit: visible-but-unextractable text
 ├── Content/

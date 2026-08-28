@@ -13,6 +13,46 @@ namespace Excise.Core.Tests.Text.Segmentation;
 /// </summary>
 public sealed class AdversarialRedactionRegressionTests
 {
+    private static int CountImageDo(PdfPage page)
+    {
+        int n = 0;
+        foreach (var op in page.GetContentStream().Operators)
+        {
+            if (op.Name != "Do" || op.Operands.Count == 0) continue;
+            var name = op.GetName(0);
+            if (!string.IsNullOrEmpty(name)
+                && page.GetXObject(name!) is Excise.Core.Primitives.PdfStream s
+                && s.GetNameOrNull("Subtype") == "Image")
+                n++;
+        }
+        return n;
+    }
+
+    [Fact]
+    public void RedactText_TermOverFullPageImage_RegionRedacts_KeepsImage()
+    {
+        // #1195: a term whose visible ink is baked into a full-page (Flate)
+        // image must have only its REGION destroyed — the image is preserved,
+        // not deleted (the pre-#1195 whole-Do behaviour that erased 5-36% of a
+        // scanned page). Uses the generated adversarial fixture; skips if absent.
+        var path = Path.Combine(RepoRoot(), "test-pdfs", "redaction-adversarial",
+            "image-ocr-overlay--IMAGEOCROVERLAYSECRET.pdf");
+        Assert.SkipUnless(File.Exists(path),
+            "adversarial corpus absent — run scripts/gen-adversarial-redaction-corpus.py " +
+            "[requires: corpus:redaction-adversarial]");
+
+        using var doc = PdfDocument.Open(path);
+        var before = CountImageDo(doc.GetPage(1));
+        before.Should().BeGreaterThan(0, "the fixture draws a full-page image");
+
+        doc.RedactText("IMAGEOCROVERLAYSECRET");
+        var saved = doc.SaveToBytes();
+
+        using var reopened = PdfDocument.Open(saved);
+        CountImageDo(reopened.GetPage(1)).Should().Be(before,
+            "the image is region-redacted in place, not dropped wholesale (#1195)");
+    }
+
     [Fact]
     public void RedactArea_OverAcroFormField_RemovesValueAndAppearanceBytes()
     {

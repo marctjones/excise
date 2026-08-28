@@ -111,6 +111,91 @@ public class ImageRedactorTests
     }
 
     [Fact]
+    public void ProcessOperations_PartialOverlap_RegionEditsInsteadOfRemoving()
+    {
+        // #1195: a redaction area that only PARTIALLY covers the image must
+        // destroy the covered samples and PRESERVE the image, not drop it.
+        var pdfData = CreatePdfWithImageXObject(
+            imageX: 100, imageY: 600, imageWidth: 100, imageHeight: 100); // quad (100,600)-(200,700)
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+        var partial = new PdfRectangle(150, 650, 300, 900); // top-right corner only
+
+        var result = ImageRedactor.ProcessOperations(
+            page.GetContentStream().Operators, page, partial,
+            GlyphRemovalStrategy.AnyOverlap, out int removed, out int regionEdited);
+
+        regionEdited.Should().Be(1, "the partially-covered image is region-redacted, not dropped");
+        removed.Should().Be(0, "nothing should be dropped wholesale");
+        var doOp = result.Should().ContainSingle(op => op.Name == "Do").Subject;
+        doOp.GetName(0).Should().StartWith("ImRdct", "the Do is remapped to the redacted clone");
+
+        // The covered sample (top row, right column) must be zeroed; the rest
+        // of the 2x2 image (0x00,0x80,0x80,0xFF) survives. The clone is a fresh
+        // Flate stream (decoded on reload in production); decode its bytes here.
+        var redacted = (PdfStream)page.GetXObject(doOp.GetName(0)!)!;
+        redacted.GetNameOrNull("Filter").Should().Be("FlateDecode");
+        using var zin = new System.IO.MemoryStream(redacted.EncodedData);
+        using var z = new System.IO.Compression.ZLibStream(
+            zin, System.IO.Compression.CompressionMode.Decompress);
+        using var zout = new System.IO.MemoryStream();
+        z.CopyTo(zout);
+        var bytes = zout.ToArray();
+        bytes.Should().HaveCount(4);
+        bytes[1].Should().Be(0, "the covered top-right sample is destroyed");
+        bytes[2].Should().Be(0x80, "an uncovered sample is preserved");
+        bytes[3].Should().Be(0xFF, "an uncovered sample is preserved");
+    }
+
+    [Fact]
+    public void ProcessOperations_TwoAreasOnSameImage_BothRegionEdit_ImageSurvives()
+    {
+        // #1195: a term that repeats on a scan produces TWO redaction areas over
+        // the SAME image. The second must region-edit the clone from the first,
+        // not throw-and-drop it (which would reinstate the whole-image collateral
+        // for the common repeated-term case).
+        var pdfData = CreatePdfWithImageXObject(
+            imageX: 100, imageY: 600, imageWidth: 100, imageHeight: 100); // quad (100,600)-(200,700)
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        var pass1 = ImageRedactor.ProcessOperations(
+            page.GetContentStream().Operators, page,
+            new PdfRectangle(150, 650, 300, 900),   // top-right corner
+            GlyphRemovalStrategy.AnyOverlap, out _, out int edited1);
+        edited1.Should().Be(1);
+
+        var pass2 = ImageRedactor.ProcessOperations(
+            pass1, page,
+            new PdfRectangle(50, 550, 150, 650),    // bottom-left corner, same image (now a clone)
+            GlyphRemovalStrategy.AnyOverlap, out int removed2, out int edited2);
+
+        edited2.Should().Be(1, "the second area must region-edit the clone from the first area");
+        removed2.Should().Be(0, "the image must survive a second overlapping redaction");
+        pass2.Should().ContainSingle(op => op.Name == "Do");
+    }
+
+    [Fact]
+    public void ProcessOperations_FullyContained_DropsWholeImage_NoRegionEdit()
+    {
+        // The whole-image case still drops the Do — region-editing an image the
+        // area fully covers would just be a slower way to delete it.
+        var pdfData = CreatePdfWithImageXObject(
+            imageX: 100, imageY: 600, imageWidth: 100, imageHeight: 100);
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+        var contains = new PdfRectangle(50, 550, 250, 750);
+
+        var result = ImageRedactor.ProcessOperations(
+            page.GetContentStream().Operators, page, contains,
+            GlyphRemovalStrategy.AnyOverlap, out int removed, out int regionEdited);
+
+        removed.Should().Be(1);
+        regionEdited.Should().Be(0);
+        result.Should().NotContain(op => op.Name == "Do");
+    }
+
+    [Fact]
     public void ProcessOperations_NoOverlap_ImageKept()
     {
         // Arrange - Image far from redaction area
@@ -151,10 +236,15 @@ public class ImageRedactorTests
 
         // Act
         var result = ImageRedactor.ProcessOperations(
-            originalOps, page, redactionArea, GlyphRemovalStrategy.AnyOverlap, out int removed);
+            originalOps, page, redactionArea, GlyphRemovalStrategy.AnyOverlap,
+            out int removed, out int regionEdited);
 
-        // Assert
-        removed.Should().BeGreaterThan(0, "AnyOverlap should remove even corner touches");
+        // Assert — #1195: AnyOverlap still SELECTS a corner-touched image, but a
+        // partial overlap is now region-redacted (samples destroyed, image kept),
+        // not dropped wholesale.
+        regionEdited.Should().Be(1, "AnyOverlap redacts even corner touches");
+        removed.Should().Be(0);
+        result.Should().ContainSingle(op => op.Name == "Do");
     }
 
     [Fact]
@@ -214,10 +304,13 @@ public class ImageRedactorTests
 
         // Act
         var result = ImageRedactor.ProcessOperations(
-            originalOps, page, redactionArea, GlyphRemovalStrategy.CenterPoint, out int removed);
+            originalOps, page, redactionArea, GlyphRemovalStrategy.CenterPoint,
+            out int removed, out int regionEdited);
 
-        // Assert
-        removed.Should().BeGreaterThan(0, "CenterPoint should remove when center is in redaction");
+        // Assert — #1195: CenterPoint still SELECTS the image (center is inside),
+        // and the partial overlap is region-redacted rather than dropped.
+        regionEdited.Should().Be(1, "CenterPoint redacts when the center is in the area");
+        removed.Should().Be(0);
     }
 
     [Fact]
