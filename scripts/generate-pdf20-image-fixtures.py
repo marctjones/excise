@@ -14,6 +14,15 @@ from pathlib import Path
 
 DEFAULT_OUTPUT = Path("test-pdfs/pdf20")
 
+# A real, minimal 1x1 DeviceRGB JPEG 2000 image (JP2 box format, single
+# resolution level, pixel = RGB(200,80,40)), produced with opj_compress -n 1
+# and stripped of its COM version-comment marker so the bytes are stable.
+# Unlike a marker-only stub, this exercises the actual JPX DECODE path
+# (CSJ2K), so jpx-image.pdf is decode coverage, not just filter plumbing.
+JPX_1X1_RGB_JP2 = bytes.fromhex(
+    "0000000c6a5020200d0a870a00000014667479706a703220000000006a7032200000002d6a703268000000166968647200000001000000010003070700000000000f636f6c72010000000000100000006e6a703263ff4fff51002f000000000001000000010000000000000000000000010000000100000000000000000003070101070101070101ff52000c00000001010004040001ff5c00044040ff90000a00000000001d0001ff93c3e704096fc7d404057fcfb4080069ffd9"
+).decode("latin-1")
+
 
 def pdf_bytes(objects: list[tuple[int, str]]) -> bytes:
     body = bytearray(b"%PDF-2.0\n%\xE2\xE3\xCF\xD3\n")
@@ -111,7 +120,7 @@ def fixtures() -> list[tuple[str, bytes]]:
         fixture(
             "jpx-image.pdf",
             "/Width 1 /Height 1 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /JPXDecode",
-            "\xff\x4f\xff\x51",
+            JPX_1X1_RGB_JP2,
         ),
         fixture(
             "jbig2-globals-image.pdf",
