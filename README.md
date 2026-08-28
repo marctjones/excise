@@ -380,12 +380,12 @@ excise ocr scan.pdf
 
 ### Excise libraries (this repo)
 - **Excise.Core** — Pure-.NET PDF parser, writer, content streams, glyph-level redaction, text extraction with letter positions, hidden-text detection, AcroForm read/fill/flatten/author, OCG + structure tree (read-only), embedded files (read + scrub), page labels, named destinations, document authoring
-- **Excise.Rendering** — SkiaSharp renderer with embedded TrueType + raw-CFF/Type1C support, Type0/CID composite fonts, /Differences-aware encoding, image XObjects (DCT/Flate/JPX/CCITTFax), inline images, transparency, clipping paths, color spaces (DeviceRGB/CMYK/Gray, ICCBased, Indexed, CalRGB, Lab)
+- **Excise.Rendering** — SkiaSharp renderer with embedded TrueType + raw-CFF/Type1C support, Type0/CID composite fonts, /Differences-aware encoding, image XObjects (DCT/Flate/JPX/CCITTFax/JBIG2), inline images, transparency, clipping paths, color spaces (DeviceRGB/CMYK/Gray, ICCBased, Indexed, CalRGB, Lab)
 - **Excise.Ocr** — Wrapper around the system `tesseract` CLI + a differential-OCR auditor
 
 ### Permissive third-party deps
 - **SkiaSharp 3.119.x** (MIT) — 2D graphics
-- **CSJ2K 3.x** (BSD) — managed JPEG 2000 / JPX image decoding
+- **CSJ2K 3.x** (BSD-2-Clause) — managed JPEG 2000 / JPX image decoding
 - **BouncyCastle.Cryptography** (MIT) — CMS cryptography for digital-signature inspection
 - **Microsoft.CodeAnalysis.CSharp.Scripting** (MIT) — optional Roslyn scripting for GUI automation; enabled in Debug/test builds and opt-in for Release builds with `-p:EnableScripting=true`
 
