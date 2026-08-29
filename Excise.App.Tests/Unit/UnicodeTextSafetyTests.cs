@@ -1,8 +1,8 @@
 using AwesomeAssertions;
-using Excise.Core.Text;
+using Excise.App.Services;
 using Xunit;
 
-namespace Excise.Core.Tests.Text;
+namespace Excise.App.Tests.Unit;
 
 public class UnicodeTextSafetyTests
 {
