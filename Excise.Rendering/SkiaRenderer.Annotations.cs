@@ -1817,7 +1817,14 @@ internal partial class RenderContext
                 int q = annot.RawDictionary.GetInt("Q", 0);
                 float textX;
                 if (q == 1)      textX = rect.Left + (rect.Width - textWidth) * 0.5f;
-                else if (q == 2) textX = rect.Right - textWidth - padX;
+                // Keep a negative-size, right-aligned run one padding unit
+                // inside its clip.  Its glyphs advance leftward, and rounding
+                // the substituted platform font's measured advance to the
+                // clip boundary otherwise made the required visible remnant
+                // disappear on FreeType while CoreText happened to retain one
+                // antialiased pixel.  This is placement/clip geometry, not a
+                // platform-font rendering decision (#970, #991).
+                else if (q == 2) textX = rect.Right - textWidth - padX - (fontSize < 0 ? padX : 0f);
                 else             textX = rect.Left + padX;
 
                 // Vertical baseline: centre the font's OWN line box inside the

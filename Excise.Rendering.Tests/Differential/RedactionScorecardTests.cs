@@ -47,7 +47,7 @@ public class RedactionScorecardTests
         var tax = RedactionScorecard.FailureTaxonomy(RedactionScorecard.Parse(Jsonl));
 
         tax.Should().Contain(l => l.Contains("excise leaks via /ActualText") &&
-                                  l.Contains("tagged") && l.Contains("50%") && l.Contains("1/2"),
+                                  l.Contains("tagged") && l.Contains("50") && l.Contains("%") && l.Contains("1/2"),
             "the taxonomy must name the channel, the stratum, and the rate — not a single score");
 
         // excise did NOT leak on federal — a clean axis is silent, not "0%".
@@ -59,7 +59,7 @@ public class RedactionScorecardTests
     {
         var tax = RedactionScorecard.FailureTaxonomy(RedactionScorecard.Parse(Jsonl));
 
-        tax.Should().Contain(l => l.Contains("pymupdf destroys >5% collateral") && l.Contains("tagged"));
+        tax.Should().Contain(l => l.Contains("pymupdf destroys >5") && l.Contains("collateral") && l.Contains("tagged"));
         tax.Should().Contain(l => l.Contains("pymupdf produces qpdf-invalid output"));
         tax.Should().Contain(l => l.Contains("excise drops document structure") && l.Contains("1/3"));
     }

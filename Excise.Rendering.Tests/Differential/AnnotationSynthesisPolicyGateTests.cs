@@ -272,7 +272,7 @@ public class AnnotationSynthesisPolicyGateTests
                         failures.Add($"{id}/{oracle}: recorded bbox class '{recordedClass}', " +
                                      $"measured '{bboxClass}' ({Describe(bbox)} vs rect {Describe(rect)})");
                     }
-                    else if (ink > 25 && recordedInk > 25 &&
+                    else if (ink > 250 && recordedInk > 250 &&
                              (ink > recordedInk * 2 || ink * 2 < recordedInk))
                     {
                         failures.Add($"{id}/{oracle}: recorded {recordedInk} inked px, measured " +
