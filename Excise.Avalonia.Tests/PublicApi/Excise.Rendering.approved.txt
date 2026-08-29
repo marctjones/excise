@@ -191,6 +191,14 @@ namespace Excise.Rendering.Differential
         public static Excise.Rendering.Differential.QpdfPasswordStatus? RequiresPassword(string pdfPath, string? password = null, int timeoutMs = 10000) { }
         public static string? ShowEncryption(string pdfPath, string? password = null, int timeoutMs = 15000) { }
     }
+    public readonly struct ReferenceProcessResources : System.IEquatable<Excise.Rendering.Differential.ReferenceProcessResources>
+    {
+        public ReferenceProcessResources(long? PeakWorkingSetBytes, long? CpuMs) { }
+        public long? CpuMs { get; init; }
+        public long? PeakWorkingSetBytes { get; init; }
+        public static Excise.Rendering.Differential.ReferenceProcessResources Capture(System.Diagnostics.Process process) { }
+        public static bool WaitForExitAndCapture(System.Diagnostics.Process process, int timeoutMs, out Excise.Rendering.Differential.ReferenceProcessResources resources) { }
+    }
     public sealed class ReferenceRedactionResult : System.IEquatable<Excise.Rendering.Differential.ReferenceRedactionResult>
     {
         public ReferenceRedactionResult(int HitsFound, string? Failure) { }
@@ -200,10 +208,12 @@ namespace Excise.Rendering.Differential
     }
     public sealed class ReferenceRenderResult : System.IEquatable<Excise.Rendering.Differential.ReferenceRenderResult>
     {
-        public ReferenceRenderResult(SkiaSharp.SKBitmap? Bitmap, string Status, string? ErrorMessage, long ElapsedMs) { }
+        public ReferenceRenderResult(SkiaSharp.SKBitmap? Bitmap, string Status, string? ErrorMessage, long ElapsedMs, long? PeakWorkingSetBytes = default, long? CpuMs = default) { }
         public SkiaSharp.SKBitmap? Bitmap { get; init; }
+        public long? CpuMs { get; init; }
         public long ElapsedMs { get; init; }
         public string? ErrorMessage { get; init; }
+        public long? PeakWorkingSetBytes { get; init; }
         public string Status { get; init; }
     }
     public static class ResidueRecoveryEngine
