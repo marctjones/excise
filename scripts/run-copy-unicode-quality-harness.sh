@@ -35,8 +35,15 @@ run_required() {
 
   echo
   echo "==> ${lane}"
+  # Native AOT/Release packaging deliberately restores Excise.App without
+  # Roslyn scripting. That shares the project's obj assets with Debug tests;
+  # reestablish the test-only graph here so this harness remains runnable
+  # after a release-package smoke.
+  if [ "$project" = "Excise.App.Tests/Excise.App.Tests.csproj" ]; then
+    dotnet restore "$project" -p:EnableScripting=true
+  fi
   set +e
-  dotnet test "$project" --no-restore --filter "$filter" \
+  dotnet test "$project" --no-restore -p:EnableScripting=true --filter "$filter" \
     --logger "console;verbosity=minimal" 2>&1 | tee "$log"
   local status=${PIPESTATUS[0]}
   set -e
@@ -55,7 +62,7 @@ echo "Raw copied text is tested separately from display-only Unicode safety."
 # plus the view-model representation of dangerous invisible controls.
 run_required "GUI clipboard and preview safety" \
   Excise.App.Tests/Excise.App.Tests.csproj \
-  "FullyQualifiedName~TextSelectionDragTests|FullyQualifiedName~ClipboardEntryUnicodeSafetyTests"
+  "FullyQualifiedName~TextSelectionDragTests|FullyQualifiedName~ClipboardEntryUnicodeSafetyTests|FullyQualifiedName~UnicodeTextSafetyTests"
 
 # Arabic/Hebrew logical-order selection remains a pure-engine test until #1203
 # adds construction-known mouse-to-clipboard cases.
@@ -67,7 +74,7 @@ run_required "RTL logical selection" \
 # extraction baseline, and the policy that vertical pages retain producer order.
 run_required "Unicode controls and vertical-writing baseline" \
   Excise.Core.Tests/Excise.Core.Tests.csproj \
-  "FullyQualifiedName~UnicodeTextSafetyTests|FullyQualifiedName~TextExtractorType0Tests|FullyQualifiedName~PageTextOrderTests"
+  "FullyQualifiedName~TextExtractorType0Tests|FullyQualifiedName~PageTextOrderTests"
 
 echo
 echo "Coverage status:"
