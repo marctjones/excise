@@ -747,12 +747,27 @@ partial class Program
             Description = "Covering-box fill color: 'black' (default), 'white', or 'R,G,B' with each " +
                 "component 0-255. Ignored with --no-box.",
         };
+        var ocrImageTextOption = new Option<bool>("--ocr-image-text")
+        {
+            Description = "OCR every page first so text baked into images can be found and redacted. Requires tesseract; writes a temporary invisible OCR layer before structural redaction.",
+            DefaultValueFactory = _ => false,
+        };
+        var flattenOcrOption = new Option<bool>("--flatten-ocr")
+        {
+            Description = "Create a fresh image-only PDF: rasterize every page, OCR the requested visible term, black out its pixels, and discard all original PDF carriers. Requires tesseract; intentionally removes selectable text, forms, links, and metadata.",
+            DefaultValueFactory = _ => false,
+        };
+        var progressOption = new Option<bool>("--progress")
+        {
+            Description = "Write page-based overall completion to stderr (0% through 100%).",
+            DefaultValueFactory = _ => false,
+        };
 
         var command = new Command(
             "redact",
             "Remove text from a PDF (glyph-level removal; text extraction will not find it)")
         {
-            inputArg, outputArg, textArg, caseSensitiveOption, closeWidthOption, passwordOption, allowDecryptOption, strictOption, allowLowConfidenceOption, noBoxOption, boxColorOption
+            inputArg, outputArg, textArg, caseSensitiveOption, closeWidthOption, passwordOption, allowDecryptOption, strictOption, allowLowConfidenceOption, noBoxOption, boxColorOption, ocrImageTextOption, flattenOcrOption, progressOption
         };
 
         command.SetAction(parseResult =>
@@ -768,6 +783,9 @@ partial class Program
             var allowLowConfidence = parseResult.GetValue(allowLowConfidenceOption);
             var noBox = parseResult.GetValue(noBoxOption);
             var boxColorSpec = parseResult.GetValue(boxColorOption);
+            var ocrImageText = parseResult.GetValue(ocrImageTextOption);
+            var flattenOcr = parseResult.GetValue(flattenOcrOption);
+            var showProgress = parseResult.GetValue(progressOption);
             if (!input.Exists)
             {
                 Console.Error.WriteLine($"File not found: {input.FullName}");
@@ -789,6 +807,12 @@ partial class Program
                 Environment.ExitCode = 1;
                 return;
             }
+            if (flattenOcr && (ocrImageText || noBox || boxColorSpec != null || closeWidth || strict || allowLowConfidence))
+            {
+                Console.Error.WriteLine("--flatten-ocr cannot be combined with structural-redaction box, width, confidence, or OCR-layer options.");
+                Environment.ExitCode = 1;
+                return;
+            }
             (double R, double G, double B)? boxColor = null;
             if (boxColorSpec != null && !TryParseBoxColor(boxColorSpec, out boxColor, out var colorError))
             {
@@ -799,7 +823,17 @@ partial class Program
 
             try
             {
-                var (count, carrierNotes) = RunRedactWithNotes(input.FullName, output.FullName, text, caseSensitive, allowDecrypt, strict, allowLowConfidence, password, closeWidth, drawBox: !noBox, boxColor: boxColor);
+                var progress = showProgress ? new PageProgressReporter() : null;
+                Action<int, int>? progressCallback = progress == null ? null : progress.Report;
+                if (flattenOcr)
+                {
+                    var flattenedCount = new PdfRasterRedactionConverter(new PdfOcrService()).RedactToImageOnly(
+                        input.FullName, output.FullName, text, caseSensitive, password, allowDecrypt, progressCallback);
+                    Console.WriteLine($"Flattened and redacted {flattenedCount} OCR occurrence(s) of '{text}'");
+                    Console.WriteLine($"Output: {output.FullName}");
+                    return;
+                }
+                var (count, carrierNotes) = RunRedactWithNotes(input.FullName, output.FullName, text, caseSensitive, allowDecrypt, strict, allowLowConfidence, password, closeWidth, drawBox: !noBox, boxColor: boxColor, ocrImageText: ocrImageText, progress: progressCallback);
                 Console.WriteLine($"Redacted {count} occurrence(s) of '{text}'");
                 foreach (var note in carrierNotes)
                     Console.WriteLine($"  note: {note}");
@@ -871,6 +905,28 @@ partial class Program
     }
 
     /// <summary>
+    /// Stable, line-oriented progress for non-interactive callers. Stderr keeps
+    /// the command's successful-result stdout usable in pipelines, and emitting
+    /// only changed integer percentages avoids terminal-control assumptions.
+    /// </summary>
+    private sealed class PageProgressReporter
+    {
+        private int _lastPercent = -1;
+
+        public void Report(int completed, int total)
+        {
+            var percent = total <= 0
+                ? 100
+                : Math.Clamp((int)Math.Floor(100.0 * completed / total), 0, 100);
+            if (percent == _lastPercent)
+                return;
+
+            _lastPercent = percent;
+            Console.Error.WriteLine($"Progress: {percent}% ({completed}/{total} pages)");
+        }
+    }
+
+    /// <summary>
     /// Core redact-a-file operation — open, call Excise.Core's text
     /// redaction, save. Exposed internally for tests.
     ///
@@ -887,9 +943,10 @@ partial class Program
         string inputPath, string outputPath, string text, bool caseSensitive,
         bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false,
         string? password = null, bool closeWidth = false,
-        bool drawBox = true, (double R, double G, double B)? boxColor = null)
+        bool drawBox = true, (double R, double G, double B)? boxColor = null,
+        bool ocrImageText = false)
         => RunRedactWithNotes(inputPath, outputPath, text, caseSensitive,
-               allowDecrypt, strict, allowLowConfidence, password, closeWidth, drawBox, boxColor).Count;
+               allowDecrypt, strict, allowLowConfidence, password, closeWidth, drawBox, boxColor, ocrImageText).Count;
 
     /// <summary>
     /// Redact, and also report the carriers the redaction could not examine
@@ -906,7 +963,8 @@ partial class Program
         string inputPath, string outputPath, string text, bool caseSensitive,
         bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false,
         string? password = null, bool closeWidth = false,
-        bool drawBox = true, (double R, double G, double B)? boxColor = null)
+        bool drawBox = true, (double R, double G, double B)? boxColor = null,
+        bool ocrImageText = false, Action<int, int>? progress = null)
     {
         using var doc = OpenInputForOutput(inputPath, outputPath, password);
 
@@ -928,6 +986,22 @@ partial class Program
         foreach (var line in EnforceConfidencePolicy(confidence, strict, allowLowConfidence))
             Console.Error.WriteLine(line);
 
+        SearchableDocumentResult? ocrResult = null;
+        if (ocrImageText)
+        {
+            // #1186: a secret painted into a scan has no PDF text carrier, so
+            // normal term redaction cannot locate it.  Add a temporary invisible
+            // OCR layer, then send those located boxes through the same glyph and
+            // image-redaction pipeline. ImageRegionRedactor edits supported image
+            // bytes; unsupported encodings fail securely by removing the whole
+            // image rather than leaving readable pixels.
+            var ocr = new PdfOcrService();
+            if (!ocr.IsAvailable())
+                throw new InvalidOperationException(
+                    "--ocr-image-text requires the tesseract CLI. Install tesseract or redact the image area manually.");
+            ocrResult = new PdfSearchableConverter(ocr).MakeSearchable(doc, force: true);
+        }
+
         // #1089: the CLI prints VERIFIED removals. The old count was matches
         // located per pass -- how one occurrence printed as "Redacted 3" (#1043)
         // and how a term that was never removed still reported success.
@@ -942,7 +1016,7 @@ partial class Program
                 ? Excise.Core.Text.Segmentation.WidthPolicy.CloseGap
                 : Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout,
             BoxColor = boxColor,
-        });
+        }, progress);
         var count = redaction.VerifiedRemovals;
 
         // #916/#905 — collect what the redaction could not examine BEFORE
@@ -951,6 +1025,10 @@ partial class Program
         // bookmark titles and off-page annotations were never looked at.
         // Collect BEFORE saving so it reflects the document that was written.
         var carrierNotes = RedactionCarrierAudit.Inspect(doc, new[] { text }).Describe().ToList();
+        if (ocrResult != null)
+            carrierNotes.Add(
+                $"OCR IMAGE TEXT: added {ocrResult.TotalWordsWritten} invisible OCR word(s) before redaction; " +
+                $"{ocrResult.TotalWordsSkippedEncoding} word(s) could not be represented in the OCR layer.");
 
         doc.Save(outputPath, reEncryption);
         // #1089: a gap between located and verified is the single most

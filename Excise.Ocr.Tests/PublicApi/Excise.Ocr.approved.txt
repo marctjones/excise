@@ -38,6 +38,11 @@ namespace Excise.Ocr
         public System.Collections.Generic.IEnumerable<Excise.Ocr.OcrResult> RecognizeDocument(Excise.Core.Document.PdfDocument document) { }
         public Excise.Ocr.OcrResult RecognizePage(Excise.Core.Document.PdfPage page) { }
     }
+    public sealed class PdfRasterRedactionConverter
+    {
+        public PdfRasterRedactionConverter(Excise.Ocr.PdfOcrService ocr, int dpi = 300) { }
+        public int RedactToImageOnly(string inputPath, string outputPath, string term, bool caseSensitive = false, string? password = null, bool allowDecrypt = false, System.Action<int, int>? progress = null) { }
+    }
     public sealed class PdfSearchableConverter
     {
         public PdfSearchableConverter(Excise.Ocr.PdfOcrService ocrService) { }

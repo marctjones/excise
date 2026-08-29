@@ -126,8 +126,11 @@ TS="$(date +%Y%m%d_%H%M%S)"
 LOG_DIR="$ROOT/logs/full-suite_${CONFIG}_$TS"
 mkdir -p "$LOG_DIR"
 
-# BSD (macOS) time uses -l; GNU time uses -v.
-if /usr/bin/time -l true >/dev/null 2>&1; then TIME_FLAG="-l"; else TIME_FLAG="-v"; fi
+# BSD (macOS) time uses -l; GNU time uses -v.  Do not capability-probe
+# through a redirected `time` invocation: in this shell it can return a
+# false negative and select GNU's -v on macOS, making every measured step
+# fail before its command starts.
+if [ "$(uname -s)" = "Darwin" ]; then TIME_FLAG="-l"; else TIME_FLAG="-v"; fi
 RUSAGE_TSV="$LOG_DIR/resources.tsv"
 : > "$RUSAGE_TSV"
 
@@ -671,6 +674,7 @@ run_one() {
     # step reports peak RSS and CPU. excise is meant to be lean; a suite run we
     # are doing anyway is free telemetry for spotting bloat.
     local cmdline
+    local BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-900000}"
     if [ "$kind" = "script" ]; then
         cmdline="$target"
     elif [ "$filter" = "-" ]; then
@@ -679,7 +683,6 @@ run_one() {
         # (#894), and that gate only accepts an unfiltered trx by construction.
         # Filtered/chunked steps deliberately do not get one — feeding the gate
         # a filtered trx would report everything the filter excluded as a hole.
-        BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-900000}"
         cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --blame-hang-timeout $BLAME_HANG_TIMEOUT --logger \"console;verbosity=minimal\" --logger \"trx;LogFileName=$LOG_DIR/$name.trx\""
     else
         cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --filter \"$filter\" --blame-hang-timeout $BLAME_HANG_TIMEOUT --logger \"console;verbosity=minimal\" --logger \"trx;LogFileName=$LOG_DIR/$name.trx\""

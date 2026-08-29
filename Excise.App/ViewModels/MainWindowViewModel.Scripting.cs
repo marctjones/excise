@@ -61,6 +61,14 @@ public partial class MainWindowViewModel
     public Task RedactTextCommand(string text) => RedactTextViaScriptAsync(text);
 
     /// <summary>
+    /// Write an explicitly image-only OCR-redacted copy. Unlike
+    /// <see cref="RedactTextCommand"/>, this is terminal and immediate: the
+    /// result is a new document without selectable text or hidden carriers.
+    /// </summary>
+    public Task FlattenOcrRedactCommand(string outputPath, string text) =>
+        FlattenOcrRedactViaScriptAsync(outputPath, text);
+
+    /// <summary>
     /// Apply all pending redactions (for Roslyn scripts).
     /// Returns a Task that completes when redactions are applied.
     /// </summary>
@@ -206,6 +214,23 @@ public partial class MainWindowViewModel
             text);
 
         await Task.CompletedTask;
+    }
+
+    private async Task FlattenOcrRedactViaScriptAsync(string outputPath, string text)
+    {
+        if (string.IsNullOrWhiteSpace(outputPath))
+            throw new ArgumentException("Output file path cannot be empty", nameof(outputPath));
+        if (string.IsNullOrWhiteSpace(text))
+            throw new ArgumentException("Text to redact cannot be empty", nameof(text));
+        if (!_documentService.IsDocumentLoaded || string.IsNullOrWhiteSpace(_currentFilePath))
+            throw new InvalidOperationException("No document loaded. Call LoadDocumentCommand first.");
+
+        var result = _redactionService.RedactTextFlattenOcr(_currentFilePath, outputPath, text);
+        if (!result.Success)
+            throw new InvalidOperationException(result.ErrorMessage);
+
+        _logger.LogInformation("[SCRIPT] FlattenOcrRedactCommand wrote image-only copy with {Count} redactions", result.RedactionCount);
+        await LoadDocumentAsync(outputPath);
     }
 
     /// <summary>

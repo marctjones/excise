@@ -4,6 +4,8 @@ using AwesomeAssertions;
 using Excise.Cli;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.Core.Text.Segmentation;
+using Excise.Ocr;
 using Excise.TestSupport;
 using Xunit;
 
@@ -107,6 +109,86 @@ public class RedactCommandTests : IDisposable
     }
 
     [Fact]
+    public void RunRedact_OcrImageText_RemovesASecretBakedOnlyIntoPixels()
+    {
+        Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")))
+            dir = dir.Parent;
+        Assert.SkipWhen(dir == null, "repository root unavailable");
+
+        var input = Path.Combine(dir!.FullName, "test-pdfs", "redaction-adversarial",
+            "image-baked-text--IMAGEBAKEDSECRET.pdf");
+        Assert.SkipWhen(!File.Exists(input), "image-baked-text fixture not present");
+        var output = TempPath(".pdf");
+
+        Program.RunRedact(input, output, "IMAGEBAKEDSECRET", caseSensitive: false,
+            ocrImageText: true).Should().Be(1,
+                "OCR must locate the image-only term before the normal structural and image-redaction path runs (#1186)");
+
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(output), "IMAGEBAKEDSECRET").Should().BeEmpty(
+            "the temporary invisible OCR layer must not leave the target in saved bytes");
+        using var redacted = PdfDocument.Open(output);
+        new PdfOcrService().RecognizePage(redacted.GetPage(1)).Text.Should().NotContain("IMAGEBAKEDSECRET",
+            "the baked pixels must be altered too, not merely the temporary OCR layer");
+    }
+
+    [Fact]
+    public async Task RunAsync_RedactFlattenOcr_ReplacesTheSourceWithCleanImageOnlyOutput()
+    {
+        Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
+        Assert.SkipWhen(dir == null, "repository root unavailable");
+        var input = Path.Combine(dir!.FullName, "test-pdfs", "redaction-adversarial",
+            "image-baked-text--IMAGEBAKEDSECRET.pdf");
+        Assert.SkipWhen(!File.Exists(input), "image-baked-text fixture not present");
+        var output = TempPath(".pdf");
+
+        (await Program.RunAsync(new[] { "redact", input, output, "IMAGEBAKEDSECRET", "--flatten-ocr" })).Should().Be(0);
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(output), "IMAGEBAKEDSECRET").Should().BeEmpty();
+        using var doc = PdfDocument.Open(output);
+        doc.GetPage(1).Text.Should().BeEmpty("the flattened output intentionally has no text layer");
+        new PdfOcrService().RecognizePage(doc.GetPage(1)).Text.Should().NotContain("IMAGEBAKEDSECRET",
+            "the source pixels must be altered, not merely omitted from extraction");
+    }
+
+    [Fact]
+    public async Task RunAsync_RedactFlattenOcr_NoMatch_FailsWithoutWritingOutput()
+    {
+        Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
+        Assert.SkipWhen(dir == null, "repository root unavailable");
+        var input = Path.Combine(dir!.FullName, "test-pdfs", "redaction-adversarial",
+            "image-baked-text--IMAGEBAKEDSECRET.pdf");
+        Assert.SkipWhen(!File.Exists(input), "image-baked-text fixture not present");
+        var output = TempPath(".pdf");
+
+        (await Program.RunAsync(new[] { "redact", input, output, "NOTPRESENT", "--flatten-ocr" })).Should().NotBe(0);
+        File.Exists(output).Should().BeFalse("a failed image-only redaction must not create an unredacted output");
+    }
+
+    [Fact]
+    public async Task RunAsync_RedactFlattenOcr_EncryptedSource_PreservesPasswordProtection()
+    {
+        Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
+        var input = WriteEncryptedFixture("IMAGEBAKEDSECRET", password: "flatten-pw");
+        var output = TempPath(".pdf");
+
+        (await Program.RunAsync(new[]
+        {
+            "redact", input, output, "IMAGEBAKEDSECRET", "--flatten-ocr", "--password", "flatten-pw"
+        })).Should().Be(0);
+
+        var withoutPassword = () => PdfDocument.Open(File.ReadAllBytes(output));
+        withoutPassword.Should().Throw<Excise.Core.Parsing.PdfEncryptionNotSupportedException>();
+        using var redacted = PdfDocument.Open(File.ReadAllBytes(output), "flatten-pw");
+        redacted.IsEncrypted.Should().BeTrue("image-only redaction must preserve source protection by default");
+        redacted.GetPage(1).Text.Should().BeEmpty();
+    }
+
+    [Fact]
     public void RunRedact_NoMatch_ReturnsZero_AndOutputExists()
     {
         var inputPath = TempPath(".pdf");
@@ -184,6 +266,35 @@ public class RedactCommandTests : IDisposable
         var raw = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
         raw.Should().NotContain("SECRET");
         raw.Should().Contain("DATA");
+    }
+
+    [Fact]
+    public async Task RunAsync_RedactProgress_WritesPageBasedOverallPercentToStderr()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("SECRET DATA"));
+
+        var previousOut = Console.Out;
+        var previousErr = Console.Error;
+        var capturedErr = new StringWriter();
+        Console.SetOut(new StringWriter());
+        Console.SetError(capturedErr);
+        try
+        {
+            (await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--progress"
+            })).Should().Be(0);
+        }
+        finally
+        {
+            Console.SetOut(previousOut);
+            Console.SetError(previousErr);
+        }
+
+        capturedErr.ToString().Should().Contain("Progress: 0% (0/1 pages)")
+            .And.Contain("Progress: 100% (1/1 pages)");
     }
 
     [Fact]

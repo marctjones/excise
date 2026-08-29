@@ -211,7 +211,7 @@ public class GlyphRemover
             // which REPAIRS it (§9.4 forbids an unterminated BT); the split keeps
             // operators in place and would leave the input's invalidity intact.
             var splitOp = (block.ImplicitEnd || DisableOperandSplit)
-                ? null : OperandGlyphSplitter.TrySplit(op, matchesToRemove);
+                ? null : OperandGlyphSplitter.TrySplit(op, matchesToRemove, CloseWidth);
             if (splitOp != null)
             {
                 blankedOperators[idx] = splitOp;

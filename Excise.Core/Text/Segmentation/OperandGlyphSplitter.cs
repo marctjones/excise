@@ -42,7 +42,10 @@ internal static class OperandGlyphSplitter
     internal static long Splits;
     internal static void ResetCounters() { Attempts = 0; Splits = 0; }
 
-    public static ContentOperator? TrySplit(ContentOperator op, IReadOnlyList<LetterMatch> toRemove)
+    public static ContentOperator? TrySplit(
+        ContentOperator op,
+        IReadOnlyList<LetterMatch> toRemove,
+        bool closeWidth = false)
     {
         if (toRemove.Count == 0) return null;
         System.Threading.Interlocked.Increment(ref Attempts);
@@ -123,9 +126,13 @@ internal static class OperandGlyphSplitter
                     i++;
                 }
 
-                // A positive TJ number moves the pen LEFT; to RESTORE the removed
-                // run's rightward advance the number is negative (§9.4.3).
-                newParts.Add(new PdfInteger(-(int)Math.Round(runDisp)));
+                // Default policy preserves layout by replaying the removed run's
+                // advance.  Width-closing deliberately omits that compensation:
+                // the following bytes then begin immediately after the preceding
+                // kept run, so neither the glyph gap nor a TJ operand encodes the
+                // removed run's measured width (#1145).
+                if (!closeWidth)
+                    newParts.Add(new PdfInteger(-(int)Math.Round(runDisp)));
                 cursor = runEnd;
                 elementRemoved = true;
             }

@@ -97,12 +97,13 @@ require_file "Core redaction API exists" "$CORE_API"
 # deleted operator-level path, so the check could not fail for any reason that
 # mattered. What matters is that the document-level entry delegates to the
 # glyph-level engine rather than removing whole operators or drawing a box.
-# The pattern pins the CALL form (`page.RedactArea(` / `page.RedactAreas(`), not
+# The pattern pins the CALL form (`page.RedactArea(` / `page.RedactAreas(` /
+# `page.RedactAreasInternal(`), not
 # the bare name: a bare "RedactArea" is satisfied by any `<see cref=...>` in the
 # file's own documentation, which is how this check passed over a visual-only
 # downgrade (see the note on require_grep).
 require_grep "doc.RedactText delegates to glyph-level RedactArea" \
-    "page\.RedactAreas?\(" "$CORE_API" \
+    "page\.Redact(Areas?|AreasInternal)\(" "$CORE_API" \
     "SECURITY: $CORE_API no longer routes through the glyph-level RedactArea path."
 
 # Check 3: the GUI must delegate to the glyph-level engine (page.RedactArea),

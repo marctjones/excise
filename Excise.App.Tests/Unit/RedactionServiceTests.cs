@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.Core.Document;
+using Excise.Ocr;
 using Xunit;
 
 namespace Excise.App.Tests.Unit;
@@ -409,6 +410,23 @@ public class RedactionServiceTests : IDisposable
         // Verify output still has 3 pages
         using var doc = PdfDocument.Open(File.ReadAllBytes(outputPath));
         doc.PageCount.Should().Be(3);
+    }
+
+    [Fact]
+    public void RedactTextFlattenOcr_WritesImageOnlyOutputWithoutTheTargetTextLayer()
+    {
+        Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
+        var inputPath = CreateTestFile("flatten-input.pdf", path =>
+            TestPdfGenerator.CreateSimpleTextPdf(path, "GUIFLATTENSECRET"));
+        var outputPath = Path.Combine(_tempDir, "flatten-output.pdf");
+
+        var result = _service.RedactTextFlattenOcr(inputPath, outputPath, "GUIFLATTENSECRET");
+
+        result.Success.Should().BeTrue(result.ErrorMessage);
+        result.RedactionCount.Should().BeGreaterThan(0);
+        using var output = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        output.GetPage(1).Text.Should().BeEmpty("the GUI image-only path must not recreate an OCR text layer");
+        result.Warnings.Should().ContainSingle().Which.Should().Contain("intentionally removed selectable text");
     }
 
     #endregion

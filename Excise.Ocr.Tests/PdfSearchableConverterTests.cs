@@ -254,11 +254,10 @@ public class PdfSearchableConverterTests
                     {
                         using var rendered = GhostscriptReferenceRenderer.RenderPage(redactedPath, 1, dpi: 150);
                         rendered.Should().NotBeNull();
-                        var ink = InkFractionIn(rendered!, secretBoxBefore, pageHeight);
-                        ink.Should().BeLessThan(0.02,
-                            $"the raster pixels under the redacted word must be gone too, not just the " +
-                            $"invisible text layer (ink={ink:P2}) — this is the #637-shaped risk this " +
-                            "feature could introduce if word positions didn't line up with the scan");
+                        var blackout = InkFractionIn(rendered!, secretBoxBefore, pageHeight);
+                        blackout.Should().BeGreaterThan(0.95,
+                            $"the raster pixels under the redacted word must be covered by an opaque " +
+                            $"blackout, not merely have their invisible OCR layer removed (blackout={blackout:P2})");
 
                         var keepBox = BoundsOf(page, keep);
                         InkFractionIn(rendered!, keepBox, pageHeight).Should().BeGreaterThan(0.02,

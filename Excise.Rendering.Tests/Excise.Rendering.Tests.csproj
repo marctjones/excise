@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Excise.Rendering\Excise.Rendering.csproj" />
     <ProjectReference Include="..\Excise.Core\Excise.Core.csproj" />
+    <ProjectReference Include="..\Excise.Ocr\Excise.Ocr.csproj" />
 
     <!-- Build-order only (no assembly reference). JpxSoftMaskRenderTests runs
          its render out of process through the CLI (#985); without this, a fresh
