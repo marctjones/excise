@@ -1,5 +1,5 @@
 using System;
-using Excise.Core.Text;
+using Excise.App.Services;
 using ReactiveUI;
 
 namespace Excise.App.Models;

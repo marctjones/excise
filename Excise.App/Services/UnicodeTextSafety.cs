@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Text;
 
-namespace Excise.Core.Text;
+namespace Excise.App.Services;
 
 /// <summary>
 /// Display-only handling for Unicode controls in untrusted document text.
