@@ -307,7 +307,12 @@ for line in pkg_lines:
 
     lf = find_license_file(folder)
     if lf:
-        info["licenseFileName"] = lf.name
+        # NuGet packages are extracted onto both case-insensitive macOS
+        # volumes and case-sensitive Linux filesystems.  Preserve the file
+        # identity through its content hash, but canonicalize the display
+        # name so the reviewed manifest is byte-identical on every release
+        # runner (for example LICENSE.txt versus license.txt).
+        info["licenseFileName"] = lf.name.lower()
         info["licenseFileSha1"] = sha1_file(lf)
         text = lf.read_text(errors="replace")
         # Cap embedded text at 8 KB to keep the manifest reasonable.

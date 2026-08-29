@@ -28,6 +28,10 @@
          plain [Fact]s, deliberately avoiding Avalonia.Headless.XUnit's
          [AvaloniaFact] and its xunit.v3 TestContext bug (#337). -->
     <PackageReference Include="Avalonia.Headless" Version="12.0.5" />
+    <!-- The viewer tests instantiate Skia-backed rendering objects.  Keep the
+         Linux native asset explicit: it is not pulled into this test output
+         by the managed SkiaSharp reference alone on a fresh CI runner. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
     <PackageReference Include="AwesomeAssertions" Version="9.4.0" />
     <PackageReference Include="PublicApiGenerator" Version="11.5.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
