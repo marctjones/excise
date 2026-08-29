@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
+using Excise.Ocr;
 using Excise.Rendering.Differential;
 using SkiaSharp;
 using Xunit;
@@ -47,6 +49,9 @@ namespace Excise.Rendering.Tests.Differential;
 public sealed class RedactionBenchmarkRunner
 {
     private readonly ITestOutputHelper _out;
+    // Only independent subprocess results live here. See
+    // ExternalRedactionOracleCache: current Excise work is never cached.
+    private readonly ExternalRedactionOracleCache _externalOracles = new();
     public RedactionBenchmarkRunner(ITestOutputHelper o) { _out = o; }
 
     /// <summary>
@@ -224,6 +229,10 @@ public sealed class RedactionBenchmarkRunner
     private static IEnumerable<string> Tools()
     {
         yield return "excise";
+        // #1186 is intentionally measured only on its defining image-baked
+        // case below. It is not a general-purpose reference redactor: it
+        // discards selectable text and document structure by design.
+        if (new PdfOcrService().IsAvailable()) yield return "excise-flatten-ocr";
         if (PyMuPdfPython() != null)
         {
             yield return "pymupdf";
@@ -396,9 +405,9 @@ public sealed class RedactionBenchmarkRunner
             foreach (var file in files)
             {
                 docsSeen++;
-                foreach (var tool in Tools())
-                    foreach (var row in MeasureDocument(file, corpus, tool))
-                        Record(row);
+                foreach (var row in MeasureToolsInParallel(
+                    tool => MeasureDocument(file, corpus, tool).ToArray()))
+                    Record(row);
             }
         }
 
@@ -419,12 +428,14 @@ public sealed class RedactionBenchmarkRunner
                 var path = Path.Combine(root, hc.Path);
                 if (!File.Exists(path)) { _out.WriteLine($"hard-case absent: {hc.Path}"); continue; }
                 docsSeen++;
-                foreach (var tool in Tools())
+                foreach (var row in MeasureToolsInParallel(tool =>
                 {
-                    var row = MeasureKnownTerm(path, "redaction-hard", tool, hc.Term, hc.Difficulty);
-                    if (row != null)
-                        Record(row with { Difficulty = hc.Difficulty, HardCategory = hc.Category });
-                }
+                    var measured = MeasureKnownTerm(path, "redaction-hard", tool, hc.Term, hc.Difficulty);
+                    return measured == null
+                        ? Array.Empty<Row>()
+                        : new[] { measured with { Difficulty = hc.Difficulty, HardCategory = hc.Category } };
+                }))
+                    Record(row);
             }
         }
 
@@ -437,6 +448,31 @@ public sealed class RedactionBenchmarkRunner
         rows.Count.Should().BeGreaterThan(20,
             "the benchmark must actually exercise the corpora; a run that measured " +
             "almost nothing tells you nothing, and looks identical to a good result");
+    }
+
+    /// <summary>
+    /// Execute independent tool cases concurrently, but retain deterministic
+    /// tool/result ordering in the report. The cap avoids turning one document
+    /// into an unbounded pile of Java, Python, and renderer subprocesses; set
+    /// <c>REDACTION_BENCH_PARALLELISM</c> to tune a local run (default: 4).
+    /// </summary>
+    private static IEnumerable<Row> MeasureToolsInParallel(Func<string, Row[]> measure)
+    {
+        var tools = Tools().ToArray();
+        var results = new Dictionary<string, Row[]>(StringComparer.Ordinal);
+        var requested = int.TryParse(Environment.GetEnvironmentVariable("REDACTION_BENCH_PARALLELISM"), out var parsed)
+            ? parsed : 4;
+        var parallelism = Math.Clamp(requested, 1, Math.Max(1, Math.Min(4, Environment.ProcessorCount)));
+
+        Parallel.ForEach(tools, new ParallelOptions { MaxDegreeOfParallelism = parallelism }, tool =>
+        {
+            var rows = measure(tool);
+            lock (results) results[tool] = rows;
+        });
+
+        foreach (var tool in tools)
+            foreach (var row in results[tool])
+                yield return row;
     }
 
     private readonly record struct HardCase(string Path, string Term, string Difficulty, string Category);
@@ -468,6 +504,7 @@ public sealed class RedactionBenchmarkRunner
     /// </summary>
     private Row? MeasureKnownTerm(string path, string corpus, string tool, string term, string difficulty)
     {
+        if (tool == "excise-flatten-ocr") return null;
         var name = Path.GetFileName(path);
         int pageCount;
         string before;
@@ -475,7 +512,7 @@ public sealed class RedactionBenchmarkRunner
         {
             using var probe = PdfDocument.Open(path);
             pageCount = probe.PageCount;
-            var pages = MutoolTextExtractor.ExtractAllPages(path, pageCount);
+            var pages = _externalOracles.ExtractAllPages(path, pageCount);
             before = pages == null ? "" : string.Join("\n", pages);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -489,6 +526,9 @@ public sealed class RedactionBenchmarkRunner
     private IEnumerable<Row> MeasureDocument(string path, string corpus, string tool)
     {
         var name = Path.GetFileName(path);
+        if (tool == "excise-flatten-ocr" &&
+            (corpus != "redaction-adversarial" || !name.StartsWith("image-baked-text--", StringComparison.Ordinal)))
+            yield break;
 
         // C# forbids `yield` inside catch, so the failure is captured first
         // and yielded after the try/catch rather than restructured away.
@@ -499,7 +539,7 @@ public sealed class RedactionBenchmarkRunner
         {
             using var probe = PdfDocument.Open(path);
             pageCount = probe.PageCount;
-            var pages = MutoolTextExtractor.ExtractAllPages(path, pageCount);
+            var pages = _externalOracles.ExtractAllPages(path, pageCount);
             before = pages == null ? "" : string.Join("\n", pages);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -556,6 +596,14 @@ public sealed class RedactionBenchmarkRunner
                     cleanSuccess = report.IsCleanSuccess;
                     doc.Save(output);
                 }
+                else if (tool == "excise-flatten-ocr")
+                {
+                    // Never cache this operation: it is the current Excise
+                    // implementation under test. Only external oracle answers
+                    // may come from _externalOracles.
+                    reported = new PdfRasterRedactionConverter(new PdfOcrService())
+                        .RedactToImageOnly(path, output, term);
+                }
                 else
                 {
                     var n = RunAdapter(tool, path, output, term);
@@ -594,7 +642,7 @@ public sealed class RedactionBenchmarkRunner
                 };
             }
 
-            var afterPages = MutoolTextExtractor.ExtractAllPages(output, pageCount);
+            var afterPages = _externalOracles.ExtractAllPages(output, pageCount);
             var after = afterPages == null ? "" : string.Join("\n", afterPages);
 
             // ⚠️ A raw byte hit is NOT automatically a leak, and the first run
@@ -666,10 +714,10 @@ public sealed class RedactionBenchmarkRunner
 
             // Count only NEW, non-whitespace bad redactions. null still means "no
             // oracle" (-1); 0 means "oracle ran, found none this tool caused".
-            var xrayOut = heavy ? XRayBadRedactionDetector.Inspect(output) : null;
+            var xrayOut = heavy ? _externalOracles.InspectWithXray(output) : null;
             var badRedactions = xrayOut == null
                 ? -1                                                  // null = no oracle (unchanged)
-                : NewNonWhitespaceBadRedactions(XRayBadRedactionDetector.Inspect(path), xrayOut);
+                : NewNonWhitespaceBadRedactions(_externalOracles.InspectWithXray(path), xrayOut);
 
             var channels = new List<string>();
             if (leakBytes) channels.Add("saved-bytes");
@@ -691,14 +739,14 @@ public sealed class RedactionBenchmarkRunner
             var termCost = Math.Max(0, termOccBefore - termOccAfter) * termLen;
             var collateral = Math.Max(0, alnumBefore - alnumAfter - termCost);
 
-            var qpdf = QpdfReferenceTool.Check(output);
+            var qpdf = _externalOracles.CheckWithQpdf(output);
             // #fidelity: only excise-CAUSED invalidity counts. Check the input
             // too, so a reject inherited from an already-malformed source is not
             // charged against the tool.
-            var inputQpdf = QpdfReferenceTool.Check(path);
+            var inputQpdf = _externalOracles.CheckWithQpdf(path);
 
             // ── VISUAL (#1141): is the region blank once the box is off? ──
-            var (inkBefore, inkAfter) = heavy ? MeasureInkAxis(path, term, tool) : (-1.0, -1.0);
+            var (inkBefore, inkAfter) = heavy ? MeasureInkAxis(path, term, tool, _externalOracles) : (-1.0, -1.0);
 
             // ── BOX-FIT (#1163): does the tool's mark spill past the glyphs? ──
             // Measured on the tool's ACTUAL output (with whatever box it draws).
@@ -706,8 +754,8 @@ public sealed class RedactionBenchmarkRunner
 
             // Per-tool render axes: does the SURVIVING page still render correctly,
             // and is the secret still READABLE in pixels?
-            var survivingRenderDelta = heavy ? MeasureSurvivingRenderDelta(path, output, term) : -1;
-            var visualReadable = heavy ? MeasureVisualReadable(path, output, term) : -1;
+            var survivingRenderDelta = heavy ? MeasureSurvivingRenderDelta(path, output, term, _externalOracles) : -1;
+            var visualReadable = heavy ? MeasureVisualReadable(path, output, term, _externalOracles) : -1;
 
             // ── IMAGE-BAKED TEXT (#1185): a secret that exists ONLY as pixels in a
             //    rasterised image has no text layer, so every text axis is blind to
@@ -716,7 +764,7 @@ public sealed class RedactionBenchmarkRunner
             //    (its sole presence would be pixels) — avoids a redundant full-page
             //    OCR on ordinary text docs.
             var imageBakedReadable = heavy && !before.Contains(term, StringComparison.OrdinalIgnoreCase)
-                ? MeasureImageBakedReadable(path, output, term) : -1;
+                ? MeasureImageBakedReadable(path, output, term, _externalOracles) : -1;
 
             // ── SURVIVING-CONTENT CONSERVATION (#1157): did untargeted words
             //    survive UNCHANGED? Catches corruption (ligature dup #1156,
@@ -967,7 +1015,7 @@ public sealed class RedactionBenchmarkRunner
     }
 
     internal static (double before, double after) MeasureInkAxis(
-        string path, string term, string tool)
+        string path, string term, string tool, ExternalRedactionOracleCache? externalOracles = null)
     {
         if (tool != "excise") return (-1, -1);
         if (!GhostscriptReferenceRenderer.IsAvailable) return (-1, -1);
@@ -984,7 +1032,7 @@ public sealed class RedactionBenchmarkRunner
                 if (regions.Count == 0) return (-1, -1);   // term is not on page 1
             }
 
-            using var before = GhostscriptReferenceRenderer.RenderPage(path, 1, dpi: 150);
+            using var before = RenderGhostscript(path, 1, dpi: 150, externalOracles);
             if (before == null) return (-1, -1);
 
             var tmp = Path.Combine(Path.GetTempPath(), $"excise-ink-{Guid.NewGuid():N}.pdf");
@@ -995,7 +1043,7 @@ public sealed class RedactionBenchmarkRunner
                     doc.RedactText(term, drawBlackRect: false);
                     doc.Save(tmp);
                 }
-                using var after = GhostscriptReferenceRenderer.RenderPage(tmp, 1, dpi: 150);
+                using var after = RenderGhostscript(tmp, 1, dpi: 150, externalOracles);
                 // Report the WORST occurrence: the region left with the most ink
                 // after removal. Residue on any occurrence is residue — sampling
                 // only the first would miss a glyph left standing further down.
@@ -1015,6 +1063,17 @@ public sealed class RedactionBenchmarkRunner
         }
         catch { return (-1, -1); }
     }
+
+    /// <summary>
+    /// Render through Ghostscript, optionally using the run-local external
+    /// oracle cache. The cache key is the PDF's bytes, page, and DPI; it is
+    /// never an Excise result. A null cache preserves the direct-call behavior
+    /// used by focused unit tests.
+    /// </summary>
+    private static SKBitmap? RenderGhostscript(
+        string pdfPath, int pageNumber, int dpi, ExternalRedactionOracleCache? externalOracles)
+        => externalOracles?.RenderWithGhostscript(pdfPath, pageNumber, dpi)
+           ?? GhostscriptReferenceRenderer.RenderPage(pdfPath, pageNumber, dpi);
 
     /// <summary>
     /// BOX-FIT / OVER-COVERAGE axis (#1163 follow-up). Tool-agnostic and
@@ -1088,7 +1147,8 @@ public sealed class RedactionBenchmarkRunner
     /// identical, or the redaction damaged the surviving render. Per-tool, on the
     /// tool's actual output. -1 when not measurable.
     /// </summary>
-    internal static double MeasureSurvivingRenderDelta(string inputPath, string outputPath, string term)
+    internal static double MeasureSurvivingRenderDelta(
+        string inputPath, string outputPath, string term, ExternalRedactionOracleCache? externalOracles = null)
     {
         if (!GhostscriptReferenceRenderer.IsAvailable) return -1;
         try
@@ -1102,8 +1162,8 @@ public sealed class RedactionBenchmarkRunner
                 regions = AllMatchBoxesOnPage1(page, term);
                 if (regions.Count == 0) return -1;
             }
-            using var before = GhostscriptReferenceRenderer.RenderPage(inputPath, 1, dpi: 150);
-            using var after = GhostscriptReferenceRenderer.RenderPage(outputPath, 1, dpi: 150);
+            using var before = RenderGhostscript(inputPath, 1, dpi: 150, externalOracles);
+            using var after = RenderGhostscript(outputPath, 1, dpi: 150, externalOracles);
             if (before == null || after == null) return -1;
             // A changed page size is itself a surviving-render change (a tool that
             // reflowed or rasterised to a different geometry).
@@ -1235,7 +1295,8 @@ public sealed class RedactionBenchmarkRunner
     /// Per-tool, on the output as it ships. Returns 1 legible, 0 not, -1 not
     /// measurable.
     /// </summary>
-    internal static int MeasureVisualReadable(string inputPath, string outputPath, string term)
+    internal static int MeasureVisualReadable(
+        string inputPath, string outputPath, string term, ExternalRedactionOracleCache? externalOracles = null)
     {
         if (!GhostscriptReferenceRenderer.IsAvailable) return -1;
         var tess = ResolveTesseract();
@@ -1251,7 +1312,7 @@ public sealed class RedactionBenchmarkRunner
                 regions = AllMatchBoxesOnPage1(page, term);
                 if (regions.Count == 0) return -1;
             }
-            using var after = GhostscriptReferenceRenderer.RenderPage(outputPath, 1, dpi: 200);
+            using var after = RenderGhostscript(outputPath, 1, dpi: 200, externalOracles);
             if (after == null) return -1;
 
             const double scale = 200.0 / 72.0;
@@ -1327,17 +1388,18 @@ public sealed class RedactionBenchmarkRunner
     /// (nothing to measure); 1 when it is STILL readable in the OUTPUT (the tool did
     /// not remove image-baked text — the #637 extraction bound made visible); 0 gone.
     /// </summary>
-    internal static int MeasureImageBakedReadable(string inputPath, string outputPath, string term)
+    internal static int MeasureImageBakedReadable(
+        string inputPath, string outputPath, string term, ExternalRedactionOracleCache? externalOracles = null)
     {
         if (!GhostscriptReferenceRenderer.IsAvailable) return -1;
         var tess = ResolveTesseract();
         if (tess == null) return -1;
         try
         {
-            using var before = GhostscriptReferenceRenderer.RenderPage(inputPath, 1, dpi: 300);
+            using var before = RenderGhostscript(inputPath, 1, dpi: 300, externalOracles);
             if (before == null) return -1;
             if (OcrRegionContains(tess, before, term) != 1) return -1;   // not readable in input ⇒ nothing to measure
-            using var after = GhostscriptReferenceRenderer.RenderPage(outputPath, 1, dpi: 300);
+            using var after = RenderGhostscript(outputPath, 1, dpi: 300, externalOracles);
             if (after == null) return -1;
             return OcrRegionContains(tess, after, term) == 1 ? 1 : 0;     // still readable ⇒ leak
         }

@@ -892,6 +892,10 @@ namespace Excise.Core.Document
         public double Y { get; init; }
         public override string ToString() { }
     }
+    public static class PdfRasterPageAuthoring
+    {
+        public static Excise.Core.Document.PdfPage AddRgbRasterPage(this Excise.Core.Document.PdfDocument document, byte[] rgb, int pixelWidth, int pixelHeight, double widthPoints, double heightPoints) { }
+    }
     public readonly struct PdfRectangle : System.IEquatable<Excise.Core.Document.PdfRectangle>
     {
         public PdfRectangle(double Left, double Bottom, double Right, double Top) { }
@@ -1923,11 +1927,11 @@ namespace Excise.Core.Text.Segmentation
     }
     public static class PdfDocumentRedactionExtensions
     {
-        public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, Excise.Core.Text.Segmentation.RedactionOptions options) { }
+        public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, Excise.Core.Text.Segmentation.RedactionOptions options, System.Action<int, int>? progress = null) { }
         public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true, bool closeWidth = false, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
                 "R",
                 "G",
-                "B"})] System.ValueTuple<double, double, double>? boxColor = default, Excise.Core.Operations.RedactionCarriers carriers = 1023) { }
+                "B"})] System.ValueTuple<double, double, double>? boxColor = default, Excise.Core.Operations.RedactionCarriers carriers = 1023, System.Action<int, int>? progress = null) { }
     }
     public static class PdfPageRedactionExtensions
     {

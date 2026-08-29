@@ -319,7 +319,7 @@ public class RedactedCopySafetyServiceTests : IDisposable
     }
 
     [Fact]
-    public void PrepareRedactedCopy_AfterImageOnlyAreaRedaction_VerifiesNoRasterOverlapAndDropsBytes()
+    public void PrepareRedactedCopy_AfterImageOnlyAreaRedaction_WarnsUntilPixelCoverageIsIndependentlyAudited()
     {
         const string marker = "SCANNEDIMAGESECRET";
         var area = new PdfRectangle(110, 650, 150, 680);
@@ -337,8 +337,14 @@ public class RedactedCopySafetyServiceTests : IDisposable
             }
         });
 
-        report.RasterRedactionAuditStatus.Should().Be(RedactedContentVerificationStatus.Verified);
-        report.RemainingRasterOverlapCount.Should().Be(0);
+        // #1195 preserves non-secret pixels by replacing the image with a
+        // region-redacted clone. The current audit intentionally sees that
+        // retained image invocation and warns: it does not yet independently
+        // inspect the altered pixel region, so calling it verified would be a
+        // false assurance.
+        report.RasterRedactionAuditStatus.Should().Be(RedactedContentVerificationStatus.Warning);
+        report.RemainingRasterOverlapCount.Should().Be(1);
+        report.Warnings.Should().Contain(w => w.Contains("raster image invocation"));
         Encoding.Latin1.GetString(document.SaveToBytes()).Should().NotContain(marker);
     }
 

@@ -256,6 +256,43 @@ public class PdfDocumentRedactionExtensionsTests
     }
 
     [Fact]
+    public void RedactText_RealCanvasFixture_RemovesVisuallyOrderedWord()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")))
+            dir = dir.Parent;
+        Assert.SkipWhen(dir == null, "repository root unavailable");
+
+        var fixture = Path.Combine(dir!.FullName, "test-pdfs", "pdfjs", "canvas.pdf");
+        Assert.SkipWhen(!File.Exists(fixture), "canvas.pdf corpus fixture not present");
+
+        using var doc = PdfDocument.Open(fixture);
+        var raw = doc.Pages.Sum(page => PdfDocumentRedactionExtensions
+            .FindTextMatches(page.Letters, "styles", false).Count);
+        raw.Should().Be(2,
+            "normal within-word glyph-bound gaps must not be treated as whitespace (#1198)");
+        doc.RedactText("styles", drawBlackRect: false).VerifiedRemovals.Should().Be(2,
+            "both visible occurrences must be structurally removed (#1198)");
+        doc.GetPage(1).Text.Should().NotContain("styles", "the first visible occurrence must be structurally removed");
+        doc.GetPage(2).Text.Should().NotContain("styles", "the second visible occurrence must be structurally removed");
+    }
+
+    [Fact]
+    public void FindTextMatches_RealFreecultureFixture_DoesNotInventWordBreakInsideVisibleThat()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
+        Assert.SkipWhen(dir == null, "repository root unavailable");
+
+        using var doc = PdfDocument.Open(Path.Combine(dir!.FullName, "test-pdfs", "pdfjs", "freeculture.pdf"));
+        var letters = doc.GetPage(201).Letters;
+        PdfDocumentRedactionExtensions.FindTextMatches(letters, "that", false)
+            .Should().Contain(match => match.Count == 4 &&
+                Math.Abs(match[0].StartX - 243.02) < 0.1,
+                "the visible word is split across text operators but has no word break (#1198)");
+    }
+
+    [Fact]
     public void RedactText_TightlyLedLines_DoesNotRemoveTheAdjacentLine()
     {
         using var doc = OpenDoc(

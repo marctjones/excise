@@ -192,6 +192,37 @@ public class RedactionService
         }
     }
 
+    /// <summary>
+    /// #1186 image-only redaction escape hatch for scanned or image-baked text.
+    /// Every source page is rasterized, OCR-located target pixels are blacked
+    /// out, and a fresh PDF containing only page-image XObjects is written.
+    /// This intentionally drops selectable text, forms, links, and metadata.
+    /// </summary>
+    /// <remarks>
+    /// This is deliberately a separate GUI-service operation rather than a
+    /// fallback inside <see cref="RedactText"/>: flattening is lossy and must
+    /// remain an explicit user/automation decision.
+    /// </remarks>
+    public TextRedactionResult RedactTextFlattenOcr(
+        string inputPath, string outputPath, string textToRedact, bool caseSensitive = false)
+    {
+        _logger.LogInformation("RedactTextFlattenOcr: '{Text}' in {Input}", textToRedact, inputPath);
+        try
+        {
+            var count = new PdfRasterRedactionConverter(new PdfOcrService())
+                .RedactToImageOnly(inputPath, outputPath, textToRedact, caseSensitive);
+            return TextRedactionResult.Succeeded(count, new[]
+            {
+                "Image-only redaction intentionally removed selectable text, forms, links, and metadata."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "RedactTextFlattenOcr failed for '{Text}'", textToRedact);
+            return TextRedactionResult.Failed($"Image-only redaction failed: {ex.Message}");
+        }
+    }
+
     private static string BuildConfidenceWarning(RedactionConfidenceReport confidence) =>
         confidence.Tier == RedactionConfidenceTier.Unverified
             ? "Redaction could not be independently verified — neither mutool nor tesseract is installed. " +

@@ -77,28 +77,17 @@ public class CanaryInjectionLeakTests
     // reappearing here is a regression; the checklist enforces both directions.
     private static readonly Dictionary<Carrier, string> KnownLeaks = new();
 
+    /// <summary>
+    /// #1199's machine-readable carrier coverage matrix. Deriving it directly
+    /// from the enum means adding a new carrier to the fixture builder also
+    /// adds a test row; there is no second hand-maintained attribute list that
+    /// can omit it (as InlineActualText previously was).
+    /// </summary>
+    public static IEnumerable<object[]> CarrierMatrix()
+        => Enum.GetValues<Carrier>().Select(carrier => new object[] { carrier });
+
     [Theory]
-    [InlineData(Carrier.PageContent)]
-    [InlineData(Carrier.TjSplit)]
-    [InlineData(Carrier.FormXObject)]
-    [InlineData(Carrier.AnnotationContents)]
-    [InlineData(Carrier.AcroFormValue)]
-    [InlineData(Carrier.AcroFormFieldName)]
-    [InlineData(Carrier.AcroFormTooltip)]
-    [InlineData(Carrier.StructActualText)]
-    [InlineData(Carrier.InfoTitle)]
-    [InlineData(Carrier.XmpCatalog)]
-    [InlineData(Carrier.XmpPage)]
-    [InlineData(Carrier.OutlineTitle)]
-    [InlineData(Carrier.OutlineTitleIndirect)]
-    [InlineData(Carrier.LinkUri)]
-    [InlineData(Carrier.OpenActionUri)]
-    [InlineData(Carrier.CatalogAaUri)]
-    [InlineData(Carrier.AnnotAaUri)]
-    [InlineData(Carrier.FieldActionUri)]
-    [InlineData(Carrier.OutlineActionUri)]
-    [InlineData(Carrier.EmbeddedFile)]
-    [InlineData(Carrier.JavaScript)]
+    [MemberData(nameof(CarrierMatrix))]
     public void RedactingTheCanary_RemovesItFromEveryCarrier(Carrier carrier)
     {
         var pdf = BuildCanaryPdf(carrier);
@@ -147,6 +136,31 @@ public class CanaryInjectionLeakTests
         hits.Should().BeEmpty(
             $"redacting the canary must remove it from the {carrier} carrier — a survival " +
             "here is a definite leak (the token cannot occur incidentally)");
+    }
+
+    [Fact]
+    public void SavedByteOracle_RejectsAnIntentionalCanarySurvivalMutation()
+    {
+        // #1199: demonstrate the detector, rather than merely trusting a
+        // passing production output. Appending post-EOF bytes is a deliberate
+        // saved-file leak mutation: readers ignore it, but an attacker can
+        // recover it, and the carrier-agnostic scanner must still fail.
+        var input = BuildCanaryPdf(Carrier.PageContent);
+        byte[] saved;
+        using (var doc = PdfDocument.Open(input))
+        {
+            doc.RedactText(Canary);
+            using var stream = new MemoryStream();
+            doc.Save(stream);
+            saved = stream.ToArray();
+        }
+
+        SavedPdfLeakScanner.FindTerm(saved, Canary).Should().BeEmpty(
+            "guard: the unmutated output must be clean before testing the oracle");
+
+        var mutated = saved.Concat(Encoding.Latin1.GetBytes($"\n% leaked {Canary}\n")).ToArray();
+        SavedPdfLeakScanner.FindTerm(mutated, Canary).Should().NotBeEmpty(
+            "the saved-byte oracle must reject a deliberately reintroduced canary (#1199)");
     }
 
     [Fact]

@@ -91,7 +91,8 @@ public static class PdfDocumentRedactionExtensions
     public static RedactionReport RedactText(
         this PdfDocument document,
         string text,
-        RedactionOptions options)
+        RedactionOptions options,
+        Action<int, int>? progress = null)
     {
         if (options == null) throw new ArgumentNullException(nameof(options));
         return document.RedactText(
@@ -103,7 +104,8 @@ public static class PdfDocumentRedactionExtensions
             options.ScrubDocumentCarriers,
             options.CloseWidth,
             options.BoxColor,
-            options.Carriers);
+            options.Carriers,
+            progress);
     }
 
     public static RedactionReport RedactText(
@@ -117,7 +119,8 @@ public static class PdfDocumentRedactionExtensions
         bool closeWidth = false,   // #1145 — opt-in width-closing (destroys the residue channel)
         (double R, double G, double B)? boxColor = null,   // #1158 — covering-box fill, RGB 0..1; null = black
         Excise.Core.Operations.RedactionCarriers carriers
-            = Excise.Core.Operations.RedactionCarriers.All)   // #1188 — per-carrier scrub scope
+            = Excise.Core.Operations.RedactionCarriers.All,  // #1188 — per-carrier scrub scope
+        Action<int, int>? progress = null)
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
@@ -135,7 +138,9 @@ public static class PdfDocumentRedactionExtensions
 
         int totalMatches = 0;
 
-        for (int pageNum = 1; pageNum <= document.PageCount; pageNum++)
+        var pageCount = document.PageCount;
+        progress?.Invoke(0, pageCount);
+        for (int pageNum = 1; pageNum <= pageCount; pageNum++)
         {
             var page = document.GetPage(pageNum);
             var pageLocated = 0;
@@ -259,7 +264,12 @@ public static class PdfDocumentRedactionExtensions
                         imageCounts += page.RedactAreasInternal(contentAreas, imageAreas, strategy, scrubDocumentCarriers: false, closeWidth: closeWidth);
                     }
 
-                    if (drawBlackRect)
+                    // A box whose width equals the removed run is itself a
+                    // width-residue oracle (#1140). Width-closing therefore
+                    // cannot draw one: its contract is to destroy that channel,
+                    // accepting the visual/layout trade-off explicitly chosen by
+                    // the caller.
+                    if (drawBlackRect && !closeWidth)
                         foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox, boxColor);
 
                     // #1101: count what this page's window shows, not the full
@@ -281,6 +291,7 @@ public static class PdfDocumentRedactionExtensions
                 remaining > 0 ? RedactionOutcome.RemovalUnverified
                 : pageLocated > 0 ? RedactionOutcome.RemovedVerified
                 : RedactionOutcome.NothingToRemove));
+            progress?.Invoke(pageNum, pageCount);
         }
 
         // #896: document-level carriers are part of redaction, not part of a
@@ -708,11 +719,30 @@ public static class PdfDocumentRedactionExtensions
         if (Math.Abs((a.Bottom + a.Top) / 2 - (b.Bottom + b.Top) / 2) > 0.5 * fontSize) return false;
         // Must be a real forward gap (overlapping/overprinted stamps are never a gap).
         if (b.Left <= a.Right) return false;
-        // Relative to the line's own advance (JoinText's WordGapAdvanceFactor, tuned 1.25);
+        // A font's glyph bounds do not tile perfectly: normal adjacent glyphs
+        // can have a sub-point gap (canvas.pdf's "e" → "s" is 0.1pt).  The
+        // left-to-left advance is naturally wider after a wide glyph, so it
+        // cannot by itself prove a word boundary.  Require meaningful blank
+        // space between the painted bounds before applying the relative
+        // advance rule (#1198).
+        // FontSize is not a dependable scale here: a text matrix can make it
+        // report 1 while the painted glyph is several points wide. Require a
+        // gap that is material relative to the preceding painted glyph too.
+        // This preserves a word split across text operators with a small
+        // positioning adjustment (freeculture.pdf's visible "th" + "at")
+        // without allowing a genuine word-sized gap to concatenate words.
+        var minimumBlank = Math.Max(0.25 * fontSize, 0.5 * Math.Abs(a.Width));
+        if (b.Left - a.Right <= minimumBlank) return false;
+        // Relative to the line's own advance. Keep this aligned with
+        // JoinText's WordGapAdvanceFactor (1.5): the source can split one
+        // visible word across text-showing operators and apply a modest
+        // positioning adjustment at that split (freeculture.pdf's "th" +
+        // "at"). A lower threshold invents a space there, so a term that
+        // mutool correctly reads as "that" becomes unmatchable (#1198).
         // fall back to a font-size fraction only when no median is available.
         var advance = b.Left - a.Left;
         return medianAdvance > 0
-            ? advance > medianAdvance * 1.25
+            ? advance > medianAdvance * 1.5
             : b.Left - a.Right > 0.25 * fontSize;
     }
 

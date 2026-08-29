@@ -138,7 +138,7 @@ public class RedactionCollateralHarness
         var countMismatches = 0;
         var measured = new SortedDictionary<string, int>();
 
-        foreach (var term in SampleTerms(before))
+        foreach (var term in ProbeTerms(fixtureName, before))
         {
             var output = Path.Combine(Path.GetTempPath(), $"excise-collateral-{Guid.NewGuid():N}.pdf");
             var reported = 0;
@@ -273,6 +273,36 @@ public class RedactionCollateralHarness
         if (ordered.Count > 1) picks.Add(ordered[^1]);
         return picks.Distinct(StringComparer.Ordinal).ToList();
     }
+
+    /// <summary>
+    /// #1178: frequency sampling is broad coverage, not a proof that the
+    /// highest-collateral term was exercised. Once a corpus measurement finds
+    /// such a term, keep it as a required probe so a frequency-distribution
+    /// change cannot silently sample it away. These probes are intentionally
+    /// tiny and reviewed; they complement rather than replace document-derived
+    /// sampling.
+    /// </summary>
+    internal static List<string> ProbeTerms(string fixtureName, string text)
+    {
+        var terms = SampleTerms(text);
+        if (WorstCollateralProbes.TryGetValue(fixtureName, out var required))
+        {
+            foreach (var term in required)
+            {
+                if (text.Contains(term, StringComparison.OrdinalIgnoreCase))
+                    terms.Add(term);
+            }
+        }
+        return terms.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    // This is not a second baseline: baseline.json sets the permitted numeric
+    // floor, while this map pins the coverage decision that discovered it.
+    private static readonly IReadOnlyDictionary<string, string[]> WorstCollateralProbes =
+        new Dictionary<string, string[]>(StringComparer.Ordinal)
+        {
+            ["ZapfDingbats.pdf"] = new[] { "document" },
+        };
 
     /// <summary>
     /// Documents that have ALREADY leaked or over-removed. Pinned in by name
