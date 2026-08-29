@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "reviewedOn": "2026-08-29",
+  "reviewer": "marctjones",
+  "purpose": "Small release-quality visual-redaction subset. This is not the broad discovery corpus: each row names the independent visual evidence and the mutation it must detect.",
+  "rowCount": 9,
+  "rows": [
+    {
+      "id": "page-text",
+      "carrier": "page text",
+      "evidence": "Excise.Rendering.Tests/Differential/RedactionRenderAxesTests.cs",
+      "independentRenderer": "Ghostscript",
+      "adjudication": "Text must disappear from the target rectangle while surrounding text remains; OCR is used only to decide whether the target is still readable in rendered pixels.",
+      "mutations": ["leave-target-visible", "shift-redaction-box", "transparent-cover", "delete-untargeted-image"]
+    },
+    {
+      "id": "form-xobject",
+      "carrier": "Form XObject",
+      "evidence": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs",
+      "independentRenderer": "Ghostscript",
+      "adjudication": "A form is flattened before redaction so a retained form stream cannot be hidden behind a page-level cover; visual checking supplements saved-byte removal.",
+      "mutations": ["leave-target-visible", "delete-untargeted-glyph"]
+    },
+    {
+      "id": "annotation-appearance",
+      "carrier": "annotation contents and appearance",
+      "evidence": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs",
+      "independentRenderer": "MuPDF",
+      "adjudication": "Annotations are renderer-policy-sensitive, so appearance and carrier removal are checked separately; a reference disagreement is not accepted as a harmless tone difference.",
+      "mutations": ["leave-target-visible", "shift-redaction-box"]
+    },
+    {
+      "id": "raster-ocr-overlay",
+      "carrier": "raster scan with invisible OCR overlay",
+      "evidence": "Excise.Rendering.Tests/Differential/ScannedRasterRedactionLeakTests.cs",
+      "independentRenderer": "Ghostscript",
+      "adjudication": "The image ink and invisible searchable layer are distinct carriers; deleting either alone is insufficient and the untouched raster block must remain inked.",
+      "mutations": ["leave-target-visible", "delete-untargeted-image"]
+    },
+    {
+      "id": "image-filters",
+      "carrier": "image XObjects and supported filters",
+      "evidence": "Excise.Core.Tests/Text/Segmentation/ImageRedactorTests.cs",
+      "independentRenderer": "Ghostscript",
+      "adjudication": "Filter support is security-sensitive: uneditable image pixels are conservatively removed rather than covered, while region-editable pixels preserve unrelated image content.",
+      "mutations": ["leave-target-visible", "delete-untargeted-image"]
+    },
+    {
+      "id": "masks-and-clipping",
+      "carrier": "masked or clipped rendered content",
+      "evidence": "Excise.Rendering.Tests/Differential/ColorKeyMaskDifferentialTests.cs",
+      "independentRenderer": "MuPDF and pdftocairo",
+      "adjudication": "Mask and clipping differences are judged as content/geometry evidence, not raw pixel tone; two non-Excise renderers prevent electing a single outlier.",
+      "mutations": ["leave-target-visible", "shift-redaction-box"]
+    },
+    {
+      "id": "rotation",
+      "carrier": "rotated page geometry",
+      "evidence": "Excise.Core.Tests/Text/Segmentation/RotatedPageRedactionTests.cs",
+      "independentRenderer": "MuPDF",
+      "adjudication": "A box shifted by page rotation is a visible-leak failure even when a black rectangle appears elsewhere; target and neighbouring text are both required evidence.",
+      "mutations": ["shift-redaction-box", "delete-untargeted-glyph"]
+    },
+    {
+      "id": "transparency",
+      "carrier": "transparent or opacity-controlled cover",
+      "evidence": "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs",
+      "independentRenderer": "Ghostscript and MuPDF",
+      "adjudication": "Opacity is geometry and content evidence, not a tone threshold: a translucent cover that leaves a word OCR-readable is a visible-secret failure.",
+      "mutations": ["transparent-cover", "leave-target-visible"]
+    },
+    {
+      "id": "vector-text-baseline",
+      "carrier": "ordinary vector text",
+      "evidence": "Excise.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs",
+      "independentRenderer": "Ghostscript and MuPDF",
+      "adjudication": "The baseline proves that a genuine glyph removal is blank in the region and preserves independent-renderer ink outside it; this separates removal from cosmetic coverage.",
+      "mutations": ["leave-target-visible", "delete-untargeted-glyph"]
+    }
+  ]
+}
