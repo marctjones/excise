@@ -18,6 +18,7 @@ namespace Excise.Rendering.Tests.Differential;
 public class RedactionRenderAxesTests
 {
     private const string Secret = "SECRETWORD";
+    private const string Jbig2Secret = "V1HH";
 
     // "Keep AAA SECRETWORD keep BBB" — surrounding words on the same line so a
     // render-fidelity regression (mispositioned survivors) would show as pixel
@@ -127,6 +128,47 @@ public class RedactionRenderAxesTests
     }
 
     [Fact]
+    public void Jbig2Scan_RegionRedaction_PreservesPixelsOutsideTheRequestedTerm()
+    {
+        // #1195/#1197: a full-page JBIG2 scan is a primary redaction case.
+        // Whole-image removal cannot pass this test: every pixel outside the
+        // matched term's boxes is compared by Ghostscript, an independent
+        // renderer, before versus after the saved output.
+        Assert.SkipUnless(GhostscriptReferenceRenderer.IsAvailable, "ghostscript not installed");
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        var root = LocateRepoRoot();
+        Assert.SkipUnless(root != null, "repository root unavailable");
+        var input = Path.Combine(root!, "test-pdfs", "pdfjs", "issue12963.pdf");
+        Assert.SkipUnless(File.Exists(input), "JBIG2 corpus fixture absent [requires: corpus:pdfjs]");
+
+        var output = Path.Combine(Path.GetTempPath(), $"rax-jbig2-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            using (var doc = PdfDocument.Open(input))
+            {
+                var report = doc.RedactText(Jbig2Secret);
+                report.ImageRegionsRedacted.Should().BeGreaterThan(0,
+                    "the requested scan region must be destroyed in place");
+                report.ImagesDroppedWhole.Should().Be(0,
+                    "a decodable JBIG2 scan must not be discarded wholesale");
+                doc.Save(output);
+            }
+
+            var delta = RedactionBenchmarkRunner.MeasureSurvivingRenderDelta(input, output, Jbig2Secret);
+            delta.Should().BeGreaterThanOrEqualTo(0,
+                "the independent surviving-render axis must be measurable on this fixture");
+            delta.Should().BeLessThan(0.01,
+                "only requested term regions and their redaction boxes may change; the rest of a full-page scan must survive");
+
+            var extracted = MutoolTextExtractor.ExtractPage(output, 1);
+            extracted.Should().NotBeNull("mutool must read the saved redacted output");
+            extracted!.Should().NotContain(Jbig2Secret,
+                "the invisible OCR layer is independently unextractable after redaction");
+        }
+        finally { File.Delete(output); }
+    }
+
+    [Fact]
     public void VisualReadableAxis_DetectsATermStillLegibleInPixels()
     {
         Assert.SkipUnless(GhostscriptReferenceRenderer.IsAvailable, "ghostscript not installed");
@@ -146,5 +188,17 @@ public class RedactionRenderAxesTests
                 "catches a secret surviving as pixels when no text carrier holds it");
         }
         finally { File.Delete(pdf); }
+    }
+
+    private static string? LocateRepoRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory != null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "excise.sln")))
+                return directory.FullName;
+            directory = directory.Parent;
+        }
+        return null;
     }
 }
