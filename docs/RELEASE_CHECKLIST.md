@@ -5,8 +5,8 @@ Use this checklist before tagging any `v*` release.
 ## Tagging
 
 ```bash
-git tag -a v3.9.0 -m "excise v3.9.0"
-git push origin v3.9.0
+git tag -a v<version> -m "excise v<version>"
+git push origin v<version>
 ```
 
 That is all. There is no evidence-checking wrapper and no enforced trailer.

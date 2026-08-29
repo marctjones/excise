@@ -6,6 +6,30 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.91.0] - 2026-08-29
+
+### Security and redaction
+- **Redaction now handles image-only OCR overlays and region-level JBIG2/image
+  redaction**, with independent extractor, rendered-ink, carrier, and
+  save/reopen assurance gates. The expanded benchmark records a versioned
+  Security × Fidelity scorecard rather than trusting excise to grade itself.
+- **Encryption identity crypt filters and non-display carriers are preserved or
+  scrubbed according to explicit policy**, preventing previously unexamined
+  secret-bearing paths from being reported clean.
+
+### Text, copy, and accessibility
+- **Copy/selection quality has new reading-order and Unicode-safety coverage**,
+  including multi-column text and unsafe display-control diagnostics.
+- **Automation and accessibility release smoke remains CLI-first and
+  platform-neutral**, with no runtime scripting compiler in shipped AOT builds.
+
+### Performance and verification
+- **A fresh-process renderer benchmark now compares Excise with independent
+  renderers** and records wall time, RSS, and fidelity separately, including
+  ACC and Altona stress fixtures.
+- **Release documentation no longer embeds a stale version number in command
+  examples.**
+
 ### Fixed
 - **An unsigned `/FT /Sig` widget no longer gets a placeholder border**
   (#1005). #885 stroked a neutral blue rectangle over the whole `/Rect` so the

@@ -574,7 +574,7 @@ Before tagging, run the release checklist in
 gate is:
 
 ```bash
-scripts/release-smoke.sh --visual --package --packaged-gui --aot --version 2.27.1
+scripts/release-smoke.sh --visual --package --packaged-gui --aot --version <version>
 ```
 
 The release-smoke script does not create tags or upload artifacts. It runs the
