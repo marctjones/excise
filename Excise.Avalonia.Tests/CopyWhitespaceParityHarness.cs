@@ -16,9 +16,8 @@ namespace Excise.Avalonia.Tests;
 /// Runs the REAL selection path — <see cref="TextSelectionEngine.SortReadingOrder(System.Collections.Generic.IEnumerable{Letter}, ReadingOrderStrategy)"/>
 /// then <see cref="TextSelectionEngine.JoinText(System.Collections.Generic.IReadOnlyList{Letter}, WhitespaceMode)"/>
 /// — over real corpus PDFs and compares to an INDEPENDENT oracle (poppler
-/// <c>pdftotext</c>). It is deliberately NOT part of the normal suite: it is
-/// gated behind <c>COPY_WHITESPACE_PARITY=1</c> so it never joins the routine
-/// (t0) run, and it skips when <c>pdftotext</c> is not on PATH or the corpus is
+/// <c>pdftotext</c>). It runs whenever those independent prerequisites are
+/// available, and skips explicitly when <c>pdftotext</c> or the corpus is
 /// absent. Reproduce with <c>scripts/copy-whitespace-parity.sh</c>.
 ///
 /// <para>
@@ -51,11 +50,6 @@ public class CopyWhitespaceParityHarness
     [Fact]
     public void MeasureParity_AgainstPdftotext()
     {
-        if (Environment.GetEnvironmentVariable("COPY_WHITESPACE_PARITY") != "1")
-        {
-            Assert.Skip("Set COPY_WHITESPACE_PARITY=1 to run the corpus parity harness.");
-            return;
-        }
         if (!PdftotextAvailable())
         {
             Assert.Skip("pdftotext (poppler) not found on PATH.");
