@@ -1,4 +1,5 @@
 using System;
+using Excise.Core.Text;
 using ReactiveUI;
 
 namespace Excise.App.Models;
@@ -18,6 +19,8 @@ public class ClipboardEntry : ReactiveObject
             this.RaiseAndSetIfChanged(ref _text, value);
             this.RaisePropertyChanged(nameof(PreviewText));
             this.RaisePropertyChanged(nameof(CharacterCount));
+            this.RaisePropertyChanged(nameof(HasUnicodeSecurityControls));
+            this.RaisePropertyChanged(nameof(UnicodeSecurityNotice));
         }
     }
 
@@ -78,12 +81,23 @@ public class ClipboardEntry : ReactiveObject
 
             // Show first 100 characters as preview
             const int maxLength = 100;
-            if (Text.Length <= maxLength)
-                return Text;
+            var preview = Text.Length <= maxLength
+                ? Text
+                : Text.Substring(0, maxLength) + "...";
 
-            return Text.Substring(0, maxLength) + "...";
+            // The clipboard and Text retain original document code points.
+            // Only this sidebar preview is escaped, so bidi/invisible controls
+            // cannot spoof what a user sees while reviewing copied PDF text.
+            return UnicodeTextSafety.EscapeForDisplay(preview);
         }
     }
 
     public int CharacterCount => Text?.Length ?? 0;
+
+    public bool HasUnicodeSecurityControls =>
+        UnicodeTextSafety.ContainsPotentiallyMisleadingControl(Text);
+
+    public string UnicodeSecurityNotice => UnicodeTextSafety.ContainsBidiControl(Text)
+        ? "Contains bidirectional formatting controls"
+        : "Contains invisible Unicode controls";
 }
