@@ -94,9 +94,9 @@ public class PdfViewerHeadlessRenderTests
     }
 
     [FixedAvaloniaFact]
-    public async Task PdfViewer_AccCompensationCover_DisplayedBitmapMatchesRendererAndIsNotBlack()
+    public async Task PdfViewer_GeneratedAnnotationProbe_DisplayedBitmapMatchesRendererAndIsNotBlack()
     {
-        var pdfPath = FindRepoFile("test-pdfs", "sample-pdfs", "acc-global-compensation-report.pdf");
+        var pdfPath = FindRepoFile("test-pdfs", "generated-regressions", "annotations", "annotation-property-probe.pdf");
         var pdfBytes = await File.ReadAllBytesAsync(pdfPath);
 
         using var expectedRaw = RenderDirectPage(pdfBytes, pageNumber: 1, dpi: ViewerRenderDpi);
@@ -107,17 +107,17 @@ public class PdfViewerHeadlessRenderTests
         displayed.Height.Should().Be(expected.Height);
 
         var difference = VisualAssertions.CalculatePixelDifference(displayed, expected);
-        _output.WriteLine($"ACC cover GUI bitmap vs renderer difference: {difference:P4}");
+        _output.WriteLine($"Generated annotation probe GUI bitmap vs renderer difference: {difference:P4}");
         difference.Should().BeLessThanOrEqualTo(0.001,
             "the bitmap handed to the GUI Image control should match the renderer output");
 
-        AssertLightOpaquePage(displayed, "ACC cover GUI bitmap");
+        AssertLightOpaquePage(displayed, "generated annotation probe GUI bitmap");
     }
 
     [FixedAvaloniaFact]
-    public async Task PdfViewer_AccCompensationCover_HeadlessVisualSurfaceMatchesDisplayedBitmap()
+    public async Task PdfViewer_GeneratedAnnotationProbe_HeadlessVisualSurfaceMatchesDisplayedBitmap()
     {
-        var pdfPath = FindRepoFile("test-pdfs", "sample-pdfs", "acc-global-compensation-report.pdf");
+        var pdfPath = FindRepoFile("test-pdfs", "generated-regressions", "annotations", "annotation-property-probe.pdf");
         var pdfBytes = await File.ReadAllBytesAsync(pdfPath);
 
         var capture = await RenderViewerVisualSurface(pdfBytes);
@@ -128,11 +128,11 @@ public class PdfViewerHeadlessRenderTests
         displayed.Height.Should().Be(visualSurface.Height);
 
         var difference = VisualAssertions.CalculatePixelDifference(visualSurface, displayed);
-        _output.WriteLine($"ACC cover offscreen GUI surface vs displayed bitmap difference: {difference:P4}");
+        _output.WriteLine($"Generated annotation probe offscreen GUI surface vs displayed bitmap difference: {difference:P4}");
         difference.Should().BeLessThanOrEqualTo(0.01,
             "the headless Avalonia visual surface should show the same pixels as the rendered page bitmap");
 
-        AssertLightOpaquePage(visualSurface, "ACC cover offscreen GUI surface");
+        AssertLightOpaquePage(visualSurface, "generated annotation probe offscreen GUI surface");
     }
 
     /// <summary>

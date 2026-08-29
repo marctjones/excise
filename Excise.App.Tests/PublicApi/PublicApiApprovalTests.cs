@@ -26,7 +26,7 @@ public class PublicApiApprovalTests
             .GeneratePublicApi(new ApiGeneratorOptions { IncludeAssemblyAttributes = false })
             .Replace("\r\n", "\n")
             .TrimEnd() + "\n";
-        var file = Path.Combine(ApprovedDir(), "Excise.App.approved.txt");
+        var file = Path.Combine(ApprovedDir(), ApprovedFileName);
         if (Environment.GetEnvironmentVariable("APPROVE_PUBLIC_API") == "1")
         {
             Directory.CreateDirectory(Path.GetDirectoryName(file)!);
@@ -43,4 +43,13 @@ public class PublicApiApprovalTests
 
     private static string ApprovedDir([CallerFilePath] string thisFile = "")
         => Path.GetDirectoryName(thisFile)!;   // this file lives in PublicApi/ already
+
+#if DEBUG
+    private const string ApprovedFileName = "Excise.App.approved.txt";
+#else
+    // Release deliberately excludes development-only scripting surface. Keep
+    // its reviewed public API distinct rather than letting a Debug snapshot
+    // make release validation fail or, worse, skip the inventory check.
+    private const string ApprovedFileName = "Excise.App.release.approved.txt";
+#endif
 }

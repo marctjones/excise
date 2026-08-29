@@ -32,7 +32,7 @@ public class InPageLinkClickTests
     private const double RenderDpi = 120.0;
 
     /// <summary>
-    /// Was a hardcoded "/home/marc/Downloads/..." path that exists on no
+    /// This used to be a hardcoded personal-document path that exists on no
     /// machine but the original author's — this test has silently skipped
     /// everywhere else since it was written (the #619 "invisible coverage
     /// loss" pattern; same bug found and fixed in MultiEmbeddedFontLayoutTests.cs

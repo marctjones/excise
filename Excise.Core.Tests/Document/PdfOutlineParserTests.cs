@@ -16,8 +16,8 @@ public class PdfOutlineParserTests
     private readonly ITestOutputHelper _out;
     public PdfOutlineParserTests(ITestOutputHelper o) { _out = o; }
 
-    private const string PragmaticBook =
-        "/home/marc/Downloads/business-success-with-open-source_P1.0.pdf";
+    // Legacy real-world coverage is disabled pending a redistributable fixture.
+    private const string PragmaticBook = "";
 
     [Fact]
     public void BuildPageRefMap_CyclicPagesTree_DoesNotRecurseForever()

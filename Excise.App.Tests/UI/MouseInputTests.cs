@@ -46,7 +46,7 @@ public class MouseInputTests : IDisposable
     // - Multiple pages of body text for selection tests
     // - Predictable layout for coordinate-based hit tests
     //
-    // Was a hardcoded "/home/marc/Downloads/..." path that exists on no
+    // This used to be a hardcoded personal-document path that exists on no
     // machine but the original author's — every test below gated on
     // File.Exists(PragmaticBook) has silently skipped everywhere else since
     // this file was written (the #619 "invisible coverage loss" pattern;

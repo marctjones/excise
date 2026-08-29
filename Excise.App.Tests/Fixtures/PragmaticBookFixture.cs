@@ -12,8 +12,10 @@ namespace Excise.App.Tests.Fixtures;
 /// </summary>
 public class PragmaticBookFixture : IDisposable
 {
-    private const string PragmaticBookPath =
-        "/home/marc/Downloads/business-success-with-open-source_P1.0.pdf";
+    // No personal-document path belongs in the test suite. This optional legacy
+    // fixture is deliberately disabled until its coverage is replaced by a
+    // redistributable, checked-in fixture.
+    private const string PragmaticBookPath = "";
 
     public PdfDocument? Document { get; }
     public bool IsAvailable { get; }

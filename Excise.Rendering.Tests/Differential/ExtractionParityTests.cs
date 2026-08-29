@@ -70,9 +70,6 @@ public sealed class ExtractionParityTests
         // downloaded release fixtures and participate whenever present.
         var cases = new (string RelativePath, int Page)[]
         {
-            ("test-pdfs/sample-pdfs/acc-global-compensation-report.pdf", 12),
-            ("test-pdfs/sample-pdfs/acc-global-compensation-report.pdf", 16),
-            ("test-pdfs/sample-pdfs/acc-global-compensation-report.pdf", 21),
             ("test-pdfs/smoke/state-ds82-passport-renewal.pdf", 2),
             ("test-pdfs/smoke/state-ds82-passport-renewal.pdf", 3),
             ("test-pdfs/smoke/state-ds82-passport-renewal.pdf", 4),
