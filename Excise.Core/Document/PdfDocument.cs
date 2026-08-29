@@ -1203,9 +1203,22 @@ public class PdfDocument : IDisposable
 
                 if (obj is PdfStream stream)
                 {
-                    var encrypted = stream.EncodedData;
-                    var decrypted = _securityHandler.DecryptStream(objNum, gen, encrypted);
-                    stream.SetEncodedData(decrypted);
+                    // §7.4.10: a stream may override the document's default
+                    // crypt filter with /Crypt /Name /Identity. Its bytes are
+                    // deliberately plaintext, so passing them to AES-CBC
+                    // would turn a valid stream into the #1048-style "input
+                    // data is not a complete block" failure (#1167).
+                    //
+                    // The /Crypt filter is an encryption stage, not a content
+                    // filter. Remove this no-op stage before the normal
+                    // decompressor runs; it has no /Crypt decoder and must
+                    // only receive actual content filters such as FlateDecode.
+                    if (!RemoveIdentityCryptFilter(stream))
+                    {
+                        var encrypted = stream.EncodedData;
+                        var decrypted = _securityHandler.DecryptStream(objNum, gen, encrypted);
+                        stream.SetEncodedData(decrypted);
+                    }
                 }
                 DecryptStringsInPlace(obj, objNum, gen);
             }
@@ -1950,6 +1963,11 @@ public class PdfDocument : IDisposable
     ///   • cross-reference streams (/Type /XRef) — always exempt.
     ///   • the /Metadata stream when /EncryptMetadata is explicitly false
     ///     (absent means true, i.e. still encrypted — do NOT exempt then).
+    ///
+    /// Per-stream <c>/Crypt /Name /Identity</c> is intentionally NOT listed
+    /// here. It exempts the stream bytes, not ordinary strings in that
+    /// indirect object's dictionary: those remain governed by the document's
+    /// <c>/StrF</c> filter. See <see cref="RemoveIdentityCryptFilter"/>.
     /// </summary>
     private bool IsExemptFromEncryption(PdfObject obj)
     {
@@ -1958,6 +1976,66 @@ public class PdfDocument : IDisposable
         if (type == "XRef") return true;
         if (type == "Metadata" && _securityHandler is { EncryptMetadata: false }) return true;
         return false;
+    }
+
+    /// <summary>
+    /// Finds a per-stream <c>/Filter /Crypt</c> stage with
+    /// <c>/DecodeParms &lt;&lt; /Name /Identity &gt;&gt;</c>, removes that no-op
+    /// stage from the filter pipeline, and returns whether it was present.
+    ///
+    /// <para>PDF's array-valued <c>/Filter</c> and <c>/DecodeParms</c> entries
+    /// are positional (§7.4): remove the matching decode-parameter element
+    /// with the matching filter. Direct parameter dictionaries are the only
+    /// representation that reaches this point; <see cref="PdfParser"/>
+    /// resolves indirect <c>/DecodeParms</c> while parsing the stream.</para>
+    /// </summary>
+    private static bool RemoveIdentityCryptFilter(PdfStream stream)
+    {
+        var filters = stream.Filters;
+        if (filters.Count == 0)
+            return false;
+
+        var parameters = stream.DecodeParams;
+        var keptFilters = new List<PdfObject>(filters.Count);
+        var keptParameters = new List<PdfObject>(filters.Count);
+        var removedIdentityCrypt = false;
+
+        for (var i = 0; i < filters.Count; i++)
+        {
+            var parameter = i < parameters.Count ? parameters[i] : null;
+            var isIdentityCrypt = filters[i] == "Crypt"
+                && parameter?.GetNameOrNull("Name") == "Identity";
+
+            if (isIdentityCrypt)
+            {
+                removedIdentityCrypt = true;
+                continue;
+            }
+
+            keptFilters.Add(new PdfName(filters[i]));
+            keptParameters.Add((PdfObject?)parameter ?? PdfNull.Instance);
+        }
+
+        if (!removedIdentityCrypt)
+            return false;
+
+        if (keptFilters.Count == 0)
+        {
+            stream.Remove("Filter");
+            stream.Remove("DecodeParms");
+            return true;
+        }
+
+        stream["Filter"] = keptFilters.Count == 1 ? keptFilters[0] : new PdfArray(keptFilters);
+
+        // A missing DecodeParms entry is semantically different from an array
+        // containing only nulls, so retain it only when one existed originally.
+        if (stream.ContainsKey("DecodeParms"))
+            stream["DecodeParms"] = keptParameters.Count == 1
+                ? keptParameters[0]
+                : new PdfArray(keptParameters);
+
+        return true;
     }
 
     private void DecryptStringsInPlace(PdfObject root, int objNum, int gen)
