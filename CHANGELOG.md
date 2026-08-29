@@ -6,7 +6,7 @@ semantic versioning.
 
 ## [Unreleased]
 
-## [3.91.0] - 2026-08-29
+## [3.9.1] - 2026-08-29
 
 ### Security and redaction
 - **Redaction now handles image-only OCR overlays and region-level JBIG2/image
