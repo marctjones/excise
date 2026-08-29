@@ -186,6 +186,32 @@ public sealed class EncryptionPreservationTests
             .And.Contain("keep", "surviving text must remain");
     }
 
+    [Fact]
+    public void RedactEncryptedPdf_PerStreamIdentityCryptFilter_DoesNotDecryptPlaintextStream()
+    {
+        // #1167: /StmF selects AESV2 for the document, but this particular
+        // content stream explicitly selects /Crypt /Name /Identity. Its bytes
+        // are plaintext by definition (§7.4.10), so applying the document
+        // handler's AES-CBC decryptor used to throw "input data is not a
+        // complete block" before redaction could inspect the page.
+        const string secret = "IDENTITY-CRYPT-SECRET";
+        var encrypted = CreateAes128PdfWithPlaintextIdentityContent(secret);
+
+        using var doc = PdfDocument.Open(encrypted, "pw");
+        doc.IsEncrypted.Should().BeTrue();
+        doc.GetPage(1).Text.Should().Contain(secret,
+            "the per-stream Identity override must leave the content stream readable");
+
+        doc.RedactText(secret, drawBlackRect: false).VerifiedRemovals.Should().Be(1);
+        var saved = doc.SaveToBytes(doc.GetReEncryptionOptions("pw"));
+
+        using var reopened = PdfDocument.Open(saved, "pw");
+        reopened.IsEncrypted.Should().BeTrue("#643 must still preserve source protection");
+        reopened.GetPage(1).Text.Should().NotContain(secret);
+        SavedPdfLeakScanner.FindTerm(reopened.SaveToBytes(), secret).Should().BeEmpty(
+            "a per-stream identity override must not weaken glyph-level removal");
+    }
+
     private static byte[] LoadEmbeddedFixture(string fileName)
     {
         var asm = Assembly.GetExecutingAssembly();
@@ -201,6 +227,83 @@ public sealed class EncryptionPreservationTests
     {
         using var doc = PdfDocument.Open(CreateSimplePdf(text));
         return doc.SaveToBytes(options);
+    }
+
+    /// <summary>
+    /// Makes a compact V=4/R=4 AESV2 fixture entirely in memory. The normal
+    /// writer encrypts every content stream, so start with its valid encryption
+    /// dictionary and file ID, then replace only object 4 with a legal
+    /// plaintext /Crypt /Identity stream and rebuild its classic xref table.
+    /// This is deliberately self-contained: qpdf can emit the same shape, but
+    /// the regression must not become skipped on machines without qpdf.
+    /// </summary>
+    private static byte[] CreateAes128PdfWithPlaintextIdentityContent(string text)
+    {
+        var encrypted = SaveEncrypted("writer-seed", new PdfEncryptionOptions
+        {
+            UserPassword = "pw",
+            OwnerPassword = "pw",
+            Algorithm = PdfEncryptionAlgorithm.Aes128,
+        });
+
+        var source = Encoding.Latin1.GetString(encrypted);
+        // Search for the table's line boundary: the final startxref token
+        // itself also ends in "xref\\n".
+        var xrefOffset = source.LastIndexOf("\nxref\n0 ", StringComparison.Ordinal) + 1;
+        var trailerOffset = source.IndexOf("trailer\n", xrefOffset, StringComparison.Ordinal);
+        var startXrefOffset = source.IndexOf("startxref\n", trailerOffset, StringComparison.Ordinal);
+        xrefOffset.Should().BeGreaterThanOrEqualTo(0);
+        trailerOffset.Should().BeGreaterThan(xrefOffset);
+        startXrefOffset.Should().BeGreaterThan(trailerOffset);
+
+        var xrefLines = source[xrefOffset..trailerOffset]
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        xrefLines[0].Should().Be("xref");
+        var xrefHeader = xrefLines[1].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        xrefHeader[0].Should().Be("0");
+        var size = int.Parse(xrefHeader[1], System.Globalization.CultureInfo.InvariantCulture);
+        var offsets = new long[size];
+        for (var objectNumber = 1; objectNumber < size; objectNumber++)
+        {
+            // xrefLines[2] is object 0's free entry; object N follows it.
+            var parts = xrefLines[objectNumber + 2]
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            offsets[objectNumber] = long.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        var content = $"BT /F1 12 Tf 100 700 Td ({text}) Tj ET";
+        var replacement = Encoding.ASCII.GetBytes(
+            $"4 0 obj\n<< /Length {content.Length} /Filter /Crypt /DecodeParms << /Name /Identity >> >>\nstream\n{content}\nendstream\nendobj\n");
+
+        using var output = new MemoryStream();
+        output.Write(encrypted, 0, checked((int)offsets[1]));
+        var rebuiltOffsets = new long[size];
+        for (var objectNumber = 1; objectNumber < size; objectNumber++)
+        {
+            rebuiltOffsets[objectNumber] = output.Position;
+            if (objectNumber == 4)
+            {
+                output.Write(replacement);
+                continue;
+            }
+
+            var nextOffset = objectNumber + 1 < size ? offsets[objectNumber + 1] : xrefOffset;
+            output.Write(encrypted, checked((int)offsets[objectNumber]), checked((int)(nextOffset - offsets[objectNumber])));
+        }
+
+        var rebuiltXrefOffset = output.Position;
+        using var writer = new StreamWriter(output, Encoding.ASCII, leaveOpen: true) { NewLine = "\n" };
+        writer.WriteLine("xref");
+        writer.WriteLine($"0 {size}");
+        writer.WriteLine("0000000000 65535 f ");
+        for (var objectNumber = 1; objectNumber < size; objectNumber++)
+            writer.WriteLine($"{rebuiltOffsets[objectNumber]:D10} 00000 n ");
+        writer.Write(source[trailerOffset..startXrefOffset]);
+        writer.WriteLine("startxref");
+        writer.WriteLine(rebuiltXrefOffset.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+        return output.ToArray();
     }
 
     private static byte[] CreateSimplePdf(string text)
