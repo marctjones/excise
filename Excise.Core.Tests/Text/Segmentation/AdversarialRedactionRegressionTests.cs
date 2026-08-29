@@ -98,20 +98,38 @@ public sealed class AdversarialRedactionRegressionTests
     }
 
     [Fact]
-    public void RedactText_Jbig2Scan_SurfacesWholeImageDrop()
+    public void RedactText_Jbig2Scan_RegionRedactsAndReplacesOriginalImage()
     {
-        // #1187/#1195: JBIG2 is not yet region-editable (#1197), so it falls back
-        // to whole-Do removal — destructive collateral that must be SURFACED, not
-        // hidden (carrier policy).
+        // #1197: JBIG2 decodes to normalized PDF 1-bit samples, so the same
+        // lossless Flate re-embed path as CCITT can preserve the scan while
+        // destroying the requested region. The saved output must point only at
+        // the newly-blackened Flate image; leaving the original JBIG2 object
+        // reachable would retain the readable pixels.
         var path = Path.Combine(RepoRoot(), "test-pdfs", "pdfjs", "issue12963.pdf");
         Assert.SkipUnless(File.Exists(path),
             "JBIG2 scan fixture absent [requires: corpus:pdfjs]");
         using var doc = PdfDocument.Open(path);
+        var before = CountImageDo(doc.GetPage(1));
         var report = doc.RedactText("V1HH");
-        report.ImagesDroppedWhole.Should().BeGreaterThan(0,
-            "a JBIG2 scan falls back to whole-Do removal (#1197)");
-        report.ToString().Should().Contain("whole image",
-            "the destructive fallback is surfaced in the report");
+        report.ImageRegionsRedacted.Should().BeGreaterThan(0,
+            "the JBIG2 scan's matched region is destroyed in place (#1197)");
+        report.ImagesDroppedWhole.Should().Be(0,
+            "a successfully decoded JBIG2 scan must not be destructively dropped");
+
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        var page = reopened.GetPage(1);
+        CountImageDo(page).Should().Be(before,
+            "the image is retained as a region-redacted replacement, not dropped");
+        var imageNames = page.GetContentStream().Operators
+            .Where(op => op.Name == "Do" && op.Operands.Count > 0)
+            .Select(op => op.GetName(0))
+            .Where(name => !string.IsNullOrEmpty(name))
+            .ToArray();
+        var hasFlateReplacement = imageNames.Any(name =>
+            page.GetXObject(name!) is Excise.Core.Primitives.PdfStream image &&
+            image.GetNameOrNull("Subtype") == "Image" && image.GetNameOrNull("Filter") == "FlateDecode");
+        hasFlateReplacement.Should().BeTrue(
+            "the saved page must reference the fresh Flate image, not the original JBIG2 bytes");
     }
 
     [Fact]
@@ -626,7 +644,12 @@ public sealed class AdversarialRedactionRegressionTests
     private static string RepoRoot()
     {
         var d = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
-        while (d != null && !System.IO.Directory.Exists(System.IO.Path.Combine(d.FullName, ".git"))) d = d.Parent;
+        // A linked Git worktree has a .git FILE pointing at the shared Git
+        // directory, while a primary checkout has a .git directory. Tests that
+        // opt into a local corpus must support both layouts.
+        while (d != null &&
+               !System.IO.Directory.Exists(System.IO.Path.Combine(d.FullName, ".git")) &&
+               !System.IO.File.Exists(System.IO.Path.Combine(d.FullName, ".git"))) d = d.Parent;
         return d!.FullName;
     }
 
