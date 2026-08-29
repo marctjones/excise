@@ -1470,6 +1470,14 @@
                                                        MaxHeight="60"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
 
+                                            <!-- Raw copied text is preserved; this warning makes any
+                                                 non-printing Unicode control explicit in the preview. -->
+                                            <TextBlock Text="{Binding UnicodeSecurityNotice}"
+                                                       IsVisible="{Binding HasUnicodeSecurityControls}"
+                                                       FontSize="10"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#D97706"/>
+
                                             <!-- Character Count -->
                                             <TextBlock Text="{Binding CharacterCount, StringFormat='{}{0} characters'}"
                                                        FontSize="10"
