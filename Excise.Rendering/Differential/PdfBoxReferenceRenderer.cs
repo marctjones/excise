@@ -73,7 +73,7 @@ public static class PdfBoxReferenceRenderer
                 return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
             var stdoutTask = p.StandardOutput.ReadToEndAsync();
             var stderrTask = p.StandardError.ReadToEndAsync();
-            if (!p.WaitForExit(timeoutMs))
+            if (!ReferenceProcessResources.WaitForExitAndCapture(p, timeoutMs, out var resources))
             {
                 try { p.Kill(entireProcessTree: true); } catch { }
                 var timeoutOutput = FormatCapturedOutput(
@@ -116,7 +116,8 @@ public static class PdfBoxReferenceRenderer
             return bitmap == null
                 ? new ReferenceRenderResult(null, "DECODE_ERROR",
                     $"{invocation.Description} output PNG could not be decoded", sw.ElapsedMilliseconds)
-                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds);
+                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds,
+                    resources.PeakWorkingSetBytes, resources.CpuMs);
         }
         catch (Exception ex)
         {

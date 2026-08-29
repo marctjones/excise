@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    { "id": "acc-compensation-cover", "path": "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf", "page": 1, "dpi": 150, "heavy": false },
+    { "id": "multilingual-cjk", "path": "test-pdfs/sample-pdfs/multilingual-noto-cjk.pdf", "page": 1, "dpi": 150, "heavy": false },
+    { "id": "irs-w9-form", "path": "test-pdfs/smoke/irs-w9.pdf", "page": 1, "dpi": 150, "heavy": false },
+    { "id": "altona-technical2-p1", "path": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_x4.pdf", "page": 1, "dpi": 72, "heavy": true },
+    { "id": "altona-technical2-p5", "path": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf", "page": 5, "dpi": 72, "heavy": true },
+    { "id": "altona-technical2-p7", "path": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf", "page": 7, "dpi": 72, "heavy": true }
+  ]
+}

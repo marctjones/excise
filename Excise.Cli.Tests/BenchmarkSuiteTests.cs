@@ -114,6 +114,40 @@ public class BenchmarkSuiteTests
     }
 
     [Fact]
+    public async Task ReferencePerformance_ReportsMissingFixtureWithoutInventingMeasurements()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "excise-reference-performance-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(dir);
+            var manifest = Path.Combine(dir, "fixtures.json");
+            await File.WriteAllTextAsync(manifest, """
+                { "schemaVersion": 1, "fixtures": [
+                  { "id": "missing", "path": "does-not-exist.pdf", "page": 1, "dpi": 72, "heavy": false }
+                ] }
+                """, TestContext.Current.CancellationToken);
+
+            var exitCode = await RenderProgram.RunAsync(new[]
+            {
+                "reference-performance", "--fixtures", manifest, "--output-dir", dir,
+                "--runs", "1", "--oracles", "none",
+            });
+
+            exitCode.Should().Be(0);
+            using var stream = File.OpenRead(Path.Combine(dir, "reference-performance.json"));
+            var report = JsonSerializer.Deserialize<RenderProgram.ReferencePerformanceReport>(stream);
+            report.Should().NotBeNull();
+            report!.runs.Should().ContainSingle().Which.status.Should().Be("MISSING_FIXTURE");
+            report.regressionGate.passed.Should().BeTrue();
+            report.methodology.Should().Contain("fresh excise CLI");
+        }
+        finally
+        {
+            if (Directory.Exists(dir)) Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
     public void HotspotRegressionCatalog_ClassifiesBenchmarkGuiCorpusAndReferencePhases()
     {
         var definitions = RenderProgram.HotspotRegressionCatalog.Definitions;

@@ -38,6 +38,7 @@ partial class Program
             CreateGuiDisplayHotspotsCommand(),
             CreateCorpusHotspotsCommand(),
             CreateBenchmarkSuiteCommand(),
+            CreateReferencePerformanceCommand(),
             CreateProfileWorkflowsCommand(),
             CreateAnnotationBenchCommand(),
         };
