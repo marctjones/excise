@@ -25,7 +25,7 @@ public class MultiEmbeddedFontLayoutTests
     // gitignored under test-pdfs/, populated locally from
     // test-pdfs/manifests/local-real-world-books.json). This used to be a
     // hardcoded single-machine absolute path
-    // ("/home/marc/Downloads/business-success-with-open-source_P1.0.pdf")
+    // (a formerly local, non-redistributable book fixture)
     // that doesn't exist on any dev machine or CI runner but this repo's
     // original author's — meaning this regression test, written for a real
     // SetFont-ordering bug, silently skipped everywhere else the whole time

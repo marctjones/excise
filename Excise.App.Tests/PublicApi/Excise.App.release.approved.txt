@@ -551,23 +551,6 @@ namespace Excise.App.Services
         public void SanitizeMetadata(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms) { }
         public void StripAllMetadata(Excise.Core.Document.PdfDocument document) { }
     }
-    public class ScriptExecutionResult
-    {
-        public ScriptExecutionResult() { }
-        public string? ErrorMessage { get; init; }
-        public object? ReturnValue { get; init; }
-        public bool Success { get; init; }
-        public override string ToString() { }
-        public static Excise.App.Services.ScriptExecutionResult FromError(string errorMessage) { }
-        public static Excise.App.Services.ScriptExecutionResult FromSuccess(object? returnValue = null) { }
-    }
-    public class ScriptingService
-    {
-        public ScriptingService(Excise.App.ViewModels.MainWindowViewModel viewModel) { }
-        public System.Threading.Tasks.Task<Excise.App.Services.ScriptExecutionResult> ExecuteAsync(string scriptCode) { }
-        public System.Threading.Tasks.Task<Excise.App.Services.ScriptExecutionResult> ExecuteFileAsync(string scriptFilePath) { }
-        public System.Collections.Generic.List<string> ValidateScript(string scriptCode) { }
-    }
     public sealed class SignatureApplicationOptions
     {
         public SignatureApplicationOptions() { }

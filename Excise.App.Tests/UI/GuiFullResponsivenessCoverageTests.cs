@@ -126,9 +126,10 @@ public class GuiFullResponsivenessCoverageTests
     }
 
     [FixedAvaloniaFact(Timeout = 120_000)]
-    public async Task AccCompensationReportContinuousScroll_RendersVisiblePageWithoutLagAndWritesHotspotReport()
+    public async Task GeneratedTwentyFourPageDocumentContinuousScroll_RendersVisiblePageWithoutLagAndWritesHotspotReport()
     {
-        var path = FindRepoFile("test-pdfs", "sample-pdfs", "acc-global-compensation-report.pdf");
+        var path = Path.Combine(Path.GetTempPath(), $"excise-continuous-scroll-{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 24);
         var results = new List<GuiWorkflowResult>();
         MainWindow? window = null;
 
@@ -139,38 +140,32 @@ public class GuiFullResponsivenessCoverageTests
             window.Show();
 
             var openElapsedMs = await MeasureAsync(() => vm.LoadDocumentAsync(path));
-            vm.TotalPages.Should().Be(24, "the ACC compensation report fixture should remain the real-world scroll target");
-            AddResult(results, "acc-compensation-document-open", openElapsedMs, 6_000, 12_000, "gui.document-open.acc-compensation-total");
+            vm.TotalPages.Should().Be(24, "the generated continuous-scroll fixture has a fixed page count");
+            AddResult(results, "generated-continuous-document-open", openElapsedMs, 6_000, 12_000, "gui.document-open.generated-continuous-total");
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
             viewer.Should().NotBeNull("the main window should host the reusable viewer control");
             await WaitForIdleLayout(window);
 
             var toggleElapsedMs = Measure(() => vm.ViewMode = PdfViewMode.Continuous);
-            AddResult(results, "acc-compensation-continuous-view-toggle", toggleElapsedMs, 150, 500, "gui.input.acc-compensation-continuous-view-toggle");
+            AddResult(results, "generated-continuous-view-toggle", toggleElapsedMs, 150, 500, "gui.input.generated-continuous-view-toggle");
             await WaitForIdleLayout(window);
 
             var scroll = viewer!.FindControl<ScrollViewer>("ContinuousScrollViewer");
-            scroll.Should().NotBeNull("continuous mode should expose a scroll viewer for real-report timing");
+            scroll.Should().NotBeNull("continuous mode should expose a scroll viewer for generated-document timing");
             var items = viewer.FindControl<ItemsControl>("ContinuousItems");
-            items.Should().NotBeNull("continuous mode should expose page slots for real-report timing");
+            items.Should().NotBeNull("continuous mode should expose page slots for generated-document timing");
             var slots = items!.ItemsSource!.Cast<PdfPageSlot>().ToArray();
             slots.Should().HaveCount(24);
 
-            // FIRST PAINT — the cold render of page 1's visible band (JIT + first
-            // Skia rasterization + xvfb on Linux CI). This used to be an ungraded
-            // 60s setup wait, and it failed ~50% of Windows CI runs (#855) while
-            // *passing* at 50s on the same commit: the wait was not a warm-up, it
-            // was an unmeasured 20-full-page-render cost hiding under a wall clock.
-            // It is graded now, so the work cannot silently grow back — see
-            // PdfViewerControl.RenderContinuousCellsAsync. The hard timeout stays
-            // well ABOVE warnMs so a slow first paint is judged by the grading
-            // rather than by a TimeoutException that bypasses it.
+            // FIRST PAINT — the cold render of page 1's visible band.  This uses a
+            // deterministic, generated document: release tests must never depend on
+            // a person's Downloads directory or a personal real-world PDF.
             var firstPaintMs = await MeasureAsync(() =>
                 WaitForContinuousPageBitmapAsync(window, items, pageNumber: 1, TimeSpan.FromSeconds(60), viewer));
             AddResult(
                 results,
-                "acc-compensation-continuous-first-paint",
+                "generated-continuous-first-paint",
                 firstPaintMs,
                 // Measured after the batching fix: ~11s on this macOS dev box in
                 // the Debug test host (one whole-page render of a graphics-heavy
@@ -183,7 +178,7 @@ public class GuiFullResponsivenessCoverageTests
                 warnMs: 30_000,
                 new Dictionary<string, long>(StringComparer.Ordinal)
                 {
-                    ["gui.render.acc-compensation-continuous-first-paint"] = firstPaintMs,
+                    ["gui.render.generated-continuous-first-paint"] = firstPaintMs,
                     // Where that time went, so a regression is attributable from
                     // the report alone rather than needing a repro (#855).
                     ["gui.render.continuous.render-passes"] = viewer.ContinuousRenderStartCount,
@@ -206,25 +201,23 @@ public class GuiFullResponsivenessCoverageTests
             });
             AddResult(
                 results,
-                "acc-compensation-continuous-scroll-schedule",
+                "generated-continuous-scroll-schedule",
                 scrollElapsedMs,
                 passMs: 150,
                 warnMs: 500,
-                phase: "gui.input.acc-compensation-continuous-scroll-schedule");
+                phase: "gui.input.generated-continuous-scroll-schedule");
 
-            // Hard timeout ABOVE warnMs (15s) so the graded thresholds below
-            // (pass 8s / warn 15s / FAIL beyond) are what judge a slow
-            // settle — previously this threw TimeoutException at 12s, below
-            // the measurement's own warn line, bypassing the grading.
+            // The timeout is above the graded thresholds below, so a slow settle
+            // is reported as a performance result instead of a setup failure.
             var settleElapsedMs = await MeasureAsync(() =>
                 WaitForContinuousPageBitmapAsync(window, items, pageNumber: targetPages[^1], TimeSpan.FromSeconds(30), viewer));
             AddResult(
                 results,
-                "acc-compensation-continuous-scroll-render-settle",
+                "generated-continuous-scroll-render-settle",
                 settleElapsedMs,
                 passMs: 8_000,
                 warnMs: 15_000,
-                phase: "gui.render.acc-compensation-continuous-scroll-settle");
+                phase: "gui.render.generated-continuous-scroll-settle");
 
             var renderStarts = viewer.ContinuousRenderStartCount - initialStarts;
             var renderCancellations = viewer.ContinuousRenderCancellationCount - initialCancellations;
@@ -248,11 +241,12 @@ public class GuiFullResponsivenessCoverageTests
                 "cancelled (skipped-before-render) cells are cheap, but should not churn without bound");
 
             AssertNoHardFailures(results);
-            WriteReport("gui-workflow-suite-acc-compensation-continuous-scroll.json", "gui-workflow-acc-compensation-continuous-scroll", results);
+            WriteReport("gui-workflow-suite-generated-continuous-scroll.json", "gui-workflow-generated-continuous-scroll", results);
         }
         finally
         {
             window?.Close();
+            TestPdfGenerator.CleanupTestFile(path);
         }
     }
 
