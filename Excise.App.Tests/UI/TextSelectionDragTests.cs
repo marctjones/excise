@@ -12,6 +12,7 @@ using Avalonia.Input;
 using Avalonia.Threading;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Graphics;
 using Excise.Core.Text;
 using Excise.Avalonia.Controls;
 using Excise.App.Services;
@@ -39,6 +40,81 @@ public class TextSelectionDragTests
     private const string PragmaticBook =
         "/home/marc/Downloads/business-success-with-open-source_P1.0.pdf";
     private const double RenderDpi = 120.0;
+
+    [FixedAvaloniaFact]
+    public async Task DragAcrossTwoColumns_CopiesNaturalColumnOrderAndLineBreaks()
+    {
+        // #1160: this owns its layout rather than relying on a local book.
+        // A visual rectangle spans both columns, but copied text must follow
+        // the human reading order: the complete left column, then the right.
+        const string expected = "LEFT ONE\nLEFT TWO\nLEFT THREE\nLEFT FOUR\nRIGHT ONE\nRIGHT TWO\nRIGHT THREE\nRIGHT FOUR";
+        var path = Path.Combine(Path.GetTempPath(), $"excise-copy-columns-{Guid.NewGuid():N}.pdf");
+        CreateTwoColumnPdf(path);
+
+        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        try
+        {
+            await Task.Delay(200);
+            await vm.LoadDocumentAsync(path);
+            for (var i = 0; i < 20 && vm.PdfCoreDocument == null; i++)
+                await Task.Delay(100);
+
+            var page = vm.PdfCoreDocument!.GetPage(1);
+            var ordered = TextSelectionEngine.SortReadingOrder(page.Letters).ToList();
+            TextSelectionEngine.JoinText(ordered).Should().Be(expected,
+                "the construction-known two-column page defines the copy order");
+
+            vm.ViewMode = PdfViewMode.SinglePage;
+            vm.IsTextSelectionMode = true;
+            for (var i = 0; i < 20; i++) { await Task.Delay(100); window.UpdateLayout(); }
+
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            viewer.InteractionMode.Should().Be(InteractionMode.TextSelection);
+            var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+            var start = ToWindowPoint(ordered[0], page, overlay, window);
+            var end = ToWindowPoint(ordered[^1], page, overlay, window);
+            var historyBefore = vm.ClipboardHistory.Count;
+
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseDown(start, MouseButton.Left));
+            await Task.Delay(50);
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(end));
+            await Task.Delay(50);
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseUp(end, MouseButton.Left));
+
+            for (var i = 0; i < 30 && vm.ClipboardHistory.Count == historyBefore; i++)
+                await Task.Delay(100);
+
+            vm.ClipboardHistory.Count.Should().BeGreaterThan(historyBefore,
+                "a mouse selection must reach the clipboard-history path");
+            vm.ClipboardHistory[0].Text.Should().Be(expected,
+                "paste-ready text must retain column order and line breaks, not PDF paint order");
+        }
+        finally
+        {
+            window.Close();
+            try { File.Delete(path); } catch { }
+        }
+    }
+
+    private static void CreateTwoColumnPdf(string path)
+    {
+        using var document = PdfDocument.CreateNew();
+        var page = document.Pages.AddBlank();
+        using var graphics = page.GetGraphics();
+        var font = PdfFont.Helvetica(18);
+        graphics.DrawString("LEFT ONE", font, PdfBrush.Black, 72, 700);
+        graphics.DrawString("LEFT TWO", font, PdfBrush.Black, 72, 660);
+        graphics.DrawString("LEFT THREE", font, PdfBrush.Black, 72, 620);
+        graphics.DrawString("LEFT FOUR", font, PdfBrush.Black, 72, 580);
+        graphics.DrawString("RIGHT ONE", font, PdfBrush.Black, 330, 700);
+        graphics.DrawString("RIGHT TWO", font, PdfBrush.Black, 330, 660);
+        graphics.DrawString("RIGHT THREE", font, PdfBrush.Black, 330, 620);
+        graphics.DrawString("RIGHT FOUR", font, PdfBrush.Black, 330, 580);
+        graphics.Flush();
+        document.Save(path);
+    }
 
     [FixedAvaloniaFact]
     public async Task DragOverFirstLine_SelectsExpectedReadingOrderText()
