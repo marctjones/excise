@@ -66,15 +66,15 @@ internal static class ImageRegionRedactor
         if (guardArea.Top - guardArea.Bottom < 1.0 || guardArea.Right - guardArea.Left < 1.0)
             return false;
 
-        // Increment scope (#1195): region-edit only filters whose decode→Flate
-        // re-encode is pixel-faithful, verified by the no-op round-trip test.
-        // CCITT and Flate round-trip at 0.00%; JBIG2 does not yet (2.91%
-        // inverted samples — #1197); DCT/JPX do not
-        // Core-decode to samples at all (they fail the length gate below, but
-        // deny explicitly so the boundary is a decision, not an accident).
+        // Region-edit only filters whose decode→Flate re-encode is
+        // pixel-faithful. JBIG2's decoder normalizes its output to PDF 1-bit
+        // samples, so it uses the same lossless Flate re-embed path as CCITT.
+        // DCT/JPX do not Core-decode to samples at all (they fail the length
+        // gate below, but deny explicitly so the boundary is a decision, not
+        // an accident).
         var filters = image.Filters;
         if (filters.Count > 0
-            && filters[filters.Count - 1] is "JBIG2Decode" or "DCTDecode" or "JPXDecode")
+            && filters[filters.Count - 1] is "DCTDecode" or "JPXDecode")
             return false;
 
         int width = image.GetInt("Width", 0);
