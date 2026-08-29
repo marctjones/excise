@@ -3,7 +3,9 @@ using AwesomeAssertions;
 using Excise.Rendering.Differential;
 using Xunit;
 
-namespace Excise.Rendering.Tests.Differential;
+// Keep this accounting contract in the deterministic suite: release coverage
+// deliberately excludes the expensive external-oracle Differential namespace.
+namespace Excise.Rendering.Tests.Performance;
 
 public sealed class ReferenceProcessResourcesTests
 {
