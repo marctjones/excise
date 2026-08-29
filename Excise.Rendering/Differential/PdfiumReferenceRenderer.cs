@@ -75,7 +75,7 @@ public static class PdfiumReferenceRenderer
             using var p = Process.Start(psi);
             if (p == null)
                 return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
-            if (!p.WaitForExit(timeoutMs))
+            if (!ReferenceProcessResources.WaitForExitAndCapture(p, timeoutMs, out var resources))
             {
                 try { p.Kill(entireProcessTree: true); } catch { }
                 return new ReferenceRenderResult(null, "TIMEOUT", $"pdfium_test exceeded {timeoutMs}ms", sw.ElapsedMilliseconds);
@@ -98,7 +98,8 @@ public static class PdfiumReferenceRenderer
             var bitmap = SKBitmap.Decode(outPath);
             return bitmap == null
                 ? new ReferenceRenderResult(null, "DECODE_ERROR", "pdfium_test output PNG could not be decoded", sw.ElapsedMilliseconds)
-                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds);
+                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds,
+                    resources.PeakWorkingSetBytes, resources.CpuMs);
         }
         catch (Exception ex)
         {

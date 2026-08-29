@@ -106,7 +106,7 @@ public static class MutoolReferenceRenderer
             using var p = Process.Start(psi);
             if (p == null)
                 return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
-            if (!p.WaitForExit(timeoutMs))
+            if (!ReferenceProcessResources.WaitForExitAndCapture(p, timeoutMs, out var resources))
             {
                 try { p.Kill(entireProcessTree: true); } catch { }
                 return new ReferenceRenderResult(null, "TIMEOUT", $"mutool exceeded {timeoutMs}ms", sw.ElapsedMilliseconds);
@@ -123,7 +123,8 @@ public static class MutoolReferenceRenderer
             var bitmap = SKBitmap.Decode(outPath);
             return bitmap == null
                 ? new ReferenceRenderResult(null, "DECODE_ERROR", "mutool output PNG could not be decoded", sw.ElapsedMilliseconds)
-                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds);
+                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds,
+                    resources.PeakWorkingSetBytes, resources.CpuMs);
         }
         catch (Exception ex)
         {

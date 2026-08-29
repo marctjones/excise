@@ -375,6 +375,8 @@ partial class Program
                 kind = "external-subprocess",
                 status = "OK",
                 elapsedMs = sw.ElapsedMilliseconds,
+                peakWorkingSetBytes = result.PeakWorkingSetBytes,
+                cpuMs = result.CpuMs,
                 width = cliBitmap.Width,
                 height = cliBitmap.Height,
                 diffFraction = diff.DifferingPixelFraction,
@@ -538,15 +540,15 @@ partial class Program
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
-        if (!process.WaitForExit(timeoutMs))
+        if (!ReferenceProcessResources.WaitForExitAndCapture(process, timeoutMs, out var resources))
         {
             try { process.Kill(entireProcessTree: true); }
             catch { }
             return new ProcessResult(-1, stdout.ToString(), stderr.ToString(), TimedOut: true);
         }
 
-        process.WaitForExit();
-        return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString(), TimedOut: false);
+        return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString(), TimedOut: false,
+            resources.PeakWorkingSetBytes, resources.CpuMs);
     }
 
     private static BenchmarkReferenceResult BenchmarkReference(
@@ -596,6 +598,8 @@ partial class Program
             kind = "external-cli",
             status = result.Status,
             elapsedMs = result.ElapsedMs,
+            peakWorkingSetBytes = result.PeakWorkingSetBytes,
+            cpuMs = result.CpuMs,
             width = referenceBitmap.Width,
             height = referenceBitmap.Height,
             diffFraction = diff.DifferingPixelFraction,
@@ -1178,7 +1182,9 @@ partial class Program
         int ExitCode,
         string StandardOutput,
         string StandardError,
-        bool TimedOut);
+        bool TimedOut,
+        long? PeakWorkingSetBytes = null,
+        long? CpuMs = null);
 
     internal static bool TryParseBenchmarkOracles(
         string value,
@@ -1372,6 +1378,8 @@ partial class Program
         public string status { get; set; } = "";
         public string? error { get; set; }
         public long? elapsedMs { get; set; }
+        public long? peakWorkingSetBytes { get; set; }
+        public long? cpuMs { get; set; }
         public int? width { get; set; }
         public int? height { get; set; }
         public double? diffFraction { get; set; }
@@ -1388,6 +1396,8 @@ partial class Program
         public string status { get; set; } = "";
         public string? error { get; set; }
         public long? elapsedMs { get; set; }
+        public long? peakWorkingSetBytes { get; set; }
+        public long? cpuMs { get; set; }
         public int? width { get; set; }
         public int? height { get; set; }
         public double? diffFraction { get; set; }
