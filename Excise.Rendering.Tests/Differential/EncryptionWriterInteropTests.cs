@@ -211,7 +211,10 @@ public class EncryptionWriterInteropTests : IDisposable
         var encPath = SaveEncrypted(new PdfEncryptionOptions());
 
         var baseline = GhostscriptReferenceRenderer.RenderPage(plainPath, 1, dpi: 150, timeoutMs: 30_000, userPassword: null);
-        var encrypted = GhostscriptReferenceRenderer.RenderPage(encPath, 1, dpi: 150, timeoutMs: 30_000, userPassword: null);
+        // Ghostscript does not attempt an empty password unless it is passed
+        // explicitly. Empty is still the
+        // password under test; null means "omit the switch", not "try empty".
+        var encrypted = GhostscriptReferenceRenderer.RenderPage(encPath, 1, dpi: 150, timeoutMs: 30_000, userPassword: "");
 
         baseline.Should().NotBeNull();
         encrypted.Should().NotBeNull();
@@ -460,7 +463,10 @@ public class EncryptionWriterInteropTests : IDisposable
         var encPath = SaveEncrypted(new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
 
         var baseline = GhostscriptReferenceRenderer.RenderPage(plainPath, 1, dpi: 150, timeoutMs: 30_000, userPassword: null);
-        var encrypted = GhostscriptReferenceRenderer.RenderPage(encPath, 1, dpi: 150, timeoutMs: 30_000, userPassword: null);
+        // Ghostscript 10 on Linux does not attempt an empty password for an
+        // R=4 AES document unless it is passed explicitly. Empty is still the
+        // password under test; null means "omit the switch", not "try empty".
+        var encrypted = GhostscriptReferenceRenderer.RenderPage(encPath, 1, dpi: 150, timeoutMs: 30_000, userPassword: "");
 
         baseline.Should().NotBeNull();
         encrypted.Should().NotBeNull();
