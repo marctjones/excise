@@ -250,6 +250,12 @@ run_t0() {
     # #940: prove the Roslyn reachability pass reports a dead root and its
     # dead leaf in one closure, without paying the whole-solution cost in t0.
     run_step "reachability-selftest" scripts/check-reachability.sh --self-test
+    # The machine-readable current/target architecture is only useful if its
+    # references and derived diagrams fail on drift. Mutation-prove the checker
+    # before trusting the real registry, then compare project references and
+    # generated DOT views against the checked-in source of truth.
+    run_step "architecture-registry-selftest" scripts/check_architecture_registry.py --self-test
+    run_step "architecture-registry" scripts/check-architecture-registry.sh
     # #1012: every gate must be falsifiable — breaking the property it guards
     # must make it fail. Each of these feeds its gate known-bad input and
     # requires a non-zero exit; each was watched going red against a gate whose
