@@ -2,6 +2,10 @@ using System.Threading.Tasks;
 
 namespace Excise.App.Services;
 
+/// <summary>
+/// Deterministic headless dialog behavior for tests that do not exercise
+/// user interaction. This type deliberately lives outside the shipping app.
+/// </summary>
 internal sealed class NullUserDialogService : IUserDialogService
 {
     public Task ShowMessageAsync(string title, string message) => Task.CompletedTask;
