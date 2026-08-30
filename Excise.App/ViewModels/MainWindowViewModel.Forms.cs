@@ -40,6 +40,9 @@ public partial class MainWindowViewModel
         get => _isPathAnnotationMode;
         set
         {
+            if (_isPathAnnotationMode == value)
+                return;
+
             this.RaiseAndSetIfChanged(ref _isPathAnnotationMode, value);
             if (value)
             {
@@ -129,6 +132,9 @@ public partial class MainWindowViewModel
         get => _isFormAuthoringMode;
         set
         {
+            if (_isFormAuthoringMode == value)
+                return;
+
             this.RaiseAndSetIfChanged(ref _isFormAuthoringMode, value);
             if (value)
             {

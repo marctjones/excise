@@ -962,6 +962,23 @@ public class MainWindowViewModelTests
         _viewModel.ContinuousScrollPreference.Should().BeTrue();
     }
 
+    [Fact]
+    public void ReapplyingInactiveEditingModes_DoesNotOverrideExplicitSinglePageView()
+    {
+        _viewModel.ViewMode = PdfViewMode.SinglePage;
+
+        _viewModel.IsRedactionMode = false;
+        _viewModel.IsFormAuthoringMode = false;
+        _viewModel.IsTypewriterMode = false;
+        _viewModel.IsPathAnnotationMode = false;
+        _viewModel.IsTextSelectionMode = true;
+
+        _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage,
+            "idempotent mode cleanup during document open must not restore continuous view");
+        _viewModel.ContinuousScrollPreference.Should().BeTrue(
+            "the explicit effective view and saved reading preference are separate state");
+    }
+
     [Theory]
     [InlineData(EditingMode.Redaction)]
     [InlineData(EditingMode.FormAuthoring)]

@@ -272,9 +272,11 @@ public partial class MainWindowViewModel : ViewModelBase
         get => _viewportSession.ViewMode;
         set
         {
-            if (!_viewportSession.SetViewMode(value))
+            if (ViewMode == value)
                 return;
 
+            this.RaisePropertyChanging(nameof(ViewMode));
+            _viewportSession.SetViewMode(value);
             this.RaisePropertyChanged(nameof(ViewMode));
             if (value == PdfViewMode.Continuous)
             {
@@ -331,8 +333,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public void ApplyContinuousScrollPreference(bool enabled)
     {
-        if (_viewportSession.SetContinuousScrollPreference(enabled))
+        if (ContinuousScrollPreference != enabled)
         {
+            this.RaisePropertyChanging(nameof(ContinuousScrollPreference));
+            _viewportSession.SetContinuousScrollPreference(enabled);
             this.RaisePropertyChanged(nameof(ContinuousScrollPreference));
         }
 
@@ -377,9 +381,11 @@ public partial class MainWindowViewModel : ViewModelBase
         get => _viewportSession.CurrentPageIndex;
         set
         {
-            if (!_viewportSession.SetCurrentPageIndex(value))
+            if (CurrentPageIndex == value)
                 return;
 
+            this.RaisePropertyChanging(nameof(CurrentPageIndex));
+            _viewportSession.SetCurrentPageIndex(value);
             this.RaisePropertyChanged(nameof(CurrentPageIndex));
             RefreshCurrentPageBindings();
         }
@@ -722,6 +728,9 @@ public partial class MainWindowViewModel : ViewModelBase
         get => _isRedactionMode;
         set
         {
+            if (_isRedactionMode == value)
+                return;
+
             this.RaiseAndSetIfChanged(ref _isRedactionMode, value);
             if (value)
             {
@@ -835,6 +844,9 @@ public partial class MainWindowViewModel : ViewModelBase
         get => _isTextSelectionMode;
         set
         {
+            if (_isTextSelectionMode == value)
+                return;
+
             this.RaiseAndSetIfChanged(ref _isTextSelectionMode, value);
             // Text selection does NOT change the view mode (#815): it works in
             // both single-page and the continuous reading view. Turning off the
