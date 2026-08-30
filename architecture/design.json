@@ -391,7 +391,8 @@
         "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
         "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
         "Excise.App/ViewModels/ThumbnailSidebarSession.cs",
-        "Excise.App/ViewModels/DocumentViewportSession.cs"
+        "Excise.App/ViewModels/DocumentViewportSession.cs",
+        "Excise.App/Services/DocumentSearchSession.cs"
       ],
       "targetState": "Become a thin workspace shell over separately testable document-session, navigation, redaction, editing, security, and background-workflow owners.",
       "workflows": [
