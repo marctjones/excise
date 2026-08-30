@@ -129,10 +129,9 @@ public class RedactionAndSearchCommandTests
         return (outputPath, savedText, savedBytes);
     }
 
-    // ApplyRedactionCommand (toolbar "Apply"). Trace of ApplyRedactionAsync: in
-    // redaction mode with a current area it MARKS a pending and returns (the
-    // immediate-redact branch below it is unreachable in that state). So the real
-    // effect of the toolbar Apply command here is: a pending redaction is created.
+    // ApplyRedactionCommand (toolbar "Apply") captures a pending selection. The
+    // document is deliberately not mutated until Apply All establishes the
+    // redacted-copy safety and save boundary.
     [FixedAvaloniaFact(Timeout = 60000)]
     public async Task ApplyRedactionCommand_WithCurrentArea_MarksPendingRedaction()
     {
@@ -152,6 +151,8 @@ public class RedactionAndSearchCommandTests
 
         vm.RedactionWorkflow.PendingCount.Should().Be(1,
             "executing the toolbar Apply command in redaction mode marks the drawn area as pending");
+        vm.PdfCoreDocument!.GetPage(1).Text.Should().Contain("TOOLBARSECRET816",
+            "marking must not run a second immediate-redaction engine path");
 
         window.Close();
     }

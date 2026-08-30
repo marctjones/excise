@@ -259,12 +259,11 @@ public partial class MainWindowViewModel
         {
             var document = _documentService.GetCurrentDocument()
                 ?? throw new InvalidOperationException("Document is null");
-            var requestedRedactions = RedactionWorkflow.PendingRedactions.ToList();
-            var skippedRedactionCount = ApplyPendingAreaRedactions(document);
-            var report = _redactedCopySafetyService.PrepareRedactedCopy(
-                document,
-                requestedRedactions,
-                skippedRedactionCount);
+            var application = _redactionWorkflowService.ApplyToDocument(
+                RedactionApplicationRequest.Capture(
+                    document,
+                    RedactionWorkflow.PendingRedactions,
+                    Array.Empty<Excise.Core.Editing.PdfTypewriterTextOperation>()));
 
             RedactionWorkflow.MoveToApplied();
             FileState.PendingRedactionsCount = 0;
@@ -273,7 +272,7 @@ public partial class MainWindowViewModel
 
             _logger.LogInformation(
                 "[SCRIPT] ApplyRedactionsCommand completed - coordinate redactions applied in memory; safety report warnings: {HasWarnings}",
-                report.HasWarnings);
+                application.SafetyReport.HasWarnings);
             await Task.CompletedTask;
             return;
         }
@@ -409,24 +408,27 @@ public partial class MainWindowViewModel
 
                 if (RedactionWorkflow.PendingCount > 0)
                 {
-                    var requestedRedactions = RedactionWorkflow.PendingRedactions.ToList();
-                    var skippedRedactionCount = ApplyPendingAreaRedactions(document);
-                    var report = _redactedCopySafetyService.PrepareRedactedCopy(
-                        document,
-                        requestedRedactions,
-                        skippedRedactionCount);
+                    var result = _redactionWorkflowService.CreateRedactedCopy(
+                        RedactedCopyRequest.Capture(
+                            document,
+                            RedactionWorkflow.PendingRedactions,
+                            Array.Empty<Excise.Core.Editing.PdfTypewriterTextOperation>(),
+                            filePath,
+                            _documentService.GetReEncryptionOptions()));
                     RedactionWorkflow.MoveToApplied();
                     FileState.PendingRedactionsCount = 0;
 
                     _logger.LogInformation(
                         "[SCRIPT] Safe-share scrub and verification completed for coordinate redaction output; warnings: {HasWarnings}",
-                        report.HasWarnings);
+                        result.Application.SafetyReport.HasWarnings);
                 }
-
-                _logger.LogInformation("[SCRIPT] Saving PDF to: {Path}", filePath);
-                // #643: an encrypted source saves encrypted with the same
-                // parameters and password.
-                document.Save(filePath, _documentService.GetReEncryptionOptions());
+                else
+                {
+                    _logger.LogInformation("[SCRIPT] Saving PDF to: {Path}", filePath);
+                    // #643: an encrypted source saves encrypted with the same
+                    // parameters and password.
+                    document.Save(filePath, _documentService.GetReEncryptionOptions());
+                }
             }
 
             // Update current file path to point to the saved file

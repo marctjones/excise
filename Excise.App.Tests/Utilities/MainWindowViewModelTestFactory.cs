@@ -25,6 +25,7 @@ internal static class MainWindowViewModelTestFactory
         FilenameSuggestionService? filenameSuggestionService = null,
         ToastService? toastService = null,
         RedactedCopySafetyService? redactedCopySafetyService = null,
+        RedactionWorkflowService? redactionWorkflowService = null,
         DocumentTextIndexSession? textIndexSession = null,
         IUserDialogService? dialogService = null,
         SignatureVerificationSummaryFormatter? signatureSummaryFormatter = null,
@@ -45,6 +46,11 @@ internal static class MainWindowViewModelTestFactory
             NullLogger<RedactedCopySafetyService>.Instance);
         textExtractionService ??= new PdfTextExtractionService(
             NullLogger<PdfTextExtractionService>.Instance);
+        redactionWorkflowService ??= new RedactionWorkflowService(
+            redactionService,
+            redactedCopySafetyService,
+            textExtractionService,
+            NullLogger<RedactionWorkflowService>.Instance);
         searchService ??= new PdfSearchService(NullLogger<PdfSearchService>.Instance);
         var searchSession = new DocumentSearchSession(searchService);
         textIndexSession ??= new DocumentTextIndexSession(
@@ -77,6 +83,7 @@ internal static class MainWindowViewModelTestFactory
             renderService,
             redactionService,
             redactedCopySafetyService,
+            redactionWorkflowService,
             textExtractionService,
             searchSession,
             textIndexSession,
