@@ -52,6 +52,7 @@ Excise.Core.Tests/Text/Segmentation/LatinLigatureRedactionTests.cs::RedactText_P
 Excise.Core.Tests/Text/Segmentation/LowContrastHiddenTextTests.cs::BlackTextOnBlackBox_IsFlagged  # DETECTOR unit tests for #1131 low-contrast hiding. Excise.Core.Tests cannot reference Excise.Rendering (x-ray oracle), so the independent check for the audit property lives in Excise.Rendering.Tests/Differential/XRayBadRedactionTests.cs. Unit-level by design, same as HiddenTextDetectorTests.
 Excise.Core.Tests/Text/Segmentation/OverprintedTextRedactionTests.cs::Guard_TheStampsAreWhatMakeTheTextUnsearchable  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs::RedactText_TightlyLedLines_DoesNotRemoveTheAdjacentLine  # no independent oracle yet
+Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs::FindTextMatches_RealFreecultureFixture_DoesNotInventWordBreakInsideVisibleThat  # locator-only positive assertion: verifies that a known visible word split across operators is matched; it neither saves a redacted PDF nor claims that sensitive data is absent
 Excise.Core.Tests/Text/Segmentation/PdfPageRedactionEndToEndTests.cs::RedactArea_CoveringOneWord_RemovesItFromContentStreamBytes  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/PdfPageRedactionEndToEndTests.cs::RedactArea_AreaHitsNothing_LeavesContentStreamUnchanged  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/PdfPageRedactionEndToEndTests.cs::RedactAreas_MultipleRects_RemovesAllOfThem  # no independent oracle yet

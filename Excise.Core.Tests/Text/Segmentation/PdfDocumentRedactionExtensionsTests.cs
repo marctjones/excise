@@ -2,6 +2,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using System.IO;
 using System.Text;
 using Xunit;
@@ -265,6 +266,10 @@ public class PdfDocumentRedactionExtensionsTests
 
         var fixture = Path.Combine(dir!.FullName, "test-pdfs", "pdfjs", "canvas.pdf");
         Assert.SkipWhen(!File.Exists(fixture), "canvas.pdf corpus fixture not present");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+
+        MutoolTextOracle.ExtractAllPages(File.ReadAllBytes(fixture)).Should().Contain("styles",
+            "the independent oracle must see the regression term before redaction");
 
         using var doc = PdfDocument.Open(fixture);
         var raw = doc.Pages.Sum(page => PdfDocumentRedactionExtensions
@@ -275,6 +280,10 @@ public class PdfDocumentRedactionExtensionsTests
             "both visible occurrences must be structurally removed (#1198)");
         doc.GetPage(1).Text.Should().NotContain("styles", "the first visible occurrence must be structurally removed");
         doc.GetPage(2).Text.Should().NotContain("styles", "the second visible occurrence must be structurally removed");
+        using var saved = new MemoryStream();
+        doc.Save(saved);
+        MutoolTextOracle.ExtractAllPages(saved.ToArray()).Should().NotContain("styles",
+            "MuPDF must independently agree that neither visible occurrence remains in the saved PDF");
     }
 
     [Fact]
