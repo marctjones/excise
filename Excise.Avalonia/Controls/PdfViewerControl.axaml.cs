@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Automation;
@@ -442,10 +441,8 @@ public partial class PdfViewerControl : UserControl
     // carried separately because the bitmap itself is stamped 96 DPI —
     // Avalonia's Image mispaints non-96-stamped bitmaps as a magnified
     // top-left pixel crop (#697; DpiStampedBitmapPaintProbeTests).
-    private readonly LinkedList<(int Page, int Dpi, WriteableBitmap Bmp, Size Dip)> _pageCache = new();
-
-    // Tracks the in-flight render so rapid paging cancels stale work.
-    private CancellationTokenSource? _renderCts;
+    private readonly SinglePageRenderLifetime<WriteableBitmap> _singlePageRenderLifetime =
+        new(PageCacheCapacity);
 
     // Text-selection state. Cached letters are in PDF content points (Y-up)
     // for the page currently displayed; hit-testing routes through
@@ -539,6 +536,12 @@ public partial class PdfViewerControl : UserControl
 
     private void OnDetachedFromVisualTreeHandler(object? sender, VisualTreeAttachmentEventArgs e)
     {
+        // A detached single-page viewer must not publish an in-flight result
+        // into controls that are no longer attached. Keep cached bitmaps alive:
+        // the control may be reattached and its Image still owns that binding.
+        _singlePageRenderLifetime.CancelRender();
+        IsLoading = false;
+
         // A detached viewer (e.g. a closed window during a test) must do NO more
         // continuous rendering: a queued render pass / in-flight cell completion
         // touching the now-disposed document would throw and destabilise the
@@ -1451,7 +1454,8 @@ public partial class PdfViewerControl : UserControl
         // text-selection — if it referenced a page from the old document
         // we'd hit-test against stale glyphs.
         InvalidatePageCache();
-        _renderCts?.Cancel();
+        _singlePageRenderLifetime.CancelRender();
+        IsLoading = false;
         _currentPageLetters = null;
         _readingOrderedLetters = null;
         _lettersPageNumber = -1;
@@ -1631,8 +1635,12 @@ public partial class PdfViewerControl : UserControl
         // toggling overlays. Set Image.Source immediately so the user
         // doesn't even see a loading flicker. The cache is keyed by the
         // DEVICE render DPI so a monitor change (dpr) re-renders.
-        if (TryGetCached(pageNumber, renderDpi, out var cached, out var cachedDip))
+        if (_singlePageRenderLifetime.TryGet(pageNumber, renderDpi, out var cached, out var cachedDip))
         {
+            // A cache hit is still a newer display request. Supersede an older
+            // in-flight render so it cannot later overwrite this cached page.
+            _singlePageRenderLifetime.CancelRender();
+            IsLoading = false;
             Trace($"SinglePageRender page={pageNumber} CACHE-HIT dpi={renderDpi}");
             if (_pdfImage != null)
             {
@@ -1654,10 +1662,8 @@ public partial class PdfViewerControl : UserControl
 
         // Cancel any prior in-flight render. If the user is paging through
         // quickly we'd rather skip the now-stale page than make them wait.
-        _renderCts?.Cancel();
-        var cts = new CancellationTokenSource();
-        _renderCts = cts;
-        var token = cts.Token;
+        using var renderLease = _singlePageRenderLifetime.BeginRender();
+        var token = renderLease.Token;
 
         try
         {
@@ -1684,7 +1690,7 @@ public partial class PdfViewerControl : UserControl
                     RevealHiddenAnnotations = revealHidden,
                     HighlightFormFields = highlightFields
                 };
-                return _renderer.RenderPage(page, options);
+                return _renderer.RenderPage(page, options, token);
             }, token);
 
             try
@@ -1692,7 +1698,7 @@ public partial class PdfViewerControl : UserControl
                 // The user may have paged again while we were rendering —
                 // honour the cancellation rather than overwriting the
                 // freshly-rendered new page with the stale one.
-                if (token.IsCancellationRequested) return;
+                if (!renderLease.IsCurrent) return;
 
                 // Stamp 96 (dip Size == PixelSize) and carry the layout size
                 // separately: Avalonia's Image paints a non-96-stamped bitmap
@@ -1706,7 +1712,7 @@ public partial class PdfViewerControl : UserControl
                     var dip = new Size(bitmap.PixelSize.Width * 96.0 / bitmapDpi,
                                        bitmap.PixelSize.Height * 96.0 / bitmapDpi);
                     Trace($"SinglePageRender page={pageNumber} RENDERED px={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dip={dip.Width:F0}x{dip.Height:F0}");
-                    AddToCache(pageNumber, renderDpi, bitmap, dip);
+                    _singlePageRenderLifetime.Add(pageNumber, renderDpi, bitmap, dip);
                     Trace($"ContVis={_continuousScrollViewer?.IsVisible} SingleVis={_scrollViewer?.IsVisible}");
                     Trace($"ImageSet page={pageNumber} imgWidth={_pdfImage?.Width:F0} srcDip={dip.Width:F0}x{dip.Height:F0} srcPx={bitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
                     if (_pdfImage != null)
@@ -1734,14 +1740,19 @@ public partial class PdfViewerControl : UserControl
         }
         catch (Exception ex)
         {
-            HasError = true;
-            ErrorMessage = $"Failed to render page: {ex.Message}";
+            // An obsolete generation must not replace the current page with a
+            // stale error any more than it may replace it with a stale bitmap.
+            if (renderLease.IsCurrent)
+            {
+                HasError = true;
+                ErrorMessage = $"Failed to render page: {ex.Message}";
+            }
         }
         finally
         {
             // Only the most-recent render should clear IsLoading; older
             // races would otherwise flicker the overlay back on.
-            if (_renderCts == cts)
+            if (renderLease.IsCurrent)
                 IsLoading = false;
         }
     }
@@ -1805,51 +1816,10 @@ public partial class PdfViewerControl : UserControl
         return Math.Max(1.0, Math.Sqrt(MaxSinglePagePreviewPixels / logicalPixels));
     }
 
-    private bool TryGetCached(int page, int dpi, out WriteableBitmap? bmp, out Size dip)
-    {
-        for (var node = _pageCache.First; node != null; node = node.Next)
-        {
-            if (node.Value.Page == page && node.Value.Dpi == dpi)
-            {
-                // Move to front (LRU touch).
-                _pageCache.Remove(node);
-                _pageCache.AddFirst(node);
-                bmp = node.Value.Bmp;
-                dip = node.Value.Dip;
-                return true;
-            }
-        }
-        bmp = null;
-        dip = default;
-        return false;
-    }
-
-    private void AddToCache(int page, int dpi, WriteableBitmap bmp, Size dip)
-    {
-        // Replace existing entry for same key (e.g. re-render after edit).
-        for (var node = _pageCache.First; node != null; node = node.Next)
-        {
-            if (node.Value.Page == page && node.Value.Dpi == dpi)
-            {
-                node.Value.Bmp.Dispose();
-                _pageCache.Remove(node);
-                break;
-            }
-        }
-        _pageCache.AddFirst((page, dpi, bmp, dip));
-        while (_pageCache.Count > PageCacheCapacity)
-        {
-            var last = _pageCache.Last!;
-            _pageCache.RemoveLast();
-            last.Value.Bmp.Dispose();
-        }
-    }
-
     /// <summary>Drop the cached bitmaps — call when document changes or content edits invalidate prior renders.</summary>
     public void InvalidatePageCache()
     {
-        foreach (var entry in _pageCache) entry.Bmp.Dispose();
-        _pageCache.Clear();
+        _singlePageRenderLifetime.InvalidateCache();
     }
 
     private void ClearDisplay()
