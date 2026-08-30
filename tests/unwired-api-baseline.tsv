@@ -20,7 +20,6 @@
 Excise.App	nowhere	ApplyBatesNumbers	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	ConvertBack	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	DisplayName	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
-Excise.App	nowhere	GeneratedAt	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	GetPageDimensions	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	IsReplaying	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	LicenseFileName	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability

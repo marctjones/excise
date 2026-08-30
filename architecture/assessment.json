@@ -118,7 +118,7 @@
         "Excise.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs"
       ],
       "gaps": [
-        "Three current redaction test methods are not independently corroborated and must be reviewed."
+        "Sixty-seven method-level redaction assertions still carry reviewed exceptions; generic no-independent-oracle entries remain an assurance backlog."
       ],
       "issueIds": [
         1029,
@@ -249,10 +249,12 @@
       "evidence": [
         "scripts/test-tier.sh t0",
         "scripts/run-full-suite.sh",
-        "scripts/check-gate-asymmetry.sh origin/develop"
+        "scripts/check-gate-asymmetry.sh origin/develop",
+        "scripts/check-unwired-api.sh --self-test",
+        "scripts/test-check-redaction-oracles.sh"
       ],
       "gaps": [
-        "The current t0 baseline reports an unwired-API key/baseline drift and three redaction methods without independent oracles."
+        "Static unwired-API evidence cannot prove dynamic reflection, DI, and framework reachability; those boundaries still require explicit seeds and review."
       ],
       "issueIds": [
         940,
@@ -267,10 +269,12 @@
       "evidence": [
         "scripts/check-architecture-registry.sh",
         "scripts/check-reachability.sh --quiet",
-        "scripts/check-unwired-api.sh --quiet"
+        "scripts/check-unwired-api.sh --quiet",
+        "architecture/generated/code-topology.json",
+        "architecture/generated/change-coupling.json"
       ],
       "gaps": [
-        "Symbol-level diagrams and responsibility metrics are not yet emitted by the Roslyn reachability tool."
+        "The generated topology is evidence; explicit current-versus-target violation reports and reviewer-oriented diagram views remain to be added."
       ],
       "issueIds": [
         940,
@@ -395,9 +399,9 @@
     },
     {
       "id": "quality-gate-baseline",
-      "name": "Architecture and security gate baseline is not green",
+      "name": "Architecture and security gate baseline integrity",
       "priority": "high",
-      "currentStatus": "partial",
+      "currentStatus": "implemented",
       "desiredState": "Every t0 architecture/security gate passes for reviewed reasons, and mutations prove each gate detects the defect class it claims to detect.",
       "components": [
         "verification",
@@ -406,8 +410,8 @@
         "app"
       ],
       "symptoms": [
-        "The unwired-API gate reports 47 Excise.App.release entries that overlap the Excise.App baseline key.",
-        "Three redaction test methods have no independently detected oracle or declared reason."
+        "Configuration-specific PublicApi snapshots can create duplicate assembly identities unless normalization remains mutation-tested.",
+        "Redaction test edits can reintroduce self-oracle-only assertions unless per-method oracle loss remains mutation-tested."
       ],
       "deterministicDiscovery": [
         "scripts/test-tier.sh t0",
@@ -417,8 +421,8 @@
         "scripts/test-check-redaction-oracles.sh"
       ],
       "rootCauseQuestions": [
-        "Is the unwired delta a real Release-only reachability change, an assembly-key normalization defect, or stale triage?",
-        "For each redaction method, what exact property is asserted and which independent instrument can observe it?",
+        "Does a future unwired delta represent a real configuration-only API, an assembly-key normalization defect, or stale triage?",
+        "For each future redaction diagnostic, what exact property is asserted and which independent instrument can observe it?",
         "Can the gate distinguish implementation gaps from checker false positives without blanket allowlisting?"
       ],
       "issueIds": [

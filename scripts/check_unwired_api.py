@@ -20,6 +20,14 @@ NOISE = {
     "Deconstruct", "PrintMembers", "GetEnumerator", "op_Equality", "op_Inequality",
 }
 
+# PublicApiApprovalTests emits configuration-specific snapshots by appending a
+# suffix to the assembly name (currently ``.release``).  Those files describe
+# variants of one public contract; treating the suffix as a second assembly
+# duplicates every diagnostic and bypasses the existing ratchet under a new
+# key.  A suffix is normalized only when the unsuffixed snapshot is present, so
+# a real assembly whose name happens to end in ``.release`` remains distinct.
+SNAPSHOT_VARIANTS = (".debug", ".release")
+
 BASELINE_HEADER = """# Public API that nothing calls, or that only tests call.
 #
 # A RATCHET, not an inventory. Entries here are ACCEPTED — mostly library API
@@ -135,6 +143,25 @@ def approved_files(root):
     return out
 
 
+def snapshot_assembly(path):
+    return os.path.basename(path)[: -len(".approved.txt")]
+
+
+def group_approved_files(paths):
+    """Group Debug/Release approval snapshots under one logical assembly."""
+    raw_names = {snapshot_assembly(path) for path in paths}
+    grouped = defaultdict(list)
+    for path in paths:
+        assembly = snapshot_assembly(path)
+        logical = assembly
+        for suffix in SNAPSHOT_VARIANTS:
+            if assembly.endswith(suffix) and assembly[: -len(suffix)] in raw_names:
+                logical = assembly[: -len(suffix)]
+                break
+        grouped[logical].append(path)
+    return {assembly: sorted(grouped[assembly]) for assembly in sorted(grouped)}
+
+
 def identifiers(path, min_len):
     """Public identifiers worth cross-referencing, with three noise classes
     excluded at the source (#913).
@@ -187,6 +214,52 @@ def identifiers(path, min_len):
                   if len(n) >= min_len and n not in NOISE and not n.startswith("op_"))
 
 
+def classify(names, prod, test, occ):
+    """Return nowhere/tests-only members for one logical assembly contract."""
+    pf = lambda n: len(prod.get(n, ()))
+    tf = lambda n: len(test.get(n, ()))
+    oc = lambda n: occ.get(n, 0)
+    unused_in_prod = lambda n: pf(n) <= 1 and oc(n) <= 1
+    dead = [n for n in names if unused_in_prod(n) and tf(n) == 0]
+    only_tests = [n for n in names if unused_in_prod(n) and tf(n) > 0]
+    return dead, only_tests
+
+
+def self_test():
+    """Mutation-sized checks for snapshot identity and tests-only detection."""
+    paths = [
+        "/repo/PublicApi/Excise.App.approved.txt",
+        "/repo/PublicApi/Excise.App.release.approved.txt",
+        "/repo/PublicApi/Excise.Core.approved.txt",
+    ]
+    grouped = group_approved_files(paths)
+    assert sorted(grouped) == ["Excise.App", "Excise.Core"]
+    assert len(grouped["Excise.App"]) == 2
+
+    # The two configuration variants contribute one unioned contract.  A
+    # Release-only member must be checked, but must not create an
+    # Excise.App.release baseline namespace.
+    fake_names = {
+        paths[0]: {"SharedMember"},
+        paths[1]: {"SharedMember", "ReleaseOnlyMember"},
+    }
+    app_names = sorted(set().union(*(fake_names[path] for path in grouped["Excise.App"])))
+    assert app_names == ["ReleaseOnlyMember", "SharedMember"]
+
+    prod = {
+        "SharedMember": {"src/Shared.cs", "src/Caller.cs"},
+        "ReleaseOnlyMember": {"src/ReleaseOnly.cs"},
+        "NewTestsOnlyMember": {"src/NewTestsOnly.cs"},
+    }
+    test = {"NewTestsOnlyMember": {"tests/NewTestsOnlyTests.cs"}}
+    occ = {"SharedMember": 1, "ReleaseOnlyMember": 1, "NewTestsOnlyMember": 1}
+    dead, only_tests = classify(
+        app_names + ["NewTestsOnlyMember"], prod, test, occ)
+    assert dead == ["ReleaseOnlyMember"]
+    assert only_tests == ["NewTestsOnlyMember"]
+    print("PASS: unwired API checker normalizes configuration snapshots and detects tests-only API")
+
+
 def main():
     ap = argparse.ArgumentParser(add_help=False)
     ap.add_argument("--min-length", type=int, default=8)
@@ -195,10 +268,14 @@ def main():
     ap.add_argument("--baseline", default="tests/unwired-api-baseline.tsv")
     ap.add_argument("--update", action="store_true",
                     help="rewrite the baseline from the current measurement")
+    ap.add_argument("--self-test", action="store_true")
     ap.add_argument("-h", "--help", action="store_true")
     args = ap.parse_args()
     if args.help:
         print(__doc__)
+        return 0
+    if args.self_test:
+        self_test()
         return 0
 
     root = "."
@@ -217,28 +294,36 @@ def main():
     print("    stripped. Files alone gave 18/22 false positives; occurrences")
     print("    alone hid every dead IDisposable behind nameof(X).")
 
+    grouped = group_approved_files(approved)
+    requested_assembly = args.assembly
+    if requested_assembly not in grouped:
+        for suffix in SNAPSHOT_VARIANTS:
+            if requested_assembly and requested_assembly.endswith(suffix):
+                base = requested_assembly[: -len(suffix)]
+                if base in grouped:
+                    requested_assembly = base
+                    break
+
     found = []          # (assembly, state, name)
     total = flagged = tested_only = 0
-    for path in approved:
-        asm = os.path.basename(path)[: -len(".approved.txt")]
-        if args.assembly and asm != args.assembly:
+    for asm, paths in grouped.items():
+        if requested_assembly and asm != requested_assembly:
             continue
-        names = identifiers(path, args.min_length)
+        names = sorted(set().union(*(identifiers(path, args.min_length) for path in paths)))
         # Unreferenced in production means BOTH: no file other than the
         # declaring one mentions it, AND the declaring file mentions it only
         # once (i.e. the declaration itself, nameof already stripped).
         pf = lambda n: len(prod.get(n, ()))
         tf = lambda n: len(test.get(n, ()))
         oc = lambda n: occ.get(n, 0)
-        unused_in_prod = lambda n: pf(n) <= 1 and oc(n) <= 1
-        dead = [n for n in names if unused_in_prod(n) and tf(n) == 0]
-        only_tests = [n for n in names if unused_in_prod(n) and tf(n) > 0]
+        dead, only_tests = classify(names, prod, test, occ)
         total += len(names)
         flagged += len(dead)
         tested_only += len(only_tests)
         found += [(asm, "nowhere", n) for n in dead]
         found += [(asm, "tests-only", n) for n in only_tests]
-        print(f"\n── {asm}: {len(names)} identifiers >= {args.min_length} chars")
+        variants = f" ({len(paths)} configuration snapshots)" if len(paths) > 1 else ""
+        print(f"\n── {asm}{variants}: {len(names)} identifiers >= {args.min_length} chars")
         print(f"     {len(dead)} referenced nowhere;  {len(only_tests)} referenced ONLY by tests")
         if not args.quiet:
             for n in dead:

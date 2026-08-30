@@ -271,6 +271,7 @@ run_t0() {
     # catch a TEST that stopped running; this catches PRODUCTION CODE that never
     # started. ~10s (a text index over .cs/.axaml), ratcheted against
     # tests/unwired-api-baseline.tsv so only NEW entries fail.
+    run_step "unwired-api-selftest" scripts/check-unwired-api.sh --self-test
     run_step "unwired-api" scripts/check-unwired-api.sh --quiet
     # #957: tests/format-compatibility-suite.json is a schema'd design tracker
     # (PDF versions, storage formats, feature workflows, oracles, known gaps).

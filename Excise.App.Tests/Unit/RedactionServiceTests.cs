@@ -9,6 +9,7 @@ using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.Core.Document;
 using Excise.Ocr;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.App.Tests.Unit;
@@ -424,6 +425,8 @@ public class RedactionServiceTests : IDisposable
 
         result.Success.Should().BeTrue(result.ErrorMessage);
         result.RedactionCount.Should().BeGreaterThan(0);
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "GUIFLATTENSECRET")
+            .Should().BeEmpty("the image-only output must not retain the target in any saved text carrier");
         using var output = PdfDocument.Open(File.ReadAllBytes(outputPath));
         output.GetPage(1).Text.Should().BeEmpty("the GUI image-only path must not recreate an OCR text layer");
         result.Warnings.Should().ContainSingle().Which.Should().Contain("intentionally removed selectable text");
