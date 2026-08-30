@@ -119,35 +119,7 @@ namespace Excise.App.Services
     public sealed class AnnotationWorkflowService
     {
         public AnnotationWorkflowService(Excise.App.Services.PdfDocumentService documentService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.AnnotationWorkflowService> logger) { }
-        public Excise.Core.Document.PdfAnnotation AddArrow(int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "X",
-                "Y"})] System.ValueTuple<double, double> start, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "X",
-                "Y"})] System.ValueTuple<double, double> end, string? contents = null) { }
-        public Excise.Core.Document.PdfAnnotation AddCircle(int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null) { }
-        public Excise.Core.Document.PdfAnnotation AddFreeText(int pageNumber, Excise.Core.Document.PdfRectangle rect, string text, double fontSize = 12) { }
-        public Excise.Core.Document.PdfAnnotation AddHighlight(int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents) { }
-        public Excise.Core.Document.PdfAnnotation AddImageStamp(int pageNumber, Excise.Core.Document.PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight, string? contents = null) { }
-        public Excise.Core.Document.PdfAnnotation AddInk(int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "X",
-                "Y"})] System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>> strokes, string? contents = null) { }
-        public Excise.Core.Document.PdfAnnotation AddLine(int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "X",
-                "Y"})] System.ValueTuple<double, double> start, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "X",
-                "Y"})] System.ValueTuple<double, double> end, string? contents = null) { }
-        public Excise.Core.Document.PdfAnnotation AddPolyLine(int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "X",
-                "Y"})] System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>> vertices, string? contents = null) { }
-        public Excise.Core.Document.PdfAnnotation AddPolygon(int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "X",
-                "Y"})] System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>> vertices, string? contents = null) { }
-        public Excise.Core.Document.PdfAnnotation AddSquare(int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null) { }
-        public Excise.Core.Document.PdfAnnotation AddSquiggly(int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents) { }
-        public Excise.Core.Document.PdfAnnotation AddStamp(int pageNumber, Excise.Core.Document.PdfRectangle rect, string stampName, string? contents = null) { }
-        public Excise.Core.Document.PdfAnnotation AddStrikeOut(int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents) { }
-        public Excise.Core.Document.PdfAnnotation AddTextNote(int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents) { }
-        public Excise.Core.Document.PdfAnnotation AddUnderline(int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents) { }
+        public Excise.Core.Document.PdfAnnotation AddImageStamp(int pageNumber, Excise.Core.Document.PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight, string? contents = null, Excise.Core.Document.PdfDocument? viewerDocument = null) { }
     }
     public static class AppPaths
     {

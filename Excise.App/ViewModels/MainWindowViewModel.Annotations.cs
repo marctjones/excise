@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging;
 using Excise.Core.Document;
+using Excise.App.Services;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PdfCoreDocument = Excise.Core.Document.PdfDocument;
 
 namespace Excise.App.ViewModels;
 
@@ -38,19 +38,13 @@ public partial class MainWindowViewModel
             ? "Highlight"
             : SelectedText.Trim();
 
-        try
-        {
-            var annotation = _annotationWorkflow.AddHighlight(pageNumber, contentRect, contents);
-            AddHighlightToViewerDocument(pageNumber, contentRect, contents);
-            await MarkAnnotationChangedAsync("Highlight added");
-            RecordAnnotationAdd("Add highlight", pageNumber, annotation,
-                () => _annotationWorkflow.AddHighlight(pageNumber, contentRect, contents));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error adding highlight annotation");
-            _toastService.ShowError("Failed to add highlight", ex.Message);
-        }
+        await CommitRectAnnotationAsync(
+            new AnnotationRectRequest(
+                AnnotationRectKind.Highlight,
+                pageNumber,
+                contentRect,
+                contents),
+            "highlight");
     }
 
     /// <summary>
@@ -74,12 +68,11 @@ public partial class MainWindowViewModel
     ///
     /// A file-only test cannot see that gap — both halves save identically.
     /// TextMarkupAnnotationCommandTests therefore asserts on
-    /// <see cref="PdfCoreDocument"/> BEFORE saving.
+    /// <c>PdfCoreDocument</c> BEFORE saving.
     /// </summary>
     private async Task AddTextMarkupFromSelectionAsync(
         string kind,
-        Func<int, PdfRectangle, string, PdfAnnotation> add,
-        Func<PdfCoreDocument, int, PdfRectangle, string, PdfAnnotation> mirrorToViewer)
+        AnnotationRectKind annotationKind)
     {
         if (!_documentService.IsDocumentLoaded)
             return;
@@ -102,32 +95,19 @@ public partial class MainWindowViewModel
 
         var contents = string.IsNullOrWhiteSpace(SelectedText) ? kind : SelectedText.Trim();
 
-        try
-        {
-            var annotation = add(pageNumber, contentRect, contents);
-            AddTextMarkupToViewerDocument(pageNumber, contentRect, contents, mirrorToViewer);
-            await MarkAnnotationChangedAsync($"{kind} added");
-            RecordAnnotationAdd($"Add {kind.ToLowerInvariant()}", pageNumber, annotation,
-                () => add(pageNumber, contentRect, contents));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error adding {Kind} annotation", kind);
-            _toastService.ShowError($"Failed to add {kind.ToLowerInvariant()}", ex.Message);
-        }
+        await CommitRectAnnotationAsync(
+            new AnnotationRectRequest(annotationKind, pageNumber, contentRect, contents),
+            kind.ToLowerInvariant());
     }
 
     public Task AddUnderlineAnnotationFromSelectionAsync() =>
-        AddTextMarkupFromSelectionAsync("Underline", _annotationWorkflow.AddUnderline,
-            static (d, p, r, c) => d.AddUnderlineAnnotation(p, r, c));
+        AddTextMarkupFromSelectionAsync("Underline", AnnotationRectKind.Underline);
 
     public Task AddStrikeOutAnnotationFromSelectionAsync() =>
-        AddTextMarkupFromSelectionAsync("StrikeOut", _annotationWorkflow.AddStrikeOut,
-            static (d, p, r, c) => d.AddStrikeOutAnnotation(p, r, c));
+        AddTextMarkupFromSelectionAsync("StrikeOut", AnnotationRectKind.StrikeOut);
 
     public Task AddSquigglyAnnotationFromSelectionAsync() =>
-        AddTextMarkupFromSelectionAsync("Squiggly", _annotationWorkflow.AddSquiggly,
-            static (d, p, r, c) => d.AddSquigglyAnnotation(p, r, c));
+        AddTextMarkupFromSelectionAsync("Squiggly", AnnotationRectKind.Squiggly);
 
     /// <summary>
     /// Square and Circle from the drag rectangle (#912's second row).
@@ -146,8 +126,7 @@ public partial class MainWindowViewModel
     /// </summary>
     private async Task AddShapeFromDragAsync(
         string kind,
-        Func<int, PdfRectangle, string, PdfAnnotation> add,
-        Func<PdfCoreDocument, int, PdfRectangle, string, PdfAnnotation> mirrorToViewer)
+        AnnotationRectKind annotationKind)
     {
         if (!_documentService.IsDocumentLoaded)
             return;
@@ -167,28 +146,16 @@ public partial class MainWindowViewModel
             return;
         }
 
-        try
-        {
-            var annotation = add(pageNumber, contentRect, kind);
-            AddTextMarkupToViewerDocument(pageNumber, contentRect, kind, mirrorToViewer);
-            await MarkAnnotationChangedAsync($"{kind} added");
-            RecordAnnotationAdd($"Add {kind.ToLowerInvariant()}", pageNumber, annotation,
-                () => add(pageNumber, contentRect, kind));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error adding {Kind} annotation", kind);
-            _toastService.ShowError($"Failed to add {kind.ToLowerInvariant()}", ex.Message);
-        }
+        await CommitRectAnnotationAsync(
+            new AnnotationRectRequest(annotationKind, pageNumber, contentRect, kind),
+            kind.ToLowerInvariant());
     }
 
     public Task AddSquareAnnotationFromDragAsync() =>
-        AddShapeFromDragAsync("Square", _annotationWorkflow.AddSquare,
-            static (d, p, r, c) => d.AddSquareAnnotation(p, r, c));
+        AddShapeFromDragAsync("Square", AnnotationRectKind.Square);
 
     public Task AddCircleAnnotationFromDragAsync() =>
-        AddShapeFromDragAsync("Circle", _annotationWorkflow.AddCircle,
-            static (d, p, r, c) => d.AddCircleAnnotation(p, r, c));
+        AddShapeFromDragAsync("Circle", AnnotationRectKind.Circle);
 
     /// <summary>
     /// FreeText from the drag rectangle plus a text prompt (#934 row A).
@@ -229,20 +196,13 @@ public partial class MainWindowViewModel
             return;
 
         var text = contents.Trim();
-        try
-        {
-            var annotation = _annotationWorkflow.AddFreeText(pageNumber, contentRect, text);
-            AddTextMarkupToViewerDocument(pageNumber, contentRect, text,
-                static (d, p, r, c) => d.AddFreeTextAnnotation(p, r, c));
-            await MarkAnnotationChangedAsync("Text box added");
-            RecordAnnotationAdd("Add text box", pageNumber, annotation,
-                () => _annotationWorkflow.AddFreeText(pageNumber, contentRect, text));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error adding free-text annotation");
-            _toastService.ShowError("Failed to add text box", ex.Message);
-        }
+        await CommitRectAnnotationAsync(
+            new AnnotationRectRequest(
+                AnnotationRectKind.FreeText,
+                pageNumber,
+                contentRect,
+                text),
+            "text box");
     }
 
     /// <summary>
@@ -278,20 +238,13 @@ public partial class MainWindowViewModel
         }
 
         var name = stampName.Trim();
-        try
-        {
-            var annotation = _annotationWorkflow.AddStamp(pageNumber, contentRect, name);
-            AddTextMarkupToViewerDocument(pageNumber, contentRect, name,
-                static (d, p, r, c) => d.AddStampAnnotation(p, r, c));
-            await MarkAnnotationChangedAsync($"{name} stamp added");
-            RecordAnnotationAdd($"Add {name} stamp", pageNumber, annotation,
-                () => _annotationWorkflow.AddStamp(pageNumber, contentRect, name));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error adding {StampName} stamp annotation", name);
-            _toastService.ShowError("Failed to add stamp", ex.Message);
-        }
+        await CommitRectAnnotationAsync(
+            new AnnotationRectRequest(
+                AnnotationRectKind.Stamp,
+                pageNumber,
+                contentRect,
+                name),
+            "stamp");
     }
 
     /// <summary>
@@ -315,84 +268,31 @@ public partial class MainWindowViewModel
             return;
         }
 
-        // Core requires two points per stroke; a stray click that got this far
-        // must not surface as an exception dialog.
-        var usable = strokes.Where(st => st is { Count: >= 2 }).ToList();
-        if (usable.Count == 0)
-            return;
-
-        var payload = (IReadOnlyList<IReadOnlyList<(double X, double Y)>>)usable;
         var kind = PathAnnotationKind;
         try
         {
-            // One gesture, one event, three annotations. The dispatch is here
-            // rather than in the viewer so the control stays a capture device
-            // that knows nothing about PDF annotation types.
-            switch (kind)
+            var request = new AnnotationPathRequest(
+                ToWorkflowPathKind(kind),
+                pageNumber,
+                strokes);
+            var result = _annotationWorkflow.AddPath(request, _pdfCoreDocument);
+            if (!result.WasAdded)
             {
-                case PathAnnotationKind.Line:
-                case PathAnnotationKind.Arrow:
+                if (result.ValidationMessage is not null)
                 {
-                    // A segment is its endpoints. Taking first and last (rather
-                    // than assuming exactly two) keeps this correct if the
-                    // capture ever samples the middle of the drag.
-                    var stroke = payload[0];
-                    var start = stroke[0];
-                    var end = stroke[^1];
-                    var isArrow = kind == PathAnnotationKind.Arrow;
-
-                    var annot = isArrow
-                        ? _annotationWorkflow.AddArrow(pageNumber, start, end)
-                        : _annotationWorkflow.AddLine(pageNumber, start, end);
-                    AddSegmentToViewerDocument(pageNumber, start, end, isArrow);
-                    await MarkAnnotationChangedAsync(isArrow ? "Arrow added" : "Line added");
-                    RecordAnnotationAdd(isArrow ? "Add arrow" : "Add line", pageNumber, annot,
-                        () => isArrow
-                            ? _annotationWorkflow.AddArrow(pageNumber, start, end)
-                            : _annotationWorkflow.AddLine(pageNumber, start, end));
-                    break;
+                    await _dialogService.ShowMessageAsync(
+                        "Add Polygon",
+                        result.ValidationMessage);
                 }
-
-                case PathAnnotationKind.Polygon:
-                case PathAnnotationKind.PolyLine:
-                {
-                    var vertices = payload[0];
-                    var isClosed = kind == PathAnnotationKind.Polygon;
-
-                    // Core needs three vertices for a closed shape. The viewer
-                    // drops shorter paths, but the scripting surface reaches
-                    // here too, so refusing rather than throwing is the
-                    // behaviour that matches every other command.
-                    if (isClosed && vertices.Count < 3)
-                    {
-                        await _dialogService.ShowMessageAsync(
-                            "Add Polygon",
-                            "A polygon needs at least three points.");
-                        return;
-                    }
-
-                    var poly = isClosed
-                        ? _annotationWorkflow.AddPolygon(pageNumber, vertices)
-                        : _annotationWorkflow.AddPolyLine(pageNumber, vertices);
-                    AddVerticesToViewerDocument(pageNumber, vertices, isClosed);
-                    await MarkAnnotationChangedAsync(isClosed ? "Polygon added" : "PolyLine added");
-                    RecordAnnotationAdd(isClosed ? "Add polygon" : "Add polyline", pageNumber, poly,
-                        () => isClosed
-                            ? _annotationWorkflow.AddPolygon(pageNumber, vertices)
-                            : _annotationWorkflow.AddPolyLine(pageNumber, vertices));
-                    break;
-                }
-
-                default:
-                {
-                    var annotation = _annotationWorkflow.AddInk(pageNumber, payload);
-                    AddInkToViewerDocument(pageNumber, payload);
-                    await MarkAnnotationChangedAsync("Ink annotation added");
-                    RecordAnnotationAdd("Add ink", pageNumber, annotation,
-                        () => _annotationWorkflow.AddInk(pageNumber, payload));
-                    break;
-                }
+                return;
             }
+
+            await MarkAnnotationChangedAsync(result.SuccessMessage);
+            RecordAnnotationAdd(
+                result.HistoryDescription,
+                result.Request.PageNumber,
+                result.Annotation!,
+                () => _annotationWorkflow.ReplayPath(result.Request));
         }
         catch (Exception ex)
         {
@@ -401,55 +301,14 @@ public partial class MainWindowViewModel
         }
     }
 
-    /// <summary>
-    /// The #912 mirror, for the one subtype whose arguments are strokes rather
-    /// than a rect. Without this the saved file is correct and the screen never
-    /// changes — the defect every row of #934 has had to re-fix, because the
-    /// document is open twice until #917 lands.
-    /// </summary>
-    private void AddInkToViewerDocument(
-        int pageNumber, IReadOnlyList<IReadOnlyList<(double X, double Y)>> strokes)
+    private static AnnotationPathKind ToWorkflowPathKind(PathAnnotationKind kind) => kind switch
     {
-        var saveDocument = _documentService.GetCurrentDocument();
-        if (_pdfCoreDocument == null || ReferenceEquals(saveDocument, _pdfCoreDocument))
-            return;
-        if (pageNumber < 1 || pageNumber > _pdfCoreDocument.PageCount)
-            return;
-
-        _pdfCoreDocument.AddInkAnnotation(pageNumber, strokes);
-    }
-
-    /// <summary>The #912 viewer mirror for Line and Arrow (#934 E).</summary>
-    private void AddSegmentToViewerDocument(
-        int pageNumber, (double X, double Y) start, (double X, double Y) end, bool isArrow)
-    {
-        var saveDocument = _documentService.GetCurrentDocument();
-        if (_pdfCoreDocument == null || ReferenceEquals(saveDocument, _pdfCoreDocument))
-            return;
-        if (pageNumber < 1 || pageNumber > _pdfCoreDocument.PageCount)
-            return;
-
-        if (isArrow)
-            _pdfCoreDocument.AddArrowAnnotation(pageNumber, start.X, start.Y, end.X, end.Y);
-        else
-            _pdfCoreDocument.AddLineAnnotation(pageNumber, start.X, start.Y, end.X, end.Y);
-    }
-
-    /// <summary>The #912 viewer mirror for Polygon and PolyLine (#934 F).</summary>
-    private void AddVerticesToViewerDocument(
-        int pageNumber, IReadOnlyList<(double X, double Y)> vertices, bool isClosed)
-    {
-        var saveDocument = _documentService.GetCurrentDocument();
-        if (_pdfCoreDocument == null || ReferenceEquals(saveDocument, _pdfCoreDocument))
-            return;
-        if (pageNumber < 1 || pageNumber > _pdfCoreDocument.PageCount)
-            return;
-
-        if (isClosed)
-            _pdfCoreDocument.AddPolygonAnnotation(pageNumber, vertices);
-        else
-            _pdfCoreDocument.AddPolyLineAnnotation(pageNumber, vertices);
-    }
+        PathAnnotationKind.Line => AnnotationPathKind.Line,
+        PathAnnotationKind.Arrow => AnnotationPathKind.Arrow,
+        PathAnnotationKind.Polygon => AnnotationPathKind.Polygon,
+        PathAnnotationKind.PolyLine => AnnotationPathKind.PolyLine,
+        _ => AnnotationPathKind.Ink
+    };
 
     /// <summary>The stamp names the menu offers — Core's standard set (#934).</summary>
     public static IReadOnlyList<string> StandardStampNames =>
@@ -512,9 +371,13 @@ public partial class MainWindowViewModel
                 return;
             }
 
-            var annotation = _annotationWorkflow.AddImageStamp(pageNumber, contentRect, rgb, w, h);
-            AddTextMarkupToViewerDocument(pageNumber, contentRect, string.Empty,
-                (d, p, r, _) => d.AddImageStampAnnotation(p, r, rgb, w, h));
+            var annotation = _annotationWorkflow.AddImageStamp(
+                pageNumber,
+                contentRect,
+                rgb,
+                w,
+                h,
+                viewerDocument: _pdfCoreDocument);
             await MarkAnnotationChangedAsync("Image stamp added");
             RecordAnnotationAdd("Add image stamp", pageNumber, annotation,
                 () => _annotationWorkflow.AddImageStamp(pageNumber, contentRect, rgb, w, h));
@@ -628,11 +491,13 @@ public partial class MainWindowViewModel
             var trimmedContents = contents.Trim();
             var notePageNumber = pageNumber;
             var noteRect = contentRect;
-            var annotation = _annotationWorkflow.AddTextNote(notePageNumber, noteRect, trimmedContents);
-            AddTextNoteToViewerDocument(notePageNumber, noteRect, trimmedContents);
-            await MarkAnnotationChangedAsync("Sticky note added");
-            RecordAnnotationAdd("Add sticky note", notePageNumber, annotation,
-                () => _annotationWorkflow.AddTextNote(notePageNumber, noteRect, trimmedContents));
+            await CommitRectAnnotationAsync(
+                new AnnotationRectRequest(
+                    AnnotationRectKind.TextNote,
+                    notePageNumber,
+                    noteRect,
+                    trimmedContents),
+                "sticky note");
         }
         catch (Exception ex)
         {
@@ -696,45 +561,25 @@ public partial class MainWindowViewModel
         return new PdfRectangle(left, top - 36, left + 36, top).Normalize();
     }
 
-    private void AddHighlightToViewerDocument(int pageNumber, PdfRectangle contentRect, string contents)
+    private async Task CommitRectAnnotationAsync(
+        AnnotationRectRequest request,
+        string failureDescription)
     {
-        var saveDocument = _documentService.GetCurrentDocument();
-        if (_pdfCoreDocument == null || ReferenceEquals(saveDocument, _pdfCoreDocument))
-            return;
-        if (pageNumber < 1 || pageNumber > _pdfCoreDocument.PageCount)
-            return;
-
-        _pdfCoreDocument.AddHighlightAnnotation(pageNumber, contentRect, contents);
-    }
-
-    /// <summary>
-    /// The generalised form of <see cref="AddHighlightToViewerDocument"/> (#912):
-    /// same guards, the subtype supplied by the caller. See
-    /// AddTextMarkupFromSelectionAsync for why skipping this makes the feature
-    /// look broken on screen while the saved file is correct.
-    /// </summary>
-    private void AddTextMarkupToViewerDocument(
-        int pageNumber, PdfRectangle contentRect, string contents,
-        Func<PdfCoreDocument, int, PdfRectangle, string, PdfAnnotation> add)
-    {
-        var saveDocument = _documentService.GetCurrentDocument();
-        if (_pdfCoreDocument == null || ReferenceEquals(saveDocument, _pdfCoreDocument))
-            return;
-        if (pageNumber < 1 || pageNumber > _pdfCoreDocument.PageCount)
-            return;
-
-        add(_pdfCoreDocument, pageNumber, contentRect, contents);
-    }
-
-    private void AddTextNoteToViewerDocument(int pageNumber, PdfRectangle contentRect, string contents)
-    {
-        var saveDocument = _documentService.GetCurrentDocument();
-        if (_pdfCoreDocument == null || ReferenceEquals(saveDocument, _pdfCoreDocument))
-            return;
-        if (pageNumber < 1 || pageNumber > _pdfCoreDocument.PageCount)
-            return;
-
-        _pdfCoreDocument.AddTextAnnotation(pageNumber, contentRect, contents);
+        try
+        {
+            var result = _annotationWorkflow.AddRect(request, _pdfCoreDocument);
+            await MarkAnnotationChangedAsync(result.SuccessMessage);
+            RecordAnnotationAdd(
+                result.HistoryDescription,
+                result.Request.PageNumber,
+                result.Annotation,
+                () => _annotationWorkflow.ReplayRect(result.Request));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding {Kind} annotation", request.Kind);
+            _toastService.ShowError($"Failed to add {failureDescription}", ex.Message);
+        }
     }
 
     private Task MarkAnnotationChangedAsync(string toastMessage)

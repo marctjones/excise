@@ -103,8 +103,16 @@ public class AnnotationAuthoringWorkflowTests : IDisposable
         var workflow = new AnnotationWorkflowService(
             documentService, NullLogger<AnnotationWorkflowService>.Instance);
 
-        workflow.AddSquare(1, new PdfRectangle(100, 500, 300, 600), "Square note");
-        workflow.AddCircle(1, new PdfRectangle(360, 300, 440, 360), "Circle note");
+        workflow.AddRect(new AnnotationRectRequest(
+            AnnotationRectKind.Square,
+            1,
+            new PdfRectangle(100, 500, 300, 600),
+            "Square note"));
+        workflow.AddRect(new AnnotationRectRequest(
+            AnnotationRectKind.Circle,
+            1,
+            new PdfRectangle(360, 300, 440, 360),
+            "Circle note"));
 
         documentService.SaveDocument(outputPath);
         using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
@@ -129,7 +137,12 @@ public class AnnotationAuthoringWorkflowTests : IDisposable
         var workflow = new AnnotationWorkflowService(
             documentService, NullLogger<AnnotationWorkflowService>.Instance);
 
-        workflow.AddFreeText(1, new PdfRectangle(100, 500, 400, 560), "Review this box", fontSize: 14);
+        workflow.AddRect(new AnnotationRectRequest(
+            AnnotationRectKind.FreeText,
+            1,
+            new PdfRectangle(100, 500, 400, 560),
+            "Review this box",
+            FontSize: 14));
 
         documentService.SaveDocument(outputPath);
         using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
@@ -152,13 +165,14 @@ public class AnnotationAuthoringWorkflowTests : IDisposable
         var workflow = new AnnotationWorkflowService(
             documentService, NullLogger<AnnotationWorkflowService>.Instance);
 
-        workflow.AddInk(1,
-            new[]
-            {
-                new[] { (100.0, 700.0), (200.0, 720.0), (300.0, 700.0) },
-                new[] { (120.0, 650.0), (280.0, 650.0) }
-            },
-            "Freehand note");
+        workflow.AddPath(new AnnotationPathRequest(
+            AnnotationPathKind.Ink,
+            1,
+            [
+                [(100.0, 700.0), (200.0, 720.0), (300.0, 700.0)],
+                [(120.0, 650.0), (280.0, 650.0)]
+            ],
+            "Freehand note"));
 
         documentService.SaveDocument(outputPath);
         using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
