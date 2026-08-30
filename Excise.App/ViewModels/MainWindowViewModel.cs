@@ -12,7 +12,6 @@ using Excise.App.Models;
 using Excise.Core.Document;
 using Excise.App.Services;
 using ReactiveUI;
-using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -36,6 +35,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly PdfTextExtractionService _textExtractionService;
     private readonly SignatureVerificationWorkflowService _signatureWorkflowService;
     private readonly PageOrganizationWorkflowService _pageOrganizationWorkflow;
+    private readonly DocumentImageExportWorkflowService _imageExportWorkflow;
     private readonly AnnotationWorkflowService _annotationWorkflow;
     private readonly FilenameSuggestionService _filenameSuggestionService;
     private readonly ToastService _toastService;
@@ -106,6 +106,7 @@ public partial class MainWindowViewModel : ViewModelBase
         IUserDialogService dialogService,
         SignatureVerificationWorkflowService signatureWorkflowService,
         PageOrganizationWorkflowService pageOrganizationWorkflow,
+        DocumentImageExportWorkflowService imageExportWorkflow,
         AnnotationWorkflowService annotationWorkflow)
     {
         _logger = logger;
@@ -121,6 +122,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _dialogService = dialogService;
         _signatureWorkflowService = signatureWorkflowService;
         _pageOrganizationWorkflow = pageOrganizationWorkflow;
+        _imageExportWorkflow = imageExportWorkflow;
         _annotationWorkflow = annotationWorkflow;
         _thumbnailSession = new ThumbnailSidebarSession(_logger);
 
@@ -1151,7 +1153,6 @@ public partial class MainWindowViewModel : ViewModelBase
             await RefreshAfterDocumentMutationAsync();
 
             this.RaisePropertyChanged(nameof(TotalPages));
-        RefreshRedactAnnotationCount();
             RefreshRedactAnnotationCount();
             _logger.LogInformation("Page removed successfully. Remaining pages: {PageCount}", TotalPages);
         }
@@ -1273,45 +1274,10 @@ public partial class MainWindowViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(response))
             return;
 
-        response = response.Trim();
-
-        SplitMode mode;
-        int pagesPerChunk = 1;
-        IReadOnlyList<int>? boundaries = null;
-
-        if (string.Equals(response, "single", StringComparison.OrdinalIgnoreCase))
+        var parsed = PageOrganizationWorkflowService.ParseSplitSpecification(response);
+        if (!parsed.IsValid)
         {
-            mode = SplitMode.SinglePages;
-        }
-        else if (string.Equals(response, "bookmarks", StringComparison.OrdinalIgnoreCase))
-        {
-            mode = SplitMode.Bookmarks;
-        }
-        else if (response.Contains(','))
-        {
-            var parsed = response
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(s => int.TryParse(s, out var n) ? n - 1 : -1)
-                .Where(n => n >= 0)
-                .ToList();
-
-            if (parsed.Count == 0)
-            {
-                await _dialogService.ShowMessageAsync("Split Document", $"Could not parse page numbers from \"{response}\".");
-                return;
-            }
-
-            mode = SplitMode.PageBoundaries;
-            boundaries = parsed;
-        }
-        else if (int.TryParse(response, out var everyN) && everyN > 0)
-        {
-            mode = SplitMode.EveryNPages;
-            pagesPerChunk = everyN;
-        }
-        else
-        {
-            await _dialogService.ShowMessageAsync("Split Document", $"Could not understand \"{response}\".");
+            await _dialogService.ShowMessageAsync("Split Document", parsed.ErrorMessage!);
             return;
         }
 
@@ -1324,8 +1290,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var paths = await _pageOrganizationWorkflow.SplitDocumentAsync(folderPath, mode, pagesPerChunk, boundaries);
-            _toastService.ShowSuccess($"Split into {paths.Count} file(s)");
+            var result = await _pageOrganizationWorkflow.SplitDocumentAsync(
+                new SplitDocumentRequest(folderPath, parsed.Specification!));
+            _toastService.ShowSuccess($"Split into {result.WrittenPaths.Count} file(s)");
         }
         catch (Exception ex)
         {
@@ -2125,6 +2092,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _logger.LogInformation("Close document command triggered");
         _textIndexSession.Cancel();
+        _searchSession.Cancel();
 
         if (!_documentService.IsDocumentLoaded)
         {
@@ -2134,64 +2102,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            // Save document state before closing
             SaveDocumentState();
-
-
-            // Close the PDF document
             _documentService.CloseDocument();
-
-            // Clear file path
-            _currentFilePath = string.Empty;
-
-            // Clear visual state
-            CurrentPageImage = null;
-            PdfCoreDocument = null;
-            ResetThumbnailSession();
-            _renderService.ClearCache();
-
-            // Clear redaction state (FIX: These were persisting!)
-            CurrentRedactionArea = new Rect();
-            ClearCurrentTextSelection();
-            RedactionWorkflow.Reset();
-            ClearPendingTypewriterText();
-            ClearEditHistory();
-            ClipboardHistory.Clear();
-
-            // Clear search state
-            SearchText = string.Empty;
-            SearchMatches.Clear();
-            CurrentSearchMatchIndex = -1;
-            IsSearchVisible = false;
-
-            // Exit redaction mode if active
-            if (IsRedactionMode)
-            {
-                IsRedactionMode = false;
-            }
-            if (IsTypewriterMode)
-            {
-                IsTypewriterMode = false;
-            }
-
-            // Reset navigation state
-            CurrentPageIndex = 0;
-
-            // Reset display zoom without overwriting the user's preference.
-            ApplyZoomTransition(_viewportSession.ResetZoomWithoutPersisting());
-
-            // Notify UI of all state changes
-            this.RaisePropertyChanged(nameof(DocumentName));
-            this.RaisePropertyChanged(nameof(TotalPages));
-            RefreshRedactAnnotationCount();
-            this.RaisePropertyChanged(nameof(StatusBarText));
-            this.RaisePropertyChanged(nameof(IsDocumentLoaded));
-            this.RaisePropertyChanged(nameof(CurrentRedactionArea));
-            this.RaisePropertyChanged(nameof(CurrentTextSelectionArea));
-            this.RaisePropertyChanged(nameof(CurrentTextSelectionPageArea));
-            this.RaisePropertyChanged(nameof(IsRedactionMode));
-            this.RaisePropertyChanged(nameof(IsTypewriterMode));
-            this.RaisePropertyChanged(nameof(SaveButtonText));
+            ResetClosedDocumentWorkspaceState();
+            PublishClosedDocumentState();
 
             _logger.LogInformation("Document closed successfully - all state cleared");
         }
@@ -2199,6 +2113,47 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _logger.LogError(ex, "Error closing document");
         }
+    }
+
+    private void ResetClosedDocumentWorkspaceState()
+    {
+        _currentFilePath = string.Empty;
+        CurrentPageImage = null;
+        PdfCoreDocument = null;
+        ResetThumbnailSession();
+        _renderService.ClearCache();
+
+        CurrentRedactionArea = new Rect();
+        ClearCurrentTextSelection();
+        RedactionWorkflow.Reset();
+        ClearPendingTypewriterText();
+        ClearEditHistory();
+        ClipboardHistory.Clear();
+
+        SearchText = string.Empty;
+        SearchMatches.Clear();
+        CurrentSearchMatchIndex = -1;
+        IsSearchVisible = false;
+
+        IsRedactionMode = false;
+        IsTypewriterMode = false;
+        CurrentPageIndex = 0;
+        ApplyZoomTransition(_viewportSession.ResetZoomWithoutPersisting());
+    }
+
+    private void PublishClosedDocumentState()
+    {
+        this.RaisePropertyChanged(nameof(DocumentName));
+        this.RaisePropertyChanged(nameof(TotalPages));
+        RefreshRedactAnnotationCount();
+        this.RaisePropertyChanged(nameof(StatusBarText));
+        this.RaisePropertyChanged(nameof(IsDocumentLoaded));
+        this.RaisePropertyChanged(nameof(CurrentRedactionArea));
+        this.RaisePropertyChanged(nameof(CurrentTextSelectionArea));
+        this.RaisePropertyChanged(nameof(CurrentTextSelectionPageArea));
+        this.RaisePropertyChanged(nameof(IsRedactionMode));
+        this.RaisePropertyChanged(nameof(IsTypewriterMode));
+        this.RaisePropertyChanged(nameof(SaveButtonText));
     }
 
     private void Exit()
@@ -2310,23 +2265,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var bitmap = await _renderService.RenderPageAsync(_currentFilePath, CurrentPageIndex, dpi);
-            if (bitmap != null)
-            {
-                var extension = System.IO.Path.GetExtension(outputPath).ToLowerInvariant();
-                SKEncodedImageFormat imageFormat = extension switch
-                {
-                    ".jpg" or ".jpeg" => SKEncodedImageFormat.Jpeg,
-                    _ => SKEncodedImageFormat.Png
-                };
-
-                using var image = SKImage.FromBitmap(bitmap);
-                using var encodedData = image.Encode(imageFormat, 90);
-                using var fileStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
-                encodedData.SaveTo(fileStream);
-
-                _logger.LogInformation("Page {PageNumber} exported to: {FilePath}", CurrentPageIndex + 1, outputPath);
-            }
+            await _imageExportWorkflow.ExportPageAsync(
+                new PageImageExportRequest(_currentFilePath, CurrentPageIndex, outputPath, dpi));
         }
         catch (Exception ex)
         {
@@ -2390,34 +2330,25 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureDocumentPermission(p => p.CanCopy,
+            "Exporting pages as images", "copying or extracting content (/P bit 5)"))
+        {
+            return;
+        }
+
         try
         {
-            for (int i = 0; i < TotalPages; i++)
-            {
-                _logger.LogDebug("Exporting page {PageIndex}", i);
-
-                var bitmap = await _renderService.RenderPageAsync(_currentFilePath, i, dpi);
-                if (bitmap != null)
-                {
-                    var fileName = $"page_{i + 1:D3}.{format}";
-                    var filePath = System.IO.Path.Combine(outputFolder, fileName);
-
-                    // Determine the image format based on the 'format' parameter
-                    SKEncodedImageFormat imageFormat = SKEncodedImageFormat.Png;
-                    if (format.Equals("jpg", StringComparison.OrdinalIgnoreCase) || format.Equals("jpeg", StringComparison.OrdinalIgnoreCase))
-                    {
-                        imageFormat = SKEncodedImageFormat.Jpeg;
-                    }
-
-                    using var image = SKImage.FromBitmap(bitmap);
-                    using var encodedData = image.Encode(imageFormat, 90); // 90% quality for JPG
-                    using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-                    encodedData.SaveTo(fileStream);
-                    _logger.LogDebug("Page {PageIndex} exported to: {FilePath}", i, filePath);
-                }
-            }
-
-            _logger.LogInformation("All {Count} pages exported successfully", TotalPages);
+            var result = await _imageExportWorkflow.ExportPagesAsync(
+                new DocumentImageExportRequest(
+                    _currentFilePath,
+                    TotalPages,
+                    outputFolder,
+                    format,
+                    dpi));
+            _logger.LogInformation(
+                "Exported {WrittenCount}/{RequestedCount} pages successfully",
+                result.WrittenPaths.Count,
+                result.RequestedPageCount);
         }
         catch (Exception ex)
         {

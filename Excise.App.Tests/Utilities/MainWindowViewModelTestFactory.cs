@@ -30,6 +30,7 @@ internal static class MainWindowViewModelTestFactory
         SignatureVerificationSummaryFormatter? signatureSummaryFormatter = null,
         SignatureVerificationWorkflowService? signatureWorkflowService = null,
         PageOrganizationWorkflowService? pageOrganizationWorkflow = null,
+        DocumentImageExportWorkflowService? imageExportWorkflow = null,
         AnnotationWorkflowService? annotationWorkflow = null,
         bool thumbnailPrewarmEnabled = true)
     {
@@ -63,6 +64,9 @@ internal static class MainWindowViewModelTestFactory
             documentService,
             dialogService,
             NullLogger<PageOrganizationWorkflowService>.Instance);
+        imageExportWorkflow ??= new DocumentImageExportWorkflowService(
+            renderService,
+            NullLogger<DocumentImageExportWorkflowService>.Instance);
         annotationWorkflow ??= new AnnotationWorkflowService(
             documentService,
             NullLogger<AnnotationWorkflowService>.Instance);
@@ -81,6 +85,7 @@ internal static class MainWindowViewModelTestFactory
             dialogService,
             signatureWorkflowService,
             pageOrganizationWorkflow,
+            imageExportWorkflow,
             annotationWorkflow);
         viewModel.ThumbnailPrewarmEnabled = thumbnailPrewarmEnabled;
         return viewModel;

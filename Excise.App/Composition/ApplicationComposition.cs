@@ -29,6 +29,7 @@ internal static class ApplicationComposition
         services.AddSingleton<SignatureVerificationSummaryFormatter>();
         services.AddSingleton<SignatureVerificationWorkflowService>();
         services.AddSingleton<PageOrganizationWorkflowService>();
+        services.AddSingleton<DocumentImageExportWorkflowService>();
         services.AddSingleton<AnnotationWorkflowService>();
         services.AddSingleton<FilenameSuggestionService>();
         services.AddSingleton<ToastService>();
@@ -59,5 +60,6 @@ internal static class ApplicationComposition
             services.GetRequiredService<IUserDialogService>(),
             services.GetRequiredService<SignatureVerificationWorkflowService>(),
             services.GetRequiredService<PageOrganizationWorkflowService>(),
+            services.GetRequiredService<DocumentImageExportWorkflowService>(),
             services.GetRequiredService<AnnotationWorkflowService>());
 }

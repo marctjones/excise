@@ -154,6 +154,57 @@ public sealed class PageOrganizationWorkflowService
         return Task.FromResult(paths);
     }
 
+    internal Task<SplitDocumentResult> SplitDocumentAsync(SplitDocumentRequest request)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.OutputFolder);
+        return SplitDocumentCoreAsync(request);
+    }
+
+    internal static SplitSpecificationParseResult ParseSplitSpecification(string? specification)
+    {
+        if (string.IsNullOrWhiteSpace(specification))
+            return SplitSpecificationParseResult.Invalid("Enter a split specification.");
+
+        var normalized = specification.Trim();
+        if (string.Equals(normalized, "single", StringComparison.OrdinalIgnoreCase))
+            return SplitSpecificationParseResult.Valid(new(SplitMode.SinglePages, 1, null));
+
+        if (string.Equals(normalized, "bookmarks", StringComparison.OrdinalIgnoreCase))
+            return SplitSpecificationParseResult.Valid(new(SplitMode.Bookmarks, 1, null));
+
+        if (normalized.Contains(','))
+        {
+            var boundaries = normalized
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(value => int.TryParse(value, out var pageNumber) ? pageNumber - 1 : -1)
+                .Where(pageIndex => pageIndex >= 0)
+                .Distinct()
+                .OrderBy(pageIndex => pageIndex)
+                .ToArray();
+            return boundaries.Length == 0
+                ? SplitSpecificationParseResult.Invalid(
+                    $"Could not parse page numbers from \"{normalized}\".")
+                : SplitSpecificationParseResult.Valid(
+                    new(SplitMode.PageBoundaries, 1, boundaries));
+        }
+
+        return int.TryParse(normalized, out var pagesPerChunk) && pagesPerChunk > 0
+            ? SplitSpecificationParseResult.Valid(
+                new(SplitMode.EveryNPages, pagesPerChunk, null))
+            : SplitSpecificationParseResult.Invalid(
+                $"Could not understand \"{normalized}\".");
+    }
+
+    private async Task<SplitDocumentResult> SplitDocumentCoreAsync(SplitDocumentRequest request)
+    {
+        var paths = await SplitDocumentAsync(
+            request.OutputFolder,
+            request.Specification.Mode,
+            request.Specification.PagesPerChunk,
+            request.Specification.Boundaries);
+        return new SplitDocumentResult(paths);
+    }
+
     private async Task ShowOperationWarningsAsync(IEnumerable<int>? pageIndices = null)
     {
         var diagnostics = _documentService.AnalyzePageOperationPreservation(pageIndices);
@@ -233,3 +284,27 @@ public sealed record PageOrganizationResult(
         IReadOnlyList<int>? selectedPageIndices = null) =>
         new(false, currentPageIndex, selectedPageIndices ?? Array.Empty<int>());
 }
+
+internal sealed record SplitSpecification(
+    SplitMode Mode,
+    int PagesPerChunk,
+    IReadOnlyList<int>? Boundaries);
+
+internal sealed record SplitSpecificationParseResult(
+    SplitSpecification? Specification,
+    string? ErrorMessage)
+{
+    public bool IsValid => Specification is not null;
+
+    public static SplitSpecificationParseResult Valid(SplitSpecification specification) =>
+        new(specification, null);
+
+    public static SplitSpecificationParseResult Invalid(string errorMessage) =>
+        new(null, errorMessage);
+}
+
+internal readonly record struct SplitDocumentRequest(
+    string OutputFolder,
+    SplitSpecification Specification);
+
+internal sealed record SplitDocumentResult(IReadOnlyList<string> WrittenPaths);
