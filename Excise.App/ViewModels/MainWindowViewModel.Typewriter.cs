@@ -257,10 +257,10 @@ public partial class MainWindowViewModel
         this.RaisePropertyChanged(nameof(HasPendingTypewriterEdits));
     }
 
-    private async Task ReloadPdfCoreDocumentAfterSaveAsync(string filePath)
+    private Task ReloadPdfCoreDocumentAfterSaveAsync(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
-            return;
+            return Task.CompletedTask;
 
         var pageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
 
@@ -275,19 +275,13 @@ public partial class MainWindowViewModel
         PdfCoreDocument = _documentService.GetCurrentDocument();
         CurrentPageIndex = pageIndex;
         _renderService.ClearCache();
-        ResetThumbnailLoadTracking();
-
-        _thumbnailCache?.Dispose();
-        _thumbnailCache = new Services.ThumbnailCacheService(
-            filePath,
-            PdfCoreDocument!,
-            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+        StartThumbnailSession(filePath, PdfCoreDocument!);
 
         _textIndexSession.Start(PdfCoreDocument!);
 
         this.RaisePropertyChanged(nameof(TotalPages));
         this.RaisePropertyChanged(nameof(CurrentPage));
         this.RaisePropertyChanged(nameof(CurrentPageFormFields));
-        await LoadPageThumbnailsAsync();
+        return Task.CompletedTask;
     }
 }
