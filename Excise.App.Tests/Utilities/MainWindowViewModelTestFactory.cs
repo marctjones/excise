@@ -45,6 +45,7 @@ internal static class MainWindowViewModelTestFactory
         textExtractionService ??= new PdfTextExtractionService(
             NullLogger<PdfTextExtractionService>.Instance);
         searchService ??= new PdfSearchService(NullLogger<PdfSearchService>.Instance);
+        var searchSession = new DocumentSearchSession(searchService);
         textIndexSession ??= new DocumentTextIndexSession(
             NullLogger<DocumentTextIndexSession>.Instance);
         filenameSuggestionService ??= new FilenameSuggestionService();
@@ -73,7 +74,7 @@ internal static class MainWindowViewModelTestFactory
             redactionService,
             redactedCopySafetyService,
             textExtractionService,
-            searchService,
+            searchSession,
             textIndexSession,
             filenameSuggestionService,
             toastService,

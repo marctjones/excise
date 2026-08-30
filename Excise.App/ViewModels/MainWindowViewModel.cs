@@ -99,7 +99,7 @@ public partial class MainWindowViewModel : ViewModelBase
         RedactionService redactionService,
         RedactedCopySafetyService redactedCopySafetyService,
         PdfTextExtractionService textExtractionService,
-        PdfSearchService searchService,
+        DocumentSearchSession searchSession,
         DocumentTextIndexSession textIndexSession,
         FilenameSuggestionService filenameSuggestionService,
         ToastService toastService,
@@ -114,7 +114,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _redactionService = redactionService;
         _redactedCopySafetyService = redactedCopySafetyService;
         _textExtractionService = textExtractionService;
-        _searchService = searchService;
+        _searchSession = searchSession;
         _textIndexSession = textIndexSession;
         _filenameSuggestionService = filenameSuggestionService;
         _toastService = toastService;
