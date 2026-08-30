@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import fnmatch
 import json
 import os
 from pathlib import Path
@@ -104,17 +105,27 @@ def project_references(project_file: Path) -> list[str]:
     return sorted(references)
 
 
-def classify_project(path: Path) -> str:
+def load_repository_scope() -> dict:
+    return load_json(ARCHITECTURE_ROOT / "repository-scope.json")
+
+
+def is_excluded_project(path: Path, scope: dict) -> bool:
     relative = repo_relative(path)
-    if ".Tests/" in relative or relative.endswith(".Tests.csproj"):
-        return "test"
-    if relative.startswith("tools/"):
-        return "tool"
-    if "Benchmarks" in relative:
-        return "benchmark"
-    if "Sample" in relative or "Demo" in relative:
-        return "sample"
-    return "shipping"
+    for item in scope.get("excludedRoots", []):
+        raw = item["path"].strip("/")
+        if "/" not in raw and raw in path.parts:
+            return True
+        if relative == raw or relative.startswith(raw + "/"):
+            return True
+    return False
+
+
+def classify_project(path: Path, scope: dict) -> str:
+    relative = repo_relative(path)
+    for rule in scope.get("projectRules", []):
+        if fnmatch.fnmatchcase(relative, rule["pattern"]):
+            return rule["classification"]
+    return scope["defaultProjectClassification"]
 
 
 def current_revision() -> str:
@@ -125,9 +136,10 @@ def current_revision() -> str:
 
 
 def generate_inventory(source_revision: str) -> dict:
+    scope = load_repository_scope()
     projects = sorted(
         path for path in REPO_ROOT.rglob("*.csproj")
-        if not any(part in {"bin", "obj", ".claude"} for part in path.parts)
+        if not is_excluded_project(path, scope)
     )
     return {
         "$schema": "./schemas/inventory.schema.json",
@@ -140,7 +152,7 @@ def generate_inventory(source_revision: str) -> dict:
         "projects": [
             {
                 "path": repo_relative(project),
-                "classification": classify_project(project),
+                "classification": classify_project(project, scope),
                 "sourceRoot": repo_relative(project.parent),
                 "projectReferences": project_references(project),
             }
@@ -195,11 +207,18 @@ def validate_registry_set(
             errors.append(f"{name}: missing schema {repo_relative(schema_path)}")
 
     design_root_keys = {
-        "$schema", "schemaVersion", "designVersion", "components",
+        "$schema", "schemaVersion", "designVersion", "repositoryScope", "components",
         "relationships", "workflows", "rules", "diagramViews",
     }
     require_keys(design, design_root_keys - {"$schema"}, "design", errors)
     reject_keys(design, design_root_keys, "design", errors)
+    if design.get("repositoryScope") != "architecture/repository-scope.json":
+        errors.append("design: repositoryScope must be architecture/repository-scope.json")
+    scope = load_repository_scope()
+    if scope.get("schemaVersion") != 1:
+        errors.append("repository scope: schemaVersion must be 1")
+    if scope.get("$schema") != "./schemas/repository-scope.schema.json":
+        errors.append("repository scope: unexpected $schema")
     component_by_id = unique_ids(design.get("components", []), "id", "design.components", errors)
     component_ids = set(component_by_id)
     workflow_by_id = unique_ids(design.get("workflows", []), "id", "design.workflows", errors)

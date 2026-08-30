@@ -136,6 +136,7 @@ def migrate(source: Path) -> None:
         "$schema": "./schemas/design.schema.json",
         "schemaVersion": 1,
         "designVersion": 1,
+        "repositoryScope": "architecture/repository-scope.json",
         "components": design_components,
         "relationships": [
             {

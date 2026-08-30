@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/marctjones/excise/blob/develop/architecture/schemas/repository-scope.schema.json",
+  "title": "Excise repository topology scope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "defaultProjectClassification", "projectRules", "excludedRoots", "reviewOnlyRoots"],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "schemaVersion": { "const": 1 },
+    "defaultProjectClassification": { "enum": ["shipping", "test", "sample", "benchmark", "tool"] },
+    "projectRules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pattern", "classification"],
+        "properties": {
+          "pattern": { "type": "string", "minLength": 1 },
+          "classification": { "enum": ["shipping", "test", "sample", "benchmark", "tool"] }
+        }
+      }
+    },
+    "excludedRoots": { "$ref": "#/$defs/roots" },
+    "reviewOnlyRoots": { "$ref": "#/$defs/roots" }
+  },
+  "$defs": {
+    "roots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "classification", "reason"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "classification": { "enum": ["nested-worktree", "generated", "corpus", "vendored", "vendored-data"] },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

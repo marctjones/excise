@@ -1,5 +1,7 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
@@ -39,13 +41,25 @@ var solution = await workspace.OpenSolutionAsync(solutionPath);
 var analyzer = new ReachabilityAnalyzer(solution, options);
 var report = await analyzer.AnalyzeAsync();
 
-return BaselineGate.Evaluate(report, options);
+if (options.TopologyOutput is not null)
+{
+    TopologyWriter.Write(options.TopologyOutput, report.Topology);
+}
+else if (options.CheckTopologyOutput is not null
+         && !TopologyWriter.Check(options.CheckTopologyOutput, report.Topology))
+{
+    return 1;
+}
+
+return BaselineGate.Evaluate(report.Unreachable, options);
 
 internal sealed record Options(
     string SolutionPath,
     string BaselinePath,
     bool Update,
     bool Quiet,
+    string? TopologyOutput,
+    string? CheckTopologyOutput,
     bool SelfTest,
     bool ShowHelp)
 {
@@ -55,6 +69,8 @@ internal sealed record Options(
         var baselinePath = "tests/reachability-baseline.tsv";
         var update = false;
         var quiet = false;
+        string? topologyOutput = null;
+        string? checkTopologyOutput = null;
         var selfTest = false;
         var help = false;
 
@@ -74,6 +90,12 @@ internal sealed record Options(
                 case "--quiet":
                     quiet = true;
                     break;
+                case "--topology-output":
+                    topologyOutput = RequireValue(args, ref i);
+                    break;
+                case "--check-topology-output":
+                    checkTopologyOutput = RequireValue(args, ref i);
+                    break;
                 case "--self-test":
                     selfTest = true;
                     break;
@@ -86,7 +108,14 @@ internal sealed record Options(
             }
         }
 
-        return new Options(solutionPath, baselinePath, update, quiet, selfTest, help);
+        if (topologyOutput is not null && checkTopologyOutput is not null)
+        {
+            throw new ArgumentException("Use only one of --topology-output and --check-topology-output.");
+        }
+
+        return new Options(
+            solutionPath, baselinePath, update, quiet,
+            topologyOutput, checkTopologyOutput, selfTest, help);
     }
 
     public static void PrintHelp()
@@ -95,6 +124,8 @@ internal sealed record Options(
         Console.WriteLine();
         Console.WriteLine("Builds a Roslyn symbol graph, seeds known production entry points,");
         Console.WriteLine("and reports unreachable private/internal symbols as a ratchet.");
+        Console.WriteLine("--topology-output writes deterministic Roslyn source/coupling metrics as JSON.");
+        Console.WriteLine("--check-topology-output fails when checked JSON differs from current source.");
     }
 
     private static string RequireValue(string[] args, ref int index)
@@ -131,7 +162,7 @@ internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
     private readonly HashSet<string> _xamlNames = new(StringComparer.Ordinal);
     private readonly HashSet<string> _stringLiterals = new(StringComparer.Ordinal);
 
-    public async Task<IReadOnlyList<ReachabilityRow>> AnalyzeAsync()
+    public async Task<AnalysisResult> AnalyzeAsync()
     {
         foreach (var project in solution.Projects)
         {
@@ -200,7 +231,265 @@ internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
             }
         }
 
-        return rows;
+        return new AnalysisResult(rows, BuildTopology(reachable));
+    }
+
+    private TopologyReport BuildTopology(HashSet<ISymbol> reachable)
+    {
+        var fanIn = new Dictionary<ISymbol, int>(SymbolEqualityComparer.Default);
+        foreach (var targets in _edges.Values)
+        {
+            foreach (var target in targets)
+            {
+                var originalTarget = Original(target);
+                fanIn[originalTarget] = fanIn.GetValueOrDefault(originalTarget) + 1;
+            }
+        }
+
+        var allSymbols = _nodes.Values
+            .Select(node => ToTopologySymbol(
+                node,
+                reachable.Contains(node.Symbol),
+                _seeds.Contains(node.Symbol),
+                fanIn.GetValueOrDefault(node.Symbol),
+                _edges.GetValueOrDefault(node.Symbol)?.Count ?? 0))
+            .OrderBy(row => row.Project, StringComparer.Ordinal)
+            .ThenBy(row => row.File, StringComparer.Ordinal)
+            .ThenBy(row => row.StartLine)
+            .ThenBy(row => row.Symbol, StringComparer.Ordinal)
+            .ToArray();
+        var symbols = allSymbols
+            .Where(IsTopologyRelevant)
+            .ToArray();
+
+        var typeEdges = _edges
+            .SelectMany(edge => edge.Value.Select(target => (From: ContainingType(edge.Key), To: ContainingType(target))))
+            .Where(edge => edge.From is not null && edge.To is not null && edge.From != edge.To)
+            .GroupBy(edge => (edge.From!, edge.To!))
+            .Select(group => new TypeDependency(group.Key.Item1, group.Key.Item2, group.Count()))
+            .OrderBy(edge => edge.Source, StringComparer.Ordinal)
+            .ThenBy(edge => edge.Target, StringComparer.Ordinal)
+            .ToArray();
+
+        var projects = allSymbols
+            .GroupBy(symbol => symbol.Project, StringComparer.Ordinal)
+            .Select(group => new ProjectTopology(
+                group.Key,
+                group.Select(item => item.File).Where(file => file is not null).Distinct(StringComparer.Ordinal).Count(),
+                group.Count(item => item.Kind == "type"),
+                group.Count(item => item.Kind == "method"),
+                group.Count(item => item.Mutable),
+                group.Sum(item => item.DeclarationLines)))
+            .OrderBy(project => project.Name, StringComparer.Ordinal)
+            .ToArray();
+
+        return new TopologyReport(
+            1,
+            "tools/Excise.Reachability",
+            GitRevision(),
+            projects,
+            symbols,
+            typeEdges,
+            BuildMethodCycles(),
+            new TopologySeedSummary(_seeds.Count, _xamlNames.Count, _stringLiterals.Count),
+            [
+                "XAML and string/reflection seeds are conservative name matches, not proven runtime edges.",
+                "DI registrations, source-generated code, native callbacks, and dynamic scripting require explicit review.",
+                "Declaration and branch counts are structural signals, not complexity verdicts.",
+                "Symbol rows retain all types plus non-trivial methods and shared mutable members; project totals cover the full graph.",
+                "Git change coupling is generated separately from commit history."
+            ]);
+    }
+
+    private static bool IsTopologyRelevant(SymbolTopology symbol)
+    {
+        return symbol.Kind == "type"
+               || symbol.Kind == "method"
+               && (symbol.DeclarationLines >= 8
+                   || symbol.BranchPoints > 0
+                   || symbol.FanIn > 2
+                   || symbol.FanOut > 2
+                   || symbol.DeclarationCount > 1
+                   || !symbol.Reachable)
+               || symbol.Kind == "field" && symbol.Mutable && symbol.FanIn > 1;
+    }
+
+    private SymbolTopology ToTopologySymbol(
+        Node node,
+        bool reachable,
+        bool seed,
+        int fanIn,
+        int fanOut)
+    {
+        var declarations = node.Symbol.DeclaringSyntaxReferences
+            .Select(reference => reference.GetSyntax())
+            .OrderBy(syntax => syntax.SyntaxTree.FilePath, StringComparer.Ordinal)
+            .ThenBy(syntax => syntax.SpanStart)
+            .ToArray();
+        var first = declarations.FirstOrDefault();
+        string? file = null;
+        var startLine = 0;
+        var endLine = 0;
+        if (first is not null)
+        {
+            var span = first.GetLocation().GetLineSpan();
+            file = Path.GetRelativePath(
+                    Path.GetDirectoryName(solution.FilePath) ?? Environment.CurrentDirectory,
+                    span.Path)
+                .Replace('\\', '/');
+            startLine = span.StartLinePosition.Line + 1;
+            endLine = span.EndLinePosition.Line + 1;
+        }
+
+        var declarationLines = declarations.Sum(CountDeclarationLines);
+        var branchPoints = declarations.Sum(CountBranchPoints);
+        var mutable = node.Symbol switch
+        {
+            IFieldSymbol field => !field.IsConst && !field.IsReadOnly,
+            IPropertySymbol property => property.SetMethod is not null,
+            _ => false
+        };
+
+        return new SymbolTopology(
+            node.ProjectName,
+            node.Kind,
+            node.Display,
+            ContainingType(node.Symbol),
+            node.Symbol.ContainingNamespace?.ToDisplayString(),
+            file,
+            startLine,
+            endLine,
+            declarationLines,
+            branchPoints,
+            fanIn,
+            fanOut,
+            reachable,
+            seed,
+            mutable,
+            declarations.Length);
+    }
+
+    private static int CountDeclarationLines(SyntaxNode declaration)
+    {
+        var text = declaration.SyntaxTree.GetText();
+        var span = declaration.GetLocation().GetLineSpan();
+        var count = 0;
+        for (var index = span.StartLinePosition.Line; index <= span.EndLinePosition.Line; index++)
+        {
+            var value = text.Lines[index].ToString().Trim();
+            if (value.Length > 0 && value is not "{" and not "}" && !value.StartsWith("//", StringComparison.Ordinal))
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static int CountBranchPoints(SyntaxNode declaration)
+    {
+        return declaration.DescendantNodes().Count(node => node is
+            IfStatementSyntax or ForStatementSyntax or ForEachStatementSyntax or WhileStatementSyntax or
+            DoStatementSyntax or CatchClauseSyntax or ConditionalExpressionSyntax or SwitchExpressionArmSyntax or
+            CaseSwitchLabelSyntax or CasePatternSwitchLabelSyntax
+            || node is BinaryExpressionSyntax binary
+            && (binary.IsKind(SyntaxKind.LogicalAndExpression)
+                || binary.IsKind(SyntaxKind.LogicalOrExpression)));
+    }
+
+    private static string? ContainingType(ISymbol symbol)
+    {
+        var type = symbol as INamedTypeSymbol ?? symbol.ContainingType;
+        return type?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+            .Replace("global::", "", StringComparison.Ordinal);
+    }
+
+    private IReadOnlyList<MethodCycle> BuildMethodCycles()
+    {
+        var methods = _nodes.Keys
+            .OfType<IMethodSymbol>()
+            .Select(method => (ISymbol)Original(method))
+            .ToHashSet(SymbolEqualityComparer.Default);
+        var index = 0;
+        var indices = new Dictionary<ISymbol, int>(SymbolEqualityComparer.Default);
+        var lowLinks = new Dictionary<ISymbol, int>(SymbolEqualityComparer.Default);
+        var stack = new Stack<ISymbol>();
+        var onStack = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
+        var cycles = new List<MethodCycle>();
+
+        void Visit(ISymbol symbol)
+        {
+            indices[symbol] = index;
+            lowLinks[symbol] = index;
+            index++;
+            stack.Push(symbol);
+            onStack.Add(symbol);
+
+            foreach (var target in _edges.GetValueOrDefault(symbol) ?? [])
+            {
+                var originalTarget = Original(target);
+                if (!methods.Contains(originalTarget))
+                {
+                    continue;
+                }
+                if (!indices.ContainsKey(originalTarget))
+                {
+                    Visit(originalTarget);
+                    lowLinks[symbol] = Math.Min(lowLinks[symbol], lowLinks[originalTarget]);
+                }
+                else if (onStack.Contains(originalTarget))
+                {
+                    lowLinks[symbol] = Math.Min(lowLinks[symbol], indices[originalTarget]);
+                }
+            }
+
+            if (lowLinks[symbol] != indices[symbol])
+            {
+                return;
+            }
+
+            var members = new List<string>();
+            ISymbol member;
+            do
+            {
+                member = stack.Pop();
+                onStack.Remove(member);
+                members.Add(Display(member));
+            }
+            while (!SymbolEqualityComparer.Default.Equals(member, symbol));
+
+            if (members.Count > 1)
+            {
+                members.Sort(StringComparer.Ordinal);
+                cycles.Add(new MethodCycle(members));
+            }
+        }
+
+        foreach (var method in methods.OrderBy(Display, StringComparer.Ordinal))
+        {
+            if (!indices.ContainsKey(method))
+            {
+                Visit(method);
+            }
+        }
+
+        return cycles.OrderBy(cycle => cycle.Members[0], StringComparer.Ordinal).ToArray();
+    }
+
+    private static string GitRevision()
+    {
+        using var process = Process.Start(new ProcessStartInfo("git", "rev-parse HEAD")
+        {
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        });
+        if (process is null)
+        {
+            return "unknown";
+        }
+        var revision = process.StandardOutput.ReadToEnd().Trim();
+        process.WaitForExit();
+        return process.ExitCode == 0 ? revision : "unknown";
     }
 
     private static bool ShouldAnalyzeProject(Project project)
@@ -240,7 +529,10 @@ internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
             if (symbol is INamedTypeSymbol typeSymbol)
             {
                 RegisterSymbol(project, typeSymbol, "type");
-                foreach (var member in typeSymbol.GetMembers().Where(m => !m.IsImplicitlyDeclared))
+                foreach (var member in typeSymbol.GetMembers().Where(member =>
+                             !member.IsImplicitlyDeclared
+                             && member.DeclaringSyntaxReferences.Any(reference =>
+                                 IsProjectSource(reference.SyntaxTree))))
                 {
                     RegisterSymbol(project, member, KindOf(member));
                 }
@@ -505,6 +797,99 @@ internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
     }
 
     private sealed record Node(string ProjectName, string Kind, string Display, ISymbol Symbol);
+}
+
+internal sealed record AnalysisResult(
+    IReadOnlyList<ReachabilityRow> Unreachable,
+    TopologyReport Topology);
+
+internal sealed record TopologyReport(
+    int SchemaVersion,
+    string Generator,
+    string SourceRevision,
+    IReadOnlyList<ProjectTopology> Projects,
+    IReadOnlyList<SymbolTopology> Symbols,
+    IReadOnlyList<TypeDependency> TypeDependencies,
+    IReadOnlyList<MethodCycle> MethodCycles,
+    TopologySeedSummary Seeds,
+    IReadOnlyList<string> BlindSpots);
+
+internal sealed record ProjectTopology(
+    string Name,
+    int SourceFiles,
+    int Types,
+    int Methods,
+    int MutableMembers,
+    int DeclarationLines);
+
+internal sealed record SymbolTopology(
+    string Project,
+    string Kind,
+    string Symbol,
+    string? ContainingType,
+    string? Namespace,
+    string? File,
+    int StartLine,
+    int EndLine,
+    int DeclarationLines,
+    int BranchPoints,
+    int FanIn,
+    int FanOut,
+    bool Reachable,
+    bool Seed,
+    bool Mutable,
+    int DeclarationCount);
+
+internal sealed record TypeDependency(string Source, string Target, int References);
+
+internal sealed record MethodCycle(IReadOnlyList<string> Members);
+
+internal sealed record TopologySeedSummary(int Symbols, int XamlNames, int StringLiterals);
+
+internal static class TopologyWriter
+{
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false
+    };
+
+    public static void Write(string path, TopologyReport report)
+    {
+        var fullPath = Path.GetFullPath(path);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+        var content = Serialize(report);
+        var temporary = fullPath + ".tmp";
+        File.WriteAllText(temporary, content, new UTF8Encoding(false));
+        File.Move(temporary, fullPath, true);
+        Console.WriteLine($"==> topology written: {path} ({report.Symbols.Count} symbols)");
+    }
+
+    public static bool Check(string path, TopologyReport report)
+    {
+        if (!File.Exists(path))
+        {
+            Console.Error.WriteLine($"FAIL: topology output is missing: {path}");
+            return false;
+        }
+
+        var actual = File.ReadAllText(path);
+        using var parsed = JsonDocument.Parse(actual);
+        var recordedRevision = parsed.RootElement.GetProperty("sourceRevision").GetString();
+        var expected = Serialize(report with { SourceRevision = recordedRevision ?? "unknown" });
+        if (!string.Equals(actual, expected, StringComparison.Ordinal))
+        {
+            Console.Error.WriteLine($"FAIL: topology output is stale: {path}");
+            Console.Error.WriteLine($"      regenerate with --topology-output {path}");
+            return false;
+        }
+
+        Console.WriteLine($"==> topology current: {path} ({report.Symbols.Count} symbols)");
+        return true;
+    }
+
+    private static string Serialize(TopologyReport report) =>
+        JsonSerializer.Serialize(report, JsonOptions) + Environment.NewLine;
 }
 
 internal sealed record ReachabilityRow(string Project, string Kind, string Symbol)

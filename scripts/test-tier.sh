@@ -287,6 +287,13 @@ run_t0() {
 
 run_t1() {
     run_t0
+    # Full Roslyn topology is intentionally t1: it reuses the reachability
+    # graph but pays whole-solution MSBuild cost. The checked JSON feeds RC20
+    # decomposition decisions and must change when symbol/coupling metrics do.
+    run_step "code-topology" scripts/check-reachability.sh --quiet \
+        --check-topology-output architecture/generated/code-topology.json
+    run_step "change-coupling-selftest" scripts/generate_change_coupling.py --self-test
+    run_step "change-coupling" scripts/generate_change_coupling.py --check
     # #341: the shipped Release package must not drag heavy optional
     # subsystems into startup — no Roslyn scripting assemblies, no bundled
     # tessdata, and toggling hidden text must not load Excise.Ocr.

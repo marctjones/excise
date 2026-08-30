@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/marctjones/excise/blob/develop/architecture/schemas/change-coupling.schema.json",
+  "title": "Excise generated Git change coupling",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "generator", "sourceRevision", "window", "files", "pairs"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "generator": { "const": "scripts/generate_change_coupling.py" },
+    "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commitsRequested", "commitsObserved", "broadCommitsExcluded", "newestProductionCommit", "oldestProductionCommit"],
+      "properties": {
+        "commitsRequested": { "type": "integer", "minimum": 1 },
+        "commitsObserved": { "type": "integer", "minimum": 0 },
+        "broadCommitsExcluded": { "type": "integer", "minimum": 0 },
+        "newestProductionCommit": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" },
+        "oldestProductionCommit": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "commits"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "commits": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "pairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "target", "cochanges", "jaccard"],
+        "properties": {
+          "source": { "type": "string", "minLength": 1 },
+          "target": { "type": "string", "minLength": 1 },
+          "cochanges": { "type": "integer", "minimum": 2 },
+          "jaccard": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    }
+  }
+}

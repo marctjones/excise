@@ -1,0 +1,23 @@
+{
+  "$schema": "./schemas/repository-scope.schema.json",
+  "schemaVersion": 1,
+  "defaultProjectClassification": "shipping",
+  "projectRules": [
+    { "pattern": "*Tests/*.csproj", "classification": "test" },
+    { "pattern": "tools/*/*.csproj", "classification": "tool" },
+    { "pattern": "*Benchmarks*/*.csproj", "classification": "benchmark" },
+    { "pattern": "*Sample*/*.csproj", "classification": "sample" },
+    { "pattern": "*Demo*/*.csproj", "classification": "sample" }
+  ],
+  "excludedRoots": [
+    { "path": ".claude/worktrees", "classification": "nested-worktree", "reason": "Secondary checkouts would duplicate source and history." },
+    { "path": "architecture/generated", "classification": "generated", "reason": "Derived architecture output is not an input source root." },
+    { "path": "bin", "classification": "generated", "reason": "Build output is never source." },
+    { "path": "obj", "classification": "generated", "reason": "Generated compiler/MSBuild output is never source." },
+    { "path": "test-pdfs", "classification": "corpus", "reason": "Reference corpora are evidence inputs, not shipping code." }
+  ],
+  "reviewOnlyRoots": [
+    { "path": "Excise.Core/Resources/CMaps", "classification": "vendored-data", "reason": "Standard mapping data requires provenance review but is not executable topology." },
+    { "path": "third_party", "classification": "vendored", "reason": "Third-party source is reviewed for provenance and excluded from Excise complexity metrics." }
+  ]
+}
