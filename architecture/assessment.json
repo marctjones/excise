@@ -205,10 +205,11 @@
       "evidence": [
         "Excise.Cli.Tests",
         "Excise.Cli/Commands/SaveSizeReportCommand.cs",
-        "Excise.Cli/Commands/CommandMetadataCommand.cs"
+        "Excise.Cli/Commands/CommandMetadataCommand.cs",
+        "Excise.Cli/Commands/FillFormCommand.cs"
       ],
       "gaps": [
-        "Program.cs remains a 2,510-line command host after save-size-report and command-metadata workflow extractions; the remaining command boundaries still need measured decomposition and duplicate-policy analysis."
+        "Program.cs remains a 2,443-line command host after save-size-report, command-metadata, and fill-form adapter extractions; the remaining command boundaries still need measured decomposition and duplicate-policy analysis."
       ],
       "issueIds": [
         1263
@@ -219,17 +220,20 @@
       "implementationStatus": "partial",
       "evidence": [
         "Excise.App.Tests",
+        "Excise.App/Composition/ApplicationComposition.cs",
+        "Excise.App.Tests/Unit/ApplicationCompositionTests.cs",
         "scripts/run-packaged-gui-smoke.sh"
       ],
       "gaps": [
         "The main window view model remains the dominant state/orchestration hub.",
-        "Production DI can select the parameterless test composition path because ToastService is not registered and provider construction is not validated (#1270).",
+        "Production now uses one explicit validated composition factory, but tests and design-time XAML still depend on the separate parameterless graph and the dependency constructor retains optional fallbacks (#1270).",
         "Debug-only scripting and platform activation require conservative reachability seeds."
       ],
       "issueIds": [
         920,
         954,
-        1239
+        1239,
+        1270
       ]
     },
     {
@@ -238,14 +242,18 @@
       "evidence": [
         "Excise.App.Tests/Unit/MainWindowViewModelTests.cs",
         "Excise.App.Tests/UI",
-        "Excise.App/ViewModels/ThumbnailSidebarSession.cs"
+        "Excise.App/ViewModels/ThumbnailSidebarSession.cs",
+        "Excise.App/ViewModels/DocumentViewportSession.cs",
+        "Excise.App/Composition/ApplicationComposition.cs"
       ],
       "gaps": [
-        "Large constructor/state surface and the production-reachable hand-built parameterless test composition still couple otherwise separate features (#1270)."
+        "Large constructor/state surface and the hand-built parameterless test/design-time composition still couple otherwise separate features; production construction is now explicit and validated (#1270)."
       ],
       "issueIds": [
         920,
-        1239
+        1239,
+        1268,
+        1270
       ]
     },
     {
@@ -340,9 +348,9 @@
         "avalonia"
       ],
       "symptoms": [
-        "MainWindowViewModel.cs is 3,184 lines before its additional partials; search-index lifecycle, staged document-open orchestration, workflow-grouped command composition, and thumbnail-session ownership extractions are complete, but navigation and other workflow ownership remain concentrated.",
-        "The constructor accepts many services and production DI can fall back to the separate hand-built parameterless composition path because ToastService is not registered.",
-        "Document, navigation, search, editing, redaction, security, and background work still share mutable state; thumbnail cache and scheduler lifetime now have one explicit owner."
+        "MainWindowViewModel.cs is 3,125 lines before its additional partials; search-index lifecycle, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, and viewport-zoom ownership extractions are complete, but page/view-mode and other workflow ownership remain concentrated.",
+        "Production uses an explicit validated service factory, while tests and design-time XAML still construct the separate parameterless graph and the dependency constructor retains optional fallbacks.",
+        "Document, page navigation, search, editing, redaction, security, and background work still share mutable state; thumbnail and viewport-zoom lifetimes now have explicit owners."
       ],
       "deterministicDiscovery": [
         "wc -l Excise.App/ViewModels/MainWindowViewModel*.cs",
