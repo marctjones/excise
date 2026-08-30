@@ -245,19 +245,22 @@
         "Excise.App/ViewModels/ThumbnailSidebarSession.cs",
         "Excise.App/ViewModels/DocumentViewportSession.cs",
         "Excise.App/Services/DocumentSearchSession.cs",
+        "Excise.App/Services/AnnotationWorkflowService.cs",
         "Excise.App.Tests/Unit/DocumentSearchSessionTests.cs",
+        "Excise.App.Tests/Unit/AnnotationWorkflowServiceTests.cs",
         "Excise.App/Composition/ApplicationComposition.cs",
         "Excise.App.Tests/Utilities/MainWindowViewModelTestFactory.cs"
       ],
       "gaps": [
-        "Scripting, annotations, redaction, and file workflows still share workspace state; constructor composition, thumbnail lifetime, search-index lifetime, search execution lifetime and source selection, document-open stages, command composition, and viewport state now have explicit owners or contracts."
+        "Scripting, redaction, and file workflows still share workspace state; constructor composition, thumbnail lifetime, search-index lifetime, search execution lifetime and source selection, annotation mutation transactions, document-open stages, command composition, and viewport state now have explicit owners or contracts."
       ],
       "issueIds": [
         920,
         1239,
         1268,
         1270,
-        1285
+        1285,
+        1286
       ]
     },
     {
@@ -352,9 +355,9 @@
         "avalonia"
       ],
       "symptoms": [
-        "MainWindowViewModel.cs is 3,078 lines before its additional partials; search-index and search-execution lifecycles, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, page/view/zoom viewport ownership, and one required composition contract are complete, but other workflow ownership remains concentrated.",
+        "MainWindowViewModel.cs is 3,078 lines before its additional partials; search-index and search-execution lifecycles, annotation mutation transactions, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, page/view/zoom viewport ownership, and one required composition contract are complete, but other workflow ownership remains concentrated.",
         "Production uses an explicit validated service factory, tests use a named factory with explicit overrides and production-matching contracts, and design-time XAML no longer creates a second service graph.",
-        "Document, editing, redaction, security, and background work still share mutable state; thumbnail, search-request, and page/view/zoom viewport lifetimes now have explicit owners, with same-page and same-mode feedback made idempotent."
+        "Document, editing, redaction, security, and background work still share mutable state; thumbnail, search-request, annotation-mutation, and page/view/zoom viewport lifetimes now have explicit owners, with same-page and same-mode feedback made idempotent."
       ],
       "deterministicDiscovery": [
         "wc -l Excise.App/ViewModels/MainWindowViewModel*.cs",

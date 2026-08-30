@@ -20,54 +20,6 @@ public sealed class AnnotationWorkflowService
         _logger = logger;
     }
 
-    public PdfAnnotation AddTextNote(int pageNumber, PdfRectangle rect, string contents)
-    {
-        var document = GetLoadedDocument();
-        var annotation = document.AddTextAnnotation(pageNumber, rect, contents);
-
-        _logger.LogInformation("Added text annotation to page {PageNumber}", pageNumber);
-        return annotation;
-    }
-
-    public PdfAnnotation AddHighlight(int pageNumber, PdfRectangle rect, string contents)
-    {
-        var document = GetLoadedDocument();
-        var annotation = document.AddHighlightAnnotation(pageNumber, rect, contents);
-
-        _logger.LogInformation("Added highlight annotation to page {PageNumber}", pageNumber);
-        return annotation;
-    }
-
-    /// <summary>
-    /// The other three text-markup subtypes (#912). Same shape as
-    /// <see cref="AddHighlight"/> and the same selection gesture — Core has been
-    /// able to author Underline, StrikeOut and Squiggly all along, and nothing
-    /// in the app could reach them.
-    /// </summary>
-    public PdfAnnotation AddUnderline(int pageNumber, PdfRectangle rect, string contents)
-    {
-        var document = GetLoadedDocument();
-        var annotation = document.AddUnderlineAnnotation(pageNumber, rect, contents);
-        _logger.LogInformation("Added underline annotation to page {PageNumber}", pageNumber);
-        return annotation;
-    }
-
-    public PdfAnnotation AddStrikeOut(int pageNumber, PdfRectangle rect, string contents)
-    {
-        var document = GetLoadedDocument();
-        var annotation = document.AddStrikeOutAnnotation(pageNumber, rect, contents);
-        _logger.LogInformation("Added strikeout annotation to page {PageNumber}", pageNumber);
-        return annotation;
-    }
-
-    public PdfAnnotation AddSquiggly(int pageNumber, PdfRectangle rect, string contents)
-    {
-        var document = GetLoadedDocument();
-        var annotation = document.AddSquigglyAnnotation(pageNumber, rect, contents);
-        _logger.LogInformation("Added squiggly annotation to page {PageNumber}", pageNumber);
-        return annotation;
-    }
-
     /// <summary>
     /// Image stamp (#934 row C) — a Stamp whose appearance is a picture, which
     /// is how a scanned signature or a letterhead gets onto a page. Core wants
@@ -75,150 +27,262 @@ public sealed class AnnotationWorkflowService
     /// </summary>
     public PdfAnnotation AddImageStamp(
         int pageNumber, PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight,
-        string? contents = null)
+        string? contents = null,
+        PdfDocument? viewerDocument = null)
     {
-        var document = GetLoadedDocument();
-        var annotation = document.AddImageStampAnnotation(
+        var saveDocument = GetLoadedDocument();
+        var annotation = saveDocument.AddImageStampAnnotation(
             pageNumber, rect, rgbPixels, pixelWidth, pixelHeight, contents);
+        if (viewerDocument is not null &&
+            !ReferenceEquals(saveDocument, viewerDocument) &&
+            pageNumber >= 1 &&
+            pageNumber <= viewerDocument.PageCount)
+        {
+            viewerDocument.AddImageStampAnnotation(
+                pageNumber, rect, rgbPixels, pixelWidth, pixelHeight, contents);
+        }
         _logger.LogInformation(
             "Added {W}x{H} image stamp to page {PageNumber}", pixelWidth, pixelHeight, pageNumber);
         return annotation;
     }
 
     /// <summary>
-    /// Standard rubber stamp (#934 row B). The 15 names in
-    /// <see cref="PdfAnnotationAuthoring.StandardStampNames"/> are the ones
-    /// ISO 32000-1 Table 181 defines; Core rejects anything else, which is why
-    /// the GUI offers a fixed menu rather than free text.
+    /// Apply one rectangle-based annotation transaction to the authoritative
+    /// save document and, when separate, the viewer document. Keeping both
+    /// writes behind one operation prevents newly wired subtypes from becoming
+    /// file-only features that appear only after save and reopen. See #1286.
     /// </summary>
-    public PdfAnnotation AddStamp(int pageNumber, PdfRectangle rect, string stampName, string? contents = null)
+    internal AnnotationRectResult AddRect(
+        AnnotationRectRequest request,
+        PdfDocument? viewerDocument = null)
     {
-        var document = GetLoadedDocument();
-        var annotation = document.AddStampAnnotation(pageNumber, rect, stampName, contents);
-        _logger.LogInformation("Added {StampName} stamp annotation to page {PageNumber}", stampName, pageNumber);
-        return annotation;
+        ArgumentNullException.ThrowIfNull(request);
+        var saveDocument = GetLoadedDocument();
+        var annotation = AddRectToDocument(saveDocument, request);
+        if (viewerDocument is not null &&
+            !ReferenceEquals(saveDocument, viewerDocument) &&
+            request.PageNumber >= 1 &&
+            request.PageNumber <= viewerDocument.PageCount)
+        {
+            AddRectToDocument(viewerDocument, request);
+        }
+
+        var (successMessage, historyDescription) = RectMessages(request);
+        _logger.LogInformation(
+            "Added {Kind} annotation to page {PageNumber}",
+            request.Kind,
+            request.PageNumber);
+        return new AnnotationRectResult(
+            request,
+            annotation,
+            successMessage,
+            historyDescription);
     }
+
+    internal PdfAnnotation ReplayRect(AnnotationRectRequest request) =>
+        AddRect(request).Annotation;
+
+    private static PdfAnnotation AddRectToDocument(
+        PdfDocument document,
+        AnnotationRectRequest request) => request.Kind switch
+        {
+            AnnotationRectKind.TextNote => document.AddTextAnnotation(
+                request.PageNumber, request.Rect, request.Value ?? string.Empty),
+            AnnotationRectKind.Highlight => document.AddHighlightAnnotation(
+                request.PageNumber, request.Rect, request.Value ?? string.Empty),
+            AnnotationRectKind.Underline => document.AddUnderlineAnnotation(
+                request.PageNumber, request.Rect, request.Value ?? string.Empty),
+            AnnotationRectKind.StrikeOut => document.AddStrikeOutAnnotation(
+                request.PageNumber, request.Rect, request.Value ?? string.Empty),
+            AnnotationRectKind.Squiggly => document.AddSquigglyAnnotation(
+                request.PageNumber, request.Rect, request.Value ?? string.Empty),
+            AnnotationRectKind.Square => document.AddSquareAnnotation(
+                request.PageNumber, request.Rect, request.Value),
+            AnnotationRectKind.Circle => document.AddCircleAnnotation(
+                request.PageNumber, request.Rect, request.Value),
+            AnnotationRectKind.FreeText => document.AddFreeTextAnnotation(
+                request.PageNumber,
+                request.Rect,
+                request.Value ?? string.Empty,
+                fontSize: request.FontSize),
+            AnnotationRectKind.Stamp => document.AddStampAnnotation(
+                request.PageNumber,
+                request.Rect,
+                request.Value ?? throw new ArgumentException("Stamp name is required.", nameof(request)),
+                request.Contents),
+            _ => throw new ArgumentOutOfRangeException(nameof(request))
+        };
+
+    private static (string SuccessMessage, string HistoryDescription) RectMessages(
+        AnnotationRectRequest request) => request.Kind switch
+        {
+            AnnotationRectKind.TextNote => ("Sticky note added", "Add sticky note"),
+            AnnotationRectKind.Highlight => ("Highlight added", "Add highlight"),
+            AnnotationRectKind.Underline => ("Underline added", "Add underline"),
+            AnnotationRectKind.StrikeOut => ("StrikeOut added", "Add strikeout"),
+            AnnotationRectKind.Squiggly => ("Squiggly added", "Add squiggly"),
+            AnnotationRectKind.Square => ("Square added", "Add square"),
+            AnnotationRectKind.Circle => ("Circle added", "Add circle"),
+            AnnotationRectKind.FreeText => ("Text box added", "Add text box"),
+            AnnotationRectKind.Stamp => ($"{request.Value} stamp added", $"Add {request.Value} stamp"),
+            _ => throw new ArgumentOutOfRangeException(nameof(request))
+        };
 
     /// <summary>
-    /// Add a Square shape annotation with a baked appearance stream (#626).
+    /// Validate and apply one path-capture transaction to the authoritative
+    /// save document and, when it is a separate instance, the viewer document.
+    /// The viewer remains a PDF-agnostic capture surface; this workflow owns the
+    /// one dispatch from gesture kind to PDF annotation type. See #1286.
     /// </summary>
-    public PdfAnnotation AddSquare(int pageNumber, PdfRectangle rect, string? contents = null)
+    internal AnnotationPathResult AddPath(
+        AnnotationPathRequest request,
+        PdfDocument? viewerDocument = null)
     {
-        var document = GetLoadedDocument();
-        var annotation = document.AddSquareAnnotation(pageNumber, rect, contents);
+        ArgumentNullException.ThrowIfNull(request);
 
-        _logger.LogInformation("Added square annotation to page {PageNumber}", pageNumber);
-        return annotation;
+        var usableStrokes = request.Strokes?
+            .Where(stroke => stroke is { Count: >= 2 })
+            .Select(stroke => (IReadOnlyList<(double X, double Y)>)stroke.ToArray())
+            .ToArray()
+            ?? [];
+        if (usableStrokes.Length == 0)
+            return AnnotationPathResult.Rejected(request, validationMessage: null);
+
+        var normalizedRequest = request with { Strokes = usableStrokes };
+        if (normalizedRequest.Kind == AnnotationPathKind.Polygon &&
+            usableStrokes[0].Count < 3)
+        {
+            return AnnotationPathResult.Rejected(
+                normalizedRequest,
+                "A polygon needs at least three points.");
+        }
+
+        var saveDocument = GetLoadedDocument();
+        var annotation = AddPathToDocument(saveDocument, normalizedRequest);
+        if (viewerDocument is not null &&
+            !ReferenceEquals(saveDocument, viewerDocument) &&
+            normalizedRequest.PageNumber >= 1 &&
+            normalizedRequest.PageNumber <= viewerDocument.PageCount)
+        {
+            AddPathToDocument(viewerDocument, normalizedRequest);
+        }
+
+        var (successMessage, historyDescription) = PathMessages(normalizedRequest.Kind);
+        _logger.LogInformation(
+            "Added {Kind} annotation to page {PageNumber}",
+            normalizedRequest.Kind,
+            normalizedRequest.PageNumber);
+        return AnnotationPathResult.Added(
+            normalizedRequest,
+            annotation,
+            successMessage,
+            historyDescription);
     }
 
-    /// <summary>
-    /// Add a Circle shape annotation with a baked appearance stream (#626).
-    /// </summary>
-    public PdfAnnotation AddCircle(int pageNumber, PdfRectangle rect, string? contents = null)
+    internal PdfAnnotation ReplayPath(AnnotationPathRequest request)
     {
-        var document = GetLoadedDocument();
-        var annotation = document.AddCircleAnnotation(pageNumber, rect, contents);
-
-        _logger.LogInformation("Added circle annotation to page {PageNumber}", pageNumber);
-        return annotation;
+        var result = AddPath(request);
+        return result.Annotation ?? throw new InvalidOperationException(
+            result.ValidationMessage ?? "The annotation path is no longer valid.");
     }
 
-    /// <summary>
-    /// Add a FreeText (text box) annotation with a baked appearance stream (#626).
-    /// </summary>
-    public PdfAnnotation AddFreeText(
-        int pageNumber, PdfRectangle rect, string text, double fontSize = 12)
+    private static PdfAnnotation AddPathToDocument(
+        PdfDocument document,
+        AnnotationPathRequest request)
     {
-        var document = GetLoadedDocument();
-        var annotation = document.AddFreeTextAnnotation(pageNumber, rect, text, fontSize: fontSize);
-
-        _logger.LogInformation("Added free-text annotation to page {PageNumber}", pageNumber);
-        return annotation;
+        var firstStroke = request.Strokes[0];
+        var start = firstStroke[0];
+        var end = firstStroke[^1];
+        return request.Kind switch
+        {
+            AnnotationPathKind.Line => document.AddLineAnnotation(
+                request.PageNumber, start.X, start.Y, end.X, end.Y, request.Contents),
+            AnnotationPathKind.Arrow => document.AddArrowAnnotation(
+                request.PageNumber, start.X, start.Y, end.X, end.Y, request.Contents),
+            AnnotationPathKind.Polygon => document.AddPolygonAnnotation(
+                request.PageNumber, firstStroke, request.Contents),
+            AnnotationPathKind.PolyLine => document.AddPolyLineAnnotation(
+                request.PageNumber, firstStroke, request.Contents),
+            _ => document.AddInkAnnotation(
+                request.PageNumber, request.Strokes, request.Contents)
+        };
     }
 
-    /// <summary>
-    /// Add an Ink (freehand) annotation with a baked appearance stream (#626).
-    /// Each stroke is a polyline of at least two (x, y) points in PDF page
-    /// coordinates (Y-up).
-    /// </summary>
-    public PdfAnnotation AddInk(
-        int pageNumber,
-        IReadOnlyList<IReadOnlyList<(double X, double Y)>> strokes,
-        string? contents = null)
-    {
-        var document = GetLoadedDocument();
-        var annotation = document.AddInkAnnotation(pageNumber, strokes, contents);
-
-        _logger.LogInformation("Added ink annotation to page {PageNumber}", pageNumber);
-        return annotation;
-    }
-
-    /// <summary>
-    /// A straight line between two points (#934 E).
-    /// </summary>
-    public PdfAnnotation AddLine(
-        int pageNumber,
-        (double X, double Y) start,
-        (double X, double Y) end,
-        string? contents = null)
-    {
-        var document = GetLoadedDocument();
-        var annotation = document.AddLineAnnotation(
-            pageNumber, start.X, start.Y, end.X, end.Y, contents);
-
-        _logger.LogInformation("Added line annotation to page {PageNumber}", pageNumber);
-        return annotation;
-    }
-
-    /// <summary>
-    /// A line with an arrowhead at the end point (#934 E).
-    ///
-    /// NOTE: an Arrow is NOT a distinct /Subtype — it is a Line carrying
-    /// /LE [None ClosedArrow]. Anything checking these two apart must compare
-    /// the line endings; a subtype assertion sees one kind and cannot tell a
-    /// mis-wired Arrow command from a working one.
-    /// </summary>
-    public PdfAnnotation AddArrow(
-        int pageNumber,
-        (double X, double Y) start,
-        (double X, double Y) end,
-        string? contents = null)
-    {
-        var document = GetLoadedDocument();
-        var annotation = document.AddArrowAnnotation(
-            pageNumber, start.X, start.Y, end.X, end.Y, contents);
-
-        _logger.LogInformation("Added arrow annotation to page {PageNumber}", pageNumber);
-        return annotation;
-    }
-
-    /// <summary>A closed multi-vertex shape (#934 F).</summary>
-    public PdfAnnotation AddPolygon(
-        int pageNumber,
-        IReadOnlyList<(double X, double Y)> vertices,
-        string? contents = null)
-    {
-        var document = GetLoadedDocument();
-        var annotation = document.AddPolygonAnnotation(pageNumber, vertices, contents);
-
-        _logger.LogInformation("Added polygon annotation to page {PageNumber}", pageNumber);
-        return annotation;
-    }
-
-    /// <summary>The same vertex path, left open (#934 F).</summary>
-    public PdfAnnotation AddPolyLine(
-        int pageNumber,
-        IReadOnlyList<(double X, double Y)> vertices,
-        string? contents = null)
-    {
-        var document = GetLoadedDocument();
-        var annotation = document.AddPolyLineAnnotation(pageNumber, vertices, contents);
-
-        _logger.LogInformation("Added polyline annotation to page {PageNumber}", pageNumber);
-        return annotation;
-    }
+    private static (string SuccessMessage, string HistoryDescription) PathMessages(
+        AnnotationPathKind kind) => kind switch
+        {
+            AnnotationPathKind.Line => ("Line added", "Add line"),
+            AnnotationPathKind.Arrow => ("Arrow added", "Add arrow"),
+            AnnotationPathKind.Polygon => ("Polygon added", "Add polygon"),
+            AnnotationPathKind.PolyLine => ("PolyLine added", "Add polyline"),
+            _ => ("Ink annotation added", "Add ink")
+        };
 
     private PdfDocument GetLoadedDocument() =>
         _documentService.GetCurrentDocument()
         ?? throw new InvalidOperationException("No document loaded");
+}
+
+internal enum AnnotationPathKind
+{
+    Ink,
+    Line,
+    Arrow,
+    Polygon,
+    PolyLine
+}
+
+internal enum AnnotationRectKind
+{
+    TextNote,
+    Highlight,
+    Underline,
+    StrikeOut,
+    Squiggly,
+    Square,
+    Circle,
+    FreeText,
+    Stamp
+}
+
+internal sealed record AnnotationRectRequest(
+    AnnotationRectKind Kind,
+    int PageNumber,
+    PdfRectangle Rect,
+    string? Value = null,
+    string? Contents = null,
+    double FontSize = 12);
+
+internal sealed record AnnotationRectResult(
+    AnnotationRectRequest Request,
+    PdfAnnotation Annotation,
+    string SuccessMessage,
+    string HistoryDescription);
+
+internal sealed record AnnotationPathRequest(
+    AnnotationPathKind Kind,
+    int PageNumber,
+    IReadOnlyList<IReadOnlyList<(double X, double Y)>> Strokes,
+    string? Contents = null);
+
+internal sealed record AnnotationPathResult(
+    AnnotationPathRequest Request,
+    PdfAnnotation? Annotation,
+    string? ValidationMessage,
+    string SuccessMessage,
+    string HistoryDescription)
+{
+    public bool WasAdded => Annotation is not null;
+
+    public static AnnotationPathResult Rejected(
+        AnnotationPathRequest request,
+        string? validationMessage) =>
+        new(request, null, validationMessage, string.Empty, string.Empty);
+
+    public static AnnotationPathResult Added(
+        AnnotationPathRequest request,
+        PdfAnnotation annotation,
+        string successMessage,
+        string historyDescription) =>
+        new(request, annotation, null, successMessage, historyDescription);
 }
