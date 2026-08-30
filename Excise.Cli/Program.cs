@@ -1,6 +1,6 @@
 using System.CommandLine;
-using System.Diagnostics;
 using System.Text.Json;
+using Excise.Cli.Commands;
 using Excise.Core.Automation;
 using Excise.Core.Document;
 using Excise.Core.Operations;
@@ -77,7 +77,7 @@ partial class Program
             CreateMakeSearchableCommand(),
             CreateEncryptCommand(),
             CreateDecryptCommand(),
-            CreateSaveSizeReportCommand(),
+            SaveSizeReportCommand.Create(),
         };
 
         // System.CommandLine 2.0 split parsing from invocation: build a
@@ -2581,145 +2581,4 @@ partial class Program
         new Excise.Core.Writing.PdfDocumentWriter(doc, encryptionOptions: null).Write(fs);
     }
 
-    /// <summary>
-    /// excise save-size-report &lt;file&gt; [&lt;file&gt;...] [--output report.json] [--max-ratio 1.20]
-    ///
-    /// Opens each input, performs an in-memory full save through the writer,
-    /// and emits a machine-readable report with original/saved byte sizes and
-    /// open/save latency. This is the automation hook for #923 daily-driver
-    /// save-size regression tracking; callers can gate on <c>overallStatus</c>
-    /// and archive the JSON as the baseline artifact.
-    /// </summary>
-    static Command CreateSaveSizeReportCommand()
-    {
-        var filesArg = new Argument<FileInfo[]>("files")
-        {
-            Description = "PDF files to open and save in memory",
-            Arity = ArgumentArity.OneOrMore,
-        };
-        var outputOption = new Option<FileInfo?>("--output", "-o")
-        {
-            Description = "Optional JSON report path. The same JSON is always written to stdout.",
-        };
-        var maxRatioOption = new Option<double>("--max-ratio")
-        {
-            Description = "Maximum allowed saved/original size ratio before the entry is marked FAIL",
-            DefaultValueFactory = _ => 1.20,
-        };
-
-        var command = new Command("save-size-report",
-            "Measure open/save size ratios and latency for PDF writer regression tracking")
-        {
-            filesArg,
-            outputOption,
-            maxRatioOption,
-        };
-
-        command.SetAction(parseResult =>
-        {
-            var files = parseResult.GetValue(filesArg)!;
-            var output = parseResult.GetValue(outputOption);
-            var maxRatio = parseResult.GetValue(maxRatioOption);
-
-            try
-            {
-                var report = BuildSaveSizeReport(files, maxRatio);
-                var json = JsonSerializer.Serialize(report, new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    WriteIndented = true,
-                });
-
-                if (output is not null)
-                {
-                    if (output.DirectoryName is { Length: > 0 })
-                        Directory.CreateDirectory(output.DirectoryName);
-                    File.WriteAllText(output.FullName, json);
-                }
-
-                Console.WriteLine(json);
-                Environment.ExitCode = report.OverallStatus == "PASS" ? 0 : 1;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"save-size-report failed: {ex.Message}");
-                Environment.ExitCode = 1;
-            }
-        });
-
-        return command;
-    }
-
-    internal static SaveSizeReport BuildSaveSizeReport(IReadOnlyList<FileInfo> files, double maxRatio)
-    {
-        if (maxRatio <= 0 || double.IsNaN(maxRatio) || double.IsInfinity(maxRatio))
-            throw new ArgumentOutOfRangeException(nameof(maxRatio), "maxRatio must be a positive finite number.");
-
-        var entries = files.Select(file =>
-        {
-            if (!file.Exists)
-            {
-                return new SaveSizeReportEntry(
-                    file.FullName,
-                    "FAIL",
-                    "File not found",
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    null,
-                    0);
-            }
-
-            var openTimer = Stopwatch.StartNew();
-            using var doc = Excise.Core.Document.PdfDocument.Open(file.FullName);
-            openTimer.Stop();
-
-            var saveTimer = Stopwatch.StartNew();
-            var saved = doc.SaveToBytes();
-            saveTimer.Stop();
-
-            var ratio = saved.Length / (double)file.Length;
-            return new SaveSizeReportEntry(
-                file.FullName,
-                ratio <= maxRatio ? "PASS" : "FAIL",
-                null,
-                file.Length,
-                saved.Length,
-                ratio,
-                openTimer.Elapsed.TotalMilliseconds,
-                saveTimer.Elapsed.TotalMilliseconds,
-                doc.Version,
-                doc.PageCount);
-        }).ToArray();
-
-        return new SaveSizeReport(
-            1,
-            "save-size-report",
-            DateTimeOffset.UtcNow,
-            maxRatio,
-            entries.All(e => e.Status == "PASS") ? "PASS" : "FAIL",
-            entries);
-    }
-
-    internal sealed record SaveSizeReport(
-        int SchemaVersion,
-        string Command,
-        DateTimeOffset GeneratedAtUtc,
-        double MaxRatio,
-        string OverallStatus,
-        IReadOnlyList<SaveSizeReportEntry> Files);
-
-    internal sealed record SaveSizeReportEntry(
-        string File,
-        string Status,
-        string? Error,
-        long OriginalSizeBytes,
-        int SavedSizeBytes,
-        double SizeRatio,
-        double OpenMilliseconds,
-        double SaveMilliseconds,
-        string? PdfVersion,
-        int PageCount);
 }

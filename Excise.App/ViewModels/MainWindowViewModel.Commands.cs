@@ -130,6 +130,21 @@ public partial class MainWindowViewModel
     {
         _logger.LogDebug("Setting up ReactiveUI commands");
 
+        InitializeFileAndPageCommands();
+        InitializeRedactionCommands();
+        InitializeEditingModeCommands();
+        InitializeAnnotationCommands();
+        InitializeViewAndNavigationCommands();
+        InitializeDocumentUtilityCommands();
+        InitializeHelpCommands();
+
+        InitializeSearchCommands();
+        InitializeScriptingCommands();
+        InitializeHistory();
+    }
+
+    private void InitializeFileAndPageCommands()
+    {
         OpenFileCommand = ReactiveCommand.CreateFromTask(OpenFileAsync);
         SaveFileCommand = ReactiveCommand.CreateFromTask(SaveFileAsync);
         RemoveCurrentPageCommand = ReactiveCommand.CreateFromTask(RemoveCurrentPageAsync);
@@ -151,6 +166,10 @@ public partial class MainWindowViewModel
         ClearSelectedPagesCommand = ReactiveCommand.Create(ClearSelectedPages);
         MoveCurrentPageEarlierCommand = ReactiveCommand.CreateFromTask(MoveCurrentPageEarlierAsync);
         MoveCurrentPageLaterCommand = ReactiveCommand.CreateFromTask(MoveCurrentPageLaterAsync);
+    }
+
+    private void InitializeRedactionCommands()
+    {
         ToggleRedactionModeCommand = ReactiveCommand.Create(ToggleRedactionMode);
         ApplyRedactionCommand = ReactiveCommand.CreateFromTask(ApplyRedactionAsync);
         RemovePendingRedactionCommand = ReactiveCommand.Create<Guid>(RemovePendingRedaction);
@@ -159,7 +178,10 @@ public partial class MainWindowViewModel
 
         ApplyRedactionCommand.ThrownExceptions.Subscribe(ex =>
             _logger.LogError(ex, "ApplyRedactionCommand threw exception"));
+    }
 
+    private void InitializeEditingModeCommands()
+    {
         ToggleTextSelectionModeCommand = ReactiveCommand.Create(ToggleTextSelectionMode);
         ToggleFormAuthoringModeCommand = ReactiveCommand.Create(() =>
         {
@@ -184,6 +206,10 @@ public partial class MainWindowViewModel
         DiscardPendingTypewriterEditsCommand = ReactiveCommand.Create(DiscardPendingTypewriterEdits);
         GoToNextPendingTypewriterEditCommand = ReactiveCommand.Create(GoToNextPendingTypewriterEdit);
         SetTypewriterColorCommand = ReactiveCommand.Create<string>(hex => SetTypewriterColor(hex));
+    }
+
+    private void InitializeAnnotationCommands()
+    {
         AddHighlightAnnotationFromSelectionCommand = ReactiveCommand.CreateFromTask(AddHighlightAnnotationFromSelectionAsync);
         // #912: three of the thirteen subtypes Core could author and the app
         // could not reach. Same selection gesture as Highlight above.
@@ -196,6 +222,10 @@ public partial class MainWindowViewModel
         AddStampAnnotationFromDragCommand = ReactiveCommand.CreateFromTask<string>(AddStampAnnotationFromDragAsync);
         AddImageStampAnnotationFromDragCommand = ReactiveCommand.CreateFromTask(() => AddImageStampAnnotationFromDragAsync(null));
         AddStickyNoteAnnotationCommand = ReactiveCommand.CreateFromTask(() => AddStickyNoteAnnotationAsync());
+    }
+
+    private void InitializeViewAndNavigationCommands()
+    {
         ToggleOutlineCommand = ReactiveCommand.Create(ToggleOutlineSidebar);
         ToggleThumbnailsCommand = ReactiveCommand.Create(ToggleThumbnailsSidebar);
         ToggleAnnotationsCommand = ReactiveCommand.Create(ToggleAnnotationsVisible);
@@ -207,14 +237,6 @@ public partial class MainWindowViewModel
         ToggleContinuousViewCommand = ReactiveCommand.Create(ToggleContinuousView);
         ToggleRevealHiddenTextCommand = ReactiveCommand.Create(() => { RevealHiddenText = !RevealHiddenText; });
         ToggleRevealRasterizedHiddenCommand = ReactiveCommand.Create(() => { RevealRasterizedHidden = !RevealRasterizedHidden; });
-        MakeSearchableCommand = ReactiveCommand.CreateFromTask(MakeSearchableAsync);
-        MakeSearchableCommand.ThrownExceptions.Subscribe(ex =>
-            _logger.LogError(ex, "MakeSearchableCommand threw exception"));
-        SecurityCommand = ReactiveCommand.CreateFromTask(ShowSecurityDialogAsync);
-        SecurityCommand.ThrownExceptions.Subscribe(ex =>
-            _logger.LogError(ex, "SecurityCommand threw exception"));
-        AutoDetectFieldsCommand = ReactiveCommand.Create(() => AutoDetectAndApplyFormFields());
-        SaveFlattenedFormCopyCommand = ReactiveCommand.CreateFromTask(SaveFlattenedFormCopyAsync);
         CopyTextCommand = ReactiveCommand.CreateFromTask(CopyTextAsync);
         ZoomInCommand = ReactiveCommand.Create(ZoomIn);
         ZoomOutCommand = ReactiveCommand.Create(ZoomOut);
@@ -229,6 +251,18 @@ public partial class MainWindowViewModel
         ZoomActualSizeCommand = ReactiveCommand.Create(ZoomActualSize);
         ZoomFitWidthCommand = ReactiveCommand.Create(ZoomFitWidth);
         ZoomFitPageCommand = ReactiveCommand.Create(ZoomFitPage);
+    }
+
+    private void InitializeDocumentUtilityCommands()
+    {
+        MakeSearchableCommand = ReactiveCommand.CreateFromTask(MakeSearchableAsync);
+        MakeSearchableCommand.ThrownExceptions.Subscribe(ex =>
+            _logger.LogError(ex, "MakeSearchableCommand threw exception"));
+        SecurityCommand = ReactiveCommand.CreateFromTask(ShowSecurityDialogAsync);
+        SecurityCommand.ThrownExceptions.Subscribe(ex =>
+            _logger.LogError(ex, "SecurityCommand threw exception"));
+        AutoDetectFieldsCommand = ReactiveCommand.Create(() => AutoDetectAndApplyFormFields());
+        SaveFlattenedFormCopyCommand = ReactiveCommand.CreateFromTask(SaveFlattenedFormCopyAsync);
 
         SaveAsCommand = ReactiveCommand.CreateFromTask(SaveAsAsync);
         CloseDocumentCommand = ReactiveCommand.Create(CloseDocument);
@@ -242,13 +276,12 @@ public partial class MainWindowViewModel
         ShowDangerousLinkRefusalCommand = ReactiveCommand.CreateFromTask<string>(ShowDangerousLinkRefusalAsync);
         VerifySignaturesCommand = ReactiveCommand.CreateFromTask(VerifySignaturesAsync);
         ShowPreferencesCommand = ReactiveCommand.Create(ShowPreferences);
+    }
 
+    private void InitializeHelpCommands()
+    {
         AboutCommand = ReactiveCommand.Create(ShowAbout);
         ShowShortcutsCommand = ReactiveCommand.Create(ShowKeyboardShortcuts);
         ShowDocumentationCommand = ReactiveCommand.Create(ShowDocumentation);
-
-        InitializeSearchCommands();
-        InitializeScriptingCommands();
-        InitializeHistory();
     }
 }
