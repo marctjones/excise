@@ -319,14 +319,6 @@ namespace Excise.App.Services
         System.Threading.Tasks.Task<bool> ShowConfirmAsync(string title, string message);
         System.Threading.Tasks.Task ShowMessageAsync(string title, string message);
     }
-    public sealed class NullUserDialogService : Excise.App.Services.IUserDialogService
-    {
-        public NullUserDialogService() { }
-        public System.Threading.Tasks.Task<string?> PromptPasswordAsync(string title, string message) { }
-        public System.Threading.Tasks.Task<string?> PromptTextAsync(string title, string message, string? defaultValue = null) { }
-        public System.Threading.Tasks.Task<bool> ShowConfirmAsync(string title, string message) { }
-        public System.Threading.Tasks.Task ShowMessageAsync(string title, string message) { }
-    }
     public sealed class PageOperationDiagnostics : System.IEquatable<Excise.App.Services.PageOperationDiagnostics>
     {
         public PageOperationDiagnostics(System.Collections.Generic.IReadOnlyList<string> Warnings) { }
@@ -768,24 +760,6 @@ namespace Excise.App.ViewModels
     }
     public class MainWindowViewModel : Excise.App.ViewModels.ViewModelBase
     {
-        public MainWindowViewModel() { }
-        public MainWindowViewModel(
-                    Microsoft.Extensions.Logging.ILogger<Excise.App.ViewModels.MainWindowViewModel> logger,
-                    Microsoft.Extensions.Logging.ILoggerFactory loggerFactory,
-                    Excise.App.Services.PdfDocumentService documentService,
-                    Excise.App.Services.PdfRenderService renderService,
-                    Excise.App.Services.RedactionService redactionService,
-                    Excise.App.Services.PdfTextExtractionService textExtractionService,
-                    Excise.App.Services.PdfSearchService searchService,
-                    Excise.App.Services.SignatureVerificationService signatureService,
-                    Excise.App.Services.FilenameSuggestionService filenameSuggestionService,
-                    Excise.App.Services.ToastService toastService,
-                    Excise.App.Services.SignatureVerificationSummaryFormatter? signatureSummaryFormatter = null,
-                    Excise.App.Services.IUserDialogService? dialogService = null,
-                    Excise.App.Services.SignatureVerificationWorkflowService? signatureWorkflowService = null,
-                    Excise.App.Services.PageOrganizationWorkflowService? pageOrganizationWorkflow = null,
-                    Excise.App.Services.AnnotationWorkflowService? annotationWorkflow = null,
-                    Excise.App.Services.RedactedCopySafetyService? redactedCopySafetyService = null) { }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AboutCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddCircleAnnotationFromDragCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddFreeTextAnnotationFromDragCommand { get; }

@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 
 namespace Excise.App.Services;
 
-public sealed class NullUserDialogService : IUserDialogService
+internal sealed class NullUserDialogService : IUserDialogService
 {
     public Task ShowMessageAsync(string title, string message) => Task.CompletedTask;
 
