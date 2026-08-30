@@ -189,10 +189,11 @@
       "implementationStatus": "partial",
       "evidence": [
         "Excise.Avalonia.Tests",
-        "Excise.App.Tests/UI"
+        "Excise.App.Tests/UI",
+        "Excise.Avalonia/Controls/SinglePageRenderLifetime.cs"
       ],
       "gaps": [
-        "PdfViewerControl is still a large partial-class family whose ownership boundaries need measurement."
+        "PdfViewerControl remains a large partial-class family after single-page render generation, cancellation-source, and bitmap-LRU lifetime moved to SinglePageRenderLifetime; continuous scheduling, layout, interaction, and accessibility boundaries still need measured decomposition."
       ],
       "issueIds": [
         1264
@@ -202,10 +203,12 @@
       "component": "cli",
       "implementationStatus": "partial",
       "evidence": [
-        "Excise.Cli.Tests"
+        "Excise.Cli.Tests",
+        "Excise.Cli/Commands/SaveSizeReportCommand.cs",
+        "Excise.Cli/Commands/CommandMetadataCommand.cs"
       ],
       "gaps": [
-        "Program.cs remains a 2,584-line command host after the first save-size-report workflow extraction; the remaining command boundaries still need measured decomposition and duplicate-policy analysis."
+        "Program.cs remains a 2,510-line command host after save-size-report and command-metadata workflow extractions; the remaining command boundaries still need measured decomposition and duplicate-policy analysis."
       ],
       "issueIds": [
         1263
@@ -220,6 +223,7 @@
       ],
       "gaps": [
         "The main window view model remains the dominant state/orchestration hub.",
+        "Production DI can select the parameterless test composition path because ToastService is not registered and provider construction is not validated (#1270).",
         "Debug-only scripting and platform activation require conservative reachability seeds."
       ],
       "issueIds": [
@@ -233,10 +237,11 @@
       "implementationStatus": "partial",
       "evidence": [
         "Excise.App.Tests/Unit/MainWindowViewModelTests.cs",
-        "Excise.App.Tests/UI"
+        "Excise.App.Tests/UI",
+        "Excise.App/ViewModels/ThumbnailSidebarSession.cs"
       ],
       "gaps": [
-        "Large constructor/state surface and hand-built parameterless test composition couple otherwise separate features."
+        "Large constructor/state surface and the production-reachable hand-built parameterless test composition still couple otherwise separate features (#1270)."
       ],
       "issueIds": [
         920,
@@ -335,9 +340,9 @@
         "avalonia"
       ],
       "symptoms": [
-        "MainWindowViewModel.cs is 3,337 lines before its additional partials; search-index lifecycle, staged document-open orchestration, and workflow-grouped command composition extractions are complete, but navigation and other workflow ownership remain concentrated.",
-        "The constructor accepts many services and also maintains a separate hand-built parameterless composition path.",
-        "Document, navigation, search, thumbnails, editing, redaction, security, and background work share mutable state."
+        "MainWindowViewModel.cs is 3,184 lines before its additional partials; search-index lifecycle, staged document-open orchestration, workflow-grouped command composition, and thumbnail-session ownership extractions are complete, but navigation and other workflow ownership remain concentrated.",
+        "The constructor accepts many services and production DI can fall back to the separate hand-built parameterless composition path because ToastService is not registered.",
+        "Document, navigation, search, editing, redaction, security, and background work still share mutable state; thumbnail cache and scheduler lifetime now have one explicit owner."
       ],
       "deterministicDiscovery": [
         "wc -l Excise.App/ViewModels/MainWindowViewModel*.cs",
