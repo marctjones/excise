@@ -348,9 +348,9 @@
         "avalonia"
       ],
       "symptoms": [
-        "MainWindowViewModel.cs is 3,125 lines before its additional partials; search-index lifecycle, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, and viewport-zoom ownership extractions are complete, but page/view-mode and other workflow ownership remain concentrated.",
+        "MainWindowViewModel.cs is 3,144 lines before its additional partials; search-index lifecycle, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, and page/view/zoom viewport ownership extractions are complete, but other workflow ownership remains concentrated.",
         "Production uses an explicit validated service factory, while tests and design-time XAML still construct the separate parameterless graph and the dependency constructor retains optional fallbacks.",
-        "Document, page navigation, search, editing, redaction, security, and background work still share mutable state; thumbnail and viewport-zoom lifetimes now have explicit owners."
+        "Document, search, editing, redaction, security, and background work still share mutable state; thumbnail lifetime and page/view/zoom viewport state now have explicit owners, with same-page and same-mode feedback made idempotent."
       ],
       "deterministicDiscovery": [
         "wc -l Excise.App/ViewModels/MainWindowViewModel*.cs",
