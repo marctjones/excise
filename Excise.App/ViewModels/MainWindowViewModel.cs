@@ -52,6 +52,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly FilenameSuggestionService _filenameSuggestionService;
     private readonly ToastService _toastService;
     private readonly IUserDialogService _dialogService;
+    private readonly DocumentTextIndexSession _textIndexSession;
 
     // State managers
     public DocumentStateManager FileState { get; } = new();
@@ -100,9 +101,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private int _renderCacheMax = 20;
     private string _operationStatus = string.Empty;
     private Services.ThumbnailCacheService? _thumbnailCache;
-    internal Services.DocumentTextIndex? TextIndex;
-    private System.Threading.CancellationTokenSource? _indexBuildCts;
-    private const int SearchIndexBackgroundStartDelayMs = 750;
+    internal Services.DocumentTextIndex? TextIndex => _textIndexSession.Current;
     private readonly Dictionary<int, Task> _thumbnailLoadTasks = new();
     private readonly object _thumbnailLoadLock = new();
     private long _thumbnailLoadGeneration;
@@ -143,6 +142,8 @@ public partial class MainWindowViewModel : ViewModelBase
             Microsoft.Extensions.Logging.Abstractions.NullLogger<RedactedCopySafetyService>.Instance);
         _textExtractionService = new PdfTextExtractionService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfTextExtractionService>.Instance);
         _searchService = new PdfSearchService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfSearchService>.Instance);
+        _textIndexSession = new DocumentTextIndexSession(
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<DocumentTextIndexSession>.Instance);
         _filenameSuggestionService = new FilenameSuggestionService();
         _toastService = new ToastService();
         _dialogService = new NullUserDialogService();
@@ -192,6 +193,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<RedactedCopySafetyService>.Instance);
         _textExtractionService = textExtractionService;
         _searchService = searchService;
+        _textIndexSession = new DocumentTextIndexSession(
+            loggerFactory.CreateLogger<DocumentTextIndexSession>());
         _filenameSuggestionService = filenameSuggestionService;
         _toastService = toastService;
         _dialogService = dialogService ?? new NullUserDialogService();
@@ -1124,6 +1127,7 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogInformation(">>> STEP 2: Clearing previous document state");
             // Clear ALL state from previous document before loading new one
             LastDocumentOpenTiming = null;
+            _textIndexSession.Cancel();
             CurrentRedactionArea = new Rect();
             ClearCurrentTextSelection();
             RedactionWorkflow.Reset();
@@ -1265,15 +1269,11 @@ public partial class MainWindowViewModel : ViewModelBase
             // Kick off the text index build in the background. First
             // search after this completes is sub-second instead of the
             // multi-second per-keystroke walk we used to do live.
-            _indexBuildCts?.Cancel();
-            _indexBuildCts = new System.Threading.CancellationTokenSource();
-            TextIndex = new Services.DocumentTextIndex(PdfCoreDocument!,
-                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
-            var indexCts = _indexBuildCts;
+            Services.DocumentTextIndex? indexGeneration = null;
             var totalPagesForIndex = TotalPages;
             var indexProgress = new Progress<(int Done, int Total)>(p =>
             {
-                if (indexCts.IsCancellationRequested) return;
+                if (!ReferenceEquals(TextIndex, indexGeneration)) return;
                 // Don't overwrite a "Searching…" / "Rendering…" status —
                 // index building runs alongside other ops and shouldn't
                 // hijack the bar. Only show indexing progress when nothing
@@ -1286,12 +1286,11 @@ public partial class MainWindowViewModel : ViewModelBase
                         : string.Empty;
                 }
             });
-            StartSearchIndexBuild(TextIndex, indexCts, indexProgress);
+            indexGeneration = _textIndexSession.Start(PdfCoreDocument!, indexProgress);
             searchIndexStartedElapsedMs = openSw.ElapsedMilliseconds;
 
             _logger.LogInformation(">>> STEP 9: RaisePropertyChanged(TotalPages)");
             this.RaisePropertyChanged(nameof(TotalPages));
-        RefreshRedactAnnotationCount();
             RefreshRedactAnnotationCount();
 
             _logger.LogInformation(">>> STEP 10: RaisePropertyChanged(StatusText)");
@@ -1342,6 +1341,7 @@ public partial class MainWindowViewModel : ViewModelBase
             // Clear document state on failure
             _currentFilePath = string.Empty;
             FileState.Reset();
+            _textIndexSession.Cancel();
             OperationStatus = string.Empty;
 
             // Determine user-friendly error message
@@ -2038,36 +2038,11 @@ public partial class MainWindowViewModel : ViewModelBase
                 cacheSalt: $"memory-version-{mutationVersion}")
             : null;
 
-        _indexBuildCts?.Cancel();
-        _indexBuildCts = new System.Threading.CancellationTokenSource();
-        TextIndex = new Services.DocumentTextIndex(
-            PdfCoreDocument!,
-            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
-        StartSearchIndexBuild(TextIndex, _indexBuildCts);
+        _textIndexSession.Start(PdfCoreDocument!);
 
         this.RaisePropertyChanged(nameof(CurrentPage));
         this.RaisePropertyChanged(nameof(CurrentPageFormFields));
         return Task.CompletedTask;
-    }
-
-    private void StartSearchIndexBuild(
-        Services.DocumentTextIndex index,
-        System.Threading.CancellationTokenSource indexCts,
-        IProgress<(int Done, int Total)>? progress = null)
-    {
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(SearchIndexBackgroundStartDelayMs, indexCts.Token)
-                    .ConfigureAwait(false);
-                await index.BuildAsync(progress, indexCts.Token).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                // Expected when the document changes before the idle index starts.
-            }
-        }, CancellationToken.None);
     }
 
     private void RequestViewerRenderRefresh()
@@ -2735,6 +2710,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void CloseDocument()
     {
         _logger.LogInformation("Close document command triggered");
+        _textIndexSession.Cancel();
 
         if (!_documentService.IsDocumentLoaded)
         {
@@ -2798,7 +2774,6 @@ public partial class MainWindowViewModel : ViewModelBase
             // Notify UI of all state changes
             this.RaisePropertyChanged(nameof(DocumentName));
             this.RaisePropertyChanged(nameof(TotalPages));
-        RefreshRedactAnnotationCount();
             RefreshRedactAnnotationCount();
             this.RaisePropertyChanged(nameof(StatusText));
             this.RaisePropertyChanged(nameof(StatusBarText));
