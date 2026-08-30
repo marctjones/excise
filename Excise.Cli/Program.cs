@@ -67,7 +67,7 @@ partial class Program
             CreateRedactCommand(),
             CreateMergeCommand(),
             CreateSplitCommand(),
-            CreateFillFormCommand(),
+            FillFormCommand.Create(CreateIgnorePermissionsOption(), RunFillForm),
             CreateAddFieldCommand(),
             CreateAutodetectFieldsCommand(),
             CreateAuditCommand(),
@@ -1331,73 +1331,6 @@ partial class Program
         }
 
         return paths;
-    }
-
-    /// <summary>
-    /// excise fill-form &lt;input&gt; &lt;output&gt; --field name=value [--field name=value]... [--flatten]
-    /// Set AcroForm field values on a PDF and save. With --flatten, the
-    /// values are baked into the page content streams and the form is
-    /// removed (no longer interactive).
-    /// </summary>
-    static Command CreateFillFormCommand()
-    {
-        var inputArg = new Argument<FileInfo>("input") { Description = "Input PDF file" };
-        var outputArg = new Argument<FileInfo>("output") { Description = "Output PDF path" };
-        var fieldOption = new Option<string[]>("--field", "-f")
-        {
-            Description = "Field assignment in the form 'FullName=Value'. May be repeated for multiple fields.",
-            AllowMultipleArgumentsPerToken = false,
-        };
-        var flattenOption = new Option<bool>("--flatten")
-        {
-            Description = "Bake values into page content and remove the form (non-interactive output)",
-            DefaultValueFactory = _ => false,
-        };
-
-        var ignorePermissionsOption = CreateIgnorePermissionsOption();
-
-        var command = new Command(
-            "fill-form",
-            "Set AcroForm field values and save (optionally flatten to baked content)")
-        {
-            inputArg, outputArg, fieldOption, flattenOption, ignorePermissionsOption
-        };
-
-        command.SetAction(parseResult =>
-        {
-            var input = parseResult.GetValue(inputArg)!;
-            var output = parseResult.GetValue(outputArg)!;
-            var fields = parseResult.GetValue(fieldOption);
-            var flatten = parseResult.GetValue(flattenOption);
-            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
-            if (!input.Exists)
-            {
-                Console.Error.WriteLine($"File not found: {input.FullName}");
-                Environment.ExitCode = 1;
-                return;
-            }
-
-            if (fields == null || fields.Length == 0)
-            {
-                Console.Error.WriteLine("At least one --field name=value assignment is required.");
-                Environment.ExitCode = 1;
-                return;
-            }
-
-            try
-            {
-                int set = RunFillForm(input.FullName, output.FullName, fields, flatten, ignorePermissions);
-                Console.WriteLine($"Set {set} field value(s){(flatten ? " (flattened)" : "")}");
-                Console.WriteLine($"Output: {output.FullName}");
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error: {ex.Message}");
-                Environment.ExitCode = 1;
-            }
-        });
-
-        return command;
     }
 
     /// <summary>
