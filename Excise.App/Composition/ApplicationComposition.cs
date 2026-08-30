@@ -21,6 +21,7 @@ internal static class ApplicationComposition
         services.AddSingleton<PdfRenderService>();
         services.AddSingleton<RedactionService>();
         services.AddSingleton<RedactedCopySafetyService>();
+        services.AddSingleton<RedactionWorkflowService>();
         services.AddSingleton<PdfTextExtractionService>();
         services.AddSingleton<PdfSearchService>();
         services.AddSingleton<DocumentSearchSession>();
@@ -52,6 +53,7 @@ internal static class ApplicationComposition
             services.GetRequiredService<PdfRenderService>(),
             services.GetRequiredService<RedactionService>(),
             services.GetRequiredService<RedactedCopySafetyService>(),
+            services.GetRequiredService<RedactionWorkflowService>(),
             services.GetRequiredService<PdfTextExtractionService>(),
             services.GetRequiredService<DocumentSearchSession>(),
             services.GetRequiredService<DocumentTextIndexSession>(),

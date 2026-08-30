@@ -171,7 +171,7 @@ public partial class MainWindowViewModel
     private void InitializeRedactionCommands()
     {
         ToggleRedactionModeCommand = ReactiveCommand.Create(ToggleRedactionMode);
-        ApplyRedactionCommand = ReactiveCommand.CreateFromTask(ApplyRedactionAsync);
+        ApplyRedactionCommand = ReactiveCommand.CreateFromTask(MarkCurrentRedactionAsync);
         RemovePendingRedactionCommand = ReactiveCommand.Create<Guid>(RemovePendingRedaction);
         ClearAllRedactionsCommand = ReactiveCommand.Create(ClearAllRedactions);
         ApplyAllRedactionsCommand = ReactiveCommand.CreateFromTask(ApplyAllRedactionsAsync);
