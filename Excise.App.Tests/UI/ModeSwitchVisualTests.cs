@@ -61,7 +61,7 @@ public class ModeSwitchVisualTests
             "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ",
             "FOURTH LINE OF BODY TEXT FOR INK MASS",
         });
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1100, Height = 900 };
         window.Show();
         try
@@ -119,7 +119,7 @@ public class ModeSwitchVisualTests
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-mode-form-visual-{Guid.NewGuid():N}.pdf");
         File.WriteAllBytes(path, BuildTextAndFieldPdf());
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1100, Height = 900 };
         window.Show();
         try
@@ -168,7 +168,7 @@ public class ModeSwitchVisualTests
         // must not dump the user somewhere else in the document.
         var path = Path.Combine(Path.GetTempPath(), $"excise-mode-scroll-{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 4);
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1100, Height = 900 };
         window.Show();
         try

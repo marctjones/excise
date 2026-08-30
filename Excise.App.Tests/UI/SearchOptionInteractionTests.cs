@@ -120,7 +120,7 @@ public class SearchOptionInteractionTests
         var path = Path.Combine(dir, $"{tag}.pdf");
         CreateTextPdf(path);
 
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);

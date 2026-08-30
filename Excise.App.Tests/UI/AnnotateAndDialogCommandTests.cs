@@ -41,7 +41,7 @@ public class AnnotateAndDialogCommandTests
         var (source, output, dir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(source, "Selectable clause text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);
@@ -69,7 +69,7 @@ public class AnnotateAndDialogCommandTests
         var (source, output, dir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(source, "Body text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);
@@ -96,7 +96,7 @@ public class AnnotateAndDialogCommandTests
         var (source, _, dir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(source, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);
@@ -148,7 +148,7 @@ public class AnnotateAndDialogCommandTests
         var (source, _, dir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(source, "Body");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);
@@ -180,7 +180,7 @@ public class AnnotateAndDialogCommandTests
         var (source, _, dir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(source, "Body");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);
@@ -204,7 +204,7 @@ public class AnnotateAndDialogCommandTests
     [FixedAvaloniaFact]
     public async Task AboutCommand_OpensTheAboutWindow()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -226,7 +226,7 @@ public class AnnotateAndDialogCommandTests
     [FixedAvaloniaFact]
     public async Task ShowShortcutsCommand_RequestsTheKeyboardShortcutsDialog()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -249,7 +249,7 @@ public class AnnotateAndDialogCommandTests
     [FixedAvaloniaFact]
     public async Task ShowDocumentationCommand_InvokesTheDocumentationOpenPath()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var opened = new System.Collections.Generic.List<string>();
         vm.DocumentationOpener = target => opened.Add(target);
 
@@ -274,7 +274,7 @@ public class AnnotateAndDialogCommandTests
         const double heightPoints = 800;
         TestPdfGenerator.CreateCustomSizePdf(source, widthPoints, heightPoints);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);
@@ -310,7 +310,7 @@ public class AnnotateAndDialogCommandTests
         var (source, _, dir) = MakePaths();
         TestPdfGenerator.CreateMultiPagePdf(source, 5);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);
@@ -344,7 +344,7 @@ public class AnnotateAndDialogCommandTests
     private static MainWindowViewModel CreateViewModelWithDialog(IUserDialogService dialogService)
     {
         var loggerFactory = NullLoggerFactory.Instance;
-        return new MainWindowViewModel(
+        return MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             new PdfDocumentService(NullLogger<PdfDocumentService>.Instance),

@@ -55,7 +55,7 @@ public class KeyboardShortcutEffectTests
     private static MainWindowViewModel NewVmWithDialog(IUserDialogService dialog)
     {
         var loggerFactory = NullLoggerFactory.Instance;
-        return new MainWindowViewModel(
+        return MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             new PdfDocumentService(NullLogger<PdfDocumentService>.Instance),
@@ -107,7 +107,7 @@ public class KeyboardShortcutEffectTests
     [FixedAvaloniaFact(Timeout = 20000)]
     public async Task CtrlO_ExecutesOpenFileCommand()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -130,7 +130,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("save_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         // Bound the load — this command can reach a save/success-toast path
@@ -157,7 +157,7 @@ public class KeyboardShortcutEffectTests
         var source = Temp("saveas_source.pdf");
         TestPdfGenerator.CreateMultiPagePdf(source, pageCount: 2);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);
@@ -181,7 +181,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("close_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -207,7 +207,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("f3_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -232,7 +232,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("shiftf3_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -258,7 +258,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("searchenter_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -285,7 +285,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("searchesc_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -313,7 +313,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("copy_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 1);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -346,7 +346,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("rotl_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 1);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -372,7 +372,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("rotr_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 1);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -402,7 +402,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("export_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 1);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -459,7 +459,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("enter_redact_effect.pdf");
         TestPdfGenerator.CreateSimpleTextPdf(path, "ENTERSECRET827");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -489,7 +489,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("outline_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -509,7 +509,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("thumbs_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -530,7 +530,7 @@ public class KeyboardShortcutEffectTests
     [FixedAvaloniaFact(Timeout = 20000)]
     public async Task F1_RequestsKeyboardShortcutsDialog()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         vm.MainWindowResolver = () => window;
@@ -552,7 +552,7 @@ public class KeyboardShortcutEffectTests
     {
         // Ctrl+, was advertised as "Preferences" (menu InputGesture) but had no
         // key handler. Written RED, then wired.
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         vm.MainWindowResolver = () => window;
@@ -586,7 +586,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("ctrla_noop.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -613,7 +613,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("space_noop.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);
@@ -638,7 +638,7 @@ public class KeyboardShortcutEffectTests
         var path = Temp("tab_native.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);

@@ -47,7 +47,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("open.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -71,7 +71,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("openclose.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -99,7 +99,7 @@ public class UserFlowAutomationTests
         var pdf2 = CreateTestPdf("second.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdf1, pageCount: 3);
         TestPdfGenerator.CreateMultiPagePdf(pdf2, pageCount: 7);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -127,7 +127,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("recent.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -154,7 +154,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("nav_next.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -181,7 +181,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("nav_boundary.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -207,7 +207,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("nav_jump.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -237,7 +237,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("zoom.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -264,7 +264,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("zoom_persist.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -299,7 +299,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("search.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -330,7 +330,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("search_nav.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 4);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -362,7 +362,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("search_empty.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -398,7 +398,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("text_select.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -429,7 +429,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("redaction.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -460,7 +460,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("sidebar.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -492,7 +492,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("workflow.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -536,7 +536,7 @@ public class UserFlowAutomationTests
         // Arrange
         var pdfPath = CreateTestPdf("modes.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -575,7 +575,7 @@ public class UserFlowAutomationTests
         var pdf2 = CreateTestPdf("seq2.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdf1, pageCount: 2);
         TestPdfGenerator.CreateMultiPagePdf(pdf2, pageCount: 4);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         // Skip window creation; test only ViewModel state transitions
         // The rendering null-ref is a pre-existing headless mode issue, not a state management bug
 

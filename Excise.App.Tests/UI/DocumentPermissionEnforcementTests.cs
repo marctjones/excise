@@ -63,7 +63,7 @@ public class DocumentPermissionEnforcementTests : IDisposable
         var toastService = new ToastService();
         var toasts = new List<ToastService.ToastEventArgs>();
         toastService.ToastRequested += (_, args) => toasts.Add(args);
-        var vm = new MainWindowViewModel(
+        var vm = MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             new PdfDocumentService(NullLogger<PdfDocumentService>.Instance),

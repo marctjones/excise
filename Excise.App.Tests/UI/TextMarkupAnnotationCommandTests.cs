@@ -63,7 +63,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Clause under review");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -112,7 +112,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Clause under review");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -153,7 +153,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Clause under review");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -195,7 +195,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -229,7 +229,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -254,7 +254,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -278,7 +278,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -306,7 +306,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -337,7 +337,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -368,7 +368,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Stamp target");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -405,7 +405,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Stamp target");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -442,7 +442,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Stamp target");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -476,7 +476,7 @@ public class TextMarkupAnnotationCommandTests
         WriteTestPng(png, 24, 12);
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -525,7 +525,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Stamp target");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -556,7 +556,7 @@ public class TextMarkupAnnotationCommandTests
         File.WriteAllText(notAnImage, "this is not a picture");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -595,7 +595,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Clause under review");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);
@@ -667,7 +667,7 @@ public class TextMarkupAnnotationCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(source, "Clause under review");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(source);

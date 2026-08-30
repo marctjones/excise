@@ -201,7 +201,7 @@ public class FormFieldsOverlayTests
         var path = WriteTempFormPdf();
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await Task.Delay(100);
@@ -253,7 +253,7 @@ public class FormFieldsOverlayTests
         var path = WriteTempFormPdf();
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await Task.Delay(100);
@@ -307,7 +307,7 @@ public class FormFieldsOverlayTests
         var path = WriteTempMultilineFormPdf();
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await Task.Delay(100);
@@ -358,7 +358,7 @@ public class FormFieldsOverlayTests
         var path = WriteTempRadioFormPdf();
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await Task.Delay(100);

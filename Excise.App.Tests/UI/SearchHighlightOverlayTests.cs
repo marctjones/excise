@@ -38,7 +38,7 @@ public class SearchHighlightOverlayTests
     {
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(100);

@@ -31,7 +31,7 @@ public class TypewriterWorkflowTests
         var outputPath = Path.Combine(tempDir, "output.pdf");
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -74,7 +74,7 @@ public class TypewriterWorkflowTests
         const string typed = "TYPEDNOTE780";
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, preExisting);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -114,7 +114,7 @@ public class TypewriterWorkflowTests
         var (sourcePath, outputPath, tempDir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -156,7 +156,7 @@ public class TypewriterWorkflowTests
         var (sourcePath, outputPath, tempDir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -191,7 +191,7 @@ public class TypewriterWorkflowTests
         var (sourcePath, _, tempDir) = MakePaths();
         TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 4);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -220,7 +220,7 @@ public class TypewriterWorkflowTests
         var (sourcePath, _, tempDir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Click to place");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
@@ -289,7 +289,7 @@ public class TypewriterWorkflowTests
         var fixturePath = RestrictedFixturePathOrNull();
         Assert.SkipWhen(fixturePath == null, "Restricted /P bit-4 fixture not available");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -311,7 +311,7 @@ public class TypewriterWorkflowTests
         var (source, _, dir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(source, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);
@@ -339,7 +339,7 @@ public class TypewriterWorkflowTests
         var (source, _, dir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(source, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);
@@ -374,7 +374,7 @@ public class TypewriterWorkflowTests
         var (source, output, dir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(source, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);

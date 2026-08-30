@@ -34,7 +34,7 @@ public class SearchViewModelTests
     {
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         await vm.LoadDocumentAsync(PragmaticBook);
 
         // Setting SearchText schedules a debounced search (300 ms wait
@@ -63,7 +63,7 @@ public class SearchViewModelTests
     {
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         await vm.LoadDocumentAsync(PragmaticBook);
 
         vm.SearchText = "Open Source";
@@ -100,7 +100,7 @@ public class SearchViewModelTests
     {
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         await vm.LoadDocumentAsync(PragmaticBook);
 
         vm.SearchText = "Brasseur";
@@ -131,7 +131,7 @@ public class SearchViewModelTests
     [FixedAvaloniaFact]
     public void RightSidebarPanelSelectors_AreMutuallyExclusive()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         // Default: no document, no redaction mode, no search → clipboard.
         vm.ShowSearchResultsPanel.Should().BeFalse();
@@ -162,7 +162,7 @@ public class SearchViewModelTests
         // pushed highlights ~25 % off the page.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         await vm.LoadDocumentAsync(PragmaticBook);
 
         vm.SearchText = "Brasseur";

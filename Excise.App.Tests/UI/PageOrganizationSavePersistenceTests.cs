@@ -260,7 +260,7 @@ public class PageOrganizationSavePersistenceTests
 
     private static async Task<(MainWindowViewModel vm, MainWindow window)> OpenAsync(string path)
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);

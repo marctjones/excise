@@ -25,7 +25,7 @@ public class GuiResponsivenessBudgetTests
 
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
 
@@ -53,7 +53,7 @@ public class GuiResponsivenessBudgetTests
 
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(path);

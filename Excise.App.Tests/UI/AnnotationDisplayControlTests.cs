@@ -28,7 +28,7 @@ public class AnnotationDisplayControlTests
 {
     private static (MainWindow Window, MainWindowViewModel Vm) Open()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         window.UpdateLayout();

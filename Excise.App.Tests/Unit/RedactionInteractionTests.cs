@@ -23,7 +23,7 @@ public class RedactionInteractionTests
     [Fact]
     public void ToggleRedactionModeWorks()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.IsRedactionMode.Should().BeFalse();
 
@@ -37,7 +37,7 @@ public class RedactionInteractionTests
     [Fact]
     public void CurrentRedactionAreaCanBeSet()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         var rect = new Rect(10, 20, 100, 50);
         vm.CurrentRedactionArea = rect;
@@ -54,7 +54,7 @@ public class RedactionInteractionTests
     [Fact]
     public void PendingRedactionsCollectionExist()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.RedactionWorkflow.PendingRedactions.Should().NotBeNull();
         vm.RedactionWorkflow.PendingRedactions.Count.Should().Be(0);
@@ -63,7 +63,7 @@ public class RedactionInteractionTests
     [Fact]
     public void CanAddPendingRedaction()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         var redaction = new Excise.App.Models.PendingRedaction
         {
@@ -81,7 +81,7 @@ public class RedactionInteractionTests
     [Fact]
     public void CanRemovePendingRedaction()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         var redaction = new Excise.App.Models.PendingRedaction
         {
@@ -99,7 +99,7 @@ public class RedactionInteractionTests
     [Fact]
     public void ShowPendingRedactionsPanelDependsOnRedactionMode()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.IsRedactionMode = false;
         vm.IsSearchVisible = false;
@@ -121,7 +121,7 @@ public class RedactionInteractionTests
     [Fact]
     public void IsRedactionModePropertyNotifiesChanges()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var changeCount = 0;
 
         vm.PropertyChanged += (s, e) =>

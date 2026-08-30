@@ -285,7 +285,7 @@ public class PageOrganizationCommandTests
         TestPdfGenerator.CreateTextOnlyPdf(b, "BRAVO_DOC");
         var outPath = Path.Combine(dir, "combined.pdf");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         vm.PickPdfFilesOverride = _ => Task.FromResult<IReadOnlyList<string>>(new[] { a, b });
@@ -420,7 +420,7 @@ public class PageOrganizationCommandTests
         TestPdfGenerator.CreateTextOnlyPdf(b, "BRAVO_DOC");
         var outPath = Path.Combine(dir, "combined.pdf");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         vm.PickPdfFilesOverride = _ => Task.FromResult<IReadOnlyList<string>>(new[] { a, b });
@@ -474,7 +474,7 @@ public class PageOrganizationCommandTests
 
     private static async Task<(MainWindowViewModel vm, MainWindow window)> OpenAsync(string path)
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);

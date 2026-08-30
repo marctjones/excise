@@ -28,7 +28,7 @@ public class SearchHighlightIndexTests
 
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             await vm.LoadDocumentAsync(path);
 
             vm.SearchText = "Page";
@@ -70,7 +70,7 @@ public class SearchHighlightIndexTests
 
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             await vm.LoadDocumentAsync(path);
 
             vm.SearchText = "Page";

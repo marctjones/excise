@@ -78,7 +78,7 @@ public class ContinuousLinkInteractionTests
     /// </summary>
     private async Task<ContinuousLinkSetup?> ArrangeTocLinkInContinuousModeAsync(string pragmaticBook)
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);

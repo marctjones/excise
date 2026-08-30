@@ -230,7 +230,7 @@ public class GuiExpectedEffectTests
         var path = Path.Combine(Path.GetTempPath(), $"excise-effect-{Guid.NewGuid():N}.pdf");
         File.WriteAllBytes(path, BuildDensePdf());
 
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1200, Height = 900 };
         window.Show();
         try
@@ -342,7 +342,7 @@ public class GuiExpectedEffectTests
         var path = Path.Combine(Path.GetTempPath(), $"excise-effect-multi-{Guid.NewGuid():N}.pdf");
         File.WriteAllBytes(path, BuildDenseMultiPagePdf(PageCount));
 
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1200, Height = 900 };
         window.Show();
         try

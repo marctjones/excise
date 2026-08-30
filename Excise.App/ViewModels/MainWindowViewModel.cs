@@ -29,7 +29,6 @@ public partial class MainWindowViewModel : ViewModelBase
     internal const int DefaultViewerRenderDpi = 120;
 
     private readonly ILogger<MainWindowViewModel> _logger;
-    private readonly ILoggerFactory _loggerFactory;
     private readonly PdfDocumentService _documentService;
     private readonly PdfRenderService _renderService;
     private readonly RedactionService _redactionService;
@@ -93,95 +92,36 @@ public partial class MainWindowViewModel : ViewModelBase
     private long _renderVersion;
     private long _documentMutationVersion;
 
-    /// <summary>
-    /// Parameterless constructor for testing and scripting scenarios.
-    /// Creates a ViewModel with default (NullLogger) dependencies.
-    /// </summary>
-    public MainWindowViewModel()
-    {
-        var nullLoggerFactory = Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
-        var nullLogger = Microsoft.Extensions.Logging.Abstractions.NullLogger<MainWindowViewModel>.Instance;
-        _logger = nullLogger;
-        _loggerFactory = nullLoggerFactory;
-        _documentService = new PdfDocumentService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfDocumentService>.Instance);
-        _renderService = new PdfRenderService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfRenderService>.Instance);
-        _redactionService = new RedactionService(Microsoft.Extensions.Logging.Abstractions.NullLogger<RedactionService>.Instance, nullLoggerFactory);
-        _redactedCopySafetyService = new RedactedCopySafetyService(
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<RedactedCopySafetyService>.Instance);
-        _textExtractionService = new PdfTextExtractionService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfTextExtractionService>.Instance);
-        _searchService = new PdfSearchService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfSearchService>.Instance);
-        _textIndexSession = new DocumentTextIndexSession(
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<DocumentTextIndexSession>.Instance);
-        _filenameSuggestionService = new FilenameSuggestionService();
-        _toastService = new ToastService();
-        _dialogService = new NullUserDialogService();
-        _signatureWorkflowService = CreateSignatureWorkflowService(
-            new SignatureVerificationService(Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationService>.Instance),
-            _dialogService,
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationWorkflowService>.Instance);
-        _pageOrganizationWorkflow = new PageOrganizationWorkflowService(
-            _documentService,
-            _dialogService,
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<PageOrganizationWorkflowService>.Instance);
-        _annotationWorkflow = new AnnotationWorkflowService(
-            _documentService,
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<AnnotationWorkflowService>.Instance);
-        _thumbnailSession = new ThumbnailSidebarSession(_logger);
-
-        InitializeCommands();
-        _logger.LogInformation("MainWindowViewModel initialized (test mode)");
-        InitializeSessionState();
-        _logger.LogDebug("MainWindowViewModel initialization complete (test mode)");
-    }
-
-    public MainWindowViewModel(
+    internal MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
-        ILoggerFactory loggerFactory,
         PdfDocumentService documentService,
         PdfRenderService renderService,
         RedactionService redactionService,
+        RedactedCopySafetyService redactedCopySafetyService,
         PdfTextExtractionService textExtractionService,
         PdfSearchService searchService,
-        SignatureVerificationService signatureService,
+        DocumentTextIndexSession textIndexSession,
         FilenameSuggestionService filenameSuggestionService,
         ToastService toastService,
-        SignatureVerificationSummaryFormatter? signatureSummaryFormatter = null,
-        IUserDialogService? dialogService = null,
-        SignatureVerificationWorkflowService? signatureWorkflowService = null,
-        PageOrganizationWorkflowService? pageOrganizationWorkflow = null,
-        AnnotationWorkflowService? annotationWorkflow = null,
-        RedactedCopySafetyService? redactedCopySafetyService = null)
+        IUserDialogService dialogService,
+        SignatureVerificationWorkflowService signatureWorkflowService,
+        PageOrganizationWorkflowService pageOrganizationWorkflow,
+        AnnotationWorkflowService annotationWorkflow)
     {
         _logger = logger;
-        _loggerFactory = loggerFactory;
         _documentService = documentService;
         _renderService = renderService;
         _redactionService = redactionService;
-        _redactedCopySafetyService = redactedCopySafetyService ?? new RedactedCopySafetyService(
-            loggerFactory.CreateLogger<RedactedCopySafetyService>()
-                ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<RedactedCopySafetyService>.Instance);
+        _redactedCopySafetyService = redactedCopySafetyService;
         _textExtractionService = textExtractionService;
         _searchService = searchService;
-        _textIndexSession = new DocumentTextIndexSession(
-            loggerFactory.CreateLogger<DocumentTextIndexSession>());
+        _textIndexSession = textIndexSession;
         _filenameSuggestionService = filenameSuggestionService;
         _toastService = toastService;
-        _dialogService = dialogService ?? new NullUserDialogService();
-        _signatureWorkflowService = signatureWorkflowService ?? new SignatureVerificationWorkflowService(
-            signatureService,
-            signatureSummaryFormatter ?? new SignatureVerificationSummaryFormatter(),
-            _dialogService,
-            loggerFactory.CreateLogger<SignatureVerificationWorkflowService>()
-                ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationWorkflowService>.Instance);
-        _pageOrganizationWorkflow = pageOrganizationWorkflow ?? new PageOrganizationWorkflowService(
-            documentService,
-            _dialogService,
-            loggerFactory.CreateLogger<PageOrganizationWorkflowService>()
-                ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<PageOrganizationWorkflowService>.Instance);
-        _annotationWorkflow = annotationWorkflow ?? new AnnotationWorkflowService(
-            documentService,
-            loggerFactory.CreateLogger<AnnotationWorkflowService>()
-                ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<AnnotationWorkflowService>.Instance);
+        _dialogService = dialogService;
+        _signatureWorkflowService = signatureWorkflowService;
+        _pageOrganizationWorkflow = pageOrganizationWorkflow;
+        _annotationWorkflow = annotationWorkflow;
         _thumbnailSession = new ThumbnailSidebarSession(_logger);
 
         InitializeCommands();
@@ -195,12 +135,6 @@ public partial class MainWindowViewModel : ViewModelBase
         LoadRecentFiles();
         LoadZoomPreference(); // Issue #32: Persist zoom level
     }
-
-    private static SignatureVerificationWorkflowService CreateSignatureWorkflowService(
-        SignatureVerificationService signatureService,
-        IUserDialogService dialogService,
-        ILogger<SignatureVerificationWorkflowService> logger) =>
-        new(signatureService, new SignatureVerificationSummaryFormatter(), dialogService, logger);
 
     // Properties
     public ObservableCollection<PageThumbnail> PageThumbnails => _thumbnailSession.Items;

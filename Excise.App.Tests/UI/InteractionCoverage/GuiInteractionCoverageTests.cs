@@ -45,7 +45,7 @@ public class GuiInteractionCoverageTests
     [FixedAvaloniaFact]
     public async Task TheInventory_IsPublishedForTheCoverageScript_AndIsNotVacuous()
     {
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1200, Height = 900 };
         window.Show();
 
@@ -96,7 +96,7 @@ public class GuiInteractionCoverageTests
     [FixedAvaloniaFact]
     public async Task ARealClickIsRecorded_AndExecutingACommandIsNot()
     {
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1200, Height = 900 };
         window.Show();
 
@@ -175,7 +175,7 @@ public class MenuAcceleratorGestureTests
     [InlineData("view.zoomFitPage", Key.D2)]
     public void ZoomAcceleratorsNameTheKeyThatActuallyWorks(string commandId, Key expected)
     {
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1200, Height = 900 };
         window.Show();
 

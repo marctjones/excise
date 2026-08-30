@@ -22,7 +22,7 @@ public class AccessibilityRegressionTests
     [FixedAvaloniaFact]
     public async Task CommandBackedControls_UseSharedCommandMetadataForAccessibleText()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         window.UpdateLayout();
@@ -82,7 +82,7 @@ public class AccessibilityRegressionTests
     [FixedAvaloniaFact]
     public async Task FooterPageNavigation_KeepsCommandMetadataWithoutHoverTooltips()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         window.UpdateLayout();
@@ -110,7 +110,7 @@ public class AccessibilityRegressionTests
     [FixedAvaloniaFact]
     public async Task CoreWorkflows_HaveCommandMetadataBackedControls()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         window.UpdateLayout();
@@ -141,7 +141,7 @@ public class AccessibilityRegressionTests
     [FixedAvaloniaFact]
     public void SearchControls_StatusBarAndViewer_ExposeKeyboardAccessibleNames()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -234,7 +234,7 @@ public class AccessibilityRegressionTests
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await vm.LoadDocumentAsync(path);

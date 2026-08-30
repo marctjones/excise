@@ -46,7 +46,7 @@ public class RevealHiddenTextTests : IDisposable
         _tempFiles.Add(path);
         File.WriteAllBytes(path, BuildBadRedactionPdf("SECRET INFO 12345"));
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         // Act: simulate the user's workflow — load the PDF, flip the toggle.
         await vm.LoadDocumentCommand(path);
@@ -86,7 +86,7 @@ public class RevealHiddenTextTests : IDisposable
         _tempFiles.Add(path);
         File.WriteAllBytes(path, BuildRasterWithOverlayPdf());
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         await vm.LoadDocumentCommand(path);
         vm.CurrentPageIndex = 0;
 

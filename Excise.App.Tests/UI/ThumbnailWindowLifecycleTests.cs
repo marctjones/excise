@@ -66,7 +66,7 @@ public class ThumbnailWindowLifecycleTests
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-thumb-window-{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 60);
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         try
         {
             await vm.LoadDocumentAsync(path);
@@ -117,7 +117,7 @@ public class ThumbnailWindowLifecycleTests
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-thumb-prewarm-{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 12);
-        var vm = new MainWindowViewModel(); // prewarm enabled (default)
+        var vm = MainWindowViewModelTestFactory.Create(); // prewarm enabled (default)
         try
         {
             await vm.LoadDocumentAsync(path);

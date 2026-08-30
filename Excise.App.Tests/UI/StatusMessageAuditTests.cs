@@ -21,7 +21,7 @@ public class StatusMessageAuditTests
 
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow
             {
                 DataContext = vm,
@@ -48,7 +48,7 @@ public class StatusMessageAuditTests
     [FixedAvaloniaFact]
     public async Task ClearingSearchText_CancelsSearchStatus()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow
         {
             DataContext = vm,

@@ -37,7 +37,7 @@ public class OutlineTreeNavigationTests
     {
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new Window
         {
             DataContext = vm,
@@ -72,7 +72,7 @@ public class OutlineTreeNavigationTests
     {
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(100);
@@ -110,7 +110,7 @@ public class OutlineTreeNavigationTests
         // its setter calls JumpToOutline. Catches binding-mode regressions.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(100);
@@ -146,7 +146,7 @@ public class OutlineTreeNavigationTests
         // to look elsewhere.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);

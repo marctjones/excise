@@ -38,7 +38,7 @@ public class RedactionMouseWorkflowTests
             var outputPdf = Path.Combine(_tempDir, $"{scenario.Name}-output.pdf");
             scenario.CreatePdf(sourcePdf);
 
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 2000, Height = 1600 };
             window.Show();
 

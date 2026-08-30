@@ -46,7 +46,7 @@ public class ContinuousNavigationRegressionTests
         var path = TempPdf("continuous-nav.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 8);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -78,7 +78,7 @@ public class ContinuousNavigationRegressionTests
         var path = TempPdf("continuous-nav-sync.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 8);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 

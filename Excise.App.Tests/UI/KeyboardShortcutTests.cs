@@ -59,7 +59,7 @@ public class KeyboardShortcutTests
     public async Task CtrlO_OpensFileDialog()
     {
         // Arrange
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -91,7 +91,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("save_test.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -121,7 +121,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("close_test.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -151,7 +151,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("search_toggle.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -177,7 +177,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("find_next.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -201,7 +201,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("find_prev.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -225,7 +225,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("search_escape.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -255,7 +255,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("copy_text.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -287,7 +287,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("pagedown.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -314,7 +314,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("pageup.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -345,7 +345,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("home.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -374,7 +374,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("end.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -403,7 +403,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("downarrow.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -428,7 +428,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("uparrow.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -483,7 +483,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("rotate_left.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -507,7 +507,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("rotate_right.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -531,7 +531,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("export_page.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -555,7 +555,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("print.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -583,7 +583,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("zoom_in.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -609,7 +609,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("zoom_out.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -639,7 +639,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("zoom_actual.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -668,7 +668,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("zoom_fit_width.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -712,7 +712,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("zoom_fit_page.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -761,7 +761,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("redaction_mode.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -787,7 +787,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("text_select_mode.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -813,7 +813,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("apply_redaction.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -843,7 +843,7 @@ public class KeyboardShortcutTests
     public async Task F1_ShowsShortcuts()
     {
         // Arrange
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -862,7 +862,7 @@ public class KeyboardShortcutTests
     public async Task CtrlComma_ShowsPreferences()
     {
         // Arrange
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -887,7 +887,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("search_workflow.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -918,7 +918,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("multi_pagedown.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -948,7 +948,7 @@ public class KeyboardShortcutTests
         // Arrange
         var pdfPath = CreateTestPdf("multi_zoom_in.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 1);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 

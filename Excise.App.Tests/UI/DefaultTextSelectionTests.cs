@@ -44,7 +44,7 @@ public class DefaultTextSelectionTests
     [FixedAvaloniaFact]
     public async Task NewDocument_IsInTextSelectionMode_ByDefault_WithoutAnyToggle()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.IsTextSelectionMode.Should().BeTrue(
             "#831: selection is the resting affordance — on by default, no toggle needed");
@@ -55,7 +55,7 @@ public class DefaultTextSelectionTests
     [FixedAvaloniaFact]
     public async Task ExitingRedactionMode_RestoresTextSelectionAsRestingMode()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.IsRedactionMode = true;
         vm.InteractionMode.Should().Be(InteractionMode.Redaction);
@@ -78,7 +78,7 @@ public class DefaultTextSelectionTests
             MainWindow window = null!;
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                vm = new MainWindowViewModel();
+                vm = MainWindowViewModelTestFactory.Create();
                 window = new MainWindow { DataContext = vm, Width = 900, Height = 1100 };
                 window.Show();
             });

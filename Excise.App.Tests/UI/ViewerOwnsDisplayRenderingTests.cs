@@ -65,7 +65,7 @@ public class ViewerOwnsDisplayRenderingTests
 
     private static MainWindowViewModel CreateViewModel(PdfDocumentService documentService, PdfRenderService renderService)
     {
-        return new MainWindowViewModel(
+        return MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             NullLoggerFactory.Instance,
             documentService,

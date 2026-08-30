@@ -38,7 +38,7 @@ public class ZoomFitModeLatchTests
         var src = Path.Combine(Path.GetTempPath(), $"excise-zoomlatch-{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(src, pageCount: 2);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         try
@@ -70,7 +70,7 @@ public class ZoomFitModeLatchTests
         var src = Path.Combine(Path.GetTempPath(), $"excise-zoomfit-{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(src, pageCount: 2);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         try

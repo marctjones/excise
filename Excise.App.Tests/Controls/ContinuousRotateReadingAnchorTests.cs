@@ -45,7 +45,7 @@ public class ContinuousRotateReadingAnchorTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            vm = new Excise.App.ViewModels.MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+            vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
             window = new Excise.App.Views.MainWindow { DataContext = vm, Width = 1100, Height = 900 };
             window.Show();
         });
@@ -139,7 +139,7 @@ public class ContinuousRotateReadingAnchorTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            vm = new Excise.App.ViewModels.MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+            vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
             window = new Excise.App.Views.MainWindow { DataContext = vm, Width = 1100, Height = 900 };
             window.Show();
         });

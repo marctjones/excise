@@ -26,10 +26,6 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Design.DataContext>
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
-
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
 
         <!-- Menu Bar -->

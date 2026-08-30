@@ -165,7 +165,7 @@ public class AnnotationHoverReadingTests : IDisposable
                      bool longMultiLineNote = false)
     {
         var path = WriteTempPdf(NotePdf(degenerateRect, longMultiLineNote));
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1000, Height = 800 };
         window.Show();
         await vm.LoadDocumentAsync(path);

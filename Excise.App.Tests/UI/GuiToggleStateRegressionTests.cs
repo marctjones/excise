@@ -18,7 +18,7 @@ public class GuiToggleStateRegressionTests
     [FixedAvaloniaFact]
     public async Task WindowViewToggleMenus_KeepCheckIconsToolbarClassesAndPanelsInSync()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await PumpAsync(window);
@@ -106,7 +106,7 @@ public class GuiToggleStateRegressionTests
     [FixedAvaloniaFact]
     public void MacNativeMenuToggleItems_TrackViewModelStateAndExecuteSharedCommands()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         vm.ApplyContinuousScrollPreference(true);
         var menu = MacNativeMenuBuilder.Create(vm);
 
@@ -159,7 +159,7 @@ public class GuiToggleStateRegressionTests
     [FixedAvaloniaFact]
     public async Task StatusBarVisualIndicators_TrackModeOperationAndDocumentStatus()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await PumpAsync(window);

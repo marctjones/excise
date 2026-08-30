@@ -47,7 +47,7 @@ public class ViewToggleMenuInteractionTests
     public async Task PointerAndClick_OnToggleMenuItem_FlipsBoundViewModelState(
         string menuItemName, string commandProperty, string stateProperty)
     {
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1200, Height = 900 };
         window.Show();
 

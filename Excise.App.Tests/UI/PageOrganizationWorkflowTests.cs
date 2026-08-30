@@ -27,7 +27,7 @@ public class PageOrganizationWorkflowTests : IDisposable
         var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
         documentService.LoadDocument(filePath);
         var loggerFactory = NullLoggerFactory.Instance;
-        var vm = new MainWindowViewModel(
+        var vm = MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             documentService,
@@ -61,7 +61,7 @@ public class PageOrganizationWorkflowTests : IDisposable
         var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
         documentService.LoadDocument(filePath);
         var loggerFactory = NullLoggerFactory.Instance;
-        var vm = new MainWindowViewModel(
+        var vm = MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             documentService,
@@ -96,7 +96,7 @@ public class PageOrganizationWorkflowTests : IDisposable
     [Fact]
     public void PageOrganizationCommands_AreAvailableForMenuAndKeyboardCoverage()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.InsertPagesBeforeCurrentCommand.Should().NotBeNull();
         vm.InsertPagesAfterCurrentCommand.Should().NotBeNull();
