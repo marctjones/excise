@@ -1,0 +1,187 @@
+{
+  "$schema": "./schemas/inventory.schema.json",
+  "schemaVersion": 1,
+  "generator": {
+    "name": "scripts/check_architecture_registry.py",
+    "version": 1,
+    "sourceRevision": "f97f679f8848a40f8cb1d77f85366da880308be2"
+  },
+  "projects": [
+    {
+      "path": "Excise.App/Excise.App.csproj",
+      "classification": "shipping",
+      "sourceRoot": "Excise.App",
+      "projectReferences": [
+        "Excise.Avalonia/Excise.Avalonia.csproj",
+        "Excise.Core/Excise.Core.csproj",
+        "Excise.Ocr/Excise.Ocr.csproj",
+        "Excise.Rendering/Excise.Rendering.csproj"
+      ]
+    },
+    {
+      "path": "Excise.App.Tests/Excise.App.Tests.csproj",
+      "classification": "test",
+      "sourceRoot": "Excise.App.Tests",
+      "projectReferences": [
+        "Excise.App/Excise.App.csproj",
+        "Excise.Avalonia/Excise.Avalonia.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Avalonia/Excise.Avalonia.csproj",
+      "classification": "shipping",
+      "sourceRoot": "Excise.Avalonia",
+      "projectReferences": [
+        "Excise.Core/Excise.Core.csproj",
+        "Excise.Rendering/Excise.Rendering.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj",
+      "classification": "sample",
+      "sourceRoot": "Excise.Avalonia.Sample",
+      "projectReferences": [
+        "Excise.Avalonia/Excise.Avalonia.csproj",
+        "Excise.Core/Excise.Core.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Avalonia.Tests/Excise.Avalonia.Tests.csproj",
+      "classification": "test",
+      "sourceRoot": "Excise.Avalonia.Tests",
+      "projectReferences": [
+        "Excise.Avalonia/Excise.Avalonia.csproj",
+        "Excise.Core/Excise.Core.csproj",
+        "Excise.Rendering/Excise.Rendering.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Benchmarks/Excise.Benchmarks.csproj",
+      "classification": "benchmark",
+      "sourceRoot": "Excise.Benchmarks",
+      "projectReferences": [
+        "Excise.Core/Excise.Core.csproj",
+        "Excise.Rendering/Excise.Rendering.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Cli/Excise.Cli.csproj",
+      "classification": "shipping",
+      "sourceRoot": "Excise.Cli",
+      "projectReferences": [
+        "Excise.Core/Excise.Core.csproj",
+        "Excise.Ocr/Excise.Ocr.csproj",
+        "Excise.Rendering/Excise.Rendering.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Cli.Tests/Excise.Cli.Tests.csproj",
+      "classification": "test",
+      "sourceRoot": "Excise.Cli.Tests",
+      "projectReferences": [
+        "Excise.Cli/Excise.Cli.csproj",
+        "Excise.Core/Excise.Core.csproj",
+        "tools/Excise.ImageInspection/Excise.ImageInspection.csproj",
+        "tools/Excise.RenderTools/Excise.RenderTools.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Core/Excise.Core.csproj",
+      "classification": "shipping",
+      "sourceRoot": "Excise.Core",
+      "projectReferences": []
+    },
+    {
+      "path": "Excise.Core.Tests/Excise.Core.Tests.csproj",
+      "classification": "test",
+      "sourceRoot": "Excise.Core.Tests",
+      "projectReferences": [
+        "Excise.Core/Excise.Core.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Demo/Excise.Demo.csproj",
+      "classification": "sample",
+      "sourceRoot": "Excise.Demo",
+      "projectReferences": [
+        "Excise.Core/Excise.Core.csproj",
+        "Excise.Rendering/Excise.Rendering.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Ocr/Excise.Ocr.csproj",
+      "classification": "shipping",
+      "sourceRoot": "Excise.Ocr",
+      "projectReferences": [
+        "Excise.Core/Excise.Core.csproj",
+        "Excise.Ocr.Native/Excise.Ocr.Native.csproj",
+        "Excise.Rendering/Excise.Rendering.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Ocr.Native/Excise.Ocr.Native.csproj",
+      "classification": "shipping",
+      "sourceRoot": "Excise.Ocr.Native",
+      "projectReferences": []
+    },
+    {
+      "path": "Excise.Ocr.Tests/Excise.Ocr.Tests.csproj",
+      "classification": "test",
+      "sourceRoot": "Excise.Ocr.Tests",
+      "projectReferences": [
+        "Excise.Core/Excise.Core.csproj",
+        "Excise.Ocr.Native/Excise.Ocr.Native.csproj",
+        "Excise.Ocr/Excise.Ocr.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Rendering/Excise.Rendering.csproj",
+      "classification": "shipping",
+      "sourceRoot": "Excise.Rendering",
+      "projectReferences": [
+        "Excise.Core/Excise.Core.csproj"
+      ]
+    },
+    {
+      "path": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj",
+      "classification": "test",
+      "sourceRoot": "Excise.Rendering.Tests",
+      "projectReferences": [
+        "Excise.Cli/Excise.Cli.csproj",
+        "Excise.Core/Excise.Core.csproj",
+        "Excise.Ocr/Excise.Ocr.csproj",
+        "Excise.Rendering/Excise.Rendering.csproj"
+      ]
+    },
+    {
+      "path": "tools/Excise.ImageInspection/Excise.ImageInspection.csproj",
+      "classification": "tool",
+      "sourceRoot": "tools/Excise.ImageInspection",
+      "projectReferences": []
+    },
+    {
+      "path": "tools/Excise.ImageTools/Excise.ImageTools.csproj",
+      "classification": "tool",
+      "sourceRoot": "tools/Excise.ImageTools",
+      "projectReferences": [
+        "tools/Excise.ImageInspection/Excise.ImageInspection.csproj"
+      ]
+    },
+    {
+      "path": "tools/Excise.Reachability/Excise.Reachability.csproj",
+      "classification": "tool",
+      "sourceRoot": "tools/Excise.Reachability",
+      "projectReferences": []
+    },
+    {
+      "path": "tools/Excise.RenderTools/Excise.RenderTools.csproj",
+      "classification": "tool",
+      "sourceRoot": "tools/Excise.RenderTools",
+      "projectReferences": [
+        "Excise.Core/Excise.Core.csproj",
+        "Excise.Rendering/Excise.Rendering.csproj",
+        "tools/Excise.ImageInspection/Excise.ImageInspection.csproj"
+      ]
+    }
+  ]
+}

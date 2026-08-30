@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/marctjones/excise/blob/develop/architecture/schemas/assessment.schema.json",
+  "title": "Excise architecture implementation assessment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reviewedAt", "statusDefinitions", "components", "relationships", "concerns"],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "schemaVersion": { "const": 1 },
+    "reviewedAt": { "type": "string", "format": "date" },
+    "statusDefinitions": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+    "components": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/componentAssessment" } },
+    "relationships": { "type": "array", "items": { "$ref": "#/$defs/relationshipAssessment" } },
+    "concerns": { "type": "array", "items": { "$ref": "#/$defs/concern" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "status": { "enum": ["implemented", "partial", "planned", "accepted_exception", "deprecated", "unknown"] },
+    "stringArray": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "idArray": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+    "issueArray": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "uniqueItems": true },
+    "componentAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "implementationStatus", "evidence", "gaps", "issueIds"],
+      "properties": {
+        "component": { "$ref": "#/$defs/id" },
+        "implementationStatus": { "$ref": "#/$defs/status" },
+        "evidence": { "$ref": "#/$defs/stringArray" },
+        "gaps": { "$ref": "#/$defs/stringArray" },
+        "issueIds": { "$ref": "#/$defs/issueArray" }
+      }
+    },
+    "relationshipAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target", "type", "implementationStatus"],
+      "properties": {
+        "source": { "$ref": "#/$defs/id" },
+        "target": { "$ref": "#/$defs/id" },
+        "type": { "enum": ["uses", "owns", "orchestrates", "adapts", "verifies", "must-not-depend-on"] },
+        "implementationStatus": { "$ref": "#/$defs/status" }
+      }
+    },
+    "concern": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "priority", "currentStatus", "desiredState", "components", "symptoms", "deterministicDiscovery", "rootCauseQuestions", "issueIds"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "priority": { "enum": ["critical", "high", "medium", "low"] },
+        "currentStatus": { "$ref": "#/$defs/status" },
+        "desiredState": { "type": "string", "minLength": 1 },
+        "components": { "$ref": "#/$defs/idArray" },
+        "symptoms": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "deterministicDiscovery": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "rootCauseQuestions": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "issueIds": { "$ref": "#/$defs/issueArray" }
+      }
+    }
+  }
+}

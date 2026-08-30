@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/marctjones/excise/blob/develop/architecture/schemas/inventory.schema.json",
+  "title": "Excise generated project inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "generator", "projects"],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "schemaVersion": { "const": 1 },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "sourceRevision"],
+      "properties": {
+        "name": { "const": "scripts/check_architecture_registry.py" },
+        "version": { "type": "integer", "minimum": 1 },
+        "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "classification", "sourceRoot", "projectReferences"],
+        "properties": {
+          "path": { "type": "string", "pattern": "\\.csproj$" },
+          "classification": { "enum": ["shipping", "test", "sample", "benchmark", "tool"] },
+          "sourceRoot": { "type": "string", "minLength": 1 },
+          "projectReferences": { "type": "array", "items": { "type": "string", "pattern": "\\.csproj$" }, "uniqueItems": true }
+        }
+      }
+    }
+  }
+}

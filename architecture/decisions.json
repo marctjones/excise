@@ -1,0 +1,54 @@
+{
+  "$schema": "./schemas/decisions.schema.json",
+  "schemaVersion": 1,
+  "decisions": [
+    {
+      "id": "AD-001",
+      "status": "accepted",
+      "prose": "../docs/architecture/decisions.md#ad-001",
+      "supersedes": []
+    },
+    {
+      "id": "AD-002",
+      "status": "accepted",
+      "prose": "../docs/architecture/decisions.md#ad-002",
+      "supersedes": []
+    },
+    {
+      "id": "AD-003",
+      "status": "accepted",
+      "prose": "../docs/architecture/decisions.md#ad-003",
+      "supersedes": []
+    },
+    {
+      "id": "AD-004",
+      "status": "accepted",
+      "prose": "../docs/architecture/decisions.md#ad-004",
+      "supersedes": []
+    },
+    {
+      "id": "AD-005",
+      "status": "accepted",
+      "prose": "../docs/architecture/decisions.md#ad-005",
+      "supersedes": []
+    },
+    {
+      "id": "AD-006",
+      "status": "accepted",
+      "prose": "../docs/architecture/decisions.md#ad-006",
+      "supersedes": []
+    },
+    {
+      "id": "AD-007",
+      "status": "accepted",
+      "prose": "../docs/architecture/decisions.md#ad-007",
+      "supersedes": []
+    },
+    {
+      "id": "AD-008",
+      "status": "accepted",
+      "prose": "../docs/architecture/decisions.md#ad-008",
+      "supersedes": []
+    }
+  ]
+}

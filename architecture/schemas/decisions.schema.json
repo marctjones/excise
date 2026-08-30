@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/marctjones/excise/blob/develop/architecture/schemas/decisions.schema.json",
+  "title": "Excise architecture decision registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "decisions"],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "schemaVersion": { "const": 1 },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "prose", "supersedes"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^AD-[0-9]{3}$" },
+          "status": { "enum": ["proposed", "accepted", "superseded", "rejected"] },
+          "prose": { "type": "string", "pattern": "^../docs/architecture/decisions\\.md#" },
+          "supersedes": { "type": "array", "items": { "type": "string", "pattern": "^AD-[0-9]{3}$" }, "uniqueItems": true }
+        }
+      }
+    }
+  }
+}

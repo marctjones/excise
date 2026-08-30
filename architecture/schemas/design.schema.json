@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/marctjones/excise/blob/develop/architecture/schemas/design.schema.json",
+  "title": "Excise intended architecture design",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "designVersion", "components", "relationships", "workflows", "rules", "diagramViews"],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "schemaVersion": { "const": 1 },
+    "designVersion": { "type": "integer", "minimum": 1 },
+    "components": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/component" } },
+    "relationships": { "type": "array", "items": { "$ref": "#/$defs/relationship" } },
+    "workflows": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/workflow" } },
+    "rules": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/rule" } },
+    "diagramViews": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/diagramView" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "stringArray": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "idArray": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "layer", "pathRole", "sourceRoots", "targetState", "workflows", "dependsOn"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["project", "subsystem", "application", "tooling", "verification"] },
+        "layer": { "enum": ["foundation", "engine", "integration", "presentation", "delivery", "verification"] },
+        "parent": { "$ref": "#/$defs/id" },
+        "pathRole": { "enum": ["ownership", "container", "evidence"] },
+        "sourceRoots": { "$ref": "#/$defs/stringArray" },
+        "projectFile": { "type": "string", "pattern": "\\.csproj$" },
+        "allowedProjectDependencies": { "$ref": "#/$defs/idArray" },
+        "targetState": { "type": "string", "minLength": 1 },
+        "workflows": { "$ref": "#/$defs/idArray" },
+        "dependsOn": { "$ref": "#/$defs/idArray" }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["projectFile"] },
+          "then": { "required": ["allowedProjectDependencies"] }
+        }
+      ]
+    },
+    "relationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target", "type", "rationale"],
+      "properties": {
+        "source": { "$ref": "#/$defs/id" },
+        "target": { "$ref": "#/$defs/id" },
+        "type": { "enum": ["uses", "owns", "orchestrates", "adapts", "verifies", "must-not-depend-on"] },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "criticality", "entryPoints", "steps", "verification"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "criticality": { "enum": ["security-critical", "primary", "supporting"] },
+        "entryPoints": { "$ref": "#/$defs/stringArray" },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["order", "component", "responsibility"],
+            "properties": {
+              "order": { "type": "integer", "minimum": 1 },
+              "component": { "$ref": "#/$defs/id" },
+              "responsibility": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "verification": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "statement", "components", "enforcement"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "statement": { "type": "string", "minLength": 1 },
+        "components": { "$ref": "#/$defs/idArray" },
+        "enforcement": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "diagramView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "mode", "components", "output"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 },
+        "mode": { "enum": ["current", "target"] },
+        "components": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+        "output": { "type": "string", "pattern": "^architecture/generated/.+\\.dot$" }
+      }
+    }
+  }
+}

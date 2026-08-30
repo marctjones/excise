@@ -90,14 +90,14 @@ def validate(root: Path) -> list[str]:
         if (root / relative).exists():
             errors.append(f"superseded architecture/status document still exists: {relative}")
 
-    registry_path = root / "architecture/registry.json"
+    registry_path = root / "architecture/design.json"
     if not registry_path.is_file():
-        errors.append(f"missing architecture registry: {registry_path}")
+        errors.append(f"missing architecture design registry: {registry_path}")
     else:
         try:
             registry = json.loads(registry_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
-            errors.append(f"cannot read architecture registry {registry_path}: {exc}")
+            errors.append(f"cannot read architecture design registry {registry_path}: {exc}")
         else:
             component_ids = {
                 component.get("id")
@@ -134,7 +134,7 @@ def _write_fixture(root: Path) -> None:
         "# Decisions\n",
         encoding="utf-8",
     )
-    (root / "architecture/registry.json").write_text(
+    (root / "architecture/design.json").write_text(
         json.dumps({"components": [{"id": "core"}]}),
         encoding="utf-8",
     )
@@ -165,7 +165,7 @@ def self_test() -> None:
         )
         assert any("dangling local link" in error for error in validate(root))
 
-        registry = root / "architecture/registry.json"
+        registry = root / "architecture/design.json"
         registry.write_text(
             json.dumps({"components": [{"id": "core"}, {"id": "renderer"}]}),
             encoding="utf-8",
