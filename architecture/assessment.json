@@ -335,7 +335,7 @@
         "avalonia"
       ],
       "symptoms": [
-        "MainWindowViewModel.cs is 3,704 lines before its additional partials; the first search-index lifecycle extraction is complete but document, navigation, and workflow ownership remain concentrated.",
+        "MainWindowViewModel.cs is 3,337 lines before its additional partials; search-index lifecycle and staged document-open orchestration extractions are complete, but navigation and other workflow ownership remain concentrated.",
         "The constructor accepts many services and also maintains a separate hand-built parameterless composition path.",
         "Document, navigation, search, thumbnails, editing, redaction, security, and background work share mutable state."
       ],

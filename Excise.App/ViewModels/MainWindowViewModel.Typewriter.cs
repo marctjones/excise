@@ -288,7 +288,6 @@ public partial class MainWindowViewModel
         this.RaisePropertyChanged(nameof(TotalPages));
         this.RaisePropertyChanged(nameof(CurrentPage));
         this.RaisePropertyChanged(nameof(CurrentPageFormFields));
-        this.RaisePropertyChanged(nameof(StatusText));
         await LoadPageThumbnailsAsync();
     }
 }

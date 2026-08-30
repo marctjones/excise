@@ -674,16 +674,6 @@ public class MainWindowViewModelTests
     #region Status Text Tests
 
     [Fact]
-    public void StatusText_ReturnsStatusMessage()
-    {
-        // StatusText is derived from document service state
-        // Just verify it returns a valid string
-        var statusText = _viewModel.StatusText;
-        statusText.Should().NotBeNull();
-        statusText.GetType().Name.Should().Be("String");
-    }
-
-    [Fact]
     public void OperationStatus_InitiallyEmpty()
     {
         _viewModel.OperationStatus.Should().BeEmpty();

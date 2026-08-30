@@ -156,7 +156,6 @@ public partial class MainWindowViewModel
         this.RaisePropertyChanged(nameof(DocumentName));
         this.RaisePropertyChanged(nameof(StatusBarText));
         this.RaisePropertyChanged(nameof(TotalPages));
-        this.RaisePropertyChanged(nameof(StatusText));
         this.RaisePropertyChanged(nameof(IsDocumentLoaded));
 
         AddToRecentFiles(filePath);

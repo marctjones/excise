@@ -393,10 +393,7 @@ public class GoldenPathTests
     /// invalid PDF structure. Application should:
     /// - Handle gracefully (may log errors but not crash)
     /// - Keep the application in a usable state
-    /// - Either reject the file or leave document count at 0
-    ///
-    /// The actual error handling happens in PdfDocumentService.LoadDocument(),
-    /// which may silently fail or throw depending on the error.
+    /// - Reject the file and leave no stale document session behind
     /// </summary>
     [FixedAvaloniaFact]
     public async Task GoldenPath_MalformedPdfGracefulFailure()
@@ -411,31 +408,41 @@ public class GoldenPathTests
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
-        // Step 1: Attempt to open invalid PDF
-        // The LoadDocumentAsync may throw or fail silently; either way, app should stay usable
-        try
-        {
-            await vm.LoadDocumentAsync(invalidPdfPath);
-            await Task.Delay(200);
-        }
-        catch (Exception ex)
-        {
-            _out.WriteLine($"Exception during invalid PDF load (expected): {ex.GetType().Name}");
-        }
+        await vm.LoadDocumentAsync(invalidPdfPath);
+        await Task.Delay(200);
 
-        // Assert step 1: Application remains in usable state
-        // Either the file didn't load (TotalPages = 0) or the exception was handled gracefully
-        if (vm.IsDocumentLoaded)
-        {
-            // If somehow it loaded, that's unusual but not a crash - still ok
-            _out.WriteLine("Unusual: Invalid PDF loaded; implementation-specific behavior");
-        }
-        else
-        {
-            // Expected: Document not loaded, app remains usable
-            vm.IsDocumentLoaded.Should().BeFalse("invalid PDF should not load");
-            vm.TotalPages.Should().Be(0, "page count should be 0 if load failed");
-        }
+        vm.IsDocumentLoaded.Should().BeFalse("invalid PDF should not load");
+        vm.TotalPages.Should().Be(0, "page count should be 0 if load failed");
+        vm.PdfCoreDocument.Should().BeNull("a failed open must not retain a parser instance");
+        vm.PageThumbnails.Should().BeEmpty("a failed open must not retain thumbnail state");
+        vm.OutlineNodes.Should().BeEmpty("a failed open must not retain outline state");
+        vm.OperationStatus.Should().BeEmpty("the failed operation has completed");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task GoldenPath_FailedReplacementClearsPreviousDocumentSession()
+    {
+        var validPdfPath = CreateTestPdf("valid-before-failure.pdf");
+        var invalidPdfPath = CreateTestPdf("invalid-replacement.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(validPdfPath, pageCount: 2);
+        File.WriteAllBytes(invalidPdfPath, [0x25, 0x50, 0x44, 0x46, 0x2D]);
+
+        var vm = new MainWindowViewModel();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+
+        await vm.LoadDocumentAsync(validPdfPath);
+        vm.IsDocumentLoaded.Should().BeTrue();
+        vm.TotalPages.Should().Be(2);
+
+        await vm.LoadDocumentAsync(invalidPdfPath);
+
+        vm.IsDocumentLoaded.Should().BeFalse("the disposed previous service document must not remain visible");
+        vm.TotalPages.Should().Be(0);
+        vm.PdfCoreDocument.Should().BeNull();
+        vm.PageThumbnails.Should().BeEmpty();
+        vm.OutlineNodes.Should().BeEmpty();
+        vm.LastDocumentOpenTiming.Should().BeNull();
     }
 
     #endregion
