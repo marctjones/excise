@@ -27,7 +27,9 @@ See [Knowledge Management Strategy](#knowledge-management-strategy) section belo
 
 ## Project Overview
 
-This is a cross-platform PDF editor built with **C# + .NET 10 + Avalonia UI** (MVVM architecture). The application runs on Windows, Linux, and macOS, providing PDF viewing, page manipulation, and content-level redaction capabilities. As of v2.0 the PDF stack is pure-.NET and excise-owned (Excise.Core parser/writer, Excise.Rendering SkiaSharp renderer, Excise.Ocr); the legacy PdfPig/PDFsharp/PDFtoImage dependencies have been removed.
+This is a cross-platform PDF editor built with **C# + .NET 10 + Avalonia UI** (MVVM architecture). The application runs on Windows, Linux, and macOS, providing PDF viewing, page manipulation, and content-level redaction capabilities. The current PDF stack is implemented in this repository (Excise.Core parser/writer, Excise.Rendering SkiaSharp renderer, Excise.Ocr), and its dependency graph no longer includes PdfPig, PDFsharp, or PDFtoImage. Source-provenance and independent-implementation assurance are tracked by #1240.
+
+The canonical architecture entry point is [`docs/architecture/README.md`](docs/architecture/README.md). Architecture prose describes intent; machine-readable registries own current/target status and evidence.
 
 **Key Features:**
 - Open/view PDFs with zoom and pan controls
@@ -1030,7 +1032,8 @@ Documentation:
 ├── README.md                       # User-facing documentation
 ├── CLAUDE.md                       # This file - AI assistant guidelines
 ├── REDACTION_AI_GUIDELINES.md      # AI safety guidelines for redaction
-└── LICENSES.md                     # Dependency licenses
+├── LICENSES.md                     # Dependency licenses
+└── docs/architecture/              # Canonical design and decisions
 ```
 
 **The rendering tools CI job provisions all six renderers (#935, re-checked
