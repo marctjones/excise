@@ -16,9 +16,18 @@ second implementation-status list.
    owns observed projects/references; [`assessment.json`](../../architecture/assessment.json)
    owns status, evidence, gaps, and issue links; and
    [`decisions.json`](../../architecture/decisions.json) indexes durable choices.
+   [`repository-scope.json`](../../architecture/repository-scope.json) classifies
+   shipping, test, sample, benchmark, tool, generated, vendored, corpus, and
+   nested-worktree roots used by deterministic inventory.
 4. [`current-projects.dot`](../../architecture/generated/current-projects.dot)
    and [`target-components.dot`](../../architecture/generated/target-components.dot)
-   — generated views; never edit them directly.
+   — generated design views; never edit them directly. The Roslyn-derived
+   [`code-topology.json`](../../architecture/generated/code-topology.json)
+   supplies type/method coupling and complexity signals for refactoring;
+   [`change-coupling.json`](../../architecture/generated/change-coupling.json)
+   records fixed-window production files that repeatedly change together.
+   The large topology file is compact generated JSON; query it with `jq`
+   instead of reviewing or editing it as prose.
 
 ## Authority matrix
 

@@ -2,6 +2,7 @@
   "$schema": "./schemas/design.schema.json",
   "schemaVersion": 1,
   "designVersion": 1,
+  "repositoryScope": "architecture/repository-scope.json",
   "components": [
     {
       "id": "core",

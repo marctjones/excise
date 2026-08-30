@@ -4,7 +4,7 @@
   "generator": {
     "name": "scripts/check_architecture_registry.py",
     "version": 1,
-    "sourceRevision": "f97f679f8848a40f8cb1d77f85366da880308be2"
+    "sourceRevision": "f32f7060ccd179dd49185219c2d2a710bd68fbe7"
   },
   "projects": [
     {
