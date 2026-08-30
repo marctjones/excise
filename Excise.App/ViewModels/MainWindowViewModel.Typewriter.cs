@@ -24,6 +24,9 @@ public partial class MainWindowViewModel
         get => _isTypewriterMode;
         set
         {
+            if (_isTypewriterMode == value)
+                return;
+
             this.RaiseAndSetIfChanged(ref _isTypewriterMode, value);
             if (value)
             {
