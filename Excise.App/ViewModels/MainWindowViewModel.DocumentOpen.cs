@@ -116,10 +116,7 @@ public partial class MainWindowViewModel
         ClearEditHistory();
         ClipboardHistory.Clear();
 
-        ResetThumbnailLoadTracking();
-        _thumbnailCache?.Dispose();
-        _thumbnailCache = null;
-        PageThumbnails.Clear();
+        ResetThumbnailSession();
         OutlineNodes.Clear();
         this.RaisePropertyChanged(nameof(HasOutline));
 
@@ -204,16 +201,11 @@ public partial class MainWindowViewModel
         timings.SearchIndexStartedElapsedMs = stopwatch.ElapsedMilliseconds;
     }
 
-    private async Task StartThumbnailSessionAsync(string filePath)
+    private Task StartThumbnailSessionAsync(string filePath)
     {
-        _thumbnailCache = new Services.ThumbnailCacheService(
-            filePath,
-            PdfCoreDocument!,
-            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
-
         _logger.LogInformation(">>> STEP 8: Creating thumbnail placeholders (lazy load)");
-        await LoadPageThumbnailsAsync();
-        QueueThumbnailPrewarm(_thumbnailCache);
+        StartThumbnailSession(filePath, PdfCoreDocument!);
+        return Task.CompletedTask;
     }
 
     private void LoadDocumentOutline()
@@ -306,10 +298,7 @@ public partial class MainWindowViewModel
         _documentService.CloseDocument();
         PdfCoreDocument = null;
         CurrentPageImage = null;
-        ResetThumbnailLoadTracking();
-        _thumbnailCache?.Dispose();
-        _thumbnailCache = null;
-        PageThumbnails.Clear();
+        ResetThumbnailSession();
         OutlineNodes.Clear();
         OperationStatus = string.Empty;
 

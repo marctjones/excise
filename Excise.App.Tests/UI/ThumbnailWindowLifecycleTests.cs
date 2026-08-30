@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Excise.App.Tests.UI;
@@ -43,6 +44,20 @@ public class ThumbnailWindowLifecycleTests
         => MainWindowViewModel.ThumbnailKeepMargin.Should().BeGreaterThan(
             MainWindowViewModel.ThumbnailPrefetchMargin * 2,
             "eviction must lag prefetch by enough that boundary jitter cannot thrash load/evict cycles");
+
+    [Fact]
+    public void Reset_AdvancesSessionGeneration()
+    {
+        using var session = new ThumbnailSidebarSession(NullLogger.Instance);
+        var generation = session.GenerationForTests;
+
+        session.Reset();
+
+        session.GenerationForTests.Should().BeGreaterThan(
+            generation,
+            "loads from an earlier document must fail the publication guard");
+        session.Items.Should().BeEmpty();
+    }
 
     // ── #687 + #688 + #689: end-to-end against the real VM ──────────────────
 

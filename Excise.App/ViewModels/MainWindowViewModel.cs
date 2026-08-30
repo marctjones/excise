@@ -12,6 +12,7 @@ using Excise.App.Models;
 using Excise.Core.Document;
 using Excise.App.Services;
 using ReactiveUI;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,7 +20,6 @@ using System.IO;
 using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
-using SkiaSharp;
 using PdfCoreDocument = Excise.Core.Document.PdfDocument;
 
 namespace Excise.App.ViewModels;
@@ -89,11 +89,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private ObservableCollection<PdfPageRect> _currentPageSearchHighlights = new();
     private int _renderCacheMax = 20;
     private string _operationStatus = string.Empty;
-    private Services.ThumbnailCacheService? _thumbnailCache;
+    private readonly ThumbnailSidebarSession _thumbnailSession;
     internal Services.DocumentTextIndex? TextIndex => _textIndexSession.Current;
-    private readonly Dictionary<int, Task> _thumbnailLoadTasks = new();
-    private readonly object _thumbnailLoadLock = new();
-    private long _thumbnailLoadGeneration;
 
     /// <summary>
     /// Tracks whether the user is in an "auto-fit" zoom state. When set to
@@ -147,6 +144,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _annotationWorkflow = new AnnotationWorkflowService(
             _documentService,
             Microsoft.Extensions.Logging.Abstractions.NullLogger<AnnotationWorkflowService>.Instance);
+        _thumbnailSession = new ThumbnailSidebarSession(_logger);
 
         InitializeCommands();
         _logger.LogInformation("MainWindowViewModel initialized (test mode)");
@@ -202,6 +200,7 @@ public partial class MainWindowViewModel : ViewModelBase
             documentService,
             loggerFactory.CreateLogger<AnnotationWorkflowService>()
                 ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<AnnotationWorkflowService>.Instance);
+        _thumbnailSession = new ThumbnailSidebarSession(_logger);
 
         InitializeCommands();
         _logger.LogInformation("MainWindowViewModel initialized");
@@ -222,7 +221,7 @@ public partial class MainWindowViewModel : ViewModelBase
         new(signatureService, new SignatureVerificationSummaryFormatter(), dialogService, logger);
 
     // Properties
-    public ObservableCollection<PageThumbnail> PageThumbnails { get; } = new();
+    public ObservableCollection<PageThumbnail> PageThumbnails => _thumbnailSession.Items;
 
     public int SelectedPageCount => GetSelectedPageIndices().Count;
     public bool HasSelectedPages => SelectedPageCount > 0;
@@ -1610,7 +1609,6 @@ public partial class MainWindowViewModel : ViewModelBase
         // past them ("the center of the content shifts on the visible page").
         // Re-fit against the new widest page (#847) so every page fits and centres.
         ReapplyFitModeIfNeeded();
-        await LoadPageThumbnailsAsync();
         this.RaisePropertyChanged(nameof(TotalPages));
         RefreshRedactAnnotationCount();
         this.RaisePropertyChanged(nameof(StatusBarText));
@@ -1667,16 +1665,17 @@ public partial class MainWindowViewModel : ViewModelBase
         CurrentPageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
         _renderService.ClearCache();
         var mutationVersion = System.Threading.Interlocked.Increment(ref _documentMutationVersion);
-        ResetThumbnailLoadTracking();
-
-        _thumbnailCache?.Dispose();
-        _thumbnailCache = !string.IsNullOrWhiteSpace(_currentFilePath)
-            ? new Services.ThumbnailCacheService(
+        if (!string.IsNullOrWhiteSpace(_currentFilePath))
+        {
+            StartThumbnailSession(
                 _currentFilePath,
                 PdfCoreDocument!,
-                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
-                cacheSalt: $"memory-version-{mutationVersion}")
-            : null;
+                cacheSalt: $"memory-version-{mutationVersion}");
+        }
+        else
+        {
+            ResetThumbnailSession();
+        }
 
         _textIndexSession.Start(PdfCoreDocument!);
 
@@ -2144,137 +2143,6 @@ public partial class MainWindowViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(PageSelectionSummary));
     }
 
-    /// <summary>
-    /// Lazy thumbnail strategy: create one PageThumbnail placeholder per
-    /// page (so the sidebar shows the right number of slots immediately)
-    /// and let the View trigger renders as items scroll into view via
-    /// <c>EnsureThumbnailLoadedAsync</c>. Combined with the on-disk
-    /// thumbnail cache (ThumbnailCacheService), reopening a book renders
-    /// only the pages the user looks at, and re-opens hit a sub-ms WebP
-    /// decode rather than re-rasterising.
-    /// </summary>
-    private Task LoadPageThumbnailsAsync()
-    {
-        _logger.LogInformation(">>> LoadPageThumbnailsAsync (lazy): START");
-        try
-        {
-            PageThumbnails.Clear();
-            var total = TotalPages;
-            for (int i = 0; i < total; i++)
-            {
-                var thumbnail = new PageThumbnail { PageNumber = i + 1, PageIndex = i };
-                AttachPageSelectionTracking(thumbnail);
-                PageThumbnails.Add(thumbnail);
-            }
-            UpdateThumbnailSelection();
-            RaiseSelectedPagePropertiesChanged();
-            _logger.LogInformation(
-                ">>> LoadPageThumbnailsAsync: created {Count} placeholders; loads happen on demand",
-                total);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "!!! ERROR creating thumbnail placeholders");
-        }
-        return Task.CompletedTask;
-    }
-
-    private void ResetThumbnailLoadTracking()
-    {
-        System.Threading.Interlocked.Increment(ref _thumbnailLoadGeneration);
-        lock (_thumbnailLoadLock)
-        {
-            _thumbnailLoadTasks.Clear();
-        }
-        // Stop viewport-window work targeting the outgoing document/state
-        // (prefetch chain, idle pre-warm, visible-set tracking — #687/#688/#689).
-        CancelThumbnailWindowWork();
-    }
-
-    /// <summary>
-    /// Render or load the thumbnail for one page. Called by the View when
-    /// the corresponding item scrolls into the visible viewport. Idempotent:
-    /// repeated calls for an already-loaded page no-op; concurrent calls for
-    /// the same page coalesce on a single in-flight Task in the cache service.
-    /// </summary>
-    public async Task EnsureThumbnailLoadedAsync(int pageIndex,
-        System.Threading.CancellationToken cancellationToken = default)
-    {
-        if (pageIndex < 0 || pageIndex >= PageThumbnails.Count) return;
-        var thumbnailCache = _thumbnailCache;
-        if (thumbnailCache == null) return; // no doc loaded yet
-        if (PageThumbnails[pageIndex].ThumbnailImage != null) return; // already loaded
-
-        var generation = System.Threading.Volatile.Read(ref _thumbnailLoadGeneration);
-        Task loadTask;
-        lock (_thumbnailLoadLock)
-        {
-            if (PageThumbnails[pageIndex].ThumbnailImage != null) return;
-            if (!_thumbnailLoadTasks.TryGetValue(pageIndex, out loadTask!))
-            {
-                loadTask = LoadThumbnailCoreAsync(pageIndex, generation, thumbnailCache, cancellationToken);
-                _thumbnailLoadTasks[pageIndex] = loadTask;
-                _ = loadTask.ContinueWith(
-                    _ =>
-                    {
-                        lock (_thumbnailLoadLock)
-                        {
-                            if (_thumbnailLoadTasks.TryGetValue(pageIndex, out var current) &&
-                                ReferenceEquals(current, loadTask))
-                            {
-                                _thumbnailLoadTasks.Remove(pageIndex);
-                            }
-                        }
-                    },
-                    CancellationToken.None,
-                    TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
-            }
-        }
-
-        try
-        {
-            await loadTask.WaitAsync(cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected when a viewport notification is canceled because the
-            // item scrolled away or the document changed.
-        }
-    }
-
-    private async Task LoadThumbnailCoreAsync(
-        int pageIndex,
-        long generation,
-        Services.ThumbnailCacheService thumbnailCache,
-        System.Threading.CancellationToken cancellationToken)
-    {
-        try
-        {
-            if (pageIndex < 0 || pageIndex >= PageThumbnails.Count) return;
-            var thumb = PageThumbnails[pageIndex];
-            if (thumb.ThumbnailImage != null) return;
-
-            using var sk = await thumbnailCache.GetThumbnailAsync(pageIndex, cancellationToken);
-            if (sk == null) return;
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                if (cancellationToken.IsCancellationRequested) return;
-                if (generation != System.Threading.Volatile.Read(ref _thumbnailLoadGeneration)) return;
-                if (pageIndex < 0 || pageIndex >= PageThumbnails.Count) return;
-                if (thumb.ThumbnailImage != null) return;
-
-                thumb.ThumbnailImage = ToAvaloniaBitmap(sk);
-            }, DispatcherPriority.Background);
-        }
-        catch (OperationCanceledException) { /* expected when scrolled away */ }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "EnsureThumbnailLoadedAsync failed for page {Page}", pageIndex);
-        }
-    }
-
     // File Menu Commands
 
     private async Task SaveAsAsync()
@@ -2367,8 +2235,7 @@ public partial class MainWindowViewModel : ViewModelBase
             // Clear visual state
             CurrentPageImage = null;
             PdfCoreDocument = null;
-            ResetThumbnailLoadTracking();
-            PageThumbnails.Clear();
+            ResetThumbnailSession();
             _renderService.ClearCache();
 
             // Clear redaction state (FIX: These were persisting!)
@@ -3301,26 +3168,6 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Converts an SKBitmap to an global::Avalonia.Media.Imaging.Bitmap.
-    /// </summary>
-    /// <param name="skBitmap">The SKBitmap to convert.</param>
-    /// <returns>An global::Avalonia.Media.Imaging.Bitmap, or null if conversion fails.</returns>
-    private global::Avalonia.Media.Imaging.Bitmap? ToAvaloniaBitmap(SKBitmap? skBitmap)
-    {
-        // Direct pixel copy via WriteableBitmap — replaces a per-render
-        // PNG encode + decode round-trip that ate ~150-300ms on every
-        // page render. See Excise.Avalonia.Imaging.SkiaInterop for the rationale.
-        try
-        {
-            return Excise.Avalonia.Imaging.SkiaInterop.ToAvaloniaBitmap(skBitmap);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error converting SKBitmap to global::Avalonia.Media.Imaging.Bitmap");
-            return null;
-        }
-    }
 }
 
 /// <summary>
