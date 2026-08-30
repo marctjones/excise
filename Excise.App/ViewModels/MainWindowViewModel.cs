@@ -68,12 +68,6 @@ public partial class MainWindowViewModel : ViewModelBase
         Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
     private Excise.Core.Text.WhitespaceMode _whitespaceMode =
         Excise.Core.Text.WhitespaceMode.Smart;
-    private double _zoomLevel = 1.0;
-    private bool _skipZoomSave; // Flag to skip zoom save during auto-reset
-    // #1014: set while the VM itself computes a zoom (fit width / fit page /
-    // the open-document reset). Those writes must NOT end fit mode — a fit
-    // routine assigning ZoomLevel would otherwise clear the latch it just set.
-    private bool _applyingAutomaticZoom;
     private bool _isRedactionMode;
     private PdfPageRect? _currentRedactionPageArea;
     // Text selection is the resting affordance of the reading view (#831):
@@ -84,22 +78,13 @@ public partial class MainWindowViewModel : ViewModelBase
     private PdfPageRect? _currentTextSelectionPageArea;
     private string _selectedText = string.Empty;
     private ObservableCollection<string> _recentFiles = new();
-    private double _viewportWidth = 800;
-    private double _viewportHeight = 600;
     private ObservableCollection<PdfPageRect> _currentPageSearchHighlights = new();
     private int _renderCacheMax = 20;
     private string _operationStatus = string.Empty;
+    private readonly DocumentViewportSession _viewportSession = new();
     private readonly ThumbnailSidebarSession _thumbnailSession;
     internal Services.DocumentTextIndex? TextIndex => _textIndexSession.Current;
 
-    /// <summary>
-    /// Tracks whether the user is in an "auto-fit" zoom state. When set to
-    /// <see cref="ZoomFitMode.FitWidth"/> or <see cref="ZoomFitMode.FitPage"/>
-    /// the renderer re-fits on viewport size changes; once the user manually
-    /// zooms (Ctrl++/-/0) we drop into <see cref="ZoomFitMode.Manual"/> and
-    /// stop auto-recomputing.
-    /// </summary>
-    private ZoomFitMode _zoomFitMode = ZoomFitMode.FitWidth;
     private bool _isThumbnailsSidebarVisible = true;
     private bool _areAnnotationsVisible = true;
     private bool _areCommentAnnotationsVisible = true;
@@ -531,38 +516,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public double ZoomLevel
     {
-        get => _zoomLevel;
-        set
-        {
-            var oldValue = _zoomLevel;
-            this.RaiseAndSetIfChanged(ref _zoomLevel, value);
+        get => _viewportSession.ZoomLevel;
+        set => ApplyZoomTransition(_viewportSession.SetManualZoom(value));
+    }
 
-            // #1014: an explicit assignment ENDS fit mode. Without this the
-            // setter left _zoomFitMode at its FitWidth default, so the next
-            // viewport change called ReapplyFitModeIfNeeded() and silently
-            // overwrote the value that was just assigned — a public settable
-            // property whose writes were transient.
-            //
-            // The convention used to be opt-IN: every caller that meant "this
-            // is an explicit zoom" had to remember to set the mode itself
-            // (ZoomIn/Out/Reset/SetZoom and the document-state restore all do,
-            // one line apart from their assignment). A convention enforced by
-            // memory is one the next caller forgets, which is what happened.
-            //
-            // It is opt-OUT now, and that direction is the safe one: a writer
-            // that forgets the guard makes a zoom STICK — visible and harmless
-            // — where forgetting the old convention made it silently revert.
-            if (!_applyingAutomaticZoom)
-            {
-                _zoomFitMode = ZoomFitMode.Manual;
-            }
+    private void ApplyZoomTransition(ZoomTransition transition)
+    {
+        if (!transition.ZoomChanged)
+            return;
 
-            // Issue #32: Save zoom preference on user change (skip during auto-reset)
-            if (!_skipZoomSave && Math.Abs(oldValue - value) > 0.001)
-            {
-                SaveZoomPreference();
-            }
-        }
+        this.RaisePropertyChanged(nameof(ZoomLevel));
+        if (transition.ShouldPersist)
+            SaveZoomPreference();
     }
 
     /// <summary>Visibility of the left thumbnail strip. Toggled from View menu / toolbar.</summary>
@@ -999,22 +964,26 @@ public partial class MainWindowViewModel : ViewModelBase
     // keep the page snapped to the viewport.
     public double ViewportWidth
     {
-        get => _viewportWidth;
+        get => _viewportSession.ViewportWidth;
         set
         {
-            if (Math.Abs(_viewportWidth - value) < 0.5) return;
-            this.RaiseAndSetIfChanged(ref _viewportWidth, value);
+            var transition = _viewportSession.UpdateViewport(value, ViewportHeight);
+            if (!transition.WidthChanged)
+                return;
+            this.RaisePropertyChanged(nameof(ViewportWidth));
             ReapplyFitModeIfNeeded();
         }
     }
 
     public double ViewportHeight
     {
-        get => _viewportHeight;
+        get => _viewportSession.ViewportHeight;
         set
         {
-            if (Math.Abs(_viewportHeight - value) < 0.5) return;
-            this.RaiseAndSetIfChanged(ref _viewportHeight, value);
+            var transition = _viewportSession.UpdateViewport(ViewportWidth, value);
+            if (!transition.HeightChanged)
+                return;
+            this.RaisePropertyChanged(nameof(ViewportHeight));
             ReapplyFitModeIfNeeded();
         }
     }
@@ -1022,13 +991,13 @@ public partial class MainWindowViewModel : ViewModelBase
     private void ReapplyFitModeIfNeeded()
     {
         if (PdfCoreDocument == null) return;
-        switch (_zoomFitMode)
+        switch (_viewportSession.FitMode)
         {
             case ZoomFitMode.FitWidth:
-                ZoomFitWidthInternal(latch: true);
+                ZoomFitWidthInternal();
                 break;
             case ZoomFitMode.FitPage:
-                ZoomFitPageInternal(latch: true);
+                ZoomFitPageInternal();
                 break;
         }
     }
@@ -1810,81 +1779,69 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void ZoomIn()
     {
-        // User-initiated zoom drops out of any auto-fit mode so a window
-        // resize doesn't immediately undo what they just clicked.
-        _zoomFitMode = ZoomFitMode.Manual;
-        ZoomLevel = Math.Min(ZoomLevel * 1.25, 5.0);
+        ZoomLevel = Math.Min(ZoomLevel * 1.25, DocumentViewportSession.MaximumZoom);
     }
 
     private void ZoomOut()
     {
-        _zoomFitMode = ZoomFitMode.Manual;
-        ZoomLevel = Math.Max(ZoomLevel / 1.25, 0.25);
+        ZoomLevel = Math.Max(ZoomLevel / 1.25, DocumentViewportSession.MinimumZoom);
     }
 
     private void ZoomActualSize()
     {
         _logger.LogInformation("Setting zoom to actual size (100%)");
-        _zoomFitMode = ZoomFitMode.Manual;
         ZoomLevel = 1.0;
     }
 
     /// <summary>
-    /// Set an explicit zoom level through the same path every user-initiated
-    /// zoom takes: latch <see cref="ZoomFitMode.Manual"/> so a latched
-    /// auto-fit (the default is FitWidth) cannot asynchronously re-apply
-    /// over it on the next viewport change. Tests that assign
-    /// <see cref="ZoomLevel"/> directly bypass the latch and race the refit.
+    /// Clamp a viewer-originated zoom to the supported range. Both this method
+    /// and direct <see cref="ZoomLevel"/> assignments explicitly end fit mode.
     /// </summary>
     internal void SetManualZoom(double zoom)
     {
-        _zoomFitMode = ZoomFitMode.Manual;
-        ZoomLevel = Math.Clamp(zoom, 0.25, 5.0);
+        ZoomLevel = Math.Clamp(
+            zoom,
+            DocumentViewportSession.MinimumZoom,
+            DocumentViewportSession.MaximumZoom);
     }
 
-    private void ZoomFitWidth() => ZoomFitWidthInternal(latch: true);
-    private void ZoomFitPage() => ZoomFitPageInternal(latch: true);
+    private void ZoomFitWidth() => ZoomFitWidthInternal();
+    private void ZoomFitPage() => ZoomFitPageInternal();
 
     /// <summary>
-    /// Resize zoom to fit the page width. When <paramref name="latch"/> is
-    /// true the mode is recorded so subsequent viewport-size changes
-    /// re-apply this fit until the user manually zooms.
+    /// Resize zoom to fit the page width and latch that fit mode so subsequent
+    /// viewport-size changes re-apply it until the user manually zooms.
     /// </summary>
-    private void ZoomFitWidthInternal(bool latch)
+    private void ZoomFitWidthInternal()
     {
         _logger.LogInformation("Setting zoom to fit width");
-        if (latch) _zoomFitMode = ZoomFitMode.FitWidth;
-        _applyingAutomaticZoom = true;
-        try
-        {
+        double zoom;
         if (TryGetMaxPageDimensionsInViewerDips(out var pageW, out _) &&
             ViewportWidth > 0)
         {
-            // Tiny gutter so the page edge doesn't kiss the scrollbar /
-            // central-pane border. Now that the viewport measurement is
-            // the *inside-the-scrollbars* width and zoom uses LayoutTransform,
-            // the math doesn't need a 40-DIP fudge any more.
+            // Tiny gutter so the page edge does not touch the scrollbar or
+            // central-pane border.
             const double margin = 8;
             var target = Math.Max(1.0, ViewportWidth - margin);
-            ZoomLevel = Math.Clamp(target / pageW, 0.25, 5.0);
+            zoom = Math.Clamp(
+                target / pageW,
+                DocumentViewportSession.MinimumZoom,
+                DocumentViewportSession.MaximumZoom);
             _logger.LogDebug("Fit width: viewport={Viewport}, page={Page}, zoom={Zoom:P0}",
-                ViewportWidth, pageW, ZoomLevel);
+                ViewportWidth, pageW, zoom);
         }
         else
         {
-            ZoomLevel = 1.0;
+            zoom = 1.0;
         }
-        }
-        finally { _applyingAutomaticZoom = false; }
+
+        ApplyZoomTransition(_viewportSession.SetAutomaticFitZoom(ZoomFitMode.FitWidth, zoom));
     }
 
-    private void ZoomFitPageInternal(bool latch)
+    private void ZoomFitPageInternal()
     {
         _logger.LogInformation("Setting zoom to fit page");
-        if (latch) _zoomFitMode = ZoomFitMode.FitPage;
-        _applyingAutomaticZoom = true;
-        try
-        {
+        double zoom;
         if (TryGetMaxPageDimensionsInViewerDips(out var pageW, out var pageH) &&
             ViewportWidth > 0 && ViewportHeight > 0)
         {
@@ -1893,17 +1850,19 @@ public partial class MainWindowViewModel : ViewModelBase
             var targetW = Math.Max(1.0, ViewportWidth - marginH);
             var targetH = Math.Max(1.0, ViewportHeight - marginV);
             // Whichever dimension is the binding constraint wins.
-            var zoom = Math.Min(targetW / pageW, targetH / pageH);
-            ZoomLevel = Math.Clamp(zoom, 0.25, 5.0);
+            zoom = Math.Clamp(
+                Math.Min(targetW / pageW, targetH / pageH),
+                DocumentViewportSession.MinimumZoom,
+                DocumentViewportSession.MaximumZoom);
             _logger.LogDebug("Fit page: vp=({Vw}x{Vh}), pg=({Pw}x{Ph}), zoom={Zoom:P0}",
-                ViewportWidth, ViewportHeight, pageW, pageH, ZoomLevel);
+                ViewportWidth, ViewportHeight, pageW, pageH, zoom);
         }
         else
         {
-            ZoomLevel = 1.0;
+            zoom = 1.0;
         }
-        }
-        finally { _applyingAutomaticZoom = false; }
+
+        ApplyZoomTransition(_viewportSession.SetAutomaticFitZoom(ZoomFitMode.FitPage, zoom));
     }
 
     /// <summary>
@@ -2265,12 +2224,8 @@ public partial class MainWindowViewModel : ViewModelBase
             // Reset navigation state
             CurrentPageIndex = 0;
 
-            // Reset zoom to default (skip saving - user's preference should persist)
-            _skipZoomSave = true;
-            _applyingAutomaticZoom = true;   // #1014: keep fit mode so a newly
-            ZoomLevel = 1.0;                 // opened document still fits
-            _applyingAutomaticZoom = false;
-            _skipZoomSave = false;
+            // Reset display zoom without overwriting the user's preference.
+            ApplyZoomTransition(_viewportSession.ResetZoomWithoutPersisting());
 
             // Notify UI of all state changes
             this.RaisePropertyChanged(nameof(DocumentName));
@@ -3033,9 +2988,10 @@ public partial class MainWindowViewModel : ViewModelBase
                     System.Globalization.CultureInfo.InvariantCulture, out var savedZoom))
                 {
                     // Validate range (25% to 500%)
-                    if (savedZoom >= 0.25 && savedZoom <= 5.0)
+                    if (savedZoom >= DocumentViewportSession.MinimumZoom &&
+                        savedZoom <= DocumentViewportSession.MaximumZoom)
                     {
-                        _zoomLevel = savedZoom;
+                        _viewportSession.LoadZoomPreference(savedZoom);
                         _logger.LogInformation("Loaded zoom preference: {Zoom:P0}", savedZoom);
                     }
                 }
@@ -3121,12 +3077,10 @@ public partial class MainWindowViewModel : ViewModelBase
                     docState.ZoomLevel, docState.LastPageIndex);
 
                 // Restore zoom level
-                if (docState.ZoomLevel > 0 && docState.ZoomLevel <= 5.0) // Reasonable bounds
+                if (docState.ZoomLevel > 0 &&
+                    docState.ZoomLevel <= DocumentViewportSession.MaximumZoom)
                 {
-                    _skipZoomSave = true;
-                    ZoomLevel = docState.ZoomLevel;
-                    _zoomFitMode = ZoomFitMode.Manual;
-                    _skipZoomSave = false;
+                    ApplyZoomTransition(_viewportSession.RestoreManualZoom(docState.ZoomLevel));
                     _logger.LogDebug("Zoom restored: {Zoom}", docState.ZoomLevel);
                 }
 
@@ -3168,17 +3122,4 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-}
-
-/// <summary>
-/// Zoom-mode latching for the viewer. PDF readers traditionally let users
-/// pick a fit mode (Width / Page) that survives window resizes — once the
-/// user manually changes zoom (Ctrl++/-/0 or scroll-wheel zoom) we drop
-/// to <see cref="Manual"/> and stop auto-recomputing.
-/// </summary>
-public enum ZoomFitMode
-{
-    Manual,
-    FitWidth,
-    FitPage,
 }
