@@ -283,12 +283,7 @@ public partial class MainWindowViewModel
             PdfCoreDocument!,
             Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
 
-        _indexBuildCts?.Cancel();
-        _indexBuildCts = new CancellationTokenSource();
-        TextIndex = new Services.DocumentTextIndex(
-            PdfCoreDocument!,
-            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
-        StartSearchIndexBuild(TextIndex, _indexBuildCts);
+        _textIndexSession.Start(PdfCoreDocument!);
 
         this.RaisePropertyChanged(nameof(TotalPages));
         this.RaisePropertyChanged(nameof(CurrentPage));
