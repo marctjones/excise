@@ -226,7 +226,7 @@
       ],
       "gaps": [
         "The main window view model remains the dominant state/orchestration hub.",
-        "Production now uses one explicit validated composition factory, but tests and design-time XAML still depend on the separate parameterless graph and the dependency constructor retains optional fallbacks (#1270).",
+        "Production and tests now share one required MainWindowViewModel dependency contract; tests provide deterministic headless defaults through a named factory, while production remains owned by the validated application composition root.",
         "Debug-only scripting and platform activation require conservative reachability seeds."
       ],
       "issueIds": [
@@ -244,10 +244,11 @@
         "Excise.App.Tests/UI",
         "Excise.App/ViewModels/ThumbnailSidebarSession.cs",
         "Excise.App/ViewModels/DocumentViewportSession.cs",
-        "Excise.App/Composition/ApplicationComposition.cs"
+        "Excise.App/Composition/ApplicationComposition.cs",
+        "Excise.App.Tests/Utilities/MainWindowViewModelTestFactory.cs"
       ],
       "gaps": [
-        "Large constructor/state surface and the hand-built parameterless test/design-time composition still couple otherwise separate features; production construction is now explicit and validated (#1270)."
+        "Search, scripting, annotations, redaction, and file workflows still share workspace state; constructor composition, thumbnail lifetime, search-index lifetime, document-open stages, command composition, and viewport state now have explicit owners or contracts."
       ],
       "issueIds": [
         920,
@@ -348,8 +349,8 @@
         "avalonia"
       ],
       "symptoms": [
-        "MainWindowViewModel.cs is 3,144 lines before its additional partials; search-index lifecycle, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, and page/view/zoom viewport ownership extractions are complete, but other workflow ownership remains concentrated.",
-        "Production uses an explicit validated service factory, while tests and design-time XAML still construct the separate parameterless graph and the dependency constructor retains optional fallbacks.",
+        "MainWindowViewModel.cs is 3,078 lines before its additional partials; search-index lifecycle, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, page/view/zoom viewport ownership, and one required composition contract are complete, but other workflow ownership remains concentrated.",
+        "Production uses an explicit validated service factory, tests use a named factory with explicit overrides and production-matching contracts, and design-time XAML no longer creates a second service graph.",
         "Document, search, editing, redaction, security, and background work still share mutable state; thumbnail lifetime and page/view/zoom viewport state now have explicit owners, with same-page and same-mode feedback made idempotent."
       ],
       "deterministicDiscovery": [
@@ -361,7 +362,7 @@
       "rootCauseQuestions": [
         "Which state belongs to the document session, viewport, or a feature workflow?",
         "Which partials communicate through shared fields rather than explicit contracts?",
-        "Which tests require the parameterless constructor because composition is not injectable?",
+        "Which remaining workflows need a state owner rather than another partial-file split?",
         "Which extractions reduce coupling rather than merely move lines?"
       ],
       "issueIds": [
