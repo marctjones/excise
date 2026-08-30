@@ -246,13 +246,15 @@
         "Excise.App/ViewModels/DocumentViewportSession.cs",
         "Excise.App/Services/DocumentSearchSession.cs",
         "Excise.App/Services/AnnotationWorkflowService.cs",
+        "Excise.App/Services/DocumentImageExportWorkflowService.cs",
         "Excise.App.Tests/Unit/DocumentSearchSessionTests.cs",
         "Excise.App.Tests/Unit/AnnotationWorkflowServiceTests.cs",
+        "Excise.App.Tests/Unit/DocumentImageExportWorkflowServiceTests.cs",
         "Excise.App/Composition/ApplicationComposition.cs",
         "Excise.App.Tests/Utilities/MainWindowViewModelTestFactory.cs"
       ],
       "gaps": [
-        "Scripting, redaction, and file workflows still share workspace state; constructor composition, thumbnail lifetime, search-index lifetime, search execution lifetime and source selection, annotation mutation transactions, document-open stages, command composition, and viewport state now have explicit owners or contracts."
+        "Scripting, redaction, and save workflows still share workspace state; constructor composition, thumbnail lifetime, search-index lifetime, search execution lifetime and source selection, annotation mutation transactions, page-image export transactions, split-request parsing, document-close reset phases, document-open stages, command composition, and viewport state now have explicit owners or contracts."
       ],
       "issueIds": [
         920,
@@ -260,7 +262,8 @@
         1268,
         1270,
         1285,
-        1286
+        1286,
+        1287
       ]
     },
     {

@@ -218,6 +218,30 @@ public class FileOpsCommandTests
         Cleanup(tempDir);
     }
 
+    [FixedAvaloniaFact]
+    public async Task CloseDocumentCommand_CanBeRepeatedAfterResettingWorkspaceState()
+    {
+        var (sourcePath, _, tempDir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Close me");
+        var vm = MainWindowViewModelTestFactory.Create();
+        await vm.LoadDocumentAsync(sourcePath);
+        vm.SearchText = "Close";
+        vm.IsSearchVisible = true;
+
+        await vm.CloseDocumentCommand.Execute();
+
+        vm.IsDocumentLoaded.Should().BeFalse();
+        vm.PdfCoreDocument.Should().BeNull();
+        vm.SearchText.Should().BeEmpty();
+        vm.IsSearchVisible.Should().BeFalse();
+        vm.CurrentPageIndex.Should().Be(0);
+
+        var secondClose = async () => await vm.CloseDocumentCommand.Execute();
+        await secondClose.Should().NotThrowAsync();
+
+        Cleanup(tempDir);
+    }
+
     // ── PrintCommand ─────────────────────────────────────────────────────
     // #621: excise deliberately does not print. The command's real effect is
     // showing that explanation via IUserDialogService — verify it actually

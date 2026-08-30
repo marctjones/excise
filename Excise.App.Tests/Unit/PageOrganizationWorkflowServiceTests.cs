@@ -118,6 +118,47 @@ public sealed class PageOrganizationWorkflowServiceTests : IDisposable
         dialog.Messages[0].Message.Should().Contain("AcroForm");
     }
 
+    [Theory]
+    [InlineData("single", SplitMode.SinglePages, 1)]
+    [InlineData("bookmarks", SplitMode.Bookmarks, 1)]
+    [InlineData("5", SplitMode.EveryNPages, 5)]
+    public void ParseSplitSpecification_RecognizesNamedAndChunkModes(
+        string input,
+        SplitMode expectedMode,
+        int expectedPagesPerChunk)
+    {
+        var result = PageOrganizationWorkflowService.ParseSplitSpecification(input);
+
+        result.IsValid.Should().BeTrue();
+        result.Specification!.Mode.Should().Be(expectedMode);
+        result.Specification.PagesPerChunk.Should().Be(expectedPagesPerChunk);
+        result.ErrorMessage.Should().BeNull();
+    }
+
+    [Fact]
+    public void ParseSplitSpecification_NormalizesOneBasedBoundaries()
+    {
+        var result = PageOrganizationWorkflowService.ParseSplitSpecification("10, 1, 5, 5");
+
+        result.IsValid.Should().BeTrue();
+        result.Specification!.Mode.Should().Be(SplitMode.PageBoundaries);
+        result.Specification.Boundaries.Should().Equal(0, 4, 9);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("0")]
+    [InlineData("nonsense")]
+    [InlineData("x,y")]
+    public void ParseSplitSpecification_RejectsInvalidInput(string input)
+    {
+        var result = PageOrganizationWorkflowService.ParseSplitSpecification(input);
+
+        result.IsValid.Should().BeFalse();
+        result.Specification.Should().BeNull();
+        result.ErrorMessage.Should().NotBeNullOrWhiteSpace();
+    }
+
     public void Dispose()
     {
         try

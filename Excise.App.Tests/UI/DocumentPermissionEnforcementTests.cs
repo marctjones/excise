@@ -173,6 +173,23 @@ public class DocumentPermissionEnforcementTests : IDisposable
         toasts.Should().ContainSingle(t => t.Message.Contains("Blocked by document permissions"));
     }
 
+    [FixedAvaloniaFact]
+    public async Task ExportPagesToImages_CopyForbidden_BlocksDirectCaller_AndWritesNoFiles()
+    {
+        var fixturePath = RestrictedFixturePathOrNull();
+        Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
+
+        var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
+        var outputFolder = Path.Combine(_tempDir, "blocked-bulk-export");
+        Directory.CreateDirectory(outputFolder);
+
+        await vm.ExportPagesToImagesAsync(outputFolder);
+
+        Directory.GetFiles(outputFolder).Should().BeEmpty(
+            "the scripting-reachable bulk export entry point must enforce the same copy gate as the command");
+        toasts.Should().ContainSingle(t => t.Message.Contains("Blocked by document permissions"));
+    }
+
     // ---- edit / annotate -------------------------------------------------
 
     [FixedAvaloniaFact]
