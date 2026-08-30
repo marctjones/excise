@@ -1,0 +1,811 @@
+{
+  "$schema": "./schemas/design.schema.json",
+  "schemaVersion": 1,
+  "designVersion": 1,
+  "components": [
+    {
+      "id": "core",
+      "name": "Excise.Core project",
+      "kind": "project",
+      "layer": "foundation",
+      "pathRole": "container",
+      "sourceRoots": [
+        "Excise.Core"
+      ],
+      "targetState": "Remain UI- and platform-independent; expose explicit, bounded domain APIs consumed by every delivery surface.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save",
+        "make-searchable",
+        "verify-signature"
+      ],
+      "dependsOn": [],
+      "projectFile": "Excise.Core/Excise.Core.csproj",
+      "allowedProjectDependencies": []
+    },
+    {
+      "id": "core-primitives",
+      "name": "PDF primitives and object graph",
+      "kind": "subsystem",
+      "layer": "foundation",
+      "parent": "core",
+      "pathRole": "ownership",
+      "sourceRoots": [
+        "Excise.Core/Primitives"
+      ],
+      "targetState": "Keep primitives deterministic, allocation-conscious, and free of workflow or UI policy.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save",
+        "make-searchable",
+        "verify-signature"
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "core-parsing",
+      "name": "Parser, xref, filters, and hostile-input boundary",
+      "kind": "subsystem",
+      "layer": "foundation",
+      "parent": "core",
+      "pathRole": "ownership",
+      "sourceRoots": [
+        "Excise.Core/Parsing",
+        "Excise.Core/Filters"
+      ],
+      "targetState": "Every attacker-controlled size, nesting level, loop, and resource allocation is bounded and fails with a typed diagnostic.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save",
+        "make-searchable",
+        "verify-signature"
+      ],
+      "dependsOn": [
+        "core-primitives"
+      ]
+    },
+    {
+      "id": "core-document",
+      "name": "Document model and mutation boundary",
+      "kind": "subsystem",
+      "layer": "engine",
+      "parent": "core",
+      "pathRole": "ownership",
+      "sourceRoots": [
+        "Excise.Core/Document",
+        "Excise.Core/Editing",
+        "Excise.Core/Operations"
+      ],
+      "targetState": "Separate document lifetime, focused mutation services, and conservation policies so PdfDocument is not the accumulation point for unrelated workflows.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save",
+        "make-searchable",
+        "verify-signature"
+      ],
+      "dependsOn": [
+        "core-primitives",
+        "core-parsing"
+      ]
+    },
+    {
+      "id": "core-content",
+      "name": "Content-stream walker and sinks",
+      "kind": "subsystem",
+      "layer": "engine",
+      "parent": "core",
+      "pathRole": "ownership",
+      "sourceRoots": [
+        "Excise.Core/Content"
+      ],
+      "targetState": "Keep one authoritative walk; new consumers add sinks or operator consumers and never duplicate PDF text/graphics state.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save"
+      ],
+      "dependsOn": [
+        "core-primitives",
+        "core-parsing",
+        "core-fonts"
+      ]
+    },
+    {
+      "id": "core-fonts",
+      "name": "Font decoding, metrics, and subsetting",
+      "kind": "subsystem",
+      "layer": "engine",
+      "parent": "core",
+      "pathRole": "ownership",
+      "sourceRoots": [
+        "Excise.Core/Fonts",
+        "Excise.Core/Resources/CMaps"
+      ],
+      "targetState": "One font interpretation contract supplies extraction, geometry, redaction, authoring, and rendering without duplicated width/encoding tables.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save",
+        "make-searchable"
+      ],
+      "dependsOn": [
+        "core-primitives",
+        "core-parsing"
+      ]
+    },
+    {
+      "id": "core-text",
+      "name": "Text extraction, ordering, search geometry, and selection",
+      "kind": "subsystem",
+      "layer": "engine",
+      "parent": "core",
+      "pathRole": "ownership",
+      "sourceRoots": [
+        "Excise.Core/Text"
+      ],
+      "targetState": "Share glyph decoding and geometry with redaction while keeping reading-order policy explicit and independently measured.",
+      "workflows": [
+        "open-view",
+        "redact-save"
+      ],
+      "dependsOn": [
+        "core-content",
+        "core-fonts"
+      ]
+    },
+    {
+      "id": "core-redaction",
+      "name": "Glyph-, image-, and carrier-level redaction",
+      "kind": "subsystem",
+      "layer": "engine",
+      "parent": "core",
+      "pathRole": "evidence",
+      "sourceRoots": [
+        "Excise.Core/Text/Segmentation",
+        "Excise.Core/Operations/PdfDocumentSanitizer.cs"
+      ],
+      "targetState": "Every shipping entry point uses the same fail-secure pipeline, and every security claim is judged by a non-Excise oracle or an explicit reason.",
+      "workflows": [
+        "redact-save"
+      ],
+      "dependsOn": [
+        "core-content",
+        "core-document",
+        "core-text",
+        "core-writing"
+      ]
+    },
+    {
+      "id": "core-writing",
+      "name": "Fresh-write serialization and encryption preservation",
+      "kind": "subsystem",
+      "layer": "engine",
+      "parent": "core",
+      "pathRole": "ownership",
+      "sourceRoots": [
+        "Excise.Core/Writing"
+      ],
+      "targetState": "All mutations conserve unrelated document properties unless a named policy deliberately removes them; outputs remain interoperable with independent readers.",
+      "workflows": [
+        "redact-save",
+        "edit-save",
+        "make-searchable"
+      ],
+      "dependsOn": [
+        "core-primitives",
+        "core-document",
+        "core-security"
+      ]
+    },
+    {
+      "id": "core-security",
+      "name": "Encryption, permissions, signatures, and document validation",
+      "kind": "subsystem",
+      "layer": "engine",
+      "parent": "core",
+      "pathRole": "ownership",
+      "sourceRoots": [
+        "Excise.Core/Security",
+        "Excise.Core/Validation"
+      ],
+      "targetState": "Security policy is explicit at action boundaries, cryptographic interop is independently checked, and validation claims name their external oracle where one exists.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save",
+        "verify-signature"
+      ],
+      "dependsOn": [
+        "core-primitives",
+        "core-parsing",
+        "core-document"
+      ]
+    },
+    {
+      "id": "rendering",
+      "name": "Excise.Rendering project",
+      "kind": "project",
+      "layer": "engine",
+      "pathRole": "container",
+      "sourceRoots": [
+        "Excise.Rendering"
+      ],
+      "targetState": "Keep rendering isolated behind a stable API; split implementation by responsibility while preserving a single explicit render context and oracle-backed behavior.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save"
+      ],
+      "dependsOn": [
+        "core"
+      ],
+      "projectFile": "Excise.Rendering/Excise.Rendering.csproj",
+      "allowedProjectDependencies": [
+        "core"
+      ]
+    },
+    {
+      "id": "ocr-native",
+      "name": "Excise.Ocr.Native project",
+      "kind": "project",
+      "layer": "integration",
+      "pathRole": "container",
+      "sourceRoots": [
+        "Excise.Ocr.Native"
+      ],
+      "targetState": "Keep unsafe/native lifetime code isolated, source-generated where possible, and covered by platform-specific failure-path tests.",
+      "workflows": [
+        "make-searchable"
+      ],
+      "dependsOn": [],
+      "projectFile": "Excise.Ocr.Native/Excise.Ocr.Native.csproj",
+      "allowedProjectDependencies": []
+    },
+    {
+      "id": "ocr",
+      "name": "Excise.Ocr project",
+      "kind": "project",
+      "layer": "integration",
+      "pathRole": "container",
+      "sourceRoots": [
+        "Excise.Ocr"
+      ],
+      "targetState": "Remain an optional integration layer and stay off ordinary open/render paths until OCR is explicitly requested.",
+      "workflows": [
+        "make-searchable"
+      ],
+      "dependsOn": [
+        "core",
+        "ocr-native",
+        "rendering"
+      ],
+      "projectFile": "Excise.Ocr/Excise.Ocr.csproj",
+      "allowedProjectDependencies": [
+        "core",
+        "ocr-native",
+        "rendering"
+      ]
+    },
+    {
+      "id": "avalonia",
+      "name": "Excise.Avalonia project",
+      "kind": "project",
+      "layer": "presentation",
+      "pathRole": "container",
+      "sourceRoots": [
+        "Excise.Avalonia"
+      ],
+      "targetState": "Own viewer interaction/render scheduling without duplicating desktop-app workflow or PDF-domain policy.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save"
+      ],
+      "dependsOn": [
+        "core",
+        "rendering"
+      ],
+      "projectFile": "Excise.Avalonia/Excise.Avalonia.csproj",
+      "allowedProjectDependencies": [
+        "core",
+        "rendering"
+      ]
+    },
+    {
+      "id": "cli",
+      "name": "Excise.Cli project",
+      "kind": "project",
+      "layer": "delivery",
+      "pathRole": "container",
+      "sourceRoots": [
+        "Excise.Cli"
+      ],
+      "targetState": "Program is composition and dispatch only; each command delegates to a focused handler sharing the same workflow services as other delivery surfaces.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save",
+        "make-searchable",
+        "verify-signature"
+      ],
+      "dependsOn": [
+        "core",
+        "ocr",
+        "rendering"
+      ],
+      "projectFile": "Excise.Cli/Excise.Cli.csproj",
+      "allowedProjectDependencies": [
+        "core",
+        "ocr",
+        "rendering"
+      ]
+    },
+    {
+      "id": "app",
+      "name": "Excise.App project",
+      "kind": "application",
+      "layer": "delivery",
+      "pathRole": "container",
+      "sourceRoots": [
+        "Excise.App"
+      ],
+      "targetState": "Keep composition and user-facing policy here while moving each primary workflow behind a focused controller/view-model with explicit state ownership.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save",
+        "make-searchable",
+        "verify-signature"
+      ],
+      "dependsOn": [
+        "avalonia",
+        "core",
+        "ocr",
+        "rendering"
+      ],
+      "projectFile": "Excise.App/Excise.App.csproj",
+      "allowedProjectDependencies": [
+        "avalonia",
+        "core",
+        "ocr",
+        "rendering"
+      ]
+    },
+    {
+      "id": "app-main-window",
+      "name": "Main-window orchestration and feature state",
+      "kind": "subsystem",
+      "layer": "presentation",
+      "parent": "app",
+      "pathRole": "ownership",
+      "sourceRoots": [
+        "Excise.App/ViewModels/MainWindowViewModel.cs",
+        "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+        "Excise.App/ViewModels/MainWindowViewModel.Redaction.cs",
+        "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
+        "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+        "Excise.App/ViewModels/MainWindowViewModel.Security.cs"
+      ],
+      "targetState": "Become a thin workspace shell over separately testable document-session, navigation, redaction, editing, security, and background-workflow owners.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save",
+        "make-searchable",
+        "verify-signature"
+      ],
+      "dependsOn": [
+        "app",
+        "avalonia"
+      ]
+    },
+    {
+      "id": "verification",
+      "name": "Repository verification system",
+      "kind": "verification",
+      "layer": "verification",
+      "pathRole": "evidence",
+      "sourceRoots": [
+        "scripts",
+        "tests",
+        "Excise.Core.Tests",
+        "Excise.Rendering.Tests",
+        "Excise.App.Tests",
+        "Excise.Cli.Tests",
+        "Excise.Avalonia.Tests",
+        "Excise.Ocr.Tests"
+      ],
+      "targetState": "Every gate is deterministic, mutation-proven, non-vacuous, and names whether it is a correctness proof, a ratchet, or an advisory measurement.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save",
+        "make-searchable",
+        "verify-signature"
+      ],
+      "dependsOn": [
+        "app",
+        "avalonia",
+        "cli",
+        "core",
+        "ocr",
+        "rendering"
+      ]
+    },
+    {
+      "id": "architecture-tooling",
+      "name": "Architecture registry, reachability, and derived diagrams",
+      "kind": "tooling",
+      "layer": "verification",
+      "pathRole": "ownership",
+      "sourceRoots": [
+        "architecture",
+        "tools/Excise.Reachability",
+        "scripts/check-reachability.sh",
+        "scripts/check-unwired-api.sh"
+      ],
+      "targetState": "Registry data, actual project references, source/evidence paths, current/target diagrams, and issue-linked gaps are checked together in t0.",
+      "workflows": [],
+      "dependsOn": [
+        "verification"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "source": "rendering",
+      "target": "core-content",
+      "type": "uses",
+      "rationale": "Rendering consumes parsed operators but re-executes graphics/text state because rendering requires canvas, font, clipping, pattern, and Type3 hooks the glyph walker does not expose."
+    },
+    {
+      "source": "core-redaction",
+      "target": "core-content",
+      "type": "uses",
+      "rationale": "Glyph removal must use the one authoritative content walk and reconstruction path."
+    },
+    {
+      "source": "verification",
+      "target": "core-redaction",
+      "type": "verifies",
+      "rationale": "Independent saved-byte, extractor, and renderer checks must corroborate each security-relevant redaction assertion or record a specific exemption."
+    },
+    {
+      "source": "core",
+      "target": "app",
+      "type": "must-not-depend-on",
+      "rationale": "PDF-domain behavior must remain usable from CLI, desktop, tests, and other consumers without a UI dependency."
+    },
+    {
+      "source": "architecture-tooling",
+      "target": "verification",
+      "type": "verifies",
+      "rationale": "Architecture data and diagrams are part of the same fail-on-drift verification system as tests and API reachability."
+    }
+  ],
+  "workflows": [
+    {
+      "id": "open-view",
+      "name": "Open, parse, render, navigate, search, and select",
+      "criticality": "primary",
+      "entryPoints": [
+        "Excise.App file activation/open dialog",
+        "excise render/text/letters",
+        "Excise.Avalonia consumer"
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "component": "app",
+          "responsibility": "Resolve the input, own document lifetime, and surface user-visible failures."
+        },
+        {
+          "order": 2,
+          "component": "core-parsing",
+          "responsibility": "Parse untrusted bytes with bounded recovery and typed diagnostics."
+        },
+        {
+          "order": 3,
+          "component": "core-document",
+          "responsibility": "Expose pages, resources, annotations, and document state."
+        },
+        {
+          "order": 4,
+          "component": "rendering",
+          "responsibility": "Rasterize the requested page and overlays."
+        },
+        {
+          "order": 5,
+          "component": "avalonia",
+          "responsibility": "Schedule visible pages, input, selection, accessibility, and viewport state."
+        },
+        {
+          "order": 6,
+          "component": "core-text",
+          "responsibility": "Produce search, reading order, and selection geometry."
+        }
+      ],
+      "verification": [
+        "Excise.App.Tests/UI",
+        "Excise.Avalonia.Tests",
+        "Excise.Rendering.Tests/Differential",
+        "Excise.Core.Tests/Parsing"
+      ]
+    },
+    {
+      "id": "redact-save",
+      "name": "Select or name content, redact it, scrub carriers, and save a safe copy",
+      "criticality": "security-critical",
+      "entryPoints": [
+        "Excise.App redaction workflow",
+        "excise redact",
+        "batch redaction.apply",
+        "Excise.Core redaction API"
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "component": "app-main-window",
+          "responsibility": "Collect user intent and page/document coordinates without owning removal semantics."
+        },
+        {
+          "order": 2,
+          "component": "core-text",
+          "responsibility": "Locate text using the shared glyph/reading model and expose confidence limits."
+        },
+        {
+          "order": 3,
+          "component": "core-redaction",
+          "responsibility": "Remove glyphs/images and scrub positionless carriers under explicit policy."
+        },
+        {
+          "order": 4,
+          "component": "core-writing",
+          "responsibility": "Write a fresh output while preserving encryption policy and eliminating prior revisions."
+        },
+        {
+          "order": 5,
+          "component": "verification",
+          "responsibility": "Corroborate saved bytes, independent extraction, and rendered ink for the relevant property."
+        }
+      ],
+      "verification": [
+        "scripts/verify-true-redaction.sh",
+        "scripts/check-redaction-oracles.sh",
+        "Excise.Core.Tests/Text/Segmentation",
+        "Excise.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs"
+      ]
+    },
+    {
+      "id": "edit-save",
+      "name": "Edit pages, annotations, forms, or authored content and save",
+      "criticality": "primary",
+      "entryPoints": [
+        "Excise.App editing workflows",
+        "excise fill-form/add-field/merge/split",
+        "Excise.Core authoring API"
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "component": "app-main-window",
+          "responsibility": "Own transient UI state and confirm destructive or permission-sensitive actions."
+        },
+        {
+          "order": 2,
+          "component": "core-document",
+          "responsibility": "Apply typed mutations with conservation boundaries."
+        },
+        {
+          "order": 3,
+          "component": "core-writing",
+          "responsibility": "Serialize the modified object graph and encryption policy."
+        },
+        {
+          "order": 4,
+          "component": "rendering",
+          "responsibility": "Preview and independently comparable reopened output."
+        }
+      ],
+      "verification": [
+        "Excise.App.Tests/Integration",
+        "Excise.Core.Tests/Document",
+        "Excise.Core.Tests/Writing",
+        "Excise.Rendering.Tests/Differential"
+      ]
+    },
+    {
+      "id": "make-searchable",
+      "name": "Raster OCR and searchable-PDF creation",
+      "criticality": "supporting",
+      "entryPoints": [
+        "Excise.App Make Searchable",
+        "excise make-searchable",
+        "Excise.Ocr API"
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "component": "rendering",
+          "responsibility": "Rasterize pages at the OCR contract resolution."
+        },
+        {
+          "order": 2,
+          "component": "ocr-native",
+          "responsibility": "Own native engine lifetime and marshalling."
+        },
+        {
+          "order": 3,
+          "component": "ocr",
+          "responsibility": "Interpret OCR results and construct text-layer operations."
+        },
+        {
+          "order": 4,
+          "component": "core-writing",
+          "responsibility": "Persist the searchable result."
+        }
+      ],
+      "verification": [
+        "Excise.Ocr.Tests",
+        "Excise.Cli.Tests/MakeSearchableCommandTests.cs",
+        "Excise.App.Tests/Unit/MakeSearchableDialogViewModelTests.cs"
+      ]
+    },
+    {
+      "id": "verify-signature",
+      "name": "Inspect signature structure, integrity, and trust",
+      "criticality": "security-critical",
+      "entryPoints": [
+        "Excise.App Security dialog",
+        "excise signatures"
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "component": "core-parsing",
+          "responsibility": "Parse the signed object graph and byte ranges without trusting declared lengths."
+        },
+        {
+          "order": 2,
+          "component": "core-security",
+          "responsibility": "Validate byte ranges, CMS integrity, permissions, and structural status."
+        },
+        {
+          "order": 3,
+          "component": "app",
+          "responsibility": "Evaluate platform trust where available and present integrity separately from trust."
+        },
+        {
+          "order": 4,
+          "component": "verification",
+          "responsibility": "Cross-check representative signatures and malformed ranges with independent tools/fixtures."
+        }
+      ],
+      "verification": [
+        "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs",
+        "Excise.Core.Tests/Security"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "core-has-no-ui-dependency",
+      "statement": "Excise.Core must not depend on Avalonia, SkiaSharp UI controls, delivery projects, or platform services.",
+      "components": [
+        "core",
+        "app",
+        "avalonia",
+        "cli"
+      ],
+      "enforcement": [
+        "scripts/check-architecture-registry.sh",
+        "ProjectReference comparison in scripts/check_architecture_registry.py"
+      ]
+    },
+    {
+      "id": "one-content-walk",
+      "statement": "New extraction, geometry, or redaction consumers use ContentStreamWalker semantics rather than implementing another PDF text-state parser.",
+      "components": [
+        "core-content",
+        "core-text",
+        "core-redaction",
+        "rendering"
+      ],
+      "enforcement": [
+        "scripts/verify-true-redaction.sh",
+        "Excise.Core.Tests/Content",
+        "Excise.Core.Tests/Text"
+      ]
+    },
+    {
+      "id": "redaction-needs-independent-oracle",
+      "statement": "A security-relevant redaction assertion uses a non-Excise oracle or carries a reviewed method-level reason.",
+      "components": [
+        "core-redaction",
+        "verification"
+      ],
+      "enforcement": [
+        "scripts/check-redaction-oracles.sh",
+        "scripts/test-check-redaction-oracles.sh"
+      ]
+    },
+    {
+      "id": "delivery-surfaces-share-domain-workflows",
+      "statement": "Desktop, CLI, batch, and library entry points delegate to the same core mutation/security semantics rather than copy workflow policy.",
+      "components": [
+        "app",
+        "cli",
+        "core-document",
+        "core-redaction",
+        "core-security"
+      ],
+      "enforcement": [
+        "scripts/check-reachability.sh --quiet",
+        "scripts/check-unwired-api.sh --quiet",
+        "cross-entry-point regression tests"
+      ]
+    },
+    {
+      "id": "architecture-data-is-derived",
+      "statement": "Registry IDs, paths, project dependencies, workflow references, and current/target diagrams are validated and regenerated deterministically.",
+      "components": [
+        "architecture-tooling",
+        "verification"
+      ],
+      "enforcement": [
+        "scripts/check-architecture-registry.sh",
+        "scripts/check_architecture_registry.py --self-test"
+      ]
+    }
+  ],
+  "diagramViews": [
+    {
+      "id": "current-projects",
+      "title": "Excise current project architecture",
+      "mode": "current",
+      "components": [
+        "core",
+        "rendering",
+        "ocr-native",
+        "ocr",
+        "avalonia",
+        "cli",
+        "app",
+        "verification",
+        "architecture-tooling"
+      ],
+      "output": "architecture/generated/current-projects.dot"
+    },
+    {
+      "id": "target-components",
+      "title": "Excise desired component architecture",
+      "mode": "target",
+      "components": [
+        "core",
+        "core-primitives",
+        "core-parsing",
+        "core-document",
+        "core-content",
+        "core-fonts",
+        "core-text",
+        "core-redaction",
+        "core-writing",
+        "core-security",
+        "rendering",
+        "ocr-native",
+        "ocr",
+        "avalonia",
+        "cli",
+        "app",
+        "app-main-window",
+        "verification",
+        "architecture-tooling"
+      ],
+      "output": "architecture/generated/target-components.dot"
+    }
+  ]
+}

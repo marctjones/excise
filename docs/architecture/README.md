@@ -10,8 +10,12 @@ second implementation-status list.
    workflows, and cross-cutting invariants.
 2. [Architecture decisions](decisions.md) — durable choices and the conditions
    under which they may be superseded.
-3. [`architecture/registry.json`](../../architecture/registry.json) — the
-   machine-readable current/target inventory, evidence, gaps, and issue links.
+3. The normalized registries:
+   [`design.json`](../../architecture/design.json) owns intended boundaries and
+   workflows; [`inventory.generated.json`](../../architecture/inventory.generated.json)
+   owns observed projects/references; [`assessment.json`](../../architecture/assessment.json)
+   owns status, evidence, gaps, and issue links; and
+   [`decisions.json`](../../architecture/decisions.json) indexes durable choices.
 4. [`current-projects.dot`](../../architecture/generated/current-projects.dot)
    and [`target-components.dot`](../../architecture/generated/target-components.dot)
    — generated views; never edit them directly.
@@ -43,8 +47,8 @@ second implementation-status list.
 ## Maintenance rules
 
 - Prose states intent and invariants, not unsupported completion claims.
-- Every component and workflow named here uses the stable ID from the
-  architecture registry.
+- Every component and workflow named here uses the stable ID from
+  `architecture/design.json`.
 - `unknown` is preferable to an inference from a directory name or old plan.
 - A new architecture document requires a distinct authority not already served
   by these files. Otherwise update an existing file or record the work in an

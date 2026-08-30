@@ -1,0 +1,575 @@
+{
+  "$schema": "./schemas/assessment.schema.json",
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-30",
+  "statusDefinitions": {
+    "implemented": "Present, production-reachable, and backed by named verification evidence.",
+    "partial": "Present but has a documented boundary, structural risk, or incomplete verification.",
+    "planned": "Desired in the target architecture but not implemented.",
+    "accepted_exception": "A deliberate divergence from the target pattern with a recorded reason and guard.",
+    "deprecated": "Present only for migration or compatibility and should lose callers.",
+    "unknown": "Not yet reviewed with enough evidence to classify."
+  },
+  "components": [
+    {
+      "component": "core",
+      "implementationStatus": "implemented",
+      "evidence": [
+        "Excise.Core.Tests",
+        "scripts/check-reachability.sh --quiet",
+        "scripts/check-unwired-api.sh --assembly Excise.Core --quiet"
+      ],
+      "gaps": [
+        "The public library surface is intentionally broad and still needs periodic production-reachability triage."
+      ],
+      "issueIds": [
+        921
+      ]
+    },
+    {
+      "component": "core-primitives",
+      "implementationStatus": "implemented",
+      "evidence": [
+        "Excise.Core.Tests/Primitives"
+      ],
+      "gaps": [],
+      "issueIds": []
+    },
+    {
+      "component": "core-parsing",
+      "implementationStatus": "implemented",
+      "evidence": [
+        "Excise.Core.Tests/Parsing",
+        "Excise.Core.Tests/Filters",
+        "Excise.Core.Tests/Parsing/StructureAwareFuzzTests.cs"
+      ],
+      "gaps": [
+        "Long-run resource budgets and reproducible minimized fuzz-corpus handling remain active work."
+      ],
+      "issueIds": [
+        1232
+      ]
+    },
+    {
+      "component": "core-document",
+      "implementationStatus": "partial",
+      "evidence": [
+        "Excise.Core.Tests/Document",
+        "Excise.Core.Tests/Editing",
+        "Excise.Core.Tests/Operations"
+      ],
+      "gaps": [
+        "PdfDocument.cs remains a multi-thousand-line coordination surface and needs responsibility mapping before any split."
+      ],
+      "issueIds": [
+        1261
+      ]
+    },
+    {
+      "component": "core-content",
+      "implementationStatus": "implemented",
+      "evidence": [
+        "Excise.Core.Tests/Content",
+        "Excise.Core.Tests/Text/TextMatrixLineSteppingTests.cs"
+      ],
+      "gaps": [
+        "The renderer necessarily re-executes graphics/text state and is an explicitly tracked exception rather than a model for new consumers."
+      ],
+      "issueIds": [
+        980,
+        986,
+        992
+      ]
+    },
+    {
+      "component": "core-fonts",
+      "implementationStatus": "partial",
+      "evidence": [
+        "Excise.Core.Tests/Fonts",
+        "Excise.Core.Tests/Text"
+      ],
+      "gaps": [
+        "Full PDF font-model completeness remains broader than the currently supported corpus."
+      ],
+      "issueIds": [
+        1242,
+        1265
+      ]
+    },
+    {
+      "component": "core-text",
+      "implementationStatus": "implemented",
+      "evidence": [
+        "Excise.Core.Tests/Text",
+        "scripts/check-extraction-parity.sh"
+      ],
+      "gaps": [
+        "Extraction coverage remains a measured bound on text redaction completeness, not a proof of completeness."
+      ],
+      "issueIds": []
+    },
+    {
+      "component": "core-redaction",
+      "implementationStatus": "partial",
+      "evidence": [
+        "scripts/verify-true-redaction.sh",
+        "scripts/check-redaction-oracles.sh",
+        "Excise.Core.Tests/Text/Segmentation",
+        "Excise.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs"
+      ],
+      "gaps": [
+        "Three current redaction test methods are not independently corroborated and must be reviewed."
+      ],
+      "issueIds": [
+        1029,
+        1077
+      ]
+    },
+    {
+      "component": "core-writing",
+      "implementationStatus": "implemented",
+      "evidence": [
+        "Excise.Core.Tests/Writing",
+        "Excise.Core.Tests/Conformance"
+      ],
+      "gaps": [],
+      "issueIds": []
+    },
+    {
+      "component": "core-security",
+      "implementationStatus": "partial",
+      "evidence": [
+        "Excise.Core.Tests/Security",
+        "Excise.Core.Tests/Validation",
+        "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs"
+      ],
+      "gaps": [
+        "Some permission enforcement and platform trust behavior lives at delivery-layer action boundaries by design."
+      ],
+      "issueIds": []
+    },
+    {
+      "component": "rendering",
+      "implementationStatus": "partial",
+      "evidence": [
+        "Excise.Rendering.Tests",
+        "Excise.Rendering.Tests/Differential",
+        "scripts/run-exploratory-corpus.sh"
+      ],
+      "gaps": [
+        "Renderer partials remain several thousand lines each and re-execute graphics/text state as an accepted architectural exception."
+      ],
+      "issueIds": [
+        986,
+        1262
+      ]
+    },
+    {
+      "component": "ocr-native",
+      "implementationStatus": "implemented",
+      "evidence": [
+        "Excise.Ocr.Tests",
+        "Excise.Ocr.Native/NativeOcrEngine.cs"
+      ],
+      "gaps": [],
+      "issueIds": []
+    },
+    {
+      "component": "ocr",
+      "implementationStatus": "implemented",
+      "evidence": [
+        "Excise.Ocr.Tests",
+        "Excise.App.Tests/Unit/MakeSearchableDialogViewModelTests.cs"
+      ],
+      "gaps": [],
+      "issueIds": []
+    },
+    {
+      "component": "avalonia",
+      "implementationStatus": "partial",
+      "evidence": [
+        "Excise.Avalonia.Tests",
+        "Excise.App.Tests/UI"
+      ],
+      "gaps": [
+        "PdfViewerControl is still a large partial-class family whose ownership boundaries need measurement."
+      ],
+      "issueIds": [
+        1264
+      ]
+    },
+    {
+      "component": "cli",
+      "implementationStatus": "partial",
+      "evidence": [
+        "Excise.Cli.Tests"
+      ],
+      "gaps": [
+        "Program.cs remains a multi-thousand-line command host and needs command-boundary and duplication analysis before decomposition."
+      ],
+      "issueIds": [
+        1263
+      ]
+    },
+    {
+      "component": "app",
+      "implementationStatus": "partial",
+      "evidence": [
+        "Excise.App.Tests",
+        "scripts/run-packaged-gui-smoke.sh"
+      ],
+      "gaps": [
+        "The main window view model remains the dominant state/orchestration hub.",
+        "Debug-only scripting and platform activation require conservative reachability seeds."
+      ],
+      "issueIds": [
+        920,
+        954,
+        1239
+      ]
+    },
+    {
+      "component": "app-main-window",
+      "implementationStatus": "partial",
+      "evidence": [
+        "Excise.App.Tests/Unit/MainWindowViewModelTests.cs",
+        "Excise.App.Tests/UI"
+      ],
+      "gaps": [
+        "Large constructor/state surface and hand-built parameterless test composition couple otherwise separate features."
+      ],
+      "issueIds": [
+        920,
+        1239
+      ]
+    },
+    {
+      "component": "verification",
+      "implementationStatus": "partial",
+      "evidence": [
+        "scripts/test-tier.sh t0",
+        "scripts/run-full-suite.sh",
+        "scripts/check-gate-asymmetry.sh origin/develop"
+      ],
+      "gaps": [
+        "The current t0 baseline reports an unwired-API key/baseline drift and three redaction methods without independent oracles."
+      ],
+      "issueIds": [
+        940,
+        1029,
+        1077,
+        1236
+      ]
+    },
+    {
+      "component": "architecture-tooling",
+      "implementationStatus": "partial",
+      "evidence": [
+        "scripts/check-architecture-registry.sh",
+        "scripts/check-reachability.sh --quiet",
+        "scripts/check-unwired-api.sh --quiet"
+      ],
+      "gaps": [
+        "Symbol-level diagrams and responsibility metrics are not yet emitted by the Roslyn reachability tool."
+      ],
+      "issueIds": [
+        940,
+        1234,
+        1247,
+        1248
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "source": "app-main-window",
+      "target": "core-redaction",
+      "type": "orchestrates",
+      "implementationStatus": "implemented"
+    },
+    {
+      "source": "rendering",
+      "target": "core-content",
+      "type": "uses",
+      "implementationStatus": "accepted_exception"
+    },
+    {
+      "source": "core-redaction",
+      "target": "core-content",
+      "type": "uses",
+      "implementationStatus": "implemented"
+    },
+    {
+      "source": "verification",
+      "target": "core-redaction",
+      "type": "verifies",
+      "implementationStatus": "partial"
+    },
+    {
+      "source": "core",
+      "target": "app",
+      "type": "must-not-depend-on",
+      "implementationStatus": "implemented"
+    },
+    {
+      "source": "architecture-tooling",
+      "target": "verification",
+      "type": "verifies",
+      "implementationStatus": "partial"
+    }
+  ],
+  "concerns": [
+    {
+      "id": "main-window-concentration",
+      "name": "Main-window state and workflow concentration",
+      "priority": "high",
+      "currentStatus": "partial",
+      "desiredState": "The main window is a small workspace shell; feature state, cancellation, commands, and workflow policy have explicit owners and contract tests.",
+      "components": [
+        "app",
+        "app-main-window",
+        "avalonia"
+      ],
+      "symptoms": [
+        "MainWindowViewModel.cs is 3,729 lines before its additional partials.",
+        "The constructor accepts many services and also maintains a separate hand-built parameterless composition path.",
+        "Document, navigation, search, thumbnails, editing, redaction, security, and background work share mutable state."
+      ],
+      "deterministicDiscovery": [
+        "wc -l Excise.App/ViewModels/MainWindowViewModel*.cs",
+        "scripts/check-reachability.sh --quiet",
+        "scripts/check-unwired-api.sh --assembly Excise.App --quiet",
+        "rg -n 'private readonly|CancellationTokenSource|ReactiveCommand' Excise.App/ViewModels/MainWindowViewModel*.cs"
+      ],
+      "rootCauseQuestions": [
+        "Which state belongs to the document session, viewport, or a feature workflow?",
+        "Which partials communicate through shared fields rather than explicit contracts?",
+        "Which tests require the parameterless constructor because composition is not injectable?",
+        "Which extractions reduce coupling rather than merely move lines?"
+      ],
+      "issueIds": [
+        920,
+        1239
+      ]
+    },
+    {
+      "id": "outsized-units",
+      "name": "Outsized implementation units and responsibility accumulation",
+      "priority": "medium",
+      "currentStatus": "partial",
+      "desiredState": "Large files are justified by cohesive generated/table-driven behavior or decomposed along measured state/contract seams, with no duplicate engines introduced.",
+      "components": [
+        "core-document",
+        "core-content",
+        "rendering",
+        "avalonia",
+        "cli",
+        "app-main-window"
+      ],
+      "symptoms": [
+        "Several production files exceed 2,000 lines, including renderer partials, the CLI host, ContentStreamWalker, PdfDocument, PdfViewerControl, and MainWindowViewModel.",
+        "Line count alone cannot distinguish irreducible PDF state machinery from mixed workflow ownership."
+      ],
+      "deterministicDiscovery": [
+        "rg --files -g '*.cs' -g '!**/bin/**' -g '!**/obj/**' | xargs wc -l | sort -nr",
+        "scripts/check-reachability.sh --quiet",
+        "dotnet build excise.sln -c Debug",
+        "rg -n 'class |partial class |switch |case ' Excise.Rendering Excise.Cli Excise.Core/Document Excise.Avalonia/Controls"
+      ],
+      "rootCauseQuestions": [
+        "Is size caused by a cohesive state machine, unrelated responsibilities, duplicated policy, or generated/tabular data?",
+        "Which types have high fan-in/fan-out or share mutable state?",
+        "Would extraction create a second state machine or clarify an existing contract?",
+        "Which large test/tool files are off the shipping graph and therefore lower priority?"
+      ],
+      "issueIds": [
+        1235,
+        1239,
+        1249,
+        1261,
+        1262,
+        1263,
+        1264,
+        1265
+      ]
+    },
+    {
+      "id": "quality-gate-baseline",
+      "name": "Architecture and security gate baseline is not green",
+      "priority": "high",
+      "currentStatus": "partial",
+      "desiredState": "Every t0 architecture/security gate passes for reviewed reasons, and mutations prove each gate detects the defect class it claims to detect.",
+      "components": [
+        "verification",
+        "architecture-tooling",
+        "core-redaction",
+        "app"
+      ],
+      "symptoms": [
+        "The unwired-API gate reports 47 Excise.App.release entries that overlap the Excise.App baseline key.",
+        "Three redaction test methods have no independently detected oracle or declared reason."
+      ],
+      "deterministicDiscovery": [
+        "scripts/test-tier.sh t0",
+        "scripts/check-unwired-api.sh --quiet",
+        "scripts/check-redaction-oracles.sh",
+        "scripts/check-reachability.sh --quiet",
+        "scripts/test-check-redaction-oracles.sh"
+      ],
+      "rootCauseQuestions": [
+        "Is the unwired delta a real Release-only reachability change, an assembly-key normalization defect, or stale triage?",
+        "For each redaction method, what exact property is asserted and which independent instrument can observe it?",
+        "Can the gate distinguish implementation gaps from checker false positives without blanket allowlisting?"
+      ],
+      "issueIds": [
+        940,
+        1029,
+        1077,
+        1236
+      ]
+    },
+    {
+      "id": "dependency-audit-reliability",
+      "name": "Dependency advisory acquisition is not deterministic",
+      "priority": "high",
+      "currentStatus": "partial",
+      "desiredState": "PR, scheduled, and release scans acquire current advisory data in a writable isolated cache, emit machine-readable evidence, and distinguish unavailable data from a clean result.",
+      "components": [
+        "app",
+        "verification"
+      ],
+      "symptoms": [
+        "dotnet list package --vulnerable reports NU1900 for App and App.Tests because the NuGet advisory cache cannot refresh.",
+        "The command still prints no vulnerable packages, which can be misread as a complete clean audit."
+      ],
+      "deterministicDiscovery": [
+        "dotnet list excise.sln package --vulnerable --include-transitive",
+        "dotnet nuget list source",
+        "scripts/check-license-compliance.sh",
+        "git diff -- '**/*.csproj' 'Directory.Packages.props' 'packages.lock.json'"
+      ],
+      "rootCauseQuestions": [
+        "Why is only part of the restore graph attempting a denied cache write?",
+        "Which cache/environment contract works both in sandboxed development and CI?",
+        "Should advisory acquisition failure be a separate hard-fail status from vulnerable/clean?",
+        "How does this work align with the broader supply-chain epic without putting network checks in t0?"
+      ],
+      "issueIds": [
+        1223,
+        1238
+      ]
+    },
+    {
+      "id": "dotnet-analysis-policy",
+      "name": ".NET analyzer, warning, and suppression policy",
+      "priority": "medium",
+      "currentStatus": "partial",
+      "desiredState": "One central policy enables an agreed analyzer level; new warnings fail in scoped projects; suppressions are narrow, justified, and verified on all target platforms.",
+      "components": [
+        "core",
+        "rendering",
+        "ocr-native",
+        "ocr",
+        "avalonia",
+        "cli",
+        "app",
+        "verification"
+      ],
+      "symptoms": [
+        "There is no central Directory.Build.props analysis policy.",
+        "CA1416 is suppressed across the entire desktop project.",
+        "The current build can succeed with NU1900 warnings despite documentation expecting a clean build."
+      ],
+      "deterministicDiscovery": [
+        "dotnet build excise.sln -c Debug",
+        "dotnet build excise.sln -c Release -p:EnableScripting=false",
+        "rg -n 'NoWarn|WarningsAsErrors|TreatWarningsAsErrors|AnalysisLevel|AnalysisMode|EnableNETAnalyzers' --glob '*.csproj' --glob 'Directory.Build.*'",
+        "dotnet format analyzers excise.sln --verify-no-changes --severity warn"
+      ],
+      "rootCauseQuestions": [
+        "Which warnings are product defects, cross-platform false positives, third-party rollups, or environment failures?",
+        "Which projects can enforce warnings first without forcing blanket suppressions?",
+        "Can CA1416 be replaced by platform guards and source-level suppressions?",
+        "Which analyzer findings overlap reachability and should share one root-cause issue?"
+      ],
+      "issueIds": [
+        911,
+        1237
+      ]
+    },
+    {
+      "id": "architecture-status-drift",
+      "name": "Narrative architecture status can drift from implementation",
+      "priority": "high",
+      "currentStatus": "partial",
+      "desiredState": "Current/target component status, dependencies, workflow ownership, verification, and known gaps live in the checked JSON registry; narrative docs explain concepts and link to it.",
+      "components": [
+        "architecture-tooling",
+        "verification"
+      ],
+      "symptoms": [
+        "Architecture, design, implementation-plan, and status claims are spread across documents and registries with overlapping authority.",
+        "Static diagrams and prose do not fail when project dependencies or evidence paths change."
+      ],
+      "deterministicDiscovery": [
+        "scripts/check-architecture-registry.sh",
+        "scripts/check-doc-claim-freshness.sh",
+        "dotnet sln excise.sln list",
+        "rg -n 'ProjectReference' --glob '*.csproj'"
+      ],
+      "rootCauseQuestions": [
+        "Which claims belong in timeless narrative versus status-bearing registry data?",
+        "Which component boundaries can be verified from project references, paths, and reachability?",
+        "Which target relationships need an issue before they can be marked planned?",
+        "What diagram granularity remains readable and decision-useful?"
+      ],
+      "issueIds": [
+        936,
+        957,
+        1234,
+        1246,
+        1247,
+        1248
+      ]
+    },
+    {
+      "id": "source-provenance",
+      "name": "Source provenance and independent-implementation assurance",
+      "priority": "high",
+      "currentStatus": "partial",
+      "desiredState": "Every current source and vendored-data family has evidence-backed lineage, attribution, and a reviewed retain-or-replace decision without overstating clean-room status.",
+      "components": [
+        "core",
+        "core-content",
+        "core-fonts",
+        "core-writing",
+        "rendering",
+        "app"
+      ],
+      "symptoms": [
+        "Legacy v1 directly used PdfPig, PDFsharp, and PDFtoImage while the current stack removed those packages.",
+        "Historical planning proposed borrowing several implementation families, so package removal alone does not prove clean-room provenance.",
+        "The Avalonia dispatcher scheduler explicitly records an adapted third-party lineage."
+      ],
+      "deterministicDiscovery": [
+        "git log --follow --all -- Excise.Core Excise.Rendering Excise.App",
+        "rg -n -i 'adapted|vendored|derived|PdfPig|PDFsharp|PDFtoImage|ReactiveUI' Excise.Core Excise.Rendering Excise.App docs LICENSES.md",
+        "npx jscpd@4.2.5 --min-lines 8 --min-tokens 70 --format csharp"
+      ],
+      "rootCauseQuestions": [
+        "Which files are specification-derived facts versus copyrightable implementation expression?",
+        "Which current code descends from earlier Excise implementations that used external libraries?",
+        "Which adapted code should be retained with attribution versus independently replaced?",
+        "How should new vendoring or material clone introduction fail deterministically?"
+      ],
+      "issueIds": [
+        1240,
+        1241,
+        1242,
+        1243,
+        1244,
+        1245
+      ]
+    }
+  ]
+}
