@@ -193,6 +193,7 @@ public partial class MainWindowViewModel
 
         await StartThumbnailSessionAsync(filePath);
         timings.ThumbnailPlaceholdersReadyElapsedMs = stopwatch.ElapsedMilliseconds;
+        RefreshCurrentPageBindings();
 
         LoadDocumentOutline();
         timings.OutlineReadyElapsedMs = stopwatch.ElapsedMilliseconds;

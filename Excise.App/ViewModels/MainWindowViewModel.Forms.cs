@@ -170,11 +170,11 @@ public partial class MainWindowViewModel
     {
         get
         {
-            if (_pdfCoreDocument == null || _currentPageIndex < 0 || _currentPageIndex >= TotalPages)
+            if (_pdfCoreDocument == null || CurrentPageIndex < 0 || CurrentPageIndex >= TotalPages)
                 return Array.Empty<PdfField>();
             try
             {
-                return _pdfCoreDocument.GetPage(_currentPageIndex + 1).GetFormFields();
+                return _pdfCoreDocument.GetPage(CurrentPageIndex + 1).GetFormFields();
             }
             catch
             {
