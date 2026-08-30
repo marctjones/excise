@@ -1,8 +1,22 @@
 # Excise Architecture Design
 
+> **Status source:** this document explains architectural concepts. The
+> machine-readable current/target inventory is
+> [`architecture/registry.json`](../architecture/registry.json), validated by
+> `scripts/check-architecture-registry.sh` and rendered into the checked-in DOT
+> views under `architecture/generated/`. Implementation status and dependency
+> claims belong in that registry so they fail on drift instead of becoming
+> stale prose.
+
 ## Overview
 
-Excise is a complete, native .NET PDF solution designed from first principles based on ISO 32000-2:2020 (PDF 2.0 specification). It is **not** influenced by existing libraries like PdfPig, PDFsharp, or iText - it is a clean-room implementation with its own design philosophy.
+Excise is a native .NET PDF solution whose current parser, writer, renderer, and
+redaction stack is owned in this repository and designed from ISO 32000-2:2020
+(PDF 2.0). Legacy v1 releases directly used PdfPig, PDFsharp, and PDFtoImage;
+those package dependencies are no longer present in the current stack. The
+remaining source-lineage audit is tracked in
+[issue #1240](https://github.com/marctjones/excise/issues/1240), so this document
+does not make a stronger formal clean-room claim than the reviewed evidence.
 
 ## Design Principles
 
@@ -400,36 +414,28 @@ bitmap.Encode(stream, SKEncodedImageFormat.Png, 100);
 
 ## Current State vs. Target
 
-### What Exists (Excise.Core)
+Do not maintain a second status list in prose. The architecture registry records
+each key component's `currentStatus`, `targetStatus`, evidence, known gaps,
+workflow participation, and current/desired dependencies. It also records
+cross-cutting concerns whose resolution may span several components.
 
-✅ Primitives (all 8 PDF object types)
-✅ Parsing (lexer, parser, xref)
-✅ Stream decompression (FlateDecode)
-✅ Document model (PdfDocument, PdfPage)
-✅ Text extraction (TextExtractor, Letter)
-✅ ToUnicode CMap parsing
-✅ Basic encoding support
-✅ Document writing
-✅ Content stream reading
+```bash
+# Validate paths, IDs, workflow references, actual ProjectReference edges,
+# allowed dependencies, and checked-in diagram freshness.
+scripts/check-architecture-registry.sh
 
-### What Needs Enhancement
+# Prove the checker catches a broken reference and that rendering is stable.
+scripts/check_architecture_registry.py --self-test
 
-⚠️ Content stream parsing (exists in TextExtractor, needs extraction)
-⚠️ Content stream modification (partial - SetContentStreamBytes exists)
-⚠️ Font handling (basic - needs enhancement for embedded fonts)
-⚠️ Graphics state tracking (exists in TextExtractor, needs extraction)
+# Regenerate the current and desired Graphviz views after a reviewed edit.
+scripts/check_architecture_registry.py --write-diagrams
+```
 
-### What Needs Implementation
-
-❌ ContentStream class (structured operator list)
-❌ ContentStreamParser (separate from TextExtractor)
-❌ ContentStreamWriter (serialize operators to bytes)
-❌ Full graphics state (clipping, blend modes, etc.)
-❌ Image extraction
-❌ Annotation handling
-❌ Form XObject support
-❌ Encryption/decryption
-❌ Incremental updates
+The registry is intentionally a reviewed plan, not an automatic claim that a
+directory's existence proves a feature complete. `implemented` requires named
+verification evidence; `partial` records the exact structural or assurance
+boundary; `planned` requires a target state and should be linked to an issue
+before implementation begins.
 
 ---
 
