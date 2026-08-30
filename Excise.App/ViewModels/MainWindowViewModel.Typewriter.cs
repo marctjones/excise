@@ -280,8 +280,7 @@ public partial class MainWindowViewModel
         _textIndexSession.Start(PdfCoreDocument!);
 
         this.RaisePropertyChanged(nameof(TotalPages));
-        this.RaisePropertyChanged(nameof(CurrentPage));
-        this.RaisePropertyChanged(nameof(CurrentPageFormFields));
+        RefreshCurrentPageBindings();
         return Task.CompletedTask;
     }
 }

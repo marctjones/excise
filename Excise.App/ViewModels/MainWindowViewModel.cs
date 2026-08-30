@@ -61,9 +61,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _currentFilePath = string.Empty;
     private Bitmap? _currentPageImage;
     private PdfCoreDocument? _pdfCoreDocument;
-    private int _currentPageIndex;
-    private PdfViewMode _viewMode = PdfViewMode.Continuous;
-    private bool _continuousScrollPreference = true;
     private Excise.Core.Text.ReadingOrderStrategy _readingOrderStrategy =
         Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
     private Excise.Core.Text.WhitespaceMode _whitespaceMode =
@@ -272,15 +269,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public PdfViewMode ViewMode
     {
-        get => _viewMode;
+        get => _viewportSession.ViewMode;
         set
         {
-            if (_viewMode == value)
-            {
+            if (!_viewportSession.SetViewMode(value))
                 return;
-            }
 
-            this.RaiseAndSetIfChanged(ref _viewMode, value);
+            this.RaisePropertyChanged(nameof(ViewMode));
             if (value == PdfViewMode.Continuous)
             {
                 // Text selection survives the switch to continuous (#815): it now
@@ -332,13 +327,12 @@ public partial class MainWindowViewModel : ViewModelBase
         WhitespaceMode = mode;
     }
 
-    public bool ContinuousScrollPreference => _continuousScrollPreference;
+    public bool ContinuousScrollPreference => _viewportSession.ContinuousScrollPreference;
 
     public void ApplyContinuousScrollPreference(bool enabled)
     {
-        if (_continuousScrollPreference != enabled)
+        if (_viewportSession.SetContinuousScrollPreference(enabled))
         {
-            _continuousScrollPreference = enabled;
             this.RaisePropertyChanged(nameof(ContinuousScrollPreference));
         }
 
@@ -364,7 +358,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void RestoreViewModeFromPreference()
     {
-        if (!_continuousScrollPreference || IsEditingModeActive)
+        if (!ContinuousScrollPreference || IsEditingModeActive)
             return;
 
         ViewMode = PdfViewMode.Continuous;
@@ -380,22 +374,36 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public int CurrentPageIndex
     {
-        get => _currentPageIndex;
+        get => _viewportSession.CurrentPageIndex;
         set
         {
-            this.RaiseAndSetIfChanged(ref _currentPageIndex, value);
-            this.RaisePropertyChanged(nameof(DisplayPageNumber));
-            // CurrentPage is computed (CurrentPageIndex + 1) and bound to
-            // PdfViewerControl.CurrentPage in MainWindow.axaml. Without this
-            // notification, thumbnail clicks updated the index but the viewer
-            // stayed on the previous page.
-            this.RaisePropertyChanged(nameof(CurrentPage));
-            this.RaisePropertyChanged(nameof(CurrentPageFormFields));
-            UpdateThumbnailSelection();
-            UpdateSearchHighlights(); // Update highlights when page changes (fixes #310)
-            RefreshHiddenTextHighlights();
-            ClearCurrentTextSelection();
+            if (!_viewportSession.SetCurrentPageIndex(value))
+                return;
+
+            this.RaisePropertyChanged(nameof(CurrentPageIndex));
+            RefreshCurrentPageBindings();
         }
+    }
+
+    /// <summary>
+    /// Publishes state derived from the current page after a real navigation or
+    /// after the backing document changed without changing the page number.
+    /// Same-page viewer feedback must not call this: it is not a transition and
+    /// clearing selection in that path loses user state.
+    /// </summary>
+    private void RefreshCurrentPageBindings()
+    {
+        this.RaisePropertyChanged(nameof(DisplayPageNumber));
+        // CurrentPage is computed (CurrentPageIndex + 1) and bound to
+        // PdfViewerControl.CurrentPage in MainWindow.axaml. Without this
+        // notification, thumbnail clicks updated the index but the viewer
+        // stayed on the previous page.
+        this.RaisePropertyChanged(nameof(CurrentPage));
+        this.RaisePropertyChanged(nameof(CurrentPageFormFields));
+        UpdateThumbnailSelection();
+        UpdateSearchHighlights(); // Update highlights when page changes (fixes #310)
+        RefreshHiddenTextHighlights();
+        ClearCurrentTextSelection();
     }
 
     public int TotalPages => _documentService.PageCount;
@@ -693,17 +701,17 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         get
         {
-            if (_pdfCoreDocument == null || _currentPageIndex < 0 || _currentPageIndex >= TotalPages)
+            if (_pdfCoreDocument == null || CurrentPageIndex < 0 || CurrentPageIndex >= TotalPages)
                 return string.Empty;
 
             try
             {
-                var text = _textExtractionService.ExtractTextFromPage(_currentFilePath, _currentPageIndex);
+                var text = _textExtractionService.ExtractTextFromPage(_currentFilePath, CurrentPageIndex);
                 return text ?? string.Empty;
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to extract text from page {PageIndex}", _currentPageIndex);
+                _logger.LogWarning(ex, "Failed to extract text from page {PageIndex}", CurrentPageIndex);
                 return string.Empty;
             }
         }
@@ -1648,8 +1656,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         _textIndexSession.Start(PdfCoreDocument!);
 
-        this.RaisePropertyChanged(nameof(CurrentPage));
-        this.RaisePropertyChanged(nameof(CurrentPageFormFields));
+        RefreshCurrentPageBindings();
         return Task.CompletedTask;
     }
 

@@ -1237,6 +1237,29 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public void CurrentPageIndex_SamePageFeedbackDoesNotClearSelectionOrRaiseChanges()
+    {
+        _viewModel.CurrentPageIndex = 2;
+        _viewModel.SelectedText = "keep this selection";
+        _viewModel.CurrentTextSelectionPageArea = PdfPageRect.ViewerDips(
+            pageNumber: 3,
+            x: 10,
+            y: 20,
+            width: 30,
+            height: 40,
+            renderDpi: MainWindowViewModel.DefaultViewerRenderDpi);
+        var changedProperties = new List<string>();
+        _viewModel.PropertyChanged += (_, e) => changedProperties.Add(e.PropertyName!);
+
+        _viewModel.CurrentPageIndex = 2;
+
+        _viewModel.SelectedText.Should().Be("keep this selection");
+        _viewModel.CurrentTextSelectionPageArea.Should().NotBeNull();
+        changedProperties.Should().BeEmpty(
+            "viewer page feedback for the already-current page is not a navigation transition");
+    }
+
+    [Fact]
     public void ZoomLevel_PropertyChangedRaised()
     {
         // Arrange

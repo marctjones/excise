@@ -1,5 +1,6 @@
 using System;
 using AwesomeAssertions;
+using Excise.Avalonia.Controls;
 using Excise.App.ViewModels;
 using Xunit;
 
@@ -7,6 +8,27 @@ namespace Excise.App.Tests.Unit;
 
 public class DocumentViewportSessionTests
 {
+    [Fact]
+    public void NavigationAndViewPolicy_HaveReaderDefaultsAndIdempotentTransitions()
+    {
+        var session = new DocumentViewportSession();
+
+        session.CurrentPageIndex.Should().Be(0);
+        session.ViewMode.Should().Be(PdfViewMode.Continuous);
+        session.ContinuousScrollPreference.Should().BeTrue();
+
+        session.SetCurrentPageIndex(4).Should().BeTrue();
+        session.SetCurrentPageIndex(4).Should().BeFalse();
+        session.SetViewMode(PdfViewMode.SinglePage).Should().BeTrue();
+        session.SetViewMode(PdfViewMode.SinglePage).Should().BeFalse();
+        session.SetContinuousScrollPreference(false).Should().BeTrue();
+        session.SetContinuousScrollPreference(false).Should().BeFalse();
+
+        session.CurrentPageIndex.Should().Be(4);
+        session.ViewMode.Should().Be(PdfViewMode.SinglePage);
+        session.ContinuousScrollPreference.Should().BeFalse();
+    }
+
     [Fact]
     public void SetManualZoom_EndsFitModeAndRequestsPersistenceForMeaningfulChanges()
     {

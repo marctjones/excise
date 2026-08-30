@@ -1,21 +1,53 @@
 using System;
+using Excise.Avalonia.Controls;
 
 namespace Excise.App.ViewModels;
 
 /// <summary>
-/// Owns per-document zoom and transient viewport state. The window view model
-/// remains the ReactiveUI binding adapter and performs persistence, while this
-/// session makes manual, automatic-fit, restore, and reset transitions explicit.
+/// Owns per-document page navigation, view policy, zoom, and transient viewport
+/// state. The window view model remains the ReactiveUI binding adapter and
+/// performs persistence and UI side effects, while this session makes the state
+/// transitions deterministic and independently testable.
 /// </summary>
 internal sealed class DocumentViewportSession
 {
     internal const double MinimumZoom = 0.25;
     internal const double MaximumZoom = 5.0;
 
+    internal int CurrentPageIndex { get; private set; }
+    internal PdfViewMode ViewMode { get; private set; } = PdfViewMode.Continuous;
+    internal bool ContinuousScrollPreference { get; private set; } = true;
     internal double ZoomLevel { get; private set; } = 1.0;
     internal ZoomFitMode FitMode { get; private set; } = ZoomFitMode.FitWidth;
     internal double ViewportWidth { get; private set; } = 800;
     internal double ViewportHeight { get; private set; } = 600;
+
+    internal bool SetCurrentPageIndex(int pageIndex)
+    {
+        if (CurrentPageIndex == pageIndex)
+            return false;
+
+        CurrentPageIndex = pageIndex;
+        return true;
+    }
+
+    internal bool SetViewMode(PdfViewMode mode)
+    {
+        if (ViewMode == mode)
+            return false;
+
+        ViewMode = mode;
+        return true;
+    }
+
+    internal bool SetContinuousScrollPreference(bool enabled)
+    {
+        if (ContinuousScrollPreference == enabled)
+            return false;
+
+        ContinuousScrollPreference = enabled;
+        return true;
+    }
 
     internal ZoomTransition SetManualZoom(double zoom) =>
         SetZoom(zoom, ZoomFitMode.Manual, shouldPersist: true);
