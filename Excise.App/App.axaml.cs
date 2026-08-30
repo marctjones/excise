@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Excise.App.Services;
+using Excise.App.Composition;
 using Excise.App.ViewModels;
 using Excise.App.Views;
 using System;
@@ -50,9 +51,14 @@ public partial class App : Application
         // Configure dependency injection and logging
         var services = new ServiceCollection();
         ConfigureServices(services);
-        _serviceProvider = services.BuildServiceProvider();
+        _serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateOnBuild = true,
+            ValidateScopes = true,
+        });
 
         var logger = _serviceProvider.GetRequiredService<ILogger<App>>();
+        logger.LogInformation("Dependency injection container configured and validated");
         logger.LogInformation("=================================================");
         logger.LogInformation("PDF Editor Application Starting");
         logger.LogInformation("=================================================");
@@ -254,33 +260,7 @@ public partial class App : Application
             });
         });
 
-        // Explicitly register ILoggerFactory as singleton (required by RedactionService)
-        services.AddSingleton<ILoggerFactory, LoggerFactory>();
-
-        // Register services
-        services.AddSingleton<PdfDocumentService>();
-        services.AddSingleton<PdfRenderService>();
-        services.AddSingleton<RedactionService>();
-        services.AddSingleton<RedactedCopySafetyService>();
-        services.AddSingleton<PdfTextExtractionService>();
-        services.AddSingleton<PdfSearchService>();
-        services.AddSingleton<SignatureVerificationService>();
-        services.AddSingleton<SignatureVerificationSummaryFormatter>();
-        services.AddSingleton<SignatureVerificationWorkflowService>();
-        services.AddSingleton<PageOrganizationWorkflowService>();
-        services.AddSingleton<AnnotationWorkflowService>();
-        services.AddSingleton<FilenameSuggestionService>();
-        services.AddSingleton<IUserDialogService, AvaloniaUserDialogService>();
-
-        // Register ViewModels
-        services.AddTransient<MainWindowViewModel>();
-
-        var tempProvider = services.BuildServiceProvider();
-        var logger = tempProvider.GetRequiredService<ILogger<App>>();
-        logger.LogInformation("Dependency injection container configured");
-        logger.LogInformation(
-            "Services registered: PdfDocumentService, PdfRenderService, RedactionService, RedactedCopySafetyService, PdfTextExtractionService, PdfSearchService, SignatureVerificationService, PageOrganizationWorkflowService, AnnotationWorkflowService");
-        logger.LogInformation("Logging level set to: INFO");
+        services.AddExciseApplicationServices();
     }
 }
 
