@@ -61,7 +61,7 @@ public class MakeSearchableWiringTests : IDisposable
     {
         var loggerFactory = NullLoggerFactory.Instance;
         var dialog = new FakeUserDialogService();
-        var vm = new MainWindowViewModel(
+        var vm = MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             new PdfDocumentService(NullLogger<PdfDocumentService>.Instance),

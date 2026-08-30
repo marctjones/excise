@@ -76,7 +76,7 @@ public class FormAuthoringTests
         var path = WritePdf(BarePdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await Task.Delay(100);
@@ -100,7 +100,7 @@ public class FormAuthoringTests
         var path = WritePdf(BarePdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await Task.Delay(100);
@@ -125,7 +125,7 @@ public class FormAuthoringTests
         var path = WritePdf(BarePdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await Task.Delay(100);
@@ -148,7 +148,7 @@ public class FormAuthoringTests
         var path = WritePdf(BarePdf("100 700 m 300 700 l S\n320 700 12 12 re S"));
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             window.Show();
             await Task.Delay(100);

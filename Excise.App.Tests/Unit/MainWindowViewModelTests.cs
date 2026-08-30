@@ -57,7 +57,7 @@ public class MainWindowViewModelTests
         _mockFilenameSuggestionService = new Mock<FilenameSuggestionService>();
 
         // Create ViewModel with mocked dependencies
-        _viewModel = new MainWindowViewModel(
+        _viewModel = MainWindowViewModelTestFactory.Create(
             _mockLogger.Object,
             _mockLoggerFactory.Object,
             _mockDocumentService.Object,
@@ -1205,7 +1205,7 @@ public class MainWindowViewModelTests
     public void Constructor_WithDependencies_InitializesSuccessfully()
     {
         // Arrange & Act
-        var vm = new MainWindowViewModel(
+        var vm = MainWindowViewModelTestFactory.Create(
             _mockLogger.Object,
             _mockLoggerFactory.Object,
             _mockDocumentService.Object,
@@ -1227,7 +1227,7 @@ public class MainWindowViewModelTests
     public void ParameterlessConstructor_InitializesSuccessfully()
     {
         // Act
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         // Assert
         vm.Should().NotBeNull();

@@ -68,7 +68,7 @@ public class FormWorkflowTests
         var outputPath = Path.Combine(Path.GetTempPath(), $"excise-form-filled-{Guid.NewGuid():N}.pdf");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             await vm.LoadDocumentAsync(inputPath);
 
             var field = vm.PdfCoreDocument!.GetAcroForm()!.FindField("Name")!;
@@ -98,7 +98,7 @@ public class FormWorkflowTests
         var outputPath = Path.Combine(Path.GetTempPath(), $"excise-form-flat-{Guid.NewGuid():N}.pdf");
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             await vm.LoadDocumentAsync(inputPath);
 
             var field = vm.PdfCoreDocument!.GetAcroForm()!.FindField("Name")!;

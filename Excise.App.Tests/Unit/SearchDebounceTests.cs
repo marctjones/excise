@@ -18,7 +18,7 @@ public class SearchDebounceTests
     [Fact]
     public void SearchUseRegexPropertyExists()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         // Should not throw
         vm.SearchUseRegex = false;
@@ -31,7 +31,7 @@ public class SearchDebounceTests
     [Fact]
     public void SearchUseRegexToggleTriggersDebouncedSearch()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         vm.SearchText = "test";
 
         // Toggle regex should trigger debounced search
@@ -47,7 +47,7 @@ public class SearchDebounceTests
     [Fact]
     public void SearchResultTextShowsMatchCounter()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         // No matches initially
         vm.SearchResultText.Should().Be("No matches");
@@ -67,7 +67,7 @@ public class SearchDebounceTests
     [Fact]
     public void SearchResultTextUpdatesAsCurrentMatchChanges()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
         vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
@@ -86,7 +86,7 @@ public class SearchDebounceTests
     [Fact]
     public void SearchCaseSensitivePropertyWorks()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.SearchCaseSensitive = false;
         vm.SearchCaseSensitive.Should().BeFalse();
@@ -98,7 +98,7 @@ public class SearchDebounceTests
     [Fact]
     public void SearchWholeWordsPropertyWorks()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.SearchWholeWords = false;
         vm.SearchWholeWords.Should().BeFalse();
@@ -110,7 +110,7 @@ public class SearchDebounceTests
     [Fact]
     public void FindNextNavigatesToNextMatch()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
         vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 1 });
@@ -128,7 +128,7 @@ public class SearchDebounceTests
     [Fact]
     public void FindPreviousNavigatesToPreviousMatch()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
         vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 1 });

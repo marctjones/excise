@@ -51,7 +51,7 @@ public class TextSelectionDragTests
         var path = Path.Combine(Path.GetTempPath(), $"excise-copy-columns-{Guid.NewGuid():N}.pdf");
         CreateTwoColumnPdf(path);
 
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         try
@@ -121,7 +121,7 @@ public class TextSelectionDragTests
     {
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
@@ -248,7 +248,7 @@ public class TextSelectionDragTests
         // by the zoom factor and never match the expected text.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         // Window must be large enough that the page at 2x zoom still
         // fits inside the viewport — otherwise the simulated click
         // lands off-window and never reaches the control. A 612-pt
@@ -323,7 +323,7 @@ public class TextSelectionDragTests
         // verifies reading-order traversal across line boundaries.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
@@ -404,7 +404,7 @@ public class TextSelectionDragTests
         // neighbour.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
@@ -462,7 +462,7 @@ public class TextSelectionDragTests
         // (range overshot into the next word).
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
@@ -534,7 +534,7 @@ public class TextSelectionDragTests
         // grow, copy is broken even though SelectedText updated.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
@@ -603,7 +603,7 @@ public class TextSelectionDragTests
         // re-extract from a 2-D bbox.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);

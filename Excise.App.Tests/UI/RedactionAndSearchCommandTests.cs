@@ -102,7 +102,7 @@ public class RedactionAndSearchCommandTests
         var outputPath = Path.Combine(_tempDir, $"{tag}-output.pdf");
         CreateTwoTokenPdf(sourcePath, Secret, Survivor);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(sourcePath);
@@ -139,7 +139,7 @@ public class RedactionAndSearchCommandTests
         var sourcePath = Path.Combine(_tempDir, "apply-toolbar-source.pdf");
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "TOOLBARSECRET816");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(sourcePath);
@@ -164,7 +164,7 @@ public class RedactionAndSearchCommandTests
         var sourcePath = Path.Combine(_tempDir, "clear-source.pdf");
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "CLEARSECRET816");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(sourcePath);
@@ -189,7 +189,7 @@ public class RedactionAndSearchCommandTests
         var sourcePath = Path.Combine(_tempDir, "remove-source.pdf");
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "REMOVESECRET816");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(sourcePath);
@@ -312,7 +312,7 @@ public class RedactionAndSearchCommandTests
     {
         var sourcePath = Path.Combine(_tempDir, fileName);
         TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(sourcePath);

@@ -51,7 +51,7 @@ public class RedactionCopyRecoveryTests
         var redactedPath = Path.Combine(dir, "redacted.pdf");
         CreateSecretPdf(originalPath);
 
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1400, Height = 1000 };
         window.Show();
 

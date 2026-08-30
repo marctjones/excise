@@ -39,7 +39,7 @@ public class CommandBindingSweepTests
     [FixedAvaloniaFact]
     public void EveryButtonAndMenuItemCommand_ResolvesToNonNullCommand()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         window.UpdateLayout();
@@ -123,7 +123,7 @@ public class CommandBindingSweepTests
     [FixedAvaloniaFact]
     public void MacNativeMenuCommandItems_ResolveToNonNullCommands()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var menu = MacNativeMenuBuilder.Create(vm);
         // The macOS application (app-name) menu — About / Preferences — is owned
         // by App and dispatches via Click handlers, not Command bindings (#833);
@@ -199,7 +199,7 @@ public class CommandBindingSweepTests
         if (!OperatingSystem.IsMacOS())
             return;
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         window.UpdateLayout();

@@ -32,7 +32,7 @@ public class ZoomFitRotatedPageTests
         var src = Path.Combine(Path.GetTempPath(), $"excise-fitmix-{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(src, pageCount: 3); // three portrait Letter pages
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         try
@@ -72,7 +72,7 @@ public class ZoomFitRotatedPageTests
         // Portrait US Letter: 612 x 792 pt.
         TestPdfGenerator.CreateCustomSizePdf(src, widthPoints: 612, heightPoints: 792);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         try

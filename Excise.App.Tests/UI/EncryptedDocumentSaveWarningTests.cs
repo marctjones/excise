@@ -75,7 +75,7 @@ public class EncryptedDocumentSaveWarningTests : IDisposable
     {
         var loggerFactory = NullLoggerFactory.Instance;
         var dialog = new FakeUserDialogService();
-        var vm = new MainWindowViewModel(
+        var vm = MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             documentService,

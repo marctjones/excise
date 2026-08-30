@@ -54,7 +54,7 @@ public class TextSelectionAlignmentTests
         var book = FindBook();
         Assert.SkipWhen(book == null, "local real-world book corpus not present");
 
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1100, Height = 900 };
         window.Show();
         try
@@ -137,7 +137,7 @@ public class TextSelectionAlignmentTests
         var book = FindBook();
         Assert.SkipWhen(book == null, "local real-world book corpus not present");
 
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1100, Height = 900 };
         window.Show();
         try
@@ -285,7 +285,7 @@ public class TextSelectionAlignmentTests
         var book = FindBook();
         Assert.SkipWhen(book == null, "local real-world book corpus not present");
 
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1400, Height = 900 };
         window.Show();
         try

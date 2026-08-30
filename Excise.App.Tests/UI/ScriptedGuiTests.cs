@@ -53,7 +53,7 @@ public class ScriptedGuiTests
     public async Task Script_CanAccessViewModel_ReturnsExpectedValue()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Act
         var result = await ExecuteScriptAsync(viewModel, @"
@@ -70,7 +70,7 @@ public class ScriptedGuiTests
     public async Task Script_InvalidSyntax_ReturnsCompilationError()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Act
         var result = await ExecuteScriptAsync(viewModel, @"
@@ -87,7 +87,7 @@ public class ScriptedGuiTests
     public async Task Script_AccessViewModelProperties_Works()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Act
         var result = await ExecuteScriptAsync(viewModel, @"
@@ -110,7 +110,7 @@ public class ScriptedGuiTests
     public async Task Script_LoadDocument_UpdatesViewModel()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var testPdf = CreateTestPdf();
 
         // Act — escape path separators for the script string literal
@@ -130,7 +130,7 @@ public class ScriptedGuiTests
     public async Task Script_RedactText_CreatesRedactionArea()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var testPdf = CreateTestPdf();
 
         // Act
@@ -150,7 +150,7 @@ public class ScriptedGuiTests
     public async Task Script_CompleteRedactionWorkflow_EndToEnd()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var sourcePdf = CreateTestPdf();
         var outputPdf = Path.Combine(_testDataDir, $"redacted_output_{Guid.NewGuid():N}.pdf");
 
@@ -182,7 +182,7 @@ public class ScriptedGuiTests
     public async Task Script_BirthCertificateRedaction_Success()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Use synthetic birth certificate PDF (not the original personal file)
         // Find repository root by walking up from current directory
@@ -239,7 +239,7 @@ public class ScriptedGuiTests
     public async Task Script_LoadNonexistentFile_HandlesError()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var nonexistentFile = Path.Combine(Path.GetTempPath(), $"does-not-exist-{Guid.NewGuid():N}.pdf");
 
         // Act — the script should observe FileNotFoundException from the command
@@ -264,7 +264,7 @@ public class ScriptedGuiTests
     public async Task Script_RedactMultiplePages_AllPagesProcessed()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var multiPagePdf = CreateMultiPageTestPdf();
         var outputPdf = Path.Combine(_testDataDir, $"multipage-redacted-{Guid.NewGuid():N}.pdf");
 

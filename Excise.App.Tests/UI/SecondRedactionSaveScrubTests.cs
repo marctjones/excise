@@ -76,7 +76,7 @@ public class SecondRedactionSaveScrubTests : IDisposable
         var copy = Path.Combine(_tempDir, "redacted-copy.pdf");
         WriteFixture(source);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(source);

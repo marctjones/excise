@@ -406,7 +406,7 @@ public class ModeSwitchDisplayTests
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-mode-switch-{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await vm.LoadDocumentAsync(path);

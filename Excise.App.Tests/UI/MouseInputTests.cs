@@ -65,7 +65,7 @@ public class MouseInputTests : IDisposable
         // input surface under test here; leaving it on starts background
         // full-book thumbnail work that survives long enough to inflate the
         // serial class peak by GiB.
-        return new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        return MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
     }
 
     private static string? FindPragmaticBook()

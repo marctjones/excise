@@ -38,7 +38,7 @@ public class AnnotationAuthoringWorkflowTests : IDisposable
     [Fact]
     public void AnnotationCommands_AreAvailableForToolbarAndMenuCoverage()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         vm.AddHighlightAnnotationFromSelectionCommand.Should().NotBeNull();
         vm.AddStickyNoteAnnotationCommand.Should().NotBeNull();
@@ -205,7 +205,7 @@ public class AnnotationAuthoringWorkflowTests : IDisposable
     private static MainWindowViewModel CreateViewModel(PdfDocumentService documentService, string filePath)
     {
         var loggerFactory = NullLoggerFactory.Instance;
-        var vm = new MainWindowViewModel(
+        var vm = MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             documentService,

@@ -89,7 +89,7 @@ public class GuiClickSafetySweepTests
         // remove-page / navigation commands can't empty the document mid-sweep).
         File.WriteAllBytes(path, BuildDenseMultiPagePdf(pageCount: 3));
 
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1200, Height = 900 };
         window.Show();
         try

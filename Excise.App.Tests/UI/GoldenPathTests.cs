@@ -60,7 +60,7 @@ public class GoldenPathTests
         // Arrange
         var pdfPath = CreateTestPdf("search_navigate.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -144,7 +144,7 @@ public class GoldenPathTests
         var secretText = "CONFIDENTIAL_SECRET_DATA";
         TestPdfGenerator.CreateSimpleTextPdf(pdfPath, secretText);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -211,7 +211,7 @@ public class GoldenPathTests
         var pdfPath = CreateTestPdf("multipage_redact.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -289,7 +289,7 @@ public class GoldenPathTests
         var genTime = DateTime.UtcNow - startGen;
         _out.WriteLine($"Test PDF generation took {genTime.TotalMilliseconds:F1}ms");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -355,7 +355,7 @@ public class GoldenPathTests
         TestPdfGenerator.CreateMultiPagePdf(pdfA, pageCount: 2);
         TestPdfGenerator.CreateMultiPagePdf(pdfB, pageCount: 3);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -404,7 +404,7 @@ public class GoldenPathTests
             0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8, 0xF7, 0xF6
         });
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -427,7 +427,7 @@ public class GoldenPathTests
         TestPdfGenerator.CreateMultiPagePdf(validPdfPath, pageCount: 2);
         File.WriteAllBytes(invalidPdfPath, [0x25, 0x50, 0x44, 0x46, 0x2D]);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -463,7 +463,7 @@ public class GoldenPathTests
         var pdfPath = CreateTestPdf("search_nav.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 5);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -515,7 +515,7 @@ public class GoldenPathTests
         var pdfPath = CreateTestPdf("state_cleanup.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 

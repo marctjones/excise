@@ -29,7 +29,7 @@ public class UndoRedoWorkflowTests
         var (sourcePath, _, tempDir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -71,7 +71,7 @@ public class UndoRedoWorkflowTests
         var (sourcePath, outputPath, tempDir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -111,7 +111,7 @@ public class UndoRedoWorkflowTests
         var (sourcePath, _, tempDir) = MakePaths();
         TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 4);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -139,7 +139,7 @@ public class UndoRedoWorkflowTests
         var (sourcePath, _, tempDir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Rotate me");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -169,7 +169,7 @@ public class UndoRedoWorkflowTests
         var (sourcePath, _, tempDir) = MakePaths();
         TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 4);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -203,7 +203,7 @@ public class UndoRedoWorkflowTests
         var (sourcePath, outputPath, tempDir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -238,7 +238,7 @@ public class UndoRedoWorkflowTests
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "First doc");
         TestPdfGenerator.CreateSimpleTextPdf(secondPath, "Second doc");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
 
@@ -258,7 +258,7 @@ public class UndoRedoWorkflowTests
     [FixedAvaloniaFact]
     public void MacNativeMenu_WiresCmdZAndCmdShiftZ_ToUndoRedo()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var menu = MacNativeMenuBuilder.Create(vm);
 
         var undo = FindItemByCommand(menu, vm.UndoCommand);

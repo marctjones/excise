@@ -50,7 +50,7 @@ public class FileOpsCommandTests
         var (sourcePath, _, tempDir) = MakePaths();
         TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 3);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         vm.StorageProviderOverride = CreateStorageProviderStub(openFiles: new[] { sourcePath });
 
         vm.IsDocumentLoaded.Should().BeFalse();
@@ -69,7 +69,7 @@ public class FileOpsCommandTests
         var (sourcePath, _, tempDir) = MakePaths();
         TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 2);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
 
         await vm.LoadRecentFileCommand.Execute(sourcePath);
 
@@ -86,7 +86,7 @@ public class FileOpsCommandTests
         var (sourcePath, outputPath, tempDir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         await vm.LoadDocumentAsync(sourcePath);
         var before = vm.PdfCoreDocument!.GetPage(1).Rotation;
 
@@ -115,7 +115,7 @@ public class FileOpsCommandTests
         var (sourcePath, outputPath, tempDir) = MakePaths();
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         await vm.LoadDocumentAsync(sourcePath);
 
         // Escape the "original file" branch of SaveFileCommand (which redirects
@@ -150,7 +150,7 @@ public class FileOpsCommandTests
         var outputPath = Path.Combine(tempDir, "form_flattened.pdf");
         File.WriteAllBytes(sourcePath, BuildFormPdf());
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         await vm.LoadDocumentAsync(sourcePath);
 
         var field = vm.PdfCoreDocument!.GetAcroForm()!.FindField("Name")!;
@@ -179,7 +179,7 @@ public class FileOpsCommandTests
         TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Export me");
         var outputPath = Path.Combine(tempDir, "page1.png");
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         await vm.LoadDocumentAsync(sourcePath);
 
         vm.StorageProviderOverride = CreateStorageProviderStub(saveFile: outputPath);
@@ -201,7 +201,7 @@ public class FileOpsCommandTests
         var exportDir = Path.Combine(tempDir, "exported");
         Directory.CreateDirectory(exportDir);
 
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         await vm.LoadDocumentAsync(sourcePath);
 
         vm.StorageProviderOverride = CreateStorageProviderStub(folder: exportDir);
@@ -331,7 +331,7 @@ public class FileOpsCommandTests
     private static MainWindowViewModel CreateViewModelWithDialogSpy(IUserDialogService dialog)
     {
         var loggerFactory = NullLoggerFactory.Instance;
-        return new MainWindowViewModel(
+        return MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             new PdfDocumentService(NullLogger<PdfDocumentService>.Instance),

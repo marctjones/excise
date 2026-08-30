@@ -54,7 +54,7 @@ public class ExternalLinkClickTests
         var loggerFactory = NullLoggerFactory.Instance;
         var dialog = new FakeUserDialogService();
         var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
-        var vm = new MainWindowViewModel(
+        var vm = MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             documentService,

@@ -58,7 +58,7 @@ public class StartupActivationWorkflowTests
             var resolved = Excise.App.StartupDocumentResolver.Resolve(lifetimeArgs: null, processArgs);
             resolved.Should().Be(Path.GetFullPath(path), "sanity: the resolver must find the path before we test loading it");
 
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             vm.IsDocumentLoaded.Should().BeFalse("fixture sanity — nothing loaded yet");
 
             await Excise.App.App.OpenPathAsync(vm, resolved!, NullLogger.Instance);
@@ -100,7 +100,7 @@ public class StartupActivationWorkflowTests
             resolved.Should().Be(Path.GetFullPath(pdfPath),
                 "it must skip the non-pdf file and the pdf that doesn't exist, and pick the real one");
 
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             await Excise.App.App.OpenPathAsync(vm, resolved!, NullLogger.Instance);
 
             vm.IsDocumentLoaded.Should().BeTrue(

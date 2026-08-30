@@ -148,7 +148,7 @@ public class RedactionMouseDragBroadeningTests
     private static async Task<(MainWindow window, MainWindowViewModel vm, PdfViewerControl viewer, Canvas overlay, PdfPage page)>
         OpenInRedactionMode(string src)
     {
-        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 2000, Height = 1600 };
         window.Show();
         await vm.LoadDocumentAsync(src);

@@ -23,6 +23,7 @@ internal static class ApplicationComposition
         services.AddSingleton<RedactedCopySafetyService>();
         services.AddSingleton<PdfTextExtractionService>();
         services.AddSingleton<PdfSearchService>();
+        services.AddSingleton<DocumentTextIndexSession>();
         services.AddSingleton<SignatureVerificationService>();
         services.AddSingleton<SignatureVerificationSummaryFormatter>();
         services.AddSingleton<SignatureVerificationWorkflowService>();
@@ -45,19 +46,17 @@ internal static class ApplicationComposition
         IServiceProvider services) =>
         new(
             services.GetRequiredService<Microsoft.Extensions.Logging.ILogger<MainWindowViewModel>>(),
-            services.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>(),
             services.GetRequiredService<PdfDocumentService>(),
             services.GetRequiredService<PdfRenderService>(),
             services.GetRequiredService<RedactionService>(),
+            services.GetRequiredService<RedactedCopySafetyService>(),
             services.GetRequiredService<PdfTextExtractionService>(),
             services.GetRequiredService<PdfSearchService>(),
-            services.GetRequiredService<SignatureVerificationService>(),
+            services.GetRequiredService<DocumentTextIndexSession>(),
             services.GetRequiredService<FilenameSuggestionService>(),
             services.GetRequiredService<ToastService>(),
-            services.GetRequiredService<SignatureVerificationSummaryFormatter>(),
             services.GetRequiredService<IUserDialogService>(),
             services.GetRequiredService<SignatureVerificationWorkflowService>(),
             services.GetRequiredService<PageOrganizationWorkflowService>(),
-            services.GetRequiredService<AnnotationWorkflowService>(),
-            services.GetRequiredService<RedactedCopySafetyService>());
+            services.GetRequiredService<AnnotationWorkflowService>());
 }

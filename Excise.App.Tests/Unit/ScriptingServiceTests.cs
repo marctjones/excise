@@ -14,7 +14,7 @@ public class ScriptingServiceTests
     public async Task ExecuteAsync_ValidScript_ReturnsSuccess()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var service = new ScriptingService(viewModel);
 
         // Act
@@ -29,7 +29,7 @@ public class ScriptingServiceTests
     public async Task ExecuteAsync_ScriptWithError_ReturnsFailure()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var service = new ScriptingService(viewModel);
 
         // Act
@@ -44,7 +44,7 @@ public class ScriptingServiceTests
     public async Task ExecuteAsync_AccessViewModel_CanReadProperties()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var service = new ScriptingService(viewModel);
 
         // Act - access IsDocumentLoaded from the ViewModel
@@ -59,7 +59,7 @@ public class ScriptingServiceTests
     public async Task ExecuteAsync_WithAsyncCode_WorksCorrectly()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var service = new ScriptingService(viewModel);
 
         // Act
@@ -77,7 +77,7 @@ public class ScriptingServiceTests
     public void ValidateScript_ValidScript_ReturnsNoErrors()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var service = new ScriptingService(viewModel);
 
         // Act
@@ -91,7 +91,7 @@ public class ScriptingServiceTests
     public void ValidateScript_InvalidScript_ReturnsErrors()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var service = new ScriptingService(viewModel);
 
         // Act
@@ -105,7 +105,7 @@ public class ScriptingServiceTests
     public void ValidateScript_UndefinedVariable_ReturnsError()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var service = new ScriptingService(viewModel);
 
         // Act
@@ -120,7 +120,7 @@ public class ScriptingServiceTests
     public async Task ExecuteFileAsync_NonExistentFile_ReturnsError()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var service = new ScriptingService(viewModel);
 
         // Act
@@ -135,7 +135,7 @@ public class ScriptingServiceTests
     public async Task ExecuteAsync_RuntimeException_ReturnsError()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var service = new ScriptingService(viewModel);
 
         // Act
@@ -150,7 +150,7 @@ public class ScriptingServiceTests
     public async Task ExecuteAsync_CanUseLinq_WithImportedNamespace()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var service = new ScriptingService(viewModel);
 
         // Act - use LINQ which should be available from imported namespaces
@@ -168,7 +168,7 @@ public class ScriptingServiceTests
     public async Task ExecuteAsync_NullReturn_HandlesGracefully()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var service = new ScriptingService(viewModel);
 
         // Act

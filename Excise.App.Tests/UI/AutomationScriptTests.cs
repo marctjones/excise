@@ -46,7 +46,7 @@ public class AutomationScriptTests
         string scriptName,
         MainWindowViewModel? viewModel = null)
     {
-        viewModel ??= new MainWindowViewModel();
+        viewModel ??= MainWindowViewModelTestFactory.Create();
 
         var scriptPath = Path.Combine(_scriptsDir, scriptName);
 
@@ -101,7 +101,7 @@ public class AutomationScriptTests
     public async Task AutomationScript_LoadDocument_ExecutesSuccessfully()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Act
         var result = await RunAutomationScriptAsync("test-load-document.csx", viewModel);
@@ -118,7 +118,7 @@ public class AutomationScriptTests
     public async Task AutomationScript_RedactText_ExecutesSuccessfully()
     {
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Act
         var result = await RunAutomationScriptAsync("test-redact-text.csx", viewModel);
@@ -137,7 +137,7 @@ public class AutomationScriptTests
         // If this passes, the milestone is complete
 
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Act
         var result = await RunAutomationScriptAsync("test-birth-certificate.csx", viewModel);
@@ -159,7 +159,7 @@ public class AutomationScriptTests
         // Tests precision, case handling, word boundaries
 
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Act
         var result = await RunAutomationScriptAsync("test-birth-certificate-specific-words.csx", viewModel);
@@ -191,7 +191,7 @@ public class AutomationScriptTests
         // which bypasses coordinate conversion issues.
 
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Act
         var result = await RunAutomationScriptAsync("test-verapdf-corpus-sample.csx", viewModel);
@@ -212,7 +212,7 @@ public class AutomationScriptTests
         // Stress test: Process 100 diverse PDFs sequentially
 
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Act
         var result = await RunAutomationScriptAsync("test-stress-diverse-pdfs.csx", viewModel);
@@ -233,7 +233,7 @@ public class AutomationScriptTests
         // Test realistic batch processing workflow
 
         // Arrange
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
 
         // Act
         var result = await RunAutomationScriptAsync("test-batch-processing.csx", viewModel);
@@ -277,7 +277,7 @@ public class AutomationScriptTests
         // Validate that all automation scripts have valid C# syntax
         // This doesn't execute them, just checks for compilation errors
 
-        var viewModel = new MainWindowViewModel();
+        var viewModel = MainWindowViewModelTestFactory.Create();
         var scriptingService = new ScriptingService(viewModel);
 
         var scriptFiles = Directory.GetFiles(_scriptsDir, "*.csx");

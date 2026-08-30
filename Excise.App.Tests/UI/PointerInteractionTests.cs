@@ -136,7 +136,7 @@ public class PointerInteractionTests : IDisposable
         var path = WriteTempPdf(BuildBarePdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -201,7 +201,7 @@ public class PointerInteractionTests : IDisposable
         var path = WriteTempPdf(BuildBarePdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -272,7 +272,7 @@ public class PointerInteractionTests : IDisposable
         var path = WriteTempPdf(BuildBarePdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -319,7 +319,7 @@ public class PointerInteractionTests : IDisposable
         var path = WriteTempPdf(BuildBarePdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -400,7 +400,7 @@ public class PointerInteractionTests : IDisposable
         var path = WriteTempPdf(BuildBarePdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -460,7 +460,7 @@ public class PointerInteractionTests : IDisposable
         var path = WriteTempPdf(BuildBarePdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -521,7 +521,7 @@ public class PointerInteractionTests : IDisposable
         var path = WriteTempPdf(BuildBarePdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -581,7 +581,7 @@ public class PointerInteractionTests : IDisposable
         var path = WriteTempPdf(BuildBarePdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -653,7 +653,7 @@ public class PointerInteractionTests : IDisposable
         var path = WriteTempPdf(BuildCheckboxFormPdf());
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -707,7 +707,7 @@ public class PointerInteractionTests : IDisposable
             Path.Combine(Path.GetTempPath(), $"excise-thumbs-{Guid.NewGuid():N}.pdf"), 4);
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 1400 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -749,7 +749,7 @@ public class PointerInteractionTests : IDisposable
             Path.Combine(Path.GetTempPath(), $"excise-thumbs-{Guid.NewGuid():N}.pdf"), 4);
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 1400 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -780,7 +780,7 @@ public class PointerInteractionTests : IDisposable
             Path.Combine(Path.GetTempPath(), $"excise-thumbs-{Guid.NewGuid():N}.pdf"), 4);
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 1400 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -810,7 +810,7 @@ public class PointerInteractionTests : IDisposable
             Path.Combine(Path.GetTempPath(), $"excise-search-{Guid.NewGuid():N}.pdf"), 4);
         try
         {
-            var vm = new MainWindowViewModel();
+            var vm = MainWindowViewModelTestFactory.Create();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 1400 };
             _windows.Show(window);
             await Task.Delay(150);
@@ -876,7 +876,7 @@ public class PointerInteractionTests : IDisposable
     {
         var loggerFactory = NullLoggerFactory.Instance;
         var dialog = new RecordingDialogService();
-        var vm = new MainWindowViewModel(
+        var vm = MainWindowViewModelTestFactory.Create(
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             new PdfDocumentService(NullLogger<PdfDocumentService>.Instance),

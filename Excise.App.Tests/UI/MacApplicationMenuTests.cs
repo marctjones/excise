@@ -29,7 +29,7 @@ public class MacApplicationMenuTests
     [FixedAvaloniaFact]
     public void AppMenu_FirstItemIsAboutExcise_NotAboutAvalonia()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var menu = MacApplicationMenu.Build(() => vm);
 
         var items = menu.Items.OfType<NativeMenuItem>().ToList();
@@ -45,7 +45,7 @@ public class MacApplicationMenuTests
     [FixedAvaloniaFact]
     public async Task ClickingAboutExcise_OpensTheAboutWindow()
     {
-        var vm = new MainWindowViewModel();
+        var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         vm.MainWindowResolver = () => window;
