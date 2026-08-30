@@ -15,7 +15,6 @@ using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Reactive;
 using System.Threading;
@@ -24,16 +23,6 @@ using SkiaSharp;
 using PdfCoreDocument = Excise.Core.Document.PdfDocument;
 
 namespace Excise.App.ViewModels;
-
-public sealed record DocumentOpenTiming(
-    string FilePath,
-    int PageCount,
-    long DocumentInstancesLoadedElapsedMs,
-    long FirstPageVisibleElapsedMs,
-    long ThumbnailPlaceholdersReadyElapsedMs,
-    long OutlineReadyElapsedMs,
-    long SearchIndexStartedElapsedMs,
-    long TotalLoadElapsedMs);
 
 public partial class MainWindowViewModel : ViewModelBase
 {
@@ -958,10 +947,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
     internal bool AdjacentPagePrefetchEnabled { get; set; } = true;
 
-    public string StatusText => _documentService.IsDocumentLoaded
-        ? $"Page {CurrentPageIndex + 1} of {TotalPages} - Zoom: {ZoomLevel:P0}"
-        : "No document loaded";
-
     public string OperationStatus
     {
         get => _operationStatus;
@@ -1060,344 +1045,6 @@ public partial class MainWindowViewModel : ViewModelBase
     // Document status property
     public bool IsDocumentLoaded => _documentService.IsDocumentLoaded;
 
-    // Command Implementations
-    private async Task OpenFileAsync()
-    {
-        _logger.LogInformation("Open file command triggered");
-
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Open dialog");
-            return;
-        }
-
-        var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Open PDF File",
-            AllowMultiple = false,
-            FileTypeFilter = new[]
-            {
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = new[] { "*.pdf" }
-                }
-            }
-        });
-
-        if (files.Count == 0)
-        {
-            _logger.LogInformation("Open dialog cancelled");
-            return;
-        }
-
-        var filePath = files[0].Path.LocalPath;
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            _logger.LogWarning("Selected file has no local path");
-            return;
-        }
-
-        await LoadDocumentAsync(filePath);
-    }
-
-    public async Task LoadDocumentAsync(string filePath)
-    {
-        // Validate input
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            throw new ArgumentException("File path cannot be null or empty", nameof(filePath));
-        }
-
-        if (!System.IO.File.Exists(filePath))
-        {
-            throw new FileNotFoundException($"PDF file not found: {filePath}", filePath);
-        }
-
-        _logger.LogInformation(">>> STEP 1: LoadDocumentAsync START for: {FilePath}", filePath);
-        var openSw = Stopwatch.StartNew();
-        long documentInstancesLoadedElapsedMs = 0;
-        long firstPageVisibleElapsedMs = 0;
-        long thumbnailPlaceholdersReadyElapsedMs = 0;
-        long outlineReadyElapsedMs = 0;
-        long searchIndexStartedElapsedMs = 0;
-
-        try
-        {
-            _logger.LogInformation(">>> STEP 2: Clearing previous document state");
-            // Clear ALL state from previous document before loading new one
-            LastDocumentOpenTiming = null;
-            _textIndexSession.Cancel();
-            CurrentRedactionArea = new Rect();
-            ClearCurrentTextSelection();
-            RedactionWorkflow.Reset();
-            ClearPendingTypewriterText();
-            ClearEditHistory();
-            ClipboardHistory.Clear();
-            ResetThumbnailLoadTracking();
-            PageThumbnails.Clear();
-            _renderService.ClearCache();
-            this.RaisePropertyChanged(nameof(RenderCacheStats));
-
-            // Exit redaction mode if active
-            if (IsRedactionMode)
-            {
-                IsRedactionMode = false;
-            }
-            if (IsTypewriterMode)
-            {
-                IsTypewriterMode = false;
-            }
-
-            _logger.LogInformation(">>> STEP 3: Setting _currentFilePath and FileState");
-            _currentFilePath = filePath;
-            FileState.SetDocument(filePath);
-
-            _logger.LogInformation(">>> STEP 4: RaisePropertyChanged(DocumentName)");
-            this.RaisePropertyChanged(nameof(DocumentName));
-            this.RaisePropertyChanged(nameof(StatusBarText));
-
-            // Stage label for the status bar — empty string clears it. Rendering
-            // text + the parser parse both happen off the UI thread, but the
-            // user otherwise has no signal that anything is in progress.
-            OperationStatus = "Opening PDF…";
-
-            // Open the document on a worker thread (the parser walks the
-            // entire xref + catalog up front; on a 455-page book that's
-            // hundreds of milliseconds we shouldn't pay on the dispatcher).
-            // Both services need their own instance — they have separate
-            // ownership lifecycles — but the parses run in parallel.
-            _logger.LogInformation(">>> STEP 5: Loading Excise.Core document (parallel parse)");
-            try
-            {
-                PdfCoreDocument = await LoadDocumentInstancesAsync(filePath, userPassword: null);
-            }
-            catch (Excise.Core.Parsing.PdfEncryptionNotSupportedException ex) when (IsPasswordVerificationFailure(ex))
-            {
-                // #643: a preserving save writes encrypted output, and flows
-                // like "apply redactions → reload the redacted copy" land
-                // here. Try the password the previous document was opened
-                // with before bothering the user for it again.
-                var rememberedPassword = _documentService.CurrentUserPassword;
-                var openedWithRememberedPassword = false;
-                if (!string.IsNullOrEmpty(rememberedPassword))
-                {
-                    try
-                    {
-                        PdfCoreDocument = await LoadDocumentInstancesAsync(filePath, rememberedPassword);
-                        openedWithRememberedPassword = true;
-                    }
-                    catch (Excise.Core.Parsing.PdfEncryptionNotSupportedException ex2) when (IsPasswordVerificationFailure(ex2))
-                    {
-                        // Different document, different password — fall
-                        // through to the prompt.
-                    }
-                }
-
-                if (!openedWithRememberedPassword)
-                {
-                    OperationStatus = "Password required…";
-                    var password = await _dialogService.PromptPasswordAsync(
-                        "Password Required",
-                        "Enter the user password for this PDF.");
-                    if (password == null)
-                        throw new Excise.Core.Parsing.PdfEncryptionNotSupportedException(
-                            "Password is required to open this PDF.");
-
-                    OperationStatus = "Opening PDF…";
-                    PdfCoreDocument = await LoadDocumentInstancesAsync(filePath, password);
-                }
-            }
-            _logger.LogInformation(">>> STEP 5: Both document instances loaded");
-            documentInstancesLoadedElapsedMs = openSw.ElapsedMilliseconds;
-
-            _logger.LogInformation(">>> STEP 6: Setting CurrentPageIndex = 0");
-            CurrentPageIndex = 0;
-
-            // The bound PdfViewerControl owns display rendering. At this point
-            // it has enough state (Document + CurrentPage) to render page 1;
-            // avoid the legacy VM render path, which produced an unbound
-            // CurrentPageImage and duplicated raster work.
-            _logger.LogInformation(">>> STEP 7: Current page render scheduled in viewer");
-            firstPageVisibleElapsedMs = openSw.ElapsedMilliseconds;
-
-            // Auto-fit-width on document open so the page is never wider than
-            // the central pane (otherwise it scrolls behind the right sidebar
-            // on default windows). The fit-mode latch in the ZoomFit* path
-            // also keeps it fitted on subsequent window resizes.
-            ReapplyFitModeIfNeeded();
-
-            // Build the on-disk thumbnail cache for this document; the
-            // strip's items will pull from it on demand as they scroll
-            // into view (no eager batch render any more — that fired
-            // hundreds of renders for pages the user might never look at).
-            _thumbnailCache?.Dispose();
-            _thumbnailCache = new Services.ThumbnailCacheService(
-                filePath, PdfCoreDocument!,
-                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
-
-            _logger.LogInformation(">>> STEP 8: Creating thumbnail placeholders (lazy load)");
-            await LoadPageThumbnailsAsync();
-            thumbnailPlaceholdersReadyElapsedMs = openSw.ElapsedMilliseconds;
-
-            // Idle pre-warm (#689): populate the disk cache for every page in
-            // the background so the first full sidebar scroll (and every
-            // future open of this file) is all cache hits. First-open only —
-            // the mutation path re-keys its cache per edit, and re-sweeping
-            // every page after every redaction would be wasted work.
-            QueueThumbnailPrewarm(_thumbnailCache);
-
-            // Parse the document's table-of-contents outline (if any).
-            // Cheap — just a tree walk over the catalog's /Outlines, no
-            // text extraction needed. Populates the left-sidebar tree.
-            try
-            {
-                var outline = Excise.Core.Document.PdfOutlineParser.Parse(PdfCoreDocument!);
-                OutlineNodes.Clear();
-                foreach (var item in outline)
-                    OutlineNodes.Add(Models.OutlineNode.From(item));
-                this.RaisePropertyChanged(nameof(HasOutline));
-                _logger.LogInformation(">>> STEP 8b: Outline parsed — {Count} top-level entries", outline.Count);
-            }
-            catch (Exception outlineEx)
-            {
-                _logger.LogWarning(outlineEx, "Failed to parse document outline");
-                OutlineNodes.Clear();
-            }
-            outlineReadyElapsedMs = openSw.ElapsedMilliseconds;
-
-            // Kick off the text index build in the background. First
-            // search after this completes is sub-second instead of the
-            // multi-second per-keystroke walk we used to do live.
-            Services.DocumentTextIndex? indexGeneration = null;
-            var totalPagesForIndex = TotalPages;
-            var indexProgress = new Progress<(int Done, int Total)>(p =>
-            {
-                if (!ReferenceEquals(TextIndex, indexGeneration)) return;
-                // Don't overwrite a "Searching…" / "Rendering…" status —
-                // index building runs alongside other ops and shouldn't
-                // hijack the bar. Only show indexing progress when nothing
-                // else is in flight.
-                if (string.IsNullOrEmpty(OperationStatus) ||
-                    OperationStatus.StartsWith("Indexing"))
-                {
-                    OperationStatus = p.Done < p.Total
-                        ? $"Indexing for search… {p.Done}/{p.Total}"
-                        : string.Empty;
-                }
-            });
-            indexGeneration = _textIndexSession.Start(PdfCoreDocument!, indexProgress);
-            searchIndexStartedElapsedMs = openSw.ElapsedMilliseconds;
-
-            _logger.LogInformation(">>> STEP 9: RaisePropertyChanged(TotalPages)");
-            this.RaisePropertyChanged(nameof(TotalPages));
-            RefreshRedactAnnotationCount();
-
-            _logger.LogInformation(">>> STEP 10: RaisePropertyChanged(StatusText)");
-            this.RaisePropertyChanged(nameof(StatusText));
-
-            _logger.LogInformation(">>> STEP 11: RaisePropertyChanged(IsDocumentLoaded)");
-            this.RaisePropertyChanged(nameof(IsDocumentLoaded));
-
-            _logger.LogInformation(">>> STEP 12: Adding to recent files");
-            AddToRecentFiles(filePath);
-
-            _logger.LogInformation(">>> STEP 12b: Restoring document state (zoom, page index)");
-            await RestoreDocumentStateAsync(filePath);
-
-            if (OperationStatus == "Opening PDF…")
-                OperationStatus = string.Empty;
-
-            openSw.Stop();
-            LastDocumentOpenTiming = new DocumentOpenTiming(
-                filePath,
-                TotalPages,
-                documentInstancesLoadedElapsedMs,
-                firstPageVisibleElapsedMs,
-                thumbnailPlaceholdersReadyElapsedMs,
-                outlineReadyElapsedMs,
-                searchIndexStartedElapsedMs,
-                openSw.ElapsedMilliseconds);
-            _logger.LogInformation(
-                ">>> STEP 13: LoadDocumentAsync COMPLETE. Total pages: {PageCount}. Timings: docLoad={DocLoadMs}ms firstPage={FirstPageMs}ms thumbnails={ThumbnailsMs}ms outline={OutlineMs}ms indexStart={IndexStartMs}ms total={TotalMs}ms",
-                TotalPages,
-                LastDocumentOpenTiming.DocumentInstancesLoadedElapsedMs,
-                LastDocumentOpenTiming.FirstPageVisibleElapsedMs,
-                LastDocumentOpenTiming.ThumbnailPlaceholdersReadyElapsedMs,
-                LastDocumentOpenTiming.OutlineReadyElapsedMs,
-                LastDocumentOpenTiming.SearchIndexStartedElapsedMs,
-                LastDocumentOpenTiming.TotalLoadElapsedMs);
-            ResponsivenessReportWriter.TryWriteDocumentOpenReportFromEnvironment(
-                LastDocumentOpenTiming,
-                _renderService.GetCacheStats(),
-                _logger);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "!!! ERROR in LoadDocumentAsync at some step: {FilePath}", filePath);
-            _logger.LogError("!!! Exception Type: {ExceptionType}", ex.GetType().Name);
-            _logger.LogError("!!! Exception Message: {Message}", ex.Message);
-
-            // Clear document state on failure
-            _currentFilePath = string.Empty;
-            FileState.Reset();
-            _textIndexSession.Cancel();
-            OperationStatus = string.Empty;
-
-            // Determine user-friendly error message
-            string userMessage;
-            if (IsPasswordVerificationFailure(ex) || ex.Message.Contains("owner password", StringComparison.OrdinalIgnoreCase)
-                || ex.Message.Contains("password is required", StringComparison.OrdinalIgnoreCase))
-            {
-                userMessage = "This PDF requires a user password. The password was not provided, was rejected, or the file uses an unsupported owner-password-only mode.";
-                _toastService.ShowError("Cannot Open PDF", "Password required or rejected.");
-            }
-            else if (ex.Message.Contains("encrypted", StringComparison.OrdinalIgnoreCase))
-            {
-                userMessage = "This PDF is encrypted and cannot be opened.";
-                _toastService.ShowError("Cannot Open PDF", "File is encrypted. Please provide an unencrypted version.");
-            }
-            else
-            {
-                userMessage = $"Failed to open PDF:\n\n{ex.Message}";
-                _toastService.ShowError("Cannot Open PDF", ex.Message);
-            }
-
-            // Show error dialog to user (StatusBarText will show "Ready" from FileState.Reset())
-            this.RaisePropertyChanged(nameof(StatusBarText));
-            await ShowErrorDialogAsync("Cannot Open PDF", userMessage);
-        }
-    }
-
-    /// <summary>
-    /// Open the file ONCE and use the single instance for both the save path
-    /// and the viewer (#917).
-    ///
-    /// This used to open the same file twice in parallel — a byte-backed
-    /// document for saving and a file-backed one for the viewer — which cost
-    /// far more than the second parse:
-    ///
-    ///   * every mutation had to be applied to both by hand, and forgetting
-    ///     was invisible: a correct saved file and an unchanged screen (this
-    ///     bit #912, and every row of #934 had to re-fix it);
-    ///   * keeping them in sync meant serialising the whole document and
-    ///     reparsing it after each mutation — that round trip IS #922's
-    ///     1401ms, and it disappears when there is only one document;
-    ///   * the viewer's copy was file-backed, so it held the file open and
-    ///     saving over it failed on Windows (#926).
-    ///
-    /// The service's instance is byte-backed and deliberately does not hold
-    /// the file open, so it is the one to keep. Ownership stays with the
-    /// service — this ViewModel must never dispose what it returns.
-    /// </summary>
-    private async Task<PdfCoreDocument> LoadDocumentInstancesAsync(string filePath, string? userPassword)
-    {
-        await Task.Run(() => _documentService.LoadDocument(filePath, userPassword));
-        return _documentService.GetCurrentDocument()
-            ?? throw new InvalidOperationException(
-                $"Document service reported no document after loading {filePath}.");
-    }
-
     /// <summary>
     /// Dispose the viewer document only when it is NOT the service's instance.
     ///
@@ -1420,10 +1067,6 @@ public partial class MainWindowViewModel : ViewModelBase
         if (_pdfCoreDocument != null && !ReferenceEquals(owned, _pdfCoreDocument))
             _pdfCoreDocument.Dispose();
     }
-
-    private static bool IsPasswordVerificationFailure(Exception ex)
-        => ex.Message.Contains("password verification failed", StringComparison.OrdinalIgnoreCase)
-           || ex.Message.Contains("requires a non-empty user password", StringComparison.OrdinalIgnoreCase);
 
     private async Task ShowErrorDialogAsync(string title, string message)
     {
@@ -1588,8 +1231,6 @@ public partial class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(TotalPages));
         RefreshRedactAnnotationCount();
             RefreshRedactAnnotationCount();
-            this.RaisePropertyChanged(nameof(StatusText));
-
             _logger.LogInformation("Page removed successfully. Remaining pages: {PageCount}", TotalPages);
         }
         catch (Exception ex)
@@ -1972,7 +1613,6 @@ public partial class MainWindowViewModel : ViewModelBase
         await LoadPageThumbnailsAsync();
         this.RaisePropertyChanged(nameof(TotalPages));
         RefreshRedactAnnotationCount();
-        this.RaisePropertyChanged(nameof(StatusText));
         this.RaisePropertyChanged(nameof(StatusBarText));
     }
 
@@ -2175,14 +1815,12 @@ public partial class MainWindowViewModel : ViewModelBase
         // resize doesn't immediately undo what they just clicked.
         _zoomFitMode = ZoomFitMode.Manual;
         ZoomLevel = Math.Min(ZoomLevel * 1.25, 5.0);
-        this.RaisePropertyChanged(nameof(StatusText));
     }
 
     private void ZoomOut()
     {
         _zoomFitMode = ZoomFitMode.Manual;
         ZoomLevel = Math.Max(ZoomLevel / 1.25, 0.25);
-        this.RaisePropertyChanged(nameof(StatusText));
     }
 
     private void ZoomActualSize()
@@ -2190,7 +1828,6 @@ public partial class MainWindowViewModel : ViewModelBase
         _logger.LogInformation("Setting zoom to actual size (100%)");
         _zoomFitMode = ZoomFitMode.Manual;
         ZoomLevel = 1.0;
-        this.RaisePropertyChanged(nameof(StatusText));
     }
 
     /// <summary>
@@ -2204,7 +1841,6 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _zoomFitMode = ZoomFitMode.Manual;
         ZoomLevel = Math.Clamp(zoom, 0.25, 5.0);
-        this.RaisePropertyChanged(nameof(StatusText));
     }
 
     private void ZoomFitWidth() => ZoomFitWidthInternal(latch: true);
@@ -2241,7 +1877,6 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         }
         finally { _applyingAutomaticZoom = false; }
-        this.RaisePropertyChanged(nameof(StatusText));
     }
 
     private void ZoomFitPageInternal(bool latch)
@@ -2270,7 +1905,6 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         }
         finally { _applyingAutomaticZoom = false; }
-        this.RaisePropertyChanged(nameof(StatusText));
     }
 
     /// <summary>
@@ -2775,7 +2409,6 @@ public partial class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(DocumentName));
             this.RaisePropertyChanged(nameof(TotalPages));
             RefreshRedactAnnotationCount();
-            this.RaisePropertyChanged(nameof(StatusText));
             this.RaisePropertyChanged(nameof(StatusBarText));
             this.RaisePropertyChanged(nameof(IsDocumentLoaded));
             this.RaisePropertyChanged(nameof(CurrentRedactionArea));

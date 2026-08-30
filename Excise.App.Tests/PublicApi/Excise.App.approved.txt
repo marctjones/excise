@@ -942,7 +942,6 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ShowShortcutsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SplitDocumentCommand { get; }
         public string StatusBarText { get; }
-        public string StatusText { get; }
         public Avalonia.Platform.Storage.IStorageProvider? StorageProviderOverride { get; set; }
         public Excise.App.Services.ToastService ToastService { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAnnotationAuditModeCommand { get; }
