@@ -205,7 +205,7 @@
         "Excise.Cli.Tests"
       ],
       "gaps": [
-        "Program.cs remains a multi-thousand-line command host and needs command-boundary and duplication analysis before decomposition."
+        "Program.cs remains a 2,584-line command host after the first save-size-report workflow extraction; the remaining command boundaries still need measured decomposition and duplicate-policy analysis."
       ],
       "issueIds": [
         1263
@@ -335,7 +335,7 @@
         "avalonia"
       ],
       "symptoms": [
-        "MainWindowViewModel.cs is 3,337 lines before its additional partials; search-index lifecycle and staged document-open orchestration extractions are complete, but navigation and other workflow ownership remain concentrated.",
+        "MainWindowViewModel.cs is 3,337 lines before its additional partials; search-index lifecycle, staged document-open orchestration, and workflow-grouped command composition extractions are complete, but navigation and other workflow ownership remain concentrated.",
         "The constructor accepts many services and also maintains a separate hand-built parameterless composition path.",
         "Document, navigation, search, thumbnails, editing, redaction, security, and background work share mutable state."
       ],

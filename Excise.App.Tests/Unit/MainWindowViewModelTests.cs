@@ -691,6 +691,21 @@ public class MainWindowViewModelTests
     #region Command Properties Tests
 
     [Fact]
+    public void AllPublicCommandProperties_AreInitialized()
+    {
+        var missingCommands = typeof(MainWindowViewModel)
+            .GetProperties()
+            .Where(property => property.Name.EndsWith("Command", StringComparison.Ordinal))
+            .Where(property => property.GetIndexParameters().Length == 0)
+            .Where(property => property.GetValue(_viewModel) is null)
+            .Select(property => property.Name)
+            .ToArray();
+
+        missingCommands.Should().BeEmpty(
+            "every XAML and automation command binding must resolve after construction");
+    }
+
+    [Fact]
     public void OpenFileCommand_IsNotNull()
     {
         _viewModel.OpenFileCommand.Should().NotBeNull();
