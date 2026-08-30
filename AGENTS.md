@@ -2,6 +2,8 @@
 
 This is a cross-platform PDF editor (C# / .NET 10 / Avalonia, MVVM). Full guidance
 for AI assistants lives in [`CLAUDE.md`](CLAUDE.md); read it first.
+The canonical architecture entry point is
+[`docs/architecture/README.md`](docs/architecture/README.md).
 
 ## Task tracking
 

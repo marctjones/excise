@@ -19,9 +19,11 @@ A cross-platform PDF editor and pure-.NET PDF framework, built with **C# + .NET 
 > renderer and GUI display evidence are issue-linked, PDF 2.0 renderer
 > coverage is tracked by contract, and remaining advanced renderer/font work is
 > explicitly deferred rather than implied as shipped. The PDF stack is
-> excise-owned end-to-end — `Excise.Core` (parser/writer), `Excise.Rendering` (Skia),
-> and `Excise.Ocr` (system tesseract shell) — with no third-party PDF
-> dependencies. See [CHANGELOG.md](CHANGELOG.md) for full release notes.
+> implemented in this repository — `Excise.Core` (parser/writer),
+> `Excise.Rendering` (Skia), and `Excise.Ocr` — with no PdfPig, PDFsharp, or
+> PDFtoImage package dependency in the current stack. The source-provenance
+> review is tracked by [#1240](https://github.com/marctjones/excise/issues/1240).
+> See [CHANGELOG.md](CHANGELOG.md) for full release notes.
 
 ## What's in the box
 
@@ -610,6 +612,8 @@ What counts as the supported public contract:
 ## Documentation
 
 - **[CHANGELOG.md](CHANGELOG.md)** — release notes
+- **[Architecture](docs/architecture/README.md)** — canonical system design,
+  decisions, registry authority, and generated views
 - **[GitHub Wiki](https://github.com/marctjones/excise/wiki)** — Architecture, redaction engine internals, PDF spec reference
 - **[CLAUDE.md](CLAUDE.md)** — Development guidelines (also for AI-assisted contributions)
 - **[REDACTION_AI_GUIDELINES.md](REDACTION_AI_GUIDELINES.md)** — Critical safety rules for redaction-code changes
@@ -620,26 +624,10 @@ MIT License. See [LICENSES.md](LICENSES.md) for the complete dependency-license 
 
 ## Contributing
 
-Contributions welcome. The redaction-trust and document-security tracks are
-complete and released (glyph-level redaction with metadata/structure-tree
-scrubbing; read + write of AES-256/AES-128 encryption with encryption preserved
-across every mutating save). The biggest remaining open areas tracked in GitHub
-Issues, roughly in roadmap order:
-
-- Renderer font-model completeness — full CMap/CID coverage, Type 3 charprocs,
-  encoding/metrics residuals (#512–#515, #532, #584); this is redaction
-  security, not display polish (excise cannot redact what it cannot read)
-- Performance and Native AOT release lane (#590–#601)
-- Interop — RTL/bidi, accessibility/PDF/UA exposure, FDF/XFDF annotation
-  round-trip, self-signed signing (#623, #626, #631, #632)
-- Edited-output fidelity against reference renderers (#605, #610, #611)
-- In-place text editing with paragraph reflow, PDF → DOCX, PDF compare / diff
-
-Deliberately out of scope (closed #629, #630): distribution signing /
-notarization, in-app auto-update, and crash reporting. excise is built and
-installed from source by its author, so the OS trust prompt is a one-time
-manual accept and rebuilding *is* the update channel. These become relevant
-again only if excise is distributed to other people — at which point both
-issues should be reopened as originally written.
-
-Smaller-scope improvements (additional operator coverage, performance, accessibility, CFF charstring rewriting) are good first issues.
+Contributions are tracked in GitHub Issues and milestones rather than a second
+roadmap in this file. The current structural program is
+[RC20](https://github.com/marctjones/excise/milestone/104), with architecture
+authority, measured decomposition, provenance, and implementation assurance
+under [program epic #1257](https://github.com/marctjones/excise/issues/1257).
+Start with an issue whose acceptance criteria name the relevant behavior,
+security, performance, and compatibility gates.
