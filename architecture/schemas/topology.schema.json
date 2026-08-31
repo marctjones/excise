@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "generator", "sourceRevision", "projects", "symbols", "typeDependencies", "methodCycles", "seeds", "blindSpots"],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": { "const": 2 },
     "generator": { "const": "tools/Excise.Reachability" },
     "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "projects": {
@@ -14,9 +14,12 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "sourceFiles", "types", "methods", "mutableMembers", "declarationLines"],
+        "required": ["name", "path", "classification", "component", "sourceFiles", "types", "methods", "mutableMembers", "declarationLines"],
         "properties": {
           "name": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "pattern": "\\.csproj$" },
+          "classification": { "enum": ["shipping", "test", "sample", "benchmark", "tool"] },
+          "component": { "type": ["string", "null"] },
           "sourceFiles": { "type": "integer", "minimum": 0 },
           "types": { "type": "integer", "minimum": 0 },
           "methods": { "type": "integer", "minimum": 0 },
@@ -30,7 +33,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["project", "kind", "symbol", "containingType", "namespace", "file", "startLine", "endLine", "declarationLines", "branchPoints", "fanIn", "fanOut", "reachable", "seed", "mutable", "declarationCount"],
+        "required": ["project", "kind", "symbol", "containingType", "namespace", "file", "component", "workflows", "startLine", "endLine", "declarationLines", "branchPoints", "fanIn", "fanOut", "reachable", "seed", "mutable", "declarationCount"],
         "properties": {
           "project": { "type": "string", "minLength": 1 },
           "kind": { "type": "string", "minLength": 1 },
@@ -38,6 +41,8 @@
           "containingType": { "type": ["string", "null"] },
           "namespace": { "type": ["string", "null"] },
           "file": { "type": ["string", "null"] },
+          "component": { "type": ["string", "null"] },
+          "workflows": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
           "startLine": { "type": "integer", "minimum": 0 },
           "endLine": { "type": "integer", "minimum": 0 },
           "declarationLines": { "type": "integer", "minimum": 0 },

@@ -38,7 +38,11 @@ workspace.RegisterWorkspaceFailedHandler(e =>
 
 var solutionPath = Path.GetFullPath(options.SolutionPath);
 var solution = await workspace.OpenSolutionAsync(solutionPath);
-var analyzer = new ReachabilityAnalyzer(solution, options);
+var architecture = ArchitectureOwnershipIndex.Load(
+    Path.GetDirectoryName(solutionPath) ?? Environment.CurrentDirectory,
+    options.ArchitectureDesignPath,
+    options.ArchitectureInventoryPath);
+var analyzer = new ReachabilityAnalyzer(solution, options, architecture);
 var report = await analyzer.AnalyzeAsync();
 
 if (options.TopologyOutput is not null)
@@ -60,6 +64,8 @@ internal sealed record Options(
     bool Quiet,
     string? TopologyOutput,
     string? CheckTopologyOutput,
+    string ArchitectureDesignPath,
+    string ArchitectureInventoryPath,
     bool SelfTest,
     bool ShowHelp)
 {
@@ -71,6 +77,8 @@ internal sealed record Options(
         var quiet = false;
         string? topologyOutput = null;
         string? checkTopologyOutput = null;
+        var architectureDesignPath = "architecture/design.json";
+        var architectureInventoryPath = "architecture/inventory.generated.json";
         var selfTest = false;
         var help = false;
 
@@ -96,6 +104,12 @@ internal sealed record Options(
                 case "--check-topology-output":
                     checkTopologyOutput = RequireValue(args, ref i);
                     break;
+                case "--architecture-design":
+                    architectureDesignPath = RequireValue(args, ref i);
+                    break;
+                case "--architecture-inventory":
+                    architectureInventoryPath = RequireValue(args, ref i);
+                    break;
                 case "--self-test":
                     selfTest = true;
                     break;
@@ -115,7 +129,9 @@ internal sealed record Options(
 
         return new Options(
             solutionPath, baselinePath, update, quiet,
-            topologyOutput, checkTopologyOutput, selfTest, help);
+            topologyOutput, checkTopologyOutput,
+            architectureDesignPath, architectureInventoryPath,
+            selfTest, help);
     }
 
     public static void PrintHelp()
@@ -126,6 +142,7 @@ internal sealed record Options(
         Console.WriteLine("and reports unreachable private/internal symbols as a ratchet.");
         Console.WriteLine("--topology-output writes deterministic Roslyn source/coupling metrics as JSON.");
         Console.WriteLine("--check-topology-output fails when checked JSON differs from current source.");
+        Console.WriteLine("--architecture-design and --architecture-inventory select normalized ownership inputs.");
     }
 
     private static string RequireValue(string[] args, ref int index)
@@ -140,7 +157,10 @@ internal sealed record Options(
     }
 }
 
-internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
+internal sealed class ReachabilityAnalyzer(
+    Solution solution,
+    Options options,
+    ArchitectureOwnershipIndex architecture)
 {
     private static readonly SymbolDisplayFormat DisplayFormat =
         new(
@@ -210,7 +230,7 @@ internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
         var rows = _nodes.Values
             .Where(n => IsReportable(n.Symbol))
             .Where(n => !reachable.Contains(n.Symbol))
-            .Select(n => new ReachabilityRow(n.ProjectName, n.Kind, n.Display))
+            .Select(n => new ReachabilityRow(n.Project.Name, n.Kind, n.Display))
             .Distinct()
             .OrderBy(r => r.Project, StringComparer.Ordinal)
             .ThenBy(r => r.Kind, StringComparer.Ordinal)
@@ -271,20 +291,31 @@ internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
             .ThenBy(edge => edge.Target, StringComparer.Ordinal)
             .ToArray();
 
+        var projectOwnership = _nodes.Values
+            .Select(node => node.Project)
+            .DistinctBy(project => project.Path, StringComparer.Ordinal)
+            .ToDictionary(project => project.Name, StringComparer.Ordinal);
         var projects = allSymbols
             .GroupBy(symbol => symbol.Project, StringComparer.Ordinal)
-            .Select(group => new ProjectTopology(
-                group.Key,
-                group.Select(item => item.File).Where(file => file is not null).Distinct(StringComparer.Ordinal).Count(),
-                group.Count(item => item.Kind == "type"),
-                group.Count(item => item.Kind == "method"),
-                group.Count(item => item.Mutable),
-                group.Sum(item => item.DeclarationLines)))
+            .Select(group =>
+            {
+                var owner = projectOwnership[group.Key];
+                return new ProjectTopology(
+                    group.Key,
+                    owner.Path,
+                    owner.Classification,
+                    owner.Component,
+                    group.Select(item => item.File).Where(file => file is not null).Distinct(StringComparer.Ordinal).Count(),
+                    group.Count(item => item.Kind == "type"),
+                    group.Count(item => item.Kind == "method"),
+                    group.Count(item => item.Mutable),
+                    group.Sum(item => item.DeclarationLines));
+            })
             .OrderBy(project => project.Name, StringComparer.Ordinal)
             .ToArray();
 
         return new TopologyReport(
-            1,
+            2,
             "tools/Excise.Reachability",
             GitRevision(),
             projects,
@@ -343,6 +374,7 @@ internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
 
         var declarationLines = declarations.Sum(CountDeclarationLines);
         var branchPoints = declarations.Sum(CountBranchPoints);
+        var ownership = architecture.ResolveSymbol(file, node.Project);
         var mutable = node.Symbol switch
         {
             IFieldSymbol field => !field.IsConst && !field.IsReadOnly,
@@ -351,12 +383,14 @@ internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
         };
 
         return new SymbolTopology(
-            node.ProjectName,
+            node.Project.Name,
             node.Kind,
             node.Display,
             ContainingType(node.Symbol),
             node.Symbol.ContainingNamespace?.ToDisplayString(),
             file,
+            ownership.Component,
+            ownership.Workflows,
             startLine,
             endLine,
             declarationLines,
@@ -547,7 +581,11 @@ internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
     private void RegisterSymbol(Project project, ISymbol symbol, string kind)
     {
         symbol = Original(symbol);
-        _nodes.TryAdd(symbol, new Node(project.Name, kind, Display(symbol), symbol));
+        _nodes.TryAdd(symbol, new Node(
+            architecture.ResolveProject(project.FilePath, project.Name),
+            kind,
+            Display(symbol),
+            symbol));
     }
 
     private void CollectReferences(SemanticModel semanticModel, SyntaxNode root)
@@ -629,7 +667,7 @@ internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
         foreach (var node in _nodes.Values)
         {
             var symbol = node.Symbol;
-            if (IsPublicPackageSurface(node.ProjectName, symbol)
+            if (IsPublicPackageSurface(node.Project.Name, symbol)
                 || IsApplicationEntry(symbol)
                 || IsFrameworkEntry(symbol)
                 || IsXamlBound(symbol)
@@ -796,7 +834,11 @@ internal sealed class ReachabilityAnalyzer(Solution solution, Options options)
         return Original(symbol).ToDisplayString(DisplayFormat);
     }
 
-    private sealed record Node(string ProjectName, string Kind, string Display, ISymbol Symbol);
+    private sealed record Node(
+        ArchitectureProjectOwnership Project,
+        string Kind,
+        string Display,
+        ISymbol Symbol);
 }
 
 internal sealed record AnalysisResult(
@@ -816,6 +858,9 @@ internal sealed record TopologyReport(
 
 internal sealed record ProjectTopology(
     string Name,
+    string Path,
+    string Classification,
+    string? Component,
     int SourceFiles,
     int Types,
     int Methods,
@@ -829,6 +874,8 @@ internal sealed record SymbolTopology(
     string? ContainingType,
     string? Namespace,
     string? File,
+    string? Component,
+    IReadOnlyList<string> Workflows,
     int StartLine,
     int EndLine,
     int DeclarationLines,
@@ -1110,6 +1157,11 @@ internal static class SelfTest
         {
             Console.Error.WriteLine("FAIL: reachability self-test did not report the dead closure.");
             Console.Error.WriteLine($"      got: {string.Join(", ", unreachable)}");
+            return 1;
+        }
+
+        if (!ArchitectureOwnershipIndex.RunSelfTest())
+        {
             return 1;
         }
 

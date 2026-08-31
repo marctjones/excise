@@ -23,7 +23,11 @@ second implementation-status list.
    and [`target-components.dot`](../../architecture/generated/target-components.dot)
    — generated design views; never edit them directly. The Roslyn-derived
    [`code-topology.json`](../../architecture/generated/code-topology.json)
-   supplies type/method coupling and complexity signals for refactoring;
+   supplies type/method coupling and complexity signals for refactoring. Its
+   project rows join to inventory classifications and project components; its
+   symbol rows use the most-specific `ownership` root, fall back to the project
+   container, and derive workflow IDs from `design.json`. A null component is
+   explicit unregistered code, not an inferred directory owner.
    [`change-coupling.json`](../../architecture/generated/change-coupling.json)
    records fixed-window production files that repeatedly change together.
    The large topology file is compact generated JSON; query it with `jq`
