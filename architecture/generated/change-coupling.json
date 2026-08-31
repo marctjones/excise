@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "77432afd6ce8e46a63589ece71b184842368133d",
+  "sourceRevision": "720ae3233aecf4fc984dd913407460ce8fd4fb11",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 197,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "77432afd6ce8e46a63589ece71b184842368133d",
-    "oldestProductionCommit": "9bf3ec91dbc12e943075041b665ef6891ae6c839"
+    "newestProductionCommit": "720ae3233aecf4fc984dd913407460ce8fd4fb11",
+    "oldestProductionCommit": "e5f1505e20852937cb10c7a862b4b503e404fc66"
   },
   "files": [
     {
@@ -38,15 +38,19 @@
       "commits": 21
     },
     {
-      "path": "Excise.App/Views/MainWindow.axaml",
-      "commits": 17
-    },
-    {
       "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
       "commits": 17
     },
     {
+      "path": "Excise.App/Views/MainWindow.axaml",
+      "commits": 16
+    },
+    {
       "path": "Excise.Core/Document/PdfDocument.cs",
+      "commits": 13
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.Images.cs",
       "commits": 13
     },
     {
@@ -58,20 +62,16 @@
       "commits": 12
     },
     {
-      "path": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "commits": 12
-    },
-    {
-      "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-      "commits": 11
-    },
-    {
       "path": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
       "commits": 11
     },
     {
       "path": "Excise.Core/Content/ContentStreamWalker.cs",
       "commits": 11
+    },
+    {
+      "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+      "commits": 10
     },
     {
       "path": "Excise.Core/Content/ContentStreamParser.cs",
@@ -83,14 +83,10 @@
     },
     {
       "path": "Excise.Core/Automation/PdfCommandIds.cs",
-      "commits": 9
+      "commits": 8
     },
     {
       "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
-      "commits": 9
-    },
-    {
-      "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
       "commits": 8
     },
     {
@@ -103,6 +99,10 @@
     },
     {
       "path": "Excise.App/Composition/ApplicationComposition.cs",
+      "commits": 7
+    },
+    {
+      "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
       "commits": 7
     },
     {
@@ -902,6 +902,10 @@
       "commits": 1
     },
     {
+      "path": "Excise.Rendering/DctImageDecoder.cs",
+      "commits": 1
+    },
+    {
       "path": "Excise.Rendering/Differential/GhostscriptReferenceRenderer.cs",
       "commits": 1
     },
@@ -950,62 +954,38 @@
     {
       "source": "Excise.Core/Automation/PdfCommandIds.cs",
       "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
-      "cochanges": 9,
+      "cochanges": 8,
       "jaccard": 1.0
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
       "target": "Excise.App/Views/MainWindow.axaml",
-      "cochanges": 9,
-      "jaccard": 0.4737
-    },
-    {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-      "target": "Excise.Core/Automation/PdfCommandIds.cs",
-      "cochanges": 8,
-      "jaccard": 0.6667
-    },
-    {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
-      "cochanges": 8,
-      "jaccard": 0.6667
-    },
-    {
-      "source": "Excise.App/Views/MainWindow.axaml",
-      "target": "Excise.Core/Automation/PdfCommandIds.cs",
       "cochanges": 8,
       "jaccard": 0.4444
     },
     {
-      "source": "Excise.App/Views/MainWindow.axaml",
-      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
-      "cochanges": 8,
-      "jaccard": 0.4444
-    },
-    {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
       "target": "Excise.Core/Automation/PdfCommandIds.cs",
       "cochanges": 7,
-      "jaccard": 0.7
+      "jaccard": 0.6364
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
       "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 7,
-      "jaccard": 0.7
+      "jaccard": 0.6364
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
-      "target": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+      "source": "Excise.App/Views/MainWindow.axaml",
+      "target": "Excise.Core/Automation/PdfCommandIds.cs",
       "cochanges": 7,
-      "jaccard": 0.5833
+      "jaccard": 0.4118
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
-      "target": "Excise.App/Views/MainWindow.axaml",
+      "source": "Excise.App/Views/MainWindow.axaml",
+      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 7,
-      "jaccard": 0.3889
+      "jaccard": 0.4118
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Typewriter.cs",
@@ -1023,13 +1003,31 @@
       "source": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "target": "Excise.App/Views/MainWindow.axaml",
       "cochanges": 7,
-      "jaccard": 0.2188
+      "jaccard": 0.2258
     },
     {
       "source": "Excise.Cli/Program.cs",
       "target": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "cochanges": 7,
       "jaccard": 0.1795
+    },
+    {
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+      "target": "Excise.Core/Automation/PdfCommandIds.cs",
+      "cochanges": 6,
+      "jaccard": 0.6667
+    },
+    {
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
+      "cochanges": 6,
+      "jaccard": 0.6667
+    },
+    {
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+      "target": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+      "cochanges": 6,
+      "jaccard": 0.5455
     },
     {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
@@ -1044,10 +1042,16 @@
       "jaccard": 0.375
     },
     {
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+      "target": "Excise.App/Views/MainWindow.axaml",
+      "cochanges": 6,
+      "jaccard": 0.3529
+    },
+    {
       "source": "Excise.App/Views/MainWindow.axaml",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
       "cochanges": 6,
-      "jaccard": 0.2727
+      "jaccard": 0.2857
     },
     {
       "source": "Excise.App/Composition/ApplicationComposition.cs",
@@ -1065,13 +1069,13 @@
       "source": "Excise.App/Services/AnnotationWorkflowService.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
       "cochanges": 5,
-      "jaccard": 0.625
+      "jaccard": 0.7143
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
       "cochanges": 5,
-      "jaccard": 0.2941
+      "jaccard": 0.3125
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
@@ -1083,7 +1087,7 @@
       "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "cochanges": 5,
-      "jaccard": 0.1786
+      "jaccard": 0.1852
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
@@ -1107,25 +1111,25 @@
       "source": "Excise.App/Services/AnnotationWorkflowService.cs",
       "target": "Excise.Core/Automation/PdfCommandIds.cs",
       "cochanges": 4,
-      "jaccard": 0.4
+      "jaccard": 0.4444
     },
     {
       "source": "Excise.App/Services/AnnotationWorkflowService.cs",
       "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 4,
-      "jaccard": 0.4
+      "jaccard": 0.4444
+    },
+    {
+      "source": "Excise.App/Services/AnnotationWorkflowService.cs",
+      "target": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+      "cochanges": 4,
+      "jaccard": 0.3636
     },
     {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.Types.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
       "cochanges": 4,
       "jaccard": 0.3636
-    },
-    {
-      "source": "Excise.App/Services/AnnotationWorkflowService.cs",
-      "target": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-      "cochanges": 4,
-      "jaccard": 0.3333
     },
     {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
@@ -1137,31 +1141,31 @@
       "source": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
       "target": "Excise.Core/Automation/PdfCommandIds.cs",
       "cochanges": 4,
-      "jaccard": 0.25
+      "jaccard": 0.2667
     },
     {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
       "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 4,
-      "jaccard": 0.25
-    },
-    {
-      "source": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "target": "Excise.Rendering/SkiaRenderer.cs",
-      "cochanges": 4,
-      "jaccard": 0.25
+      "jaccard": 0.2667
     },
     {
       "source": "Excise.App/Views/MainWindow.axaml",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Types.cs",
       "cochanges": 4,
-      "jaccard": 0.2353
+      "jaccard": 0.25
     },
     {
       "source": "Excise.App/Services/AnnotationWorkflowService.cs",
       "target": "Excise.App/Views/MainWindow.axaml",
       "cochanges": 4,
-      "jaccard": 0.2222
+      "jaccard": 0.2353
+    },
+    {
+      "source": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "target": "Excise.Rendering/SkiaRenderer.cs",
+      "cochanges": 4,
+      "jaccard": 0.2353
     },
     {
       "source": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
@@ -1173,7 +1177,7 @@
       "source": "Excise.App/Views/MainWindow.axaml",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
       "cochanges": 4,
-      "jaccard": 0.2
+      "jaccard": 0.2105
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
@@ -1212,16 +1216,34 @@
       "jaccard": 0.4286
     },
     {
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+      "target": "Excise.Avalonia/Controls/PdfViewerControl.Types.cs",
+      "cochanges": 3,
+      "jaccard": 0.375
+    },
+    {
       "source": "Excise.App/Views/MainWindow.axaml.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
       "cochanges": 3,
       "jaccard": 0.375
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
-      "target": "Excise.Avalonia/Controls/PdfViewerControl.Types.cs",
+      "source": "Excise.Avalonia/Controls/PdfViewerControl.Types.cs",
+      "target": "Excise.Core/Automation/PdfCommandIds.cs",
       "cochanges": 3,
       "jaccard": 0.3333
+    },
+    {
+      "source": "Excise.Avalonia/Controls/PdfViewerControl.Types.cs",
+      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
+      "cochanges": 3,
+      "jaccard": 0.3333
+    },
+    {
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+      "target": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
+      "cochanges": 3,
+      "jaccard": 0.3
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
@@ -1232,18 +1254,6 @@
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
-      "cochanges": 3,
-      "jaccard": 0.3
-    },
-    {
-      "source": "Excise.Avalonia/Controls/PdfViewerControl.Types.cs",
-      "target": "Excise.Core/Automation/PdfCommandIds.cs",
-      "cochanges": 3,
-      "jaccard": 0.3
-    },
-    {
-      "source": "Excise.Avalonia/Controls/PdfViewerControl.Types.cs",
-      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 3,
       "jaccard": 0.3
     },
@@ -1261,37 +1271,43 @@
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
-      "target": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
-      "cochanges": 3,
-      "jaccard": 0.2727
-    },
-    {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
       "cochanges": 3,
-      "jaccard": 0.25
+      "jaccard": 0.2727
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Types.cs",
       "cochanges": 3,
-      "jaccard": 0.25
+      "jaccard": 0.2727
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
       "target": "Excise.Core/Automation/PdfCommandIds.cs",
       "cochanges": 3,
-      "jaccard": 0.25
+      "jaccard": 0.2727
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
       "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 3,
-      "jaccard": 0.25
+      "jaccard": 0.2727
     },
     {
       "source": "Excise.App/Views/MainWindow.axaml.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
+      "cochanges": 3,
+      "jaccard": 0.25
+    },
+    {
+      "source": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
+      "target": "Excise.Core/Automation/PdfCommandIds.cs",
+      "cochanges": 3,
+      "jaccard": 0.25
+    },
+    {
+      "source": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
+      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 3,
       "jaccard": 0.25
     },
@@ -1302,20 +1318,8 @@
       "jaccard": 0.25
     },
     {
-      "source": "Excise.Rendering/RawSampleImageDecoder.cs",
-      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "cochanges": 3,
-      "jaccard": 0.25
-    },
-    {
-      "source": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
-      "target": "Excise.Core/Automation/PdfCommandIds.cs",
-      "cochanges": 3,
-      "jaccard": 0.2308
-    },
-    {
-      "source": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
-      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+      "target": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
       "cochanges": 3,
       "jaccard": 0.2308
     },
@@ -1332,14 +1336,14 @@
       "jaccard": 0.2308
     },
     {
-      "source": "Excise.Rendering/RenderResourceScope.cs",
+      "source": "Excise.Rendering/RawSampleImageDecoder.cs",
       "target": "Excise.Rendering/SkiaRenderer.Images.cs",
       "cochanges": 3,
       "jaccard": 0.2308
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-      "target": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
+      "target": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
       "cochanges": 3,
       "jaccard": 0.2143
     },
@@ -1350,34 +1354,34 @@
       "jaccard": 0.2143
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-      "target": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
+      "source": "Excise.Rendering/RenderResourceScope.cs",
+      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
       "cochanges": 3,
-      "jaccard": 0.2
+      "jaccard": 0.2143
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
       "cochanges": 3,
-      "jaccard": 0.1875
+      "jaccard": 0.2
     },
     {
       "source": "Excise.App/Views/MainWindow.axaml",
       "target": "Excise.Core/Document/PdfAnnotation.cs",
       "cochanges": 3,
-      "jaccard": 0.1667
+      "jaccard": 0.1765
     },
     {
       "source": "Excise.App/Views/MainWindow.axaml",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
       "cochanges": 3,
-      "jaccard": 0.1579
+      "jaccard": 0.1667
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
       "target": "Excise.App/Views/MainWindow.axaml",
       "cochanges": 3,
-      "jaccard": 0.15
+      "jaccard": 0.1579
     },
     {
       "source": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
@@ -1407,13 +1411,13 @@
       "source": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "target": "Excise.Core/Automation/PdfCommandIds.cs",
       "cochanges": 3,
-      "jaccard": 0.1071
+      "jaccard": 0.1111
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 3,
-      "jaccard": 0.1071
+      "jaccard": 0.1111
     },
     {
       "source": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
@@ -1524,6 +1528,12 @@
       "jaccard": 0.2857
     },
     {
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+      "target": "Excise.App/ViewModels/PathAnnotationKind.cs",
+      "cochanges": 2,
+      "jaccard": 0.2857
+    },
+    {
       "source": "Excise.App/ViewModels/PathAnnotationKind.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
       "cochanges": 2,
@@ -1536,14 +1546,20 @@
       "jaccard": 0.2857
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
-      "target": "Excise.App/ViewModels/PathAnnotationKind.cs",
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
+      "target": "Excise.App/Views/MainWindow.axaml.cs",
       "cochanges": 2,
       "jaccard": 0.25
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
-      "target": "Excise.App/Views/MainWindow.axaml.cs",
+      "source": "Excise.App/ViewModels/PathAnnotationKind.cs",
+      "target": "Excise.Core/Automation/PdfCommandIds.cs",
+      "cochanges": 2,
+      "jaccard": 0.25
+    },
+    {
+      "source": "Excise.App/ViewModels/PathAnnotationKind.cs",
+      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 2,
       "jaccard": 0.25
     },
@@ -1566,14 +1582,8 @@
       "jaccard": 0.2222
     },
     {
-      "source": "Excise.App/ViewModels/PathAnnotationKind.cs",
-      "target": "Excise.Core/Automation/PdfCommandIds.cs",
-      "cochanges": 2,
-      "jaccard": 0.2222
-    },
-    {
-      "source": "Excise.App/ViewModels/PathAnnotationKind.cs",
-      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+      "target": "Excise.Core/Document/PdfAnnotation.cs",
       "cochanges": 2,
       "jaccard": 0.2222
     },
@@ -1602,16 +1612,22 @@
       "jaccard": 0.2
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+      "target": "Excise.App/ViewModels/PathAnnotationKind.cs",
+      "cochanges": 2,
+      "jaccard": 0.2
+    },
+    {
+      "source": "Excise.Core/Automation/PdfCommandIds.cs",
       "target": "Excise.Core/Document/PdfAnnotation.cs",
       "cochanges": 2,
       "jaccard": 0.2
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-      "target": "Excise.App/ViewModels/PathAnnotationKind.cs",
+      "source": "Excise.Core/Automation/PdfCommandRegistry.cs",
+      "target": "Excise.Core/Document/PdfAnnotation.cs",
       "cochanges": 2,
-      "jaccard": 0.1818
+      "jaccard": 0.2
     },
     {
       "source": "Excise.App/ViewModels/PathAnnotationKind.cs",
@@ -1622,18 +1638,6 @@
     {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
       "target": "Excise.Rendering/SkiaRenderer.cs",
-      "cochanges": 2,
-      "jaccard": 0.1818
-    },
-    {
-      "source": "Excise.Core/Automation/PdfCommandIds.cs",
-      "target": "Excise.Core/Document/PdfAnnotation.cs",
-      "cochanges": 2,
-      "jaccard": 0.1818
-    },
-    {
-      "source": "Excise.Core/Automation/PdfCommandRegistry.cs",
-      "target": "Excise.Core/Document/PdfAnnotation.cs",
       "cochanges": 2,
       "jaccard": 0.1818
     },
@@ -1650,6 +1654,12 @@
       "jaccard": 0.1818
     },
     {
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+      "target": "Excise.Core/Document/PdfAnnotation.cs",
+      "cochanges": 2,
+      "jaccard": 0.1667
+    },
+    {
       "source": "Excise.Core/Text/Segmentation/AppearanceStreamRedactor.cs",
       "target": "Excise.Core/Text/TextExtractor.cs",
       "cochanges": 2,
@@ -1662,26 +1672,8 @@
       "jaccard": 0.1667
     },
     {
-      "source": "Excise.Rendering/EncodedImageDecoder.cs",
-      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "cochanges": 2,
-      "jaccard": 0.1667
-    },
-    {
-      "source": "Excise.Rendering/ImageColorConverter.cs",
-      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "cochanges": 2,
-      "jaccard": 0.1667
-    },
-    {
-      "source": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "target": "Excise.Rendering/SkiaRenderer.Patterns.cs",
-      "cochanges": 2,
-      "jaccard": 0.1667
-    },
-    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-      "target": "Excise.Core/Document/PdfAnnotation.cs",
+      "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
       "cochanges": 2,
       "jaccard": 0.1538
     },
@@ -1716,8 +1708,20 @@
       "jaccard": 0.1538
     },
     {
+      "source": "Excise.Rendering/EncodedImageDecoder.cs",
+      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "cochanges": 2,
+      "jaccard": 0.1538
+    },
+    {
+      "source": "Excise.Rendering/ImageColorConverter.cs",
+      "target": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "cochanges": 2,
+      "jaccard": 0.1538
+    },
+    {
       "source": "Excise.Rendering/SkiaRenderer.Images.cs",
-      "target": "Excise.Rendering/SkiaRenderer.Text.cs",
+      "target": "Excise.Rendering/SkiaRenderer.Patterns.cs",
       "cochanges": 2,
       "jaccard": 0.1538
     },
@@ -1728,16 +1732,22 @@
       "jaccard": 0.1429
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-      "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
-      "cochanges": 2,
-      "jaccard": 0.1429
-    },
-    {
       "source": "Excise.Core/Document/PageCollection.cs",
       "target": "Excise.Core/Document/PdfDocument.cs",
       "cochanges": 2,
       "jaccard": 0.1429
+    },
+    {
+      "source": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "target": "Excise.Rendering/SkiaRenderer.Text.cs",
+      "cochanges": 2,
+      "jaccard": 0.1429
+    },
+    {
+      "source": "Excise.App/ViewModels/PathAnnotationKind.cs",
+      "target": "Excise.App/Views/MainWindow.axaml",
+      "cochanges": 2,
+      "jaccard": 0.125
     },
     {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
@@ -1746,28 +1756,22 @@
       "jaccard": 0.125
     },
     {
-      "source": "Excise.App/ViewModels/PathAnnotationKind.cs",
-      "target": "Excise.App/Views/MainWindow.axaml",
-      "cochanges": 2,
-      "jaccard": 0.1176
-    },
-    {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
       "target": "Excise.Rendering/SkiaRenderer.cs",
       "cochanges": 2,
       "jaccard": 0.1176
     },
     {
-      "source": "Excise.Core/Document/PdfDocument.cs",
-      "target": "Excise.Core/Document/PdfPage.cs",
+      "source": "Excise.App/Views/MainWindow.axaml",
+      "target": "Excise.App/Views/MainWindow.axaml.cs",
       "cochanges": 2,
       "jaccard": 0.1111
     },
     {
-      "source": "Excise.App/Views/MainWindow.axaml",
-      "target": "Excise.App/Views/MainWindow.axaml.cs",
+      "source": "Excise.Core/Document/PdfDocument.cs",
+      "target": "Excise.Core/Document/PdfPage.cs",
       "cochanges": 2,
-      "jaccard": 0.1053
+      "jaccard": 0.1111
     },
     {
       "source": "Excise.Core/Document/PdfAnnotation.cs",
@@ -1857,7 +1861,7 @@
       "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "cochanges": 2,
-      "jaccard": 0.0714
+      "jaccard": 0.0741
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Scripting.cs",
