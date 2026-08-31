@@ -93,6 +93,10 @@ chains are:
   scheduling. Its typed viewport diagnostics and scroll intents expose values,
   never template controls. The desktop app owns product workflows, automation
   scenarios, artifact paths, and dialogs.
+- CLI command registration owns option parsing and dispatch. Focused handlers
+  own typed delivery inputs/results, cancellation and resource lifetime, exit
+  policy, and presentation; they compose Core, Rendering, and OCR engines
+  without copying those engines or pushing console policy inward.
 - `MainWindowViewModel` is a composition surface. Feature state and workflows
   move behind focused collaborators when their ownership and conservation gates
   are established.

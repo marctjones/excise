@@ -206,10 +206,14 @@
         "Excise.Cli.Tests",
         "Excise.Cli/Commands/SaveSizeReportCommand.cs",
         "Excise.Cli/Commands/CommandMetadataCommand.cs",
-        "Excise.Cli/Commands/FillFormCommand.cs"
+        "Excise.Cli/Commands/FillFormCommand.cs",
+        "Excise.Cli/Commands/UnredactCommand.cs",
+        "Excise.Cli/Commands/UnredactCommandHandler.cs",
+        "Excise.Cli/Commands/UnredactCommandModels.cs",
+        "Excise.Cli/Commands/UnredactCommandOutput.cs"
       ],
       "gaps": [
-        "Program.cs remains a 2,443-line command host after save-size-report, command-metadata, and fill-form adapter extractions; the remaining command boundaries still need measured decomposition and duplicate-policy analysis."
+        "Program.cs remains a 2,211-line command host after save-size-report, command-metadata, fill-form, and typed unredact adapter extractions; the remaining command boundaries still need measured decomposition and duplicate-policy analysis."
       ],
       "issueIds": [
         1263

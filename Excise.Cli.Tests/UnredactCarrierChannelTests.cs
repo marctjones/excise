@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using AwesomeAssertions;
+using Excise.Cli.Commands;
 using Xunit;
 
 namespace Excise.Cli.Tests;
@@ -103,6 +104,32 @@ public class UnredactCarrierChannelTests
             exit.Should().Be(3);
             output.Should().Contain("SECRETBETA", "the annotation /Contents carrier is recovered verbatim");
             output.Should().Contain("annotation /Contents");
+        }
+        finally { File.Delete(pdf); }
+    }
+
+    [Fact]
+    public void Handler_CarrierChannelReturnsTypedFindingWithoutSecondCliProcess()
+    {
+        var pdf = WriteCarrierLeak("SECRETALPHA", "SECRETBETA");
+        try
+        {
+            var outcome = UnredactCommandHandler.Execute(
+                new UnredactCommandInput(
+                    pdf,
+                    "certain",
+                    DictionaryPath: null,
+                    Tolerance: 0.5,
+                    MaxCandidates: 200,
+                    UseOcr: false,
+                    NoCorroboration: false),
+                TestContext.Current.CancellationToken);
+
+            outcome.ExitCode.Should().Be(3);
+            outcome.Report!.Certain.Should().Contain(
+                finding => finding.Text == "SECRETALPHA" && finding.HiddenBy.EndsWith("/ActualText"));
+            outcome.Report.Certain.Should().Contain(
+                finding => finding.Text == "SECRETBETA" && finding.HiddenBy == "annotation /Contents");
         }
         finally { File.Delete(pdf); }
     }
