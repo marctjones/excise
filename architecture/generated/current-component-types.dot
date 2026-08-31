@@ -7,7 +7,7 @@ digraph excise_architecture {
     label="delivery";
     color="#cbd5e1";
     "app" [label="Excise.App project\npartial\n729 retained symbols", fillcolor="#fff3bf"];
-    "cli" [label="Excise.Cli project\npartial\n298 retained symbols", fillcolor="#fff3bf"];
+    "cli" [label="Excise.Cli project\npartial\n323 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {
     label="engine";
@@ -73,8 +73,8 @@ digraph excise_architecture {
   "avalonia" -> "core-text" [label="46 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "rendering" [label="22 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core" [label="37 refs / 8 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "cli" -> "core-content" [label="9 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "cli" -> "core-document" [label="141 refs / 28 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "cli" -> "core-content" [label="10 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "cli" -> "core-document" [label="132 refs / 33 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-encryption" [label="20 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-parsing" [label="2 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-redaction" [label="53 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

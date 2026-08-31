@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AwesomeAssertions;
+using Excise.Cli;
+using Excise.Cli.Commands;
 using Excise.Core.Operations;
 using Excise.Rendering.Differential;
 using Xunit;
@@ -80,7 +82,7 @@ public class PageAssemblyCorrectnessTests : IDisposable
         var c = PageWithText("CHARLIEPAGE");
         var output = TempPath(".pdf");
 
-        Program.RunMerge([a, b, c], output);
+        DocumentAssemblyTestDriver.RunMerge([a, b, c], output);
 
         QpdfReferenceTool.PageCount(output).Should().Be(3,
             "merging three single-page inputs must yield three pages according to an " +
@@ -103,12 +105,68 @@ public class PageAssemblyCorrectnessTests : IDisposable
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
 
         var output = TempPath(".pdf");
-        Program.RunMerge([PageWithText("ONE"), PageWithText("TWO")], output);
+        DocumentAssemblyTestDriver.RunMerge([PageWithText("ONE"), PageWithText("TWO")], output);
 
         var check = QpdfReferenceTool.Check(output);
         check.Should().NotBeNull("qpdf reported IsAvailable but produced no result");
         check!.Value.Success.Should().BeTrue(
             $"a merged document must satisfy an independent structural check. qpdf said:\n{check.Value.Output}");
+    }
+
+    [Fact]
+    public void Merge_SameInputAndOutputPath_DetachesSourceBeforeSaving()
+    {
+        var path = PageWithText("SAMEPATH");
+
+        var result = DocumentAssemblyHandler.Merge(new MergeDocumentsRequest(
+            [path],
+            path,
+            IgnorePermissions: false), TestContext.Current.CancellationToken);
+
+        result.OutputPath.Should().Be(Path.GetFullPath(path));
+        result.PageCount.Should().Be(1);
+        using var document = Excise.Core.Document.PdfDocument.Open(path);
+        document.GetPage(1).Text.Should().Contain("SAMEPATH",
+            "same-path merge must not leave a source read handle over the destination");
+    }
+
+    [Fact]
+    public void DocumentAssemblyHandler_CancelledMerge_DoesNotOpenOrWriteOutput()
+    {
+        var output = TempPath(".pdf");
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        var act = () => DocumentAssemblyHandler.Merge(new MergeDocumentsRequest(
+            [PageWithText("CANCELLED")],
+            output,
+            IgnorePermissions: false), cancellation.Token);
+
+        act.Should().Throw<OperationCanceledException>();
+        File.Exists(output).Should().BeFalse(
+            "a cancelled mutation request must not create an output before it starts");
+    }
+
+    [Fact]
+    public async Task RunAsync_MergeMissingInput_PreservesTextErrorAndExitCode()
+    {
+        var missing = TempPath(".pdf");
+        var output = TempPath(".pdf");
+        var previousError = Console.Error;
+        var capturedError = new StringWriter();
+        Console.SetError(capturedError);
+        try
+        {
+            var exitCode = await Program.RunAsync(["merge", "--input", missing, "--output", output]);
+
+            exitCode.Should().Be(1);
+            capturedError.ToString().Should().Contain($"File not found: {missing}");
+        }
+        finally
+        {
+            Console.SetError(previousError);
+            Environment.ExitCode = 0;
+        }
     }
 
     // ----------------------------------------------------------------- split --
@@ -124,10 +182,12 @@ public class PageAssemblyCorrectnessTests : IDisposable
         // above, so a merge regression shows up there first rather than
         // silently corrupting this test's premise.
         var merged = TempPath(".pdf");
-        Program.RunMerge([PageWithText("SPLITONE"), PageWithText("SPLITTWO"), PageWithText("SPLITTHREE")], merged);
+        DocumentAssemblyTestDriver.RunMerge(
+            [PageWithText("SPLITONE"), PageWithText("SPLITTWO"), PageWithText("SPLITTHREE")],
+            merged);
 
         var outDir = TempDir();
-        var written = Program.RunSplit(merged, outDir, PdfDocumentSplitter.SplitToSinglePages);
+        var written = DocumentAssemblyTestDriver.RunSplitToSinglePages(merged, outDir);
 
         written.Should().HaveCount(3, "a single-page burst of a 3-page document must write 3 files");
 
@@ -154,10 +214,10 @@ public class PageAssemblyCorrectnessTests : IDisposable
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
 
         var merged = TempPath(".pdf");
-        Program.RunMerge([PageWithText("FRAGONE"), PageWithText("FRAGTWO")], merged);
+        DocumentAssemblyTestDriver.RunMerge([PageWithText("FRAGONE"), PageWithText("FRAGTWO")], merged);
 
         var outDir = TempDir();
-        var written = Program.RunSplit(merged, outDir, PdfDocumentSplitter.SplitToSinglePages);
+        var written = DocumentAssemblyTestDriver.RunSplitToSinglePages(merged, outDir);
 
         foreach (var fragment in written)
         {
