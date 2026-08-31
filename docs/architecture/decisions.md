@@ -201,9 +201,9 @@ disposal all consume that same state.
 policy surface. Its `GetObject`, `Resolve`, mutation, and writer hooks delegate
 to the single store; they do not maintain shadow caches or another graph. The
 existing `PdfParser`, `XRefParser`, `PdfDocumentWriter`, and redaction engine
-remain authoritative. A future open pipeline or save-session boundary must
-construct and consume this store rather than introducing another reader,
-document graph, or serializer.
+remain authoritative. The document-open pipeline constructs this store, and a
+future save-session boundary must consume it rather than introducing another
+reader, document graph, or serializer.
 
 ## AD-016 — Supported mutations invalidate derived state by source scope
 
@@ -224,3 +224,24 @@ tagged-text page lookup, and parsed structure state. Unrelated caches retain
 their identity until their own source scope changes. Raw dictionary edits made
 directly by external callers cannot be intercepted without a breaking API
 change and therefore remain outside this supported-mutation contract.
+
+## AD-017 — One open pipeline assembles document identity
+
+**Status:** accepted
+
+All six public `PdfDocument.Open` overloads delegate through one internal
+document-open pipeline. The pipeline owns header/version reading, xref revision
+traversal, hybrid-reference merge precedence, reconstruction when the assembled
+catalog is unreachable, trailer and catalog validation, Standard security
+handler negotiation, creation of the single `PdfDocumentObjectStore`, and
+owned-stream cleanup if any stage fails. Its typed result transfers the object
+store, trailer, catalog, optional Info dictionary, version, and permissions to
+the stable public document facade.
+
+The pipeline is orchestration, not another reader. `XRefParser`, `PdfParser`,
+the existing filters, and `PdfStandardSecurityHandler` remain the authoritative
+implementations, and `CreateNew` continues to pass its minimal in-memory PDF
+through the same open path. The parsing foundation does not depend on the
+document component. A borrowed stream remains caller-owned on success and
+failure; an owned stream transfers to the object store on success and is
+disposed by the pipeline or store on failure.

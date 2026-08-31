@@ -572,10 +572,11 @@ public class PdfParser : IDisposable
             //
             // Tolerating it is safe because this reader is OFFSET-DRIVEN, not
             // sequential. Both callers Seek() to the object's own xref offset
-            // before parsing (PdfDocument.ReadIndirectObjectAt and the
-            // GetObject path), so a stray token after a value cannot desync the
-            // next object — the next read starts from its own offset. 'endobj'
-            // is a delimiter for a scan this parser does not perform.
+            // before parsing (the document-open encryption probe and the
+            // object-store GetObject path), so a stray token after a value
+            // cannot desync the next object — the next read starts from its own
+            // offset. 'endobj' is a delimiter for a scan this parser does not
+            // perform.
             //
             // The risk this accepts is the opposite one: if ParseObject went
             // wrong and swallowed too much, we now keep a wrong value instead of

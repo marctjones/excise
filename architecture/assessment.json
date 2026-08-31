@@ -59,17 +59,17 @@
         "Excise.Core.Tests/Operations",
         "Excise.Core/Content/PdfPageContentFacade.cs",
         "Excise.Core/Document/PdfDocumentDerivedState.cs",
+        "Excise.Core/Document/PdfDocumentOpenPipeline.cs",
         "Excise.Core/Document/PdfDocumentObjectStore.cs",
         "Excise.Core/Text/PdfPageTextFacade.cs",
         "Excise.Core/Text/PdfDocumentTextFacade.cs",
         "Excise.Core/Writing/PdfDocumentWritingFacade.cs"
       ],
       "gaps": [
-        "PdfDocumentObjectStore owns the single stream/parser/xref/object-identity lifetime, and supported page, tagging, metadata, attachment, action/name, and sanitizer mutations now share one scoped derived-state invalidation contract. Open/xref assembly and save lifecycle ownership remain tracked separately."
+        "PdfDocumentObjectStore owns the single stream/parser/xref/object-identity lifetime, PdfDocumentOpenPipeline owns revision/xref/encryption assembly and failure cleanup, and supported mutations share one scoped derived-state invalidation contract. Save lifecycle ownership remains tracked separately."
       ],
       "issueIds": [
         1261,
-        1325,
         1327
       ]
     },
