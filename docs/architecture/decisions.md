@@ -57,6 +57,12 @@ XObject and operator pipeline, while document-level AcroForm defaults have one
 explicit lazy owner. Annotation handling must not introduce a second content
 walker or renderer.
 
+Skia-specific DeviceCMYK preview state has one execution-state owner for group
+and backdrop lifetime, RGB dirty synchronization, and native scratch-mask
+disposal. Nested groups enter and complete through typed request/result
+operations. Pixel-compositing algorithms remain in the existing render context,
+and color-space meaning remains in Core.
+
 ## AD-006 — Delivery and platform policy stay outside the domain
 
 **Status:** accepted

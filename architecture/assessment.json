@@ -185,6 +185,8 @@
         "Excise.Rendering/AnnotationAppearancePolicy.cs",
         "Excise.Rendering/AnnotationAppearanceExecution.cs",
         "Excise.Rendering/AcroFormAppearanceDefaults.cs",
+        "Excise.Rendering/Transparency/DeviceCmykExecutionState.cs",
+        "Excise.Rendering/Transparency/DeviceCmykBackdrop.cs",
         "Excise.Rendering.Tests/EncodedImageDecoderTests.cs",
         "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
         "Excise.Rendering.Tests/DctImageDecoderTests.cs",
@@ -193,11 +195,12 @@
         "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
         "Excise.Rendering.Tests/AnnotationAppearanceExecutionTests.cs",
         "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs",
+        "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs",
         "Excise.App/Services/PageImageRenderer.cs",
         "scripts/run-exploratory-corpus.sh"
       ],
       "gaps": [
-        "A facade-owned per-page resource scope gives nested render contexts one explicit cache lifetime; typed context-free raw, encoded, DCT, and JPX decoders own image sample and codec policy; and one allocation-free operator registry routes the single interpreter through reviewed family handlers with ordered cancellation, marked-content, optional-content, and Type 3 preconditions. Annotation visibility, appearance selection, synthesis routing, and geometry planning are canvas-free; one typed execution request enters the existing Form XObject/operator pipeline; and AcroForm defaults have one explicit lazy owner. DeviceCMYK and transparency execution state remain coupled across renderer partials. Rendering re-executes graphics/text state as an accepted architectural exception."
+        "A facade-owned per-page resource scope gives nested render contexts one explicit cache lifetime; typed context-free raw, encoded, DCT, and JPX decoders own image sample and codec policy; and one allocation-free operator registry routes the single interpreter through reviewed family handlers with ordered cancellation, marked-content, optional-content, and Type 3 preconditions. Annotation visibility, appearance selection, synthesis routing, and geometry planning are canvas-free; one typed execution request enters the existing Form XObject/operator pipeline; and AcroForm defaults have one explicit lazy owner. One Skia-specific DeviceCMYK execution-state owner controls group and backdrop lifetime, typed child-group entry and completion, RGB dirty synchronization, and scratch-mask disposal without duplicating the pixel algorithms or Core color-space semantics. Rendering re-executes graphics/text state as an accepted architectural exception."
       ],
       "issueIds": [
         1262,

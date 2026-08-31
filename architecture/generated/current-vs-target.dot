@@ -129,7 +129,7 @@ digraph excise_architecture {
   "ocr" -> "core-redaction" [label="observed via parent boundary\n2 refs", color="#2563eb", style="dashed", penwidth=1];
   "ocr" -> "ocr-native" [label="target + observed\n5 refs", color="#15803d", style="solid", penwidth=2];
   "ocr" -> "rendering" [label="target + observed\n16 refs", color="#15803d", style="solid", penwidth=2];
-  "rendering" -> "core" [label="target + observed\n148 refs", color="#15803d", style="solid", penwidth=2];
+  "rendering" -> "core" [label="target + observed\n150 refs", color="#15803d", style="solid", penwidth=2];
   "rendering" -> "core-content" [label="accepted exception\n46 refs", color="#7e22ce", style="dotted", penwidth=2];
   "rendering" -> "core-document" [label="observed via parent boundary\n289 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-fonts" [label="observed via parent boundary\n53 refs", color="#2563eb", style="dashed", penwidth=1];
