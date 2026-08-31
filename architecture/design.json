@@ -69,6 +69,27 @@
       ]
     },
     {
+      "id": "core-encryption",
+      "name": "Encryption contracts, permissions, and standard security handler",
+      "kind": "subsystem",
+      "layer": "foundation",
+      "parent": "core",
+      "pathRole": "ownership",
+      "sourceRoots": [
+        "Excise.Core/Encryption"
+      ],
+      "targetState": "One interoperable standard security handler owns password processing, permission contracts, encryption state, and cryptographic transforms below document and writer orchestration.",
+      "workflows": [
+        "open-view",
+        "redact-save",
+        "edit-save"
+      ],
+      "dependsOn": [
+        "core-primitives",
+        "core-parsing"
+      ]
+    },
+    {
       "id": "core-document",
       "name": "Document model and mutation boundary",
       "kind": "subsystem",
@@ -90,7 +111,8 @@
       ],
       "dependsOn": [
         "core-primitives",
-        "core-parsing"
+        "core-parsing",
+        "core-encryption"
       ]
     },
     {
@@ -202,21 +224,20 @@
       "dependsOn": [
         "core-primitives",
         "core-document",
-        "core-security"
+        "core-encryption"
       ]
     },
     {
       "id": "core-security",
-      "name": "Encryption, permissions, signatures, and document validation",
+      "name": "Document conformance and structural validation",
       "kind": "subsystem",
       "layer": "engine",
       "parent": "core",
       "pathRole": "ownership",
       "sourceRoots": [
-        "Excise.Core/Security",
         "Excise.Core/Validation"
       ],
-      "targetState": "Security policy is explicit at action boundaries, cryptographic interop is independently checked, and validation claims name their external oracle where one exists.",
+      "targetState": "Document-dependent validation remains above the document and content engines, and every validation claim names its external oracle where one exists.",
       "workflows": [
         "open-view",
         "redact-save",
@@ -225,7 +246,6 @@
       ],
       "dependsOn": [
         "core-primitives",
-        "core-parsing",
         "core-document",
         "core-content"
       ]
@@ -513,7 +533,7 @@
       "source": "core-security",
       "target": "core-content",
       "type": "uses",
-      "rationale": "Document validation inspects tagging and operators through the authoritative content parser; encryption-state layering is separated under #1317."
+      "rationale": "Document validation inspects tagging and operators through the authoritative content parser."
     },
     {
       "source": "core-content",
@@ -529,9 +549,9 @@
     },
     {
       "source": "core-document",
-      "target": "core-security",
+      "target": "core-encryption",
       "type": "uses",
-      "rationale": "Temporary layering exception #1317: PdfDocument owns security-handler and permission state while validation also depends on documents; split the low-level state from document-dependent validation."
+      "rationale": "The document model stores the active standard security handler and exposes established permission and re-encryption contracts without depending on document-level validation."
     },
     {
       "source": "core-fonts",
@@ -818,6 +838,7 @@
         "cli",
         "core-document",
         "core-redaction",
+        "core-encryption",
         "core-security"
       ],
       "enforcement": [
@@ -865,6 +886,7 @@
         "core",
         "core-primitives",
         "core-parsing",
+        "core-encryption",
         "core-document",
         "core-content",
         "core-fonts",
@@ -892,6 +914,7 @@
         "core",
         "core-primitives",
         "core-parsing",
+        "core-encryption",
         "core-document",
         "core-content",
         "core-fonts",
@@ -919,6 +942,7 @@
         "core",
         "core-primitives",
         "core-parsing",
+        "core-encryption",
         "core-document",
         "core-content",
         "core-fonts",
