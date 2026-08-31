@@ -84,7 +84,7 @@ digraph excise_architecture {
   "cli" -> "core-security" [label="observed via parent boundary\n28 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-text" [label="observed via parent boundary\n6 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-writing" [label="observed via parent boundary\n6 refs", color="#2563eb", style="dashed", penwidth=1];
-  "cli" -> "ocr" [label="target + observed\n69 refs", color="#15803d", style="solid", penwidth=2];
+  "cli" -> "ocr" [label="target + observed\n67 refs", color="#15803d", style="solid", penwidth=2];
   "cli" -> "rendering" [label="target + observed\n20 refs", color="#15803d", style="solid", penwidth=2];
   "core" -> "core-document" [label="observed via parent boundary\n316 refs", color="#2563eb", style="dashed", penwidth=1];
   "core" -> "core-fonts" [label="observed via parent boundary\n38 refs", color="#2563eb", style="dashed", penwidth=1];

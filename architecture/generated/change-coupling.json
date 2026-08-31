@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "0c2810f983df93fa4deef06834e582e0de5c7bcd",
+  "sourceRevision": "f7b6b2610064c27207db89f7fd287ce10c4c6d16",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,24 +21,24 @@
     "commitsRequested": 200,
     "commitsObserved": 198,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "0c2810f983df93fa4deef06834e582e0de5c7bcd",
-    "oldestProductionCommit": "d8091bb9c6e47d348133cfeb48811642cce1105f"
+    "newestProductionCommit": "f7b6b2610064c27207db89f7fd287ce10c4c6d16",
+    "oldestProductionCommit": "375b6894dc2d1619cc0c775901652ce733f7ae43"
   },
   "files": [
     {
       "path": "Excise.Cli/Program.cs",
-      "commits": 32
+      "commits": 34
     },
     {
       "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
       "commits": 20
     },
     {
-      "path": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
-      "commits": 19
+      "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
+      "commits": 18
     },
     {
-      "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
+      "path": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "commits": 18
     },
     {
@@ -66,19 +66,19 @@
       "commits": 10
     },
     {
-      "path": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs",
-      "commits": 10
-    },
-    {
       "path": "Excise.Rendering/SkiaRenderer.cs",
       "commits": 10
     },
     {
-      "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
+      "path": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs",
       "commits": 9
     },
     {
       "path": "Excise.Core/Operations/PdfDocumentSanitizer.cs",
+      "commits": 8
+    },
+    {
+      "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
       "commits": 8
     },
     {
@@ -94,12 +94,12 @@
       "commits": 6
     },
     {
-      "path": "Excise.Core/Document/PdfPage.cs",
+      "path": "Excise.Cli/AutomationBatch.cs",
       "commits": 6
     },
     {
-      "path": "Excise.Cli/AutomationBatch.cs",
-      "commits": 5
+      "path": "Excise.Core/Document/PdfPage.cs",
+      "commits": 6
     },
     {
       "path": "Excise.Core/Text/TextSelectionEngine.cs",
@@ -334,10 +334,6 @@
       "commits": 2
     },
     {
-      "path": "Excise.Core/Text/Segmentation/TextSegmenter.cs",
-      "commits": 2
-    },
-    {
       "path": "Excise.Core/Writing/PdfDocumentWriter.cs",
       "commits": 2
     },
@@ -511,6 +507,18 @@
     },
     {
       "path": "Excise.Cli/Commands/OcrInspectionHandler.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Cli/Commands/PdfDocumentLifetime.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Cli/Commands/RedactCommand.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Cli/Commands/RedactCommandHandler.cs",
       "commits": 1
     },
     {
@@ -886,6 +894,10 @@
       "commits": 1
     },
     {
+      "path": "Excise.Core/Text/Segmentation/TextSegmenter.cs",
+      "commits": 1
+    },
+    {
       "path": "Excise.Core/Text/UnicodeTextSafety.cs",
       "commits": 1
     },
@@ -1011,7 +1023,7 @@
       "source": "Excise.Cli/Program.cs",
       "target": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "cochanges": 7,
-      "jaccard": 0.1591
+      "jaccard": 0.1556
     },
     {
       "source": "Excise.Core/Content/ContentStreamParser.cs",
@@ -1035,7 +1047,7 @@
       "source": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "target": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs",
       "cochanges": 6,
-      "jaccard": 0.2609
+      "jaccard": 0.2857
     },
     {
       "source": "Excise.Rendering/SkiaRenderer.Images.cs",
@@ -1048,6 +1060,12 @@
       "target": "Excise.App/Views/MainWindow.axaml",
       "cochanges": 5,
       "jaccard": 0.2174
+    },
+    {
+      "source": "Excise.Cli/AutomationBatch.cs",
+      "target": "Excise.Cli/Program.cs",
+      "cochanges": 5,
+      "jaccard": 0.1429
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
@@ -1074,22 +1092,16 @@
       "jaccard": 0.2222
     },
     {
-      "source": "Excise.Cli/AutomationBatch.cs",
-      "target": "Excise.Cli/Program.cs",
-      "cochanges": 4,
-      "jaccard": 0.1212
-    },
-    {
       "source": "Excise.Cli/Program.cs",
       "target": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs",
       "cochanges": 4,
-      "jaccard": 0.1053
+      "jaccard": 0.1026
     },
     {
       "source": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
       "target": "Excise.Core/Text/Segmentation/OperandGlyphSplitter.cs",
       "cochanges": 3,
-      "jaccard": 0.3333
+      "jaccard": 0.375
     },
     {
       "source": "Excise.Rendering/SkiaRenderer.Patterns.cs",
@@ -1146,10 +1158,10 @@
       "jaccard": 0.2
     },
     {
-      "source": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
-      "target": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs",
+      "source": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
+      "target": "Excise.Core/Text/Segmentation/RedactionReport.cs",
       "cochanges": 3,
-      "jaccard": 0.1875
+      "jaccard": 0.1667
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
@@ -1170,12 +1182,6 @@
       "jaccard": 0.1579
     },
     {
-      "source": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
-      "target": "Excise.Core/Text/Segmentation/RedactionReport.cs",
-      "cochanges": 3,
-      "jaccard": 0.1579
-    },
-    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
       "cochanges": 3,
@@ -1185,13 +1191,13 @@
       "source": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
       "target": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "cochanges": 3,
-      "jaccard": 0.12
+      "jaccard": 0.1304
     },
     {
       "source": "Excise.Cli/Program.cs",
       "target": "Excise.Core/Text/Segmentation/RedactionReport.cs",
       "cochanges": 3,
-      "jaccard": 0.0938
+      "jaccard": 0.0882
     },
     {
       "source": "Excise.App/Automation/VisualTraceRunner.cs",
@@ -1242,12 +1248,6 @@
       "jaccard": 0.5
     },
     {
-      "source": "Excise.Cli/AutomationBatch.cs",
-      "target": "Excise.Cli/DocumentPermissionGuard.cs",
-      "cochanges": 2,
-      "jaccard": 0.4
-    },
-    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
       "cochanges": 2,
@@ -1256,6 +1256,12 @@
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.Typewriter.cs",
+      "cochanges": 2,
+      "jaccard": 0.3333
+    },
+    {
+      "source": "Excise.Cli/AutomationBatch.cs",
+      "target": "Excise.Cli/DocumentPermissionGuard.cs",
       "cochanges": 2,
       "jaccard": 0.3333
     },
@@ -1297,39 +1303,27 @@
     },
     {
       "source": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
-      "target": "Excise.Core/Text/Segmentation/TextSegmenter.cs",
-      "cochanges": 2,
-      "jaccard": 0.2222
-    },
-    {
-      "source": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
       "target": "Excise.Core/Text/Segmentation/OperationReconstructor.cs",
       "cochanges": 2,
-      "jaccard": 0.2
+      "jaccard": 0.2222
     },
     {
       "source": "Excise.Core/Text/Segmentation/MarkedContentCarrierScrubber.cs",
       "target": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs",
       "cochanges": 2,
-      "jaccard": 0.2
-    },
-    {
-      "source": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs",
-      "target": "Excise.Core/Text/Segmentation/TextSegmenter.cs",
-      "cochanges": 2,
-      "jaccard": 0.2
+      "jaccard": 0.2222
     },
     {
       "source": "Excise.Core/Text/Segmentation/OperationReconstructor.cs",
       "target": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs",
       "cochanges": 2,
-      "jaccard": 0.1818
+      "jaccard": 0.2
     },
     {
       "source": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs",
       "target": "Excise.Core/Text/Segmentation/StructureTreeRedactionScrubber.cs",
       "cochanges": 2,
-      "jaccard": 0.1818
+      "jaccard": 0.2
     },
     {
       "source": "Excise.Rendering/SkiaRenderer.Text.cs",
@@ -1392,6 +1386,12 @@
       "jaccard": 0.1333
     },
     {
+      "source": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
+      "target": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs",
+      "cochanges": 2,
+      "jaccard": 0.1333
+    },
+    {
       "source": "Excise.Rendering/SkiaRenderer.Images.cs",
       "target": "Excise.Rendering/SkiaRenderer.Text.cs",
       "cochanges": 2,
@@ -1412,6 +1412,12 @@
     {
       "source": "Excise.App/Services/DocumentImageExportWorkflowService.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.cs",
+      "cochanges": 2,
+      "jaccard": 0.1111
+    },
+    {
+      "source": "Excise.App/Services/RedactionService.cs",
+      "target": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "cochanges": 2,
       "jaccard": 0.1111
     },
@@ -1440,32 +1446,26 @@
       "jaccard": 0.1111
     },
     {
-      "source": "Excise.App/Services/RedactionService.cs",
-      "target": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
-      "cochanges": 2,
-      "jaccard": 0.1053
-    },
-    {
       "source": "Excise.Core/Text/Segmentation/InteractiveRedactionScrubber.cs",
       "target": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "cochanges": 2,
-      "jaccard": 0.1053
+      "jaccard": 0.1111
     },
     {
       "source": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "target": "Excise.Core/Text/Segmentation/RedactionOptions.cs",
+      "cochanges": 2,
+      "jaccard": 0.1111
+    },
+    {
+      "source": "Excise.Core/Text/Segmentation/OperationReconstructor.cs",
+      "target": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "cochanges": 2,
       "jaccard": 0.1053
     },
     {
       "source": "Excise.Core/Document/PdfAnnotation.cs",
       "target": "Excise.Rendering/SkiaRenderer.Annotations.cs",
-      "cochanges": 2,
-      "jaccard": 0.1
-    },
-    {
-      "source": "Excise.Core/Text/Segmentation/OperationReconstructor.cs",
-      "target": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "cochanges": 2,
       "jaccard": 0.1
     },
@@ -1485,37 +1485,37 @@
       "source": "Excise.Core/Content/ContentStreamParser.cs",
       "target": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "cochanges": 2,
-      "jaccard": 0.0741
+      "jaccard": 0.0769
     },
     {
       "source": "Excise.App/Services/RedactionService.cs",
       "target": "Excise.Cli/Program.cs",
       "cochanges": 2,
-      "jaccard": 0.0625
+      "jaccard": 0.0588
     },
     {
       "source": "Excise.App/Services/RedactedCopySafetyService.cs",
       "target": "Excise.Cli/Program.cs",
       "cochanges": 2,
-      "jaccard": 0.0606
+      "jaccard": 0.0571
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Scripting.cs",
       "target": "Excise.Cli/Program.cs",
       "cochanges": 2,
-      "jaccard": 0.0588
+      "jaccard": 0.0556
     },
     {
       "source": "Excise.Cli/Program.cs",
       "target": "Excise.Core/Document/PdfPage.cs",
       "cochanges": 2,
-      "jaccard": 0.0556
+      "jaccard": 0.0526
     },
     {
       "source": "Excise.Cli/Program.cs",
       "target": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
       "cochanges": 2,
-      "jaccard": 0.0513
+      "jaccard": 0.05
     }
   ]
 }
