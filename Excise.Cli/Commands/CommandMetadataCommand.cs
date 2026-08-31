@@ -48,8 +48,7 @@ internal static class CommandMetadataCommand
             else
             {
                 Console.Error.WriteLine($"Unknown command id: {id}");
-                Environment.ExitCode = 1;
-                return;
+                return 1;
             }
 
             if (json)
@@ -59,7 +58,7 @@ internal static class CommandMetadataCommand
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                     WriteIndented = true,
                 }));
-                return;
+                return 0;
             }
 
             foreach (var metadata in commands)
@@ -77,6 +76,8 @@ internal static class CommandMetadataCommand
                 if (metadata.IsDestructive)
                     Console.WriteLine("  Destructive: true");
             }
+
+            return 0;
         });
 
         return command;

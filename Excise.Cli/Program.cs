@@ -16,7 +16,6 @@ partial class Program
     /// </summary>
     internal static Task<int> RunAsync(string[] args)
     {
-        Environment.ExitCode = 0;
         var rootCommand = new RootCommand("excise - PDF toolkit powered by Excise.Core")
         {
             CommandMetadataCommand.Create(),
@@ -41,13 +40,9 @@ partial class Program
             SaveSizeReportCommand.Create(),
         };
 
-        // System.CommandLine 2.0 split parsing from invocation: build a
-        // ParseResult first, then run its action. Wrap with Task.FromResult
-        // because handlers are sync; if any command goes async later we'll
-        // switch to Parse(args).InvokeAsync().
-        var parserExitCode = rootCommand.Parse(args).Invoke();
-        var handlerExitCode = Environment.ExitCode;
-        return Task.FromResult(parserExitCode != 0 ? parserExitCode : handlerExitCode);
+        // Command actions return their explicit invocation outcome. This keeps
+        // test and embedded callers independent of process-global exit state.
+        return Task.FromResult(rootCommand.Parse(args).Invoke());
     }
 
 }

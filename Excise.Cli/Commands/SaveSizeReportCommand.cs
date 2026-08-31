@@ -61,12 +61,12 @@ internal static class SaveSizeReportCommand
                 }
 
                 Console.WriteLine(json);
-                Environment.ExitCode = report.OverallStatus == "PASS" ? 0 : 1;
+                return report.OverallStatus == "PASS" ? 0 : 1;
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"save-size-report failed: {ex.Message}");
-                Environment.ExitCode = 1;
+                return 1;
             }
         });
 
