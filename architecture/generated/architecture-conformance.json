@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "0c2810f983df93fa4deef06834e582e0de5c7bcd",
+  "sourceRevision": "f7b6b2610064c27207db89f7fd287ce10c4c6d16",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5904,
+    "retainedSymbols": 5915,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -403,13 +403,13 @@
       "source": "cli",
       "target": "core-document",
       "references": 141,
-      "typeDependencyCount": 25,
+      "typeDependencyCount": 27,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Cli.Program",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 45
+          "references": 36
         }
       ]
     },
@@ -417,13 +417,13 @@
       "source": "cli",
       "target": "core-encryption",
       "references": 17,
-      "typeDependencyCount": 3,
+      "typeDependencyCount": 4,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Program",
-          "target": "Excise.Core.Security.PdfEncryptionOptions",
-          "references": 7
+          "source": "Excise.Cli.DocumentPermissionGuard",
+          "target": "Excise.Core.Security.PdfPermissions",
+          "references": 6
         }
       ]
     },
@@ -500,8 +500,8 @@
     {
       "source": "cli",
       "target": "ocr",
-      "references": 69,
-      "typeDependencyCount": 21,
+      "references": 67,
+      "typeDependencyCount": 24,
       "classification": "declared",
       "evidence": [
         {
