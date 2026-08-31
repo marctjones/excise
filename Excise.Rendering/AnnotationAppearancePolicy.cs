@@ -9,6 +9,35 @@ namespace Excise.Rendering;
 /// </summary>
 internal static class AnnotationAppearancePolicy
 {
+    public static IReadOnlyList<AnnotationRenderSelection> SelectVisibleAnnotations(
+        IReadOnlyList<PdfAnnotation> annotations,
+        RenderOptions options,
+        ICollection<string>? diagnostics)
+    {
+        if (annotations.Count == 0)
+            return [];
+
+        var selected = new List<AnnotationRenderSelection>(annotations.Count);
+        foreach (var annotation in annotations)
+        {
+            var visibility = EvaluateVisibility(annotation, options);
+            if (visibility.ShouldRender)
+            {
+                selected.Add(new AnnotationRenderSelection(annotation, visibility.IsFieldOrLink));
+                continue;
+            }
+
+            if (visibility.Disposition == AnnotationVisibilityDisposition.UnsupportedInvisible)
+            {
+                diagnostics?.Add(
+                    "Annotation of a non-standard subtype has the Invisible flag and no " +
+                    "handler; not drawn (§12.5.3).");
+            }
+        }
+
+        return selected;
+    }
+
     public static AnnotationVisibilityDecision EvaluateVisibility(
         PdfAnnotation annotation,
         RenderOptions options)
@@ -91,7 +120,31 @@ internal static class AnnotationAppearancePolicy
 
         return only;
     }
+
+    public static AnnotationSynthesisKind SelectSynthesis(PdfAnnotationSubtype subtype)
+        => subtype switch
+        {
+            PdfAnnotationSubtype.Widget => AnnotationSynthesisKind.Widget,
+            PdfAnnotationSubtype.Link => AnnotationSynthesisKind.Link,
+            PdfAnnotationSubtype.Text => AnnotationSynthesisKind.StickyNote,
+            PdfAnnotationSubtype.Square => AnnotationSynthesisKind.Square,
+            PdfAnnotationSubtype.Circle => AnnotationSynthesisKind.Circle,
+            PdfAnnotationSubtype.FreeText => AnnotationSynthesisKind.FreeText,
+            PdfAnnotationSubtype.Highlight or
+            PdfAnnotationSubtype.Underline or
+            PdfAnnotationSubtype.Squiggly or
+            PdfAnnotationSubtype.StrikeOut => AnnotationSynthesisKind.TextMarkup,
+            PdfAnnotationSubtype.Line => AnnotationSynthesisKind.Line,
+            PdfAnnotationSubtype.Polygon => AnnotationSynthesisKind.Polygon,
+            PdfAnnotationSubtype.PolyLine => AnnotationSynthesisKind.PolyLine,
+            PdfAnnotationSubtype.Ink => AnnotationSynthesisKind.Ink,
+            _ => AnnotationSynthesisKind.None,
+        };
 }
+
+internal readonly record struct AnnotationRenderSelection(
+    PdfAnnotation Annotation,
+    bool IsFieldOrLink);
 
 internal readonly record struct AnnotationVisibilityDecision(
     AnnotationVisibilityDisposition Disposition,
@@ -106,4 +159,20 @@ internal enum AnnotationVisibilityDisposition
     CategoryDisabled,
     HiddenByFlags,
     UnsupportedInvisible,
+}
+
+internal enum AnnotationSynthesisKind
+{
+    None,
+    Widget,
+    Link,
+    StickyNote,
+    Square,
+    Circle,
+    FreeText,
+    TextMarkup,
+    Line,
+    Polygon,
+    PolyLine,
+    Ink,
 }

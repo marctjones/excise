@@ -28,21 +28,13 @@ internal partial class RenderContext
         IReadOnlyList<Excise.Core.Document.PdfAnnotation> annots;
         try { annots = _page.GetAnnotations(); }
         catch { return; }
-        if (annots.Count == 0) return;
-
-        foreach (var annot in annots)
+        var selections = AnnotationAppearancePolicy.SelectVisibleAnnotations(
+            annots,
+            _options,
+            _options.Diagnostics);
+        foreach (var selection in selections)
         {
-            var visibility = AnnotationAppearancePolicy.EvaluateVisibility(annot, _options);
-            if (!visibility.ShouldRender)
-            {
-                if (visibility.Disposition == AnnotationVisibilityDisposition.UnsupportedInvisible)
-                {
-                    _options.Diagnostics?.Add(
-                        "Annotation of a non-standard subtype has the Invisible flag and no " +
-                        "handler; not drawn (§12.5.3).");
-                }
-                continue;
-            }
+            var annot = selection.Annotation;
 
             // §12.5.2 /CA — the annotation's constant opacity, applied to
             // stroke AND fill, and to a baked /AP appearance stream just as
@@ -65,7 +57,7 @@ internal partial class RenderContext
             // Fields". Drawn UNDER the field's own appearance so it never
             // obscures a value, and only when asked — see the warning on
             // RenderOptions.HighlightFormFields about export paths.
-            if (visibility.IsFieldOrLink && _options.HighlightFormFields &&
+            if (selection.IsFieldOrLink && _options.HighlightFormFields &&
                 annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Widget)
             {
                 DrawFieldHighlight(annot);
@@ -232,30 +224,27 @@ internal partial class RenderContext
 
         var rect = new SKRect(rx1, ry1, rx2, ry2);
 
-        switch (annot.Subtype)
+        switch (AnnotationAppearancePolicy.SelectSynthesis(annot.Subtype))
         {
-            case Excise.Core.Document.PdfAnnotationSubtype.Widget:
+            case AnnotationSynthesisKind.Widget:
                 RenderWidgetDefault(annot, rect);
                 break;
-            case Excise.Core.Document.PdfAnnotationSubtype.Link:
+            case AnnotationSynthesisKind.Link:
                 RenderLinkDefault(annot, rect);
                 break;
-            case Excise.Core.Document.PdfAnnotationSubtype.Text:
+            case AnnotationSynthesisKind.StickyNote:
                 RenderStickyNoteDefault(annot, rect);
                 break;
-            case Excise.Core.Document.PdfAnnotationSubtype.Square:
+            case AnnotationSynthesisKind.Square:
                 RenderShapeDefault(annot, rect, isEllipse: false);
                 break;
-            case Excise.Core.Document.PdfAnnotationSubtype.Circle:
+            case AnnotationSynthesisKind.Circle:
                 RenderShapeDefault(annot, rect, isEllipse: true);
                 break;
-            case Excise.Core.Document.PdfAnnotationSubtype.FreeText:
+            case AnnotationSynthesisKind.FreeText:
                 RenderFreeTextDefault(annot, rect);
                 break;
-            case Excise.Core.Document.PdfAnnotationSubtype.Highlight:
-            case Excise.Core.Document.PdfAnnotationSubtype.Underline:
-            case Excise.Core.Document.PdfAnnotationSubtype.Squiggly:
-            case Excise.Core.Document.PdfAnnotationSubtype.StrikeOut:
+            case AnnotationSynthesisKind.TextMarkup:
                 RenderTextMarkupDefault(annot, rect);
                 break;
 
@@ -270,17 +259,19 @@ internal partial class RenderContext
             // layout) or Stamp/Text (which need viewer-specific icon art), the
             // annotation states exactly what to draw, so synthesising it is
             // reading the file rather than guessing at it.
-            case Excise.Core.Document.PdfAnnotationSubtype.Line:
+            case AnnotationSynthesisKind.Line:
                 RenderLineDefault(annot);
                 break;
-            case Excise.Core.Document.PdfAnnotationSubtype.Polygon:
+            case AnnotationSynthesisKind.Polygon:
                 RenderVertexShapeDefault(annot, close: true);
                 break;
-            case Excise.Core.Document.PdfAnnotationSubtype.PolyLine:
+            case AnnotationSynthesisKind.PolyLine:
                 RenderVertexShapeDefault(annot, close: false);
                 break;
-            case Excise.Core.Document.PdfAnnotationSubtype.Ink:
+            case AnnotationSynthesisKind.Ink:
                 RenderInkDefault(annot);
+                break;
+            case AnnotationSynthesisKind.None:
                 break;
         }
     }
