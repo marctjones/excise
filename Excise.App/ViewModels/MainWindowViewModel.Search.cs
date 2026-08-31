@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Excise.App.Models;
 using Excise.Core.Document;
 using Excise.App.Services;
 using ReactiveUI;
@@ -22,7 +23,7 @@ public partial class MainWindowViewModel
     private bool _searchWholeWords = false;
     private bool _searchUseRegex = false;
     private int _currentSearchMatchIndex = -1;
-    private ObservableCollection<PdfSearchService.SearchMatch> _searchMatches = new();
+    private ObservableCollection<SearchMatch> _searchMatches = new();
     private bool _isSearchVisible = false;
 
     // Debounce incremental ("search-as-you-type") queries. Pre-fix every
@@ -118,9 +119,9 @@ public partial class MainWindowViewModel
     // (a dense search on a large book — thousands of matches — turns each page
     // flip into a scan of all of them). The index makes the per-navigation
     // lookup O(matches on the target page). See #601.
-    private readonly System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<PdfSearchService.SearchMatch>> _matchesByPage = new();
+    private readonly System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<SearchMatch>> _matchesByPage = new();
 
-    public ObservableCollection<PdfSearchService.SearchMatch> SearchMatches
+    public ObservableCollection<SearchMatch> SearchMatches
     {
         get => _searchMatches;
         set
@@ -131,7 +132,7 @@ public partial class MainWindowViewModel
     }
 
     /// <summary>Test hook (#601 benchmark): the per-page match index.</summary>
-    internal System.Collections.Generic.IReadOnlyDictionary<int, System.Collections.Generic.List<PdfSearchService.SearchMatch>> MatchesByPageIndexForBenchmark
+    internal System.Collections.Generic.IReadOnlyDictionary<int, System.Collections.Generic.List<SearchMatch>> MatchesByPageIndexForBenchmark
         => _matchesByPage;
 
     private void RebuildMatchesByPageIndex()
@@ -141,7 +142,7 @@ public partial class MainWindowViewModel
         {
             if (!_matchesByPage.TryGetValue(match.PageIndex, out var list))
             {
-                list = new System.Collections.Generic.List<PdfSearchService.SearchMatch>();
+                list = new System.Collections.Generic.List<SearchMatch>();
                 _matchesByPage[match.PageIndex] = list;
             }
             list.Add(match);
@@ -200,7 +201,7 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit>? FindPreviousCommand { get; private set; }
     public ReactiveCommand<Unit, Unit>? CloseSearchCommand { get; private set; }
     public ReactiveCommand<Unit, Unit>? FindCommand { get; private set; }
-    public ReactiveCommand<PdfSearchService.SearchMatch, Unit>? JumpToSearchMatchCommand { get; private set; }
+    public ReactiveCommand<SearchMatch, Unit>? JumpToSearchMatchCommand { get; private set; }
 
     /// <summary>
     /// Initialize search commands (call from main constructor)
@@ -217,7 +218,7 @@ public partial class MainWindowViewModel
         FindCommand = ReactiveCommand.Create(FindNow);
         // Click on a row in the search-results sidebar.
         JumpToSearchMatchCommand =
-            ReactiveCommand.Create<PdfSearchService.SearchMatch>(JumpToSearchMatch);
+            ReactiveCommand.Create<SearchMatch>(JumpToSearchMatch);
     }
 
     /// <summary>
@@ -382,7 +383,7 @@ public partial class MainWindowViewModel
         LastSearchUiQueueElapsedMs = ElapsedMillisecondsSince(publishQueuedTimestamp);
         var publishStartedTimestamp = Stopwatch.GetTimestamp();
 
-        SearchMatches = new ObservableCollection<PdfSearchService.SearchMatch>(result.Matches);
+        SearchMatches = new ObservableCollection<SearchMatch>(result.Matches);
         CurrentSearchMatchIndex = SearchMatches.Count > 0 ? 0 : -1;
         this.RaisePropertyChanged(nameof(SearchResultText));
         ClearSearchStatus();
@@ -439,7 +440,7 @@ public partial class MainWindowViewModel
     /// viewer to the page containing <paramref name="match"/> and selects
     /// it so the prev/next buttons resume from there.
     /// </summary>
-    public void JumpToSearchMatch(PdfSearchService.SearchMatch match)
+    public void JumpToSearchMatch(SearchMatch match)
     {
         if (match == null) return;
         var index = SearchMatches.IndexOf(match);
@@ -451,7 +452,7 @@ public partial class MainWindowViewModel
     /// <summary>
     /// Navigate to a specific search match
     /// </summary>
-    private void NavigateToSearchMatch(PdfSearchService.SearchMatch match)
+    private void NavigateToSearchMatch(SearchMatch match)
     {
         // Navigate to the page containing the match
         if (match.PageIndex != CurrentPageIndex)

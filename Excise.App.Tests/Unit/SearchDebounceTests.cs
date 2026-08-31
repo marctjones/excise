@@ -1,7 +1,7 @@
 using Xunit;
 using AwesomeAssertions;
+using Excise.App.Models;
 using Excise.App.ViewModels;
-using Excise.App.Services;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -53,9 +53,9 @@ public class SearchDebounceTests
         vm.SearchResultText.Should().Be("No matches");
 
         // Add fake matches by manipulating the collection (in real tests, we load a PDF)
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 0 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 0 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 0 });
 
         // Set current match index to first one
         vm.CurrentSearchMatchIndex = 0;
@@ -69,9 +69,9 @@ public class SearchDebounceTests
     {
         var vm = MainWindowViewModelTestFactory.Create();
 
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 0 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 0 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 0 });
 
         vm.CurrentSearchMatchIndex = 0;
         vm.SearchResultText.Should().Be("1 of 3");
@@ -112,9 +112,9 @@ public class SearchDebounceTests
     {
         var vm = MainWindowViewModelTestFactory.Create();
 
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 1 });
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 2 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 0 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 1 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 2 });
 
         vm.CurrentSearchMatchIndex = 0;
 
@@ -130,9 +130,9 @@ public class SearchDebounceTests
     {
         var vm = MainWindowViewModelTestFactory.Create();
 
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 0 });
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 1 });
-        vm.SearchMatches.Add(new PdfSearchService.SearchMatch { PageIndex = 2 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 0 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 1 });
+        vm.SearchMatches.Add(new SearchMatch { PageIndex = 2 });
 
         vm.CurrentSearchMatchIndex = 2;
 
