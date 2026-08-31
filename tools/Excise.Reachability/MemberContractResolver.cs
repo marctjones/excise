@@ -48,14 +48,40 @@ internal static class MemberContractResolver
 
         foreach (var type in sourceSymbols.OfType<INamedTypeSymbol>())
         {
+            var staticConstructors = type.StaticConstructors
+                .Select(Original)
+                .Where(sourceSymbols.Contains)
+                .ToArray();
+            foreach (var staticMember in type.GetMembers()
+                         .Where(member => member.IsStatic)
+                         .Select(Original)
+                         .Where(member => sourceSymbols.Contains(member)
+                                          && member is not IMethodSymbol
+                                          {
+                                              MethodKind: MethodKind.StaticConstructor
+                                          }))
+            {
+                foreach (var staticConstructor in staticConstructors)
+                {
+                    yield return new MemberContractEdge(
+                        staticMember,
+                        staticConstructor);
+                }
+            }
+
             foreach (var interfaceType in type.AllInterfaces)
             {
                 foreach (var interfaceMember in interfaceType.GetMembers())
                 {
-                    foreach (var edge in SourceEdges(
-                                 sourceSymbols,
-                                 (interfaceMember,
-                                     type.FindImplementationForInterfaceMember(interfaceMember))))
+                    var implementation = type.FindImplementationForInterfaceMember(interfaceMember);
+                    var sourceInterfaceMember = sourceSymbols.Contains(Original(interfaceMember));
+                    foreach (var edge in sourceInterfaceMember
+                                 ? SourceEdges(
+                                     sourceSymbols,
+                                     (interfaceMember, implementation))
+                                 : SourceEdges(
+                                     sourceSymbols,
+                                     (type, implementation)))
                     {
                         yield return edge;
                     }
@@ -113,8 +139,9 @@ internal static class MemberContractResolver
                                   public virtual void Run() { }
                               }
 
-                              internal sealed class Implementation : Base, IContract
+                              internal sealed class Implementation : Base, IContract, IDisposable
                               {
+                                  static Implementation() { }
                                   private EventHandler? _changed;
                                   public string Name { get; set; } = "fixture";
                                   public event EventHandler Changed
@@ -124,7 +151,9 @@ internal static class MemberContractResolver
                                   }
                                   public override string Value { get; set; } = "implementation";
                                   public void Execute() => _changed?.Invoke(this, EventArgs.Empty);
+                                  public void Dispose() { }
                                   public override void Run() { }
+                                  public static void Activate() { }
                               }
                               """;
         var tree = CSharpSyntaxTree.ParseText(source);
@@ -154,6 +183,23 @@ internal static class MemberContractResolver
             Console.Error.WriteLine("FAIL: member contract self-test missed a dispatch edge.");
             Console.Error.WriteLine(
                 $"      edges: {string.Join(", ", actual.OrderBy(edge => edge.Item1).ThenBy(edge => edge.Item2).Select(edge => $"{edge.Item1} -> {edge.Item2}"))}");
+            return false;
+        }
+
+        var implementation = symbols.OfType<INamedTypeSymbol>()
+            .Single(symbol => symbol.Name == "Implementation");
+        var dispose = implementation.GetMembers("Dispose").OfType<IMethodSymbol>().Single();
+        var activate = implementation.GetMembers("Activate").OfType<IMethodSymbol>().Single();
+        var staticConstructor = implementation.StaticConstructors.Single();
+        if (!edges.Any(edge =>
+                SymbolEqualityComparer.Default.Equals(edge.From, implementation)
+                && SymbolEqualityComparer.Default.Equals(edge.To, dispose))
+            || !edges.Any(edge =>
+                SymbolEqualityComparer.Default.Equals(edge.From, activate)
+                && SymbolEqualityComparer.Default.Equals(edge.To, staticConstructor)))
+        {
+            Console.Error.WriteLine(
+                "FAIL: member contract self-test missed external interface or static initialization activation.");
             return false;
         }
 
