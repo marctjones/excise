@@ -1,0 +1,2902 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/build-pdf-feature-cluster-scorecard.py",
+  "policy": "Clusters organize existing registry leaves for review. They never infer support from a name, source candidate, or test candidate.",
+  "clusters": [
+    {
+      "section": "annotation-subtypes",
+      "cluster": "3D",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-026"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Caret",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-018"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Circle",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-010"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "FileAttachment",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-016"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "FreeText",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-004"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Highlight",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-005"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Ink",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-014"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Line",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-011"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Link",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-002"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Movie",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-021"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "PolyLine",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-013"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Polygon",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-012"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Popup",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-015"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "PrinterMark",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-024"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Projection",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-028"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Redact",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-019"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "RichMedia",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-027"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Screen",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-022"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Sound",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-020"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Square",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-009"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Squiggly",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-008"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Stamp",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-017"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "StrikeOut",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-007"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Text",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-003"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "TrapNet",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-025"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Underline",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-006"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Watermark",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-023"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "annotation-subtypes",
+      "cluster": "Widget",
+      "capabilityIds": [
+        "pdf.20.annotation.subtype-001"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "content",
+      "cluster": "All ISO 32000-2 Annex A content-stream operators",
+      "capabilityIds": [
+        "pdf.20.content.operators"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "unknown": 6
+      },
+      "unknownModeCount": 6,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "content",
+      "cluster": "Page content streams, form XObjects, and resource-scoped interpretation",
+      "capabilityIds": [
+        "pdf.17.content.streams"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "partial": 1,
+        "unknown": 5
+      },
+      "unknownModeCount": 5,
+      "explicitContractModes": 1,
+      "passingContractModes": 0,
+      "testCandidateModes": 5
+    },
+    {
+      "section": "content",
+      "cluster": "Text objects, text state, positioning, showing, and Type 3 character procedures",
+      "capabilityIds": [
+        "pdf.17.content.text-state"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "unknown": 6
+      },
+      "unknownModeCount": 6,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 3
+    },
+    {
+      "section": "document",
+      "cluster": "Document catalog, page tree, inheritance, and page geometry",
+      "capabilityIds": [
+        "pdf.17.document.catalog-pages"
+      ],
+      "targetModes": 5,
+      "modeStates": {
+        "unknown": 5
+      },
+      "unknownModeCount": 5,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 3
+    },
+    {
+      "section": "document",
+      "cluster": "Document information, XMP metadata, identifiers, dates, and versioning",
+      "capabilityIds": [
+        "pdf.17.document.metadata"
+      ],
+      "targetModes": 5,
+      "modeStates": {
+        "unknown": 5
+      },
+      "unknownModeCount": 5,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 3
+    },
+    {
+      "section": "document",
+      "cluster": "Embedded files, file specifications, collections, and portfolios",
+      "capabilityIds": [
+        "pdf.17.document.embedded-files"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "unknown": 6
+      },
+      "unknownModeCount": 6,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "document",
+      "cluster": "Outlines, page labels, named destinations, and viewer preferences",
+      "capabilityIds": [
+        "pdf.17.document.navigation"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "unknown": 6
+      },
+      "unknownModeCount": 6,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "graphics",
+      "cluster": "Color spaces, color values, functions, and output intents",
+      "capabilityIds": [
+        "pdf.17.graphics.color"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "partial": 1,
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 2
+    },
+    {
+      "section": "graphics",
+      "cluster": "Fonts, encodings, CMaps, glyph metrics, and text rendering",
+      "capabilityIds": [
+        "pdf.17.graphics.fonts"
+      ],
+      "targetModes": 7,
+      "modeStates": {
+        "implemented": 1,
+        "unknown": 6
+      },
+      "unknownModeCount": 6,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 3
+    },
+    {
+      "section": "graphics",
+      "cluster": "Graphics state, device-independent state, and resource dictionaries",
+      "capabilityIds": [
+        "pdf.17.graphics.state"
+      ],
+      "targetModes": 5,
+      "modeStates": {
+        "implemented": 1,
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 4
+    },
+    {
+      "section": "graphics",
+      "cluster": "Image XObjects, image masks, inline images, and image decoding",
+      "capabilityIds": [
+        "pdf.17.graphics.images"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "implemented": 1,
+        "unknown": 5
+      },
+      "unknownModeCount": 5,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 3
+    },
+    {
+      "section": "graphics",
+      "cluster": "Path construction, clipping, painting, and line style",
+      "capabilityIds": [
+        "pdf.17.graphics.paths-painting"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "implemented": 1,
+        "unknown": 5
+      },
+      "unknownModeCount": 5,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 4
+    },
+    {
+      "section": "graphics",
+      "cluster": "Patterns, shadings, and functions",
+      "capabilityIds": [
+        "pdf.17.graphics.patterns-shadings"
+      ],
+      "targetModes": 5,
+      "modeStates": {
+        "unknown": 5
+      },
+      "unknownModeCount": 5,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 2
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-color:DeviceCMYK",
+      "capabilityIds": [
+        "pdf.20.image.requirement-028"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-color:DeviceGray",
+      "capabilityIds": [
+        "pdf.20.image.requirement-026"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-color:DeviceN",
+      "capabilityIds": [
+        "pdf.20.image.requirement-033"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-color:DeviceRGB",
+      "capabilityIds": [
+        "pdf.20.image.requirement-027"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-color:ICCBased",
+      "capabilityIds": [
+        "pdf.20.image.requirement-029"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-color:Indexed",
+      "capabilityIds": [
+        "pdf.20.image.requirement-030"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-color:Lab",
+      "capabilityIds": [
+        "pdf.20.image.requirement-031"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-color:Separation",
+      "capabilityIds": [
+        "pdf.20.image.requirement-032"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-compositing:BlendTransparency",
+      "capabilityIds": [
+        "pdf.20.image.requirement-035"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-dictionary:BitsPerComponent",
+      "capabilityIds": [
+        "pdf.20.image.requirement-024"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-dictionary:Decode",
+      "capabilityIds": [
+        "pdf.20.image.requirement-023"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-dictionary:ImageMask",
+      "capabilityIds": [
+        "pdf.20.image.requirement-019"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-dictionary:Interpolate",
+      "capabilityIds": [
+        "pdf.20.image.requirement-025"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-dictionary:Mask",
+      "capabilityIds": [
+        "pdf.20.image.requirement-021",
+        "pdf.20.image.requirement-022"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "unknown": 6
+      },
+      "unknownModeCount": 6,
+      "explicitContractModes": 6,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-dictionary:SMask",
+      "capabilityIds": [
+        "pdf.20.image.requirement-020"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-filter:CCITTFaxDecode",
+      "capabilityIds": [
+        "pdf.20.image.requirement-010",
+        "pdf.20.image.requirement-011"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "unknown": 6
+      },
+      "unknownModeCount": 6,
+      "explicitContractModes": 6,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-filter:DCTDecode",
+      "capabilityIds": [
+        "pdf.20.image.requirement-012",
+        "pdf.20.image.requirement-013"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "unknown": 6
+      },
+      "unknownModeCount": 6,
+      "explicitContractModes": 6,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-filter:JBIG2Decode",
+      "capabilityIds": [
+        "pdf.20.image.requirement-015",
+        "pdf.20.image.requirement-016"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "unknown": 6
+      },
+      "unknownModeCount": 6,
+      "explicitContractModes": 6,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-filter:JPXDecode",
+      "capabilityIds": [
+        "pdf.20.image.requirement-014"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "image-placement:CTM",
+      "capabilityIds": [
+        "pdf.20.image.requirement-034"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "resource-policy:image-limits",
+      "capabilityIds": [
+        "pdf.20.image.requirement-036"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "stream-filter-arrays",
+      "capabilityIds": [
+        "pdf.20.image.requirement-018"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "stream-filter:ASCII85Decode",
+      "capabilityIds": [
+        "pdf.20.image.requirement-002"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "stream-filter:ASCIIHexDecode",
+      "capabilityIds": [
+        "pdf.20.image.requirement-001"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "stream-filter:Crypt",
+      "capabilityIds": [
+        "pdf.20.image.requirement-017"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "stream-filter:FlateDecode",
+      "capabilityIds": [
+        "pdf.20.image.requirement-003",
+        "pdf.20.image.requirement-004",
+        "pdf.20.image.requirement-005"
+      ],
+      "targetModes": 9,
+      "modeStates": {
+        "unknown": 9
+      },
+      "unknownModeCount": 9,
+      "explicitContractModes": 9,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "stream-filter:LZWDecode",
+      "capabilityIds": [
+        "pdf.20.image.requirement-006",
+        "pdf.20.image.requirement-007",
+        "pdf.20.image.requirement-008"
+      ],
+      "targetModes": 9,
+      "modeStates": {
+        "unknown": 9
+      },
+      "unknownModeCount": 9,
+      "explicitContractModes": 9,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "image-requirements",
+      "cluster": "stream-filter:RunLengthDecode",
+      "capabilityIds": [
+        "pdf.20.image.requirement-009"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "interactive",
+      "cluster": "AcroForm fields, widgets, appearances, calculations, and XFA policy",
+      "capabilityIds": [
+        "pdf.17.interactive.forms"
+      ],
+      "targetModes": 8,
+      "modeStates": {
+        "unimplemented": 1,
+        "unknown": 7
+      },
+      "unknownModeCount": 7,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 4
+    },
+    {
+      "section": "interactive",
+      "cluster": "All annotation subtypes, appearances, geometry, and flags",
+      "capabilityIds": [
+        "pdf.17.interactive.annotations"
+      ],
+      "targetModes": 7,
+      "modeStates": {
+        "unknown": 7
+      },
+      "unknownModeCount": 7,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 4
+    },
+    {
+      "section": "interactive",
+      "cluster": "Applied security redaction",
+      "capabilityIds": [
+        "pdf.17.security.redaction-content-removal"
+      ],
+      "targetModes": 5,
+      "modeStates": {
+        "implemented": 1,
+        "partial": 4
+      },
+      "unknownModeCount": 0,
+      "explicitContractModes": 5,
+      "passingContractModes": 0,
+      "testCandidateModes": 5
+    },
+    {
+      "section": "interactive",
+      "cluster": "Incoming redaction annotations",
+      "capabilityIds": [
+        "pdf.17.interactive.redaction-annotations"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "partial": 3,
+        "unimplemented": 2,
+        "unknown": 1
+      },
+      "unknownModeCount": 1,
+      "explicitContractModes": 3,
+      "passingContractModes": 1,
+      "testCandidateModes": 4
+    },
+    {
+      "section": "interactive",
+      "cluster": "Opt-in redaction review drafts",
+      "capabilityIds": [
+        "pdf.17.interactive.redaction-review-drafts"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "partial": 2,
+        "unimplemented": 3,
+        "unknown": 1
+      },
+      "unknownModeCount": 1,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "interactive",
+      "cluster": "Optional content groups, configurations, and usage applications",
+      "capabilityIds": [
+        "pdf.17.interactive.optional-content"
+      ],
+      "targetModes": 7,
+      "modeStates": {
+        "unimplemented": 1,
+        "unknown": 6
+      },
+      "unknownModeCount": 6,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "interchange",
+      "cluster": "Digital signatures, signatures dictionaries, byte ranges, permissions, and validation",
+      "capabilityIds": [
+        "pdf.17.interchange.signatures"
+      ],
+      "targetModes": 6,
+      "modeStates": {
+        "unimplemented": 1,
+        "unknown": 5
+      },
+      "unknownModeCount": 5,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "operators",
+      "cluster": "Content-stream",
+      "capabilityIds": [
+        "pdf.20.content.operator-001",
+        "pdf.20.content.operator-002",
+        "pdf.20.content.operator-003",
+        "pdf.20.content.operator-004",
+        "pdf.20.content.operator-005",
+        "pdf.20.content.operator-006",
+        "pdf.20.content.operator-007",
+        "pdf.20.content.operator-008",
+        "pdf.20.content.operator-009",
+        "pdf.20.content.operator-010",
+        "pdf.20.content.operator-011",
+        "pdf.20.content.operator-012",
+        "pdf.20.content.operator-013",
+        "pdf.20.content.operator-014",
+        "pdf.20.content.operator-015",
+        "pdf.20.content.operator-016",
+        "pdf.20.content.operator-017",
+        "pdf.20.content.operator-018",
+        "pdf.20.content.operator-019",
+        "pdf.20.content.operator-020",
+        "pdf.20.content.operator-021",
+        "pdf.20.content.operator-022",
+        "pdf.20.content.operator-023",
+        "pdf.20.content.operator-024",
+        "pdf.20.content.operator-025",
+        "pdf.20.content.operator-026",
+        "pdf.20.content.operator-027",
+        "pdf.20.content.operator-028",
+        "pdf.20.content.operator-029",
+        "pdf.20.content.operator-030",
+        "pdf.20.content.operator-031",
+        "pdf.20.content.operator-032",
+        "pdf.20.content.operator-033",
+        "pdf.20.content.operator-034",
+        "pdf.20.content.operator-035",
+        "pdf.20.content.operator-036",
+        "pdf.20.content.operator-037",
+        "pdf.20.content.operator-038",
+        "pdf.20.content.operator-039",
+        "pdf.20.content.operator-040",
+        "pdf.20.content.operator-041",
+        "pdf.20.content.operator-042",
+        "pdf.20.content.operator-043",
+        "pdf.20.content.operator-044",
+        "pdf.20.content.operator-045",
+        "pdf.20.content.operator-046",
+        "pdf.20.content.operator-047",
+        "pdf.20.content.operator-048",
+        "pdf.20.content.operator-049",
+        "pdf.20.content.operator-050",
+        "pdf.20.content.operator-051",
+        "pdf.20.content.operator-052",
+        "pdf.20.content.operator-053",
+        "pdf.20.content.operator-054",
+        "pdf.20.content.operator-055",
+        "pdf.20.content.operator-056",
+        "pdf.20.content.operator-057",
+        "pdf.20.content.operator-058",
+        "pdf.20.content.operator-059",
+        "pdf.20.content.operator-060",
+        "pdf.20.content.operator-061",
+        "pdf.20.content.operator-062",
+        "pdf.20.content.operator-063",
+        "pdf.20.content.operator-064",
+        "pdf.20.content.operator-065",
+        "pdf.20.content.operator-066",
+        "pdf.20.content.operator-067",
+        "pdf.20.content.operator-068",
+        "pdf.20.content.operator-069",
+        "pdf.20.content.operator-070",
+        "pdf.20.content.operator-071",
+        "pdf.20.content.operator-072",
+        "pdf.20.content.operator-073"
+      ],
+      "targetModes": 292,
+      "modeStates": {
+        "unknown": 292
+      },
+      "unknownModeCount": 292,
+      "explicitContractModes": 146,
+      "passingContractModes": 0,
+      "testCandidateModes": 146
+    },
+    {
+      "section": "product-capabilities",
+      "cluster": "Attachment disclosure, save, and stripping",
+      "capabilityIds": [
+        "pdfe.product.security.attachments"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unimplemented": 2,
+        "unknown": 2
+      },
+      "unknownModeCount": 2,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "product-capabilities",
+      "cluster": "Limited-mode editing and redaction refusal",
+      "capabilityIds": [
+        "pdfe.product.safety.limited-editing"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unimplemented": 2,
+        "unknown": 2
+      },
+      "unknownModeCount": 2,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "product-capabilities",
+      "cluster": "Privacy-clean copy and metadata/attachment stripping",
+      "capabilityIds": [
+        "pdfe.product.security.privacy-clean-copy"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 2
+    },
+    {
+      "section": "product-capabilities",
+      "cluster": "Safe external-link activation",
+      "capabilityIds": [
+        "pdfe.product.security.external-links"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unimplemented": 1,
+        "unknown": 2
+      },
+      "unknownModeCount": 2,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "product-capabilities",
+      "cluster": "Signature invalidation and advisory-permission override",
+      "capabilityIds": [
+        "pdfe.product.security.signature-and-permission-warning"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unimplemented": 2,
+        "unknown": 2
+      },
+      "unknownModeCount": 2,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 3
+    },
+    {
+      "section": "product-capabilities",
+      "cluster": "Unapplied-redaction review visibility",
+      "capabilityIds": [
+        "pdfe.product.redaction.review-panel"
+      ],
+      "targetModes": 2,
+      "modeStates": {
+        "unimplemented": 2
+      },
+      "unknownModeCount": 0,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.color.spaces",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-006"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.fonts",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-010"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.forms",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-009"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.geospatial",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-022"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.graphics.extgstate",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-005"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.images",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-008"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.interactive.annotations.appearance-stream",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-016"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.interactive.annotations.preservation",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-017"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.interactive.annotations.synthesis",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-018"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.multimedia-3d",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-021"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.B",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-046"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.BDC",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-090"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.BI",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-066"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.BMC",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-089"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.BT",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-070"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.BX",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-094"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Bstar",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-047"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.CS",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-053"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.DP",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-093"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Do",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-069"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.EI",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-068"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.EMC",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-091"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.ET",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-071"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.EX",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-095"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.F",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-044"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.G",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-059"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.ID",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-067"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.J",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-027"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.K",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-063"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.M",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-029"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.MP",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-092"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Q",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-024"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.RG",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-061"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.S",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-041"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.SC",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-055"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.SCN",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-056"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.TD",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-080"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.TJ",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-084"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.TL",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-075"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Tc",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-072"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Td",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-079"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Tf",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-076"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Tj",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-083"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Tm",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-081"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Tr",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-077"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Ts",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-078"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Tstar",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-082"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Tw",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-073"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Tz",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-074"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.W",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-051"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.Wstar",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-052"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.apostrophe",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-085"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.b",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-048"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.bstar",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-049"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.c",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-036"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.cm",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-025"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.cs",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-054"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.d",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-030"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.d0",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-087"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.d1",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-088"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.f",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-043"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.fstar",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-045"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.g",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-060"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.gs",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-033"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.h",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-039"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.i",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-032"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.j",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-028"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.k",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-064"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.l",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-035"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.m",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-034"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.n",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-050"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.q",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-023"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.quote",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-086"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.re",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-040"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.rg",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-062"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.ri",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-031"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.s",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-042"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.sc",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-057"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.scn",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-058"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.sh",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-065"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.v",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-037"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.w",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-026"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.op.y",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-038"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.optional-content",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-012"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.page.boxes",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-004"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.page.tree",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-003"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.patterns",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-007"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.resource-limits.images",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-014"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.resource-limits.recursion",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-015"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.resource-limits.streams",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-013"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.signatures",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-020"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.syntax.objects",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-001"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.syntax.streams",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-002"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.tagged-pdf.structure",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-019"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "renderer-requirements",
+      "cluster": "pdf20.transparency",
+      "capabilityIds": [
+        "pdf.20.renderer.requirement-011"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "rendering",
+      "cluster": "Colour conversion, transfer functions, halftones, and scan conversion",
+      "capabilityIds": [
+        "pdf.17.rendering.colour-conversion"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "rendering",
+      "cluster": "PDF 2.0 deprecated-feature intake and no-new-output policy",
+      "capabilityIds": [
+        "pdf.20.compatibility.deprecated"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unimplemented": 1,
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "rendering",
+      "cluster": "Version declarations, compatibility, implementation limits, and linearized files",
+      "capabilityIds": [
+        "pdf.17.compatibility.versions"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "syntax",
+      "cluster": "Encryption, permissions, and crypt filters",
+      "capabilityIds": [
+        "pdf.17.syntax.encryption"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 4
+    },
+    {
+      "section": "syntax",
+      "cluster": "Header, lexical syntax, and file structure",
+      "capabilityIds": [
+        "pdf.17.syntax.file"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 3
+    },
+    {
+      "section": "syntax",
+      "cluster": "Indirect objects, streams, cross-reference, trailer, and incremental update",
+      "capabilityIds": [
+        "pdf.17.syntax.objects"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "unknown": 4
+      },
+      "unknownModeCount": 4,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 4
+    },
+    {
+      "section": "syntax",
+      "cluster": "Stream filters and decode parameters",
+      "capabilityIds": [
+        "pdf.17.syntax.filters"
+      ],
+      "targetModes": 3,
+      "modeStates": {
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 0,
+      "passingContractModes": 0,
+      "testCandidateModes": 0
+    },
+    {
+      "section": "transparency",
+      "cluster": "Transparency groups, blend modes, soft masks, alpha, and compositing",
+      "capabilityIds": [
+        "pdf.17.transparency.model"
+      ],
+      "targetModes": 4,
+      "modeStates": {
+        "partial": 1,
+        "unknown": 3
+      },
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 2
+    }
+  ],
+  "summary": {
+    "clusters": 186,
+    "targetModes": 964,
+    "unknownModeCount": 929
+  }
+}
