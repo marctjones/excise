@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "generator", "sourceRevision", "projects", "symbols", "typeDependencies", "methodCycles", "seeds", "blindSpots"],
   "properties": {
-    "schemaVersion": { "const": 4 },
+    "schemaVersion": { "const": 5 },
     "generator": { "const": "tools/Excise.Reachability" },
     "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "projects": {
@@ -75,9 +75,10 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["source", "target", "references"],
+        "required": ["source", "sourceComponent", "target", "references"],
         "properties": {
           "source": { "type": "string", "minLength": 1 },
+          "sourceComponent": { "type": ["string", "null"] },
           "target": { "type": "string", "minLength": 1 },
           "references": { "type": "integer", "minimum": 1 }
         }

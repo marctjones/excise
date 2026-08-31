@@ -33,6 +33,11 @@ second implementation-status list.
    edges, qualified seeds, explicit conservative fallbacks, or have no observed
    entry path. AXAML is parsed structurally; any untyped reflection-binding
    fallback is named in the topology blind-spot list.
+   Type-dependency source ownership follows the declaration file of the member
+   making the reference, including members of partial types. The target remains
+   the owning component of its public containing type. This distinguishes an
+   engine-owned compatibility facade from document-model implementation without
+   reclassifying callers that consume that facade.
    [`architecture-conformance.json`](../../architecture/generated/architecture-conformance.json)
    compares those observed type edges with target dependencies, explicit
    forbidden relationships, and accepted exceptions. The generated
