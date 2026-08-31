@@ -155,7 +155,7 @@ internal partial class RenderContext
     {
         if (group == null ||
             _rootBitmap == null ||
-            _deviceCmykBackdrop == null)
+            _deviceCmyk.Backdrop == null)
         {
             return false;
         }
@@ -202,31 +202,26 @@ internal partial class RenderContext
             child._state.SoftMask = null;
             var isIsolated = group.GetBool("I");
             var isKnockout = group.GetBool("K");
-            child._deviceCmykPreserveZeroAlphaShape = _deviceCmykKnockoutGroupDepth > 0 && !isIsolated;
 
             if (!isIsolated && invocationState.BlendMode != SKBlendMode.SrcOver)
                 SyncDeviceCmykBackdropFromRootBitmap(left, top, width, height);
 
-            var parentBackdropForChild = _deviceCmykKnockoutGroupDepth > 0 &&
-                                         _deviceCmykKnockoutInitialBackdrop != null
-                ? _deviceCmykKnockoutInitialBackdrop
-                : _deviceCmykBackdrop;
-            if (!isIsolated && child._deviceCmykBackdrop != null && parentBackdropForChild != null)
-                SeedDeviceCmykGroupBackdrop(child._deviceCmykBackdrop, parentBackdropForChild, left, top, width, height);
+            child._deviceCmyk.EnterChildGroup(new DeviceCmykChildGroupRequest(
+                isIsolated,
+                isKnockout,
+                _deviceCmyk.IsInKnockoutGroup,
+                _deviceCmyk.SelectBackdropForChild(),
+                left,
+                top,
+                width,
+                height));
 
-            if (isKnockout)
-            {
-                child._deviceCmykKnockoutGroupDepth++;
-                child._deviceCmykKnockoutInitialBackdrop = child._deviceCmykBackdrop?.Clone();
-            }
-            if (isIsolated)
-                child._deviceCmykIsolatedGroupDepth++;
-
+            DeviceCmykChildGroupResult childResult;
             try
             {
                 child.RenderFormXObject(formStream);
-                if (child._deviceCmykBackdropDirtyFromRgbPaint && child._deviceCmykBackdrop != null)
-                    child.SyncDeviceCmykBackdropFromRootBitmap(0, 0, width, height);
+                childResult = child._deviceCmyk.CompleteChildGroup(
+                    () => child.SyncDeviceCmykBackdropFromRootBitmap(0, 0, width, height));
             }
             finally
             {
@@ -234,15 +229,15 @@ internal partial class RenderContext
                 child.DisposeOwnedResources();
             }
 
-            if (child._deviceCmykBackdrop == null)
+            if (!childResult.IsAvailable)
                 return false;
 
-            var groupInvocationAlpha = _deviceCmykKnockoutGroupDepth > 0
+            var groupInvocationAlpha = _deviceCmyk.IsInKnockoutGroup
                 ? 1
                 : invocationState.FillAlpha;
             CompositeDeviceCmykGroupBitmap(
                 groupBitmap,
-                child._deviceCmykBackdrop,
+                childResult.Backdrop!,
                 left,
                 top,
                 invocationState.BlendMode,
@@ -254,7 +249,7 @@ internal partial class RenderContext
 
     private void SyncDeviceCmykBackdropFromRootBitmap(int left, int top, int width, int height)
     {
-        if (_rootBitmap == null || _deviceCmykBackdrop == null)
+        if (_rootBitmap == null || _deviceCmyk.Backdrop == null)
             return;
 
         for (var y = 0; y < height; y++)
@@ -270,7 +265,7 @@ internal partial class RenderContext
                     continue;
 
                 var pixel = _rootBitmap.GetPixel(parentX, parentY);
-                var retained = _deviceCmykBackdrop.Get(parentX, parentY);
+                var retained = _deviceCmyk.Backdrop.Get(parentX, parentY);
                 var (retainedR, retainedG, retainedB) = DeviceCmykToRgb(retained);
                 if (Math.Abs(pixel.Red - ToByte(retainedR)) +
                     Math.Abs(pixel.Green - ToByte(retainedG)) +
@@ -283,30 +278,7 @@ internal partial class RenderContext
                 var r = (pixel.Red / 255.0 * alpha) + (1 - alpha);
                 var g = (pixel.Green / 255.0 * alpha) + (1 - alpha);
                 var b = (pixel.Blue / 255.0 * alpha) + (1 - alpha);
-                _deviceCmykBackdrop.Set(parentX, parentY, RgbToDeviceCmyk(r, g, b), alpha);
-            }
-        }
-    }
-
-    private static void SeedDeviceCmykGroupBackdrop(
-        DeviceCmykBackdrop groupBackdrop,
-        DeviceCmykBackdrop sourceBackdrop,
-        int left,
-        int top,
-        int width,
-        int height)
-    {
-        for (var y = 0; y < height; y++)
-        {
-            var parentY = top + y;
-            for (var x = 0; x < width; x++)
-            {
-                var parentX = left + x;
-                groupBackdrop.Set(
-                    x,
-                    y,
-                    sourceBackdrop.Get(parentX, parentY),
-                    sourceBackdrop.GetAlpha(parentX, parentY));
+                _deviceCmyk.Backdrop.Set(parentX, parentY, RgbToDeviceCmyk(r, g, b), alpha);
             }
         }
     }
@@ -319,7 +291,7 @@ internal partial class RenderContext
         SKBlendMode invocationBlendMode,
         float invocationAlpha)
     {
-        if (_rootBitmap == null || _deviceCmykBackdrop == null)
+        if (_rootBitmap == null || _deviceCmyk.Backdrop == null)
             return;
 
         var isNormalBlend = invocationBlendMode == SKBlendMode.SrcOver;
@@ -330,7 +302,7 @@ internal partial class RenderContext
             // Match the path-painting fast path: isolated CMYK groups keep direct
             // handling for these retained-backdrop modes, but knockout compositing
             // uses the subtractive DeviceCMYK blend path.
-            _deviceCmykIsolatedGroupDepth > 0 &&
+            _deviceCmyk.IsInIsolatedGroup &&
             !isNormalBlend &&
             blend is PdfSeparableBlendMode.Lighten or
                 PdfSeparableBlendMode.Screen or
@@ -353,12 +325,12 @@ internal partial class RenderContext
                     continue;
 
                 var dst = _rootBitmap.GetPixel(parentX, parentY);
-                if (_deviceCmykKnockoutGroupDepth > 0)
+                if (_deviceCmyk.IsInKnockoutGroup)
                 {
-                    var initialBackdrop = _deviceCmykKnockoutInitialBackdrop?.Get(parentX, parentY)
+                    var initialBackdrop = _deviceCmyk.KnockoutInitialBackdrop?.Get(parentX, parentY)
                                           ?? new DeviceCmykColor(0, 0, 0, 0);
-                    var initialAlpha = _deviceCmykKnockoutInitialBackdrop?.GetAlpha(parentX, parentY) ?? 0;
-                    _deviceCmykBackdrop.Set(parentX, parentY, initialBackdrop, initialAlpha);
+                    var initialAlpha = _deviceCmyk.KnockoutInitialBackdrop?.GetAlpha(parentX, parentY) ?? 0;
+                    _deviceCmyk.Backdrop.Set(parentX, parentY, initialBackdrop, initialAlpha);
                     var (initialR, initialG, initialB) = DeviceCmykToRgb(initialBackdrop);
                     dst = new SKColor(
                         ToByte(initialR),
@@ -369,17 +341,17 @@ internal partial class RenderContext
                 }
 
                 var source = groupBackdrop.Get(x, y);
-                var backdrop = _deviceCmykBackdrop.Get(parentX, parentY);
+                var backdrop = _deviceCmyk.Backdrop.Get(parentX, parentY);
                 var blended = isNormalBlend
                     ? source
                     : BlendDeviceCmykWithBackdropAlpha(
                         backdrop,
                         source,
                         blend,
-                        _deviceCmykBackdrop.GetAlpha(parentX, parentY),
+                        _deviceCmyk.Backdrop.GetAlpha(parentX, parentY),
                         useDirectBlendFunctions);
-                _deviceCmykBackdrop.CompositeSourceOver(parentX, parentY, blended, alpha);
-                var output = _deviceCmykBackdrop.Get(parentX, parentY);
+                _deviceCmyk.Backdrop.CompositeSourceOver(parentX, parentY, blended, alpha);
+                var output = _deviceCmyk.Backdrop.Get(parentX, parentY);
                 var (r, g, b) = DeviceCmykToRgb(output);
                 var dstAlpha = dst.Alpha / 255.0;
                 var outAlpha = alpha + (dstAlpha * (1 - alpha));

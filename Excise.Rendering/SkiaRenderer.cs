@@ -425,13 +425,7 @@ internal partial class RenderContext
     private readonly Stack<Excise.Core.Primitives.PdfDictionary?> _resourcesStack = new();
     private readonly Stack<bool> _optionalContentVisibilityStack = new();
     private int _hiddenOptionalContentDepth;
-    private int _deviceCmykTransparencyGroupDepth;
-    private int _deviceCmykKnockoutGroupDepth;
-    private int _deviceCmykIsolatedGroupDepth;
-    private bool _deviceCmykPreserveZeroAlphaShape;
-    private bool _deviceCmykBackdropDirtyFromRgbPaint;
-    private readonly DeviceCmykBackdrop? _deviceCmykBackdrop;
-    private readonly PdfColorSpace _deviceCmykPreviewColorSpace;
+    private readonly DeviceCmykExecutionState _deviceCmyk;
 
     // Per-fontDict cache for CFF CID→glyph maps, keyed the same way as
     // _embeddedTypefaces so two different /Font dicts with the same
@@ -482,7 +476,6 @@ internal partial class RenderContext
     // Per-page native assets are owned outside the context so every nested
     // context can borrow them without participating in disposal policy.
     private readonly RenderResourceScope _resourceScope;
-    private DeviceCmykBackdrop? _deviceCmykKnockoutInitialBackdrop;
     private int _tilingPatternDepth;
 
     private readonly CancellationToken _cancellationToken;
@@ -502,11 +495,10 @@ internal partial class RenderContext
         _options = options;
         _resourceScope = resourceScope;
         _cancellationToken = cancellationToken;
-        _deviceCmykPreviewColorSpace = PdfColorSpace.Parse(PdfName.DeviceCMYK, page.Document);
-        _deviceCmykTransparencyGroupDepth = startsInDeviceCmykTransparencyGroup ? 1 : 0;
-        _deviceCmykBackdrop = startsInDeviceCmykTransparencyGroup && rootBitmap != null
-            ? new DeviceCmykBackdrop(rootBitmap.Width, rootBitmap.Height)
-            : null;
+        _deviceCmyk = new DeviceCmykExecutionState(
+            PdfColorSpace.Parse(PdfName.DeviceCMYK, page.Document),
+            rootBitmap,
+            startsInDeviceCmykTransparencyGroup);
         _stateStack = new Stack<GraphicsState>();
         _state = new GraphicsState();
         _textState = new TextState();
@@ -1000,7 +992,7 @@ internal partial class RenderContext
     }
 
     private (double R, double G, double B) DeviceCmykToRgb(DeviceCmykColor color)
-        => _deviceCmykPreviewColorSpace.ToRgb(new[] { color.C, color.M, color.Y, color.K });
+        => _deviceCmyk.PreviewColorSpace.ToRgb(new[] { color.C, color.M, color.Y, color.K });
 
     private static SKColor CmykToColor(double c, double m, double y, double k)
     {
