@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "0f9cdcb986b954fb4b9cf006893d4136ba79fedd",
+  "sourceRevision": "0ddc6508819a4a59541bd0972f3809cbc9a7a22b",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 4
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5552,
+    "retainedSymbols": 5650,
     "observedComponentDependencies": 78,
     "declaredDependencies": 65,
     "acceptedExceptions": 1,
@@ -17,7 +17,7 @@
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
     "unownedShippingSymbols": 0,
-    "unresolvedTypeDependencies": 277,
+    "unresolvedTypeDependencies": 274,
     "registryMismatches": 0
   },
   "componentDependencies": [
@@ -150,7 +150,7 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 496,
+      "references": 495,
       "typeDependencyCount": 56,
       "classification": "declared",
       "evidence": [
@@ -1310,14 +1310,14 @@
         "path": "tools/Excise.ImageInspection/Excise.ImageInspection.csproj",
         "classification": "tool",
         "projectComponent": null,
-        "unownedSymbols": 21
+        "unownedSymbols": 20
       },
       {
         "name": "Excise.RenderTools",
         "path": "tools/Excise.RenderTools/Excise.RenderTools.csproj",
         "classification": "tool",
         "projectComponent": null,
-        "unownedSymbols": 337
+        "unownedSymbols": 329
       }
     ]
   },
@@ -1524,7 +1524,7 @@
   "observationBlindSpots": [
     "XAML untyped binding paths: Context, MatchedText, PageIndex. Unresolved typed member segments: none. Both sets are explicit rather than hidden by whole-file token matching.",
     "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
-    "Test-project evidence starts from semantic cross-compilation references and follows explicit production edges before the temporary whole-type compatibility closure.",
+    "Test-project evidence starts from semantic cross-compilation references and follows explicit production edges without treating every member of a reachable type as reachable.",
     "Declaration and branch counts are structural signals, not complexity verdicts.",
     "Symbol rows retain every unreachable symbol, all types, non-trivial methods, and shared mutable members; project totals cover the full graph.",
     "Git change coupling is generated separately from commit history."

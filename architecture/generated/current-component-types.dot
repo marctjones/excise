@@ -6,44 +6,44 @@ digraph excise_architecture {
   subgraph cluster_delivery {
     label="delivery";
     color="#cbd5e1";
-    "app" [label="Excise.App project\npartial\n693 retained symbols", fillcolor="#fff3bf"];
-    "cli" [label="Excise.Cli project\npartial\n120 retained symbols", fillcolor="#fff3bf"];
+    "app" [label="Excise.App project\npartial\n876 retained symbols", fillcolor="#fff3bf"];
+    "cli" [label="Excise.Cli project\npartial\n145 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {
     label="engine";
     color="#cbd5e1";
-    "core-content" [label="Content-stream walker and sinks\nimplemented\n248 retained symbols", fillcolor="#d8f3dc"];
-    "core-document" [label="Document model and mutation boundary\npartial\n537 retained symbols", fillcolor="#fff3bf"];
-    "core-fonts" [label="Font decoding, metrics, and subsetting\npartial\n114 retained symbols", fillcolor="#fff3bf"];
+    "core-content" [label="Content-stream walker and sinks\nimplemented\n246 retained symbols", fillcolor="#d8f3dc"];
+    "core-document" [label="Document model and mutation boundary\npartial\n526 retained symbols", fillcolor="#fff3bf"];
+    "core-fonts" [label="Font decoding, metrics, and subsetting\npartial\n110 retained symbols", fillcolor="#fff3bf"];
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n0 retained symbols", fillcolor="#fff3bf"];
-    "core-security" [label="Encryption, permissions, signatures, and document validation\npartial\n102 retained symbols", fillcolor="#fff3bf"];
-    "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n482 retained symbols", fillcolor="#d8f3dc"];
-    "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n47 retained symbols", fillcolor="#d8f3dc"];
-    "rendering" [label="Excise.Rendering project\npartial\n713 retained symbols", fillcolor="#fff3bf"];
+    "core-security" [label="Encryption, permissions, signatures, and document validation\npartial\n99 retained symbols", fillcolor="#fff3bf"];
+    "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n474 retained symbols", fillcolor="#d8f3dc"];
+    "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n45 retained symbols", fillcolor="#d8f3dc"];
+    "rendering" [label="Excise.Rendering project\npartial\n692 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_foundation {
     label="foundation";
     color="#cbd5e1";
-    "core" [label="Excise.Core project\nimplemented\n401 retained symbols", fillcolor="#d8f3dc"];
-    "core-parsing" [label="Parser, xref, filters, and hostile-input boundary\nimplemented\n560 retained symbols", fillcolor="#d8f3dc"];
-    "core-primitives" [label="PDF primitives and object graph\nimplemented\n155 retained symbols", fillcolor="#d8f3dc"];
+    "core" [label="Excise.Core project\nimplemented\n388 retained symbols", fillcolor="#d8f3dc"];
+    "core-parsing" [label="Parser, xref, filters, and hostile-input boundary\nimplemented\n552 retained symbols", fillcolor="#d8f3dc"];
+    "core-primitives" [label="PDF primitives and object graph\nimplemented\n144 retained symbols", fillcolor="#d8f3dc"];
   }
   subgraph cluster_integration {
     label="integration";
     color="#cbd5e1";
-    "ocr" [label="Excise.Ocr project\nimplemented\n44 retained symbols", fillcolor="#d8f3dc"];
-    "ocr-native" [label="Excise.Ocr.Native project\nimplemented\n31 retained symbols", fillcolor="#d8f3dc"];
+    "ocr" [label="Excise.Ocr project\nimplemented\n43 retained symbols", fillcolor="#d8f3dc"];
+    "ocr-native" [label="Excise.Ocr.Native project\nimplemented\n30 retained symbols", fillcolor="#d8f3dc"];
   }
   subgraph cluster_presentation {
     label="presentation";
     color="#cbd5e1";
-    "app-main-window" [label="Main-window orchestration and feature state\npartial\n350 retained symbols", fillcolor="#fff3bf"];
-    "avalonia" [label="Excise.Avalonia project\npartial\n400 retained symbols", fillcolor="#fff3bf"];
+    "app-main-window" [label="Main-window orchestration and feature state\npartial\n355 retained symbols", fillcolor="#fff3bf"];
+    "avalonia" [label="Excise.Avalonia project\npartial\n383 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_verification {
     label="verification";
     color="#cbd5e1";
-    "architecture-tooling" [label="Architecture registry, reachability, and derived diagrams\npartial\n149 retained symbols", fillcolor="#fff3bf"];
+    "architecture-tooling" [label="Architecture registry, reachability, and derived diagrams\npartial\n145 retained symbols", fillcolor="#fff3bf"];
     "verification" [label="Repository verification system\npartial\n0 retained symbols", fillcolor="#fff3bf"];
   }
   "app" -> "app-main-window" [label="253 refs / 18 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -55,7 +55,7 @@ digraph excise_architecture {
   "app" -> "core-text" [label="47 refs / 15 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "ocr" [label="29 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "rendering" [label="3 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "app-main-window" -> "app" [label="496 refs / 56 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app-main-window" -> "app" [label="495 refs / 56 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core" [label="8 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core-document" [label="309 refs / 44 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core-parsing" [label="3 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

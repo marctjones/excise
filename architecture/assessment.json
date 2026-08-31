@@ -304,7 +304,7 @@
         "scripts/test-check-redaction-oracles.sh"
       ],
       "gaps": [
-        "Dynamic reachability mechanisms now have explicit seed/static-edge classifications and mutation fixtures, but containing-type closure still limits member-level dead-code precision (#1304)."
+        "Reachability is compile-time evidence: observed XAML, dependency-injection, callback, interface-dispatch, static-constructor, and test-reference mechanisms are modeled and mutation-tested, while unobserved runtime mechanisms remain explicit blind spots."
       ],
       "issueIds": [
         940,
@@ -329,7 +329,7 @@
         "architecture/generated/artifact-set.json"
       ],
       "gaps": [
-        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. The observed-versus-target report still identifies 12 undeclared component edges for architectural review and 277 unresolved type edges confined to explicit non-shipping ownership gaps. XAML has three explicit untyped search-result members (#1305), and containing-type closure still hides member-level dead code (#1304)."
+        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. The observed-versus-target report still identifies 12 undeclared component edges for architectural review and 277 unresolved type edges confined to explicit non-shipping ownership gaps. XAML has three explicit untyped search-result members (#1305)."
       ],
       "issueIds": [
         940,
