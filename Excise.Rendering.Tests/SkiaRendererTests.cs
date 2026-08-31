@@ -3511,6 +3511,24 @@ public class SkiaRendererTests
         hasNonWhitePixels.Should().BeTrue("Form XObject content should render");
     }
 
+    [Fact(Timeout = 5000)]
+    public void RenderPage_SelfReferentialFormXObject_SkipsRecursiveDoAndKeepsOuterPaint()
+    {
+        var pdfData = CreatePdfWithFormXObjectAndContent(
+            content: "/Fm1 Do",
+            formContent: "0 g 10 10 80 80 re f /Fm1 Do",
+            formResources: "<< /XObject << /Fm1 6 0 R >> >>");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountDarkPixels(bitmap, new SKRectI(10, bitmap.Height - 90, 90, bitmap.Height - 10))
+            .Should().BeGreaterThan(5_000,
+                "the outer form paint must survive while its recursive Do invocation is skipped");
+    }
+
     [Fact]
     public void RenderPage_ScaledImageXObject_AppliesCTM()
     {
