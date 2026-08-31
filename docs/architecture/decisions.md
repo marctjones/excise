@@ -51,6 +51,12 @@ Operator names resolve once to typed kinds and reviewed families; this routing
 must not introduce a second stream walk, a second interpreter, or per-operator
 delegate allocation.
 
+Annotation visibility, appearance selection, synthesis routing, and geometry
+planning remain canvas-free. A typed appearance request enters the same Form
+XObject and operator pipeline, while document-level AcroForm defaults have one
+explicit lazy owner. Annotation handling must not introduce a second content
+walker or renderer.
+
 ## AD-006 — Delivery and platform policy stay outside the domain
 
 **Status:** accepted

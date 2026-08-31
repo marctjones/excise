@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "d90aded3acb2f296db842ff69e608b4561452346",
+  "sourceRevision": "85934bcc40e4ced61d49a219fb7791953609fdb4",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5739,
+    "retainedSymbols": 5767,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -1136,14 +1136,14 @@
     {
       "source": "rendering",
       "target": "core-document",
-      "references": 269,
-      "typeDependencyCount": 16,
+      "references": 289,
+      "typeDependencyCount": 24,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Rendering.RenderContext",
-          "target": "Excise.Core.Document.PdfAnnotation",
-          "references": 62
+          "target": "Excise.Core.Document.PdfPage",
+          "references": 60
         }
       ]
     },
@@ -1178,14 +1178,14 @@
     {
       "source": "rendering",
       "target": "core-primitives",
-      "references": 564,
-      "typeDependencyCount": 27,
+      "references": 575,
+      "typeDependencyCount": 37,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Rendering.RenderContext",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 180
+          "references": 174
         }
       ]
     },
