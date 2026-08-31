@@ -1,0 +1,3031 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "image-requirements",
+  "capabilities": [
+    {
+      "id": "pdf.20.image.requirement-001",
+      "name": "stream-filter:ASCIIHexDecode",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "stream-filter:ASCIIHexDecode"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for stream-filter:ASCIIHexDecode",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "PDF stream filter support",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "PDF stream filter support"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-002",
+      "name": "stream-filter:ASCII85Decode",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "stream-filter:ASCII85Decode"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for stream-filter:ASCII85Decode",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "PDF stream filter support",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "PDF stream filter support"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-003",
+      "name": "stream-filter:FlateDecode",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "stream-filter:FlateDecode"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for stream-filter:FlateDecode",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "PDF stream and raw image support",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "PDF stream and raw image support"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-004",
+      "name": "stream-filter:FlateDecode.predictor-tiff",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "stream-filter:FlateDecode.predictor-tiff"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for stream-filter:FlateDecode.predictor-tiff",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "FlateDecode predictor DecodeParms",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "FlateDecode predictor DecodeParms"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-005",
+      "name": "stream-filter:FlateDecode.predictor-png",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "stream-filter:FlateDecode.predictor-png"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for stream-filter:FlateDecode.predictor-png",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "FlateDecode predictor DecodeParms",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "FlateDecode predictor DecodeParms"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-006",
+      "name": "stream-filter:LZWDecode",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "stream-filter:LZWDecode"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for stream-filter:LZWDecode",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "PDF stream and legacy raw image support",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "PDF stream and legacy raw image support"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-007",
+      "name": "stream-filter:LZWDecode.early-change",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "stream-filter:LZWDecode.early-change"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for stream-filter:LZWDecode.early-change",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "LZWDecode DecodeParms",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "LZWDecode DecodeParms"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-008",
+      "name": "stream-filter:LZWDecode.predictors",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "stream-filter:LZWDecode.predictors"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for stream-filter:LZWDecode.predictors",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "LZWDecode predictor DecodeParms",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "LZWDecode predictor DecodeParms"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-009",
+      "name": "stream-filter:RunLengthDecode",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "stream-filter:RunLengthDecode"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for stream-filter:RunLengthDecode",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "PDF stream and legacy raw image support",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "PDF stream and legacy raw image support"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-010",
+      "name": "image-filter:CCITTFaxDecode",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-filter:CCITTFaxDecode"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-filter:CCITTFaxDecode",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Bi-level fax image XObject support",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Bi-level fax image XObject support"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-011",
+      "name": "image-filter:CCITTFaxDecode.decodeparms",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-filter:CCITTFaxDecode.decodeparms"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-filter:CCITTFaxDecode.decodeparms",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "CCITTFaxDecode DecodeParms",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "CCITTFaxDecode DecodeParms"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-012",
+      "name": "image-filter:DCTDecode",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-filter:DCTDecode"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-filter:DCTDecode",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "JPEG image XObject support",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "JPEG image XObject support"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-013",
+      "name": "image-filter:DCTDecode.color-transform",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-filter:DCTDecode.color-transform"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-filter:DCTDecode.color-transform",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "JPEG color interpretation in PDF",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "JPEG color interpretation in PDF"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-014",
+      "name": "image-filter:JPXDecode",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-filter:JPXDecode"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-filter:JPXDecode",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "JPEG 2000 / JPX image XObject support",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "JPEG 2000 / JPX image XObject support"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-015",
+      "name": "image-filter:JBIG2Decode",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-filter:JBIG2Decode"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-filter:JBIG2Decode",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "JBIG2 bi-level image XObject support",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "JBIG2 bi-level image XObject support"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-016",
+      "name": "image-filter:JBIG2Decode.globals",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-filter:JBIG2Decode.globals"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-filter:JBIG2Decode.globals",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "JBIG2Decode DecodeParms",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "JBIG2Decode DecodeParms"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-017",
+      "name": "stream-filter:Crypt",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "stream-filter:Crypt"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for stream-filter:Crypt",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Encrypted stream filter handling",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Encrypted stream filter handling"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-018",
+      "name": "stream-filter-arrays",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "stream-filter-arrays"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for stream-filter-arrays",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "PDF stream filter arrays",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "PDF stream filter arrays"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-019",
+      "name": "image-dictionary:ImageMask",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-dictionary:ImageMask"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-dictionary:ImageMask",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Stencil image rendering",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Stencil image rendering"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-020",
+      "name": "image-dictionary:SMask",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-dictionary:SMask"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-dictionary:SMask",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Soft-mask image compositing",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Soft-mask image compositing"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-021",
+      "name": "image-dictionary:Mask.image",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-dictionary:Mask.image"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-dictionary:Mask.image",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Explicit image mask compositing",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Explicit image mask compositing"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-022",
+      "name": "image-dictionary:Mask.color-key",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-dictionary:Mask.color-key"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-dictionary:Mask.color-key",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Color-key mask compositing",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Color-key mask compositing"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-023",
+      "name": "image-dictionary:Decode",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-dictionary:Decode"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-dictionary:Decode",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "PDF image sample remapping",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "PDF image sample remapping"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-024",
+      "name": "image-dictionary:BitsPerComponent",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-dictionary:BitsPerComponent"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-dictionary:BitsPerComponent",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Image sample unpacking",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Image sample unpacking"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-025",
+      "name": "image-dictionary:Interpolate",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-dictionary:Interpolate"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-dictionary:Interpolate",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Image interpolation hint handling",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Image interpolation hint handling"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-026",
+      "name": "image-color:DeviceGray",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-color:DeviceGray"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-color:DeviceGray",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Device color space image rendering",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Device color space image rendering"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-027",
+      "name": "image-color:DeviceRGB",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-color:DeviceRGB"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-color:DeviceRGB",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Device color space image rendering",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Device color space image rendering"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-028",
+      "name": "image-color:DeviceCMYK",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-color:DeviceCMYK"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-color:DeviceCMYK",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Device color space image rendering",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Device color space image rendering"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-029",
+      "name": "image-color:ICCBased",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-color:ICCBased"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-color:ICCBased",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Calibrated image color management",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Calibrated image color management"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-030",
+      "name": "image-color:Indexed",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-color:Indexed"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-color:Indexed",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Indexed image color table handling",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Indexed image color table handling"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-031",
+      "name": "image-color:Lab",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-color:Lab"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-color:Lab",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "CIE-based Lab image color conversion",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "CIE-based Lab image color conversion"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-032",
+      "name": "image-color:Separation",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-color:Separation"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-color:Separation",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Spot-color image handling",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Spot-color image handling"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-033",
+      "name": "image-color:DeviceN",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-color:DeviceN"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-color:DeviceN",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Multi-ink image handling",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Multi-ink image handling"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-034",
+      "name": "image-placement:CTM",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-placement:CTM"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-placement:CTM",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Image placement through graphics state CTM",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Image placement through graphics state CTM"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-035",
+      "name": "image-compositing:BlendTransparency",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "image-compositing:BlendTransparency"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for image-compositing:BlendTransparency",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Transparent image compositing",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Transparent image compositing"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.image.requirement-036",
+      "name": "resource-policy:image-limits",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "preserve": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "resource-policy:image-limits"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for resource-policy:image-limits",
+            "modes": [
+              "parse",
+              "render",
+              "preserve"
+            ]
+          }
+        ]
+      },
+      "notes": "Bounded rendering of malformed or adversarial image streams",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Bounded rendering of malformed or adversarial image streams"
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}

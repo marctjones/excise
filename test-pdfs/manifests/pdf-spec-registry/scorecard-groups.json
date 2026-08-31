@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "policy": "Major categories are reporting rollups only. Their score is mode-weighted from member sections and never hides a failing member or security gate.",
+  "groups": [
+    {"id": "file-model", "name": "File model", "sections": ["syntax", "document"]},
+    {"id": "page-content-rendering", "name": "Page content and rendering", "sections": ["graphics", "rendering", "content", "operators", "renderer-requirements", "image-requirements", "transparency"]},
+    {"id": "interaction-and-annotations", "name": "Interaction and annotations", "sections": ["annotation-subtypes", "interactive", "multimedia"]},
+    {"id": "interchange-and-profiles", "name": "Interchange and profiles", "sections": ["interchange", "optional-profiles"]},
+    {"id": "pdfe-product", "name": "PDFE product capabilities", "sections": ["product-capabilities"]}
+  ]
+}

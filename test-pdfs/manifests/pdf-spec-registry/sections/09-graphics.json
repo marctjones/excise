@@ -1,0 +1,614 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "graphics",
+  "capabilities": [
+    {
+      "id": "pdf.17.graphics.state",
+      "name": "Graphics state, device-independent state, and resource dictionaries",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "8.4",
+            "8.7"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "8.4",
+            "8.7"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Shared semantics underpin every visible page operation."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "mutate": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.graphics.extgstate"
+        }
+      ],
+      "notes": "Track each ExtGState entry, save/restore balancing, resource resolution, and limits as separate child capabilities.",
+      "documentation": [
+        "docs/architecture/system-design.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [
+          "docs/architecture/system-design.md"
+        ],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track each ExtGState entry, save/restore balancing, resource resolution, and limits as separate child capabilities."
+        ],
+        "processorRoles": [
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.graphics.paths-painting",
+      "name": "Path construction, clipping, painting, and line style",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "8.5"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "8.5"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Fundamental page appearance and redaction obstruction analysis."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "partial",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20-operator-evidence"
+        }
+      ],
+      "notes": "Operator-level claims migrate from the Annex A evidence source; this feature adds rendering and mutation proof.",
+      "documentation": [
+        "CLAUDE.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Operator-level claims migrate from the Annex A evidence source; this feature adds rendering and mutation proof."
+        ],
+        "processorRoles": [
+          "author",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "implemented-partial",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.graphics.color",
+      "name": "Color spaces, color values, functions, and output intents",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "8.6",
+            "10.3"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "8.6",
+            "10.3"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Practical office-document rendering needs basic color-managed appearance, not artist or prepress fidelity."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.color.spaces"
+        }
+      ],
+      "notes": "Track device, calibrated, ICC, indexed, separation, DeviceN, spot-color and tint-transform support independently. Advanced color controls and print-production authoring remain deferred.",
+      "documentation": [
+        "CI_GATES.md",
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track device, calibrated, ICC, indexed, separation, DeviceN, spot-color and tint-transform support independently. Advanced color controls and print-production authoring remain deferred."
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.graphics.patterns-shadings",
+      "name": "Patterns, shadings, and functions",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "8.6.6",
+            "8.7",
+            "10.4"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "8.6.6",
+            "8.7",
+            "10.4"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "supported",
+        "rationale": "Required by real-world rendering but authoring may remain narrow."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "write": "unknown",
+        "author": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.patterns"
+        }
+      ],
+      "notes": "Type and function-family coverage must be explicit; a gradient screenshot is not comprehensive evidence.",
+      "documentation": [
+        "CI_GATES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Type and function-family coverage must be explicit; a gradient screenshot is not comprehensive evidence."
+        ],
+        "processorRoles": [
+          "author",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.graphics.images",
+      "name": "Image XObjects, image masks, inline images, and image decoding",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "8.9"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "8.9"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Images are common page content and may be redaction carriers."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "partial",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf-image-feature-matrix"
+        },
+        {
+          "kind": "legacy",
+          "ref": "pdf20.images"
+        },
+        {
+          "kind": "implementation",
+          "ref": "Excise.Rendering/SkiaRenderer.Images.cs; Excise.Rendering/SkiaRenderer.XObjects.cs"
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency; Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha"
+        },
+        {
+          "kind": "atomic-fixture",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha"
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
+        }
+      ],
+      "verification": {
+        "status": "executable",
+        "requiredModes": [
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "atomic-fixture",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
+      },
+      "notes": "Keep one row per filter/mask/color-space combination in the migrated child inventory.",
+      "documentation": [
+        "CI_GATES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [
+          "Excise.Rendering/SkiaRenderer.Images.cs; Excise.Rendering/SkiaRenderer.XObjects.cs"
+        ],
+        "testRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency; Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha"
+        ],
+        "fixtureRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha"
+        ],
+        "corpusRefs": [],
+        "referenceToolRefs": [
+          "reference-tools.json"
+        ],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Keep one row per filter/mask/color-space combination in the migrated child inventory."
+        ],
+        "processorRoles": [
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "implemented-partial",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency; Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha",
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha"
+        ],
+        "negativeOrConservationTestRefs": [
+          "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
+        ],
+        "explicitEvidenceGaps": []
+      }
+    },
+    {
+      "id": "pdf.17.graphics.fonts",
+      "name": "Fonts, encodings, CMaps, glyph metrics, and text rendering",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "9"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "9"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Text layout, selection, extraction, and safe redaction depend on font semantics."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "partial",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.fonts"
+        },
+        {
+          "kind": "implementation",
+          "ref": "Excise.Rendering/SkiaRenderer.Text.cs; Excise.Rendering/Fonts/"
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont; Excise.Rendering.Tests/Fonts/EmbeddedCffWidthAuthorityTests.cs::RenderPage_EmbeddedCffSimpleFont_OutOfRangeCodeAdvancesByMissingWidthNotHmtxStub"
+        },
+        {
+          "kind": "atomic-fixture",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont"
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
+        }
+      ],
+      "verification": {
+        "status": "executable",
+        "requiredModes": [
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "atomic-fixture",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
+      },
+      "notes": "Track each font subtype, embedding, ToUnicode, writing mode, fallback, and subset behavior separately.",
+      "documentation": [
+        "REDACTION_AI_GUIDELINES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [
+          "Excise.Rendering/SkiaRenderer.Text.cs; Excise.Rendering/Fonts/"
+        ],
+        "testRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont; Excise.Rendering.Tests/Fonts/EmbeddedCffWidthAuthorityTests.cs::RenderPage_EmbeddedCffSimpleFont_OutOfRangeCodeAdvancesByMissingWidthNotHmtxStub"
+        ],
+        "fixtureRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont"
+        ],
+        "corpusRefs": [],
+        "referenceToolRefs": [
+          "reference-tools.json"
+        ],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track each font subtype, embedding, ToUnicode, writing mode, fallback, and subset behavior separately."
+        ],
+        "processorRoles": [
+          "author",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "implemented-partial",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont; Excise.Rendering.Tests/Fonts/EmbeddedCffWidthAuthorityTests.cs::RenderPage_EmbeddedCffSimpleFont_OutOfRangeCodeAdvancesByMissingWidthNotHmtxStub",
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont"
+        ],
+        "negativeOrConservationTestRefs": [
+          "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
+        ],
+        "explicitEvidenceGaps": []
+      }
+    }
+  ]
+}

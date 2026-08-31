@@ -1,0 +1,710 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "interactive",
+  "capabilities": [
+    {
+      "id": "pdf.17.interactive.annotations",
+      "name": "All annotation subtypes, appearances, geometry, and flags",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "12.5"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "12.5"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "supported",
+        "rationale": "Annotations are authored, preserved, displayed, and may carry redactable data."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unknown",
+        "execute": "not-applicable"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "annotation-support-matrix"
+        }
+      ],
+      "notes": "Migrate each subtype with independent read/preserve/display/interact/redaction-carrier decisions; preservation is mandatory even for a non-rendered subtype.",
+      "documentation": [
+        "tests/annotation-support-matrix.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Migrate each subtype with independent read/preserve/display/interact/redaction-carrier decisions; preservation is mandatory even for a non-rendered subtype."
+        ],
+        "processorRoles": [
+          "author",
+          "execute",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.interactive.redaction-annotations",
+      "name": "Incoming redaction annotations",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "12.5.6.23"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "12.5.6.23"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Marked redactions must be surfaced and preserved without silently performing an irreversible operation chosen by another processor."
+      },
+      "modes": {
+        "parse": "partial",
+        "preserve": "partial",
+        "render": "unknown",
+        "extract": "not-applicable",
+        "mutate": "unimplemented",
+        "write": "partial",
+        "author": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "implementation",
+          "ref": "Excise.Core/Document/PdfAnnotationParser.cs; Excise.App/ViewModels/MainWindowViewModel.cs"
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs"
+        },
+        {
+          "kind": "corpus",
+          "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip"
+        }
+      ],
+      "notes": "PDFE counts and warns about incoming /Redact annotations but deliberately never applies them (#1021). Partial is intentional until atomic fixtures and independent reference comparison satisfy the implementation contract.",
+      "documentation": [
+        "tests/annotation-support-matrix.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [
+          "Excise.Core/Document/PdfAnnotationParser.cs; Excise.App/ViewModels/MainWindowViewModel.cs"
+        ],
+        "testRefs": [
+          "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [
+          "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip"
+        ],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "PDFE counts and warns about incoming /Redact annotations but deliberately never applies them (#1021). Partial is intentional until atomic fixtures and independent reference comparison satisfy the implementation contract."
+        ],
+        "processorRoles": [
+          "author",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "implemented-partial",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs",
+          "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.interactive.redaction-review-drafts",
+      "name": "Opt-in redaction review drafts",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "12.5.6.23"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "12.5.6.23"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "supported",
+        "rationale": "Authorized reviewers may need a portable, non-destructive proposal before applying removal; this must be impossible to confuse with a safe-redacted copy."
+      },
+      "modes": {
+        "parse": "partial",
+        "preserve": "partial",
+        "render": "unknown",
+        "extract": "not-applicable",
+        "mutate": "unimplemented",
+        "write": "unimplemented",
+        "author": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "documentation",
+          "ref": "PyMuPDF Page.add_redact_annot / apply_redactions documentation"
+        },
+        {
+          "kind": "corpus",
+          "ref": "test-pdfs/pdfium/redact_annot.pdf; veraPDF annotation conformance fixtures"
+        }
+      ],
+      "notes": "Planned product capability, disabled by default. A review draft must carry an explicit non-shareable/unapplied state; it is never evidence of content removal.",
+      "documentation": [
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [
+          "test-pdfs/pdfium/redact_annot.pdf; veraPDF annotation conformance fixtures"
+        ],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Planned product capability, disabled by default. A review draft must carry an explicit non-shareable/unapplied state; it is never evidence of content removal."
+        ],
+        "processorRoles": [
+          "author",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "implemented-partial",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "test-pdfs/pdfium/redact_annot.pdf; veraPDF annotation conformance fixtures"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.security.redaction-content-removal",
+      "name": "Applied security redaction",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "12.5.6.23"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "12.5.6.23"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "The product's defining security workflow must meet the format's removal requirement, not merely paint an overlay."
+      },
+      "modes": {
+        "parse": "not-applicable",
+        "preserve": "partial",
+        "render": "partial",
+        "extract": "partial",
+        "mutate": "partial",
+        "write": "implemented",
+        "author": "not-applicable"
+      },
+      "evidence": [
+        {
+          "kind": "implementation",
+          "ref": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs; Excise.Core/Text/Segmentation/GlyphRemover.cs"
+        },
+        {
+          "kind": "security",
+          "ref": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerTests.cs; Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs"
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs; Excise.Rendering.Tests/Differential/RedactionRenderAxesTests.cs"
+        },
+        {
+          "kind": "corpus",
+          "ref": "Excise.Rendering.Tests/Corpus/RedactionRegressionTests.cs; Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs"
+        },
+        {
+          "kind": "benchmark",
+          "ref": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs"
+        }
+      ],
+      "verification": {
+        "requiredModes": [
+          "preserve",
+          "render",
+          "extract",
+          "mutate",
+          "write"
+        ],
+        "securitySensitive": true,
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerTests.cs",
+            "modes": [
+              "extract",
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "atomic-fixture",
+            "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs",
+            "modes": [
+              "preserve",
+              "extract",
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "security",
+            "ref": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerTests.cs; Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs",
+            "modes": [
+              "preserve",
+              "extract",
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs; Excise.Rendering.Tests/Differential/RedactionRenderAxesTests.cs",
+            "modes": [
+              "render",
+              "preserve",
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/Corpus/RedactionRegressionTests.cs; Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs",
+            "modes": [
+              "render",
+              "preserve",
+              "extract",
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "benchmark",
+            "ref": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
+            "modes": [
+              "mutate",
+              "write"
+            ]
+          }
+        ]
+      },
+      "notes": "Partial is intentional: tests establish several independent removal and conservation properties, but the specification's all-content obligation is broader than any finite corpus. Extraction coverage bounds text redaction; raster/image and non-page carriers have dedicated tests. Benchmark output is diagnostic, while collateral and parity harnesses ratchet regressions.",
+      "documentation": [
+        "REDACTION_AI_GUIDELINES.md",
+        "CI_GATES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [
+          "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs; Excise.Core/Text/Segmentation/GlyphRemover.cs"
+        ],
+        "testRefs": [
+          "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerTests.cs; Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [
+          "Excise.Rendering.Tests/Corpus/RedactionRegressionTests.cs; Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs"
+        ],
+        "referenceToolRefs": [
+          "reference-tools.json"
+        ],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Partial is intentional: tests establish several independent removal and conservation properties, but the specification's all-content obligation is broader than any finite corpus. Extraction coverage bounds text redaction; raster/image and non-page carriers have dedicated tests. Benchmark output is diagnostic, while collateral and parity harnesses ratchet regressions."
+        ],
+        "processorRoles": [
+          "author",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "implemented-and-proven",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "Excise.Rendering.Tests/Corpus/RedactionRegressionTests.cs; Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs"
+        ],
+        "negativeOrConservationTestRefs": [
+          "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerTests.cs; Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs",
+          "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs; Excise.Rendering.Tests/Differential/RedactionRenderAxesTests.cs"
+        ],
+        "explicitEvidenceGaps": []
+      }
+    },
+    {
+      "id": "pdf.17.interactive.forms",
+      "name": "AcroForm fields, widgets, appearances, calculations, and XFA policy",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "12.7"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "12.7"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Filling, saving, and flattening ordinary office and court forms are core workflows; scripts and XFA are distinct scopes."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unknown",
+        "execute": "unimplemented"
+      },
+      "evidence": [],
+      "notes": "Track field type, inheritance, appearance generation, calculation, submit/reset/import, and NeedAppearances separately. Allow direct entry into ordinary fields but do not execute JavaScript-dependent calculation, validation, formatting, or submit actions; report unavailable scripted behavior. XFA is deferred.",
+      "documentation": [
+        "README.md",
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track field type, inheritance, appearance generation, calculation, submit/reset/import, and NeedAppearances separately. Allow direct entry into ordinary fields but do not execute JavaScript-dependent calculation, validation, formatting, or submit actions; report unavailable scripted behavior. XFA is deferred."
+        ],
+        "processorRoles": [
+          "author",
+          "execute",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.interactive.actions",
+      "name": "Actions and destinations including URI, GoTo, JavaScript, Launch, and submit",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "12.6"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "12.6"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "blocked",
+        "rationale": "Untrusted documents must never gain implicit code or external-process execution."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "execute": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "annotation-support-matrix.notSupported"
+        }
+      ],
+      "notes": "A blocked execute mode does not justify dropping action dictionaries on save; navigation policy is tracked separately.",
+      "documentation": [
+        "tests/annotation-support-matrix.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "A blocked execute mode does not justify dropping action dictionaries on save; navigation policy is tracked separately."
+        ],
+        "processorRoles": [
+          "execute",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "intentionally-unsupported",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.interactive.optional-content",
+      "name": "Optional content groups, configurations, and usage applications",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "8.11"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "8.11"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "supported",
+        "rationale": "Layers affect appearance and must be viewable, toggleable, and preserved through edits."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.optional-content"
+        }
+      ],
+      "notes": "Track default configuration, radio groups, intents, usage and user interface policy individually. Creating and sophisticated editing of layer structures are deferred.",
+      "documentation": [
+        "README.md",
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track default configuration, radio groups, intents, usage and user interface policy individually. Creating and sophisticated editing of layer structures are deferred."
+        ],
+        "processorRoles": [
+          "author",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}

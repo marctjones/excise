@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/collect-pdf-reference-tool-evidence.py",
+  "policy": "This records executable/version availability only. It does not run PDFs, establish conformance, or turn a reference renderer into an oracle without a named fixture/test contract.",
+  "recordedAt": "2026-08-31T03:17:58.011223+00:00",
+  "tools": [
+    {
+      "id": "mupdf-mutool",
+      "declaredAvailability": "available-local",
+      "command": "mutool",
+      "versionCommand": "mutool --version",
+      "resolvedExecutable": "/opt/homebrew/bin/mutool",
+      "observations": [
+        "page rendering",
+        "text extraction",
+        "redaction result rendering"
+      ],
+      "limitations": [
+        "not a conformance validator",
+        "renderer disagreement requires adjudication"
+      ],
+      "status": "available",
+      "exitCode": 1,
+      "version": "mutool version 1.27.2",
+      "output": "mutool version 1.27.2\nusage: mutool <command> [options]\n\trun\t-- run javascript\n\tdraw\t-- convert document\n\tconvert\t-- convert document (with simpler options)\n\taudit\t-- produce usage stats from PDF files\n\tbake\t-- bake PDF form into static content\n\tclean\t-- rewrite PDF file\n\tcreate\t-- create PDF document\n\textract\t-- extract font and image resources\n\tinfo\t-- show information about PDF resources\n\tmerge\t-- merge pages from multiple PDF sources into a new PDF\n\tpages\t-- show information about PDF pages\n\tposter\t-- split large PDF page into many tiles\n\trecolor\t-- change colorspace of PDF document\n\tshow\t-- show internal PDF objects\n\tsign\t-- manipulate PDF digital signatures\n\ttrim\t-- trim PDF page contents\n\tgrep\t-- search for text\n\ttrace\t-- trace device calls"
+    },
+    {
+      "id": "qpdf",
+      "declaredAvailability": "available-local",
+      "command": "qpdf",
+      "versionCommand": "qpdf --version",
+      "resolvedExecutable": "/opt/homebrew/bin/qpdf",
+      "observations": [
+        "object graph",
+        "syntax acceptance",
+        "open-save preservation"
+      ],
+      "limitations": [
+        "not a page renderer",
+        "not a redaction oracle"
+      ],
+      "status": "available",
+      "exitCode": 0,
+      "version": "qpdf version 12.3.2",
+      "output": "qpdf version 12.3.2\nRun qpdf --copyright to see copyright and license information."
+    },
+    {
+      "id": "poppler",
+      "declaredAvailability": "available-local",
+      "command": "pdftoppm",
+      "versionCommand": "pdftoppm -v",
+      "resolvedExecutable": "/opt/homebrew/bin/pdftoppm",
+      "observations": [
+        "raster page appearance"
+      ],
+      "limitations": [
+        "does not prove text extraction or object preservation"
+      ],
+      "status": "available",
+      "exitCode": 0,
+      "version": "pdftoppm version 26.06.0",
+      "output": "pdftoppm version 26.06.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+    },
+    {
+      "id": "evince",
+      "declaredAvailability": "not-installed-local",
+      "command": "evince",
+      "versionCommand": "evince --version",
+      "resolvedExecutable": null,
+      "observations": [
+        "human visual-review availability"
+      ],
+      "limitations": [
+        "no stable headless page-rendering contract",
+        "not an automated conformance or redaction oracle"
+      ],
+      "status": "not-installed",
+      "version": null,
+      "output": null
+    },
+    {
+      "id": "pymupdf",
+      "declaredAvailability": "not-installed-local",
+      "command": "python3 -m fitz",
+      "versionCommand": "python3 -c 'import fitz; print(fitz.VersionBind)'",
+      "resolvedExecutable": "/opt/homebrew/bin/python3",
+      "observations": [
+        "independent rendering",
+        "redaction API behavior"
+      ],
+      "limitations": [
+        "not installed in this validation environment",
+        "no result may cite this tool until its exact version is recorded"
+      ],
+      "status": "not-installed",
+      "exitCode": 1,
+      "version": "Traceback (most recent call last):",
+      "output": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n    import fitz; print(fitz.VersionBind)\n    ^^^^^^^^^^^\nModuleNotFoundError: No module named 'fitz'"
+    }
+  ],
+  "summary": {
+    "registered": 5,
+    "available": 3,
+    "notInstalled": 2,
+    "unhealthy": 0
+  }
+}

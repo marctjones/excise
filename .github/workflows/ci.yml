@@ -157,6 +157,9 @@ jobs:
       - name: Verify TRUE Redaction Implementation
         run: ./scripts/verify-true-redaction.sh
 
+      - name: Verify PDF capability registry and scorecard
+        run: ./scripts/check-pdf-capability-registry.sh
+
       # Gate asymmetry (#618): CORRECTNESS is a blocking gate, PERFORMANCE is a
       # budget. A perf regression may never be resolved by weakening a correctness
       # assertion. This fails a PR that touches a perf-sensitive path AND rewrites

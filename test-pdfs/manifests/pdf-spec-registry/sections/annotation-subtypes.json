@@ -1,0 +1,2560 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "annotation-subtypes",
+  "capabilities": [
+    {
+      "id": "pdf.20.annotation.subtype-001",
+      "name": "Widget",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationSynthesisPolicyGateTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Widget",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Form fields. The largest non-visual use of annotations in the format \u2014 every AcroForm field's on-page presence is a Widget. Field VALUES are text, so this is a redaction carrier. Page-raster oracle APIs legitimately draw nothing here (pdfium's form-fill layer is a separate pass), which is why Widget rows are judged over 3 engines, not 5.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationSynthesisPolicyGateTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Form fields. The largest non-visual use of annotations in the format \u2014 every AcroForm field's on-page presence is a Widget. Field VALUES are text, so this is a redaction carrier. Page-raster oracle APIs legitimately draw nothing here (pdfium's form-fill layer is a separate pass), which is why Widget rows are judged over 3 engines, not 5."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationSynthesisPolicyGateTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-002",
+      "name": "Link",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationSynthesisPolicyGateTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Link",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Navigation only: GoTo and URI. A /URI is user-visible text and travels with the file, so it is a carrier. \u00a712.5.6.5 default 1pt border implemented in #987; the absurd-width case refuses per #1015.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationSynthesisPolicyGateTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Navigation only: GoTo and URI. A /URI is user-visible text and travels with the file, so it is a carrier. \u00a712.5.6.5 default 1pt border implemented in #987; the absurd-width case refuses per #1015."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationSynthesisPolicyGateTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-003",
+      "name": "Text",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Text",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "The sticky-note icon. /Contents is the note body \u2014 real human text outside the content stream.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "The sticky-note icon. /Contents is the note body \u2014 real human text outside the content stream."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-004",
+      "name": "FreeText",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for FreeText",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Text drawn directly on the page. Among the most important carriers: it LOOKS like page content but is not in the content stream.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Text drawn directly on the page. Among the most important carriers: it LOOKS like page content but is not in the content stream."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-005",
+      "name": "Highlight",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Highlight",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Quad-based text markup. Magnitude divergence tracked as #1004.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Quad-based text markup. Magnitude divergence tracked as #1004."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-006",
+      "name": "Underline",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Underline",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": null,
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-007",
+      "name": "StrikeOut",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for StrikeOut",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": null,
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-008",
+      "name": "Squiggly",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Squiggly",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": null,
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-009",
+      "name": "Square",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Square",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": null,
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-010",
+      "name": "Circle",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Circle",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": null,
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-011",
+      "name": "Line",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Line",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Line endings are distinguishable and preserved in order across a save (#933).",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Line endings are distinguishable and preserved in order across a save (#933)."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-012",
+      "name": "Polygon",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Polygon",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": null,
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-013",
+      "name": "PolyLine",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for PolyLine",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": null,
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-014",
+      "name": "Ink",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationInvariantTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Ink",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Every point preserved in order across a save (#933).",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Every point preserved in order across a save (#933)."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationInvariantTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-015",
+      "name": "Popup",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Popup",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Deliberately never drawn inline \u2014 it is the note window for its parent markup annotation, and its text belongs to that parent. Recognised precisely so it is NOT rendered onto the page.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Deliberately never drawn inline \u2014 it is the note window for its parent markup annotation, and its text belongs to that parent. Recognised precisely so it is NOT rendered onto the page."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-016",
+      "name": "FileAttachment",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for FileAttachment",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Embeds an ENTIRE arbitrary file. The most consequential data carrier in the format \u2014 scrubbed by default in the GUI redaction-copy flow (#467). No synthesis: the oracles disagree on the icon and there is nothing to copy.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Embeds an ENTIRE arbitrary file. The most consequential data carrier in the format \u2014 scrubbed by default in the GUI redaction-copy flow (#467). No synthesis: the oracles disagree on the icon and there is nothing to copy."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-017",
+      "name": "Stamp",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "AnnotationSynthesisPolicyGateTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Stamp",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "No synthesis, by decision #1015: 3 of 5 engines draw and disagree 4.7x on quantity and 3.6x on bbox height. A stamp's picture is viewer-specific art \u2014 there is nothing to copy, only an invitation to invent some.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "AnnotationSynthesisPolicyGateTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "No synthesis, by decision #1015: 3 of 5 engines draw and disagree 4.7x on quantity and 3.6x on bbox height. A stamp's picture is viewer-specific art \u2014 there is nothing to copy, only an invitation to invent some."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "AnnotationSynthesisPolicyGateTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-018",
+      "name": "Caret",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Caret",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "No synthesis. #972's first fix drew a caret where a tick belonged, with identical pixel count and identical bbox \u2014 the case that proved an ink count and a bbox cannot discriminate shape.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "No synthesis. #972's first fix drew a caret where a tick belonged, with identical pixel count and identical bbox \u2014 the case that proved an ink count and a bbox cannot discriminate shape."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-019",
+      "name": "Redact",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Redact",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "\u00a712.5.6.23. Marks a region INTENDED for redaction \u2014 an instruction to a processor, not a picture. excise recognises and preserves it; whether excise should ACT on it is an open product question, not a rendering one.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "\u00a712.5.6.23. Marks a region INTENDED for redaction \u2014 an instruction to a processor, not a picture. excise recognises and preserves it; whether excise should ACT on it is an open product question, not a rendering one."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-020",
+      "name": "Sound",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Sound",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Preserved, never played. Embedded audio is a data carrier.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Preserved, never played. Embedded audio is a data carrier."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-021",
+      "name": "Movie",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Movie",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Preserved, never played.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Preserved, never played."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-022",
+      "name": "Screen",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Screen",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Media playback surface. Preserved, never played, its action never executed.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Media playback surface. Preserved, never played, its action never executed."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-023",
+      "name": "Watermark",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Watermark",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Drawn from its /AP only.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Drawn from its /AP only."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-024",
+      "name": "PrinterMark",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for PrinterMark",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Prepress. Not currently recognised by name in Excise.Core; preserved as an unknown subtype. Listed so the gap is visible rather than implicit.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Prepress. Not currently recognised by name in Excise.Core; preserved as an unknown subtype. Listed so the gap is visible rather than implicit."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-025",
+      "name": "TrapNet",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for TrapNet",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Prepress. As PrinterMark.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Prepress. As PrinterMark."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-026",
+      "name": "3D",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for 3D",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "Preserved byte-for-byte, never interpreted. excise does not embed a 3D engine.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Preserved byte-for-byte, never interpreted. excise does not embed a 3D engine."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-027",
+      "name": "RichMedia",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for RichMedia",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "As 3D.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "As 3D."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.annotation.subtype-028",
+      "name": "Projection",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "unit",
+          "ref": "UnauthoredAnnotationPreservationTests"
+        }
+      ],
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "legacy matrix evidence for Projection",
+            "modes": [
+              "parse",
+              "preserve",
+              "render",
+              "extract"
+            ]
+          }
+        ]
+      },
+      "notes": "As 3D.",
+      "documentation": [
+        "test-pdfs/manifests/pdf20-renderer-requirements.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "As 3D."
+        ],
+        "processorRoles": [
+          "extract",
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "UnauthoredAnnotationPreservationTests"
+        ],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}

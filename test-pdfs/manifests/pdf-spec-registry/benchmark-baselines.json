@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "policy": "Wall-clock budgets are coarse runner-health ratchets. Fine-grained latency and allocation limits remain assertions inside the dedicated benchmark tests.",
+  "baselines": {
+    "open": {"maxWallSeconds": 30, "reason":"PerformanceBenchmarkTests local harness"},
+    "render": {"maxWallSeconds": 30, "reason":"PerformanceBenchmarkTests local harness"},
+    "search": {"maxWallSeconds": 30, "reason":"PerformanceBenchmarkTests local harness"},
+    "save": {"maxWallSeconds": 30, "reason":"PerformanceBenchmarkTests local harness"},
+    "redact": {"maxWallSeconds": 30, "reason":"PerformanceBenchmarkTests local harness; correctness and security remain independently gated"},
+    "forms": {"maxWallSeconds": 30, "reason":"PerformanceBenchmarkTests local harness"}
+  }
+}

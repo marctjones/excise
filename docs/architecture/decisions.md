@@ -73,3 +73,29 @@ Prose explains the desired design. Machine-readable registries own observed
 inventory, current/target assessment, evidence, gaps, and issue links.
 Generated diagrams are derived artifacts. A directory or type name alone cannot
 establish an `implemented` claim.
+
+## AD-009 — Broad legacy intake; narrow, capability-based output
+
+**Status:** accepted
+
+Excise is a daily-driver viewer, editor, and security-sensitive redactor, not a
+generic implementation of every PDF feature. It accepts PDF 1.0 through PDF
+2.0 within explicit resource and security limits, and interprets shared
+semantics using ISO 32000-2:2020 with errata as the current reference. PDF 1.7
+remains a first-class compatibility contract for legacy structures. A writer
+preserves the input's declared version where that is safe; it emits PDF 2.0
+when the chosen workflow requires it or PDFE cannot safely author the
+earlier-version form. It must never silently introduce a PDF 2.0-only feature
+or a deprecated PDF 2.0 feature.
+
+Product scope is capability-based, not version-badge-based. Core reading,
+rendering, text/search, true redaction, page operations, mainstream forms and
+annotations, metadata/attachments, encryption, and signature inspection have
+priority. Complex media, 3D, geospatial, print-production, and profile
+conformance are preserve-only or deferred unless a specific product workflow
+and independent evidence justify them. JavaScript and Launch execution remain
+blocked. The product makes no blanket PDF 2.0 conformance claim; its published
+capability profile and formal, independently validated output modes are the
+only conformance statements. Every exception is represented in the PDF
+specification capability registry with its reason, mode-specific status, and
+evidence.

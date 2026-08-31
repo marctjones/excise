@@ -1,0 +1,414 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "content",
+  "capabilities": [
+    {
+      "id": "pdf.17.content.streams",
+      "name": "Page content streams, form XObjects, and resource-scoped interpretation",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "7.8",
+            "8.10"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "7.8",
+            "8.10"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "This is the shared semantic path for rendering, extraction, and rewriting."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "partial",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.forms"
+        },
+        {
+          "kind": "implementation",
+          "ref": "Excise.Rendering/SkiaRenderer.cs; Excise.Rendering/SkiaRenderer.XObjects.cs; Excise.Rendering/SkiaRenderer.Text.cs"
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont; Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_PdfjsIssue16742_FormXObjectClipsToBBox"
+        },
+        {
+          "kind": "atomic-fixture",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont"
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
+        },
+        {
+          "kind": "corpus",
+          "ref": "Excise.Rendering.Tests/Corpus/ConformanceTests.cs::ConformanceTests_SmokeCorpus_ParsesAndRendersWithoutCrashing"
+        }
+      ],
+      "verification": {
+        "status": "executable",
+        "requiredModes": [
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "atomic-fixture",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/Corpus/ConformanceTests.cs::ConformanceTests_SmokeCorpus_ParsesAndRendersWithoutCrashing",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
+      },
+      "notes": "Form flattening and recursive resource remapping are separate child capabilities.",
+      "documentation": [
+        "docs/architecture/system-design.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [
+          "Excise.Rendering/SkiaRenderer.cs; Excise.Rendering/SkiaRenderer.XObjects.cs; Excise.Rendering/SkiaRenderer.Text.cs"
+        ],
+        "testRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont; Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_PdfjsIssue16742_FormXObjectClipsToBBox"
+        ],
+        "fixtureRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont"
+        ],
+        "corpusRefs": [
+          "Excise.Rendering.Tests/Corpus/ConformanceTests.cs::ConformanceTests_SmokeCorpus_ParsesAndRendersWithoutCrashing"
+        ],
+        "referenceToolRefs": [
+          "reference-tools.json"
+        ],
+        "architectureRefs": [
+          "docs/architecture/system-design.md"
+        ],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Form flattening and recursive resource remapping are separate child capabilities."
+        ],
+        "processorRoles": [
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "implemented-partial",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont; Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_PdfjsIssue16742_FormXObjectClipsToBBox",
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
+          "Excise.Rendering.Tests/Corpus/ConformanceTests.cs::ConformanceTests_SmokeCorpus_ParsesAndRendersWithoutCrashing"
+        ],
+        "negativeOrConservationTestRefs": [
+          "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
+        ],
+        "explicitEvidenceGaps": []
+      }
+    },
+    {
+      "id": "pdf.20.content.operators",
+      "name": "All ISO 32000-2 Annex A content-stream operators",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "Annex A"
+          ]
+        },
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "Annex A"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Every standard operator must have an explicit parse/preserve decision; semantic execution is mode-specific."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20-operator-evidence"
+        }
+      ],
+      "notes": "This is a container. Migrate the current 73 stable operator IDs into `operators/` one file per operator family before declaring this active.",
+      "documentation": [
+        "CLAUDE.md",
+        "CI_GATES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "This is a container. Migrate the current 73 stable operator IDs into `operators/` one file per operator family before declaring this active."
+        ],
+        "processorRoles": [
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          },
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.content.text-state",
+      "name": "Text objects, text state, positioning, showing, and Type 3 character procedures",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "9.3",
+            "9.4",
+            "9.5",
+            "9.6"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "9.3",
+            "9.4",
+            "9.5",
+            "9.6"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Text is a user-facing and security-critical semantic layer."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20-operator-evidence"
+        }
+      ],
+      "notes": "Each text operator needs extraction and redaction evidence in addition to round-trip proof.",
+      "documentation": [
+        "REDACTION_AI_GUIDELINES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Each text operator needs extraction and redaction evidence in addition to round-trip proof."
+        ],
+        "processorRoles": [
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.content.marked",
+      "name": "Marked content, artifacts, property lists, and compatibility sections",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "14.6",
+            "8.11"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "14.6",
+            "8.11"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "preserve-only",
+        "rationale": "Semantics must not be destroyed even where full accessibility interpretation is deferred."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "not-applicable",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.tagged-pdf.structure"
+        }
+      ],
+      "notes": "Marked-content operators are not visually inert when optional-content/resource properties apply.",
+      "documentation": [
+        "REDACTION_AI_GUIDELINES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Marked-content operators are not visually inert when optional-content/resource properties apply."
+        ],
+        "processorRoles": [
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}

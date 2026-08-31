@@ -1,0 +1,227 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "rendering",
+  "capabilities": [
+    {
+      "id": "pdf.17.rendering.colour-conversion",
+      "name": "Colour conversion, transfer functions, halftones, and scan conversion",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "10"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "10"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "This is distinct from colour-space parsing: it defines the final rendered result."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown"
+      },
+      "evidence": [],
+      "notes": "Each renderer/oracle contract must state which device and colour-management assumptions it makes.",
+      "documentation": [
+        "CI_GATES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Each renderer/oracle contract must state which device and colour-management assumptions it makes."
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.compatibility.versions",
+      "name": "Version declarations, compatibility, implementation limits, and linearized files",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "5",
+            "Annex C",
+            "Annex F",
+            "Annex I"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "5",
+            "Annex C",
+            "Annex F",
+            "Annex I"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Excise must read common historic files safely even when it does not write every legacy feature."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [],
+      "notes": "Track PDF 1.0 through 1.7 intake separately from PDF 2.0 output; linearization is a performance/streaming feature, not a visual feature.",
+      "documentation": [
+        "docs/architecture/system-design.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [
+          "docs/architecture/system-design.md"
+        ],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track PDF 1.0 through 1.7 intake separately from PDF 2.0 output; linearization is a performance/streaming feature, not a visual feature."
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.compatibility.deprecated",
+      "name": "PDF 2.0 deprecated-feature intake and no-new-output policy",
+      "spec": [
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "5",
+            "7.6",
+            "7.7.2",
+            "7.8.3",
+            "9.6",
+            "11",
+            "12.5",
+            "12.6",
+            "12.7",
+            "13",
+            "14.2",
+            "14.3",
+            "14.8"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Existing PDFs may use deprecated 1.7 facilities; readers preserve or safely ignore them, while writers must not add them to new PDF 2.0 output."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "write": "unknown",
+        "execute": "unimplemented"
+      },
+      "evidence": [],
+      "notes": "Initial inventory: legacy encryption algorithms, XFA/NeedsRendering, Movie/Sound/TrapNet and actions, Info, ProcSet, OS-specific files and Launch additions, names for XObjects/fonts, blend-mode arrays, alternate presentations, OPI, CharSet/CIDSet, prepress viewer preferences, NeedAppearances, legacy signature handlers, FDF encryption, MarkInfo Suspects, and UR signatures.",
+      "documentation": [],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Initial inventory: legacy encryption algorithms, XFA/NeedsRendering, Movie/Sound/TrapNet and actions, Info, ProcSet, OS-specific files and Launch additions, names for XObjects/fonts, blend-mode arrays, alternate presentations, OPI, CharSet/CIDSet, prepress viewer preferences, NeedAppearances, legacy signature handlers, FDF encryption, MarkInfo Suspects, and UR signatures."
+        ],
+        "processorRoles": [
+          "execute",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}

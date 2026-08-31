@@ -49,6 +49,12 @@
       "status": "accepted",
       "prose": "../docs/architecture/decisions.md#ad-008",
       "supersedes": []
+    },
+    {
+      "id": "AD-009",
+      "status": "accepted",
+      "prose": "../docs/architecture/decisions.md#ad-009",
+      "supersedes": []
     }
   ]
 }

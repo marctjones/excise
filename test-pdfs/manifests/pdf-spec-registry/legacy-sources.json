@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "status": "active-until-migrated",
+  "sources": [
+    { "path": "../pdf20-renderer-requirements.json", "role": "current renderer/parser/security requirements", "migration": "map its 95 rows to capability IDs and mode-specific evidence" },
+    { "path": "../pdf20-operator-evidence.json", "role": "current Annex A operator proof", "migration": "populate the 73 operator records in 10-content.json without losing atomic evidence" },
+    { "path": "../pdf-image-feature-matrix.json", "role": "current image/filter obligations", "migration": "split across syntax filters, graphics images, color, and transparency" },
+    { "path": "../../../tests/annotation-support-matrix.json", "role": "annotation modes and redaction-carrier policy", "migration": "retain one capability per subtype and its read/preserve/display/interact decisions" }
+  ],
+  "rules": [
+    "No capability may be marked implemented merely because a legacy row exists; retain named evidence.",
+    "No legacy matrix may be deleted until its consuming test/gate reads the new registry and the migration map is complete.",
+    "Existing stable IDs remain aliases after migration so corpus contracts and issues do not lose links."
+  ]
+}

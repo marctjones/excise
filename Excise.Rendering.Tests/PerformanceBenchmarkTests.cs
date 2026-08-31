@@ -124,6 +124,59 @@ public class PerformanceBenchmarkTests
     }
 
     [Fact]
+    public void SaveRoundTrip_StaysUnder_OneSecond_ForSmallForm()
+    {
+        var path = Path.Combine(CorpusDir, "irs-w9.pdf");
+        Assert.SkipUnless(File.Exists(path), "irs-w9.pdf is required for the save performance budget");
+
+        // Warm parsing and writer JIT separately from the measured save.
+        using (var warm = PdfDocument.Open(path))
+        using (var warmOutput = new MemoryStream())
+            warm.Save(warmOutput);
+
+        using var document = PdfDocument.Open(path);
+        using var output = new MemoryStream();
+        var sw = Stopwatch.StartNew();
+        document.Save(output);
+        sw.Stop();
+
+        _out.WriteLine($"Save(irs-w9.pdf): {output.Length} bytes in {sw.ElapsedMilliseconds}ms (warmed)");
+        output.Length.Should().BeGreaterThan(0, "the timed save must produce a file");
+        sw.ElapsedMilliseconds.Should().BeLessThan(1_000,
+            "a warmed save of the small office-form fixture should remain interactive");
+    }
+
+    [Fact]
+    public void AcroFormFillAndSave_StaysUnder_OneSecond_ForSmallForm()
+    {
+        var path = Path.Combine(CorpusDir, "irs-w9.pdf");
+        Assert.SkipUnless(File.Exists(path), "irs-w9.pdf is required for the AcroForm performance budget");
+
+        using (var warm = PdfDocument.Open(path))
+        {
+            var warmField = warm.GetAcroForm()?.Fields.FirstOrDefault(field => !field.IsReadOnly);
+            Assert.SkipUnless(warmField != null, "irs-w9.pdf must expose an editable AcroForm field");
+            warmField.SetValue(warmField.Value ?? "Benchmark");
+            using var warmOutput = new MemoryStream();
+            warm.Save(warmOutput);
+        }
+
+        using var document = PdfDocument.Open(path);
+        var field = document.GetAcroForm()?.Fields.FirstOrDefault(candidate => !candidate.IsReadOnly);
+        Assert.SkipUnless(field != null, "irs-w9.pdf must expose an editable AcroForm field");
+        using var output = new MemoryStream();
+        var sw = Stopwatch.StartNew();
+        field.SetValue(field.Value ?? "Benchmark");
+        document.Save(output);
+        sw.Stop();
+
+        _out.WriteLine($"AcroFormFillAndSave(irs-w9.pdf): {output.Length} bytes in {sw.ElapsedMilliseconds}ms (warmed)");
+        output.Length.Should().BeGreaterThan(0, "the timed form workflow must produce a file");
+        sw.ElapsedMilliseconds.Should().BeLessThan(1_000,
+            "a warmed ordinary form fill-and-save should remain interactive");
+    }
+
+    [Fact]
     public void RedactText_CommonTermOnW9_StaysUnderFiveSeconds()
     {
         var path = Path.Combine(CorpusDir, "irs-w9.pdf");

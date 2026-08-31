@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/collect-pdf-test-outcomes.py",
+  "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
+  "recordedAt": "2026-08-31T03:17:57.585373+00:00",
+  "gitRevision": "7376fdbc0c9ecc0263ed3b96c4c64e01d32d6ec2",
+  "dotnetVersion": "10.0.400",
+  "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "resultFiles": [
+    {
+      "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-renderer-atomic.trx",
+      "modifiedAt": "2026-08-31T02:45:59.642455+00:00",
+      "sha256": "3fbd98ddd705a0b65d8fa15463456608f8783dce43f94d8362dc351523cef756"
+    }
+  ],
+  "outcomes": [
+    {
+      "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha",
+      "outcome": "Passed",
+      "duration": "00:00:00.0322756",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-renderer-atomic.trx",
+      "resultModifiedAt": "2026-08-31T02:45:59.642455+00:00",
+      "trxSha256": "3fbd98ddd705a0b65d8fa15463456608f8783dce43f94d8362dc351523cef756"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_SimpleText_SingleFont",
+      "outcome": "Passed",
+      "duration": "00:00:00.1837454",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-renderer-atomic.trx",
+      "resultModifiedAt": "2026-08-31T02:45:59.642455+00:00",
+      "trxSha256": "3fbd98ddd705a0b65d8fa15463456608f8783dce43f94d8362dc351523cef756"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_Transparency_OverlappingRectangles_BlendingApplied",
+      "outcome": "Passed",
+      "duration": "00:00:00.0128599",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-renderer-atomic.trx",
+      "resultModifiedAt": "2026-08-31T02:45:59.642455+00:00",
+      "trxSha256": "3fbd98ddd705a0b65d8fa15463456608f8783dce43f94d8362dc351523cef756"
+    }
+  ],
+  "summary": {
+    "trxFiles": 1,
+    "tests": 3,
+    "outcomes": {
+      "Passed": 3
+    },
+    "status": "recorded"
+  }
+}

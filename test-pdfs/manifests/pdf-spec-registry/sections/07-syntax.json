@@ -1,0 +1,318 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "syntax",
+  "capabilities": [
+    {
+      "id": "pdf.17.syntax.file",
+      "name": "Header, lexical syntax, and file structure",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "7.1",
+            "7.2"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "7.1",
+            "7.2"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Every workflow starts with safe interpretation of untrusted bytes."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [],
+      "notes": "Includes version header, tokens, names, strings, arrays, dictionaries, booleans, null, and indirect references.",
+      "documentation": [
+        "docs/architecture/system-design.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [
+          "docs/architecture/system-design.md"
+        ],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Includes version header, tokens, names, strings, arrays, dictionaries, booleans, null, and indirect references."
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.syntax.objects",
+      "name": "Indirect objects, streams, cross-reference, trailer, and incremental update",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "7.3",
+            "7.4",
+            "7.5"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "7.3",
+            "7.4",
+            "7.5"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Required for reliable open, save, and forensic-safe mutation."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "mutate": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.syntax.objects"
+        },
+        {
+          "kind": "legacy",
+          "ref": "pdf20.syntax.streams"
+        }
+      ],
+      "notes": "Track tables and xref streams separately in migrated evidence; incremental-save policy must be explicit.",
+      "documentation": [
+        "docs/architecture/system-design.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [
+          "docs/architecture/system-design.md"
+        ],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track tables and xref streams separately in migrated evidence; incremental-save policy must be explicit."
+        ],
+        "processorRoles": [
+          "mutate",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.syntax.filters",
+      "name": "Stream filters and decode parameters",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "7.4"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "7.4"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Content and resources cannot be safely understood without bounded decoding."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf-image-feature-matrix"
+        }
+      ],
+      "notes": "Track each filter and predictor as a child feature during migration, including resource limits and malformed-data behavior.",
+      "documentation": [
+        "CI_GATES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track each filter and predictor as a child feature during migration, including resource limits and malformed-data behavior."
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.syntax.encryption",
+      "name": "Encryption, permissions, and crypt filters",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "7.6"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "7.6"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Open documents with valid credentials and offer modern protection without mistaking advisory permissions for cryptographic authorization."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "mutate": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [],
+      "notes": "Do not recover passwords or bypass encryption. New output must not use obsolete or weak encryption; password stripping is permitted only after legitimate opening, with a warning. Explicit user confirmation is required to override advisory permission flags.",
+      "documentation": [
+        "docs/architecture/system-design.md",
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [
+          "docs/architecture/system-design.md"
+        ],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Do not recover passwords or bypass encryption. New output must not use obsolete or weak encryption; password stripping is permitted only after legitimate opening, with a warning. Explicit user confirmation is required to override advisory permission flags."
+        ],
+        "processorRoles": [
+          "mutate",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,269 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "optional-profiles",
+  "capabilities": [
+    {
+      "id": "pdf.20.extension.developer",
+      "name": "Extensions, developer extensions, and version negotiation",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "7.12"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "7.12"
+          ]
+        }
+      ],
+      "classification": "extension",
+      "decision": {
+        "state": "preserve-only",
+        "rationale": "Recognize extension declarations without treating unknown behavior as standard semantics."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [],
+      "notes": "Every non-ISO extension needs a vendor/namespace and compatibility decision.",
+      "documentation": [],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Every non-ISO extension needs a vendor/namespace and compatibility decision."
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.profile.pdfa",
+      "name": "PDF/A archival conformance",
+      "spec": [
+        {
+          "source": "pdf-association",
+          "clauses": [
+            "PDF/A family"
+          ]
+        }
+      ],
+      "classification": "profile",
+      "decision": {
+        "state": "deferred",
+        "rationale": "PDF/A conformance is a profile claim requiring a dedicated validator, not normal PDF support."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "write": "unknown",
+        "author": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "veraPDF corpus"
+        }
+      ],
+      "notes": "Track PDF/A-1 through A-4 variants individually if claimed.",
+      "documentation": [
+        "Excise.Rendering.Tests/Corpus/CONFORMANCE.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track PDF/A-1 through A-4 variants individually if claimed."
+        ],
+        "processorRoles": [
+          "author",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "deferred",
+        "normativeSourcePins": [
+          {
+            "source": "pdf-association",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.profile.pdfua",
+      "name": "PDF/UA accessibility conformance",
+      "spec": [
+        {
+          "source": "pdf-association",
+          "clauses": [
+            "PDF/UA family"
+          ]
+        }
+      ],
+      "classification": "profile",
+      "decision": {
+        "state": "deferred",
+        "rationale": "Requires semantic and accessibility validation beyond structure preservation."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "write": "unknown",
+        "author": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "veraPDF corpus"
+        }
+      ],
+      "notes": "Track PDF/UA-1 and PDF/UA-2 separately if claimed.",
+      "documentation": [
+        "Excise.Rendering.Tests/Corpus/CONFORMANCE.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track PDF/UA-1 and PDF/UA-2 separately if claimed."
+        ],
+        "processorRoles": [
+          "author",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "deferred",
+        "normativeSourcePins": [
+          {
+            "source": "pdf-association",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.20.profile.pdfx",
+      "name": "PDF/X print-production conformance",
+      "spec": [
+        {
+          "source": "pdf-association",
+          "clauses": [
+            "PDF/X family"
+          ]
+        }
+      ],
+      "classification": "profile",
+      "decision": {
+        "state": "deferred",
+        "rationale": "Production-print validation is separate from screen renderer fidelity."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "write": "unknown",
+        "author": "unimplemented"
+      },
+      "evidence": [],
+      "notes": "Output intents, transparency, trapping and overprint are prerequisites, not sufficient proof.",
+      "documentation": [],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Output intents, transparency, trapping and overprint are prerequisites, not sufficient proof."
+        ],
+        "processorRoles": [
+          "author",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "deferred",
+        "normativeSourcePins": [
+          {
+            "source": "pdf-association",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}
