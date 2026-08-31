@@ -44,7 +44,7 @@ public class PermissionEnforcementTests : IDisposable
         var plain = TempPath(".pdf");
         var encrypted = TempPath(".pdf");
         File.WriteAllBytes(plain, TestPdfBuilder.SinglePage(text));
-        Program.RunEncrypt(plain, encrypted, userPassword: null, ownerPassword: "owner-pw",
+        EncryptionCommandTestDriver.RunEncrypt(plain, encrypted, userPassword: null, ownerPassword: "owner-pw",
             permissions, PdfEncryptionAlgorithm.Aes256, encryptMetadata: true);
         return encrypted;
     }
@@ -244,7 +244,7 @@ public class PermissionEnforcementTests : IDisposable
         Program.RunAddField(RestrictedFixtureUnencryptedSource(), withField,
             "Text", "name", 1, "100,100,300,130", null, []);
         var restricted = TempPath(".pdf");
-        Program.RunEncrypt(withField, restricted, userPassword: null, ownerPassword: "owner-pw",
+        EncryptionCommandTestDriver.RunEncrypt(withField, restricted, userPassword: null, ownerPassword: "owner-pw",
             -4 & ~32 & ~256, PdfEncryptionAlgorithm.Aes256, encryptMetadata: true);
         var output = TempPath(".pdf");
 
@@ -265,7 +265,7 @@ public class PermissionEnforcementTests : IDisposable
         Program.RunAddField(RestrictedFixtureUnencryptedSource(), withField,
             "Text", "name", 1, "100,100,300,130", null, []);
         var restricted = TempPath(".pdf");
-        Program.RunEncrypt(withField, restricted, userPassword: null, ownerPassword: "owner-pw",
+        EncryptionCommandTestDriver.RunEncrypt(withField, restricted, userPassword: null, ownerPassword: "owner-pw",
             -4 & ~32, PdfEncryptionAlgorithm.Aes256, encryptMetadata: true);
         var output = TempPath(".pdf");
 

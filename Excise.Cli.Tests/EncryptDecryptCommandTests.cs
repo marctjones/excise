@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using AwesomeAssertions;
 using Excise.Cli;
+using Excise.Cli.Commands;
 using Excise.Core.Document;
 using Excise.Core.Security;
 using Xunit;
@@ -10,8 +11,7 @@ namespace Excise.Cli.Tests;
 
 /// <summary>
 /// Tests for the <c>excise encrypt</c> / <c>excise decrypt</c> subcommands
-/// (#641), exercising the internal <see cref="Program.RunEncrypt"/> /
-/// <see cref="Program.RunDecrypt"/> cores, mirroring
+/// (#641), exercising the typed <see cref="EncryptionCommandHandler"/> core, mirroring
 /// <see cref="RedactCommandTests"/>' pattern. The Standard Security
 /// Handler writer itself is already independently verified against
 /// qpdf/mutool/Ghostscript by
@@ -36,6 +36,70 @@ public class EncryptDecryptCommandTests : IDisposable
         return path;
     }
 
+    [Theory]
+    [InlineData("aes256", PdfEncryptionAlgorithm.Aes256)]
+    [InlineData("AES128", PdfEncryptionAlgorithm.Aes128)]
+    public void TryParseAlgorithm_AcceptsSupportedNames(
+        string value,
+        PdfEncryptionAlgorithm expected)
+    {
+        EncryptCommand.TryParseAlgorithm(value, out var algorithm).Should().BeTrue();
+        algorithm.Should().Be(expected);
+    }
+
+    [Fact]
+    public async Task RunAsync_EncryptUnknownAlgorithm_RejectsBeforeWritingOutput()
+    {
+        var input = TempPath(".pdf");
+        var output = TempPath(".pdf");
+        File.WriteAllBytes(input, TestPdfBuilder.SinglePage("SECRET"));
+        var previousError = Console.Error;
+        var error = new StringWriter();
+        Console.SetError(error);
+        try
+        {
+            (await Program.RunAsync([
+                "encrypt", input, output, "--user-password", "pw", "--algorithm", "rot13"
+            ])).Should().Be(1);
+        }
+        finally
+        {
+            Console.SetError(previousError);
+        }
+
+        error.ToString().Should().Contain("Unknown --algorithm");
+        File.Exists(output).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RunAsync_EncryptThenDecrypt_RoundTripsThroughCommandAdapters()
+    {
+        var input = TempPath(".pdf");
+        var encrypted = TempPath(".pdf");
+        var decrypted = TempPath(".pdf");
+        File.WriteAllBytes(input, TestPdfBuilder.SinglePage("COMMAND ROUND TRIP"));
+
+        var previousOut = Console.Out;
+        Console.SetOut(new StringWriter());
+        try
+        {
+            (await Program.RunAsync([
+                "encrypt", input, encrypted, "--user-password", "pw", "--algorithm", "aes128"
+            ])).Should().Be(0);
+            (await Program.RunAsync([
+                "decrypt", encrypted, decrypted, "--password", "pw"
+            ])).Should().Be(0);
+        }
+        finally
+        {
+            Console.SetOut(previousOut);
+        }
+
+        using var document = PdfDocument.Open(decrypted);
+        document.IsEncrypted.Should().BeFalse();
+        document.GetPage(1).Text.Should().Contain("COMMAND ROUND TRIP");
+    }
+
     [Fact]
     public void RunEncrypt_Aes256_ProducesEncryptedFile_PlaintextGoneFromSavedBytes()
     {
@@ -43,7 +107,7 @@ public class EncryptDecryptCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("CLI ENCRYPT MARKER"));
 
-        Program.RunEncrypt(inputPath, outputPath, "user-pw", "owner-pw",
+        EncryptionCommandTestDriver.RunEncrypt(inputPath, outputPath, "user-pw", "owner-pw",
             permissions: -4, PdfEncryptionAlgorithm.Aes256, encryptMetadata: true);
 
         var saved = File.ReadAllBytes(outputPath);
@@ -62,7 +126,7 @@ public class EncryptDecryptCommandTests : IDisposable
         var path = TempPath(".pdf");
         File.WriteAllBytes(path, TestPdfBuilder.SinglePage("INPLACE ENCRYPT MARKER"));
 
-        Program.RunEncrypt(path, path, "user-pw", "owner-pw",
+        EncryptionCommandTestDriver.RunEncrypt(path, path, "user-pw", "owner-pw",
             permissions: -4, PdfEncryptionAlgorithm.Aes256, encryptMetadata: true);
 
         var saved = File.ReadAllBytes(path);
@@ -80,7 +144,7 @@ public class EncryptDecryptCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("R4 CONTENT"));
 
-        Program.RunEncrypt(inputPath, outputPath, "pw", null,
+        EncryptionCommandTestDriver.RunEncrypt(inputPath, outputPath, "pw", null,
             permissions: -4, PdfEncryptionAlgorithm.Aes128, encryptMetadata: true);
 
         var savedText = Encoding.Latin1.GetString(File.ReadAllBytes(outputPath));
@@ -96,9 +160,9 @@ public class EncryptDecryptCommandTests : IDisposable
         var midPath = TempPath(".pdf");
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("X"));
-        Program.RunEncrypt(inputPath, midPath, "pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
+        EncryptionCommandTestDriver.RunEncrypt(inputPath, midPath, "pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
 
-        var act = () => Program.RunEncrypt(midPath, outputPath, "new-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
+        var act = () => EncryptionCommandTestDriver.RunEncrypt(midPath, outputPath, "new-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*already encrypted*decrypt*",
@@ -113,9 +177,9 @@ public class EncryptDecryptCommandTests : IDisposable
         var encPath = TempPath(".pdf");
         var decPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("ROUNDTRIP CONTENT"));
-        Program.RunEncrypt(inputPath, encPath, "open-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
+        EncryptionCommandTestDriver.RunEncrypt(inputPath, encPath, "open-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
 
-        Program.RunDecrypt(encPath, decPath, "open-pw");
+        EncryptionCommandTestDriver.RunDecrypt(encPath, decPath, "open-pw");
 
         var saved = File.ReadAllBytes(decPath);
         Encoding.Latin1.GetString(saved).Should().NotContain("/Encrypt",
@@ -131,9 +195,9 @@ public class EncryptDecryptCommandTests : IDisposable
     {
         var path = TempPath(".pdf");
         File.WriteAllBytes(path, TestPdfBuilder.SinglePage("INPLACE DECRYPT CONTENT"));
-        Program.RunEncrypt(path, path, "open-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
+        EncryptionCommandTestDriver.RunEncrypt(path, path, "open-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
 
-        Program.RunDecrypt(path, path, "open-pw");
+        EncryptionCommandTestDriver.RunDecrypt(path, path, "open-pw");
 
         var saved = File.ReadAllBytes(path);
         Encoding.Latin1.GetString(saved).Should().NotContain("/Encrypt");
@@ -149,7 +213,7 @@ public class EncryptDecryptCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("PLAIN"));
 
-        var act = () => Program.RunDecrypt(inputPath, outputPath, null);
+        var act = () => EncryptionCommandTestDriver.RunDecrypt(inputPath, outputPath, null);
 
         act.Should().Throw<InvalidOperationException>().WithMessage("*not encrypted*");
     }
@@ -161,9 +225,9 @@ public class EncryptDecryptCommandTests : IDisposable
         var encPath = TempPath(".pdf");
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("X"));
-        Program.RunEncrypt(inputPath, encPath, "right-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
+        EncryptionCommandTestDriver.RunEncrypt(inputPath, encPath, "right-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
 
-        var act = () => Program.RunDecrypt(encPath, outputPath, "wrong-pw");
+        var act = () => EncryptionCommandTestDriver.RunDecrypt(encPath, outputPath, "wrong-pw");
 
         act.Should().Throw<Exception>("a wrong password must never silently produce a decrypted file");
         File.Exists(outputPath).Should().BeFalse();
@@ -180,9 +244,9 @@ public class EncryptDecryptCommandTests : IDisposable
         var plain = TempPath(".pdf");
         var v2 = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("SEKRIT"));
-        Program.RunEncrypt(inputPath, v1, "old-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
-        Program.RunDecrypt(v1, plain, "old-pw");
-        Program.RunEncrypt(plain, v2, "new-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
+        EncryptionCommandTestDriver.RunEncrypt(inputPath, v1, "old-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
+        EncryptionCommandTestDriver.RunDecrypt(v1, plain, "old-pw");
+        EncryptionCommandTestDriver.RunEncrypt(plain, v2, "new-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
 
         var v2Bytes = File.ReadAllBytes(v2);
         var openWithOld = () => PdfDocument.Open(v2Bytes, "old-pw");
