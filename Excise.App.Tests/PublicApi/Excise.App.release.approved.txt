@@ -192,57 +192,6 @@ namespace Excise.App.Services
         public int NextBatesNumber { get; set; }
         public int TotalPages { get; set; }
     }
-    public static class CoordinateConverter
-    {
-        public const int DefaultRenderDpi = 150;
-        public const int PdfPointsPerInch = 72;
-        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "X",
-                "Y"})]
-        public static System.ValueTuple<double, double> AvaloniaPointToPdf(Avalonia.Point avaloniaPoint, double pageHeight) { }
-        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "Left",
-                "Bottom",
-                "Right",
-                "Top"})]
-        public static System.ValueTuple<double, double, double, double> AvaloniaRectToPdfRect(Avalonia.Rect avaloniaRect, double pageHeight) { }
-        public static double AvaloniaYToPdfY(double avaloniaY, double pageHeight) { }
-        public static string DescribeConversion(Avalonia.Rect input, string inputSystem, Avalonia.Rect output, string outputSystem) { }
-        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "X",
-                "Y",
-                "Width",
-                "Height"})]
-        public static System.ValueTuple<double, double, double, double> ForXGraphics(Avalonia.Rect avaloniaRect) { }
-        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "X",
-                "Y",
-                "Width",
-                "Height"})]
-        public static System.ValueTuple<double, double, double, double> ForXGraphics(Avalonia.Rect avaloniaRect, double pageHeight) { }
-        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "X",
-                "Y",
-                "Width",
-                "Height"})]
-        public static System.ValueTuple<double, double, double, double> ForXGraphicsWithVerification(Avalonia.Rect avaloniaRect, double pageHeight, bool xGraphicsUsesTopLeft = true) { }
-        public static Avalonia.Rect ImagePixelsToPdfPoints(Avalonia.Rect imageRect, int renderDpi = 150) { }
-        public static double ImagePixelsToPdfPoints(double imagePixels, int renderDpi = 150) { }
-        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "Left",
-                "Bottom",
-                "Right",
-                "Top"})]
-        public static System.ValueTuple<double, double, double, double> ImageSelectionToPdfCoords(Avalonia.Rect imageSelection, double pageHeightPoints, int renderDpi = 150) { }
-        public static Avalonia.Rect ImageSelectionToPdfPointsTopLeft(Avalonia.Rect imageSelection, int renderDpi = 150) { }
-        public static bool IsValidForPage(Avalonia.Rect rect, double pageWidth, double pageHeight, double tolerance = 50) { }
-        public static Avalonia.Point PdfPointToAvalonia(double pdfX, double pdfY, double pageHeight) { }
-        public static Avalonia.Rect PdfPointsToImagePixels(Avalonia.Rect pdfRect, int renderDpi = 150) { }
-        public static double PdfPointsToImagePixels(double pdfPoints, int renderDpi = 150) { }
-        public static Avalonia.Rect PdfRectToAvaloniaRect(double pdfLeft, double pdfBottom, double pdfRight, double pdfTop, double pageHeight) { }
-        public static double PdfYToAvaloniaY(double pdfY, double pageHeight) { }
-        public static Avalonia.Rect TextBoundsToPdfPointsTopLeft(double textX, double textY, double textWidth, double textHeight, double pageHeight) { }
-    }
     public sealed class DocumentTextIndex
     {
         public DocumentTextIndex(Excise.Core.Document.PdfDocument doc, Microsoft.Extensions.Logging.ILogger logger) { }

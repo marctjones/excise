@@ -264,7 +264,7 @@ The codebase follows strict MVVM separation:
 - `RedactionService.cs` - Orchestrates content-level redaction
 - `PdfTextExtractionService.cs` - Text extraction from PDFs
 - `PdfSearchService.cs` - Search functionality
-- `CoordinateConverter.cs` - Coordinate system conversions
+- Coordinate conversion is owned by `Excise.Core.Document.PdfCoordinateMapper`; viewer-specific input and layout stay in `Excise.Avalonia`
 
 ### Data Flow
 
@@ -481,7 +481,7 @@ wall-clock timeout and produce a **false red** (observed three times on
 
 **Key Test Files:**
 - `GuiRedactionSimulationTests.cs` - Simulates exact GUI workflow to catch coordinate issues
-- `CoordinateConverterTests.cs` - Validates coordinate math
+- `Excise.Core.Tests/Document/PdfCoordinateMapperTests.cs` and `PageRotationCoordinateTests.cs` - Validate active coordinate contracts
 - `ComprehensiveRedactionTests.cs` - Full redaction pipeline tests
 
 **Running Tests:** See "Build and Run Commands" section above.
@@ -1017,7 +1017,7 @@ Excise.App.Tests/
 │   ├── ComprehensiveRedactionTests.cs  # Full redaction tests
 │   └── ...
 ├── Unit/
-│   ├── CoordinateConverterTests.cs     # Coordinate math tests
+│   ├── MainWindowViewModelTests.cs     # View-model orchestration tests
 │   └── ...
 ├── UI/
 │   └── HeadlessUITests.cs              # UI integration tests

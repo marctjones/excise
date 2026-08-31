@@ -111,11 +111,82 @@ public class PageRotationCoordinateTests
         c.Bottom.Should().Be(200);  // 220 - 20
     }
 
-    private static PdfPage PageWith(int rotate, string mediaBox = "[0 0 100 200]")
+    [Theory]
+    [InlineData(0, 10, 100, 20, 120)]
+    [InlineData(90, 10, 20, 30, 30)]
+    [InlineData(180, 50, 20, 60, 40)]
+    [InlineData(270, 40, 110, 60, 120)]
+    public void EffectiveCropBox_DrivesViewerMapping_ForEveryRotation(
+        int rotate,
+        double expectedLeft,
+        double expectedBottom,
+        double expectedRight,
+        double expectedTop)
+    {
+        var page = PageWith(
+            rotate,
+            mediaBox: "[0 0 100 200]",
+            cropBox: "[10 20 60 120]");
+        var viewerRect = PdfPageRect.ViewerDips(
+            page.PageNumber,
+            x: 0,
+            y: 0,
+            width: 10,
+            height: 20,
+            renderDpi: 72);
+
+        var content = PdfCoordinateMapper.ToContentPoints(page, viewerRect).ToPdfRectangle().Normalize();
+
+        content.Left.Should().Be(expectedLeft);
+        content.Bottom.Should().Be(expectedBottom);
+        content.Right.Should().Be(expectedRight);
+        content.Top.Should().Be(expectedTop);
+
+        var roundTrip = PdfCoordinateMapper.ToViewerDips(
+            page,
+            PdfPageRect.FromContentPoints(page.PageNumber, content),
+            renderDpi: 72);
+        roundTrip.X.Should().BeApproximately(viewerRect.X, 0.001);
+        roundTrip.Y.Should().BeApproximately(viewerRect.Y, 0.001);
+        roundTrip.Width.Should().BeApproximately(viewerRect.Width, 0.001);
+        roundTrip.Height.Should().BeApproximately(viewerRect.Height, 0.001);
+    }
+
+    [Fact]
+    public void EffectiveCropBox_ClampsToMediaBox_AndDefinesVisualDimensions()
+    {
+        var page = PageWith(
+            rotate: 0,
+            mediaBox: "[0 0 100 200]",
+            cropBox: "[-10 -20 60 250]");
+
+        page.EffectiveCropBox.Should().Be(new PdfRectangle(0, 0, 60, 200));
+        page.VisualWidth.Should().Be(60);
+        page.VisualHeight.Should().Be(200);
+    }
+
+    [Fact]
+    public void EffectiveCropBox_UsesMediaBox_WhenCropIsDisjoint()
+    {
+        var page = PageWith(
+            rotate: 90,
+            mediaBox: "[0 0 100 200]",
+            cropBox: "[300 300 400 400]");
+
+        page.EffectiveCropBox.Should().Be(page.MediaBox.Normalize());
+        page.VisualWidth.Should().Be(200);
+        page.VisualHeight.Should().Be(100);
+    }
+
+    private static PdfPage PageWith(
+        int rotate,
+        string mediaBox = "[0 0 100 200]",
+        string? cropBox = null)
     {
         var rotateEntry = rotate == 0 ? "" : $" /Rotate {rotate}";
+        var cropBoxEntry = cropBox == null ? "" : $" /CropBox {cropBox}";
         var pdf = BuildOnePager(
-            $"<< /Type /Page /Parent 2 0 R /MediaBox {mediaBox}{rotateEntry} /Contents 4 0 R >>",
+            $"<< /Type /Page /Parent 2 0 R /MediaBox {mediaBox}{cropBoxEntry}{rotateEntry} /Contents 4 0 R >>",
             "");
         return PdfDocument.Open(pdf).GetPage(1);
     }

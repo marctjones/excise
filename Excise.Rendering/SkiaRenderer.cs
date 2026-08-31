@@ -220,41 +220,7 @@ public class SkiaRenderer
         }
     }
 
-    public static PdfRectangle ResolveEffectiveRenderBox(PdfPage page)
-    {
-        var mediaBox = page.MediaBox.Normalize();
-        var cropBox = page.CropBox.Normalize();
-
-        if (HasPositiveArea(mediaBox))
-        {
-            if (!HasPositiveArea(cropBox))
-                return mediaBox;
-
-            var visibleMediaCrop = Intersect(mediaBox, cropBox);
-            return HasPositiveArea(visibleMediaCrop)
-                ? visibleMediaCrop
-                : mediaBox;
-        }
-
-        if (HasPositiveArea(cropBox))
-            return cropBox;
-
-        return new PdfRectangle(0, 0, 612, 792);
-    }
-
-    private static PdfRectangle Intersect(PdfRectangle a, PdfRectangle b)
-    {
-        return new PdfRectangle(
-            Math.Max(a.Left, b.Left),
-            Math.Max(a.Bottom, b.Bottom),
-            Math.Min(a.Right, b.Right),
-            Math.Min(a.Top, b.Top));
-    }
-
-    private static bool HasPositiveArea(PdfRectangle rect)
-    {
-        return rect.Right > rect.Left && rect.Top > rect.Bottom;
-    }
+    public static PdfRectangle ResolveEffectiveRenderBox(PdfPage page) => page.EffectiveCropBox;
 
     private static int CeilingPixelCount(double value)
     {

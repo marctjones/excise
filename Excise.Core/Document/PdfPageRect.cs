@@ -224,11 +224,11 @@ public static class PdfCoordinateMapper
     private static PdfPageRect ContentToVisualPoints(PdfPage page, PdfPageRect rect)
     {
         var content = rect.ToPdfRectangle().Normalize();
-        var mb = page.MediaBox.Normalize();
-        var l = mb.Left;
-        var b = mb.Bottom;
-        var w = mb.Width;
-        var h = mb.Height;
+        var visibleBox = page.EffectiveCropBox;
+        var l = visibleBox.Left;
+        var b = visibleBox.Bottom;
+        var w = visibleBox.Width;
+        var h = visibleBox.Height;
         var rotation = page.Rotation;   // already canonical {0,90,180,270}
 
         (double x, double y) Map(double cx, double cy) => rotation switch

@@ -799,6 +799,7 @@ namespace Excise.Core.Document
         public Excise.Core.Primitives.PdfDictionary Dictionary { get; }
         public Excise.Core.Document.PdfDocument Document { get; }
         public double? Duration { get; }
+        public Excise.Core.Document.PdfRectangle EffectiveCropBox { get; }
         public double Height { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> Letters { get; }
         public Excise.Core.Document.PdfRectangle MediaBox { get; }

@@ -303,6 +303,41 @@ public class PdfPage
     public PdfRectangle CropBox => GetInheritedRectangle("CropBox") ?? MediaBox;
 
     /// <summary>
+    /// The page box that a conforming viewer renders: the intersection of a
+    /// valid <see cref="CropBox"/> and <see cref="MediaBox"/>, with a valid
+    /// MediaBox used when the crop is empty or disjoint.
+    /// </summary>
+    /// <remarks>
+    /// PDF processors must not display a CropBox outside the MediaBox. Keeping
+    /// this normalization on the page contract gives rendering, viewer layout,
+    /// and pointer-to-content mapping one source of truth for the visible
+    /// origin and extent.
+    /// </remarks>
+    public PdfRectangle EffectiveCropBox
+    {
+        get
+        {
+            var mediaBox = MediaBox.Normalize();
+            var cropBox = CropBox.Normalize();
+
+            if (HasPositiveArea(mediaBox))
+            {
+                if (!HasPositiveArea(cropBox))
+                    return mediaBox;
+
+                var intersection = new PdfRectangle(
+                    Math.Max(mediaBox.Left, cropBox.Left),
+                    Math.Max(mediaBox.Bottom, cropBox.Bottom),
+                    Math.Min(mediaBox.Right, cropBox.Right),
+                    Math.Min(mediaBox.Top, cropBox.Top));
+                return HasPositiveArea(intersection) ? intersection : mediaBox;
+            }
+
+            return HasPositiveArea(cropBox) ? cropBox : DefaultMediaBox;
+        }
+    }
+
+    /// <summary>
     /// The bleed box. Falls back to CropBox if not specified.
     /// </summary>
     public PdfRectangle BleedBox => GetRectangle("BleedBox") ?? CropBox;
@@ -318,16 +353,18 @@ public class PdfPage
     public PdfRectangle ArtBox => GetRectangle("ArtBox") ?? CropBox;
 
     /// <summary>
-    /// Width of the page as displayed, i.e. after applying <see cref="Rotation"/>.
-    /// Equals <see cref="Width"/> for 0°/180° and <see cref="Height"/> for 90°/270°.
+    /// Width of the visible page as displayed, after applying <see cref="Rotation"/>.
     /// </summary>
-    public double VisualWidth => Rotation is 90 or 270 ? Height : Width;
+    public double VisualWidth => Rotation is 90 or 270
+        ? EffectiveCropBox.Height
+        : EffectiveCropBox.Width;
 
     /// <summary>
-    /// Height of the page as displayed, i.e. after applying <see cref="Rotation"/>.
-    /// Equals <see cref="Height"/> for 0°/180° and <see cref="Width"/> for 90°/270°.
+    /// Height of the visible page as displayed, after applying <see cref="Rotation"/>.
     /// </summary>
-    public double VisualHeight => Rotation is 90 or 270 ? Width : Height;
+    public double VisualHeight => Rotation is 90 or 270
+        ? EffectiveCropBox.Width
+        : EffectiveCropBox.Height;
 
     /// <summary>
     /// Map a rectangle from <em>visual</em> space — what the viewer sees after
@@ -351,8 +388,8 @@ public class PdfPage
     /// and y range are interpreted as visual coordinates (y measured downward).</param>
     public PdfRectangle ToContentStreamCoordinates(PdfRectangle visualRect)
     {
-        var mb = MediaBox.Normalize();
-        double l = mb.Left, b = mb.Bottom, w = mb.Width, h = mb.Height;
+        var visibleBox = EffectiveCropBox;
+        double l = visibleBox.Left, b = visibleBox.Bottom, w = visibleBox.Width, h = visibleBox.Height;
         int r = Rotation;
 
         // Map one visual point (x right, y down, top-left origin) to content
@@ -378,6 +415,9 @@ public class PdfPage
 
         return new PdfRectangle(minX, minY, maxX, maxY);
     }
+
+    private static bool HasPositiveArea(PdfRectangle rectangle) =>
+        rectangle.Right > rectangle.Left && rectangle.Top > rectangle.Bottom;
 
     /// <summary>
     /// This page's presentation transition effect (/Trans, ISO 32000-2:2020 §12.4.4),

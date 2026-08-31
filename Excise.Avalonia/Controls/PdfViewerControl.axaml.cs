@@ -1616,7 +1616,7 @@ public partial class PdfViewerControl : UserControl
             _currentSinglePageRenderDpi = logicalDpi;
             UpdateZoomTransform();
         }
-        var box = page.CropBox.Normalize();
+        var box = page.EffectiveCropBox;
         var widthPt = page.Rotation is 90 or 270 ? box.Height : box.Width;
         var heightPt = page.Rotation is 90 or 270 ? box.Width : box.Height;
         double scale = ZoomLevel * EffectiveRenderScaling;
@@ -1759,7 +1759,7 @@ public partial class PdfViewerControl : UserControl
 
     internal static int EffectiveSinglePageRenderDpi(PdfPage page)
     {
-        var box = page.CropBox.Normalize();
+        var box = page.EffectiveCropBox;
         var rotation = page.Rotation;   // already canonical {0,90,180,270}
         var widthPt = rotation is 90 or 270 ? box.Height : box.Width;
         var heightPt = rotation is 90 or 270 ? box.Width : box.Height;
