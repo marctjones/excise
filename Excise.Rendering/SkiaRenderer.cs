@@ -141,11 +141,15 @@ public class SkiaRenderer
         if (options.ClipRect.HasValue)
             canvas.ClipRect(options.ClipRect.Value, SKClipOperation.Intersect, options.AntiAlias);
 
-        // Render content
+        // Render content. The facade owns the per-page resource scope; nested
+        // contexts borrow it and therefore cannot dispose resources still in
+        // use by a sibling form, pattern, mask, or transparency group.
+        using var resourceScope = new RenderResourceScope();
         var context = new RenderContext(
             canvas,
             page,
             options,
+            resourceScope,
             cancellationToken,
             bitmap,
             startsInDeviceCmykGroup);
@@ -483,14 +487,9 @@ internal partial class RenderContext
     internal static long ImageBitmapCacheHits;
     [ThreadStatic]
     internal static long ImageBitmapCacheMisses;
-    // Decoded-image caches. Shared with child transparency-group / tiling-pattern
-    // contexts via the shared-scope constructor so a repeated image decodes once
-    // per page, not once per context (#599). Only the owning (root) context
-    // disposes them — see _ownsImageBitmapCache / DisposeImageBitmapCache.
-    private readonly Dictionary<(int ObjectNumber, int Generation, ImageBitmapCacheKey Key), SKBitmap?> _imageBitmapByReference;
-    private readonly Dictionary<Excise.Core.Primitives.PdfStream, Dictionary<ImageBitmapCacheKey, SKBitmap?>> _imageBitmapByStream;
-    private readonly List<SKBitmap> _cachedImageBitmaps;
-    private readonly bool _ownsImageBitmapCache;
+    // Per-page native assets are owned outside the context so every nested
+    // context can borrow them without participating in disposal policy.
+    private readonly RenderResourceScope _resourceScope;
     // Tessellated glyph outlines keyed by (typeface, font-size bits, glyph
     // string) — see GetCachedGlyphOutline (#598). SKFont.GetTextPath drives the
     // platform font scaler to build the outline on every call; body text
@@ -558,48 +557,21 @@ internal partial class RenderContext
     private readonly CancellationToken _cancellationToken;
 
     private sealed record SoftMaskAlpha(byte[] Data, int Width, int Height);
-    private readonly record struct ImageBitmapCacheKey(
-        int Width,
-        int Height,
-        int BitsPerComponent,
-        string ColorSpace,
-        int TargetWidth,
-        int TargetHeight,
-        bool ImageMask,
-        byte FillRed,
-        byte FillGreen,
-        byte FillBlue,
-        byte FillAlpha,
-        int? DctColorTransform);
-
-    public RenderContext(SKCanvas canvas, PdfPage page, RenderOptions options,
+    public RenderContext(
+        SKCanvas canvas,
+        PdfPage page,
+        RenderOptions options,
+        RenderResourceScope resourceScope,
         CancellationToken cancellationToken = default,
         SKBitmap? rootBitmap = null,
-        bool startsInDeviceCmykTransparencyGroup = false,
-        RenderContext? imageCacheOwner = null)
+        bool startsInDeviceCmykTransparencyGroup = false)
     {
         _canvas = canvas;
         _rootBitmap = rootBitmap;
         _page = page;
         _options = options;
+        _resourceScope = resourceScope;
         _cancellationToken = cancellationToken;
-        if (imageCacheOwner != null)
-        {
-            // Share the decoded-image cache with the owning context so an image
-            // reused across a transparency group / tiling pattern decodes once
-            // per page (#599). The owner disposes; this context does not.
-            _imageBitmapByReference = imageCacheOwner._imageBitmapByReference;
-            _imageBitmapByStream = imageCacheOwner._imageBitmapByStream;
-            _cachedImageBitmaps = imageCacheOwner._cachedImageBitmaps;
-            _ownsImageBitmapCache = false;
-        }
-        else
-        {
-            _imageBitmapByReference = new();
-            _imageBitmapByStream = new(ReferenceEqualityComparer.Instance);
-            _cachedImageBitmaps = new();
-            _ownsImageBitmapCache = true;
-        }
         _deviceCmykPreviewColorSpace = PdfColorSpace.Parse(PdfName.DeviceCMYK, page.Document);
         _deviceCmykTransparencyGroupDepth = startsInDeviceCmykTransparencyGroup ? 1 : 0;
         _deviceCmykBackdrop = startsInDeviceCmykTransparencyGroup && rootBitmap != null
