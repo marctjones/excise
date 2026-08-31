@@ -181,6 +181,8 @@ internal sealed class ReachabilityAnalyzer(
     private readonly XamlSeedCatalog _xaml = new();
     private readonly HashSet<INamedTypeSymbol> _scriptGlobals =
         new(SymbolEqualityComparer.Default);
+    private readonly HashSet<INamedTypeSymbol> _dependencyInjectionTypes =
+        new(SymbolEqualityComparer.Default);
     private int _dependencyInjectionRegistrations;
     private int _externalReflectionLoads;
     private int _sourceGenerationRoots;
@@ -357,9 +359,11 @@ internal sealed class ReachabilityAnalyzer(
         {
             new DynamicMechanismSummary(
                 "dependency-injection",
-                "static-edge",
+                _dependencyInjectionTypes.Count > 0
+                    ? "qualified-seed-and-static-edge"
+                    : "static-edge",
                 _dependencyInjectionRegistrations,
-                "Closed-generic registrations and explicit factories are ordinary Roslyn type/call edges."),
+                $"Closed-generic registrations seed explicit public constructors for {_dependencyInjectionTypes.Count} implementation types; explicit factories remain ordinary Roslyn call edges."),
             new DynamicMechanismSummary(
                 "native-interop",
                 _nativeCallbacks > 0 ? "qualified-seed-and-static-edge" : "static-edge",
@@ -659,7 +663,7 @@ internal sealed class ReachabilityAnalyzer(
 
         foreach (var node in root.DescendantNodes())
         {
-            var referenced = SymbolFromNode(semanticModel, node);
+            var referenced = StaticReferenceResolver.Resolve(semanticModel, node);
             if (referenced is null)
             {
                 continue;
@@ -713,6 +717,13 @@ internal sealed class ReachabilityAnalyzer(
             {
                 case DynamicInvocationKind.DependencyInjectionRegistration:
                     _dependencyInjectionRegistrations++;
+                    var activationType = DynamicMechanismClassifier
+                        .ResolveDependencyInjectionActivationType(method);
+                    if (activationType is not null)
+                    {
+                        _dependencyInjectionTypes.Add(
+                            (INamedTypeSymbol)Original(activationType));
+                    }
                     break;
                 case DynamicInvocationKind.ExternalAssemblyLoad:
                     _externalReflectionLoads++;
@@ -754,18 +765,6 @@ internal sealed class ReachabilityAnalyzer(
         }
     }
 
-    private static ISymbol? SymbolFromNode(SemanticModel semanticModel, SyntaxNode node)
-    {
-        return node switch
-        {
-            IdentifierNameSyntax or GenericNameSyntax or MemberAccessExpressionSyntax or ObjectCreationExpressionSyntax or InvocationExpressionSyntax
-                => semanticModel.GetSymbolInfo(node).Symbol ?? semanticModel.GetSymbolInfo(node).CandidateSymbols.FirstOrDefault(),
-            AttributeSyntax attribute
-                => semanticModel.GetSymbolInfo(attribute).Symbol ?? semanticModel.GetTypeInfo(attribute).Type,
-            _ => null
-        };
-    }
-
     private static ISymbol? FindContainingDeclaredSymbol(SemanticModel semanticModel, SyntaxNode node)
     {
         for (var current = node.Parent; current is not null; current = current.Parent)
@@ -788,6 +787,7 @@ internal sealed class ReachabilityAnalyzer(
     private void AddConservativeSeeds()
     {
         AddXamlSeeds();
+        AddDependencyInjectionConstructorSeeds();
 
         foreach (var node in _nodes.Values)
         {
@@ -821,6 +821,29 @@ internal sealed class ReachabilityAnalyzer(
                     AddEdge(originalType, symbol);
                     AddEdge(symbol, originalType);
                 }
+            }
+        }
+
+        foreach (var edge in MemberContractResolver.Resolve(_nodes.Keys))
+        {
+            AddEdge(edge.From, edge.To);
+        }
+    }
+
+    private void AddDependencyInjectionConstructorSeeds()
+    {
+        foreach (var type in _dependencyInjectionTypes)
+        {
+            foreach (var constructor in type.InstanceConstructors
+                         .Where(constructor =>
+                             constructor.DeclaredAccessibility == Accessibility.Public)
+                         .Select(Original)
+                         .Where(_nodes.ContainsKey))
+            {
+                AddSeed(
+                    constructor,
+                    "dependency-injection-constructor",
+                    $"public constructor activated by registration of {Display(type)}");
             }
         }
     }
@@ -1338,6 +1361,16 @@ internal static class SelfTest
         }
 
         if (!XamlSeedResolver.RunSelfTest())
+        {
+            return 1;
+        }
+
+        if (!StaticReferenceResolver.RunSelfTest())
+        {
+            return 1;
+        }
+
+        if (!MemberContractResolver.RunSelfTest())
         {
             return 1;
         }

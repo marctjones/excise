@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "3baf78a716d011c22f6f00a11b41f831293d89d3",
+  "sourceRevision": "1040d6188edc4597bf2b4a49533f362928d2bd8e",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 3
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5492,
+    "retainedSymbols": 5542,
     "observedComponentDependencies": 78,
     "declaredDependencies": 65,
     "acceptedExceptions": 1,
@@ -24,7 +24,7 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 252,
+      "references": 253,
       "typeDependencyCount": 18,
       "classification": "declared",
       "evidence": [
@@ -150,7 +150,7 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 495,
+      "references": 496,
       "typeDependencyCount": 56,
       "classification": "declared",
       "evidence": [
@@ -164,14 +164,14 @@
     {
       "source": "app-main-window",
       "target": "core",
-      "references": 7,
+      "references": 8,
       "typeDependencyCount": 2,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.Core.Graphics.PdfColor",
-          "references": 6
+          "references": 7
         }
       ]
     },
@@ -220,7 +220,7 @@
     {
       "source": "app-main-window",
       "target": "core-text",
-      "references": 65,
+      "references": 66,
       "typeDependencyCount": 17,
       "classification": "declared",
       "evidence": [
@@ -486,7 +486,7 @@
     {
       "source": "core",
       "target": "core-primitives",
-      "references": 340,
+      "references": 342,
       "typeDependencyCount": 45,
       "classification": "declared",
       "evidence": [
@@ -590,8 +590,8 @@
     {
       "source": "core-content",
       "target": "core-text",
-      "references": 37,
-      "typeDependencyCount": 10,
+      "references": 45,
+      "typeDependencyCount": 11,
       "classification": "undeclared",
       "evidence": [
         {
@@ -605,6 +605,11 @@
           "references": 9
         },
         {
+          "source": "Excise.Core.Content.IContentStreamSink",
+          "target": "Excise.Core.Text.TextExtractor.LetterSink",
+          "references": 8
+        },
+        {
           "source": "Excise.Core.Content.ContentStreamWalker",
           "target": "Excise.Core.Text.CidCMap",
           "references": 6
@@ -613,11 +618,6 @@
           "source": "Excise.Core.Content.ContentStreamWalker",
           "target": "Excise.Core.Text.ToUnicodeCMapParser",
           "references": 4
-        },
-        {
-          "source": "Excise.Core.Content.ContentStreamWalker",
-          "target": "Excise.Core.Text.AdobeGlyphList",
-          "references": 2
         }
       ]
     },
@@ -643,7 +643,7 @@
     {
       "source": "core-document",
       "target": "core",
-      "references": 36,
+      "references": 38,
       "typeDependencyCount": 12,
       "classification": "declared",
       "evidence": [
@@ -951,7 +951,7 @@
     {
       "source": "core-text",
       "target": "core-document",
-      "references": 586,
+      "references": 588,
       "typeDependencyCount": 76,
       "classification": "undeclared",
       "evidence": [

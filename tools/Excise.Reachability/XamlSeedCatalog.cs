@@ -20,10 +20,12 @@ internal sealed class XamlSeedCatalog
         RegexOptions.CultureInvariant);
 
     private readonly HashSet<string> _types = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _instantiatedTypes = new(StringComparer.Ordinal);
     private readonly HashSet<XamlQualifiedMember> _qualifiedMembers = [];
     private readonly HashSet<XamlBindingPath> _bindingPaths = [];
 
     public IReadOnlySet<string> Types => _types;
+    public IReadOnlySet<string> InstantiatedTypes => _instantiatedTypes;
     public IReadOnlySet<XamlQualifiedMember> QualifiedMembers => _qualifiedMembers;
     public IReadOnlySet<XamlBindingPath> BindingPaths => _bindingPaths;
     public int UntypedBindingPaths => _bindingPaths.Count(path => path.ContextType is null);
@@ -55,6 +57,7 @@ internal sealed class XamlSeedCatalog
         if (rootClass is not null)
         {
             _types.Add(rootClass);
+            _instantiatedTypes.Add(rootClass);
         }
 
         Visit(document.Root, rootClass, inheritedContext: null, namespaces);
@@ -70,6 +73,7 @@ internal sealed class XamlSeedCatalog
         if (elementType is not null)
         {
             _types.Add(elementType);
+            _instantiatedTypes.Add(elementType);
         }
 
         var declaredContext = element.Attributes()
@@ -264,6 +268,9 @@ internal sealed class XamlSeedCatalog
             "Excise.Avalonia.Controls.PdfViewerControl"
         };
         if (requiredTypes.Any(type => !catalog.Types.Contains(type))
+            || !catalog.InstantiatedTypes.Contains("Excise.App.Views.MainWindow")
+            || !catalog.InstantiatedTypes.Contains("Excise.Avalonia.Controls.PdfViewerControl")
+            || catalog.InstantiatedTypes.Contains("Excise.App.ViewModels.ItemViewModel")
             || !catalog.QualifiedMembers.Contains(new XamlQualifiedMember(
                 "Excise.App.Views.MainWindow", "OnClick", "code-behind handler candidate"))
             || !catalog.QualifiedMembers.Contains(new XamlQualifiedMember(
