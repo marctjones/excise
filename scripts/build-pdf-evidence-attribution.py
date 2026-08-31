@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]; REG=ROOT/'test-pdfs/manifests/pdf-spec-registry'; OUT=REG/'generated/evidence-attribution.json'
 def load(p): return json.loads(p.read_text())
 def method(name):
+ name=name.rsplit('::',1)[-1]
  m=re.search(r'\.([A-Za-z_][A-Za-z0-9_]*)\(',name)
  return m.group(1) if m else name.rsplit('.',1)[-1]
 def main():

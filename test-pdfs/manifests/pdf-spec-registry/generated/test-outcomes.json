@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-08-31T03:28:55.500435+00:00",
-  "gitRevision": "85ce54f18121d437e2a4e83befb181a7b0f94cf9",
+  "recordedAt": "2026-08-31T03:53:36.314366+00:00",
+  "gitRevision": "ad5a523beb6d41c8220619c8a8b7381dc14f49f1",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -36,6 +36,11 @@
       "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-color-rgb-atomic.trx",
       "modifiedAt": "2026-08-31T03:28:55.365377+00:00",
       "sha256": "6407778f34695f1f4f631403f4a53fa8f53fefd02515106b2b89f3177425eff7"
+    },
+    {
+      "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-pattern-shading.trx",
+      "modifiedAt": "2026-08-31T03:37:42.326521+00:00",
+      "sha256": "ca0edce9c89d3d3d50f639a806dff9dbb88e36060f96b1cea59828af6e3fc1d9"
     }
   ],
   "outcomes": [
@@ -288,6 +293,22 @@
       "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
     },
     {
+      "testName": "Excise.Rendering.Tests.Differential.ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
+      "outcome": "Passed",
+      "duration": "00:00:00.4306702",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-pattern-shading.trx",
+      "resultModifiedAt": "2026-08-31T03:37:42.326521+00:00",
+      "trxSha256": "ca0edce9c89d3d3d50f639a806dff9dbb88e36060f96b1cea59828af6e3fc1d9"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.OperatorRenderCoverageTests.Sh_AxialShading_PaintsLeftToRightGradient",
+      "outcome": "Passed",
+      "duration": "00:00:00.2523524",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-pattern-shading.trx",
+      "resultModifiedAt": "2026-08-31T03:37:42.326521+00:00",
+      "trxSha256": "ca0edce9c89d3d3d50f639a806dff9dbb88e36060f96b1cea59828af6e3fc1d9"
+    },
+    {
       "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_ClippingPath_W_NonzeroWinding",
       "outcome": "Passed",
       "duration": "00:00:00.1150512",
@@ -345,10 +366,10 @@
     }
   ],
   "summary": {
-    "trxFiles": 6,
-    "tests": 38,
+    "trxFiles": 7,
+    "tests": 40,
     "outcomes": {
-      "Passed": 38
+      "Passed": 40
     },
     "status": "recorded"
   }
