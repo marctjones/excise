@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "366ca0974f799161935f4e520930748507a50c52",
+  "sourceRevision": "52265e3a9744881c46bd03949ae3a85caa4664ab",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5927,
+    "retainedSymbols": 5952,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -388,12 +388,12 @@
     {
       "source": "cli",
       "target": "core-content",
-      "references": 9,
-      "typeDependencyCount": 2,
+      "references": 10,
+      "typeDependencyCount": 3,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Program",
+          "source": "Excise.Cli.Commands.AutodetectFieldsCommand",
           "target": "Excise.Core.Document.SuggestedField",
           "references": 6
         }
@@ -402,14 +402,14 @@
     {
       "source": "cli",
       "target": "core-document",
-      "references": 141,
-      "typeDependencyCount": 28,
+      "references": 132,
+      "typeDependencyCount": 33,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Program",
+          "source": "Excise.Cli.Commands.InfoCommandHandler",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 32
+          "references": 12
         }
       ]
     },

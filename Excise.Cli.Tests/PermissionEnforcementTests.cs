@@ -211,12 +211,12 @@ public class PermissionEnforcementTests : IDisposable
         var pdf = RestrictedFixture(-4 & ~1024);
         var output = TempPath(".pdf");
 
-        var act = () => Program.RunMerge([pdf], output);
+        var act = () => DocumentAssemblyTestDriver.RunMerge([pdf], output);
         act.Should().Throw<PdfPermissionDeniedException>()
             .WithMessage("*bit 11*");
         File.Exists(output).Should().BeFalse("a merge blocked by /P bit 11 must not produce a file");
 
-        Program.RunMerge([pdf], output, ignorePermissions: true);
+        DocumentAssemblyTestDriver.RunMerge([pdf], output, ignorePermissions: true);
         File.Exists(output).Should().BeTrue();
     }
 
@@ -226,12 +226,12 @@ public class PermissionEnforcementTests : IDisposable
         var pdf = RestrictedFixture(-4 & ~1024);
         var outDir = TempPath("");   // RunSplit creates the directory itself
 
-        var act = () => Program.RunSplit(pdf, outDir, PdfDocumentSplitter.SplitToSinglePages);
+        var act = () => DocumentAssemblyTestDriver.RunSplitToSinglePages(pdf, outDir);
         act.Should().Throw<PdfPermissionDeniedException>()
             .WithMessage("*bit 11*");
         Directory.Exists(outDir).Should().BeFalse("a split blocked by /P bit 11 must not write fragments");
 
-        var written = Program.RunSplit(pdf, outDir, PdfDocumentSplitter.SplitToSinglePages,
+        var written = DocumentAssemblyTestDriver.RunSplitToSinglePages(pdf, outDir,
             ignorePermissions: true);
         written.Should().NotBeEmpty();
     }

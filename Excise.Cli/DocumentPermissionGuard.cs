@@ -43,34 +43,6 @@ internal sealed class PdfPermissionDeniedException(string message) : InvalidOper
 /// yet supported. Text extraction additionally honours the /P bit 10
 /// accessibility carve-out via <c>--for-accessibility</c>.
 /// </summary>
-partial class Program
-{
-    internal static Option<bool> CreateIgnorePermissionsOption()
-        => CliPermissionOptions.CreateIgnorePermissionsOption();
-
-    /// <summary>
-    /// Compatibility entry point for existing command handlers. New handlers
-    /// call <see cref="DocumentPermissionGuard.Require"/> directly so policy
-    /// ownership does not remain coupled to the CLI composition root.
-    /// </summary>
-    internal static void RequireDocumentPermission(
-        PdfDocument doc,
-        DocumentAction action,
-        string actionDescription,
-        bool ignorePermissions,
-        bool forAccessibility = false,
-        string? accessibilityHint = null,
-        string overrideHint = "--ignore-permissions")
-        => DocumentPermissionGuard.Require(
-            doc,
-            action,
-            actionDescription,
-            ignorePermissions,
-            forAccessibility,
-            accessibilityHint,
-            overrideHint);
-}
-
 internal static class CliPermissionOptions
 {
     internal static Option<bool> CreateIgnorePermissionsOption() => new("--ignore-permissions")
