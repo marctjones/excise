@@ -1285,7 +1285,7 @@
                     <ScrollViewer Grid.Row="1" IsVisible="{Binding ShowSearchResultsPanel}">
                         <ItemsControl ItemsSource="{Binding SearchMatches}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="models:SearchMatch">
                                     <Button HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Stretch"
                                             Margin="6,4"

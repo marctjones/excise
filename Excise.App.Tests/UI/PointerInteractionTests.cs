@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Excise.Core.Document;
 using Excise.Core.Text;
 using Excise.Avalonia.Controls;
+using Excise.App.Models;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
@@ -819,13 +820,13 @@ public class PointerInteractionTests : IDisposable
 
             // Populate matches directly (deterministic; the click gesture, not
             // the extractor, is what's under test) and open the results panel.
-            var match = new PdfSearchService.SearchMatch
+            var match = new SearchMatch
             {
                 PageIndex = 2,
                 MatchedText = "target",
                 Context = "…target…",
             };
-            vm.SearchMatches = new ObservableCollection<PdfSearchService.SearchMatch> { match };
+            vm.SearchMatches = new ObservableCollection<SearchMatch> { match };
             vm.IsSearchVisible = true;
             vm.ShowSearchResultsPanel.Should().BeTrue();
 
@@ -1057,7 +1058,7 @@ public class PointerInteractionTests : IDisposable
     }
 
     private static bool DataContextIsSearchMatch(Control c) =>
-        c.DataContext is PdfSearchService.SearchMatch;
+        c.DataContext is SearchMatch;
 
     private static bool IsInSearchMatchRow(Control c)
     {

@@ -2,7 +2,7 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "55822e10eb6dd0b648001cd91876a5461c7f9fb8",
+  "sourceRevision": "30990006ab3b05bc9773b5df9abd4f3e99c0ce4c",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 4
@@ -150,8 +150,8 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 495,
-      "typeDependencyCount": 56,
+      "references": 485,
+      "typeDependencyCount": 55,
       "classification": "declared",
       "evidence": [
         {
@@ -1452,7 +1452,7 @@
   ],
   "registryMismatches": [],
   "observationBlindSpots": [
-    "XAML untyped binding paths: Context, MatchedText, PageIndex. Unresolved typed member segments: none. Both sets are explicit rather than hidden by whole-file token matching.",
+    "XAML untyped binding paths: none. Unresolved typed member segments: none. Both sets are explicit rather than hidden by whole-file token matching.",
     "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
     "Test-project evidence starts from semantic cross-compilation references and follows explicit production edges without treating every member of a reachable type as reachable.",
     "Declaration and branch counts are structural signals, not complexity verdicts.",

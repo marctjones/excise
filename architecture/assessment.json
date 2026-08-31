@@ -339,7 +339,7 @@
         "architecture/generated/artifact-set.json"
       ],
       "gaps": [
-        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; eight Core direction/ownership defects are explicit issue-linked exceptions (#1316-#1321), and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML has three explicit untyped search-result members (#1305)."
+        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; eight Core direction/ownership defects are explicit issue-linked exceptions (#1316-#1321), and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
       ],
       "issueIds": [
         940,
@@ -349,7 +349,8 @@
         1300,
         1301,
         1302,
-        1303
+        1303,
+        1305
       ]
     }
   ],

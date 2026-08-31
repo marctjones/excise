@@ -56,7 +56,7 @@ digraph excise_architecture {
   "app" -> "core-text" [label="observed via parent boundary\n47 refs", color="#2563eb", style="dashed", penwidth=1];
   "app" -> "ocr" [label="target + observed\n29 refs", color="#15803d", style="solid", penwidth=2];
   "app" -> "rendering" [label="target + observed\n3 refs", color="#15803d", style="solid", penwidth=2];
-  "app-main-window" -> "app" [label="target + observed\n495 refs", color="#15803d", style="solid", penwidth=2];
+  "app-main-window" -> "app" [label="target + observed\n485 refs", color="#15803d", style="solid", penwidth=2];
   "app-main-window" -> "avalonia" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "app-main-window" -> "core" [label="observed via parent boundary\n8 refs", color="#2563eb", style="dashed", penwidth=1];
   "app-main-window" -> "core-document" [label="observed via parent boundary\n309 refs", color="#2563eb", style="dashed", penwidth=1];

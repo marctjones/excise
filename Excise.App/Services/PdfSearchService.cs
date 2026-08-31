@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Excise.App.Models;
 
 namespace Excise.App.Services;
 
@@ -21,20 +22,6 @@ public class PdfSearchService
     public PdfSearchService(ILogger<PdfSearchService> logger)
     {
         _logger = logger;
-    }
-
-    /// <summary>
-    /// Represents a single search match
-    /// </summary>
-    public class SearchMatch
-    {
-        public int PageIndex { get; set; }
-        public string MatchedText { get; set; } = string.Empty;
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
-        public string Context { get; set; } = string.Empty; // Surrounding text for preview
     }
 
     /// <summary>

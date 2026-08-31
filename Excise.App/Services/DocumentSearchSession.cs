@@ -1,3 +1,4 @@
+using Excise.App.Models;
 using Excise.Core.Document;
 
 namespace Excise.App.Services;
@@ -61,7 +62,7 @@ internal sealed class DocumentSearchSession : IDisposable
         ThrowIfStale(request);
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        List<PdfSearchService.SearchMatch> matches;
+        List<SearchMatch> matches;
         if (textIndex is { IsReady: true })
         {
             matches = _searchService.Search(
@@ -151,11 +152,11 @@ internal sealed record DocumentSearchRequest(
 
 internal sealed record DocumentSearchResult(
     bool HasSource,
-    IReadOnlyList<PdfSearchService.SearchMatch> Matches,
+    IReadOnlyList<SearchMatch> Matches,
     long WorkerElapsedMilliseconds)
 {
     public static DocumentSearchResult NoSource { get; } = new(
         false,
-        Array.Empty<PdfSearchService.SearchMatch>(),
+        Array.Empty<SearchMatch>(),
         0);
 }

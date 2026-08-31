@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AwesomeAssertions;
+using Excise.App.Models;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Xunit;
@@ -47,7 +48,7 @@ public class SearchHighlightIndexTests
             {
                 var expected = vm.SearchMatches.Where(m => m.PageIndex == page).ToList();
                 index.TryGetValue(page, out var actual);
-                (actual ?? new System.Collections.Generic.List<Excise.App.Services.PdfSearchService.SearchMatch>())
+                (actual ?? new System.Collections.Generic.List<SearchMatch>())
                     .Should().Equal(expected,
                         $"the per-page index for page {page} must contain exactly the matches a linear scan finds");
             }
