@@ -58,7 +58,7 @@ partial class Program
             CommandMetadataCommand.Create(),
             CreateBatchCommand(),
             InfoCommand.Create(),
-            CreateValidateCommand(),
+            ValidateCommand.Create(),
             TextCommand.Create(),
             LettersCommand.Create(),
             RenderCommand.Create(),
@@ -84,127 +84,6 @@ partial class Program
         var parserExitCode = rootCommand.Parse(args).Invoke();
         var handlerExitCode = Environment.ExitCode;
         return Task.FromResult(parserExitCode != 0 ? parserExitCode : handlerExitCode);
-    }
-
-    /// <summary>
-    /// excise validate &lt;file&gt; [--pdfa 1b|2b] [--json] - Bounded PDF/UA-1 (and
-    /// optional PDF/A structural) conformance check. This is a CHECKER over a
-    /// deliberately small, honestly-scoped subset of the standard — not a full
-    /// ISO validator. Exit code is non-zero when a checked Error-severity rule
-    /// fails. See issue #772.
-    /// </summary>
-    static Command CreateValidateCommand()
-    {
-        var fileArg = new Argument<FileInfo>("file") { Description = "PDF file to validate" };
-        var pdfaOption = new Option<string?>("--pdfa")
-        {
-            Description = "Also run the PDF/A structural check for the given level (1b or 2b)",
-        };
-        var jsonOption = new Option<bool>("--json")
-        {
-            Description = "Write the conformance report as JSON",
-            DefaultValueFactory = _ => false,
-        };
-        var passwordOption = new Option<string?>("--password")
-        {
-            Description = "User password for encrypted PDFs",
-        };
-
-        var command = new Command("validate", "Check PDF/UA-1 (and optionally PDF/A) conformance — bounded structural subset, not a full ISO validator")
-        {
-            fileArg,
-            pdfaOption,
-            jsonOption,
-            passwordOption,
-        };
-
-        command.SetAction(parseResult =>
-        {
-            var file = parseResult.GetValue(fileArg)!;
-            var json = parseResult.GetValue(jsonOption);
-            var password = parseResult.GetValue(passwordOption);
-            var pdfaText = parseResult.GetValue(pdfaOption);
-
-            if (!file.Exists)
-            {
-                Console.Error.WriteLine($"File not found: {file.FullName}");
-                Environment.ExitCode = 1;
-                return;
-            }
-
-            Excise.Core.Authoring.PdfAConformance? pdfa = pdfaText?.Trim().ToLowerInvariant() switch
-            {
-                null or "" => null,
-                "1b" or "pdfa1b" => Excise.Core.Authoring.PdfAConformance.PdfA1B,
-                "2b" or "pdfa2b" => Excise.Core.Authoring.PdfAConformance.PdfA2B,
-                _ => throw new ArgumentException("invalid --pdfa level"),
-            };
-
-            try
-            {
-                using var doc = OpenPdfDocument(file.FullName, password);
-
-                var reports = new List<Excise.Core.Validation.ValidationReport>
-                {
-                    Excise.Core.Validation.PdfUaValidator.Validate(doc),
-                };
-                if (pdfa is { } level)
-                    reports.Add(Excise.Core.Validation.PdfAStructuralValidator.Validate(doc, level));
-
-                bool conformant = reports.All(r => r.CheckedSubsetConformant);
-
-                if (json)
-                {
-                    WriteJson(new
-                    {
-                        schemaVersion = 1,
-                        command = "validate",
-                        status = conformant ? "PASS" : "FAIL",
-                        file = file.FullName,
-                        note = "Bounded structural subset checker — not a full ISO conformance verdict. Use veraPDF for authoritative validation.",
-                        reports = reports.Select(r => new
-                        {
-                            standard = r.Standard.ToString(),
-                            checkedSubsetConformant = r.CheckedSubsetConformant,
-                            uncoveredCheckpoints = r.UncoveredCheckpoints,
-                            results = r.Results.Select(x => new
-                            {
-                                ruleId = x.RuleId,
-                                status = x.Status.ToString(),
-                                severity = x.Severity.ToString(),
-                                x.Description,
-                                x.Location,
-                                x.Reference,
-                            }),
-                        }),
-                    });
-                }
-                else
-                {
-                    Console.WriteLine($"File: {file.Name}");
-                    Console.WriteLine("Bounded structural conformance check (NOT a full ISO verdict — use veraPDF for that).");
-                    foreach (var r in reports)
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine($"=== {r.Standard} — CheckedSubsetConformant={r.CheckedSubsetConformant} ===");
-                        foreach (var x in r.Results)
-                            Console.WriteLine($"  [{x.Status}] {x.RuleId} ({x.Severity}){(x.Location is null ? "" : $" @ {x.Location}")}: {x.Description}");
-                        Console.WriteLine("  NOT checked:");
-                        foreach (var u in r.UncoveredCheckpoints)
-                            Console.WriteLine($"    - {u}");
-                    }
-                }
-
-                Environment.ExitCode = conformant ? 0 : 1;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error: {ex.Message}");
-                Environment.ExitCode = 1;
-            }
-        });
-
-        return command;
     }
 
     /// <summary>
