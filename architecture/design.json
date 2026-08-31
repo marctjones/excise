@@ -112,6 +112,7 @@
       "dependsOn": [
         "core-primitives",
         "core-parsing",
+        "core-document",
         "core-fonts"
       ]
     },
@@ -154,6 +155,8 @@
         "redact-save"
       ],
       "dependsOn": [
+        "core-primitives",
+        "core-document",
         "core-content",
         "core-fonts"
       ]
@@ -223,7 +226,8 @@
       "dependsOn": [
         "core-primitives",
         "core-parsing",
-        "core-document"
+        "core-document",
+        "core-content"
       ]
     },
     {
@@ -476,6 +480,78 @@
       "target": "core-content",
       "type": "uses",
       "rationale": "Glyph removal must use the one authoritative content walk and reconstruction path."
+    },
+    {
+      "source": "core-content",
+      "target": "core-document",
+      "type": "uses",
+      "rationale": "Content walking operates on the authoritative page and document object graph; the reverse document convenience-facade edge is temporary under #1316."
+    },
+    {
+      "source": "core-text",
+      "target": "core-document",
+      "type": "uses",
+      "rationale": "Extraction, selection, and search geometry consume authoritative page, field, and coordinate contracts; the reverse document convenience-facade edge is temporary under #1316."
+    },
+    {
+      "source": "core-text",
+      "target": "core-primitives",
+      "type": "uses",
+      "rationale": "Text decoding and extraction interpret the parsed PDF object graph directly; redaction-owned references currently inflate this edge until #1321 establishes a distinct owner."
+    },
+    {
+      "source": "core-security",
+      "target": "core-content",
+      "type": "uses",
+      "rationale": "Document validation inspects tagging and operators through the authoritative content parser; encryption-state layering is separated under #1317."
+    },
+    {
+      "source": "core-content",
+      "target": "core-text",
+      "type": "uses",
+      "rationale": "Temporary exception #1318: the content walker currently consumes text-owned glyph/CMap decoders and a nested TextExtractor sink; those shared contracts must move below the two engines."
+    },
+    {
+      "source": "core-content",
+      "target": "core-writing",
+      "type": "uses",
+      "rationale": "Temporary exception #1319: content serialization consumes PdfNumberFormatter from writer ownership until the one canonical formatter moves to a neutral foundation."
+    },
+    {
+      "source": "core-document",
+      "target": "core-content",
+      "type": "uses",
+      "rationale": "Temporary compatibility exception #1316: PdfPage convenience members invoke the content engine; the target keeps the model below content processing."
+    },
+    {
+      "source": "core-document",
+      "target": "core-text",
+      "type": "uses",
+      "rationale": "Temporary compatibility exception #1316: PdfPage convenience members invoke extraction and selection; the target keeps the model below text processing."
+    },
+    {
+      "source": "core-document",
+      "target": "core-writing",
+      "type": "uses",
+      "rationale": "Temporary compatibility exception #1316: PdfDocument save convenience invokes the fresh writer; the target keeps serialization above the document model."
+    },
+    {
+      "source": "core-document",
+      "target": "core-security",
+      "type": "uses",
+      "rationale": "Temporary layering exception #1317: PdfDocument owns security-handler and permission state while validation also depends on documents; split the low-level state from document-dependent validation."
+    },
+    {
+      "source": "core-fonts",
+      "target": "core-text",
+      "type": "uses",
+      "rationale": "Temporary ownership exception #1320: font decoders consume AdobeGlyphList and StandardMacGlyphOrder from text ownership until the tables move under the font contract."
+    },
+    {
+      "source": "core-text",
+      "target": "core-parsing",
+      "type": "uses",
+      "rationale": "Temporary ownership exception #1321: ImageRegionRedactor is assigned to core-text because redaction has no non-overlapping owned source root; establish the redaction boundary and reclassify the dependency."
     },
     {
       "source": "verification",

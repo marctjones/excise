@@ -2,7 +2,7 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "0ddc6508819a4a59541bd0972f3809cbc9a7a22b",
+  "sourceRevision": "55822e10eb6dd0b648001cd91876a5461c7f9fb8",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 4
@@ -11,9 +11,9 @@
     "analyzedProjects": 12,
     "retainedSymbols": 5650,
     "observedComponentDependencies": 78,
-    "declaredDependencies": 65,
-    "acceptedExceptions": 1,
-    "undeclaredDependencies": 12,
+    "declaredDependencies": 69,
+    "acceptedExceptions": 9,
+    "undeclaredDependencies": 0,
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
     "unownedShippingSymbols": 0,
@@ -516,32 +516,12 @@
       "target": "core-document",
       "references": 71,
       "typeDependencyCount": 9,
-      "classification": "undeclared",
+      "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Content.ContentOperator",
           "target": "Excise.Core.Document.PdfRectangle",
           "references": 18
-        },
-        {
-          "source": "Excise.Core.Content.ContentStreamWalker",
-          "target": "Excise.Core.Document.PdfPage",
-          "references": 18
-        },
-        {
-          "source": "Excise.Core.Content.ContentStreamWalker",
-          "target": "Excise.Core.Document.PdfDocument",
-          "references": 13
-        },
-        {
-          "source": "Excise.Core.Content.ContentStreamParser",
-          "target": "Excise.Core.Document.PdfRectangle",
-          "references": 9
-        },
-        {
-          "source": "Excise.Core.Content.ContentStreamWalker",
-          "target": "Excise.Core.Document.PdfRectangle",
-          "references": 6
         }
       ]
     },
@@ -592,7 +572,7 @@
       "target": "core-text",
       "references": 45,
       "typeDependencyCount": 11,
-      "classification": "undeclared",
+      "classification": "accepted_exception",
       "evidence": [
         {
           "source": "Excise.Core.Content.ContentStreamWalker",
@@ -626,7 +606,7 @@
       "target": "core-writing",
       "references": 4,
       "typeDependencyCount": 2,
-      "classification": "undeclared",
+      "classification": "accepted_exception",
       "evidence": [
         {
           "source": "Excise.Core.Content.ContentOperator",
@@ -659,7 +639,7 @@
       "target": "core-content",
       "references": 13,
       "typeDependencyCount": 5,
-      "classification": "undeclared",
+      "classification": "accepted_exception",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfFormAutoDetector",
@@ -721,7 +701,7 @@
       "target": "core-security",
       "references": 32,
       "typeDependencyCount": 4,
-      "classification": "undeclared",
+      "classification": "accepted_exception",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfDocument",
@@ -750,7 +730,7 @@
       "target": "core-text",
       "references": 18,
       "typeDependencyCount": 6,
-      "classification": "undeclared",
+      "classification": "accepted_exception",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfPage",
@@ -784,7 +764,7 @@
       "target": "core-writing",
       "references": 3,
       "typeDependencyCount": 1,
-      "classification": "undeclared",
+      "classification": "accepted_exception",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfDocument",
@@ -812,7 +792,7 @@
       "target": "core-text",
       "references": 4,
       "typeDependencyCount": 2,
-      "classification": "undeclared",
+      "classification": "accepted_exception",
       "evidence": [
         {
           "source": "Excise.Core.Fonts.SymbolCmapDecoder",
@@ -859,22 +839,12 @@
       "target": "core-content",
       "references": 9,
       "typeDependencyCount": 3,
-      "classification": "undeclared",
+      "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Validation.ContentTaggingScanner",
           "target": "Excise.Core.Content.ContentStreamParser",
           "references": 4
-        },
-        {
-          "source": "Excise.Core.Validation.ContentTaggingScanner",
-          "target": "Excise.Core.Content.ContentOperator",
-          "references": 3
-        },
-        {
-          "source": "Excise.Core.Validation.ContentTaggingScanner",
-          "target": "Excise.Core.Content.ContentStream",
-          "references": 2
         }
       ]
     },
@@ -953,32 +923,12 @@
       "target": "core-document",
       "references": 588,
       "typeDependencyCount": 76,
-      "classification": "undeclared",
+      "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.TextSelectionEngine",
           "target": "Excise.Core.Document.PdfRectangle",
           "references": 51
-        },
-        {
-          "source": "Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions",
-          "target": "Excise.Core.Document.PdfRectangle",
-          "references": 45
-        },
-        {
-          "source": "Excise.Core.Text.Segmentation.HiddenTextDetector",
-          "target": "Excise.Core.Document.PdfRectangle",
-          "references": 24
-        },
-        {
-          "source": "Excise.Core.Text.Segmentation.LetterFinder",
-          "target": "Excise.Core.Document.PdfRectangle",
-          "references": 23
-        },
-        {
-          "source": "Excise.Core.Text.Segmentation.TextSegmenter",
-          "target": "Excise.Core.Document.PdfRectangle",
-          "references": 22
         }
       ]
     },
@@ -1001,7 +951,7 @@
       "target": "core-parsing",
       "references": 2,
       "typeDependencyCount": 1,
-      "classification": "undeclared",
+      "classification": "accepted_exception",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.ImageRegionRedactor",
@@ -1015,32 +965,12 @@
       "target": "core-primitives",
       "references": 414,
       "typeDependencyCount": 95,
-      "classification": "undeclared",
+      "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.GlyphUnicodeDecoder",
           "target": "Excise.Core.Primitives.PdfDictionary",
           "references": 22
-        },
-        {
-          "source": "Excise.Core.Text.Segmentation.FormXObjectFlattener",
-          "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 21
-        },
-        {
-          "source": "Excise.Core.Text.Segmentation.InteractiveRedactionScrubber",
-          "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 18
-        },
-        {
-          "source": "Excise.Core.Text.TextExtractor",
-          "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 15
-        },
-        {
-          "source": "Excise.Core.Text.Segmentation.FormXObjectFlattener.Context",
-          "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 13
         }
       ]
     },

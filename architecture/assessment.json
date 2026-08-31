@@ -59,10 +59,12 @@
         "Excise.Core.Tests/Operations"
       ],
       "gaps": [
-        "PdfDocument.cs remains a multi-thousand-line coordination surface and needs responsibility mapping before any split."
+        "PdfDocument.cs remains a multi-thousand-line coordination surface; its content, text, writing convenience facades (#1316) and mixed security/validation boundary (#1317) create temporary reverse dependencies."
       ],
       "issueIds": [
-        1261
+        1261,
+        1316,
+        1317
       ]
     },
     {
@@ -73,12 +75,14 @@
         "Excise.Core.Tests/Text/TextMatrixLineSteppingTests.cs"
       ],
       "gaps": [
-        "The renderer necessarily re-executes graphics/text state and is an explicitly tracked exception rather than a model for new consumers."
+        "The renderer necessarily re-executes graphics/text state as an accepted exception; content also temporarily depends upward on text-owned glyph decoding (#1318) and writer-owned number formatting (#1319)."
       ],
       "issueIds": [
         980,
         986,
-        992
+        992,
+        1318,
+        1319
       ]
     },
     {
@@ -89,11 +93,12 @@
         "Excise.Core.Tests/Text"
       ],
       "gaps": [
-        "Full PDF font-model completeness remains broader than the currently supported corpus."
+        "Full PDF font-model completeness remains broader than the currently supported corpus, and two font lookup tables remain text-owned until #1320."
       ],
       "issueIds": [
         1242,
-        1265
+        1265,
+        1320
       ]
     },
     {
@@ -104,9 +109,11 @@
         "scripts/check-extraction-parity.sh"
       ],
       "gaps": [
-        "Extraction coverage remains a measured bound on text redaction completeness, not a proof of completeness."
+        "Extraction coverage remains a measured bound on text redaction completeness, not a proof of completeness. Redaction implementation is still path-owned as core-text until #1321 establishes a real component boundary."
       ],
-      "issueIds": []
+      "issueIds": [
+        1321
+      ]
     },
     {
       "component": "core-redaction",
@@ -121,12 +128,13 @@
         "Excise.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs"
       ],
       "gaps": [
-        "Sixty-seven method-level redaction assertions still carry reviewed exceptions; generic no-independent-oracle entries remain an assurance backlog."
+        "Sixty-seven method-level redaction assertions still carry reviewed exceptions; generic no-independent-oracle entries remain an assurance backlog. The current ownership model assigns zero retained symbols to core-redaction until #1321."
       ],
       "issueIds": [
         1029,
         1077,
-        1291
+        1291,
+        1321
       ]
     },
     {
@@ -148,9 +156,11 @@
         "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs"
       ],
       "gaps": [
-        "Some permission enforcement and platform trust behavior lives at delivery-layer action boundaries by design."
+        "Some permission enforcement and platform trust behavior lives at delivery-layer action boundaries by design. Encryption state and document-dependent validation remain cyclic until #1317."
       ],
-      "issueIds": []
+      "issueIds": [
+        1317
+      ]
     },
     {
       "component": "rendering",
@@ -329,7 +339,7 @@
         "architecture/generated/artifact-set.json"
       ],
       "gaps": [
-        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. The observed-versus-target report still identifies 12 undeclared component edges for architectural review and 277 unresolved type edges confined to explicit non-shipping ownership gaps. XAML has three explicit untyped search-result members (#1305)."
+        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; eight Core direction/ownership defects are explicit issue-linked exceptions (#1316-#1321), and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML has three explicit untyped search-result members (#1305)."
       ],
       "issueIds": [
         940,
@@ -338,7 +348,8 @@
         1248,
         1300,
         1301,
-        1302
+        1302,
+        1303
       ]
     }
   ],
@@ -360,6 +371,78 @@
       "target": "core-content",
       "type": "uses",
       "implementationStatus": "implemented"
+    },
+    {
+      "source": "core-content",
+      "target": "core-document",
+      "type": "uses",
+      "implementationStatus": "implemented"
+    },
+    {
+      "source": "core-text",
+      "target": "core-document",
+      "type": "uses",
+      "implementationStatus": "implemented"
+    },
+    {
+      "source": "core-text",
+      "target": "core-primitives",
+      "type": "uses",
+      "implementationStatus": "implemented"
+    },
+    {
+      "source": "core-security",
+      "target": "core-content",
+      "type": "uses",
+      "implementationStatus": "implemented"
+    },
+    {
+      "source": "core-content",
+      "target": "core-text",
+      "type": "uses",
+      "implementationStatus": "accepted_exception"
+    },
+    {
+      "source": "core-content",
+      "target": "core-writing",
+      "type": "uses",
+      "implementationStatus": "accepted_exception"
+    },
+    {
+      "source": "core-document",
+      "target": "core-content",
+      "type": "uses",
+      "implementationStatus": "accepted_exception"
+    },
+    {
+      "source": "core-document",
+      "target": "core-text",
+      "type": "uses",
+      "implementationStatus": "accepted_exception"
+    },
+    {
+      "source": "core-document",
+      "target": "core-writing",
+      "type": "uses",
+      "implementationStatus": "accepted_exception"
+    },
+    {
+      "source": "core-document",
+      "target": "core-security",
+      "type": "uses",
+      "implementationStatus": "accepted_exception"
+    },
+    {
+      "source": "core-fonts",
+      "target": "core-text",
+      "type": "uses",
+      "implementationStatus": "accepted_exception"
+    },
+    {
+      "source": "core-text",
+      "target": "core-parsing",
+      "type": "uses",
+      "implementationStatus": "accepted_exception"
     },
     {
       "source": "verification",
