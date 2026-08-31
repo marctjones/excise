@@ -12,13 +12,8 @@ public class StreamDecompressor
     private readonly PdfFilterRegistry _filters;
 
     public StreamDecompressor()
-        : this(PdfFilterRegistry.CreateDefault())
     {
-    }
-
-    internal StreamDecompressor(PdfFilterRegistry filters)
-    {
-        _filters = filters;
+        _filters = PdfFilterRegistry.CreateDefault();
     }
 
     /// <summary>

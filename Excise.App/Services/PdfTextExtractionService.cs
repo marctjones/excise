@@ -276,15 +276,6 @@ public class PdfTextExtractionService
     }
 
     /// <summary>
-    /// Check if two rectangles intersect (kept for potential future use)
-    /// </summary>
-    private static bool Intersects(PdfRectangle a, PdfRectangle b)
-    {
-        return !(a.Right < b.Left || a.Left > b.Right ||
-                 a.Top < b.Bottom || a.Bottom > b.Top);
-    }
-
-    /// <summary>
     /// Extract text from a specific area of the page (file-based wrapper for backward compatibility)
     /// </summary>
     /// <param name="pdfPath">Path to PDF file</param>

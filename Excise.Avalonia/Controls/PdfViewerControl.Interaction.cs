@@ -758,7 +758,6 @@ public partial class PdfViewerControl
     }
 
     private Rectangle? _tempRedactionRect;
-    private Rectangle? _tempSelectionRect;
 
     private void DrawTemporaryRedactionRectangle(Point start, Point end)
     {
@@ -785,31 +784,6 @@ public partial class PdfViewerControl
         _tempRedactionRect.IsVisible = true;
     }
 
-    private void DrawTemporarySelectionRectangle(Point start, Point end)
-    {
-        if (_interactionLayer == null) return;
-
-        var rect = CreateRect(start, end);
-
-        if (_tempSelectionRect == null)
-        {
-            _tempSelectionRect = new Rectangle
-            {
-                Fill = new SolidColorBrush(Color.FromArgb(0x40, 0x4C, 0xAF, 0x50)), // Semi-transparent green
-                Stroke = new SolidColorBrush(Color.FromArgb(0xFF, 0x4C, 0xAF, 0x50)),
-                StrokeThickness = 2,
-                StrokeDashArray = new AvaloniaList<double> { 5, 5 }
-            };
-            _interactionLayer.Children.Add(_tempSelectionRect);
-        }
-
-        Canvas.SetLeft(_tempSelectionRect, rect.X);
-        Canvas.SetTop(_tempSelectionRect, rect.Y);
-        _tempSelectionRect.Width = rect.Width;
-        _tempSelectionRect.Height = rect.Height;
-        _tempSelectionRect.IsVisible = true;
-    }
-
     private void ClearTemporaryDrawings()
     {
         if (_tempRedactionRect != null)
@@ -817,10 +791,6 @@ public partial class PdfViewerControl
             _tempRedactionRect.IsVisible = false;
         }
 
-        if (_tempSelectionRect != null)
-        {
-            _tempSelectionRect.IsVisible = false;
-        }
 
         if (_tempTypewriterRect != null)
         {
