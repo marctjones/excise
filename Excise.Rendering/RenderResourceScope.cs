@@ -1,4 +1,5 @@
 using Excise.Core.Primitives;
+using Excise.Core.Content;
 using SkiaSharp;
 
 namespace Excise.Rendering;
@@ -16,6 +17,8 @@ internal sealed class RenderResourceScope : IDisposable
     private readonly Dictionary<PdfStream, Dictionary<ImageBitmapCacheKey, SKBitmap?>>
         _imageBitmapsByStream = new(ReferenceEqualityComparer.Instance);
     private readonly List<SKBitmap> _ownedImageBitmaps = new();
+    private readonly Dictionary<byte[], ContentStream> _parsedContentByBytes =
+        new(ReferenceEqualityComparer.Instance);
     private bool _disposed;
 
     public bool TryGetDecodedImage(
@@ -64,6 +67,18 @@ internal sealed class RenderResourceScope : IDisposable
         streamCache[key] = bitmap;
     }
 
+    public bool TryGetParsedContent(byte[] contentBytes, out ContentStream? content)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        return _parsedContentByBytes.TryGetValue(contentBytes, out content);
+    }
+
+    public void CacheParsedContent(byte[] contentBytes, ContentStream content)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _parsedContentByBytes[contentBytes] = content;
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -76,6 +91,7 @@ internal sealed class RenderResourceScope : IDisposable
         _ownedImageBitmaps.Clear();
         _imageBitmapsByReference.Clear();
         _imageBitmapsByStream.Clear();
+        _parsedContentByBytes.Clear();
     }
 
     private static bool TryGetReferenceKey(
