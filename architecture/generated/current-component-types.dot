@@ -19,7 +19,7 @@ digraph excise_architecture {
     "core-security" [label="Document conformance and structural validation\npartial\n54 retained symbols", fillcolor="#fff3bf"];
     "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n147 retained symbols", fillcolor="#d8f3dc"];
     "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n61 retained symbols", fillcolor="#d8f3dc"];
-    "rendering" [label="Excise.Rendering project\npartial\n705 retained symbols", fillcolor="#fff3bf"];
+    "rendering" [label="Excise.Rendering project\npartial\n709 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_foundation {
     label="foundation";
@@ -123,11 +123,11 @@ digraph excise_architecture {
   "ocr" -> "core-redaction" [label="2 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "ocr" -> "ocr-native" [label="5 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "ocr" -> "rendering" [label="16 refs / 7 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "rendering" -> "core" [label="140 refs / 7 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "rendering" -> "core" [label="140 refs / 10 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-content" [label="40 refs / 7 type pairs\naccepted_exception", color="#7e22ce", style="dotted", penwidth=2];
   "rendering" -> "core-document" [label="269 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-fonts" [label="53 refs / 11 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-parsing" [label="33 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "rendering" -> "core-primitives" [label="568 refs / 27 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "rendering" -> "core-primitives" [label="566 refs / 27 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-text" [label="9 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
 }
