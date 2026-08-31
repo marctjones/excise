@@ -233,7 +233,12 @@ public class RevealHiddenTextTests : IDisposable
         double textX = 100, textY = 700;
         double rectLeft = textX - 4;
         double rectBottom = textY - 4;
-        double rectWidth = secretText.Length * 8;
+        // The eight-point estimate is intentionally conservative for the
+        // Helvetica text advance, so include a right-side margin as well as
+        // the existing left-side margin.  The hidden-text detector now reports
+        // the exact glyph run that the overlay covers; without this margin the
+        // last glyph of this synthetic "whole secret" fixture is uncovered.
+        double rectWidth = secretText.Length * 8 + 16;
         double rectHeight = 14;
 
         var body =
