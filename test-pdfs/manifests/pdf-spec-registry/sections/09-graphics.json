@@ -30,7 +30,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "implemented",
         "mutate": "unknown",
         "write": "unknown"
       },
@@ -38,8 +38,33 @@
         {
           "kind": "legacy",
           "ref": "pdf20.graphics.extgstate"
+        },
+        {
+          "kind": "implementation",
+          "ref": "Excise.Rendering/SkiaRenderer.cs"
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore"
+        },
+        {
+          "kind": "atomic-fixture",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore"
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
         }
       ],
+      "verification": {
+        "status": "executable",
+        "requiredModes": ["render"],
+        "checks": [
+          {"kind": "unit", "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore", "modes": ["render"]},
+          {"kind": "atomic-fixture", "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore", "modes": ["render"]},
+          {"kind": "differential", "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool", "modes": ["render"]}
+        ]
+      },
       "notes": "Track each ExtGState entry, save/restore balancing, resource resolution, and limits as separate child capabilities.",
       "documentation": [
         "docs/architecture/system-design.md"
@@ -47,9 +72,9 @@
       "tracking": {
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
-        "implementationRefs": [],
-        "testRefs": [],
-        "fixtureRefs": [],
+        "implementationRefs": ["Excise.Rendering/SkiaRenderer.cs"],
+        "testRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore"],
+        "fixtureRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore"],
         "corpusRefs": [],
         "referenceToolRefs": [],
         "architectureRefs": [

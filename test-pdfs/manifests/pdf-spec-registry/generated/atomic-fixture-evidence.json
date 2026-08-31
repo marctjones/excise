@@ -311,9 +311,18 @@
       "capability": "pdf.17.graphics.state",
       "section": "graphics",
       "mode": "render",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "implemented",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore",
+          "testRecord": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_StateStack_SaveRestore",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.17.graphics.state",
@@ -8816,8 +8825,8 @@
     "fixtureStatus": {
       "contracted-not-run": 146,
       "contracted-unresolved-reference": 4,
-      "not-contracted": 809,
-      "recorded-passing": 5
+      "not-contracted": 808,
+      "recorded-passing": 6
     }
   }
 }

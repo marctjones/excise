@@ -134783,6 +134783,15 @@
           ]
         },
         {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "render"
+          ],
+          "mappingSources": [
+            "registry-verification-contract"
+          ]
+        },
+        {
           "capability": "pdf.17.transparency.model",
           "modes": [
             "render"
@@ -148189,6 +148198,15 @@
           ]
         },
         {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "render"
+          ],
+          "mappingSources": [
+            "registry-verification-contract"
+          ]
+        },
+        {
           "capability": "pdf.17.syntax.objects",
           "modes": [
             "mutate",
@@ -148218,7 +148236,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_ClippingPathThenNestedFilledPaths_RendersAllFills",
-      "line": 697,
+      "line": 705,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148269,7 +148287,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_SimpleText_SingleFont",
-      "line": 766,
+      "line": 774,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148305,7 +148323,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_Text_LargerFontSize",
-      "line": 788,
+      "line": 796,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148331,7 +148349,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_EmptyContent_ShowsWhiteBackground",
-      "line": 814,
+      "line": 822,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148345,7 +148363,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_SingleOperator_JustRectangle",
-      "line": 831,
+      "line": 839,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148359,7 +148377,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_VariousDpis_ScalesDimensionsCorrectly",
-      "line": 859,
+      "line": 867,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -148373,7 +148391,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_LetterSize_612x792Points",
-      "line": 884,
+      "line": 892,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148387,7 +148405,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_CustomSmallPage_50x50Points",
-      "line": 903,
+      "line": 911,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148401,7 +148419,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_CustomLargePage_1200x1600Points",
-      "line": 921,
+      "line": 929,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148415,7 +148433,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_PatternType6CoonsMesh_RendersMeshArea",
-      "line": 941,
+      "line": 949,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148429,7 +148447,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_PatternType2AxialShadingFill_UsesPatternResource",
-      "line": 963,
+      "line": 971,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148443,7 +148461,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_PatternType1TilingFill_UsesDirectPatternColorSpace",
-      "line": 980,
+      "line": 988,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148457,7 +148475,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_PatternType1TilingFill_ClipsContentToPatternBBox",
-      "line": 994,
+      "line": 1002,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148508,7 +148526,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_PatternType1ColoredTilingFill_ComposesOverlappingCell",
-      "line": 1017,
+      "line": 1025,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148522,7 +148540,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_MissingPatternFill_DoesNotFallbackToSolidCurrentColor",
-      "line": 1036,
+      "line": 1044,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148536,7 +148554,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_FunctionBasedShading_EvaluatesAcrossDomain",
-      "line": 1053,
+      "line": 1061,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -148550,7 +148568,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
       "class": "SkiaRendererCoverageTests",
       "method": "RenderPage_FunctionBasedShading_MapsVerticalDomainUpwards",
-      "line": 1070,
+      "line": 1078,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193873,7 +193891,7 @@
       "pdf.17.graphics.paths-painting:write": 711,
       "pdf.17.graphics.state:mutate": 711,
       "pdf.17.graphics.state:parse": 711,
-      "pdf.17.graphics.state:render": 711,
+      "pdf.17.graphics.state:render": 713,
       "pdf.17.graphics.state:write": 711,
       "pdf.17.interactive.annotations:mutate": 329,
       "pdf.17.interactive.annotations:parse": 329,
