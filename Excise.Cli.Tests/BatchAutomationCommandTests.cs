@@ -337,6 +337,63 @@ public class BatchAutomationCommandTests : IDisposable
         error.GetProperty("category").GetString().Should().Be("SCHEMA");
     }
 
+    [Fact]
+    public async Task RunAsync_BatchFormAndAuditSteps_UseSharedHandlerContracts()
+    {
+        var directory = TempDirectory();
+        var input = Path.Combine(directory, "input.pdf");
+        var withField = Path.Combine(directory, "with-field.pdf");
+        var filled = Path.Combine(directory, "filled.pdf");
+        var workflow = Path.Combine(directory, "workflow.json");
+        File.WriteAllBytes(input, TestPdfBuilder.SinglePage("VISIBLE"));
+        File.WriteAllText(workflow, JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1,
+            steps = new object[]
+            {
+                new
+                {
+                    id = "add-field",
+                    command = PdfCommandIds.AddFormField,
+                    input = "input.pdf",
+                    output = "with-field.pdf",
+                    type = "Text",
+                    name = "Name",
+                    page = 1,
+                    rect = "72,700,300,720",
+                    value = "Alice",
+                },
+                new
+                {
+                    id = "fill-form",
+                    command = PdfCommandIds.FillForm,
+                    input = "with-field.pdf",
+                    output = "filled.pdf",
+                    fields = new Dictionary<string, string> { ["Name"] = "Bob" },
+                },
+                new
+                {
+                    id = "audit",
+                    command = PdfCommandIds.AuditHiddenText,
+                    input = "filled.pdf",
+                    allowFindings = true,
+                },
+            },
+        }));
+
+        var result = await RunCliCaptureAsync(["batch", workflow, "--json"]);
+
+        result.ExitCode.Should().Be(0);
+        using var report = JsonDocument.Parse(result.StdOut);
+        report.RootElement.GetProperty("passedCount").GetInt32().Should().Be(3);
+        var steps = report.RootElement.GetProperty("steps");
+        steps[0].GetProperty("result").GetProperty("fieldName").GetString().Should().Be("Name");
+        steps[1].GetProperty("result").GetProperty("updatedFieldCount").GetInt32().Should().Be(1);
+        steps[2].GetProperty("result").GetProperty("hitCount").GetInt32().Should().Be(0);
+        using var document = PdfDocument.Open(filled);
+        document.GetAcroForm()!.FindField("Name")!.Value.Should().Be("Bob");
+    }
+
     private string TempPath(string suffix)
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-cli-batch-{Guid.NewGuid():N}{suffix}");
