@@ -16,15 +16,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / "architecture/generated/change-coupling.json"
-PRODUCTION_ROOTS = (
-    "Excise.Core",
-    "Excise.Rendering",
-    "Excise.Avalonia",
-    "Excise.App",
-    "Excise.Cli",
-    "Excise.Ocr",
-    "Excise.Ocr.Native",
-)
+DEFAULT_INVENTORY = ROOT / "architecture/inventory.generated.json"
 SOURCE_SUFFIXES = (".cs", ".axaml", ".csproj")
 MAX_FILES_PER_COMMIT = 60
 
@@ -35,7 +27,21 @@ def git(*args: str) -> str:
     ).stdout
 
 
-def load_commits(limit: int) -> list[tuple[str, list[str]]]:
+def load_source_roots(inventory_path: Path) -> tuple[str, ...]:
+    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    roots = {
+        project["sourceRoot"].strip("/")
+        for project in inventory.get("projects", [])
+        if project.get("classification") == "shipping"
+        and isinstance(project.get("sourceRoot"), str)
+        and project["sourceRoot"].strip("/")
+    }
+    if not roots:
+        raise ValueError(f"no shipping source roots in {inventory_path}")
+    return tuple(sorted(roots))
+
+
+def load_commits(limit: int, source_roots: tuple[str, ...]) -> list[tuple[str, list[str]]]:
     output = git(
         "log",
         "--no-merges",
@@ -43,7 +49,7 @@ def load_commits(limit: int) -> list[tuple[str, list[str]]]:
         "--format=commit:%H",
         "--name-only",
         "--",
-        *PRODUCTION_ROOTS,
+        *source_roots,
     )
     commits: list[tuple[str, list[str]]] = []
     revision: str | None = None
@@ -63,13 +69,23 @@ def load_commits(limit: int) -> list[tuple[str, list[str]]]:
 
 
 def analyze(
-    commits: list[tuple[str, list[str]]], requested: int, source_revision: str
+    commits: list[tuple[str, list[str]]],
+    requested: int,
+    source_revision: str,
+    source_roots: tuple[str, ...],
+    inventory_path: str = "architecture/inventory.generated.json",
 ) -> dict:
     file_counts: Counter[str] = Counter()
     pair_counts: Counter[tuple[str, str]] = Counter()
     broad_excluded = 0
     accepted: list[tuple[str, list[str]]] = []
     for revision, files in commits:
+        files = [
+            path
+            for path in files
+            if path.endswith(SOURCE_SUFFIXES)
+            and any(path == root or path.startswith(root + "/") for root in source_roots)
+        ]
         if not files:
             continue
         if len(files) > MAX_FILES_PER_COMMIT:
@@ -92,12 +108,19 @@ def analyze(
                 "jaccard": round(cochanges / union, 4),
             }
         )
-    pairs.sort(key=lambda item: (-item["cochanges"], -item["jaccard"], item["source"], item["target"]))
+    pairs.sort(key=lambda item: (
+        -item["cochanges"], -item["jaccard"], item["source"], item["target"]
+    ))
 
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "generator": "scripts/generate_change_coupling.py",
         "sourceRevision": source_revision,
+        "scope": {
+            "inventory": inventory_path,
+            "classifications": ["shipping"],
+            "sourceRoots": list(source_roots),
+        },
         "window": {
             "commitsRequested": requested,
             "commitsObserved": len(accepted),
@@ -132,26 +155,40 @@ def write_atomic(path: Path, content: str) -> None:
 
 
 def self_test() -> None:
+    roots = ("Excise.App", "Excise.Core")
     report = analyze(
         [
-            ("a" * 40, ["Excise.App/A.cs", "Excise.App/B.cs"]),
-            ("b" * 40, ["Excise.App/A.cs", "Excise.App/B.cs", "Excise.Core/C.cs"]),
+            ("a" * 40, ["Excise.App/A.cs", "Excise.App/B.cs", "Tests/Outside.cs"]),
+            (
+                "b" * 40,
+                [
+                    "Excise.App/A.cs", "Excise.App/B.cs", "Excise.Core/C.cs",
+                    "Excise.AppExtra/No.cs",
+                ],
+            ),
             ("c" * 40, [f"Excise.Core/F{index}.cs" for index in range(61)]),
         ],
         3,
         "d" * 40,
+        roots,
     )
     assert report["window"]["commitsObserved"] == 2
     assert report["window"]["broadCommitsExcluded"] == 1
     assert report["pairs"][0]["source"] == "Excise.App/A.cs"
     assert report["pairs"][0]["target"] == "Excise.App/B.cs"
     assert report["pairs"][0]["cochanges"] == 2
+    assert report["scope"]["sourceRoots"] == list(roots)
+    assert all(
+        not item["path"].startswith(("Tests/", "Excise.AppExtra/"))
+        for item in report["files"]
+    )
     print("PASS: change-coupling generator self-test")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--inventory", type=Path, default=DEFAULT_INVENTORY)
     parser.add_argument("--commits", type=int, default=200)
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--self-test", action="store_true")
@@ -163,7 +200,15 @@ def main() -> int:
         parser.error("--commits must be positive")
 
     output = args.output.resolve()
-    report = analyze(load_commits(args.commits), args.commits, git("rev-parse", "HEAD").strip())
+    inventory = args.inventory.resolve()
+    source_roots = load_source_roots(inventory)
+    report = analyze(
+        load_commits(args.commits, source_roots),
+        args.commits,
+        git("rev-parse", "HEAD").strip(),
+        source_roots,
+        inventory.relative_to(ROOT).as_posix(),
+    )
     if args.check:
         if not output.is_file():
             print(f"FAIL: change-coupling output is missing: {output}", file=sys.stderr)
@@ -178,7 +223,11 @@ def main() -> int:
         return 0
 
     write_atomic(output, serialize(report))
-    print(f"wrote {output.relative_to(ROOT)} ({len(report['pairs'])} retained pairs)")
+    try:
+        display_output = output.relative_to(ROOT)
+    except ValueError:
+        display_output = output
+    print(f"wrote {display_output} ({len(report['pairs'])} retained pairs)")
     return 0
 
 

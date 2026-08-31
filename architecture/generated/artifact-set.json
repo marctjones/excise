@@ -1,0 +1,53 @@
+{
+  "$schema": "../schemas/artifact-set.schema.json",
+  "schemaVersion": 1,
+  "generator": "scripts/architecture_artifacts.py",
+  "sourceRevision": "3baf78a716d011c22f6f00a11b41f831293d89d3",
+  "revisionSemantics": "provenance-only; normalized content and hashes determine freshness",
+  "artifacts": [
+    {
+      "path": "architecture/inventory.generated.json",
+      "format": "json",
+      "schema": "architecture/schemas/inventory.schema.json",
+      "sha256": "9c6095d2ba0e2411e97feefd0f96f63f405e5cf944493042f48a1496d31f2e77"
+    },
+    {
+      "path": "architecture/generated/code-topology.json",
+      "format": "json",
+      "schema": "architecture/schemas/topology.schema.json",
+      "sha256": "932873479835301ac9ac204fba4d16f047407feace4ea42908fb79a81027f95f"
+    },
+    {
+      "path": "architecture/generated/change-coupling.json",
+      "format": "json",
+      "schema": "architecture/schemas/change-coupling.schema.json",
+      "sha256": "cc6515fa5ad524bf7c92eadeb250961fd0e73d28be80e63058b7813f92e746b2"
+    },
+    {
+      "path": "architecture/generated/architecture-conformance.json",
+      "format": "json",
+      "schema": "architecture/schemas/architecture-conformance.schema.json",
+      "sha256": "1624cfa0f02b831201a6b4ffbb788b61086788bc06e343b07880d0c04089bcd0"
+    },
+    {
+      "path": "architecture/generated/current-projects.dot",
+      "format": "dot",
+      "sha256": "809a05a31dbeb4c725b8a8bca59654e322c9e7115d03dfe74dfb430c48907223"
+    },
+    {
+      "path": "architecture/generated/target-components.dot",
+      "format": "dot",
+      "sha256": "dea3e330e06bb17b87596a23c5aa205ebe84cd28dbb5621324d3596a3de70a8d"
+    },
+    {
+      "path": "architecture/generated/current-component-types.dot",
+      "format": "dot",
+      "sha256": "4a2307f859fd2efe91a7d8b0c50e3f51ec60454a45b20e07abe6a4b55ece8a77"
+    },
+    {
+      "path": "architecture/generated/current-vs-target.dot",
+      "format": "dot",
+      "sha256": "2aed2b0f337f131bd5395a0aa1e7235a099b61694472311fecd9aee559cb6870"
+    }
+  ]
+}

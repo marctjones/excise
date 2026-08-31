@@ -162,6 +162,6 @@ Do not add a prose implementation matrix here. Query the architecture registry
 and regenerate its checked views:
 
 ```bash
-scripts/check_architecture-registry.sh
-scripts/check_architecture_registry.py --write-diagrams
+scripts/check-architecture-artifacts.sh
+scripts/check-architecture-artifacts.sh --update
 ```

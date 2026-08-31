@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/marctjones/excise/blob/develop/architecture/schemas/artifact-set.schema.json",
+  "title": "Excise coherent generated architecture artifact set",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "generator", "sourceRevision", "revisionSemantics", "artifacts"],
+  "properties": {
+    "$schema": { "const": "../schemas/artifact-set.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "generator": { "const": "scripts/architecture_artifacts.py" },
+    "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "revisionSemantics": { "const": "provenance-only; normalized content and hashes determine freshness" },
+    "artifacts": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "format", "sha256"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "format": { "enum": ["json", "dot"] },
+          "schema": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    }
+  }
+}

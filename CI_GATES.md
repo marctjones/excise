@@ -26,11 +26,27 @@ and the workflow are kept in step by construction (`scripts/ci-test.sh` is
 now a thin wrapper around `test-tier.sh t1`, not a second hand-maintained
 copy). See `CLAUDE.md`'s "Test Tiers" section for the full T0-T3 table.
 
-CI currently runs on Linux only (`ubuntu-latest`) — macOS- and Windows-specific
-code (`Excise.App/Views/MacNativeMenuBuilder.cs`, `.app` bundle behavior,
-Windows installer/file associations) is untested in CI (#647, tracked and
-in progress). Check `.github/workflows/ci.yml`'s `jobs:` keys for the
-current, authoritative platform coverage rather than trusting this note.
+CI has Linux, macOS, and Windows test jobs plus a macOS accessibility job.
+Check `.github/workflows/ci.yml`'s `jobs:` keys for the current, authoritative
+platform coverage rather than copying the job matrix here.
+
+### Coherent Architecture Artifact Gate
+
+**Trigger**: Linux CI and local T1; its mutation self-test also runs in T0.
+
+```bash
+scripts/check-architecture-artifacts.sh
+scripts/check-architecture-artifacts.sh --self-test
+```
+
+The gate generates the Roslyn topology in a temporary directory, derives
+change-coupling scope from the shipping project inventory, validates every
+generated JSON document against its schema, regenerates conformance and DOT
+views, and checks the artifact-set hash manifest. Use `--update` to stage and
+validate the complete set before replacing any checked file. `sourceRevision`
+is generation provenance; normalized content and manifest hashes determine
+freshness because the commit containing generated output necessarily changes
+`HEAD`.
 
 ### PDF 2.0 Renderer Conformance Gate
 
