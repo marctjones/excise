@@ -108,11 +108,9 @@
         "scripts/check-extraction-parity.sh"
       ],
       "gaps": [
-        "Extraction coverage remains a measured bound on text redaction completeness, not a proof of completeness. Redaction implementation is still path-owned as core-text until #1321 establishes a real component boundary."
+        "Extraction coverage remains a measured bound on text redaction completeness, not a proof of completeness."
       ],
-      "issueIds": [
-        1321
-      ]
+      "issueIds": []
     },
     {
       "component": "core-redaction",
@@ -121,19 +119,18 @@
         "scripts/verify-true-redaction.sh",
         "scripts/check-redaction-oracles.sh",
         "Excise.Core.Tests/Text/Segmentation",
-        "Excise.Core/Text/Segmentation/RedactedCopySafetyContract.cs",
-        "Excise.Core/Text/Segmentation/RedactedCopySafetyPolicy.cs",
+        "Excise.Core/Redaction/RedactedCopySafetyContract.cs",
+        "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
         "Excise.Core.Tests/Text/Segmentation/RedactedCopySafetyPolicyTests.cs",
         "Excise.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs"
       ],
       "gaps": [
-        "Sixty-seven method-level redaction assertions still carry reviewed exceptions; generic no-independent-oracle entries remain an assurance backlog. The current ownership model assigns zero retained symbols to core-redaction until #1321."
+        "Sixty-seven method-level redaction assertions still carry reviewed exceptions; generic no-independent-oracle entries remain an assurance backlog."
       ],
       "issueIds": [
         1029,
         1077,
-        1291,
-        1321
+        1291
       ]
     },
     {
@@ -348,7 +345,7 @@
         "architecture/generated/artifact-set.json"
       ],
       "gaps": [
-        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; the one remaining Core direction/ownership defect is the explicit issue-linked exception #1321, and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
+        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified with no remaining Core direction/ownership exception; unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
       ],
       "issueIds": [
         940,
@@ -383,6 +380,12 @@
       "implementationStatus": "implemented"
     },
     {
+      "source": "core-redaction",
+      "target": "core-parsing",
+      "type": "uses",
+      "implementationStatus": "implemented"
+    },
+    {
       "source": "core-content",
       "target": "core-document",
       "type": "uses",
@@ -411,12 +414,6 @@
       "target": "core-encryption",
       "type": "uses",
       "implementationStatus": "implemented"
-    },
-    {
-      "source": "core-text",
-      "target": "core-parsing",
-      "type": "uses",
-      "implementationStatus": "accepted_exception"
     },
     {
       "source": "verification",

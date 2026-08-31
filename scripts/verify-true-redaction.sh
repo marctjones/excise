@@ -6,7 +6,7 @@
 # visual-only black boxes — a security vulnerability).
 #
 # As of v2.0 the redaction engine is pure-.NET and owned by Excise.Core
-# (Excise.Core/Text/Segmentation/*, Excise.Core/Content/*). The GUI's
+# (Excise.Core/Redaction/*, Excise.Core/Content/*). The GUI's
 # RedactionService is a thin orchestrator that calls page.RedactArea(...).
 # This script verifies that architecture is intact.
 #
@@ -25,11 +25,11 @@ REDACTION_SERVICE="Excise.App/Services/RedactionService.cs"     # GUI orchestrat
 # So two checks in the gate guarding the redaction guarantee were pinned to a
 # file redaction never went through, and would have passed with the real
 # document-level API deleted.
-CORE_API="Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs"
-CORE_EXT="Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs"  # page.RedactArea entry
-CORE_GLYPH="Excise.Core/Text/Segmentation/GlyphRemover.cs"       # glyph-level removal
-CORE_IMAGE="Excise.Core/Text/Segmentation/ImageRedactor.cs"      # image removal
-CORE_RECON="Excise.Core/Text/Segmentation/OperationReconstructor.cs"  # rebuild BT/Tf/Tj
+CORE_API="Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs"
+CORE_EXT="Excise.Core/Redaction/PdfPageRedactionExtensions.cs"  # page.RedactArea entry
+CORE_GLYPH="Excise.Core/Redaction/GlyphRemover.cs"       # glyph-level removal
+CORE_IMAGE="Excise.Core/Redaction/ImageRedactor.cs"      # image removal
+CORE_RECON="Excise.Core/Redaction/OperationReconstructor.cs"  # rebuild BT/Tf/Tj
 CORE_PARSER="Excise.Core/Content/ContentStreamParser.cs"         # parse operators
 CORE_WRITER="Excise.Core/Content/ContentStreamWriter.cs"         # serialize operators
 SECURITY_TEST="Excise.Core.Tests/Text/Segmentation/PdfPageRedactionEndToEndTests.cs"
@@ -166,7 +166,7 @@ echo -n "  ✓ Checking the whole-operator removal paths stay deleted... "
 WHOLE_OPERATOR='RemoveTextShowingOperatorsContaining|RemoveTextLinesStillContaining|RemoveIntersectingOperators'
 if grep -REn "$WHOLE_OPERATOR" \
         "$CORE_EXT" "$CORE_GLYPH" \
-        "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs" 2>/dev/null; then
+        "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs" 2>/dev/null; then
     echo -e "${RED}FAILED${NC}"
     echo "    A whole-operator removal path is back. It removes the term and an"
     echo "    unbounded amount of its neighbours -- see #1090 and #1038, where"
@@ -188,7 +188,7 @@ else
     echo ""
     echo "CRITICAL: the redaction implementation may have been changed in a way"
     echo "that compromises TRUE content-level removal (text still extractable)."
-    echo "Review the pipeline (Excise.Core/Text/Segmentation + Excise.Core/Content)"
+    echo "Review the pipeline (Excise.Core/Redaction + Excise.Core/Content)"
     echo "and ensure glyph-level removal is maintained. DO NOT DEPLOY this build."
     exit 1
 fi

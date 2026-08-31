@@ -64,9 +64,9 @@ This project implements **TRUE glyph-level removal** for PDF redaction. This is 
 ### Critical Files - DO NOT SIMPLIFY
 
 ```
-Excise.Core/Text/Segmentation/GlyphRemover.cs            ← orchestrates glyph-level removal
-Excise.Core/Text/Segmentation/LetterFinder.cs            ← text-based letter matching (issue #90)
-Excise.Core/Text/Segmentation/OperationReconstructor.cs  ← rebuilds BT/Tf/Tj blocks without removed glyphs
+Excise.Core/Redaction/GlyphRemover.cs                    ← orchestrates glyph-level removal
+Excise.Core/Redaction/LetterFinder.cs                    ← text-based letter matching (issue #90)
+Excise.Core/Redaction/OperationReconstructor.cs          ← rebuilds BT/Tf/Tj blocks without removed glyphs
 Excise.Core/Content/ContentStreamParser.cs               ← parses content-stream operators
 Excise.Core/Content/ContentStreamWriter.cs               ← serializes operators back to bytes
 Excise.App/Services/RedactionService.cs                 ← GUI orchestration; mirrors the rewrite onto the page
@@ -357,7 +357,7 @@ that is not excise.
 
 This is the most complex part of the codebase. As of v2.0 the redaction engine
 lives in **`Excise.Core`** (pure .NET), not the GUI project. The authoritative
-glyph-level pipeline is in `Excise.Core/Text/Segmentation/` (GlyphRemover,
+glyph-level pipeline is in `Excise.Core/Redaction/` (GlyphRemover,
 LetterFinder, OperationReconstructor) and the content-stream machinery in
 `Excise.Core/Content/` (ContentStreamParser, ContentStreamWriter). The GUI's
 `Excise.App/Services/RedactionService.cs` only orchestrates and mirrors the
@@ -970,7 +970,7 @@ it is in `Excise.Core`, not in the GUI project.
 
 ```
 Excise.Core/                          # the PDF engine — parser, writer, redaction
-├── Text/Segmentation/              # ← THE REDACTION ENGINE
+├── Redaction/                      # ← THE REDACTION ENGINE (legacy public namespaces retained)
 │   ├── GlyphRemover.cs             # orchestrates glyph-level removal
 │   ├── LetterFinder.cs             # text-based letter matching
 │   ├── OperationReconstructor.cs   # rebuilds BT/Tf/Tj without removed glyphs
@@ -981,14 +981,16 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 │   ├── ImageRedactor.cs            # image Do: region-blackout (Flate/CCITT) or whole-Do drop (#1195)
 │   ├── ImageRegionRedactor.cs      # decode→zero the term rect→re-encode Flate; fail-secure length gate (#1195)
 │   ├── FormXObjectFlattener.cs     # inlines forms so their text is reachable
-│   └── HiddenTextDetector.cs       # audit: visible-but-unextractable text
+│   ├── HiddenTextDetector.cs       # audit: visible-but-unextractable text
+│   ├── PdfDocumentSanitizer.cs     # /Info, XMP, outlines, annots (#608)
+│   ├── RedactionCarriers.cs        # typed document-carrier scope
+│   └── XfaXmlCarrier.cs            # safe XML/XFA carrier rewrite
 ├── Content/
 │   ├── ContentStreamWalker.cs      # ← THE content-stream state machine (see below)
 │   ├── ContentStreamParser.cs      # a SINK: operator bounds + decoded text
 │   └── ContentStreamWriter.cs      # serialize operators back to bytes
 ├── Primitives/                     # PDF object graph + canonical PDF numeric token formatting
-├── Operations/
-│   └── PdfDocumentSanitizer.cs     # /Info, XMP, outlines, annots (#608)
+├── Operations/                     # non-redaction merge/split workflows
 ├── Document/                       # PdfDocument, PdfPage, PdfPageRect, coords
 ├── Fonts/                          # CFF, TrueType parse + subset (see #512-#515)
 └── Security/                       # decrypt + encrypt writers (#639-#641), /P permissions (#642)
@@ -1150,7 +1152,7 @@ changelog instead.
 
 #### Implementation Files
 
-**Glyph-Level Redaction** (`Excise.Core/Text/Segmentation/`):
+**Glyph-Level Redaction** (`Excise.Core/Redaction/`):
 - ✅ `GlyphRemover.cs` - Orchestrates glyph-level redaction
 - ✅ `LetterFinder.cs` - Text-based letter matching (issue #90 fix)
 - ✅ `OperationReconstructor.cs` - Rebuilds BT/Tf/Tj blocks with positioning
