@@ -10,14 +10,15 @@ public sealed class RawSampleImageDecoderTests
     [Fact]
     public void DeviceRgbSamplesAreCopiedWithoutAContext()
     {
-        using var bitmap = RawSampleImageDecoder.TryDecodeFast(new RawSampleImageDecodeRequest(
+        using var bitmap = RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
             Samples: new byte[] { 255, 0, 0, 0, 255, 0 },
             Width: 2,
             Height: 1,
             BitsPerComponent: 8,
             ColorSpace: PdfColorSpace.DeviceRGB,
             ComponentsPerPixel: 3,
-            HasDecodeArray: false));
+            DecodeArray: null,
+            ColorKeyMask: null));
 
         bitmap.Should().NotBeNull();
         bitmap!.GetPixel(0, 0).Should().Be(SKColors.Red);
@@ -27,14 +28,15 @@ public sealed class RawSampleImageDecoderTests
     [Fact]
     public void DeviceCmykSamplesUseTheColorSpaceLattice()
     {
-        using var bitmap = RawSampleImageDecoder.TryDecodeFast(new RawSampleImageDecodeRequest(
+        using var bitmap = RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
             Samples: new byte[] { 0, 0, 0, 255 },
             Width: 1,
             Height: 1,
             BitsPerComponent: 8,
             ColorSpace: PdfColorSpace.DeviceCMYK,
             ComponentsPerPixel: 4,
-            HasDecodeArray: false));
+            DecodeArray: null,
+            ColorKeyMask: null));
 
         bitmap.Should().NotBeNull();
         var pixel = bitmap!.GetPixel(0, 0);
@@ -46,24 +48,73 @@ public sealed class RawSampleImageDecoderTests
     }
 
     [Fact]
-    public void DecoratedOrIncompleteSamplesStayOnTheGeneralPath()
+    public void DecodeArrayIsAppliedWithoutAContext()
     {
-        RawSampleImageDecoder.TryDecodeFast(new RawSampleImageDecodeRequest(
-            Samples: new byte[] { 255, 0 },
+        using var bitmap = RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
+            Samples: new byte[] { 0 },
             Width: 1,
             Height: 1,
             BitsPerComponent: 8,
-            ColorSpace: PdfColorSpace.DeviceRGB,
-            ComponentsPerPixel: 3,
-            HasDecodeArray: false)).Should().BeNull();
+            ColorSpace: PdfColorSpace.DeviceGray,
+            ComponentsPerPixel: 1,
+            DecodeArray: new[] { 1.0, 0.0 },
+            ColorKeyMask: null));
 
-        RawSampleImageDecoder.TryDecodeFast(new RawSampleImageDecodeRequest(
-            Samples: new byte[] { 255, 0, 0 },
-            Width: 1,
+        bitmap.Should().NotBeNull();
+        bitmap!.GetPixel(0, 0).Should().Be(SKColors.White);
+    }
+
+    [Fact]
+    public void ColorKeyMaskUsesRawSamplesBeforeColorConversion()
+    {
+        using var bitmap = RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
+            Samples: new byte[] { 255, 0, 0, 0, 255, 0 },
+            Width: 2,
             Height: 1,
             BitsPerComponent: 8,
             ColorSpace: PdfColorSpace.DeviceRGB,
             ComponentsPerPixel: 3,
-            HasDecodeArray: true)).Should().BeNull();
+            DecodeArray: null,
+            ColorKeyMask: new[] { 255, 255, 0, 0, 0, 0 }));
+
+        bitmap.Should().NotBeNull();
+        bitmap!.GetPixel(0, 0).Alpha.Should().Be(0);
+        bitmap.GetPixel(1, 0).Should().Be(new SKColor(0, 255, 0));
+    }
+
+    [Fact]
+    public void PackedFourBitSamplesAreUnpackedPerRow()
+    {
+        using var bitmap = RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
+            Samples: new byte[] { 0x0f },
+            Width: 2,
+            Height: 1,
+            BitsPerComponent: 4,
+            ColorSpace: PdfColorSpace.DeviceGray,
+            ComponentsPerPixel: 1,
+            DecodeArray: null,
+            ColorKeyMask: null));
+
+        bitmap.Should().NotBeNull();
+        bitmap!.GetPixel(0, 0).Should().Be(SKColors.Black);
+        bitmap.GetPixel(1, 0).Should().Be(SKColors.White);
+    }
+
+    [Fact]
+    public void OneBitRowsHonorBytePadding()
+    {
+        using var bitmap = RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
+            Samples: new byte[] { 0b0000_0000, 0b1000_0000 },
+            Width: 1,
+            Height: 2,
+            BitsPerComponent: 1,
+            ColorSpace: PdfColorSpace.DeviceGray,
+            ComponentsPerPixel: 1,
+            DecodeArray: null,
+            ColorKeyMask: null));
+
+        bitmap.Should().NotBeNull();
+        bitmap!.GetPixel(0, 0).Should().Be(SKColors.Black);
+        bitmap.GetPixel(0, 1).Should().Be(SKColors.White);
     }
 }

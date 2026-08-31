@@ -134,7 +134,7 @@ digraph excise_architecture {
   "rendering" -> "core-document" [label="observed via parent boundary\n269 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-fonts" [label="observed via parent boundary\n53 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-parsing" [label="observed via parent boundary\n33 refs", color="#2563eb", style="dashed", penwidth=1];
-  "rendering" -> "core-primitives" [label="observed via parent boundary\n566 refs", color="#2563eb", style="dashed", penwidth=1];
+  "rendering" -> "core-primitives" [label="observed via parent boundary\n562 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-text" [label="observed via parent boundary\n9 refs", color="#2563eb", style="dashed", penwidth=1];
   "verification" -> "app" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "verification" -> "avalonia" [label="target only", color="#94a3b8", style="dotted", penwidth=1];

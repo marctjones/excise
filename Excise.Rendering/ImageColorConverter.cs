@@ -39,7 +39,7 @@ internal sealed class ImageColorConverter
             colorSpace,
             static cs => new ConverterBox(Create(cs))).Converter;
 
-    internal (byte R, byte G, byte B) ToRgb(double[] values)
+    internal (byte R, byte G, byte B) ToRgb(ReadOnlySpan<double> values)
     {
         if (_byteTable != null)
         {
@@ -52,7 +52,7 @@ internal sealed class ImageColorConverter
         if (_lattice != null)
             return LatticeToRgb(_lattice, _components, values);
 
-        var (r, g, b) = _colorSpace.ToRgb(values);
+        var (r, g, b) = _colorSpace.ToRgb(values.ToArray());
         return ToByteRgb(r, g, b);
     }
 
@@ -62,6 +62,22 @@ internal sealed class ImageColorConverter
             return LookupByteTable(_byteTable, sample);
 
         return ToRgb([sample / 255.0]);
+    }
+
+    internal (byte R, byte G, byte B) ToRgb(
+        byte first,
+        byte second,
+        byte third,
+        byte fourth)
+    {
+        Span<double> values = stackalloc double[4]
+        {
+            first / 255.0,
+            second / 255.0,
+            third / 255.0,
+            fourth / 255.0
+        };
+        return ToRgb(values);
     }
 
     private static ImageColorConverter? Create(PdfColorSpace colorSpace)
@@ -167,7 +183,7 @@ internal sealed class ImageColorConverter
     private static (byte R, byte G, byte B) LatticeToRgb(
         float[] lattice,
         int components,
-        double[] values)
+        ReadOnlySpan<double> values)
     {
         Span<int> index = stackalloc int[4];
         Span<double> fractions = stackalloc double[4];

@@ -2044,222 +2044,16 @@ internal partial class RenderContext
             }
         }
 
-        // Colour-key masking (#873, PDF 32000-1 §8.9.6.4): /Mask as an ARRAY of
-        // integer ranges makes source samples inside those ranges transparent.
-        // This is distinct from the stencil form (/Mask as a stream), which
-        // TryDrawImageWithExplicitMask handles; that method type-checks for a
-        // PdfStream and previously let the array form fall through silently, so
-        // the image was drawn fully opaque and ink appeared that the document
-        // says is not there.
-        //
-        // It must be evaluated on the RAW SAMPLE values, before the colour
-        // space is applied — for an Indexed space the range is an index range,
-        // not an RGB one. Testing decoded RGB instead would happen to work on
-        // simple palettes and quietly mask the wrong pixels whenever two
-        // palette entries share a colour.
         var colorKeyMask = TryGetColorKeyMask(stream, componentsPerPixel);
-
-        // The fast path writes samples straight through without exposing them,
-        // so it cannot evaluate the key. Fall back to the general loop when a
-        // colour-key mask is present.
-        var fastBitmap = colorKeyMask != null
-            ? null
-            : RawSampleImageDecoder.TryDecodeFast(new RawSampleImageDecodeRequest(
-                data,
-                width,
-                height,
-                bitsPerComponent,
-                pdfColorSpace,
-                componentsPerPixel,
-                HasDecodeArray: stream.GetOptional("Decode") != null));
-        if (fastBitmap != null)
-            return fastBitmap;
-
-        var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
-        // Fill the bitmap's pixel store directly (#599): every pixel below writes
-        // all four RGBA bytes unconditionally, so there is no reliance on the
-        // buffer being pre-zeroed and no large transient byte[] / Marshal.Copy.
-        var pixels = SkiaBitmapPixelBuffer.GetWritableSpan(bitmap);
-        if (pixels.IsEmpty)
-        {
-            bitmap.Dispose();
-            return null;
-        }
-
-        try
-        {
-            int srcIndex = 0;
-            int dstIndex = 0;
-            var pixelValues = new double[componentsPerPixel];
-            var imageMaskPaintBits = isImageMask
-                ? ResolveImageMaskPaintBits(stream)
-                : default;
-            // Hoist the /Decode lookup and max-sample constant out of the
-            // per-pixel loop (#599): DecodeImageSample was resolving the stream
-            // dictionary and calling Math.Pow once per component per pixel —
-            // millions of redundant lookups on a large image. Both are image-wide
-            // invariants; the arithmetic is otherwise identical.
-            var decodeArray = stream.GetOptional("Decode") as Excise.Core.Primitives.PdfArray;
-            var maxSample = Math.Pow(2, bitsPerComponent) - 1;
-            var imageColorConverter = decodeArray == null && pdfColorSpace != null
-                ? ImageColorConverter.For(pdfColorSpace)
-                : null;
-            // Raw (pre-colour-space) samples for the colour-key test above.
-            var rawSamples = colorKeyMask != null ? new int[componentsPerPixel] : null;
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    byte r = 0, g = 0, b = 0, a = 255;
-
-                    if (bitsPerComponent > 1 && pdfColorSpace != null)
-                    {
-                        if (bitsPerComponent == 8 && srcIndex + componentsPerPixel <= data.Length)
-                        {
-                            for (int i = 0; i < componentsPerPixel; i++)
-                            {
-                                if (rawSamples != null)
-                                    rawSamples[i] = data[srcIndex + i];
-                                pixelValues[i] = DecodeImageSample(
-                                    decodeArray,
-                                    pdfColorSpace,
-                                    i,
-                                    data[srcIndex + i],
-                                    maxSample);
-                            }
-                            srcIndex += componentsPerPixel;
-
-                            if (rawSamples != null && IsColorKeyMasked(rawSamples, colorKeyMask!))
-                                a = 0;
-
-                            if (imageColorConverter != null)
-                            {
-                                var rgb = imageColorConverter.ToRgb(pixelValues);
-                                r = rgb.R;
-                                g = rgb.G;
-                                b = rgb.B;
-                            }
-                            else
-                            {
-                                var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
-                                r = (byte)Math.Clamp(rd * 255, 0, 255);
-                                g = (byte)Math.Clamp(gd * 255, 0, 255);
-                                b = (byte)Math.Clamp(bd * 255, 0, 255);
-                            }
-                        }
-                        else if (bitsPerComponent != 8)
-                        {
-                            var rowBits = checked(width * componentsPerPixel * bitsPerComponent);
-                            var rowStrideBits = AlignBitsToByte(rowBits);
-                            var bitOffset = checked((y * rowStrideBits) + (x * componentsPerPixel * bitsPerComponent));
-                            if (bitOffset + (componentsPerPixel * bitsPerComponent) <= data.Length * 8)
-                            {
-                                for (int i = 0; i < componentsPerPixel; i++)
-                                {
-                                    var sample = ReadPackedImageSample(
-                                        data,
-                                        bitOffset + (i * bitsPerComponent),
-                                        bitsPerComponent);
-                                    if (rawSamples != null)
-                                        rawSamples[i] = sample;
-                                    pixelValues[i] = DecodeImageSample(
-                                        decodeArray,
-                                        pdfColorSpace,
-                                        i,
-                                        sample,
-                                        maxSample);
-                                }
-
-                                if (rawSamples != null && IsColorKeyMasked(rawSamples, colorKeyMask!))
-                                    a = 0;
-
-                                if (imageColorConverter != null)
-                                {
-                                    var rgb = imageColorConverter.ToRgb(pixelValues);
-                                    r = rgb.R;
-                                    g = rgb.G;
-                                    b = rgb.B;
-                                }
-                                else
-                                {
-                                    var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
-                                    r = (byte)Math.Clamp(rd * 255, 0, 255);
-                                    g = (byte)Math.Clamp(gd * 255, 0, 255);
-                                    b = (byte)Math.Clamp(bd * 255, 0, 255);
-                                }
-                            }
-                        }
-                    }
-                    else if (bitsPerComponent == 1)
-                    {
-                        // 1-bit monochrome
-                        int byteIndex = srcIndex / 8;
-                        int bitIndex = 7 - (srcIndex % 8);
-                        int bit = 0;
-                        if (byteIndex < data.Length)
-                        {
-                            bit = (data[byteIndex] >> bitIndex) & 1;
-                        }
-
-                        if (isImageMask)
-                        {
-                            r = _state.FillColor.Red;
-                            g = _state.FillColor.Green;
-                            b = _state.FillColor.Blue;
-                            a = imageMaskPaintBits.Paints(bit)
-                                ? (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255)
-                                : (byte)0;
-                        }
-                        else if (pdfColorSpace != null)
-                        {
-                            var sample = DecodeOneBitImageSample(stream, bit);
-                            if (imageColorConverter != null)
-                            {
-                                var rgb = imageColorConverter.ToRgb([sample]);
-                                r = rgb.R;
-                                g = rgb.G;
-                                b = rgb.B;
-                            }
-                            else
-                            {
-                                var (rd, gd, bd) = pdfColorSpace.ToRgb([sample]);
-                                r = (byte)Math.Clamp(rd * 255, 0, 255);
-                                g = (byte)Math.Clamp(gd * 255, 0, 255);
-                                b = (byte)Math.Clamp(bd * 255, 0, 255);
-                            }
-
-                            if (rawSamples != null)
-                            {
-                                rawSamples[0] = bit;
-                                if (IsColorKeyMasked(rawSamples, colorKeyMask!))
-                                    a = 0;
-                            }
-                        }
-                        srcIndex++;
-                    }
-
-                    // RGBA format
-                    pixels[dstIndex++] = r;
-                    pixels[dstIndex++] = g;
-                    pixels[dstIndex++] = b;
-                    pixels[dstIndex++] = a;
-                }
-
-                // Handle row padding for 1-bit images
-                if (bitsPerComponent == 1)
-                {
-                    srcIndex = ((srcIndex + 7) / 8) * 8; // Align to byte boundary
-                }
-            }
-        }
-        catch
-        {
-            bitmap.Dispose();
-            return null;
-        }
-
-        return bitmap;
+        return RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
+            data,
+            width,
+            height,
+            bitsPerComponent,
+            pdfColorSpace,
+            componentsPerPixel,
+            GetImageDecodeArray(stream),
+            colorKeyMask));
     }
 
     private static SKBitmap? CreateBitmapFromRgbaBytes(
@@ -2398,62 +2192,6 @@ internal partial class RenderContext
         return CreateBitmapFromRgbaBytes(width, height, pixels);
     }
 
-    private static double DecodeOneBitImageSample(Excise.Core.Primitives.PdfStream stream, int bit)
-    {
-        var decode = stream.GetOptional("Decode") as Excise.Core.Primitives.PdfArray;
-        var d0 = decode?.Count >= 2 ? decode.GetNumber(0) : 0.0;
-        var d1 = decode?.Count >= 2 ? decode.GetNumber(1) : 1.0;
-        return bit == 0 ? d0 : d1;
-    }
-
-    private static int AlignBitsToByte(int bitCount)
-        => ((bitCount + 7) / 8) * 8;
-
-    private static int ReadPackedImageSample(byte[] data, int bitOffset, int bitsPerComponent)
-    {
-        var sample = 0;
-        for (var i = 0; i < bitsPerComponent; i++)
-        {
-            var absoluteBit = bitOffset + i;
-            var byteIndex = absoluteBit / 8;
-            if (byteIndex >= data.Length)
-                break;
-
-            var bitIndex = 7 - (absoluteBit % 8);
-            sample = (sample << 1) | ((data[byteIndex] >> bitIndex) & 1);
-        }
-
-        return sample;
-    }
-
-    // The raw-image fill loop resolves the /Decode array and max-sample constant
-    // once per image instead of once per component per pixel (#599).
-    private static double DecodeImageSample(
-        Excise.Core.Primitives.PdfArray? decode,
-        PdfColorSpace colorSpace,
-        int componentIndex,
-        int sample,
-        double maxSample)
-    {
-        var offset = componentIndex * 2;
-        if (decode != null && decode.Count >= offset + 2)
-        {
-            var d0 = decode.GetNumber(offset);
-            var d1 = decode.GetNumber(offset + 1);
-            return maxSample > 0
-                ? d0 + sample * ((d1 - d0) / maxSample)
-                : d0;
-        }
-
-        if (colorSpace.Type == PdfColorSpaceType.Indexed)
-            return sample;
-
-        var normalizedByte = maxSample > 0
-            ? (byte)Math.Clamp((int)Math.Round(sample * (255.0 / maxSample)), 0, 255)
-            : (byte)0;
-        return colorSpace.DecodeSampleByte(componentIndex, normalizedByte);
-    }
-
     /// <summary>
     /// Parse /Mask in its colour-key form: an array of 2 x n integers giving an
     /// inclusive [min max] range per colour component (PDF 32000-1 §8.9.6.4).
@@ -2498,23 +2236,15 @@ internal partial class RenderContext
         return ranges;
     }
 
-    /// <summary>
-    /// A pixel is masked only when EVERY component falls inside its range —
-    /// the ranges are a conjunction, not a union (§8.9.6.4).
-    /// </summary>
-    private static bool IsColorKeyMasked(int[] rawSamples, int[] ranges)
+    private static double[]? GetImageDecodeArray(Excise.Core.Primitives.PdfStream stream)
     {
-        for (int i = 0; i < rawSamples.Length; i++)
-        {
-            var min = ranges[i * 2];
-            var max = ranges[(i * 2) + 1];
-            if (min > max)
-                (min, max) = (max, min);
-            if (rawSamples[i] < min || rawSamples[i] > max)
-                return false;
-        }
+        if (stream.GetOptional("Decode") is not Excise.Core.Primitives.PdfArray decodeArray)
+            return null;
 
-        return true;
+        var values = new double[decodeArray.Count];
+        for (var i = 0; i < values.Length; i++)
+            values[i] = decodeArray.GetNumber(i);
+        return values;
     }
 
     private static bool DecodeImageMaskBit(Excise.Core.Primitives.PdfStream stream, int bit)
