@@ -458,8 +458,8 @@ def component_lineage(component_id: str, component_by_id: dict[str, dict]) -> li
 
 def validate_topology_join(design: dict, inventory: dict, topology: dict) -> list[str]:
     errors: list[str] = []
-    if topology.get("schemaVersion") != 4:
-        errors.append("topology: schemaVersion must be 4")
+    if topology.get("schemaVersion") != 5:
+        errors.append("topology: schemaVersion must be 5")
         return errors
     for schema_name in ("topology.schema.json", "architecture-conformance.schema.json"):
         if not (SCHEMA_ROOT / schema_name).is_file():
@@ -522,6 +522,13 @@ def validate_topology_join(design: dict, inventory: dict, topology: dict) -> lis
         errors.append(
             "topology: dynamic mechanism summary must contain each supported mechanism exactly once"
         )
+    for index, dependency in enumerate(topology.get("typeDependencies", [])):
+        source_component = dependency.get("sourceComponent")
+        if source_component is not None and source_component not in component_by_id:
+            errors.append(
+                f"topology.typeDependencies[{index}]: unknown source component "
+                f"'{source_component}'"
+            )
     return errors
 
 
@@ -604,7 +611,8 @@ def generate_architecture_conformance(
     observed: dict[tuple[str, str], dict] = {}
     unresolved: list[dict] = []
     for dependency in topology["typeDependencies"]:
-        source_owners = sorted(type_owners.get(dependency["source"], set()))
+        source_component = dependency["sourceComponent"]
+        source_owners = [] if source_component is None else [source_component]
         target_owners = sorted(type_owners.get(dependency["target"], set()))
         if len(source_owners) != 1 or len(target_owners) != 1:
             unresolved.append(

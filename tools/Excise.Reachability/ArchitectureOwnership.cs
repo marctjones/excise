@@ -1,4 +1,7 @@
 using System.Text.Json;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 internal sealed record ArchitectureProjectOwnership(
     string Name,
@@ -94,6 +97,21 @@ internal sealed class ArchitectureOwnershipIndex
         return new ArchitectureSymbolOwnership(component, workflows);
     }
 
+    public ArchitectureSymbolOwnership ResolveSymbol(
+        ISymbol symbol,
+        ArchitectureProjectOwnership project)
+    {
+        var declarationFile = symbol.DeclaringSyntaxReferences
+            .Select(reference => reference.SyntaxTree.FilePath)
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Order(StringComparer.Ordinal)
+            .FirstOrDefault();
+        var file = declarationFile is null
+            ? null
+            : RepositoryRelative(declarationFile);
+        return ResolveSymbol(file, project);
+    }
+
     internal static bool RunSelfTest()
     {
         const string design = """
@@ -147,6 +165,30 @@ internal sealed class ArchitectureOwnershipIndex
                 || fallback.Component != "app")
             {
                 Console.Error.WriteLine("FAIL: architecture ownership self-test resolved the wrong owner.");
+                return false;
+            }
+
+            var modelTree = CSharpSyntaxTree.ParseText(
+                "namespace Fixture; internal partial class Model { internal void State() { } }",
+                path: Path.Combine(root, "App", "Model.cs"));
+            var featureTree = CSharpSyntaxTree.ParseText(
+                "namespace Fixture; internal partial class Model { internal void Execute() { State(); } }",
+                path: Path.Combine(root, "App", "Feature", "Model.Feature.cs"));
+            var compilation = CSharpCompilation.Create(
+                "ArchitectureOwnershipFixture",
+                [modelTree, featureTree],
+                [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)]);
+            var featureModel = compilation.GetSemanticModel(featureTree);
+            var executeDeclaration = featureTree.GetRoot()
+                .DescendantNodes()
+                .OfType<MethodDeclarationSyntax>()
+                .Single();
+            var execute = featureModel.GetDeclaredSymbol(executeDeclaration);
+            if (execute is null
+                || index.ResolveSymbol(execute, project).Component != "feature")
+            {
+                Console.Error.WriteLine(
+                    "FAIL: architecture ownership self-test did not attribute a partial member to its declaration root.");
                 return false;
             }
 

@@ -327,11 +327,28 @@ internal sealed class ReachabilityAnalyzer(
             .ToArray();
 
         var typeEdges = _edges
-            .SelectMany(edge => edge.Value.Select(target => (From: ContainingType(edge.Key), To: ContainingType(target))))
-            .Where(edge => edge.From is not null && edge.To is not null && edge.From != edge.To)
-            .GroupBy(edge => (edge.From!, edge.To!))
-            .Select(group => new TypeDependency(group.Key.Item1, group.Key.Item2, group.Count()))
-            .OrderBy(edge => edge.Source, StringComparer.Ordinal)
+            .SelectMany(edge =>
+            {
+                var source = Original(edge.Key);
+                var sourceComponent = _nodes.TryGetValue(source, out var sourceNode)
+                    ? architecture.ResolveSymbol(source, sourceNode.Project).Component
+                    : null;
+                return edge.Value.Select(target => (
+                    Source: ContainingType(source),
+                    SourceComponent: sourceComponent,
+                    Target: ContainingType(target)));
+            })
+            .Where(edge => edge.Source is not null
+                           && edge.Target is not null
+                           && edge.Source != edge.Target)
+            .GroupBy(edge => (edge.Source!, edge.SourceComponent, edge.Target!))
+            .Select(group => new TypeDependency(
+                group.Key.Item1,
+                group.Key.SourceComponent,
+                group.Key.Item3,
+                group.Count()))
+            .OrderBy(edge => edge.SourceComponent, StringComparer.Ordinal)
+            .ThenBy(edge => edge.Source, StringComparer.Ordinal)
             .ThenBy(edge => edge.Target, StringComparer.Ordinal)
             .ToArray();
 
@@ -359,7 +376,7 @@ internal sealed class ReachabilityAnalyzer(
             .ToArray();
 
         return new TopologyReport(
-            4,
+            5,
             "tools/Excise.Reachability",
             GitRevision(),
             projects,
@@ -1127,7 +1144,11 @@ internal sealed record SymbolTopology(
     bool Mutable,
     int DeclarationCount);
 
-internal sealed record TypeDependency(string Source, string Target, int References);
+internal sealed record TypeDependency(
+    string Source,
+    string? SourceComponent,
+    string Target,
+    int References);
 
 internal sealed record MethodCycle(IReadOnlyList<string> Members);
 
