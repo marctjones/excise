@@ -2,13 +2,11 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.CodeAnalysis.Text;
 
 var options = Options.Parse(args);
 if (options.ShowHelp)
@@ -180,7 +178,7 @@ internal sealed class ReachabilityAnalyzer(
     private readonly Dictionary<ISymbol, HashSet<ISymbol>> _edges = new(SymbolEqualityComparer.Default);
     private readonly Dictionary<ISymbol, HashSet<TopologySeedReason>> _seeds =
         new(SymbolEqualityComparer.Default);
-    private readonly HashSet<string> _xamlNames = new(StringComparer.Ordinal);
+    private readonly XamlSeedCatalog _xaml = new();
     private readonly HashSet<INamedTypeSymbol> _scriptGlobals =
         new(SymbolEqualityComparer.Default);
     private int _dependencyInjectionRegistrations;
@@ -188,6 +186,9 @@ internal sealed class ReachabilityAnalyzer(
     private int _sourceGenerationRoots;
     private int _nativeImports;
     private int _nativeCallbacks;
+    private int _resolvedXamlBindingMembers;
+    private readonly HashSet<string> _unresolvedXamlBindingMembers =
+        new(StringComparer.Ordinal);
 
     public async Task<AnalysisResult> AnalyzeAsync()
     {
@@ -195,7 +196,7 @@ internal sealed class ReachabilityAnalyzer(
         {
             foreach (var document in project.AdditionalDocuments.Where(d => d.FilePath?.EndsWith(".axaml", StringComparison.OrdinalIgnoreCase) == true))
             {
-                CollectXamlNames(await document.GetTextAsync());
+                _xaml.Add((await document.GetTextAsync()).ToString());
             }
         }
 
@@ -331,7 +332,7 @@ internal sealed class ReachabilityAnalyzer(
             BuildMethodCycles(),
             BuildSeedSummary(),
             [
-                "XAML seeds remain conservative simple-name matches pending #1304's qualified member-edge work.",
+                DescribeXamlBlindSpots(),
                 "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
                 "Declaration and branch counts are structural signals, not complexity verdicts.",
                 "Symbol rows retain all types plus non-trivial methods and shared mutable members; project totals cover the full graph.",
@@ -381,11 +382,24 @@ internal sealed class ReachabilityAnalyzer(
                 "Source-generator attributes and generated partial declarations retain statically referenced first-party types."),
             new DynamicMechanismSummary(
                 "xaml",
-                "conservative-seed",
-                _xamlNames.Count,
-                "Compiled Avalonia XAML currently seeds matching symbol names; qualified binding/handler edges are tracked by #1304.")
+                _xaml.UntypedBindingPaths > 0
+                    ? "qualified-seed-and-conservative-fallback"
+                    : "qualified-seed",
+                _xaml.Observations,
+                $"Structural AXAML parsing resolves types, handlers, static/custom members, and typed binding paths ({_resolvedXamlBindingMembers} matched member references); {_xaml.UntypedBindingPaths} untyped template paths use name-only fallback and {_unresolvedXamlBindingMembers.Count} typed member segments are unresolved.")
         };
         return new TopologySeedSummary(_seeds.Count, categories, mechanisms);
+    }
+
+    private string DescribeXamlBlindSpots()
+    {
+        var untyped = _xaml.UntypedBindingPathNames.Count == 0
+            ? "none"
+            : string.Join(", ", _xaml.UntypedBindingPathNames);
+        var unresolved = _unresolvedXamlBindingMembers.Count == 0
+            ? "none"
+            : string.Join(", ", _unresolvedXamlBindingMembers.Order(StringComparer.Ordinal));
+        return $"XAML untyped binding paths: {untyped}. Unresolved typed member segments: {unresolved}. Both sets are explicit rather than hidden by whole-file token matching.";
     }
 
     private static bool IsTopologyRelevant(SymbolTopology symbol)
@@ -601,14 +615,6 @@ internal sealed class ReachabilityAnalyzer(
                && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
     }
 
-    private void CollectXamlNames(SourceText text)
-    {
-        foreach (Match match in Regex.Matches(text.ToString(), @"[A-Za-z_][A-Za-z0-9_]{2,}"))
-        {
-            _xamlNames.Add(match.Value);
-        }
-    }
-
     private void CollectDeclarations(Project project, SemanticModel semanticModel, SyntaxNode root)
     {
         foreach (var declaration in root.DescendantNodes().OfType<MemberDeclarationSyntax>())
@@ -781,6 +787,8 @@ internal sealed class ReachabilityAnalyzer(
 
     private void AddConservativeSeeds()
     {
+        AddXamlSeeds();
+
         foreach (var node in _nodes.Values)
         {
             var symbol = node.Symbol;
@@ -795,10 +803,6 @@ internal sealed class ReachabilityAnalyzer(
             if (IsFrameworkEntry(symbol))
             {
                 AddSeed(symbol, "framework-callback", "override or explicit interface callback");
-            }
-            if (IsXamlBound(symbol))
-            {
-                AddSeed(symbol, "xaml-convention", "simple name appears in compiled Avalonia XAML");
             }
             if (IsScriptSurface(symbol))
             {
@@ -819,6 +823,17 @@ internal sealed class ReachabilityAnalyzer(
                 }
             }
         }
+    }
+
+    private void AddXamlSeeds()
+    {
+        var resolution = XamlSeedResolver.Resolve(_xaml, _nodes.Keys);
+        foreach (var seed in resolution.Seeds)
+        {
+            AddSeed(seed.Symbol, seed.Category, seed.Reason);
+        }
+        _resolvedXamlBindingMembers = resolution.MatchedBindingMembers;
+        _unresolvedXamlBindingMembers.UnionWith(resolution.UnresolvedMembers);
     }
 
     private void AddSeed(ISymbol symbol, string category, string reason)
@@ -863,26 +878,6 @@ internal sealed class ReachabilityAnalyzer(
         if (symbol is IEventSymbol @event)
         {
             return @event.IsOverride || @event.ExplicitInterfaceImplementations.Length > 0;
-        }
-
-        return false;
-    }
-
-    private bool IsXamlBound(ISymbol symbol)
-    {
-        if (_xamlNames.Contains(symbol.Name))
-        {
-            return true;
-        }
-
-        if (symbol.Name.StartsWith("Set", StringComparison.Ordinal) && _xamlNames.Contains(symbol.Name[3..]))
-        {
-            return true;
-        }
-
-        if (symbol.Name.StartsWith("Get", StringComparison.Ordinal) && _xamlNames.Contains(symbol.Name[3..]))
-        {
-            return true;
         }
 
         return false;
@@ -1333,6 +1328,16 @@ internal static class SelfTest
         }
 
         if (!DynamicMechanismClassifier.RunSelfTest())
+        {
+            return 1;
+        }
+
+        if (!XamlSeedCatalog.RunSelfTest())
+        {
+            return 1;
+        }
+
+        if (!XamlSeedResolver.RunSelfTest())
         {
             return 1;
         }

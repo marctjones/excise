@@ -119,7 +119,7 @@
             "required": ["mechanism", "modeling", "observations", "reason"],
             "properties": {
               "mechanism": { "type": "string", "minLength": 1 },
-              "modeling": { "enum": ["absent", "static-edge", "external-only", "qualified-seed", "qualified-seed-and-static-edge", "conservative-seed"] },
+              "modeling": { "enum": ["absent", "static-edge", "external-only", "qualified-seed", "qualified-seed-and-static-edge", "qualified-seed-and-conservative-fallback", "conservative-seed"] },
               "observations": { "type": "integer", "minimum": 0 },
               "reason": { "type": "string", "minLength": 1 }
             }

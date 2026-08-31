@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+  "sourceRevision": "446477e62e3b14d00cc899ead475a639620f1130",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 3
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5466,
+    "retainedSymbols": 5492,
     "observedComponentDependencies": 78,
     "declaredDependencies": 65,
     "acceptedExceptions": 1,
@@ -1522,7 +1522,7 @@
   ],
   "registryMismatches": [],
   "observationBlindSpots": [
-    "XAML seeds remain conservative simple-name matches pending #1304's qualified member-edge work.",
+    "XAML untyped binding paths: Context, MatchedText, PageIndex. Unresolved typed member segments: none. Both sets are explicit rather than hidden by whole-file token matching.",
     "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
     "Declaration and branch counts are structural signals, not complexity verdicts.",
     "Symbol rows retain all types plus non-trivial methods and shared mutable members; project totals cover the full graph.",

@@ -30,7 +30,9 @@ second implementation-status list.
    explicit unregistered code, not an inferred directory owner. Seeded symbols
    carry category/reason provenance, and the seed summary records whether XAML,
    DI, reflection, source generation, native interop, and scripting use static
-   edges, qualified seeds, conservative seeds, or have no observed entry path.
+   edges, qualified seeds, explicit conservative fallbacks, or have no observed
+   entry path. AXAML is parsed structurally; any untyped reflection-binding
+   fallback is named in the topology blind-spot list.
    [`architecture-conformance.json`](../../architecture/generated/architecture-conformance.json)
    compares those observed type edges with target dependencies, explicit
    forbidden relationships, and accepted exceptions. The generated

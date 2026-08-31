@@ -1007,7 +1007,8 @@
                                   Background="Transparent"
                                   BorderThickness="0">
                             <TreeView.ItemTemplate>
-                                <TreeDataTemplate ItemsSource="{Binding Children}">
+                                <TreeDataTemplate x:DataType="models:OutlineNode"
+                                                  ItemsSource="{Binding Children}">
                                     <TextBlock Text="{Binding DisplayText}"
                                                FontSize="11"
                                                Foreground="{DynamicResource TextPrimaryBrush}"
@@ -1088,7 +1089,7 @@
                     <ScrollViewer Grid.Row="1">
                     <ItemsControl x:Name="ThumbnailsItemsControl" ItemsSource="{Binding PageThumbnails}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="models:PageThumbnail">
                                     <!-- Drag-to-reorder pointer handlers are attached in
                                          code-behind on the ItemsControl with handledEventsToo:true.
                                          They cannot be XAML event attributes on this Button: the
@@ -1327,7 +1328,7 @@
                     <ScrollViewer Grid.Row="1" IsVisible="{Binding ShowPendingRedactionsPanel}">
                         <ItemsControl ItemsSource="{Binding RedactionWorkflow.PendingRedactions}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="models:PendingRedaction">
                                     <Border Margin="8" Padding="10"
                                             Background="{DynamicResource CardBrush}"
                                             BorderBrush="#E53935"
@@ -1421,7 +1422,7 @@
                     <ScrollViewer Grid.Row="1" IsVisible="{Binding ShowClipboardHistoryPanel}">
                         <ItemsControl ItemsSource="{Binding ClipboardHistory}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate DataType="models:ClipboardEntry">
+                                <DataTemplate x:DataType="models:ClipboardEntry">
                                     <Border Margin="8" Padding="10"
                                             Background="{DynamicResource CardBrush}"
                                             BorderBrush="{DynamicResource BorderBrush}"
