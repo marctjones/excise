@@ -134756,6 +134756,15 @@
           ]
         },
         {
+          "capability": "pdf.17.graphics.color",
+          "modes": [
+            "render"
+          ],
+          "mappingSources": [
+            "registry-verification-contract"
+          ]
+        },
+        {
           "capability": "pdf.17.graphics.fonts",
           "modes": [
             "render"
@@ -147491,7 +147500,17 @@
       "facets": [
         "product-integration-general"
       ],
-      "parentCapabilityModes": [],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.color",
+          "modes": [
+            "render"
+          ],
+          "mappingSources": [
+            "registry-verification-contract"
+          ]
+        }
+      ],
       "promotion": "review-required"
     },
     {
@@ -193879,6 +193898,7 @@
       "pdf.17.document.metadata:mutate": 475,
       "pdf.17.document.metadata:preserve": 475,
       "pdf.17.document.metadata:write": 475,
+      "pdf.17.graphics.color:render": 2,
       "pdf.17.graphics.fonts:extract": 645,
       "pdf.17.graphics.fonts:parse": 645,
       "pdf.17.graphics.fonts:render": 646,

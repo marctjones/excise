@@ -48004,2192 +48004,6 @@
       "nextAction": "review deterministic discovery candidates and accept/reject them"
     },
     {
-      "capability": "pdf.17.graphics.color",
-      "section": "graphics",
-      "workflow": "other",
-      "mode": "parse",
-      "currentState": "unknown",
-      "deficiencies": [
-        "no-mapped-implementation-candidate",
-        "no-mapped-direct-test-candidate",
-        "no-accepted-atomic-fixture",
-        "no-accepted-independent-or-corpus-evidence",
-        "no-executable-mode-verification-contract"
-      ],
-      "discoveryStatus": "mapped-test-only",
-      "discoveryCandidates": {
-        "source": [
-          {
-            "path": "Excise.Core/Authoring/PdfA.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "intents",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorSpaceType.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfIccProfile.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStreamWalker.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "spaces",
-              "values",
-              "colorspace",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/AcroFormFlattener.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAcroFormParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotation.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfDocument.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPage.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace",
-              "pdfgraphics",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPageRect.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Ccitt/CcittFaxFilterDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/PdfPredictor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/CidFontWidths.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/FdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/XfdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfColor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfGraphics.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/XfaXmlCarrier.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/PdfParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Primitives/PdfName.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Security/PdfStandardSecurityEncryptor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/BidiReorderer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/MatchingNormalization.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/FormXObjectFlattener.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/ImageRegionRedactor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/RedactionCarrierAudit.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/RedactionOptions.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/TextExtractor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          }
-        ],
-        "test": [
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/OutputIntentColorSpaceTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "intents",
-              "output",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfFunctionEvaluatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfIccProfileTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Conformance/Pdf20RendererRequirementMatrixTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "colour",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/GraphicsStateOperatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/MidTierCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/PageCollectionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values",
-              "colorspace"
-            ]
-          }
-        ],
-        "architecture": []
-      },
-      "executionStatus": "not-contracted",
-      "recordedChecks": [],
-      "priority": 35,
-      "implementationCandidates": [],
-      "directTestCandidates": [
-        "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
-        "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type7TensorPatchMeshPatternFill_MutoolAgreesInkIsDrawn",
-        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchPoints_Type7Flag0_ReordersPerimeterAndInteriorControls",
-        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchColors_Flag0_ConvertsPdfCornerOrderToRendererOrder",
-        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchPoints_Type6Flag0_DerivesInteriorControls",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_AxialShading_PaintsLeftToRightGradient",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShading_PaintsCenterToEdgeGradient",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShadingWithoutExtend_DoesNotPaintOutsideEndpointCircles",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_AxialShadingWithBBox_DoesNotPaintOutsideShadingBounds",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_MissingShadingResource_DoesNotThrowAndLeavesPageBlank",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Null_ReturnsNull",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_UnknownType_ReturnsNull",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtZero_ReturnsValue",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtOne_ReturnsValue",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtHalf_InterpolatesCorrectly",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_MultiComponent_ReturnsArray",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithExponent_AppliesPowerLaw",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Array_OfFunctions_EvaluatesAll",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_Stitching_SelectsCorrectFunction",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type0_Sampled_DoesNotCrash",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_MultipleInputs_InterpolatesBothInputs",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_HighExponent_AppliesStrongPowerLaw",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_FractionalExponent_AppliesRootFunction",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_InputBeyondDomain_InterpolatesAnyway",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithRange_InterpolatesWithinRange",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_MultipleStitchingBounds",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_WithEncoding_MapsInputCorrectly",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_EmptyArray_ReturnsNull",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithMinusExponent_InversePowerLaw",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_SingleFunction_StillWorks",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType2AxialShadingFill_UsesPatternResource",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_EvaluatesAcrossDomain",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_MapsVerticalDomainUpwards",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsBug852992_FormSoftMaskCanResolveFormShadingResources",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue13372_ImageMaskPaintsCurrentShadingPattern",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsAlphaTrans_DirectAxialShadingUsesFunctionReferencesAndAlpha",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue10572_StitchedShadingPatternUsesDeclaredDomain",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue13520_DeviceNShadingTintTransformDoesNotCollapseToBlack",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_WithClipping_RestrictsShading",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_WithTransformation_AppliesCTM",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_MissingResource_ContinuesRendering",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_Type5MeshShadingPatternFill_RendersInsteadOfNothing",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_Type7TensorPatchShadingPatternFill_RendersInsteadOfNothing",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_UnsupportedShadingTypeInPatternFill_RecordsDiagnosticInsteadOfSilentFailure",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_UnsupportedShadingTypeInShOperator_RecordsDiagnosticInsteadOfSilentFailure"
-      ],
-      "atomicFixtures": [],
-      "independentEvidence": [],
-      "nextAction": "review deterministic discovery candidates and accept/reject them"
-    },
-    {
-      "capability": "pdf.17.graphics.color",
-      "section": "graphics",
-      "workflow": "other",
-      "mode": "preserve",
-      "currentState": "unknown",
-      "deficiencies": [
-        "no-mapped-implementation-candidate",
-        "no-mapped-direct-test-candidate",
-        "no-accepted-atomic-fixture",
-        "no-accepted-independent-or-corpus-evidence",
-        "no-executable-mode-verification-contract"
-      ],
-      "discoveryStatus": "source-and-test-candidates",
-      "discoveryCandidates": {
-        "source": [
-          {
-            "path": "Excise.Core/Authoring/PdfA.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "intents",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorSpaceType.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfIccProfile.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStreamWalker.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "spaces",
-              "values",
-              "colorspace",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/AcroFormFlattener.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAcroFormParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotation.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfDocument.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPage.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace",
-              "pdfgraphics",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPageRect.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Ccitt/CcittFaxFilterDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/PdfPredictor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/CidFontWidths.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/FdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/XfdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfColor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfGraphics.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/XfaXmlCarrier.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/PdfParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Primitives/PdfName.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Security/PdfStandardSecurityEncryptor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/BidiReorderer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/MatchingNormalization.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/FormXObjectFlattener.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/ImageRegionRedactor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/RedactionCarrierAudit.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/RedactionOptions.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/TextExtractor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          }
-        ],
-        "test": [
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/OutputIntentColorSpaceTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "intents",
-              "output",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfFunctionEvaluatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfIccProfileTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Conformance/Pdf20RendererRequirementMatrixTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "colour",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/GraphicsStateOperatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/MidTierCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/PageCollectionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values",
-              "colorspace"
-            ]
-          }
-        ],
-        "architecture": []
-      },
-      "executionStatus": "not-contracted",
-      "recordedChecks": [],
-      "priority": 35,
-      "implementationCandidates": [],
-      "directTestCandidates": [],
-      "atomicFixtures": [],
-      "independentEvidence": [],
-      "nextAction": "review deterministic discovery candidates and accept/reject them"
-    },
-    {
-      "capability": "pdf.17.graphics.color",
-      "section": "graphics",
-      "workflow": "other",
-      "mode": "render",
-      "currentState": "unknown",
-      "deficiencies": [
-        "no-mapped-implementation-candidate",
-        "no-mapped-direct-test-candidate",
-        "no-accepted-atomic-fixture",
-        "no-accepted-independent-or-corpus-evidence",
-        "no-executable-mode-verification-contract"
-      ],
-      "discoveryStatus": "mapped-test-only",
-      "discoveryCandidates": {
-        "source": [
-          {
-            "path": "Excise.Core/Authoring/PdfA.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "intents",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorSpaceType.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfIccProfile.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStreamWalker.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "spaces",
-              "values",
-              "colorspace",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/AcroFormFlattener.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAcroFormParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotation.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfDocument.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPage.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace",
-              "pdfgraphics",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPageRect.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Ccitt/CcittFaxFilterDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/PdfPredictor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/CidFontWidths.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/FdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/XfdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfColor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfGraphics.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/XfaXmlCarrier.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/PdfParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Primitives/PdfName.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Security/PdfStandardSecurityEncryptor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/BidiReorderer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/MatchingNormalization.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/FormXObjectFlattener.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/ImageRegionRedactor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/RedactionCarrierAudit.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/RedactionOptions.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/TextExtractor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          }
-        ],
-        "test": [
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/OutputIntentColorSpaceTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "intents",
-              "output",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfFunctionEvaluatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfIccProfileTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Conformance/Pdf20RendererRequirementMatrixTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "colour",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/GraphicsStateOperatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/MidTierCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/PageCollectionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values",
-              "colorspace"
-            ]
-          }
-        ],
-        "architecture": []
-      },
-      "executionStatus": "not-contracted",
-      "recordedChecks": [],
-      "priority": 35,
-      "implementationCandidates": [],
-      "directTestCandidates": [
-        "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
-        "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type7TensorPatchMeshPatternFill_MutoolAgreesInkIsDrawn",
-        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchPoints_Type7Flag0_ReordersPerimeterAndInteriorControls",
-        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchColors_Flag0_ConvertsPdfCornerOrderToRendererOrder",
-        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchPoints_Type6Flag0_DerivesInteriorControls",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_AxialShading_PaintsLeftToRightGradient",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShading_PaintsCenterToEdgeGradient",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShadingWithoutExtend_DoesNotPaintOutsideEndpointCircles",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_AxialShadingWithBBox_DoesNotPaintOutsideShadingBounds",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_MissingShadingResource_DoesNotThrowAndLeavesPageBlank",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Null_ReturnsNull",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_UnknownType_ReturnsNull",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtZero_ReturnsValue",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtOne_ReturnsValue",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtHalf_InterpolatesCorrectly",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_MultiComponent_ReturnsArray",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithExponent_AppliesPowerLaw",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Array_OfFunctions_EvaluatesAll",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_Stitching_SelectsCorrectFunction",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type0_Sampled_DoesNotCrash",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_MultipleInputs_InterpolatesBothInputs",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_HighExponent_AppliesStrongPowerLaw",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_FractionalExponent_AppliesRootFunction",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_InputBeyondDomain_InterpolatesAnyway",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithRange_InterpolatesWithinRange",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_MultipleStitchingBounds",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_WithEncoding_MapsInputCorrectly",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_EmptyArray_ReturnsNull",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithMinusExponent_InversePowerLaw",
-        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_SingleFunction_StillWorks",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType2AxialShadingFill_UsesPatternResource",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_EvaluatesAcrossDomain",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_MapsVerticalDomainUpwards",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsBug852992_FormSoftMaskCanResolveFormShadingResources",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue13372_ImageMaskPaintsCurrentShadingPattern",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsAlphaTrans_DirectAxialShadingUsesFunctionReferencesAndAlpha",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue10572_StitchedShadingPatternUsesDeclaredDomain",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue13520_DeviceNShadingTintTransformDoesNotCollapseToBlack",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_WithClipping_RestrictsShading",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_WithTransformation_AppliesCTM",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_MissingResource_ContinuesRendering",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_Type5MeshShadingPatternFill_RendersInsteadOfNothing",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_Type7TensorPatchShadingPatternFill_RendersInsteadOfNothing",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_UnsupportedShadingTypeInPatternFill_RecordsDiagnosticInsteadOfSilentFailure",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_UnsupportedShadingTypeInShOperator_RecordsDiagnosticInsteadOfSilentFailure"
-      ],
-      "atomicFixtures": [],
-      "independentEvidence": [],
-      "nextAction": "review deterministic discovery candidates and accept/reject them"
-    },
-    {
-      "capability": "pdf.17.graphics.color",
-      "section": "graphics",
-      "workflow": "other",
-      "mode": "write",
-      "currentState": "unknown",
-      "deficiencies": [
-        "no-mapped-implementation-candidate",
-        "no-mapped-direct-test-candidate",
-        "no-accepted-atomic-fixture",
-        "no-accepted-independent-or-corpus-evidence",
-        "no-executable-mode-verification-contract"
-      ],
-      "discoveryStatus": "source-and-test-candidates",
-      "discoveryCandidates": {
-        "source": [
-          {
-            "path": "Excise.Core/Authoring/PdfA.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "intents",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfColorSpaceType.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/ColorSpaces/PdfIccProfile.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStreamWalker.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "spaces",
-              "values",
-              "colorspace",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/AcroFormFlattener.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAcroFormParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotation.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfDocument.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPage.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace",
-              "pdfgraphics",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPageRect.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Ccitt/CcittFaxFilterDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/PdfPredictor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/CidFontWidths.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/FdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/XfdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfColor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfGraphics.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "intents",
-              "output"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/XfaXmlCarrier.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/PdfParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Primitives/PdfName.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Security/PdfStandardSecurityEncryptor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/BidiReorderer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/MatchingNormalization.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "spaces",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/FormXObjectFlattener.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/ImageRegionRedactor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/RedactionCarrierAudit.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/Segmentation/RedactionOptions.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "color",
-              "colour",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core/Text/TextExtractor.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          }
-        ],
-        "test": [
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/OutputIntentColorSpaceTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "intents",
-              "output",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfFunctionEvaluatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/ColorSpaces/PdfIccProfileTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "output",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Conformance/Pdf20RendererRequirementMatrixTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "colour",
-              "output",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "spaces",
-              "values",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/GraphicsStateOperatorTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "output",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/MidTierCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/PageCollectionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "values",
-              "colorspace"
-            ]
-          }
-        ],
-        "architecture": []
-      },
-      "executionStatus": "not-contracted",
-      "recordedChecks": [],
-      "priority": 35,
-      "implementationCandidates": [],
-      "directTestCandidates": [],
-      "atomicFixtures": [],
-      "independentEvidence": [],
-      "nextAction": "review deterministic discovery candidates and accept/reject them"
-    },
-    {
       "capability": "pdf.17.rendering.colour-conversion",
       "section": "rendering",
       "workflow": "other",
@@ -64184,6 +61998,1625 @@
       "recordedChecks": [],
       "priority": 35,
       "implementationCandidates": [],
+      "directTestCandidates": [],
+      "atomicFixtures": [],
+      "independentEvidence": [],
+      "nextAction": "review deterministic discovery candidates and accept/reject them"
+    },
+    {
+      "capability": "pdf.17.graphics.color",
+      "section": "graphics",
+      "workflow": "other",
+      "mode": "parse",
+      "currentState": "unknown",
+      "deficiencies": [
+        "no-mapped-direct-test-candidate",
+        "no-accepted-atomic-fixture",
+        "no-accepted-independent-or-corpus-evidence",
+        "no-executable-mode-verification-contract"
+      ],
+      "discoveryStatus": "mapped-source-and-test",
+      "discoveryCandidates": {
+        "source": [
+          {
+            "path": "Excise.Core/Authoring/PdfA.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "intents",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorSpaceType.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfIccProfile.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStreamWalker.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "spaces",
+              "values",
+              "colorspace",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/AcroFormFlattener.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAcroFormParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotation.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfDocument.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPage.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace",
+              "pdfgraphics",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPageRect.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Ccitt/CcittFaxFilterDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/PdfPredictor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/CidFontWidths.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/FdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/XfdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfColor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfGraphics.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/XfaXmlCarrier.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/PdfParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Primitives/PdfName.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Security/PdfStandardSecurityEncryptor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/BidiReorderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/MatchingNormalization.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/FormXObjectFlattener.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/ImageRegionRedactor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/RedactionCarrierAudit.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/RedactionOptions.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/TextExtractor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          }
+        ],
+        "test": [
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/OutputIntentColorSpaceTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "intents",
+              "output",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfFunctionEvaluatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfIccProfileTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Conformance/Pdf20RendererRequirementMatrixTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "colour",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "output",
+              "values",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/GraphicsStateOperatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/MidTierCoverageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/PageCollectionTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values",
+              "colorspace"
+            ]
+          }
+        ],
+        "architecture": []
+      },
+      "executionStatus": "not-contracted",
+      "recordedChecks": [],
+      "priority": 34,
+      "implementationCandidates": [
+        "Excise.Rendering/SkiaRenderer.cs"
+      ],
+      "directTestCandidates": [
+        "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
+        "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type7TensorPatchMeshPatternFill_MutoolAgreesInkIsDrawn",
+        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchPoints_Type7Flag0_ReordersPerimeterAndInteriorControls",
+        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchColors_Flag0_ConvertsPdfCornerOrderToRendererOrder",
+        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchPoints_Type6Flag0_DerivesInteriorControls",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_AxialShading_PaintsLeftToRightGradient",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShading_PaintsCenterToEdgeGradient",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShadingWithoutExtend_DoesNotPaintOutsideEndpointCircles",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_AxialShadingWithBBox_DoesNotPaintOutsideShadingBounds",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_MissingShadingResource_DoesNotThrowAndLeavesPageBlank",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Null_ReturnsNull",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_UnknownType_ReturnsNull",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtZero_ReturnsValue",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtOne_ReturnsValue",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtHalf_InterpolatesCorrectly",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_MultiComponent_ReturnsArray",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithExponent_AppliesPowerLaw",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Array_OfFunctions_EvaluatesAll",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_Stitching_SelectsCorrectFunction",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type0_Sampled_DoesNotCrash",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_MultipleInputs_InterpolatesBothInputs",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_HighExponent_AppliesStrongPowerLaw",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_FractionalExponent_AppliesRootFunction",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_InputBeyondDomain_InterpolatesAnyway",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithRange_InterpolatesWithinRange",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_MultipleStitchingBounds",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_WithEncoding_MapsInputCorrectly",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_EmptyArray_ReturnsNull",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithMinusExponent_InversePowerLaw",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_SingleFunction_StillWorks",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType2AxialShadingFill_UsesPatternResource",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_EvaluatesAcrossDomain",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_MapsVerticalDomainUpwards",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsBug852992_FormSoftMaskCanResolveFormShadingResources",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue13372_ImageMaskPaintsCurrentShadingPattern",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsAlphaTrans_DirectAxialShadingUsesFunctionReferencesAndAlpha",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue10572_StitchedShadingPatternUsesDeclaredDomain",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue13520_DeviceNShadingTintTransformDoesNotCollapseToBlack",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_WithClipping_RestrictsShading",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_WithTransformation_AppliesCTM",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_MissingResource_ContinuesRendering",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_Type5MeshShadingPatternFill_RendersInsteadOfNothing",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_Type7TensorPatchShadingPatternFill_RendersInsteadOfNothing",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_UnsupportedShadingTypeInPatternFill_RecordsDiagnosticInsteadOfSilentFailure",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_UnsupportedShadingTypeInShOperator_RecordsDiagnosticInsteadOfSilentFailure"
+      ],
+      "atomicFixtures": [],
+      "independentEvidence": [],
+      "nextAction": "review mapped code and test candidates"
+    },
+    {
+      "capability": "pdf.17.graphics.color",
+      "section": "graphics",
+      "workflow": "other",
+      "mode": "preserve",
+      "currentState": "unknown",
+      "deficiencies": [
+        "no-mapped-direct-test-candidate",
+        "no-accepted-atomic-fixture",
+        "no-accepted-independent-or-corpus-evidence",
+        "no-executable-mode-verification-contract"
+      ],
+      "discoveryStatus": "mapped-source-only",
+      "discoveryCandidates": {
+        "source": [
+          {
+            "path": "Excise.Core/Authoring/PdfA.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "intents",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorSpaceType.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfIccProfile.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStreamWalker.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "spaces",
+              "values",
+              "colorspace",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/AcroFormFlattener.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAcroFormParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotation.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfDocument.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPage.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace",
+              "pdfgraphics",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPageRect.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Ccitt/CcittFaxFilterDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/PdfPredictor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/CidFontWidths.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/FdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/XfdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfColor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfGraphics.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/XfaXmlCarrier.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/PdfParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Primitives/PdfName.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Security/PdfStandardSecurityEncryptor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/BidiReorderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/MatchingNormalization.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/FormXObjectFlattener.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/ImageRegionRedactor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/RedactionCarrierAudit.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/RedactionOptions.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/TextExtractor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          }
+        ],
+        "test": [
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/OutputIntentColorSpaceTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "intents",
+              "output",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfFunctionEvaluatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfIccProfileTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Conformance/Pdf20RendererRequirementMatrixTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "colour",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "output",
+              "values",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/GraphicsStateOperatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/MidTierCoverageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/PageCollectionTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values",
+              "colorspace"
+            ]
+          }
+        ],
+        "architecture": []
+      },
+      "executionStatus": "not-contracted",
+      "recordedChecks": [],
+      "priority": 34,
+      "implementationCandidates": [
+        "Excise.Rendering/SkiaRenderer.cs"
+      ],
+      "directTestCandidates": [],
+      "atomicFixtures": [],
+      "independentEvidence": [],
+      "nextAction": "review deterministic discovery candidates and accept/reject them"
+    },
+    {
+      "capability": "pdf.17.graphics.color",
+      "section": "graphics",
+      "workflow": "other",
+      "mode": "write",
+      "currentState": "unknown",
+      "deficiencies": [
+        "no-mapped-direct-test-candidate",
+        "no-accepted-atomic-fixture",
+        "no-accepted-independent-or-corpus-evidence",
+        "no-executable-mode-verification-contract"
+      ],
+      "discoveryStatus": "mapped-source-only",
+      "discoveryCandidates": {
+        "source": [
+          {
+            "path": "Excise.Core/Authoring/PdfA.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "intents",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorSpaceType.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfIccProfile.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStreamWalker.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "spaces",
+              "values",
+              "colorspace",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/AcroFormFlattener.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAcroFormParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotation.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfDocument.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPage.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace",
+              "pdfgraphics",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPageRect.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Ccitt/CcittFaxFilterDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/PdfPredictor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/CidFontWidths.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/FdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/XfdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfColor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfGraphics.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/XfaXmlCarrier.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/PdfParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Primitives/PdfName.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Security/PdfStandardSecurityEncryptor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/BidiReorderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/MatchingNormalization.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/FormXObjectFlattener.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/ImageRegionRedactor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/RedactionCarrierAudit.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/RedactionOptions.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/TextExtractor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          }
+        ],
+        "test": [
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/OutputIntentColorSpaceTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "intents",
+              "output",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfFunctionEvaluatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfIccProfileTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Conformance/Pdf20RendererRequirementMatrixTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "colour",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "output",
+              "values",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/GraphicsStateOperatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/MidTierCoverageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/PageCollectionTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values",
+              "colorspace"
+            ]
+          }
+        ],
+        "architecture": []
+      },
+      "executionStatus": "not-contracted",
+      "recordedChecks": [],
+      "priority": 34,
+      "implementationCandidates": [
+        "Excise.Rendering/SkiaRenderer.cs"
+      ],
       "directTestCandidates": [],
       "atomicFixtures": [],
       "independentEvidence": [],
@@ -151804,6 +151237,598 @@
       "nextAction": "find or write a focused implementation/test pair"
     },
     {
+      "capability": "pdf.17.graphics.color",
+      "section": "graphics",
+      "workflow": "other",
+      "mode": "render",
+      "currentState": "partial",
+      "deficiencies": [],
+      "discoveryStatus": "mapped-source-and-test",
+      "discoveryCandidates": {
+        "source": [
+          {
+            "path": "Excise.Core/Authoring/PdfA.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "intents",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfColorSpaceType.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/ColorSpaces/PdfIccProfile.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStreamWalker.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "spaces",
+              "values",
+              "colorspace",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/AcroFormFlattener.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAcroFormParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotation.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfDocument.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPage.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace",
+              "pdfgraphics",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPageRect.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Ccitt/CcittFaxFilterDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/PdfPredictor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/CidFontWidths.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/FdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/XfdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfColor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfGraphics.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "intents",
+              "output"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/XfaXmlCarrier.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/PdfParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Primitives/PdfName.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Security/PdfStandardSecurityEncryptor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/BidiReorderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/MatchingNormalization.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "spaces",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/FormXObjectFlattener.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/ImageRegionRedactor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/RedactionCarrierAudit.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/Segmentation/RedactionOptions.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core/Text/TextExtractor.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          }
+        ],
+        "test": [
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/OutputIntentColorSpaceTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "intents",
+              "output",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfFunctionEvaluatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/ColorSpaces/PdfIccProfileTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "output",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Conformance/Pdf20RendererRequirementMatrixTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "colour",
+              "output",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "output",
+              "values",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/ColorOperatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "spaces",
+              "values",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/GraphicsStateOperatorTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "output",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/MidTierCoverageTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/PageCollectionTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "color",
+              "values",
+              "colorspace"
+            ]
+          }
+        ],
+        "architecture": []
+      },
+      "executionStatus": "passed",
+      "recordedChecks": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
+          "outcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "atomic-fixture",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
+          "outcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
+          "outcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "priority": 30,
+      "implementationCandidates": [
+        "Excise.Rendering/SkiaRenderer.cs"
+      ],
+      "directTestCandidates": [
+        "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
+        "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type7TensorPatchMeshPatternFill_MutoolAgreesInkIsDrawn",
+        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchPoints_Type7Flag0_ReordersPerimeterAndInteriorControls",
+        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchColors_Flag0_ConvertsPdfCornerOrderToRendererOrder",
+        "Excise.Rendering.Tests/MeshPatchBuilderTests.cs::MeshPatchBuilderTests.ResolveCanonicalPatchPoints_Type6Flag0_DerivesInteriorControls",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_AxialShading_PaintsLeftToRightGradient",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShading_PaintsCenterToEdgeGradient",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShadingWithoutExtend_DoesNotPaintOutsideEndpointCircles",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_AxialShadingWithBBox_DoesNotPaintOutsideShadingBounds",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_MissingShadingResource_DoesNotThrowAndLeavesPageBlank",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Null_ReturnsNull",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_UnknownType_ReturnsNull",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtZero_ReturnsValue",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtOne_ReturnsValue",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_AtHalf_InterpolatesCorrectly",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_MultiComponent_ReturnsArray",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithExponent_AppliesPowerLaw",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Array_OfFunctions_EvaluatesAll",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_Stitching_SelectsCorrectFunction",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type0_Sampled_DoesNotCrash",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_MultipleInputs_InterpolatesBothInputs",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_HighExponent_AppliesStrongPowerLaw",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_FractionalExponent_AppliesRootFunction",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_InputBeyondDomain_InterpolatesAnyway",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithRange_InterpolatesWithinRange",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_MultipleStitchingBounds",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_WithEncoding_MapsInputCorrectly",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_EmptyArray_ReturnsNull",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type2_WithMinusExponent_InversePowerLaw",
+        "Excise.Rendering.Tests/PdfFunctionEvaluatorTests.cs::PdfFunctionEvaluatorTests.Evaluate_Type3_SingleFunction_StillWorks",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType2AxialShadingFill_UsesPatternResource",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_EvaluatesAcrossDomain",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_MapsVerticalDomainUpwards",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsBug852992_FormSoftMaskCanResolveFormShadingResources",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue13372_ImageMaskPaintsCurrentShadingPattern",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsAlphaTrans_DirectAxialShadingUsesFunctionReferencesAndAlpha",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue10572_StitchedShadingPatternUsesDeclaredDomain",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue13520_DeviceNShadingTintTransformDoesNotCollapseToBlack",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_WithClipping_RestrictsShading",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_WithTransformation_AppliesCTM",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ShadingPattern_MissingResource_ContinuesRendering",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_Type5MeshShadingPatternFill_RendersInsteadOfNothing",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_Type7TensorPatchShadingPatternFill_RendersInsteadOfNothing",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_UnsupportedShadingTypeInPatternFill_RecordsDiagnosticInsteadOfSilentFailure",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_UnsupportedShadingTypeInShOperator_RecordsDiagnosticInsteadOfSilentFailure"
+      ],
+      "atomicFixtures": [
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue"
+      ],
+      "independentEvidence": [
+        "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
+      ],
+      "nextAction": "review mapped code and test candidates"
+    },
+    {
       "capability": "pdf.17.graphics.paths-painting",
       "section": "graphics",
       "workflow": "other",
@@ -187448,26 +187473,26 @@
   "summary": {
     "targetModes": 964,
     "strictImplemented": 5,
-    "modesWithDeficiencies": 957,
+    "modesWithDeficiencies": 956,
     "deficiencies": {
-      "no-accepted-atomic-fixture": 811,
-      "no-accepted-independent-or-corpus-evidence": 957,
-      "no-executable-mode-verification-contract": 302,
-      "no-mapped-direct-test-candidate": 760,
-      "no-mapped-implementation-candidate": 903
+      "no-accepted-atomic-fixture": 810,
+      "no-accepted-independent-or-corpus-evidence": 956,
+      "no-executable-mode-verification-contract": 301,
+      "no-mapped-direct-test-candidate": 759,
+      "no-mapped-implementation-candidate": 899
     },
     "executionStatus": {
-      "not-contracted": 812,
+      "not-contracted": 811,
       "not-recorded": 146,
       "partial": 1,
-      "passed": 5
+      "passed": 6
     },
     "discoveryStatus": {
-      "mapped-source-and-test": 58,
-      "mapped-source-only": 3,
-      "mapped-test-only": 154,
+      "mapped-source-and-test": 60,
+      "mapped-source-only": 5,
+      "mapped-test-only": 152,
       "no-repository-candidate": 396,
-      "source-and-test-candidates": 309,
+      "source-and-test-candidates": 307,
       "source-candidates-only": 4,
       "test-candidates-only": 40
     },
@@ -187478,9 +187503,9 @@
       },
       "other": {
         "implemented": 2,
-        "partial": 2,
+        "partial": 3,
         "unimplemented": 15,
-        "unknown": 890
+        "unknown": 889
       },
       "redaction": {
         "implemented": 1,

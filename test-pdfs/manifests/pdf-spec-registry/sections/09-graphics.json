@@ -244,15 +244,36 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "unknown"
       },
       "evidence": [
         {
           "kind": "legacy",
           "ref": "pdf20.color.spaces"
+        },
+        {
+          "kind": "implementation",
+          "ref": "Excise.Rendering/SkiaRenderer.cs"
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue"
+        },
+        {
+          "kind": "atomic-fixture",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue"
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
         }
       ],
+      "verification": {"status":"executable","requiredModes":["render"],"checks":[
+        {"kind":"unit","ref":"Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue","modes":["render"]},
+        {"kind":"atomic-fixture","ref":"Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue","modes":["render"]},
+        {"kind":"differential","ref":"Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool","modes":["render"]}
+      ]},
       "notes": "Track device, calibrated, ICC, indexed, separation, DeviceN, spot-color and tint-transform support independently. Advanced color controls and print-production authoring remain deferred.",
       "documentation": [
         "CI_GATES.md",
@@ -261,9 +282,9 @@
       "tracking": {
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
-        "implementationRefs": [],
-        "testRefs": [],
-        "fixtureRefs": [],
+        "implementationRefs": ["Excise.Rendering/SkiaRenderer.cs"],
+        "testRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue"],
+        "fixtureRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue"],
         "corpusRefs": [],
         "referenceToolRefs": [],
         "architectureRefs": [],
