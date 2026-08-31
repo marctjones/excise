@@ -13,6 +13,7 @@ internal static class RawSampleImageDecoder
 {
     public static SKBitmap? Decode(RawSampleImageDecodeRequest request)
     {
+        request.CancellationToken.ThrowIfCancellationRequested();
         if (request.ColorSpace == null || request.Width <= 0 || request.Height <= 0)
         {
             return null;
@@ -28,6 +29,10 @@ internal static class RawSampleImageDecoder
             }
 
             return DecodeGeneral(request);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch
         {
@@ -91,6 +96,7 @@ internal static class RawSampleImageDecoder
 
             for (var y = 0; y < request.Height; y++)
             {
+                request.CancellationToken.ThrowIfCancellationRequested();
                 for (var x = 0; x < request.Width; x++)
                 {
                     byte red = 0, green = 0, blue = 0, alpha = 255;
@@ -202,6 +208,11 @@ internal static class RawSampleImageDecoder
                 if (request.BitsPerComponent == 1)
                     sourceIndex = AlignBitsToByte(sourceIndex);
             }
+        }
+        catch (OperationCanceledException)
+        {
+            bitmap.Dispose();
+            throw;
         }
         catch
         {
@@ -397,7 +408,8 @@ internal readonly record struct RawSampleImageDecodeRequest(
     PdfColorSpace? ColorSpace,
     int ComponentsPerPixel,
     double[]? DecodeArray,
-    int[]? ColorKeyMask);
+    int[]? ColorKeyMask,
+    CancellationToken CancellationToken = default);
 
 internal static class SkiaBitmapPixelBuffer
 {

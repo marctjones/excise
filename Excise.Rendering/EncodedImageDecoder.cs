@@ -11,6 +11,7 @@ internal static class EncodedImageDecoder
 {
     public static SKBitmap? Decode(EncodedImageDecodeRequest request)
     {
+        request.CancellationToken.ThrowIfCancellationRequested();
         var bytes = request.Bytes;
         if (bytes == null || bytes.Length == 0)
             return null;
@@ -23,10 +24,14 @@ internal static class EncodedImageDecoder
                     bytes,
                     new SKImageInfo(size.Width, size.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
                 if (scaled != null)
-                    return scaled;
+                    return ObserveCancellation(scaled, request.CancellationToken);
             }
 
-            return SKBitmap.Decode(bytes);
+            return ObserveCancellation(SKBitmap.Decode(bytes), request.CancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch
         {
@@ -36,8 +41,19 @@ internal static class EncodedImageDecoder
             return null;
         }
     }
+
+    private static SKBitmap? ObserveCancellation(SKBitmap? bitmap, CancellationToken cancellationToken)
+    {
+        if (!cancellationToken.IsCancellationRequested)
+            return bitmap;
+
+        bitmap?.Dispose();
+        cancellationToken.ThrowIfCancellationRequested();
+        return null;
+    }
 }
 
 internal readonly record struct EncodedImageDecodeRequest(
     byte[]? Bytes,
-    SKSizeI? PreferredSize = null);
+    SKSizeI? PreferredSize = null,
+    CancellationToken CancellationToken = default);

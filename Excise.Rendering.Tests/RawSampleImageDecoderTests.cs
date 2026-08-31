@@ -117,4 +117,24 @@ public sealed class RawSampleImageDecoderTests
         bitmap!.GetPixel(0, 0).Should().Be(SKColors.Black);
         bitmap.GetPixel(0, 1).Should().Be(SKColors.White);
     }
+
+    [Fact]
+    public void CancellationIsPropagatedInsteadOfReportedAsMalformedData()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        var act = () => RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
+            Samples: new byte[] { 0 },
+            Width: 1,
+            Height: 1,
+            BitsPerComponent: 8,
+            ColorSpace: PdfColorSpace.DeviceGray,
+            ComponentsPerPixel: 1,
+            DecodeArray: null,
+            ColorKeyMask: null,
+            CancellationToken: cancellation.Token));
+
+        act.Should().Throw<OperationCanceledException>();
+    }
 }
