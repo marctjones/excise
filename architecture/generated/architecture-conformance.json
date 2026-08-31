@@ -2,17 +2,17 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "d28bb5fa756c0c14b8f4e7ffae11ee7c696771f4",
+  "sourceRevision": "de27332e5cdb91373e8bc4bd32f0157e22bf6953",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5651,
-    "observedComponentDependencies": 78,
-    "declaredDependencies": 69,
-    "acceptedExceptions": 9,
+    "retainedSymbols": 5652,
+    "observedComponentDependencies": 77,
+    "declaredDependencies": 71,
+    "acceptedExceptions": 6,
     "undeclaredDependencies": 0,
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
@@ -177,9 +177,23 @@
     },
     {
       "source": "app-main-window",
+      "target": "core-content",
+      "references": 3,
+      "typeDependencyCount": 1,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.App.ViewModels.MainWindowViewModel",
+          "target": "Excise.Core.Document.PdfFormAutoDetector",
+          "references": 3
+        }
+      ]
+    },
+    {
+      "source": "app-main-window",
       "target": "core-document",
-      "references": 311,
-      "typeDependencyCount": 45,
+      "references": 308,
+      "typeDependencyCount": 44,
       "classification": "declared",
       "evidence": [
         {
@@ -345,9 +359,23 @@
     },
     {
       "source": "cli",
+      "target": "core-content",
+      "references": 9,
+      "typeDependencyCount": 2,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Cli.Program",
+          "target": "Excise.Core.Document.SuggestedField",
+          "references": 6
+        }
+      ]
+    },
+    {
+      "source": "cli",
       "target": "core-document",
-      "references": 162,
-      "typeDependencyCount": 14,
+      "references": 153,
+      "typeDependencyCount": 12,
       "classification": "declared",
       "evidence": [
         {
@@ -514,8 +542,8 @@
     {
       "source": "core-content",
       "target": "core-document",
-      "references": 71,
-      "typeDependencyCount": 9,
+      "references": 105,
+      "typeDependencyCount": 18,
       "classification": "declared",
       "evidence": [
         {
@@ -556,8 +584,8 @@
     {
       "source": "core-content",
       "target": "core-primitives",
-      "references": 273,
-      "typeDependencyCount": 36,
+      "references": 295,
+      "typeDependencyCount": 41,
       "classification": "declared",
       "evidence": [
         {
@@ -636,40 +664,6 @@
     },
     {
       "source": "core-document",
-      "target": "core-content",
-      "references": 13,
-      "typeDependencyCount": 5,
-      "classification": "accepted_exception",
-      "evidence": [
-        {
-          "source": "Excise.Core.Document.PdfFormAutoDetector",
-          "target": "Excise.Core.Content.ContentOperator",
-          "references": 4
-        },
-        {
-          "source": "Excise.Core.Document.PdfPage",
-          "target": "Excise.Core.Content.ContentStream",
-          "references": 3
-        },
-        {
-          "source": "Excise.Core.Document.PdfPage",
-          "target": "Excise.Core.Content.ContentStreamParser",
-          "references": 3
-        },
-        {
-          "source": "Excise.Core.Document.PdfPage",
-          "target": "Excise.Core.Content.ContentStreamWriter",
-          "references": 2
-        },
-        {
-          "source": "Excise.Core.Document.PdfFormAutoDetector",
-          "target": "Excise.Core.Content.ContentStream",
-          "references": 1
-        }
-      ]
-    },
-    {
-      "source": "core-document",
       "target": "core-parsing",
       "references": 78,
       "typeDependencyCount": 10,
@@ -685,7 +679,7 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1356,
+      "references": 1324,
       "typeDependencyCount": 174,
       "classification": "declared",
       "evidence": [
@@ -699,7 +693,7 @@
     {
       "source": "core-document",
       "target": "core-security",
-      "references": 32,
+      "references": 29,
       "typeDependencyCount": 4,
       "classification": "accepted_exception",
       "evidence": [
@@ -716,59 +710,11 @@
         {
           "source": "Excise.Core.Document.PdfDocument",
           "target": "Excise.Core.Security.PdfEncryptionOptions",
-          "references": 9
+          "references": 6
         },
         {
           "source": "Excise.Core.Document.PdfDocument",
           "target": "Excise.Core.Security.PdfEncryptionAlgorithm",
-          "references": 3
-        }
-      ]
-    },
-    {
-      "source": "core-document",
-      "target": "core-text",
-      "references": 18,
-      "typeDependencyCount": 6,
-      "classification": "accepted_exception",
-      "evidence": [
-        {
-          "source": "Excise.Core.Document.PdfPage",
-          "target": "Excise.Core.Text.TextExtractor",
-          "references": 5
-        },
-        {
-          "source": "Excise.Core.Document.PdfPage",
-          "target": "Excise.Core.Text.Letter",
-          "references": 4
-        },
-        {
-          "source": "Excise.Core.Document.PdfDocument",
-          "target": "Excise.Core.Text.Letter",
-          "references": 3
-        },
-        {
-          "source": "Excise.Core.Document.PdfPage",
-          "target": "Excise.Core.Text.TextSelectionEngine",
-          "references": 3
-        },
-        {
-          "source": "Excise.Core.Document.PdfPage",
-          "target": "Excise.Core.Text.WhitespaceMode",
-          "references": 2
-        }
-      ]
-    },
-    {
-      "source": "core-document",
-      "target": "core-writing",
-      "references": 3,
-      "typeDependencyCount": 1,
-      "classification": "accepted_exception",
-      "evidence": [
-        {
-          "source": "Excise.Core.Document.PdfDocument",
-          "target": "Excise.Core.Writing.PdfDocumentWriter",
           "references": 3
         }
       ]
@@ -921,8 +867,8 @@
     {
       "source": "core-text",
       "target": "core-document",
-      "references": 588,
-      "typeDependencyCount": 76,
+      "references": 596,
+      "typeDependencyCount": 79,
       "classification": "declared",
       "evidence": [
         {
@@ -963,8 +909,8 @@
     {
       "source": "core-text",
       "target": "core-primitives",
-      "references": 414,
-      "typeDependencyCount": 95,
+      "references": 424,
+      "typeDependencyCount": 99,
       "classification": "declared",
       "evidence": [
         {
@@ -1005,8 +951,8 @@
     {
       "source": "core-writing",
       "target": "core-security",
-      "references": 42,
-      "typeDependencyCount": 3,
+      "references": 45,
+      "typeDependencyCount": 4,
       "classification": "declared",
       "evidence": [
         {

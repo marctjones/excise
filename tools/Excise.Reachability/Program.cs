@@ -485,7 +485,10 @@ internal sealed class ReachabilityAnalyzer(
             .OrderBy(syntax => syntax.SyntaxTree.FilePath, StringComparer.Ordinal)
             .ThenBy(syntax => syntax.SpanStart)
             .ToArray();
-        var first = declarations.FirstOrDefault();
+        var primaryReference = architecture.ResolvePrimaryDeclaration(
+            node.Symbol,
+            node.Project);
+        var first = primaryReference?.GetSyntax();
         string? file = null;
         var startLine = 0;
         var endLine = 0;

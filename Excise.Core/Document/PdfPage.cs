@@ -1,21 +1,15 @@
-using Excise.Core.Content;
 using Excise.Core.Graphics;
 using Excise.Core.Primitives;
-using Excise.Core.Text;
-using System.Text;
 
 namespace Excise.Core.Document;
 
 /// <summary>
 /// Represents a page in a PDF document.
 /// </summary>
-public class PdfPage
+public partial class PdfPage
 {
     private readonly PdfDocument _document;
     private readonly PdfDictionary _pageDict;
-    private IReadOnlyList<Letter>? _cachedLetters;
-    private string? _cachedText;
-    private IReadOnlyList<Word>? _cachedWords;
 
     /// <summary>
     /// The 1-based page number.
@@ -41,108 +35,6 @@ public class PdfPage
     /// The document this page belongs to.
     /// </summary>
     public PdfDocument Document => _document;
-
-    /// <summary>
-    /// Get the extracted text content from the page.
-    /// Cached on first access; subsequent calls return the cached result.
-    /// </summary>
-    /// <remarks>
-    /// Excludes letters positioned entirely above or below the page's
-    /// <see cref="CropBox"/> (#649): producers routinely place production
-    /// metadata — filename slugs, proofing notes, workflow IDs — far off-canvas
-    /// (e.g. Y &gt; 900 on a 792pt-tall page) using ordinary content-stream text
-    /// operators with no reliable tag to distinguish it. Two rejected approaches,
-    /// both found by direct measurement against mutool (the parity oracle):
-    /// (1) a <c>/Artifact</c>-tag-based filter — on real documents
-    /// (irs-1040-instructions.pdf p1) the same tag covers both the off-page junk
-    /// AND the genuinely visible, on-page running footer ("Department of the
-    /// Treasury..."), so filtering by tag alone hid real, searchable content;
-    /// (2) a full bounding-box (X and Y) filter — excise's own X-position
-    /// calculation has known drift on some real documents (#90; horizontal
-    /// advance-width accumulation, unlike Y which comes from explicit line
-    /// operators), and on scotus-trump-v-us.pdf p56 that drift alone pushed
-    /// genuinely visible footnote text (confirmed present in mutool's output)
-    /// up to ~100pt past the right edge — an X-bounds filter would have deleted
-    /// real content to paper over an unrelated, pre-existing position bug.
-    /// Every off-page slug measured across the smoke corpus is a pure vertical
-    /// violation (Y entirely outside the CropBox, X untouched), so the filter
-    /// checks Y only — narrow enough to remove the slug, too narrow to be
-    /// tripped by X-axis drift. <see cref="Letters"/> itself is NOT filtered —
-    /// redaction reads letters directly and must keep full reach into off-page
-    /// content, so only this derived, display/search-facing view is narrowed.
-    /// </remarks>
-    public string Text
-    {
-        get
-        {
-            if (_cachedText != null)
-                return _cachedText;
-
-            var cropBox = CropBox.Normalize();
-            var visible = new List<Letter>(Letters.Count);
-            foreach (var letter in Letters)
-            {
-                var glyphBox = letter.GlyphRectangle.Normalize();
-                if (glyphBox.Top <= cropBox.Bottom || glyphBox.Bottom >= cropBox.Top)
-                    continue;
-                visible.Add(letter);
-            }
-
-            var reading = TextSelectionEngine.SortPageTextOrder(visible);
-            _cachedText = TextSelectionEngine.JoinText(reading, WhitespaceMode.LineFaithful);
-            return _cachedText;
-        }
-    }
-
-    /// <summary>
-    /// Get all letters extracted from the page with position information.
-    /// Cached on first access; subsequent calls return the cached result.
-    /// </summary>
-    public IReadOnlyList<Letter> Letters => GetLetters();
-
-    /// <summary>
-    /// <see cref="Letters"/> with a cancellation token, so a caller with a
-    /// timeout can abandon extraction of a hostile or very large page instead
-    /// of blocking until it finishes (#982; CLAUDE.md Pitfall 3). A cancelled
-    /// call throws <see cref="OperationCanceledException"/> and caches nothing,
-    /// so a later call re-runs the extraction rather than returning a partial
-    /// letter list.
-    /// </summary>
-    public IReadOnlyList<Letter> GetLetters(CancellationToken cancellationToken = default)
-    {
-        if (_cachedLetters != null)
-            return _cachedLetters;
-
-        var extractor = new TextExtractor(this);
-        _cachedLetters = extractor.ExtractLetters(cancellationToken);
-        return _cachedLetters;
-    }
-
-    /// <summary>
-    /// Get all words extracted from the page.
-    /// A word is a sequence of letters separated by whitespace.
-    /// Cached on first access; subsequent calls return the cached result.
-    /// </summary>
-    /// <returns>List of words with their letters and bounding boxes.</returns>
-    public IReadOnlyList<Word> GetWords()
-    {
-        if (_cachedWords != null)
-            return _cachedWords;
-
-        _cachedWords = TextExtractor.BuildWords(Letters);
-        return _cachedWords;
-    }
-
-    /// <summary>
-    /// Clear cached text extraction after page-adjacent structures such as
-    /// annotations or form fields change without rewriting /Contents.
-    /// </summary>
-    internal void InvalidateTextExtractionCache()
-    {
-        _cachedLetters = null;
-        _cachedText = null;
-        _cachedWords = null;
-    }
 
     /// <summary>
     /// All annotations on this page (§12.5).
@@ -372,7 +264,7 @@ public class PdfPage
     /// x increasing right, y increasing <b>down</b>, sized
     /// <see cref="VisualWidth"/>×<see cref="VisualHeight"/> — into
     /// content-stream space (PDF default: MediaBox origin at the bottom-left,
-    /// y increasing up), which is what <see cref="PdfPageRedactionExtensions.RedactArea(PdfPage, PdfRectangle, Excise.Core.Text.Segmentation.GlyphRemovalStrategy)"/>
+    /// y increasing up), which is what <see cref="Excise.Core.Text.Segmentation.PdfPageRedactionExtensions.RedactArea(PdfPage, PdfRectangle, Excise.Core.Text.Segmentation.GlyphRemovalStrategy)"/>
     /// and the rest of the engine operate in.
     /// </summary>
     /// <remarks>
@@ -463,193 +355,6 @@ public class PdfPage
     public PdfDictionary? Resources => GetInheritedDictionary("Resources");
 
     /// <summary>
-    /// Get the raw content stream bytes (decoded).
-    /// </summary>
-    public byte[] GetContentStreamBytes()
-    {
-        TryCollectContentStreamBytes(skipRecoverableContentStreams: false, out var data, out _);
-        return data;
-    }
-
-    /// <summary>
-    /// Try to get decoded page content stream bytes, skipping streams whose
-    /// filter pipeline could not be decoded. Returns false if any stream was
-    /// skipped. Use this for best-effort viewing only; editing and redaction
-    /// should keep using <see cref="GetContentStreamBytes"/> so undecodable
-    /// content never silently disappears from mutation paths.
-    /// </summary>
-    internal bool TryGetContentStreamBytes(out byte[] data)
-        => TryGetContentStreamBytes(out data, out _);
-
-    internal bool TryGetContentStreamBytes(
-        out byte[] data,
-        out IReadOnlyList<ContentStreamReadWarning> warnings)
-        => TryCollectContentStreamBytes(skipRecoverableContentStreams: true, out data, out warnings);
-
-    private bool TryCollectContentStreamBytes(
-        bool skipRecoverableContentStreams,
-        out byte[] data,
-        out IReadOnlyList<ContentStreamReadWarning> warnings)
-    {
-        var warningList = new List<ContentStreamReadWarning>();
-        var contentsObj = _pageDict.GetOptional("Contents");
-        if (contentsObj == null)
-        {
-            data = Array.Empty<byte>();
-            warnings = Array.Empty<ContentStreamReadWarning>();
-            return true;
-        }
-
-        contentsObj = _document.Resolve(contentsObj);
-
-        if (contentsObj is PdfStream stream)
-        {
-            var complete = TryGetDecodedContentStreamBytes(
-                stream,
-                skipRecoverableContentStreams,
-                warningList,
-                out data);
-            warnings = warningList;
-            return complete;
-        }
-        else if (contentsObj is PdfArray array)
-        {
-            // Multiple content streams - concatenate
-            var complete = true;
-            using var ms = new MemoryStream();
-            foreach (var item in array)
-            {
-                var resolved = _document.Resolve(item);
-                if (resolved is PdfStream s)
-                {
-                    if (!TryGetDecodedContentStreamBytes(
-                            s,
-                            skipRecoverableContentStreams,
-                            warningList,
-                            out var streamData))
-                    {
-                        complete = false;
-                        continue;
-                    }
-
-                    ms.Write(streamData);
-                    ms.WriteByte((byte)'\n'); // Separate streams with newline
-                }
-            }
-            data = ms.ToArray();
-            warnings = warningList;
-            return complete;
-        }
-
-        data = Array.Empty<byte>();
-        warnings = Array.Empty<ContentStreamReadWarning>();
-        return true;
-    }
-
-    private static bool TryGetDecodedContentStreamBytes(
-        PdfStream stream,
-        bool skipRecoverableContentStreams,
-        List<ContentStreamReadWarning> warnings,
-        out byte[] data)
-    {
-        data = Array.Empty<byte>();
-        if (TryGetImageOnlyContentFilter(stream, out var imageOnlyFilter))
-        {
-            var warning = ContentStreamReadWarning.ImageOnlyFilter(
-                stream.ObjectNumber ?? 0,
-                stream.GenerationNumber ?? 0,
-                imageOnlyFilter);
-            if (skipRecoverableContentStreams)
-            {
-                warnings.Add(warning);
-                return false;
-            }
-
-            throw new InvalidDataException(warning.Message);
-        }
-
-        if (skipRecoverableContentStreams && stream.IsFiltered && !stream.IsDecoded)
-        {
-            warnings.Add(ContentStreamReadWarning.UndecodedFilter(
-                stream.ObjectNumber ?? 0,
-                stream.GenerationNumber ?? 0,
-                stream.Filters));
-            return false;
-        }
-
-        data = stream.DecodedData;
-        return true;
-    }
-
-    private static bool TryGetImageOnlyContentFilter(PdfStream stream, out string filter)
-    {
-        foreach (var candidate in stream.Filters)
-        {
-            if (IsNamedFilter(candidate, "JBIG2Decode"))
-            {
-                filter = candidate;
-                return true;
-            }
-        }
-
-        filter = "";
-        return false;
-    }
-
-    private static bool IsNamedFilter(string actual, string expected)
-        => string.Equals(actual, expected, StringComparison.Ordinal)
-           || (string.Equals(expected, "JBIG2Decode", StringComparison.Ordinal)
-               && string.Equals(actual, "JBIG2", StringComparison.Ordinal));
-
-    /// <summary>
-    /// Sets the content stream bytes for this page.
-    /// </summary>
-    public void SetContentStreamBytes(byte[] data)
-    {
-        // Any cached extraction (Letters/Text/Words from A4) is now stale —
-        // the content has changed underneath it. Multi-match redaction relies
-        // on the second RedactArea call seeing freshly-extracted letters that
-        // reflect the first redaction's deletions.
-        _cachedLetters = null;
-        _cachedText = null;
-        _cachedWords = null;
-
-        var contentsObj = _pageDict.GetOptional("Contents");
-
-        if (contentsObj == null)
-        {
-            // Create a new content stream as a proper indirect object —
-            // PDF streams are not valid inline in a dictionary.
-            var newStream = new PdfStream(data);
-            var streamRef = _document.AddIndirectObject(newStream);
-            _pageDict["Contents"] = streamRef;
-            return;
-        }
-
-        contentsObj = _document.Resolve(contentsObj);
-
-        if (contentsObj is PdfStream stream)
-        {
-            // Update existing stream (also updates encoded data and length)
-            stream.DecodedData = data;
-        }
-        else if (contentsObj is PdfArray array && array.Count > 0)
-        {
-            // Update first stream in array
-            var firstRef = array[0];
-            var resolved = _document.Resolve(firstRef);
-            if (resolved is PdfStream firstStream)
-            {
-                // Update first stream (removes filters too)
-                firstStream.DecodedData = data;
-                // Clear other streams in the array if present
-                while (array.Count > 1)
-                    array.RemoveAt(array.Count - 1);
-            }
-        }
-    }
-
-    /// <summary>
     /// Gets a graphics context for drawing on this page.
     /// </summary>
     public PdfGraphics GetGraphics()
@@ -658,29 +363,6 @@ public class PdfPage
         // instance bit us when callers used `using var g = …` — once
         // disposed, subsequent calls handed back the same dead instance.
         return new PdfGraphics(this);
-    }
-
-    /// <summary>
-    /// Get the content stream as a parsed ContentStream object.
-    /// </summary>
-    public ContentStream GetContentStream()
-    {
-        var bytes = GetContentStreamBytes();
-        if (bytes.Length == 0)
-            return new ContentStream();
-
-        var parser = new ContentStreamParser(bytes, this);
-        return parser.Parse();
-    }
-
-    /// <summary>
-    /// Set the content stream from a ContentStream object.
-    /// </summary>
-    public void SetContentStream(ContentStream content)
-    {
-        var writer = new ContentStreamWriter();
-        var bytes = writer.Write(content);
-        SetContentStreamBytes(bytes);
     }
 
     /// <summary>

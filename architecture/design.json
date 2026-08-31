@@ -495,13 +495,13 @@
       "source": "core-content",
       "target": "core-document",
       "type": "uses",
-      "rationale": "Content walking operates on the authoritative page and document object graph; the reverse document convenience-facade edge is temporary under #1316."
+      "rationale": "Content walking operates on the authoritative page and document object graph. PdfPage content compatibility members retain the public document API but are source-owned by the content engine."
     },
     {
       "source": "core-text",
       "target": "core-document",
       "type": "uses",
-      "rationale": "Extraction, selection, and search geometry consume authoritative page, field, and coordinate contracts; the reverse document convenience-facade edge is temporary under #1316."
+      "rationale": "Extraction, selection, and search geometry consume authoritative page, field, and coordinate contracts. PdfPage and PdfDocument text compatibility members retain the public document API but are source-owned by the text engine."
     },
     {
       "source": "core-text",
@@ -526,24 +526,6 @@
       "target": "core-writing",
       "type": "uses",
       "rationale": "Temporary exception #1319: content serialization consumes PdfNumberFormatter from writer ownership until the one canonical formatter moves to a neutral foundation."
-    },
-    {
-      "source": "core-document",
-      "target": "core-content",
-      "type": "uses",
-      "rationale": "Temporary compatibility exception #1316: PdfPage convenience members invoke the content engine; the target keeps the model below content processing."
-    },
-    {
-      "source": "core-document",
-      "target": "core-text",
-      "type": "uses",
-      "rationale": "Temporary compatibility exception #1316: PdfPage convenience members invoke extraction and selection; the target keeps the model below text processing."
-    },
-    {
-      "source": "core-document",
-      "target": "core-writing",
-      "type": "uses",
-      "rationale": "Temporary compatibility exception #1316: PdfDocument save convenience invokes the fresh writer; the target keeps serialization above the document model."
     },
     {
       "source": "core-document",

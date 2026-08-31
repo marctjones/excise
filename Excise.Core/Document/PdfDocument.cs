@@ -1,6 +1,5 @@
 using Excise.Core.Parsing;
 using Excise.Core.Primitives;
-using Excise.Core.Writing;
 using System.Linq;
 
 namespace Excise.Core.Document;
@@ -9,7 +8,7 @@ namespace Excise.Core.Document;
 /// Represents a PDF document.
 /// Main entry point for reading and manipulating PDFs.
 /// </summary>
-public class PdfDocument : IDisposable
+public partial class PdfDocument : IDisposable
 {
     private readonly Stream _stream;
     private readonly bool _ownsStream;
@@ -30,7 +29,6 @@ public class PdfDocument : IDisposable
     private PdfOcgConfig? _ocgConfig;
     private PdfStructElement? _structureTree;
     private bool? _isTaggedPdf;
-    private Dictionary<PdfDictionary, int>? _pagesByDict;
     private IReadOnlyList<PdfEmbeddedFile>? _embeddedFiles;
 
     /// <summary>
@@ -309,111 +307,6 @@ public class PdfDocument : IDisposable
     {
         _structureTree ??= PdfStructTreeParser.ParseStructureTree(this) ?? null;
         return _structureTree;
-    }
-
-    /// <summary>
-    /// Resolve the real body text of a tagged-PDF structure element from its
-    /// marked-content references (#776 — the accessibility MCID→letter bridge).
-    /// Gathers the extracted <see cref="Text.Letter"/>s whose /MCID (and page)
-    /// match the element's references — both /MCID integers directly in the
-    /// element's /K (which belong to the element's own /Pg, or the supplied
-    /// <paramref name="inheritedPageNumber"/> when the element has none) and
-    /// marked-content-reference (/MCR) child dictionaries (which carry their own
-    /// /Pg) — and concatenates them in reference (reading) order.
-    ///
-    /// <para>
-    /// This is how a heading or paragraph with no /ActualText carrier can still
-    /// have its real glyphs read in structure order: /ActualText is the author's
-    /// explicit replacement text, but most tagged elements have none and their
-    /// text lives only in MCID-tagged content. Returns an empty string when the
-    /// element references no resolvable marked content (e.g. a /Figure, or an
-    /// element whose page cannot be determined).
-    /// </para>
-    /// </summary>
-    public string ResolveStructElementText(PdfStructElement element, int? inheritedPageNumber = null)
-    {
-        if (element == null)
-            return string.Empty;
-
-        int? elementPage = PageNumberFromPg(element.RawDictionary) ?? inheritedPageNumber;
-
-        // Ordered (page, mcid) references this element points at directly. Child
-        // struct elements (/K dicts with their own /S) are NOT descended into —
-        // each resolves its own text.
-        var refs = new List<(int Page, int Mcid)>();
-        CollectMarkedContentRefs(element.RawDictionary.GetOptional("K"), elementPage, refs, depth: 0);
-        if (refs.Count == 0)
-            return string.Empty;
-
-        // Cache each referenced page's letters once.
-        var lettersByPage = new Dictionary<int, IReadOnlyList<Text.Letter>>();
-        var sb = new System.Text.StringBuilder();
-        foreach (var (page, mcid) in refs)
-        {
-            if (page < 1 || page > PageCount)
-                continue;
-            if (!lettersByPage.TryGetValue(page, out var letters))
-                lettersByPage[page] = letters = GetPage(page).Letters;
-            foreach (var letter in letters)
-            {
-                if (letter.MarkedContentId == mcid)
-                    sb.Append(letter.Value);
-            }
-        }
-        return sb.ToString();
-    }
-
-    private void CollectMarkedContentRefs(
-        PdfObject? kObj, int? elementPage, List<(int Page, int Mcid)> refs, int depth)
-    {
-        if (kObj == null || depth > 64)
-            return;
-
-        var resolved = Resolve(kObj);
-        switch (resolved)
-        {
-            case PdfInteger mcidInt when elementPage.HasValue:
-                refs.Add((elementPage.Value, (int)mcidInt.Value));
-                break;
-
-            case PdfArray arr:
-                foreach (var item in arr)
-                    CollectMarkedContentRefs(item, elementPage, refs, depth + 1);
-                break;
-
-            case PdfDictionary dict:
-                // A child struct element (has /S) is a separate element; skip it.
-                // A marked-content-reference dict (/MCR, or any /S-less dict with
-                // an /MCID) carries the mcid and optionally its own /Pg.
-                if (dict.GetOptional("S") != null)
-                    break;
-                var mcidObj = dict.GetOptional("MCID");
-                if (mcidObj != null && Resolve(mcidObj) is PdfInteger mcrMcid)
-                {
-                    int? refPage = PageNumberFromPg(dict) ?? elementPage;
-                    if (refPage.HasValue)
-                        refs.Add((refPage.Value, (int)mcrMcid.Value));
-                }
-                break;
-        }
-    }
-
-    // Map a dictionary's /Pg entry (a page reference) to its 1-based page number.
-    private int? PageNumberFromPg(PdfDictionary dict)
-    {
-        var pgObj = dict.GetOptional("Pg");
-        if (pgObj == null)
-            return null;
-        if (Resolve(pgObj) is not PdfDictionary pageDict)
-            return null;
-
-        if (_pagesByDict == null)
-        {
-            _pagesByDict = new Dictionary<PdfDictionary, int>();
-            for (int i = 1; i <= PageCount; i++)
-                _pagesByDict[GetPage(i).Dictionary] = i;
-        }
-        return _pagesByDict.TryGetValue(pageDict, out int n) ? n : (int?)null;
     }
 
     /// <summary>
@@ -1779,66 +1672,6 @@ public class PdfDocument : IDisposable
             if (ReferenceEquals(cached, obj))
                 return new PdfReference(num, 0);
         return null;
-    }
-
-    /// <summary>
-    /// Save the document to a stream. Writes an unencrypted file — even when
-    /// the source was opened encrypted (see <see cref="IsEncrypted"/>). To
-    /// keep an encrypted source encrypted, pass
-    /// <see cref="GetReEncryptionOptions"/>'s result to
-    /// <see cref="Save(Stream, Excise.Core.Security.PdfEncryptionOptions?)"/> (#643).
-    /// The plaintext default is deliberate: dozens of flows (rendering,
-    /// splitting, extraction) rely on "save = decrypt" being explicit, so
-    /// nothing re-encrypts by surprise.
-    /// </summary>
-    public void Save(Stream outputStream) => Save(outputStream, encryptionOptions: null);
-
-    /// <summary>
-    /// Save the document to a stream, optionally encrypting the output with
-    /// the PDF Standard Security Handler. <paramref name="encryptionOptions"/>
-    /// of <c>null</c> writes plaintext (identical to <see cref="Save(Stream)"/>).
-    /// Combine with <see cref="GetReEncryptionOptions"/> to preserve an
-    /// encrypted source's protection across a redact/edit round-trip (#643).
-    /// </summary>
-    public void Save(Stream outputStream, Excise.Core.Security.PdfEncryptionOptions? encryptionOptions)
-    {
-        foreach (var action in _preSaveActions)
-            action();
-        var writer = new PdfDocumentWriter(this, encryptionOptions);
-        writer.Write(outputStream);
-    }
-
-    /// <summary>
-    /// Save the document to a byte array. Plaintext output — see
-    /// <see cref="Save(Stream)"/>'s remarks.
-    /// </summary>
-    public byte[] SaveToBytes() => SaveToBytes(encryptionOptions: null);
-
-    /// <summary>
-    /// Save the document to a byte array, optionally encrypted — see
-    /// <see cref="Save(Stream, Excise.Core.Security.PdfEncryptionOptions?)"/>.
-    /// </summary>
-    public byte[] SaveToBytes(Excise.Core.Security.PdfEncryptionOptions? encryptionOptions)
-    {
-        using var ms = new MemoryStream();
-        Save(ms, encryptionOptions);
-        return ms.ToArray();
-    }
-
-    /// <summary>
-    /// Save the document to a file. Plaintext output — see
-    /// <see cref="Save(Stream)"/>'s remarks.
-    /// </summary>
-    public void Save(string path) => Save(path, encryptionOptions: null);
-
-    /// <summary>
-    /// Save the document to a file, optionally encrypted — see
-    /// <see cref="Save(Stream, Excise.Core.Security.PdfEncryptionOptions?)"/>.
-    /// </summary>
-    public void Save(string path, Excise.Core.Security.PdfEncryptionOptions? encryptionOptions)
-    {
-        using var fs = new FileStream(path, FileMode.Create, FileAccess.Write);
-        Save(fs, encryptionOptions);
     }
 
     /// <summary>

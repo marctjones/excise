@@ -56,14 +56,17 @@
       "evidence": [
         "Excise.Core.Tests/Document",
         "Excise.Core.Tests/Editing",
-        "Excise.Core.Tests/Operations"
+        "Excise.Core.Tests/Operations",
+        "Excise.Core/Content/PdfPageContentFacade.cs",
+        "Excise.Core/Text/PdfPageTextFacade.cs",
+        "Excise.Core/Text/PdfDocumentTextFacade.cs",
+        "Excise.Core/Writing/PdfDocumentWritingFacade.cs"
       ],
       "gaps": [
-        "PdfDocument.cs remains a multi-thousand-line coordination surface; its content, text, writing convenience facades (#1316) and mixed security/validation boundary (#1317) create temporary reverse dependencies."
+        "PdfDocument.cs remains a multi-thousand-line coordination surface, and its mixed security/validation boundary (#1317) creates the remaining reverse dependency. Content, text, and writing compatibility facades were source-owned by their engines under #1316 without changing the public document API."
       ],
       "issueIds": [
         1261,
-        1316,
         1317
       ]
     },
@@ -339,7 +342,7 @@
         "architecture/generated/artifact-set.json"
       ],
       "gaps": [
-        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; eight Core direction/ownership defects are explicit issue-linked exceptions (#1316-#1321), and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
+        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; five remaining Core direction/ownership defects are explicit issue-linked exceptions (#1317-#1321), and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
       ],
       "issueIds": [
         940,
@@ -405,24 +408,6 @@
     },
     {
       "source": "core-content",
-      "target": "core-writing",
-      "type": "uses",
-      "implementationStatus": "accepted_exception"
-    },
-    {
-      "source": "core-document",
-      "target": "core-content",
-      "type": "uses",
-      "implementationStatus": "accepted_exception"
-    },
-    {
-      "source": "core-document",
-      "target": "core-text",
-      "type": "uses",
-      "implementationStatus": "accepted_exception"
-    },
-    {
-      "source": "core-document",
       "target": "core-writing",
       "type": "uses",
       "implementationStatus": "accepted_exception"

@@ -35,9 +35,12 @@ second implementation-status list.
    fallback is named in the topology blind-spot list.
    Type-dependency source ownership follows the declaration file of the member
    making the reference, including members of partial types. The target remains
-   the owning component of its public containing type. This distinguishes an
-   engine-owned compatibility facade from document-model implementation without
-   reclassifying callers that consume that facade.
+   the owning component of its public containing type: for a partial type,
+   `{TypeName}.cs` is its canonical contract declaration. A cross-component
+   partial type without exactly one canonical declaration fails analysis rather
+   than inheriting alphabetical file order. This distinguishes an engine-owned
+   compatibility facade from document-model implementation without reclassifying
+   callers that consume that facade.
    [`architecture-conformance.json`](../../architecture/generated/architecture-conformance.json)
    compares those observed type edges with target dependencies, explicit
    forbidden relationships, and accepted exceptions. The generated

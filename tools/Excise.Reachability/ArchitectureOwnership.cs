@@ -101,15 +101,53 @@ internal sealed class ArchitectureOwnershipIndex
         ISymbol symbol,
         ArchitectureProjectOwnership project)
     {
-        var declarationFile = symbol.DeclaringSyntaxReferences
-            .Select(reference => reference.SyntaxTree.FilePath)
-            .Where(path => !string.IsNullOrWhiteSpace(path))
-            .Order(StringComparer.Ordinal)
-            .FirstOrDefault();
-        var file = declarationFile is null
+        var declaration = ResolvePrimaryDeclaration(symbol, project);
+        var file = declaration is null
             ? null
-            : RepositoryRelative(declarationFile);
+            : RepositoryRelative(declaration.SyntaxTree.FilePath);
         return ResolveSymbol(file, project);
+    }
+
+    public SyntaxReference? ResolvePrimaryDeclaration(
+        ISymbol symbol,
+        ArchitectureProjectOwnership project)
+    {
+        var declarations = symbol.DeclaringSyntaxReferences
+            .Where(reference => !string.IsNullOrWhiteSpace(reference.SyntaxTree.FilePath))
+            .OrderBy(reference => reference.SyntaxTree.FilePath, StringComparer.Ordinal)
+            .ThenBy(reference => reference.Span.Start)
+            .ToArray();
+        if (declarations.Length <= 1 || symbol is not INamedTypeSymbol type)
+            return declarations.FirstOrDefault();
+
+        var canonical = declarations
+            .Where(reference => string.Equals(
+                Path.GetFileNameWithoutExtension(reference.SyntaxTree.FilePath),
+                type.Name,
+                StringComparison.Ordinal))
+            .ToArray();
+        if (canonical.Length == 1)
+            return canonical[0];
+        if (canonical.Length > 1)
+        {
+            throw new InvalidOperationException(
+                $"Partial type '{type.ToDisplayString()}' has more than one canonical " +
+                $"'{type.Name}.cs' declaration.");
+        }
+
+        var components = declarations
+            .Select(reference => RepositoryRelative(reference.SyntaxTree.FilePath))
+            .Select(file => ResolveSymbol(file, project).Component)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        if (components.Length > 1)
+        {
+            throw new InvalidOperationException(
+                $"Partial type '{type.ToDisplayString()}' spans architecture components " +
+                $"without a canonical '{type.Name}.cs' declaration.");
+        }
+
+        return declarations[0];
     }
 
     internal static bool RunSelfTest()
@@ -184,12 +222,45 @@ internal sealed class ArchitectureOwnershipIndex
                 .OfType<MethodDeclarationSyntax>()
                 .Single();
             var execute = featureModel.GetDeclaredSymbol(executeDeclaration);
+            var modelType = compilation.GetTypeByMetadataName("Fixture.Model");
             if (execute is null
-                || index.ResolveSymbol(execute, project).Component != "feature")
+                || modelType is null
+                || index.ResolveSymbol(execute, project).Component != "feature"
+                || index.ResolveSymbol(modelType, project).Component != "app")
             {
                 Console.Error.WriteLine(
-                    "FAIL: architecture ownership self-test did not attribute a partial member to its declaration root.");
+                    "FAIL: architecture ownership self-test did not separate a partial member from its canonical type owner.");
                 return false;
+            }
+
+            var ambiguousPartOne = CSharpSyntaxTree.ParseText(
+                "namespace Fixture; internal partial class Ambiguous { internal void One() { } }",
+                path: Path.Combine(root, "App", "Ambiguous.Part1.cs"));
+            var ambiguousPartTwo = CSharpSyntaxTree.ParseText(
+                "namespace Fixture; internal partial class Ambiguous { internal void Two() { } }",
+                path: Path.Combine(root, "App", "Feature", "Ambiguous.Part2.cs"));
+            var ambiguousCompilation = CSharpCompilation.Create(
+                "ArchitectureOwnershipAmbiguousFixture",
+                [ambiguousPartOne, ambiguousPartTwo],
+                [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)]);
+            var ambiguousType = ambiguousCompilation.GetTypeByMetadataName("Fixture.Ambiguous");
+            if (ambiguousType is null)
+            {
+                Console.Error.WriteLine(
+                    "FAIL: architecture ownership self-test could not create the ambiguous partial type.");
+                return false;
+            }
+
+            try
+            {
+                index.ResolveSymbol(ambiguousType, project);
+                Console.Error.WriteLine(
+                    "FAIL: architecture ownership self-test accepted a cross-component partial type without a canonical declaration.");
+                return false;
+            }
+            catch (InvalidOperationException exception)
+                when (exception.Message.Contains("without a canonical", StringComparison.Ordinal))
+            {
             }
 
             const string ambiguousDesign = """
