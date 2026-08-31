@@ -458,8 +458,8 @@ def component_lineage(component_id: str, component_by_id: dict[str, dict]) -> li
 
 def validate_topology_join(design: dict, inventory: dict, topology: dict) -> list[str]:
     errors: list[str] = []
-    if topology.get("schemaVersion") != 3:
-        errors.append("topology: schemaVersion must be 3")
+    if topology.get("schemaVersion") != 4:
+        errors.append("topology: schemaVersion must be 4")
         return errors
     for schema_name in ("topology.schema.json", "architecture-conformance.schema.json"):
         if not (SCHEMA_ROOT / schema_name).is_file():

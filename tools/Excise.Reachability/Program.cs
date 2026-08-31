@@ -183,6 +183,8 @@ internal sealed class ReachabilityAnalyzer(
         new(SymbolEqualityComparer.Default);
     private readonly HashSet<INamedTypeSymbol> _dependencyInjectionTypes =
         new(SymbolEqualityComparer.Default);
+    private readonly Dictionary<ISymbol, HashSet<string>> _testReferences =
+        new(SymbolEqualityComparer.Default);
     private int _dependencyInjectionRegistrations;
     private int _externalReflectionLoads;
     private int _sourceGenerationRoots;
@@ -234,7 +236,11 @@ internal sealed class ReachabilityAnalyzer(
             }
         }
 
+        await CollectTestReferencesAsync();
+
         AddConservativeSeeds();
+        TestReferenceResolver.Expand(_testReferences, _edges);
+        AddWholeTypeMemberClosure();
 
         var reachable = ComputeReachable();
         var rows = _nodes.Values
@@ -282,7 +288,10 @@ internal sealed class ReachabilityAnalyzer(
                 reachable.Contains(node.Symbol),
                 _seeds.GetValueOrDefault(node.Symbol),
                 fanIn.GetValueOrDefault(node.Symbol),
-                _edges.GetValueOrDefault(node.Symbol)?.Count ?? 0))
+                _edges.GetValueOrDefault(node.Symbol)?.Count ?? 0,
+                _testReferences.GetValueOrDefault(node.Symbol)?
+                    .Order(StringComparer.Ordinal)
+                    .ToArray() ?? []))
             .OrderBy(row => row.Project, StringComparer.Ordinal)
             .ThenBy(row => row.File, StringComparer.Ordinal)
             .ThenBy(row => row.StartLine)
@@ -325,7 +334,7 @@ internal sealed class ReachabilityAnalyzer(
             .ToArray();
 
         return new TopologyReport(
-            3,
+            4,
             "tools/Excise.Reachability",
             GitRevision(),
             projects,
@@ -336,8 +345,9 @@ internal sealed class ReachabilityAnalyzer(
             [
                 DescribeXamlBlindSpots(),
                 "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
+                "Test-project evidence starts from semantic cross-compilation references and follows explicit production edges before the temporary whole-type compatibility closure.",
                 "Declaration and branch counts are structural signals, not complexity verdicts.",
-                "Symbol rows retain all types plus non-trivial methods and shared mutable members; project totals cover the full graph.",
+                "Symbol rows retain every unreachable symbol, all types, non-trivial methods, and shared mutable members; project totals cover the full graph.",
                 "Git change coupling is generated separately from commit history."
             ]);
     }
@@ -408,7 +418,8 @@ internal sealed class ReachabilityAnalyzer(
 
     private static bool IsTopologyRelevant(SymbolTopology symbol)
     {
-        return symbol.Kind == "type"
+        return !symbol.Reachable
+               || symbol.Kind == "type"
                || symbol.Kind == "method"
                && (symbol.DeclarationLines >= 8
                    || symbol.BranchPoints > 0
@@ -424,7 +435,8 @@ internal sealed class ReachabilityAnalyzer(
         bool reachable,
         IReadOnlySet<TopologySeedReason>? seedReasons,
         int fanIn,
-        int fanOut)
+        int fanOut,
+        IReadOnlyList<string> testProjects)
     {
         var declarations = node.Symbol.DeclaringSyntaxReferences
             .Select(reference => reference.GetSyntax())
@@ -471,6 +483,7 @@ internal sealed class ReachabilityAnalyzer(
             branchPoints,
             fanIn,
             fanOut,
+            testProjects,
             reachable,
             seedReasons is not null,
             seedReasons?.OrderBy(reason => reason.Category, StringComparer.Ordinal)
@@ -700,6 +713,36 @@ internal sealed class ReachabilityAnalyzer(
         }
     }
 
+    private async Task CollectTestReferencesAsync()
+    {
+        var sourceSymbols = _nodes.Keys
+            .GroupBy(SymbolReferenceKey.Create)
+            .ToDictionary(group => group.Key, group => group.ToArray());
+        var sourceAssemblies = sourceSymbols.Keys
+            .Select(key => key.Assembly)
+            .ToHashSet(StringComparer.Ordinal);
+        var references = await TestReferenceResolver.ResolveAsync(
+            solution,
+            sourceAssemblies);
+        foreach (var (key, testProjects) in references)
+        {
+            if (!sourceSymbols.TryGetValue(key, out var symbols))
+            {
+                continue;
+            }
+
+            foreach (var symbol in symbols)
+            {
+                if (!_testReferences.TryGetValue(symbol, out var projects))
+                {
+                    projects = new HashSet<string>(StringComparer.Ordinal);
+                    _testReferences[symbol] = projects;
+                }
+                projects.UnionWith(testProjects);
+            }
+        }
+    }
+
     private void CollectDynamicMechanisms(SemanticModel semanticModel, SyntaxNode root)
     {
         foreach (var invocation in root.DescendantNodes().OfType<InvocationExpressionSyntax>())
@@ -818,7 +861,6 @@ internal sealed class ReachabilityAnalyzer(
                 var originalType = Original(containingType);
                 if (_nodes.ContainsKey(originalType))
                 {
-                    AddEdge(originalType, symbol);
                     AddEdge(symbol, originalType);
                 }
             }
@@ -827,6 +869,18 @@ internal sealed class ReachabilityAnalyzer(
         foreach (var edge in MemberContractResolver.Resolve(_nodes.Keys))
         {
             AddEdge(edge.From, edge.To);
+        }
+    }
+
+    private void AddWholeTypeMemberClosure()
+    {
+        foreach (var symbol in _nodes.Keys.Where(symbol => symbol.ContainingType is not null))
+        {
+            var containingType = Original(symbol.ContainingType!);
+            if (_nodes.ContainsKey(containingType))
+            {
+                AddEdge(containingType, symbol);
+            }
         }
     }
 
@@ -1053,6 +1107,7 @@ internal sealed record SymbolTopology(
     int BranchPoints,
     int FanIn,
     int FanOut,
+    IReadOnlyList<string> TestProjects,
     bool Reachable,
     bool Seed,
     IReadOnlyList<TopologySeedReason> SeedReasons,
@@ -1371,6 +1426,11 @@ internal static class SelfTest
         }
 
         if (!MemberContractResolver.RunSelfTest())
+        {
+            return 1;
+        }
+
+        if (!TestReferenceResolver.RunSelfTest())
         {
             return 1;
         }

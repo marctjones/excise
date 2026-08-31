@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "a8d2c898c4f8faaf32582b6aead05821072ba603",
+  "sourceRevision": "97dd5b98a7cd285e9fb61ae019e19511c53bd637",
   "inputs": {
     "designVersion": 2,
-    "topologySchemaVersion": 3
+    "topologySchemaVersion": 4
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5551,
+    "retainedSymbols": 5565,
     "observedComponentDependencies": 78,
     "declaredDependencies": 65,
     "acceptedExceptions": 1,
@@ -1524,8 +1524,9 @@
   "observationBlindSpots": [
     "XAML untyped binding paths: Context, MatchedText, PageIndex. Unresolved typed member segments: none. Both sets are explicit rather than hidden by whole-file token matching.",
     "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
+    "Test-project evidence starts from semantic cross-compilation references and follows explicit production edges before the temporary whole-type compatibility closure.",
     "Declaration and branch counts are structural signals, not complexity verdicts.",
-    "Symbol rows retain all types plus non-trivial methods and shared mutable members; project totals cover the full graph.",
+    "Symbol rows retain every unreachable symbol, all types, non-trivial methods, and shared mutable members; project totals cover the full graph.",
     "Git change coupling is generated separately from commit history."
   ]
 }

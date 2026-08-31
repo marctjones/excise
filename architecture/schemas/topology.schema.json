@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "generator", "sourceRevision", "projects", "symbols", "typeDependencies", "methodCycles", "seeds", "blindSpots"],
   "properties": {
-    "schemaVersion": { "const": 3 },
+    "schemaVersion": { "const": 4 },
     "generator": { "const": "tools/Excise.Reachability" },
     "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "projects": {
@@ -33,7 +33,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["project", "kind", "symbol", "containingType", "namespace", "file", "component", "workflows", "startLine", "endLine", "declarationLines", "branchPoints", "fanIn", "fanOut", "reachable", "seed", "seedReasons", "mutable", "declarationCount"],
+        "required": ["project", "kind", "symbol", "containingType", "namespace", "file", "component", "workflows", "startLine", "endLine", "declarationLines", "branchPoints", "fanIn", "fanOut", "testProjects", "reachable", "seed", "seedReasons", "mutable", "declarationCount"],
         "properties": {
           "project": { "type": "string", "minLength": 1 },
           "kind": { "type": "string", "minLength": 1 },
@@ -49,6 +49,7 @@
           "branchPoints": { "type": "integer", "minimum": 0 },
           "fanIn": { "type": "integer", "minimum": 0 },
           "fanOut": { "type": "integer", "minimum": 0 },
+          "testProjects": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
           "reachable": { "type": "boolean" },
           "seed": { "type": "boolean" },
           "seedReasons": {
