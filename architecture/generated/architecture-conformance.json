@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "105b22826a9488fce2f0bce7352511a4d2c9aab1",
+  "sourceRevision": "1d832b21568c06e14c34ebabe9b596a3b41b1f35",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5672,
+    "retainedSymbols": 5681,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -668,21 +668,21 @@
     {
       "source": "core-document",
       "target": "core-encryption",
-      "references": 32,
-      "typeDependencyCount": 5,
+      "references": 34,
+      "typeDependencyCount": 10,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfDocument",
-          "target": "Excise.Core.Security.PdfPermissions",
-          "references": 10
+          "target": "Excise.Core.Security.PdfEncryptionOptions",
+          "references": 6
         }
       ]
     },
     {
       "source": "core-document",
       "target": "core-parsing",
-      "references": 77,
+      "references": 80,
       "typeDependencyCount": 14,
       "classification": "declared",
       "evidence": [
@@ -696,8 +696,8 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1206,
-      "typeDependencyCount": 172,
+      "references": 1213,
+      "typeDependencyCount": 180,
       "classification": "declared",
       "evidence": [
         {

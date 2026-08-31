@@ -13,7 +13,7 @@ digraph excise_architecture {
     label="engine";
     color="#cbd5e1";
     "core-content" [label="Content-stream walker and sinks\nimplemented\n268 retained symbols", fillcolor="#d8f3dc"];
-    "core-document" [label="Document model and mutation boundary\npartial\n472 retained symbols", fillcolor="#fff3bf"];
+    "core-document" [label="Document model and mutation boundary\npartial\n481 retained symbols", fillcolor="#fff3bf"];
     "core-fonts" [label="Font decoding, metrics, and subsetting\npartial\n192 retained symbols", fillcolor="#fff3bf"];
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n292 retained symbols", fillcolor="#fff3bf"];
     "core-security" [label="Document conformance and structural validation\npartial\n54 retained symbols", fillcolor="#fff3bf"];
@@ -93,9 +93,9 @@ digraph excise_architecture {
   "core-content" -> "core-parsing" [label="6 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-primitives" [label="299 refs / 43 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core" [label="38 refs / 12 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-document" -> "core-encryption" [label="32 refs / 5 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-document" -> "core-parsing" [label="77 refs / 14 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-document" -> "core-primitives" [label="1206 refs / 172 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-document" -> "core-encryption" [label="34 refs / 10 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-document" -> "core-parsing" [label="80 refs / 14 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-document" -> "core-primitives" [label="1213 refs / 180 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-encryption" -> "core-parsing" [label="11 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-encryption" -> "core-primitives" [label="19 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-fonts" -> "core-primitives" [label="77 refs / 12 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

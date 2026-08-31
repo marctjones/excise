@@ -96,9 +96,9 @@ digraph excise_architecture {
   "core-content" -> "core-parsing" [label="target + observed\n6 refs", color="#15803d", style="solid", penwidth=2];
   "core-content" -> "core-primitives" [label="target + observed\n299 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core" [label="observed via parent boundary\n38 refs", color="#2563eb", style="dashed", penwidth=1];
-  "core-document" -> "core-encryption" [label="target + observed\n32 refs", color="#15803d", style="solid", penwidth=2];
-  "core-document" -> "core-parsing" [label="target + observed\n77 refs", color="#15803d", style="solid", penwidth=2];
-  "core-document" -> "core-primitives" [label="target + observed\n1206 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-encryption" [label="target + observed\n34 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-parsing" [label="target + observed\n80 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-primitives" [label="target + observed\n1213 refs", color="#15803d", style="solid", penwidth=2];
   "core-encryption" -> "core-parsing" [label="target + observed\n11 refs", color="#15803d", style="solid", penwidth=2];
   "core-encryption" -> "core-primitives" [label="target + observed\n19 refs", color="#15803d", style="solid", penwidth=2];
   "core-fonts" -> "core-parsing" [label="target only", color="#94a3b8", style="dotted", penwidth=1];

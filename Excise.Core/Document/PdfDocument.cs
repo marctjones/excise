@@ -267,44 +267,18 @@ public partial class PdfDocument : IDisposable
         }
     }
 
-    private PdfDocument(
-        Stream stream,
-        bool ownsStream,
-        Dictionary<int, XRefEntry> xref,
-        PdfDictionary trailer,
-        string version,
-        Excise.Core.Security.PdfStandardSecurityHandler? securityHandler = null,
-        Excise.Core.Security.PdfPermissions? permissions = null)
+    internal PdfDocument(PdfDocumentOpenResult openResult)
     {
-        _objectStore = new PdfDocumentObjectStore(stream, ownsStream, xref, securityHandler);
-        Permissions = permissions ?? Excise.Core.Security.PdfPermissions.AllAllowed;
+        _objectStore = openResult.ObjectStore;
+        Permissions = openResult.Permissions;
         // Owner-password opening is #324 (unsupported): every successful
         // open today verifies the USER password, so permissions apply.
         OpenedWithOwnerPassword = false;
 
-        Trailer = trailer;
-        Version = version;
-
-        // Load catalog. A hostile/truncated trailer may lack a valid /Root —
-        // fail with a typed PdfParseException, not a raw KeyNotFound/cast. (#352)
-        var catalogRef = trailer.GetReferenceOrNull("Root")
-            ?? throw new PdfParseException("Trailer has no valid /Root reference");
-        Catalog = GetObject(catalogRef) as PdfDictionary
-            ?? throw new PdfParseException("Could not load document catalog");
-
-        // Get info dictionary
-        var infoRef = trailer.GetReferenceOrNull("Info");
-        if (infoRef != null)
-        {
-            try
-            {
-                Info = GetObject(infoRef) as PdfDictionary;
-            }
-            catch (Exception __ex) when (__ex is not OutOfMemoryException)
-            {
-                Info = null;
-            }
-        }
+        Trailer = openResult.Trailer;
+        Catalog = openResult.Catalog;
+        Info = openResult.Info;
+        Version = openResult.Version;
     }
 
     /// <summary>
@@ -313,15 +287,7 @@ public partial class PdfDocument : IDisposable
     public static PdfDocument Open(string path, bool allowEncrypted = false)
     {
         var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        try
-        {
-            return OpenCore(stream, ownsStream: true, allowEncrypted: allowEncrypted, userPassword: null);
-        }
-        catch (Exception __ex) when (__ex is not OutOfMemoryException)
-        {
-            stream.Dispose();
-            throw;
-        }
+        return OpenCore(stream, ownsStream: true, allowEncrypted: allowEncrypted, userPassword: null);
     }
 
     /// <summary>
@@ -333,15 +299,7 @@ public partial class PdfDocument : IDisposable
     public static PdfDocument Open(string path, string? userPassword, bool allowEncrypted = false)
     {
         var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        try
-        {
-            return OpenCore(stream, ownsStream: true, allowEncrypted: allowEncrypted, userPassword: userPassword);
-        }
-        catch (Exception __ex) when (__ex is not OutOfMemoryException)
-        {
-            stream.Dispose();
-            throw;
-        }
+        return OpenCore(stream, ownsStream: true, allowEncrypted: allowEncrypted, userPassword: userPassword);
     }
 
     /// <summary>
@@ -369,333 +327,8 @@ public partial class PdfDocument : IDisposable
     public static PdfDocument Open(Stream stream, string? userPassword, bool ownsStream = false, bool allowEncrypted = false)
         => OpenCore(stream, ownsStream, allowEncrypted, userPassword);
 
-    /// <summary>
-    /// Merge the cross-reference stream named by a classic trailer's /XRefStm
-    /// (a "hybrid-reference file", PDF 32000-1 §7.5.8.4).
-    /// </summary>
-    /// <remarks>
-    /// A hybrid-reference file carries BOTH a classic xref table and a
-    /// cross-reference stream for the same revision. The classic table lists
-    /// only what a pre-PDF-1.5 reader can use; objects living inside object
-    /// streams can only be expressed in the stream, so the table simply omits
-    /// them and the trailer points at the stream via /XRefStm.
-    ///
-    /// Ignoring the key does not produce a parse error — it produces a
-    /// SUCCESSFUL parse of the wrong revision. The reader falls through to
-    /// /Prev and resolves superseded definitions as current, silently (#872).
-    /// For a redaction tool that is a document-identity bug: the reviewer sees
-    /// content the author replaced, and redaction decisions are made against
-    /// it.
-    ///
-    /// Precedence follows the same rule as the /Prev walk — an entry already
-    /// established by a newer section is never overwritten. Within one hybrid
-    /// section the classic table is merged first and the stream fills the gaps
-    /// it structurally cannot express, which is what the spec's compatibility
-    /// scheme intends and what other readers do.
-    ///
-    /// The stream's own /Prev is deliberately NOT followed: the containing
-    /// classic trailer owns the chaining, and following both would walk the
-    /// history twice.
-    /// </remarks>
-    private static void MergeHybridXRefStream(
-        XRefParser xrefParser,
-        Stream stream,
-        PdfDictionary sectionTrailer,
-        Dictionary<int, XRefEntry> fullXRef,
-        HashSet<long> parsedHybridXRefStreams)
-    {
-        var xrefStmObj = sectionTrailer.GetOptional("XRefStm");
-        if (xrefStmObj == null)
-            return;
-
-        long offset;
-        try
-        {
-            offset = xrefStmObj.GetLong();
-        }
-        catch
-        {
-            return;   // a malformed /XRefStm is not worth failing the open over
-        }
-
-        if (offset <= 0 || offset >= stream.Length || !parsedHybridXRefStreams.Add(offset))
-            return;
-
-        Dictionary<int, XRefEntry> entries;
-        try
-        {
-            entries = xrefParser.ParseDocumentXRef(offset).XRef;
-        }
-        catch (Exception ex) when (IsRecoverableIncrementalXRefException(ex))
-        {
-            // Best-effort: a broken hybrid stream leaves us exactly where we
-            // were before this method existed, rather than failing the open.
-            return;
-        }
-
-        foreach (var kvp in entries)
-        {
-            if (!fullXRef.ContainsKey(kvp.Key))
-                fullXRef[kvp.Key] = kvp.Value;
-        }
-    }
-
-    /// <summary>
-    /// Whether the trailer's /Root names an object the assembled xref can
-    /// actually produce. A direct (non-indirect) /Root dictionary needs no xref
-    /// entry and counts as reachable; a missing or free entry does not (#884).
-    /// </summary>
-    private static bool RootIsReachable(PdfDictionary trailer, Dictionary<int, XRefEntry> xref)
-    {
-        var rootRef = trailer.GetReferenceOrNull("Root");
-        if (rootRef == null)
-            return trailer.GetOptional("Root") is PdfDictionary;
-
-        return xref.TryGetValue(rootRef.ObjectNum, out var entry) && entry.InUse;
-    }
-
     private static PdfDocument OpenCore(Stream stream, bool ownsStream, bool allowEncrypted, string? userPassword)
-    {
-        // Read PDF version from header
-        string version = ReadVersion(stream);
-
-        // Find and parse xref
-        var xrefParser = new XRefParser(stream);
-        var (trailer, xref) = xrefParser.ParseRootXRef();
-
-        // Handle incremental updates (Prev pointer)
-        var fullXRef = new Dictionary<int, XRefEntry>(xref);
-        var currentTrailer = trailer;
-        var parsedPreviousXRefs = new HashSet<long>();
-        var parsedHybridXRefStreams = new HashSet<long>();
-
-        // Hybrid-reference files (#872): the ROOT section may itself carry
-        // /XRefStm, so this has to run before the /Prev walk, not just inside it.
-        MergeHybridXRefStream(xrefParser, stream, trailer, fullXRef, parsedHybridXRefStreams);
-
-        while (currentTrailer.GetReferenceOrNull("Prev") != null || currentTrailer.ContainsKey("Prev"))
-        {
-            var prevObj = currentTrailer.GetOptional("Prev");
-            if (prevObj == null) break;
-
-            // /Prev must be a direct integer byte offset (§7.5.5). An indirect
-            // reference there made GetLong throw a raw InvalidCastException
-            // out of Open (#960 deep sweep, seed 9603). Treat a non-number as
-            // "no usable previous section" and stop walking, exactly as an
-            // out-of-range offset already does below: a damaged trailer chain
-            // costs the older revisions, not the document.
-            if (!prevObj.TryGetNumber(out var prevNumber))
-                break;
-
-            long prevXRef = (long)prevNumber;
-            if (prevXRef < 0 || prevXRef >= stream.Length || !parsedPreviousXRefs.Add(prevXRef))
-                break;
-
-            (PdfDictionary prevTrailer, Dictionary<int, XRefEntry> prevXRefEntries) previous;
-            try
-            {
-                previous = xrefParser.ParseDocumentXRef(prevXRef);
-            }
-            catch (Exception ex) when (IsRecoverableIncrementalXRefException(ex))
-            {
-                break;
-            }
-
-            // Merge with previous xref (older entries don't override newer)
-            foreach (var kvp in previous.prevXRefEntries)
-            {
-                if (!fullXRef.ContainsKey(kvp.Key))
-                    fullXRef[kvp.Key] = kvp.Value;
-            }
-
-            // Each section in the chain may be hybrid-reference too.
-            MergeHybridXRefStream(
-                xrefParser, stream, previous.prevTrailer, fullXRef, parsedHybridXRefStreams);
-
-            currentTrailer = previous.prevTrailer;
-        }
-
-        // The xref we just assembled is only usable if the catalog is reachable
-        // through it. When it is not, rebuild by scanning the file for indirect
-        // object headers (#884).
-        //
-        // pdfium/embedded_images.pdf is the case that needs this: 34 KB of a
-        // file whose tail was cut off, so `startxref` (124724), the trailer's
-        // /Prev (123786) and its /XRefStm (123449) all point past EOF. ParseXRef
-        // throws, the repair path finds the file's terminal "xref 0 0" section
-        // and SUCCEEDS with zero entries and a healthy-looking /Root 1 0 R, and
-        // RepairUncompressedXRefOffsets can only rewrite entries that already
-        // exist — it can never add one. Reconstruction was never reached, and it
-        // would have worked: the catalog is at offset 17 and objects 1-15 are
-        // intact. mutool and pdftocairo both render the page.
-        //
-        // This runs AFTER the /Prev walk, deliberately, and NOT inside
-        // XRefParser.ParseRootXRef. A single xref SECTION of a healthy
-        // incrementally-updated file legitimately omits the catalog — it lives
-        // in an earlier section reached through /Prev — so only the assembled
-        // table can answer "is the catalog reachable". Asking one section would
-        // condemn a large class of perfectly good files.
-        //
-        // Merge, don't replace: reconstructed entries fill gaps only. Anything
-        // the real xref defined (including entries it marks FREE) stays
-        // authoritative, so a document is never silently rewound to a superseded
-        // revision of an object the xref deliberately replaced.
-        if (!RootIsReachable(trailer, fullXRef)
-            && xrefParser.TryReconstructXRef(out var rebuiltTrailer, out var rebuiltXRef))
-        {
-            foreach (var kvp in rebuiltXRef)
-            {
-                if (!fullXRef.ContainsKey(kvp.Key))
-                    fullXRef[kvp.Key] = kvp.Value;
-            }
-
-            // Only if the catalog is STILL unreachable is the trailer's own
-            // /Root the thing that is wrong; then prefer the one recovered
-            // alongside the rebuilt table.
-            if (!RootIsReachable(trailer, fullXRef)
-                && rebuiltTrailer.GetOptional("Root") is { } rebuiltRoot
-                && RootIsReachable(rebuiltTrailer, fullXRef))
-            {
-                trailer["Root"] = rebuiltRoot;
-            }
-        }
-
-        // Encrypted PDFs: try to build a security handler that decrypts
-        // streams + strings as they're read. If /Encrypt is present and
-        // we can verify the empty user password (the common case), we
-        // continue with full decryption. If we can't (unsupported V/R,
-        // wrong password), we honour `allowEncrypted` — true keeps
-        // returning ciphertext for inspection; false (default) throws.
-        Excise.Core.Security.PdfStandardSecurityHandler? handler = null;
-        Excise.Core.Security.PdfPermissions? permissions = null;
-        if (trailer.ContainsKey("Encrypt"))
-        {
-            try
-            {
-                // Resolve the /Encrypt dict (it can be an indirect ref).
-                var encryptObj = trailer.GetOptional("Encrypt");
-                if (encryptObj is PdfReference encryptRef)
-                {
-                    // Need to read the object directly from xref since
-                    // we don't have a document yet.
-                    try
-                    {
-                        encryptObj = ReadIndirectObjectAt(stream, fullXRef[encryptRef.ObjectNum].Offset);
-                    }
-                    catch (Exception ex) when (IsRecoverableMalformedEncryptObjectException(ex))
-                    {
-                        encryptObj = null;
-                    }
-                }
-                if (encryptObj == null)
-                    handler = null;
-                else
-                {
-                    if (encryptObj is not PdfDictionary encryptDict)
-                        throw new Excise.Core.Parsing.PdfParseException("/Encrypt is not a dictionary");
-
-                    // Surface /P (#642) regardless of whether the security
-                    // handler can be built — it's plain-integer metadata.
-                    permissions = ReadPermissions(encryptDict);
-
-                    // Some PDF 2.0 files encrypt only embedded-file streams
-                    // (/EFF) while leaving normal document streams and strings
-                    // on /Identity. Rendering/search/redaction of visible page
-                    // content does not need a security handler in that case, and
-                    // attempting password verification would wrongly reject an
-                    // otherwise readable document.
-                    if (!UsesIdentityCryptFiltersForDocumentContent(encryptDict))
-                    {
-                        // /ID is required; first element is what the security handler hashes.
-                        // GetArrayOrNull, not GetArray: an encrypted file with no
-                        // /ID at all is malformed and must refuse as the typed
-                        // PdfParseException below, not as a raw
-                        // KeyNotFoundException from the dictionary accessor. The
-                        // "missing or empty" check under it was already written
-                        // for this case but could never be reached (bug_644.pdf).
-                        // GetDirect deliberately: this runs during trailer parsing, in a static
-                        // context, before a document exists to resolve through. An indirect
-                        // /ID would also be a chicken-and-egg problem -- /ID is needed to
-                        // derive the encryption key that would decrypt the object holding it.
-                        var idArr = trailer.GetDirectArrayOrNull("ID");
-                        if (idArr is null || idArr.Count == 0 || idArr[0] is not PdfString idStr)
-                            throw new Excise.Core.Parsing.PdfParseException("/ID array missing or empty");
-                        var firstId = idStr.Bytes;
-
-                        // Try the supplied user password. A null password is the
-                        // same as the empty user password, by far the most common
-                        // case for encrypted PDFs.
-                        handler = Excise.Core.Security.PdfStandardSecurityHandler.Build(
-                            encryptDict, firstId, userPassword);
-                    }
-                }
-            }
-            catch (Excise.Core.Parsing.PdfEncryptionNotSupportedException)
-            {
-                if (!allowEncrypted)
-                {
-                    if (ownsStream) stream.Dispose();
-                    throw;
-                }
-                // allowEncrypted=true: caller wants the doc anyway, accept
-                // that streams will be ciphertext.
-                handler = null;
-            }
-        }
-
-        // Create document (loads catalog internally)
-        return new PdfDocument(stream, ownsStream, fullXRef, trailer, version, handler, permissions);
-    }
-
-    /// <summary>
-    /// Decode /P from the /Encrypt dictionary (#642). Missing or
-    /// non-numeric /P (malformed — /P is required for the Standard
-    /// handler) fails open to all-allowed: /P is advisory policy metadata
-    /// and mainstream readers treat a broken mask the same way.
-    /// </summary>
-    private static Excise.Core.Security.PdfPermissions ReadPermissions(PdfDictionary encryptDict)
-    {
-        try
-        {
-            var p = encryptDict.GetOptional("P");
-            if (p is PdfInteger or PdfReal)
-                return new Excise.Core.Security.PdfPermissions(p.GetLong());
-        }
-        catch (Exception ex) when (ex is not OutOfMemoryException)
-        {
-            // fall through to all-allowed
-        }
-        return Excise.Core.Security.PdfPermissions.AllAllowed;
-    }
-
-    private static bool UsesIdentityCryptFiltersForDocumentContent(PdfDictionary encryptDict)
-        => string.Equals(encryptDict.GetNameOrNull("StmF"), "Identity", StringComparison.Ordinal)
-           && string.Equals(encryptDict.GetNameOrNull("StrF"), "Identity", StringComparison.Ordinal);
-
-    private static bool IsRecoverableIncrementalXRefException(Exception ex)
-        => ex is PdfParseException or FormatException or OverflowException or KeyNotFoundException;
-
-    private static bool IsRecoverableMalformedEncryptObjectException(Exception ex)
-        => ex is PdfParseException { Message: var message }
-           && (message.Contains("Unexpected keyword", StringComparison.Ordinal)
-               || message.Contains("Expected object number", StringComparison.Ordinal)
-               || message.Contains("Expected generation number", StringComparison.Ordinal)
-               || message.Contains("Expected 'obj'", StringComparison.Ordinal)
-               || message.Contains("Unterminated dictionary", StringComparison.Ordinal));
-
-    /// <summary>
-    /// One-shot reader used by <see cref="Open(Stream, bool, bool)"/> to
-    /// resolve an indirect /Encrypt reference *before* the PdfDocument
-    /// (and therefore the parser's resolver) exists. Seeks to the given
-    /// offset, parses an indirect object, returns its value.
-    /// </summary>
-    private static PdfObject ReadIndirectObjectAt(Stream stream, long offset)
-    {
-        var lexer = new Excise.Core.Parsing.PdfLexer(stream, ownsStream: false);
-        lexer.Seek(offset);
-        var parser = new Excise.Core.Parsing.PdfParser(lexer);
-        return parser.ParseIndirectObject().Value;
-    }
+        => PdfDocumentOpenPipeline.Open(stream, ownsStream, allowEncrypted, userPassword);
 
     /// <summary>
     /// Open a PDF document from a byte array.
@@ -775,37 +408,6 @@ public partial class PdfDocument : IDisposable
         w.Flush();
 
         return ms.ToArray();
-    }
-
-    /// <summary>
-    /// Read the PDF version from the header.
-    /// </summary>
-    private static string ReadVersion(Stream stream)
-    {
-        stream.Position = 0;
-        var buffer = new byte[Math.Min(1024, Math.Max(20, (int)Math.Min(stream.Length, 1024)))];
-        int read = stream.Read(buffer, 0, buffer.Length);
-
-        var header = System.Text.Encoding.ASCII.GetString(buffer, 0, read);
-        var headerStart = header.IndexOf("%PDF-", StringComparison.Ordinal);
-        if (headerStart < 0)
-            return "0.0";
-
-        // Extract version (e.g., "1.4", "1.7", "2.0")
-        int idx = headerStart + 5;
-        while (idx < header.Length && (char.IsDigit(header[idx]) || header[idx] == '.'))
-            idx++;
-
-        var version = header.Substring(headerStart + 5, idx - (headerStart + 5));
-        return IsValidPdfVersion(version) ? version : "0.0";
-    }
-
-    private static bool IsValidPdfVersion(string version)
-    {
-        if (version.Length != 3 || version[1] != '.')
-            return false;
-
-        return char.IsDigit(version[0]) && char.IsDigit(version[2]);
     }
 
     /// <summary>
