@@ -8429,13 +8429,23 @@
       "section": "interactive",
       "mode": "preserve",
       "currentState": "partial",
-      "fixtureStatus": "contracted-unresolved-reference",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
-          "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs",
-          "testRecord": null,
-          "recordedOutcomes": [],
-          "resolution": "non-method-reference"
+          "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs::RedactArea_RemovesActualTextFromTheStructureTree",
+          "testRecord": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs::StructureTreeRedactionLeakTests.RedactArea_RemovesActualTextFromTheStructureTree",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        },
+        {
+          "ref": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+          "testRecord": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
         }
       ]
     },
@@ -8444,21 +8454,32 @@
       "section": "interactive",
       "mode": "render",
       "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Text/Segmentation/InlineImageRedactionEndToEndTests.cs::RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
+          "testRecord": "Excise.Core.Tests/Text/Segmentation/InlineImageRedactionEndToEndTests.cs::InlineImageRedactionEndToEndTests.RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.17.security.redaction-content-removal",
       "section": "interactive",
       "mode": "extract",
       "currentState": "partial",
-      "fixtureStatus": "contracted-unresolved-reference",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
-          "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs",
-          "testRecord": null,
-          "recordedOutcomes": [],
-          "resolution": "non-method-reference"
+          "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs::RedactArea_RemovesActualTextFromTheStructureTree",
+          "testRecord": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs::StructureTreeRedactionLeakTests.RedactArea_RemovesActualTextFromTheStructureTree",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
         }
       ]
     },
@@ -8467,13 +8488,31 @@
       "section": "interactive",
       "mode": "mutate",
       "currentState": "partial",
-      "fixtureStatus": "contracted-unresolved-reference",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
-          "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs",
-          "testRecord": null,
-          "recordedOutcomes": [],
-          "resolution": "non-method-reference"
+          "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs::RedactArea_RemovesActualTextFromTheStructureTree",
+          "testRecord": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs::StructureTreeRedactionLeakTests.RedactArea_RemovesActualTextFromTheStructureTree",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        },
+        {
+          "ref": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+          "testRecord": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        },
+        {
+          "ref": "Excise.Core.Tests/Text/Segmentation/InlineImageRedactionEndToEndTests.cs::RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
+          "testRecord": "Excise.Core.Tests/Text/Segmentation/InlineImageRedactionEndToEndTests.cs::InlineImageRedactionEndToEndTests.RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
         }
       ]
     },
@@ -8482,13 +8521,31 @@
       "section": "interactive",
       "mode": "write",
       "currentState": "implemented",
-      "fixtureStatus": "contracted-unresolved-reference",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
-          "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs",
-          "testRecord": null,
-          "recordedOutcomes": [],
-          "resolution": "non-method-reference"
+          "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs::RedactArea_RemovesActualTextFromTheStructureTree",
+          "testRecord": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs::StructureTreeRedactionLeakTests.RedactArea_RemovesActualTextFromTheStructureTree",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        },
+        {
+          "ref": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+          "testRecord": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        },
+        {
+          "ref": "Excise.Core.Tests/Text/Segmentation/InlineImageRedactionEndToEndTests.cs::RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
+          "testRecord": "Excise.Core.Tests/Text/Segmentation/InlineImageRedactionEndToEndTests.cs::InlineImageRedactionEndToEndTests.RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
         }
       ]
     },
@@ -8833,9 +8890,8 @@
     "targetModes": 964,
     "fixtureStatus": {
       "contracted-not-run": 146,
-      "contracted-unresolved-reference": 4,
-      "not-contracted": 807,
-      "recorded-passing": 7
+      "not-contracted": 806,
+      "recorded-passing": 12
     }
   }
 }

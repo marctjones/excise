@@ -133,6 +133,22 @@
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip"
         }
       ],
+      "verification": {
+        "status": "executable",
+        "requiredModes": ["parse", "preserve", "write"],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": ["parse"]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
+            "modes": ["preserve", "write"]
+          }
+        ]
+      },
       "notes": "PDFE counts and warns about incoming /Redact annotations but deliberately never applies them (#1021). Partial is intentional until atomic fixtures and independent reference comparison satisfy the implementation contract.",
       "documentation": [
         "tests/annotation-support-matrix.json"
@@ -333,6 +349,7 @@
         }
       ],
       "verification": {
+        "status": "executable",
         "requiredModes": [
           "preserve",
           "render",
@@ -344,7 +361,7 @@
         "checks": [
           {
             "kind": "unit",
-            "ref": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerTests.cs",
+            "ref": "Excise.Core.Tests/Text/Segmentation/NonPageCarrierRedactionLeakTests.cs::Redaction_DoesNotLeaveSecretInXmpMetadata",
             "modes": [
               "extract",
               "mutate",
@@ -353,7 +370,7 @@
           },
           {
             "kind": "atomic-fixture",
-            "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs",
+            "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs::RedactArea_RemovesActualTextFromTheStructureTree",
             "modes": [
               "preserve",
               "extract",
@@ -362,8 +379,26 @@
             ]
           },
           {
+            "kind": "atomic-fixture",
+            "ref": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+            "modes": [
+              "preserve",
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "atomic-fixture",
+            "ref": "Excise.Core.Tests/Text/Segmentation/InlineImageRedactionEndToEndTests.cs::RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
+            "modes": [
+              "render",
+              "mutate",
+              "write"
+            ]
+          },
+          {
             "kind": "security",
-            "ref": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerTests.cs; Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs",
+            "ref": "Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs::RedactArea_RemovesActualTextFromTheStructureTree",
             "modes": [
               "preserve",
               "extract",
@@ -373,17 +408,25 @@
           },
           {
             "kind": "differential",
-            "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs; Excise.Rendering.Tests/Differential/RedactionRenderAxesTests.cs",
+            "ref": "Excise.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs::RedactedGlyphs_AreNotDrawnByAnIndependentRenderer",
             "modes": [
               "render",
-              "preserve",
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs::RedactedText_IsNotRecoverableByAnIndependentExtractor",
+            "modes": [
+              "extract",
               "mutate",
               "write"
             ]
           },
           {
             "kind": "corpus",
-            "ref": "Excise.Rendering.Tests/Corpus/RedactionRegressionTests.cs; Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs",
+            "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
             "modes": [
               "render",
               "preserve",
@@ -394,7 +437,7 @@
           },
           {
             "kind": "benchmark",
-            "ref": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
+            "ref": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs::RedactText_CommonTermOnW9_StaysUnderFiveSeconds",
             "modes": [
               "mutate",
               "write"
