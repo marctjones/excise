@@ -271,13 +271,16 @@
         "Excise.Cli/Commands/PdfDocumentLifetime.cs",
         "Excise.Cli/Commands/RedactCommand.cs",
         "Excise.Cli/Commands/RedactCommandHandler.cs",
+        "Excise.Cli/Commands/EncryptCommand.cs",
+        "Excise.Cli/Commands/DecryptCommand.cs",
+        "Excise.Cli/Commands/EncryptionCommandHandler.cs",
         "Excise.Cli/AutomationBatch.cs",
         "Excise.Cli.Tests/RedactCommandTests.cs",
         "Excise.Cli.Tests/RedactCommandHandlerTests.cs",
         "Excise.Cli.Tests/AuditInspectionHandlerTests.cs"
       ],
       "gaps": [
-        "Program.cs is 964 physical lines after its info, text, letters, render, validation, OCR, audit, and redaction workflows moved behind typed handlers; deterministic topology now records 15 methods, 563 declaration lines, 73 branch points, and 189 fan-out there. Form mutation, assembly, searchable-output, encryption, and final composition-root boundaries remain to be decomposed.",
+        "Program.cs is 729 physical lines after its info, text, letters, render, validation, OCR, audit, redaction, encryption, and decryption workflows moved behind typed handlers; deterministic topology now records 11 methods, 441 declaration lines, 61 branch points, and 154 fan-out there. Form mutation, assembly, searchable-output, and final composition-root boundaries remain to be decomposed.",
         "AutomationBatch.cs now reuses the info, text, render, audit, and redaction handlers, but its fill-form, add-field, sequencing, and result-envelope paths still record 28 methods, 437 declaration lines, 63 branch points, and 264 fan-out and need explicit convergence review."
       ],
       "issueIds": [

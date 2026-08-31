@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "f7b6b2610064c27207db89f7fd287ce10c4c6d16",
+  "sourceRevision": "366ca0974f799161935f4e520930748507a50c52",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5915,
+    "retainedSymbols": 5927,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -403,26 +403,26 @@
       "source": "cli",
       "target": "core-document",
       "references": 141,
-      "typeDependencyCount": 27,
+      "typeDependencyCount": 28,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Cli.Program",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 36
+          "references": 32
         }
       ]
     },
     {
       "source": "cli",
       "target": "core-encryption",
-      "references": 17,
-      "typeDependencyCount": 4,
+      "references": 20,
+      "typeDependencyCount": 6,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.DocumentPermissionGuard",
-          "target": "Excise.Core.Security.PdfPermissions",
+          "source": "Excise.Cli.Commands.EncryptionCommandHandler",
+          "target": "Excise.Core.Security.PdfEncryptionOptions",
           "references": 6
         }
       ]
@@ -431,13 +431,13 @@
       "source": "cli",
       "target": "core-parsing",
       "references": 2,
-      "typeDependencyCount": 1,
+      "typeDependencyCount": 2,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Program",
+          "source": "Excise.Cli.Commands.EncryptionCommandHandler",
           "target": "Excise.Core.Parsing.PdfEncryptionNotSupportedException",
-          "references": 2
+          "references": 1
         }
       ]
     },
@@ -491,7 +491,7 @@
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Program",
+          "source": "Excise.Cli.Commands.EncryptionCommandHandler",
           "target": "Excise.Core.Writing.PdfDocumentWriter",
           "references": 6
         }

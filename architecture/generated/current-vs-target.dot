@@ -78,7 +78,7 @@ digraph excise_architecture {
   "cli" -> "core" [label="target + observed\n37 refs", color="#15803d", style="solid", penwidth=2];
   "cli" -> "core-content" [label="observed via parent boundary\n9 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-document" [label="observed via parent boundary\n141 refs", color="#2563eb", style="dashed", penwidth=1];
-  "cli" -> "core-encryption" [label="observed via parent boundary\n17 refs", color="#2563eb", style="dashed", penwidth=1];
+  "cli" -> "core-encryption" [label="observed via parent boundary\n20 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-parsing" [label="observed via parent boundary\n2 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-redaction" [label="observed via parent boundary\n53 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-security" [label="observed via parent boundary\n28 refs", color="#2563eb", style="dashed", penwidth=1];
