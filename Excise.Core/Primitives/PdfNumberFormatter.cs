@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Excise.Core.Writing;
+namespace Excise.Core.Primitives;
 
 /// <summary>
 /// Deterministic real-number formatting for PDF output. See issue #762.

@@ -13,21 +13,21 @@ digraph excise_architecture {
     label="engine";
     color="#cbd5e1";
     "core-content" [label="Content-stream walker and sinks\nimplemented\n268 retained symbols", fillcolor="#d8f3dc"];
-    "core-document" [label="Document model and mutation boundary\npartial\n489 retained symbols", fillcolor="#fff3bf"];
+    "core-document" [label="Document model and mutation boundary\npartial\n490 retained symbols", fillcolor="#fff3bf"];
     "core-fonts" [label="Font decoding, metrics, and subsetting\npartial\n192 retained symbols", fillcolor="#fff3bf"];
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n0 retained symbols", fillcolor="#fff3bf"];
     "core-security" [label="Document conformance and structural validation\npartial\n54 retained symbols", fillcolor="#fff3bf"];
     "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n402 retained symbols", fillcolor="#d8f3dc"];
-    "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n50 retained symbols", fillcolor="#d8f3dc"];
+    "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n48 retained symbols", fillcolor="#d8f3dc"];
     "rendering" [label="Excise.Rendering project\npartial\n692 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_foundation {
     label="foundation";
     color="#cbd5e1";
-    "core" [label="Excise.Core project\nimplemented\n388 retained symbols", fillcolor="#d8f3dc"];
+    "core" [label="Excise.Core project\nimplemented\n386 retained symbols", fillcolor="#d8f3dc"];
     "core-encryption" [label="Encryption contracts, permissions, and standard security handler\nimplemented\n45 retained symbols", fillcolor="#d8f3dc"];
     "core-parsing" [label="Parser, xref, filters, and hostile-input boundary\nimplemented\n552 retained symbols", fillcolor="#d8f3dc"];
-    "core-primitives" [label="PDF primitives and object graph\nimplemented\n144 retained symbols", fillcolor="#d8f3dc"];
+    "core-primitives" [label="PDF primitives and object graph\nimplemented\n146 retained symbols", fillcolor="#d8f3dc"];
   }
   subgraph cluster_integration {
     label="integration";
@@ -83,17 +83,16 @@ digraph excise_architecture {
   "core" -> "core-document" [label="309 refs / 34 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-fonts" [label="38 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-parsing" [label="11 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core" -> "core-primitives" [label="342 refs / 45 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core" -> "core-primitives" [label="350 refs / 48 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-writing" [label="4 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-document" [label="106 refs / 18 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-fonts" [label="65 refs / 17 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-parsing" [label="6 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-content" -> "core-primitives" [label="295 refs / 41 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-content" -> "core-writing" [label="4 refs / 2 type pairs\naccepted_exception", color="#7e22ce", style="dotted", penwidth=2];
+  "core-content" -> "core-primitives" [label="299 refs / 43 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core" [label="38 refs / 12 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-encryption" [label="29 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-parsing" [label="78 refs / 10 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-document" -> "core-primitives" [label="1324 refs / 174 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-document" -> "core-primitives" [label="1334 refs / 177 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-encryption" -> "core-parsing" [label="11 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-encryption" -> "core-primitives" [label="19 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-fonts" -> "core-primitives" [label="77 refs / 12 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -110,7 +109,7 @@ digraph excise_architecture {
   "core-text" -> "core-primitives" [label="355 refs / 91 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-writing" -> "core-document" [label="14 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-writing" -> "core-encryption" [label="45 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-writing" -> "core-primitives" [label="112 refs / 20 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-writing" -> "core-primitives" [label="114 refs / 21 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "ocr" -> "core" [label="5 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "ocr" -> "core-document" [label="54 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "ocr" -> "core-encryption" [label="1 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

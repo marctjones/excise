@@ -121,6 +121,30 @@ public class PdfAnnotationAuthoringTests
     }
 
     [Fact]
+    public void AddSquareAnnotation_UsesCanonicalPdfNumberPrecision()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+
+        var annotation = doc.AddSquareAnnotation(
+            pageNumber: 1,
+            rect: new PdfRectangle(100, 500, 300, 600),
+            contents: "precision",
+            red: 0.12345678,
+            green: 0.23456789,
+            blue: 0.34567891,
+            borderWidth: 1.23456789);
+
+        var ap = (Excise.Core.Primitives.PdfDictionary)doc.Resolve(
+            annotation.RawDictionary["AP"]);
+        var appearance = (Excise.Core.Primitives.PdfStream)doc.Resolve(ap["N"]);
+        var content = appearance.GetDecodedString();
+
+        content.Should().Contain("0.123457 0.234568 0.345679 RG");
+        content.Should().Contain("1.234568 w");
+    }
+
+    [Fact]
     public void AddCircleAnnotation_WritesInteriorColorAndBezierAppearance()
     {
         using var doc = PdfDocument.CreateNew();

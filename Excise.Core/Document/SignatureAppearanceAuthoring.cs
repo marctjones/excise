@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 using Excise.Core.Graphics;
 using Excise.Core.Primitives;
@@ -176,6 +175,5 @@ public static class SignatureAppearanceAuthoring
         return sb.ToString();
     }
 
-    private static string Num(double value) =>
-        value.ToString("0.####", CultureInfo.InvariantCulture);
+    private static string Num(double value) => PdfNumberFormatter.Format(value);
 }

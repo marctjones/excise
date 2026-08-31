@@ -1,3 +1,5 @@
+using Excise.Core.Primitives;
+
 namespace Excise.Core.Graphics;
 
 /// <summary>
@@ -33,19 +35,12 @@ public class PdfBrush
         if (Color.IsGrayscale)
         {
             // Use 'g' for grayscale non-stroking color
-            return $"{FormatNumber(Color.R)} g";
+            return $"{PdfNumberFormatter.Format(Color.R)} g";
         }
         else
         {
             // Use 'rg' for RGB non-stroking color
-            return $"{FormatNumber(Color.R)} {FormatNumber(Color.G)} {FormatNumber(Color.B)} rg";
+            return $"{PdfNumberFormatter.Format(Color.R)} {PdfNumberFormatter.Format(Color.G)} {PdfNumberFormatter.Format(Color.B)} rg";
         }
-    }
-
-    private static string FormatNumber(double value)
-    {
-        if (Math.Abs(value - Math.Round(value)) < 0.0001)
-            return ((int)Math.Round(value)).ToString();
-        return value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
     }
 }

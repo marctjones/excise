@@ -77,13 +77,12 @@
         "Excise.Core.Tests/Text/TextMatrixLineSteppingTests.cs"
       ],
       "gaps": [
-        "The renderer necessarily re-executes graphics/text state as an accepted exception; content temporarily depends upward on writer-owned number formatting (#1319). Shared glyph/CMap decoding is font-owned."
+        "The renderer necessarily re-executes graphics/text state as an accepted exception. Shared glyph/CMap decoding is font-owned, and canonical PDF numeric token formatting is primitive-owned."
       ],
       "issueIds": [
         980,
         986,
-        992,
-        1319
+        992
       ]
     },
     {
@@ -349,7 +348,7 @@
         "architecture/generated/artifact-set.json"
       ],
       "gaps": [
-        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; two remaining Core direction/ownership defects are explicit issue-linked exceptions (#1319 and #1321), and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
+        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; the one remaining Core direction/ownership defect is the explicit issue-linked exception #1321, and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
       ],
       "issueIds": [
         940,
@@ -406,12 +405,6 @@
       "target": "core-content",
       "type": "uses",
       "implementationStatus": "implemented"
-    },
-    {
-      "source": "core-content",
-      "target": "core-writing",
-      "type": "uses",
-      "implementationStatus": "accepted_exception"
     },
     {
       "source": "core-document",

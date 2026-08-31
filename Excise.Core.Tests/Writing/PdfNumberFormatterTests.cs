@@ -53,6 +53,23 @@ public class PdfNumberFormatterTests
         PdfNumberFormatter.Format(x).Should().Be("216.016");
     }
 
+    [Fact]
+    public void PdfRealEmitters_UseTheSameNearIntegerPolicy()
+    {
+        const double value = 1.000009;
+        const string expected = "1.000009";
+        var real = new PdfReal(value);
+
+        PdfNumberFormatter.Format(value).Should().Be(expected);
+        PdfObjectWriter.Serialize(real).Should().Be(expected);
+        new ContentOperator("w", new PdfObject[] { real }).ToString()
+            .Should().Be($"{expected} w");
+
+        var bytes = new ContentStreamWriter().Write(
+            new ContentStream(new[] { new ContentOperator("w", new PdfObject[] { real }) }));
+        Encoding.Latin1.GetString(bytes).Should().Be($"{expected} w\n");
+    }
+
     [Theory]
     [InlineData(2.5, "2.5")]
     [InlineData(700.0, "700")]

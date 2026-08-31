@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
@@ -558,13 +557,7 @@ public class PdfGraphics : IDisposable
 
     #region Private Helpers
 
-    private static string Fmt(double value)
-    {
-        // Format number without unnecessary trailing zeros
-        if (Math.Abs(value - Math.Round(value)) < 0.0001)
-            return ((long)Math.Round(value)).ToString(CultureInfo.InvariantCulture);
-        return value.ToString("0.###", CultureInfo.InvariantCulture);
-    }
+    private static string Fmt(double value) => PdfNumberFormatter.Format(value);
 
     private void ThrowIfDisposed()
     {

@@ -66,7 +66,6 @@ digraph excise_architecture {
   "core-content" -> "core-fonts" [label="depends", style="solid"];
   "core-content" -> "core-parsing" [label="depends", style="solid"];
   "core-content" -> "core-primitives" [label="depends", style="solid"];
-  "core-content" -> "core-writing" [label="uses", style="dotted"];
   "core-document" -> "core-encryption" [label="depends", style="solid"];
   "core-document" -> "core-encryption" [label="uses", style="dotted"];
   "core-document" -> "core-parsing" [label="depends", style="solid"];
