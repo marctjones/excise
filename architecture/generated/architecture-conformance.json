@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "77e8a4ba226e4a38c7c548bb2f2eb999dc1e8ae7",
+  "sourceRevision": "61c04931752d0c9e59cc9e87de3166b129770c96",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5968,
+    "retainedSymbols": 5976,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -402,12 +402,12 @@
     {
       "source": "cli",
       "target": "core-document",
-      "references": 133,
+      "references": 136,
       "typeDependencyCount": 35,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Commands.InfoCommandHandler",
+          "source": "Excise.Cli.Commands.DocumentAssemblyHandler",
           "target": "Excise.Core.Document.PdfDocument",
           "references": 12
         }
@@ -416,8 +416,8 @@
     {
       "source": "cli",
       "target": "core-encryption",
-      "references": 20,
-      "typeDependencyCount": 6,
+      "references": 26,
+      "typeDependencyCount": 8,
       "classification": "declared",
       "evidence": [
         {

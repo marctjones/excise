@@ -1,5 +1,6 @@
 using Excise.Core.Document;
 using Excise.Core.Operations;
+using Excise.Core.Security;
 
 namespace Excise.Cli.Commands;
 
@@ -38,17 +39,19 @@ internal static class DocumentAssemblyHandler
                 sources.Add((document, Enumerable.Range(0, document.PageCount).ToArray()));
             }
 
+            var outputEncryption = ResolveMergeOutputEncryption(opened);
             var droppedCatalogEntries = PdfDocumentMerger
                 .CatalogEntriesNotConserved(opened[0])
                 .ToArray();
             cancellationToken.ThrowIfCancellationRequested();
             using var merged = PdfDocumentMerger.Merge(sources);
-            merged.Save(outputPath);
+            merged.Save(outputPath, outputEncryption.Options);
             return new MergeDocumentsResult(
                 request.InputPaths.Select(Path.GetFullPath).ToArray(),
                 outputPath,
                 merged.PageCount,
-                droppedCatalogEntries);
+                droppedCatalogEntries,
+                outputEncryption.Policy);
         }
         finally
         {
@@ -77,6 +80,7 @@ internal static class DocumentAssemblyHandler
             DocumentAction.AssembleDocument,
             "splitting this document",
             request.IgnorePermissions);
+        var outputEncryption = GetOutputEncryption(document);
         var droppedCatalogEntries = PdfDocumentMerger
             .CatalogEntriesNotConserved(document)
             .ToArray();
@@ -93,7 +97,7 @@ internal static class DocumentAssemblyHandler
                 cancellationToken.ThrowIfCancellationRequested();
                 var suffix = (index + 1).ToString().PadLeft(digits, '0');
                 var path = Path.Combine(outputFolder, $"{baseName}_{suffix}.pdf");
-                fragments[index].Save(path);
+                fragments[index].Save(path, outputEncryption.Options);
                 paths.Add(path);
             }
         }
@@ -107,7 +111,8 @@ internal static class DocumentAssemblyHandler
             input.FullName,
             outputFolder,
             paths,
-            droppedCatalogEntries);
+            droppedCatalogEntries,
+            outputEncryption.Policy);
     }
 
     private static IReadOnlyList<PdfDocument> CreateFragments(
@@ -133,7 +138,57 @@ internal static class DocumentAssemblyHandler
         if (request.Mode == SplitDocumentMode.Boundaries && request.Boundaries.Count == 0)
             throw new ArgumentException("At least one split boundary is required.");
     }
+
+    private static AssemblyOutputEncryption ResolveMergeOutputEncryption(
+        IReadOnlyList<PdfDocument> sources)
+    {
+        var first = GetOutputEncryption(sources[0]);
+        for (var index = 1; index < sources.Count; index++)
+        {
+            var next = GetOutputEncryption(sources[index]);
+            if (first.Policy != next.Policy || !Equivalent(first.Options, next.Options))
+            {
+                throw new DocumentAssemblyEncryptionPolicyException(
+                    "Cannot merge inputs with conflicting encryption policies. " +
+                    "Use `excise decrypt` to make the output policy explicit before merging.");
+            }
+        }
+
+        return first;
+    }
+
+    private static AssemblyOutputEncryption GetOutputEncryption(PdfDocument document)
+    {
+        var options = document.GetReEncryptionOptions(userPassword: null);
+        return options is null
+            ? new AssemblyOutputEncryption(DocumentAssemblyEncryptionPolicy.Unencrypted, null)
+            : new AssemblyOutputEncryption(DocumentAssemblyEncryptionPolicy.Preserved, options);
+    }
+
+    private static bool Equivalent(PdfEncryptionOptions? left, PdfEncryptionOptions? right)
+        => left is null || right is null
+            ? left is null && right is null
+            : left.Algorithm == right.Algorithm
+              && left.Permissions == right.Permissions
+              && left.EncryptMetadata == right.EncryptMetadata;
 }
+
+/// <summary>
+/// Raised before an assembly save when merge inputs have no single safe output
+/// encryption policy. Callers must explicitly decrypt or normalize the sources.
+/// </summary>
+internal sealed class DocumentAssemblyEncryptionPolicyException(string message)
+    : InvalidOperationException(message);
+
+internal enum DocumentAssemblyEncryptionPolicy
+{
+    Unencrypted,
+    Preserved,
+}
+
+internal readonly record struct AssemblyOutputEncryption(
+    DocumentAssemblyEncryptionPolicy Policy,
+    PdfEncryptionOptions? Options);
 
 internal readonly record struct MergeDocumentsRequest(
     IReadOnlyList<string> InputPaths,
@@ -144,7 +199,8 @@ internal sealed record MergeDocumentsResult(
     IReadOnlyList<string> InputPaths,
     string OutputPath,
     int PageCount,
-    IReadOnlyList<string> DroppedCatalogEntries);
+    IReadOnlyList<string> DroppedCatalogEntries,
+    DocumentAssemblyEncryptionPolicy OutputEncryptionPolicy);
 
 internal enum SplitDocumentMode
 {
@@ -166,4 +222,5 @@ internal sealed record SplitDocumentResult(
     string InputPath,
     string OutputFolder,
     IReadOnlyList<string> WrittenPaths,
-    IReadOnlyList<string> DroppedCatalogEntries);
+    IReadOnlyList<string> DroppedCatalogEntries,
+    DocumentAssemblyEncryptionPolicy OutputEncryptionPolicy);
