@@ -5,8 +5,6 @@ using Excise.Core.Document;
 using Excise.Core.Operations;
 using Excise.Core.Text.Segmentation;
 using Excise.Ocr;
-using Excise.Rendering;
-using SkiaSharp;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Excise.Cli.Tests")]
 
@@ -63,7 +61,7 @@ partial class Program
             CreateValidateCommand(),
             TextCommand.Create(),
             LettersCommand.Create(),
-            CreateRenderCommand(),
+            RenderCommand.Create(),
             CreateRedactCommand(),
             CreateMergeCommand(),
             CreateSplitCommand(),
@@ -198,114 +196,6 @@ partial class Program
                 }
 
                 Environment.ExitCode = conformant ? 0 : 1;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error: {ex.Message}");
-                Environment.ExitCode = 1;
-            }
-        });
-
-        return command;
-    }
-
-    /// <summary>
-    /// excise render <file> -o <output.png> [--page N] [--dpi N] [--password P]
-    /// </summary>
-    static Command CreateRenderCommand()
-    {
-        var fileArg = new Argument<FileInfo>("file") { Description = "PDF file" };
-        var outputOption = new Option<FileInfo>("--output", "-o")
-        {
-            Description = "Output image file (PNG)",
-            Required = true,
-        };
-        var pageOption = new Option<int>("--page", "-p")
-        {
-            Description = "Page number (1-based)",
-            DefaultValueFactory = _ => 1,
-        };
-        var dpiOption = new Option<int>("--dpi")
-        {
-            Description = "Resolution in DPI",
-            DefaultValueFactory = _ => 150,
-        };
-        var passwordOption = new Option<string?>("--password")
-        {
-            Description = "User password for encrypted PDFs",
-        };
-        var jsonOption = new Option<bool>("--json")
-        {
-            Description = "Write render result as JSON",
-            DefaultValueFactory = _ => false,
-        };
-
-        var ignorePermissionsOption = CreateIgnorePermissionsOption();
-
-        var command = new Command("render", "Render PDF page to image")
-        {
-            fileArg,
-            outputOption,
-            pageOption,
-            dpiOption,
-            passwordOption,
-            jsonOption,
-            ignorePermissionsOption,
-        };
-
-        command.SetAction(parseResult =>
-        {
-            var file = parseResult.GetValue(fileArg)!;
-            var output = parseResult.GetValue(outputOption)!;
-            var page = parseResult.GetValue(pageOption);
-            var dpi = parseResult.GetValue(dpiOption);
-            var password = parseResult.GetValue(passwordOption);
-            var json = parseResult.GetValue(jsonOption);
-            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
-            if (!file.Exists)
-            {
-                Console.Error.WriteLine($"File not found: {file.FullName}");
-                Environment.ExitCode = 1;
-                return;
-            }
-
-            try
-            {
-                using var doc = OpenPdfDocument(file.FullName, password);
-                RequireDocumentPermission(doc, DocumentAction.Extract,
-                    "page image export (render)", ignorePermissions);
-
-                if (page < 1 || page > doc.PageCount)
-                {
-                    Console.Error.WriteLine($"Invalid page number. Document has {doc.PageCount} pages.");
-                    Environment.ExitCode = 1;
-                    return;
-                }
-
-                if (!json)
-                    Console.WriteLine($"Rendering page {page} at {dpi} DPI...");
-
-                var result = RenderPageToPng(doc, page, dpi, output.FullName);
-
-                if (json)
-                {
-                    WriteJson(new
-                    {
-                        schemaVersion = 1,
-                        command = PdfCommandIds.RenderPage,
-                        status = "PASS",
-                        inputPath = file.FullName,
-                        outputPath = output.FullName,
-                        pageNumber = page,
-                        dpi,
-                        result.Width,
-                        result.Height,
-                    });
-                    return;
-                }
-
-                Console.WriteLine($"Output size: {result.Width} x {result.Height} pixels");
-                Console.WriteLine($"Saved to: {output.FullName}");
             }
             catch (Exception ex)
             {
