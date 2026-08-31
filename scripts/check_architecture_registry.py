@@ -16,6 +16,8 @@ import sys
 import tempfile
 import xml.etree.ElementTree as ET
 
+from validate_json_schema import validate_json_schema
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ARCHITECTURE_ROOT = REPO_ROOT / "architecture"
@@ -24,6 +26,7 @@ DEFAULT_INVENTORY = ARCHITECTURE_ROOT / "inventory.generated.json"
 DEFAULT_ASSESSMENT = ARCHITECTURE_ROOT / "assessment.json"
 DEFAULT_DECISIONS = ARCHITECTURE_ROOT / "decisions.json"
 DEFAULT_TOPOLOGY = ARCHITECTURE_ROOT / "generated/code-topology.json"
+DEFAULT_COUPLING = ARCHITECTURE_ROOT / "generated/change-coupling.json"
 DEFAULT_CONFORMANCE = ARCHITECTURE_ROOT / "generated/architecture-conformance.json"
 SCHEMA_ROOT = ARCHITECTURE_ROOT / "schemas"
 
@@ -55,6 +58,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--assessment", type=Path, default=DEFAULT_ASSESSMENT)
     parser.add_argument("--decisions", type=Path, default=DEFAULT_DECISIONS)
     parser.add_argument("--topology", type=Path, default=DEFAULT_TOPOLOGY)
+    parser.add_argument("--coupling", type=Path, default=DEFAULT_COUPLING)
     parser.add_argument("--conformance", type=Path, default=DEFAULT_CONFORMANCE)
     parser.add_argument("--write-inventory", action="store_true")
     parser.add_argument("--write-diagrams", action="store_true")
@@ -95,6 +99,20 @@ def repo_relative(path: Path) -> str:
 
 def repo_path(raw: str) -> Path:
     return (REPO_ROOT / raw.replace("\\", "/")).resolve()
+
+
+def schema_errors(document: dict, schema_name: str, context: str) -> list[str]:
+    schema_path = SCHEMA_ROOT / schema_name
+    if not schema_path.is_file():
+        return [f"{context}: missing schema {repo_relative(schema_path)}"]
+    try:
+        schema = load_json(schema_path)
+    except ValueError as exc:
+        return [f"{context}: {exc}"]
+    return [
+        f"{context} schema: {error}"
+        for error in validate_json_schema(document, schema)
+    ]
 
 
 def project_references(project_file: Path) -> list[str]:
@@ -212,6 +230,8 @@ def validate_registry_set(
         schema_path = SCHEMA_ROOT / f"{name}.schema.json"
         if not schema_path.is_file():
             errors.append(f"{name}: missing schema {repo_relative(schema_path)}")
+        else:
+            errors.extend(schema_errors(document, f"{name}.schema.json", name))
 
     design_root_keys = {
         "$schema", "schemaVersion", "designVersion", "repositoryScope", "components",
@@ -226,6 +246,9 @@ def validate_registry_set(
         errors.append("repository scope: schemaVersion must be 1")
     if scope.get("$schema") != "./schemas/repository-scope.schema.json":
         errors.append("repository scope: unexpected $schema")
+    errors.extend(schema_errors(
+        scope, "repository-scope.schema.json", "repository scope"
+    ))
     component_by_id = unique_ids(design.get("components", []), "id", "design.components", errors)
     component_ids = set(component_by_id)
     workflow_by_id = unique_ids(design.get("workflows", []), "id", "design.workflows", errors)
@@ -441,6 +464,7 @@ def validate_topology_join(design: dict, inventory: dict, topology: dict) -> lis
     for schema_name in ("topology.schema.json", "architecture-conformance.schema.json"):
         if not (SCHEMA_ROOT / schema_name).is_file():
             errors.append(f"topology: missing schema architecture/schemas/{schema_name}")
+    errors.extend(schema_errors(topology, "topology.schema.json", "topology"))
 
     component_by_id = {component["id"]: component for component in design["components"]}
     inventory_by_path = {project["path"]: project for project in inventory["projects"]}
@@ -498,6 +522,29 @@ def validate_topology_join(design: dict, inventory: dict, topology: dict) -> lis
         errors.append(
             "topology: dynamic mechanism summary must contain each supported mechanism exactly once"
         )
+    return errors
+
+
+def validate_change_coupling(inventory: dict, coupling: dict) -> list[str]:
+    errors = schema_errors(
+        coupling, "change-coupling.schema.json", "change coupling"
+    )
+    expected_roots = sorted({
+        project["sourceRoot"]
+        for project in inventory.get("projects", [])
+        if project.get("classification") == "shipping"
+    })
+    scope = coupling.get("scope", {})
+    if scope.get("sourceRoots") != expected_roots:
+        errors.append(
+            "change coupling: sourceRoots differ from shipping inventory roots"
+        )
+    for index, item in enumerate(coupling.get("files", [])):
+        path = item.get("path", "")
+        if not any(path.startswith(root + "/") for root in expected_roots):
+            errors.append(
+                f"change coupling files[{index}]: path is outside shipping scope: {path}"
+            )
     return errors
 
 
@@ -1010,9 +1057,11 @@ def run_self_test(
     assessment: dict,
     decisions: dict,
     topology: dict,
+    coupling: dict,
 ) -> int:
     baseline = validate_registry_set(design, inventory, assessment, decisions)
     baseline.extend(validate_topology_join(design, inventory, topology))
+    baseline.extend(validate_change_coupling(inventory, coupling))
     if baseline:
         print("FAIL: real normalized registries are invalid", file=sys.stderr)
         for error in baseline:
@@ -1140,6 +1189,14 @@ def run_self_test(
     ):
         print("FAIL: topology seed provenance mutation was not detected", file=sys.stderr)
         return 1
+    mutated_coupling = copy.deepcopy(coupling)
+    mutated_coupling["scope"]["sourceRoots"].pop()
+    if not any(
+        "sourceRoots differ" in error
+        for error in validate_change_coupling(inventory, mutated_coupling)
+    ):
+        print("FAIL: coupling scope mutation was not detected", file=sys.stderr)
+        return 1
     print("PASS: normalized registries reject reference, inventory, and assessment drift")
     return 0
 
@@ -1147,11 +1204,11 @@ def run_self_test(
 def main() -> int:
     args = parse_args()
     try:
-        design, inventory, assessment, decisions, topology = [
+        design, inventory, assessment, decisions, topology, coupling = [
             load_json(path.resolve())
             for path in (
                 args.design, args.inventory, args.assessment, args.decisions,
-                args.topology,
+                args.topology, args.coupling,
             )
         ]
     except ValueError as exc:
@@ -1164,14 +1221,22 @@ def main() -> int:
         )
         print(f"wrote {repo_relative(args.inventory)}")
     if args.self_test:
-        return run_self_test(design, inventory, assessment, decisions, topology)
+        return run_self_test(
+            design, inventory, assessment, decisions, topology, coupling
+        )
     errors = validate_registry_set(design, inventory, assessment, decisions)
     errors.extend(validate_topology_join(design, inventory, topology))
+    errors.extend(validate_change_coupling(inventory, coupling))
     conformance: dict = {}
     if not errors:
         conformance = generate_architecture_conformance(
             design, inventory, assessment, topology
         )
+        errors.extend(schema_errors(
+            conformance,
+            "architecture-conformance.schema.json",
+            "architecture conformance",
+        ))
         errors.extend(
             check_or_write_conformance(
                 conformance,

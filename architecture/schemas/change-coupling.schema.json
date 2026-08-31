@@ -4,11 +4,32 @@
   "title": "Excise generated Git change coupling",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "generator", "sourceRevision", "window", "files", "pairs"],
+  "required": ["schemaVersion", "generator", "sourceRevision", "scope", "window", "files", "pairs"],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": { "const": 2 },
     "generator": { "const": "scripts/generate_change_coupling.py" },
     "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inventory", "classifications", "sourceRoots"],
+      "properties": {
+        "inventory": { "const": "architecture/inventory.generated.json" },
+        "classifications": {
+          "type": "array",
+          "items": { "const": "shipping" },
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true
+        },
+        "sourceRoots": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
     "window": {
       "type": "object",
       "additionalProperties": false,

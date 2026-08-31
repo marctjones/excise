@@ -41,9 +41,18 @@ second implementation-status list.
    provide compact reviewer views; undeclared edges are review candidates,
    while forbidden edges and unowned shipping code fail the registry gate.
    [`change-coupling.json`](../../architecture/generated/change-coupling.json)
-   records fixed-window production files that repeatedly change together.
+   records fixed-window shipping files that repeatedly change together; its
+   roots come from the generated inventory rather than a second source list.
+   [`artifact-set.json`](../../architecture/generated/artifact-set.json) hashes
+   the complete inventory/topology/coupling/conformance/diagram set so a mixed
+   or partial regeneration fails as one unit.
    The large topology file is compact generated JSON; query it with `jq`
    instead of reviewing or editing it as prose.
+
+`sourceRevision` records the commit used as the generation base. It is
+provenance, not the freshness key: committing regenerated output necessarily
+changes `HEAD`. Checks therefore preserve that field while comparing all other
+normalized content, then verify exact artifact bytes through the set manifest.
 
 ## Authority matrix
 
@@ -84,8 +93,15 @@ second implementation-status list.
 Validate the architecture surface with:
 
 ```bash
-scripts/check-architecture-registry.sh
-scripts/check_architecture_registry.py --self-test
+scripts/check-architecture-artifacts.sh
+scripts/check-architecture-artifacts.sh --self-test
 scripts/check-architecture-docs.sh
 scripts/check_architecture_docs.py --self-test
+```
+
+Regenerate all derived architecture artifacts transactionally only after
+reviewing the source registry changes:
+
+```bash
+scripts/check-architecture-artifacts.sh --update
 ```
