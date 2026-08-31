@@ -192,12 +192,12 @@ public class PermissionEnforcementTests : IDisposable
         var pdf = RestrictedFixture(-4 & ~8);
         var output = TempPath(".pdf");
 
-        var act = () => Program.RunAddField(pdf, output, "Text", "field1", 1, "100,100,300,130", null, []);
+        var act = () => FormMutationTestDriver.RunAddField(pdf, output, "Text", "field1", 1, "100,100,300,130", null, []);
         act.Should().Throw<PdfPermissionDeniedException>()
             .WithMessage("*bit 4*");
         File.Exists(output).Should().BeFalse();
 
-        Program.RunAddField(pdf, output, "Text", "field1", 1, "100,100,300,130", null, [],
+        FormMutationTestDriver.RunAddField(pdf, output, "Text", "field1", 1, "100,100,300,130", null, [],
             ignorePermissions: true);
         File.Exists(output).Should().BeTrue();
     }
@@ -241,18 +241,18 @@ public class PermissionEnforcementTests : IDisposable
     {
         // Clear bits 6 (32) and 9 (256): form fill-in denied both ways.
         var withField = TempPath(".pdf");
-        Program.RunAddField(RestrictedFixtureUnencryptedSource(), withField,
+        FormMutationTestDriver.RunAddField(RestrictedFixtureUnencryptedSource(), withField,
             "Text", "name", 1, "100,100,300,130", null, []);
         var restricted = TempPath(".pdf");
         EncryptionCommandTestDriver.RunEncrypt(withField, restricted, userPassword: null, ownerPassword: "owner-pw",
             -4 & ~32 & ~256, PdfEncryptionAlgorithm.Aes256, encryptMetadata: true);
         var output = TempPath(".pdf");
 
-        var act = () => Program.RunFillForm(restricted, output, ["name=Jane"], flatten: false);
+        var act = () => FormMutationTestDriver.RunFillForm(restricted, output, ["name=Jane"], flatten: false);
         act.Should().Throw<PdfPermissionDeniedException>()
             .WithMessage("*bit 6 or 9*");
 
-        Program.RunFillForm(restricted, output, ["name=Jane"], flatten: false, ignorePermissions: true)
+        FormMutationTestDriver.RunFillForm(restricted, output, ["name=Jane"], flatten: false, ignorePermissions: true)
             .Should().Be(1);
     }
 
@@ -262,14 +262,14 @@ public class PermissionEnforcementTests : IDisposable
         // Table 22: bit 9 permits filling existing fields even when bit 6
         // (annotate) is denied.
         var withField = TempPath(".pdf");
-        Program.RunAddField(RestrictedFixtureUnencryptedSource(), withField,
+        FormMutationTestDriver.RunAddField(RestrictedFixtureUnencryptedSource(), withField,
             "Text", "name", 1, "100,100,300,130", null, []);
         var restricted = TempPath(".pdf");
         EncryptionCommandTestDriver.RunEncrypt(withField, restricted, userPassword: null, ownerPassword: "owner-pw",
             -4 & ~32, PdfEncryptionAlgorithm.Aes256, encryptMetadata: true);
         var output = TempPath(".pdf");
 
-        Program.RunFillForm(restricted, output, ["name=Jane"], flatten: false).Should().Be(1);
+        FormMutationTestDriver.RunFillForm(restricted, output, ["name=Jane"], flatten: false).Should().Be(1);
     }
 
     private string RestrictedFixtureUnencryptedSource()

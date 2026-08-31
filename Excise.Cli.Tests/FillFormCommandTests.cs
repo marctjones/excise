@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using AwesomeAssertions;
 using Excise.Cli;
+using Excise.Cli.Commands;
 using Excise.Core.Document;
 using Xunit;
 
@@ -9,7 +10,7 @@ namespace Excise.Cli.Tests;
 
 /// <summary>
 /// Tests for the <c>excise fill-form</c> subcommand. Exercises both the
-/// internal <see cref="Program.RunFillForm"/> core and the CLI surface
+/// typed <see cref="FormMutationHandler"/> core and the CLI surface
 /// (<see cref="Program.RunAsync"/>).
 /// </summary>
 public class FillFormCommandTests : IDisposable
@@ -87,7 +88,7 @@ public class FillFormCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, PdfWithForm());
 
-        int set = Program.RunFillForm(input, output, new[] { "Name=Bob" }, flatten: false);
+        int set = FormMutationTestDriver.RunFillForm(input, output, new[] { "Name=Bob" }, flatten: false);
 
         set.Should().Be(1);
         using var doc = PdfDocument.Open(File.ReadAllBytes(output));
@@ -100,7 +101,7 @@ public class FillFormCommandTests : IDisposable
         var path = TempPath(".pdf");
         File.WriteAllBytes(path, PdfWithForm());
 
-        int set = Program.RunFillForm(path, path, new[] { "Name=Bob" }, flatten: false);
+        int set = FormMutationTestDriver.RunFillForm(path, path, new[] { "Name=Bob" }, flatten: false);
 
         set.Should().Be(1);
         using var doc = PdfDocument.Open(File.ReadAllBytes(path));
@@ -114,7 +115,7 @@ public class FillFormCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, PdfWithForm());
 
-        int set = Program.RunFillForm(input, output,
+        int set = FormMutationTestDriver.RunFillForm(input, output,
             new[] { "Name=Carol", "Accept=Off" }, flatten: false);
 
         set.Should().Be(2);
@@ -131,7 +132,7 @@ public class FillFormCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, PdfWithForm());
 
-        Program.RunFillForm(input, output, new[] { "Name=Dan" }, flatten: true);
+        FormMutationTestDriver.RunFillForm(input, output, new[] { "Name=Dan" }, flatten: true);
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(output));
         doc.GetAcroForm().Should().BeNull("flatten must remove the AcroForm dictionary");
@@ -147,7 +148,7 @@ public class FillFormCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, PdfWithForm());
 
-        var act = () => Program.RunFillForm(input, output,
+        var act = () => FormMutationTestDriver.RunFillForm(input, output,
             new[] { "Nonexistent=x" }, flatten: false);
 
         act.Should().Throw<KeyNotFoundException>().WithMessage("*Nonexistent*");
@@ -160,7 +161,7 @@ public class FillFormCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, PdfWithForm());
 
-        var act = () => Program.RunFillForm(input, output,
+        var act = () => FormMutationTestDriver.RunFillForm(input, output,
             new[] { "no-equals-sign" }, flatten: false);
 
         act.Should().Throw<InvalidOperationException>().WithMessage("*Malformed*");

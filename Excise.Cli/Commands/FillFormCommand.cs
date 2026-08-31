@@ -7,19 +7,7 @@ namespace Excise.Cli.Commands;
 /// </summary>
 internal static class FillFormCommand
 {
-    internal delegate int FillFormOperation(
-        string inputPath,
-        string outputPath,
-        string[] fields,
-        bool flatten,
-        bool ignorePermissions);
-
-    /// <summary>
-    /// Creates <c>excise fill-form</c> around the supplied permission option and form operation.
-    /// </summary>
-    internal static Command Create(
-        Option<bool> ignorePermissionsOption,
-        FillFormOperation runFillForm)
+    internal static Command Create()
     {
         var inputArg = new Argument<FileInfo>("input") { Description = "Input PDF file" };
         var outputArg = new Argument<FileInfo>("output") { Description = "Output PDF path" };
@@ -34,6 +22,7 @@ internal static class FillFormCommand
             DefaultValueFactory = _ => false,
         };
 
+        var ignorePermissionsOption = CliPermissionOptions.CreateIgnorePermissionsOption();
         var command = new Command(
             "fill-form",
             "Set AcroForm field values and save (optionally flatten to baked content)")
@@ -51,32 +40,31 @@ internal static class FillFormCommand
             if (!input.Exists)
             {
                 Console.Error.WriteLine($"File not found: {input.FullName}");
-                Environment.ExitCode = 1;
-                return;
+                return 1;
             }
 
             if (fields == null || fields.Length == 0)
             {
                 Console.Error.WriteLine("At least one --field name=value assignment is required.");
-                Environment.ExitCode = 1;
-                return;
+                return 1;
             }
 
             try
             {
-                int set = runFillForm(
+                var result = FormMutationHandler.Fill(new FillFormRequest(
                     input.FullName,
                     output.FullName,
                     fields,
                     flatten,
-                    ignorePermissions);
-                Console.WriteLine($"Set {set} field value(s){(flatten ? " (flattened)" : "")}");
-                Console.WriteLine($"Output: {output.FullName}");
+                    ignorePermissions));
+                Console.WriteLine($"Set {result.UpdatedFieldCount} field value(s){(flatten ? " (flattened)" : "")}");
+                Console.WriteLine($"Output: {result.OutputPath}");
+                return 0;
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error: {ex.Message}");
-                Environment.ExitCode = 1;
+                return 1;
             }
         });
 
