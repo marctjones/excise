@@ -17,7 +17,12 @@ namespace Excise.Cli.Tests;
 /// </remarks>
 internal static class TestPdfBuilder
 {
-    public static byte[] SinglePage(string text, double fontSize = 12, double x = 100, double y = 700)
+    public static byte[] SinglePage(
+        string text,
+        double fontSize = 12,
+        double x = 100,
+        double y = 700,
+        string? contentSuffix = null)
     {
         using var ms = new MemoryStream();
         using var writer = new StreamWriter(ms, new UTF8Encoding(false), leaveOpen: true) { NewLine = "\n" };
@@ -47,6 +52,8 @@ internal static class TestPdfBuilder
         writer.Flush();
 
         var contentBody = $"BT /F1 {fontSize} Tf {x} {y} Td ({text}) Tj ET";
+        if (!string.IsNullOrWhiteSpace(contentSuffix))
+            contentBody += $" {contentSuffix}";
         offsets[4] = ms.Position;
         writer.WriteLine("4 0 obj");
         writer.WriteLine($"<< /Length {contentBody.Length} >>");

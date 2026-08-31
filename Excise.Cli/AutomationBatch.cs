@@ -6,7 +6,6 @@ using Excise.Cli.Commands;
 using Excise.Core.Automation;
 using Excise.Core.Document;
 using Excise.Core.Parsing;
-using Excise.Core.Text.Segmentation;
 
 namespace Excise.Cli;
 
@@ -451,8 +450,11 @@ partial class Program
     private static object ExecuteAuditStep(AutomationBatchStep step, string baseDirectory)
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
-        using var doc = OpenPdfDocument(input, step.Password);
-        var hits = HiddenTextDetector.Scan(doc, includeVisibleFailedRedactions: true);
+        var result = AuditInspectionHandler.Execute(new AuditInspectionRequest(
+            input,
+            step.Password,
+            Deep: false));
+        var hits = result.StructuralHits;
         if (hits.Count > 0 && step.AllowFindings != true)
             throw new AutomationValidationException(
                 "HIDDEN_TEXT_FOUND",
@@ -465,7 +467,7 @@ partial class Program
 
         return new
         {
-            inputPath = input,
+            inputPath = result.FilePath,
             hitCount = hits.Count,
             hits = hits.Select(hit => new
             {
@@ -482,11 +484,6 @@ partial class Program
             }).ToArray(),
         };
     }
-
-    private static PdfDocument OpenPdfDocument(string path, string? password)
-        => string.IsNullOrEmpty(password)
-            ? PdfDocument.Open(path)
-            : PdfDocument.Open(path, password);
 
     private static void WriteJson(object value)
         => Console.WriteLine(JsonSerializer.Serialize(value, AutomationJsonOptions));
