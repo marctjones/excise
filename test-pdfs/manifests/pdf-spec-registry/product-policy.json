@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "decision": "AD-009",
+  "status": "accepted",
+  "specificationPolicy": {
+    "interpretationReference": "ISO 32000-2:2020 with current errata",
+    "legacyReference": "ISO 32000-1:2008 and the earlier Adobe PDF versions",
+    "inputVersions": ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "2.0"],
+    "defaultOutput": "Preserve the input's declared PDF version where safely possible; emit PDF 2.0 when the selected workflow requires it or PDFE cannot safely author the earlier-version form.",
+    "outputRules": [
+      "Do not emit a PDF 2.0-only feature without upgrading the declared version and testing both the new feature and preservation of unrelated content.",
+      "Do not downgrade, preserve a version declaration, or claim a conformance profile when the changed output cannot safely satisfy that declaration or claim.",
+      "Do not write features deprecated by PDF 2.0; legacy files may still need parse/preserve handling.",
+      "Do not call a feature supported merely because it parses or round-trips; support is mode-specific."
+    ],
+    "redactionReviewDrafts": {
+      "defaultEnabled": false,
+      "purpose": "Explicit, internal review of proposed redactions before destructive content removal.",
+      "ordinarySave": "Preserve incoming /Redact annotations without applying them.",
+      "reviewDraftSave": "When explicitly enabled, write /Redact annotations and a clear non-shareable warning; no security-removal claim is permitted.",
+      "safeRedactedCopy": "Never create /Redact annotations. Refuse to produce a safe-redacted copy with unresolved incoming /Redact annotations rather than silently applying or deleting them.",
+      "application": "Applying an explicitly reviewed annotation must remove the identified content, draw any post-removal overlay as page content, and delete the applied annotation."
+    }
+  },
+  "editingSafetyPolicy": {
+    "unsupportedOrAmbiguousFeature": "A document may be viewed in clearly limited mode, but PDFE refuses editing or redaction when it cannot safely render or mutate a relevant feature and explains the reason on the attempted action.",
+    "malformedOrDamagedDocument": "Offer clearly marked best-effort read-only recovery only; refuse editing, redaction, and conformance claims until parsing is safe and deterministic.",
+    "saveStrategy": "Default to a full normalized rewrite after editing. Incremental-save workflows are deferred unless separately justified.",
+    "resourceLimits": "Define maximum file, object, nesting, decoded-stream, image-pixel, and rendering budgets; reject over-limit inputs safely with an explanation."
+  },
+  "conformancePolicy": {
+    "marketing": "Do not claim blanket PDF 2.0 conformance. Publish the evidence-backed capability profile instead.",
+    "profiles": "After an edit, remove PDF/A, PDF/UA, PDF/X, PDF/E, or PDF/VT conformance claims unless PDFE independently verifies that the output remains conforming.",
+    "formalClaims": "Make formal profile claims only in specific independently validated output modes."
+  },
+  "evidencePolicy": {
+    "implementedMinimum": ["automated unit test", "adversarial atomic fixture", "local reference-tool comparison"],
+    "higherConfidence": "Redistributable real-world corpus coverage raises confidence above implemented.",
+    "securitySensitive": "Require independent saved-file and rendered-output checks before calling a security-sensitive capability implemented.",
+    "benchmarkScope": "Benchmarks are required for open, render, search, save, redact, and forms; record a stated metric and threshold where applicable.",
+    "redactionReleaseRule": "A confirmed redaction leak blocks release only when it is a regression. A newly discovered pre-existing leak is a priority remediation item with recorded scope and owner.",
+    "corpusPrivacy": "Use only redistributable public or official fixtures and anonymized synthetic material. Never upload private documents; run reference tools locally and record tool, version, command, and claim."
+  },
+  "activeContentPolicy": {
+    "https": "Only a deliberate user click may launch an https URI in the system browser. Show the normalized destination and permit a user-managed trusted-host allowlist that no PDF can modify.",
+    "http": "Never follow insecure http. Explain the risk and offer copy/inspection or an https alternative.",
+    "mailto": "Require confirmation showing recipient, subject, and body before opening the mail client.",
+    "otherSchemes": "Block and allow copy-only for all other URI schemes, including local, executable, custom-app, data, and script schemes.",
+    "otherActions": "Never automatically execute actions. Block JavaScript, Launch, remote-document, embedded-document, multimedia, form-submit, and external-data execution."
+  },
+  "priorityCapabilities": [
+    "safe parsing, bounded decoding, and conservative round-trip preservation",
+    "page viewing, rendering, search, selection, copy, and common font/image content",
+    "content-level redaction with independent saved-byte, extraction, and visual evidence",
+    "page organization and ordinary document editing",
+    "mainstream AcroForms (fill, save, flatten) and everyday annotations",
+    "metadata, embedded files, encryption, permissions, and signature inspection",
+    "reliable viewing, search, selection, and redaction for complex writing systems"
+  ],
+  "selectedPdf20Capabilities": [
+    "AES-256 and Unicode password handling",
+    "associated files and current embedded-file semantics",
+    "PDF 2.0 header/catalog acceptance and current errata-based interpretation",
+    "tagged-PDF namespace-aware preservation before any claim of semantic authoring"
+  ],
+  "preserveOnlyOrDeferred": [
+    "XFA and deprecated form presentation behavior",
+    "rich media, movie, sound, 3D, PRC, and projection",
+    "geospatial, measurement, document-part, and print-production workflows",
+    "PDF/A, PDF/UA, PDF/X, PDF/E, and PDF/VT conformance claims",
+    "full accessibility repair or authoring beyond evidence-backed workflows"
+  ],
+  "blocked": ["JavaScript execution", "Launch action execution", "media playback", "implicit external-data or attached-file execution"],
+  "adoptionEvidence": [
+    {"kind":"industry-guidance","url":"https://pdfa.org/how-to-get-started-with-pdf-2-0/","note":"PDF does not require implementation of every feature; implemented features must be correct."},
+    {"kind":"industry-guidance","url":"https://pdfa.org/resource/iso-32000-2/","note":"PDF 2.0 supplies corrections and clarifications relevant to PDF 1.7 implementations."},
+    {"kind":"industry-guidance","url":"https://pdfa.org/download-area/publications/Tagged-PDF-Best-Practice-Guide.pdf","note":"Tagged-PDF data model is shared but PDF 2.0 adds namespace semantics."}
+  ]
+}

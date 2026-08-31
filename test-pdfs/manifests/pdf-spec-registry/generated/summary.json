@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/check-pdf-spec-registry.py",
+  "registryStatus": "proposed",
+  "sections": {
+    "annotation-subtypes": 28,
+    "content": 4,
+    "document": 4,
+    "graphics": 6,
+    "image-requirements": 36,
+    "interactive": 7,
+    "interchange": 4,
+    "multimedia": 2,
+    "operators": 73,
+    "optional-profiles": 4,
+    "product-capabilities": 10,
+    "renderer-requirements": 95,
+    "rendering": 3,
+    "syntax": 4,
+    "transparency": 2
+  },
+  "capabilities": 282,
+  "decisionStates": {
+    "blocked": 1,
+    "deferred": 9,
+    "preserve-only": 6,
+    "required": 253,
+    "supported": 13
+  },
+  "modeCoverage": {
+    "author": 23,
+    "execute": 9,
+    "extract": 53,
+    "mutate": 29,
+    "parse": 277,
+    "preserve": 273,
+    "render": 257,
+    "write": 115
+  },
+  "migrationStatus": "active-until-migrated",
+  "productPolicy": "AD-009",
+  "verificationGapCount": 304
+}

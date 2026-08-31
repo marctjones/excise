@@ -1,0 +1,210 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "transparency",
+  "capabilities": [
+    {
+      "id": "pdf.17.transparency.model",
+      "name": "Transparency groups, blend modes, soft masks, alpha, and compositing",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "11"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "11"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Common page appearance with high differential-render risk."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "partial",
+        "write": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.transparency"
+        },
+        {
+          "kind": "implementation",
+          "ref": "Excise.Rendering/SkiaRenderer.Paths.cs; Excise.Rendering/SkiaRenderer.State.cs; Excise.Rendering/Transparency/"
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied; Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SoftMaskedImage_ComposesStraightAlphaSamples"
+        },
+        {
+          "kind": "atomic-fixture",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied"
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
+        }
+      ],
+      "verification": {
+        "status": "executable",
+        "requiredModes": [
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "atomic-fixture",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
+      },
+      "notes": "Track group isolation/knockout, blend mode, soft-mask subtype, transfer behavior, and flattening separately.",
+      "documentation": [
+        "CI_GATES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [
+          "Excise.Rendering/SkiaRenderer.Paths.cs; Excise.Rendering/SkiaRenderer.State.cs; Excise.Rendering/Transparency/"
+        ],
+        "testRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied; Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SoftMaskedImage_ComposesStraightAlphaSamples"
+        ],
+        "fixtureRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied"
+        ],
+        "corpusRefs": [],
+        "referenceToolRefs": [
+          "reference-tools.json"
+        ],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track group isolation/knockout, blend mode, soft-mask subtype, transfer behavior, and flattening separately."
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "implemented-partial",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied; Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SoftMaskedImage_ComposesStraightAlphaSamples",
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied"
+        ],
+        "negativeOrConservationTestRefs": [
+          "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
+        ],
+        "explicitEvidenceGaps": []
+      }
+    },
+    {
+      "id": "pdf.17.transparency.output-preview",
+      "name": "Output preview and flattening parameters",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "11.6"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "11.6"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "deferred",
+        "rationale": "Print-production behavior is outside current core editing scope."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "not-applicable",
+        "write": "unknown"
+      },
+      "evidence": [],
+      "notes": "Preservation must still be evaluated before any save claim.",
+      "documentation": [],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Preservation must still be evaluated before any save claim."
+        ],
+        "processorRoles": [
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "deferred",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}

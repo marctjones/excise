@@ -1,0 +1,330 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "document",
+  "capabilities": [
+    {
+      "id": "pdf.17.document.catalog-pages",
+      "name": "Document catalog, page tree, inheritance, and page geometry",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "7.7",
+            "7.7.3",
+            "7.7.4"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "7.7",
+            "7.7.3",
+            "7.7.4"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Core viewing and editing model."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "mutate": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.page.tree"
+        },
+        {
+          "kind": "legacy",
+          "ref": "pdf20.page.boxes"
+        }
+      ],
+      "notes": "Track inherited resources, boxes, rotation, user units, and page-content arrays independently in evidence.",
+      "documentation": [
+        "docs/architecture/system-design.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [
+          "docs/architecture/system-design.md"
+        ],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track inherited resources, boxes, rotation, user units, and page-content arrays independently in evidence."
+        ],
+        "processorRoles": [
+          "mutate",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.document.navigation",
+      "name": "Outlines, page labels, named destinations, and viewer preferences",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "12.2",
+            "12.3",
+            "12.4"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "12.2",
+            "12.3",
+            "12.4"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "supported",
+        "rationale": "Useful navigation must survive editing even where UI is limited."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unknown"
+      },
+      "evidence": [],
+      "notes": "Destinations have security and broken-reference cases; track them separately from actions.",
+      "documentation": [
+        "README.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Destinations have security and broken-reference cases; track them separately from actions."
+        ],
+        "processorRoles": [
+          "author",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.document.metadata",
+      "name": "Document information, XMP metadata, identifiers, dates, and versioning",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "7.7.2",
+            "14.3"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "7.7.2",
+            "14.3"
+          ]
+        }
+      ],
+      "classification": "core",
+      "decision": {
+        "state": "required",
+        "rationale": "Preservation and redaction both depend on tracking non-page text carriers."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown"
+      },
+      "evidence": [],
+      "notes": "Metadata is a redaction carrier and needs saved-byte evidence, not a page-render-only test.",
+      "documentation": [
+        "REDACTION_AI_GUIDELINES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Metadata is a redaction carrier and needs saved-byte evidence, not a page-render-only test."
+        ],
+        "processorRoles": [
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.document.embedded-files",
+      "name": "Embedded files, file specifications, collections, and portfolios",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "7.11",
+            "12.3.5"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "7.11",
+            "12.3.5"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "supported",
+        "rationale": "Attachments are high-value preservation and redaction carriers."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unknown"
+      },
+      "evidence": [],
+      "notes": "Track document-level and annotation attachments separately; do not execute attached content.",
+      "documentation": [
+        "REDACTION_AI_GUIDELINES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track document-level and annotation attachments separately; do not execute attached content."
+        ],
+        "processorRoles": [
+          "author",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}

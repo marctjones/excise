@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
+  "sourceRoots": ["Excise.Core", "Excise.Rendering", "Excise.App", "Excise.Core.Tests", "Excise.Rendering.Tests", "Excise.App.Tests", "Excise.Cli.Tests", "tests", "docs/architecture"],
+  "extensions": [".cs", ".json", ".md", ".sh", ".py", ".tsv"],
+  "ignoredTerms": ["pdf", "document", "content", "stream", "operator", "feature", "requirement", "renderer", "rendering", "optional", "standard", "support", "compatibility", "interactive", "security", "product", "capability", "implementation", "and", "all", "the", "for", "with", "from", "into", "files", "file", "functions", "objects", "object", "state", "graphics", "page", "pages", "text", "type", "lists", "sections", "procedures"],
+  "minimumDistinctTermHits": 2,
+  "sectionTerms": {
+    "syntax": ["PdfParser", "PdfDocumentWriter", "XRef", "PdfObject"],
+    "document": ["PdfDocument", "Catalog", "PageTree", "Metadata"],
+    "graphics": ["SkiaRenderer", "PdfGraphics", "ColorSpace", "PdfImage"],
+    "rendering": ["SkiaRenderer", "RenderPage", "DifferentialRendering", "PerformanceBenchmark"],
+    "content": ["ContentStream", "ContentOperator", "TextState", "TextExtractor"],
+    "operators": ["OperatorCoverageTests", "ContentOperator", "ContentStreamParser"],
+    "renderer-requirements": ["SkiaRenderer", "DifferentialRendering", "ConformanceTests"],
+    "image-requirements": ["PdfImage", "Jpx", "Jbig2", "Image"],
+    "annotation-subtypes": ["Annotation", "PdfAnnotation", "Redact"],
+    "transparency": ["Transparency", "BlendMode", "SoftMask"],
+    "interactive": ["AcroForm", "Annotation", "Action", "Redact"],
+    "multimedia": ["Media", "Sound", "Movie", "ThreeD"],
+    "interchange": ["StructureTree", "Metadata", "OutputIntent", "Tagged"],
+    "optional-profiles": ["PdfA", "PdfUa", "Conformance"],
+    "product-capabilities": ["Redaction", "Privacy", "Security", "Ocr"]
+  }
+}

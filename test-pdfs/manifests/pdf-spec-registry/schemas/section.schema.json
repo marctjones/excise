@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Excise PDF specification capability section",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "section", "capabilities"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "section": { "type": "string", "minLength": 1 },
+    "capabilities": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "name", "spec", "classification", "decision", "modes", "evidence", "notes", "documentation", "tracking"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^(pdf\\.(17|20)|pdfe\\.product)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$" },
+          "name": { "type": "string", "minLength": 1 },
+          "spec": { "type": "array", "minItems": 1 },
+          "classification": { "enum": ["core", "optional", "extension", "profile", "product"] },
+          "decision": { "type": "object", "required": ["state", "rationale"], "properties": { "state": { "type": "string" }, "rationale": { "type": "string" } } },
+          "modes": { "type": "object", "minProperties": 1 },
+          "evidence": { "type": "array" },
+          "notes": { "type": "string" },
+          "documentation": { "type": "array" },
+          "tracking": { "type": "object", "additionalProperties": false, "required": ["owner", "reviewState", "implementationRefs", "testRefs", "fixtureRefs", "corpusRefs", "referenceToolRefs", "architectureRefs", "issueRefs", "knownLimitations", "processorRoles", "supportLevel", "normativeSourcePins", "errataStatus", "lastReviewedCommit", "positiveTestRefs", "negativeOrConservationTestRefs", "explicitEvidenceGaps"], "properties": { "owner": { "type": "string", "minLength": 1 }, "reviewState": { "enum": ["migration-pending", "policy-reviewed", "verified", "needs-review"] }, "implementationRefs": { "type": "array", "items": { "type": "string" } }, "testRefs": { "type": "array", "items": { "type": "string" } }, "fixtureRefs": { "type": "array", "items": { "type": "string" } }, "corpusRefs": { "type": "array", "items": { "type": "string" } }, "referenceToolRefs": { "type": "array", "items": { "type": "string" } }, "architectureRefs": { "type": "array", "items": { "type": "string" } }, "issueRefs": { "type": "array", "items": { "type": "string", "pattern": "^#[0-9]+$" } }, "knownLimitations": { "type": "array", "items": { "type": "string" } }, "processorRoles": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "supportLevel": { "enum": ["implemented-and-proven", "implemented-partial", "implemented-incorrect", "planned", "deferred", "intentionally-unsupported", "unknown"] }, "normativeSourcePins": { "type": "array", "minItems": 1, "items": { "type": "object", "required": ["source", "pin"] } }, "errataStatus": { "enum": ["not-reviewed", "no-requirement-change", "requires-registry-change", "superseded"] }, "lastReviewedCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }, "positiveTestRefs": { "type": "array", "items": { "type": "string" } }, "negativeOrConservationTestRefs": { "type": "array", "items": { "type": "string" } }, "explicitEvidenceGaps": { "type": "array", "items": { "type": "string" } } } },
+          "verification": { "type": "object", "additionalProperties": false, "required": ["requiredModes", "checks"], "properties": { "status": { "enum": ["planned", "executable"] }, "requiredModes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }, "securitySensitive": { "type": "boolean" }, "checks": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["kind", "ref", "modes"], "properties": { "kind": { "type": "string" }, "ref": { "type": "string", "minLength": 1 }, "modes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true } } } } } }
+        }
+      }
+    }
+  }
+}

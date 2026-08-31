@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
+  "sourceRoots": ["Excise.Core", "Excise.Rendering", "Excise.App", "Excise.Cli"],
+  "testRoots": ["Excise.Core.Tests", "Excise.Rendering.Tests", "Excise.App.Tests", "Excise.Cli.Tests"],
+  "mapInventory": [
+    {"id":"spec-citations","generator":"scripts/build-pdf-spec-inventory.py","output":"generated/spec-source-inventory.json","purpose":"SHA-256-pinned ISO clause audit"},
+    {"id":"capability-discovery","generator":"scripts/collect-pdf-capability-evidence.py","output":"generated/evidence-collection.json","purpose":"all registry leaves and repository evidence candidates"},
+    {"id":"renderer-tests","generator":"scripts/build-renderer-test-evidence-map.py","output":"generated/renderer-test-evidence-map.json","purpose":"every rendering xUnit test method"},
+    {"id":"renderer-promotion-queue","generator":"scripts/build-renderer-promotion-queue.py","output":"generated/renderer-promotion-queue.json","purpose":"reviewable implementation, test, fixture, and oracle promotion contracts for every renderer mode"},
+    {"id":"implementation-ownership","generator":"scripts/build-pdf-evidence-maps.py","output":"generated/implementation-evidence-map.json","purpose":"Core/Rendering/App/CLI source ownership candidates"},
+    {"id":"test-suite","generator":"scripts/build-pdf-evidence-maps.py","output":"generated/test-suite-evidence-map.json","purpose":"Core/Rendering/App/CLI xUnit test contracts"},
+    {"id":"test-outcomes","generator":"scripts/collect-pdf-test-outcomes.py","output":"generated/test-outcomes.json","purpose":"TRX-backed pass/fail outcomes with host, git revision, and .NET provenance"},
+    {"id":"evidence-deficiencies","generator":"scripts/build-pdf-evidence-deficiency-report.py","output":"generated/evidence-deficiency-report.json","purpose":"prioritized mode-by-mode gaps in source, test, fixture, independent evidence, and executable contracts"},
+    {"id":"corpus-governance","generator":"scripts/build-pdf-corpus-governance.py","output":"generated/corpus-governance.json","purpose":"provenance, consumers, safety, and release identity"},
+    {"id":"benchmark-scenarios","generator":"scripts/run-pdf-capability-benchmarks.py","output":"benchmark-baselines.json","purpose":"critical-path performance evidence and budgets"},
+    {"id":"reference-tools","generator":"manual pinned manifest","output":"reference-tools.json","purpose":"oracle capability, version, limit, and disagreement policy"},
+    {"id":"reference-tool-probe","generator":"scripts/collect-pdf-reference-tool-evidence.py","output":"generated/reference-tool-evidence.json","purpose":"deterministic local executable/version availability, including Evince interactive-review availability"},
+    {"id":"atomic-fixture-contracts","generator":"scripts/build-pdf-atomic-fixture-map.py","output":"generated/atomic-fixture-evidence.json","purpose":"mode-level fixture contracts, mapped test records, and imported TRX status"}
+  ],
+  "facets": [
+    {"id":"redaction","parents":["pdf.17.security.redaction-content-removal"],"modes":["extract","mutate","write","render"],"patterns":["redact","scrub","leak"]},
+    {"id":"forms","parents":["pdf.17.interactive.forms"],"modes":["parse","render","mutate","write"],"patterns":["acroform","formfield","fillable","widget"]},
+    {"id":"annotations","parents":["pdf.17.interactive.annotations","pdf.17.interactive.redaction-annotations"],"modes":["parse","preserve","render","mutate"],"patterns":["annotation","annot"]},
+    {"id":"safe-save-and-metadata","parents":["pdf.17.syntax.objects","pdf.17.document.metadata","pdfe.product.security.privacy-clean-copy"],"modes":["preserve","mutate","write"],"patterns":["save","writer","metadata","sanitize","privacy"]},
+    {"id":"security-and-encryption","parents":["pdf.17.syntax.encryption","pdfe.product.security.signature-and-permission-warning"],"modes":["parse","preserve","mutate","write"],"patterns":["encrypt","password","permission","signature","security"]},
+    {"id":"document-structure","parents":["pdf.17.syntax.file","pdf.17.syntax.objects","pdf.17.document.catalog-pages"],"modes":["parse","preserve","write"],"patterns":["parser","xref","objectstream","catalog","pagetree","pdfdocument"]},
+    {"id":"content-and-graphics","parents":["pdf.17.content.streams","pdf.17.graphics.state","pdf.17.graphics.paths-painting"],"modes":["parse","render","mutate","write"],"patterns":["contentstream","contentoperator","graphics","path","clip","textstate"]},
+    {"id":"images","parents":["pdf.17.graphics.images"],"modes":["parse","render","extract"],"patterns":["image","jpx","jbig2","jpeg","dct","mask"]},
+    {"id":"fonts","parents":["pdf.17.graphics.fonts"],"modes":["parse","render","extract"],"patterns":["font","glyph","cff","cmap","cid","type0","encoding"]},
+    {"id":"transparency","parents":["pdf.17.transparency.model"],"modes":["parse","render"],"patterns":["transparency","blend","softmask","opacity","alpha"]},
+    {"id":"product-integration-general","parents":[],"modes":[],"patterns":[]}
+  ]
+}

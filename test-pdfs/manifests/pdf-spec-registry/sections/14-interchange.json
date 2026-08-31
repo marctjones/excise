@@ -1,0 +1,333 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "interchange",
+  "capabilities": [
+    {
+      "id": "pdf.17.interchange.tagged-pdf",
+      "name": "Logical structure, role maps, class maps, attributes, and associated files",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "14.7"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "14.7"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "preserve-only",
+        "rationale": "Structure can carry accessibility and redactable text even before complete semantic editing exists."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.tagged-pdf.structure"
+        }
+      ],
+      "notes": "Track PDF/UA conformance separately; structure preservation is not an accessibility conformance claim.",
+      "documentation": [
+        "REDACTION_AI_GUIDELINES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Track PDF/UA conformance separately; structure preservation is not an accessibility conformance claim."
+        ],
+        "processorRoles": [
+          "author",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.interchange.measurement-geospatial",
+      "name": "Measurement dictionaries, geospatial coordinate systems, and viewport data",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "12.9",
+            "12.10"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "12.9",
+            "12.10"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "preserve-only",
+        "rationale": "Do not lose specialized document data while focused workflows remain non-geospatial."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.geospatial"
+        }
+      ],
+      "notes": "Measurement display and coordinate conversion are distinct prospective capabilities.",
+      "documentation": [],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Measurement display and coordinate conversion are distinct prospective capabilities."
+        ],
+        "processorRoles": [
+          "author",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.interchange.signatures",
+      "name": "Digital signatures, signatures dictionaries, byte ranges, permissions, and validation",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "12.8"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "12.8"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "supported",
+        "rationale": "Inspection and status reporting are valuable; signing and certificate management are deferred."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unimplemented",
+        "execute": "not-applicable"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.signatures"
+        }
+      ],
+      "notes": "Permit edits only after an interactive warning that existing signatures will be invalidated and removed. Track signature inspection/status independently from validation, trust, signing, and certificate management.",
+      "documentation": [
+        "docs/architecture/system-design.md",
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [
+          "docs/architecture/system-design.md"
+        ],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Permit edits only after an interactive warning that existing signatures will be invalidated and removed. Track signature inspection/status independently from validation, trust, signing, and certificate management."
+        ],
+        "processorRoles": [
+          "author",
+          "execute",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.interchange.accessibility",
+      "name": "Accessibility, article threads, private data, and document interchange metadata",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "14.8",
+            "14.9",
+            "14.10"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "14.8",
+            "14.9",
+            "14.10"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "deferred",
+        "rationale": "Do not claim PDF/UA or accessibility completeness from visual rendering alone."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "extract": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unimplemented"
+      },
+      "evidence": [],
+      "notes": "Profile conformance belongs under optional profiles, with external validation evidence.",
+      "documentation": [],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Profile conformance belongs under optional profiles, with external validation evidence."
+        ],
+        "processorRoles": [
+          "author",
+          "extract",
+          "mutate",
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "supportLevel": "deferred",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}

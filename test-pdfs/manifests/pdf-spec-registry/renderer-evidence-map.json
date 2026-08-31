@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
+  "testRoot": "Excise.Rendering.Tests",
+  "facets": [
+    {"id":"content-streams","parents":["pdf.17.content.streams"],"modes":["parse","render"],"patterns":["content","operator","text","clip","path","formxobject","graphics","marked"]},
+    {"id":"images","parents":["pdf.17.graphics.images"],"modes":["parse","render","extract"],"patterns":["image","jpeg","jpx","jbig2","dct","mask","inlineimage","bitmap"]},
+    {"id":"fonts","parents":["pdf.17.graphics.fonts"],"modes":["parse","render","extract"],"patterns":["font","glyph","cff","cmap","cid","type0","truetype","encoding","kerning","width"]},
+    {"id":"transparency","parents":["pdf.17.transparency.model"],"modes":["parse","render"],"patterns":["transparency","blend","softmask","opacity","alpha","knockout","isolation"]},
+    {"id":"graphics-state-and-paths","parents":["pdf.17.graphics.state","pdf.17.graphics.paths-painting"],"modes":["parse","render"],"patterns":["skiarenderertests","skiarenderercoveragetests","renderinginvarianttests","tileclip","stroke","fillrule","dash"]},
+    {"id":"functions-and-shadings","parents":["pdf.17.graphics.color","pdf.17.graphics.patterns-shadings"],"modes":["parse","render"],"patterns":["pdffunctionevaluator","meshpatch","shading","functionevaluator"]},
+    {"id":"content-strings-and-text","parents":["pdf.17.content.streams","pdf.17.content.text-state"],"modes":["parse","render","extract"],"patterns":["pdfstringescape","escape","string"]},
+    {"id":"renderer-performance-and-lifetime","parents":[],"modes":[],"patterns":["memorybenchmark","performancebenchmark","longsessionsoak"]},
+    {"id":"page-group-backdrop","parents":["pdf.17.transparency.model"],"modes":["render"],"patterns":["pagegroupbackdrop"]},
+    {"id":"differential-rendering","parents":["pdf.17.content.streams","pdf.17.graphics.images","pdf.17.graphics.fonts","pdf.17.transparency.model"],"modes":["render"],"patterns":["differential","reference","visual","corpus","conservation","parity"]},
+    {"id":"renderer-integration-general","parents":[],"modes":[],"patterns":[]}
+  ]
+}

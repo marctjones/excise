@@ -1,0 +1,612 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "product-capabilities",
+  "capabilities": [
+    {
+      "id": "pdfe.product.safety.limited-editing",
+      "name": "Limited-mode editing and redaction refusal",
+      "spec": [
+        {
+          "source": "pdfe-product",
+          "clauses": [
+            "editingSafetyPolicy.unsupportedOrAmbiguousFeature"
+          ]
+        }
+      ],
+      "classification": "product",
+      "decision": {
+        "state": "required",
+        "rationale": "A daily-driver editor must not silently corrupt or insecurely redact a feature it cannot safely handle."
+      },
+      "modes": {
+        "parse": "unknown",
+        "render": "unknown",
+        "mutate": "unimplemented",
+        "write": "unimplemented"
+      },
+      "evidence": [],
+      "notes": "View with a clear limitation; refuse the edit/redaction on attempt and identify the blocking feature.",
+      "documentation": [
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "View with a clear limitation; refuse the edit/redaction on attempt and identify the blocking feature."
+        ],
+        "processorRoles": [
+          "mutate",
+          "parse",
+          "render",
+          "write"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "pdfe-product",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdfe.product.redaction.review-panel",
+      "name": "Unapplied-redaction review visibility",
+      "spec": [
+        {
+          "source": "pdfe-product",
+          "clauses": [
+            "specificationPolicy.redactionReviewDrafts"
+          ]
+        }
+      ],
+      "classification": "product",
+      "decision": {
+        "state": "required",
+        "rationale": "Users must be made immediately aware of proposed but unapplied redactions."
+      },
+      "modes": {
+        "render": "unimplemented",
+        "author": "unimplemented"
+      },
+      "evidence": [],
+      "notes": "Future UI should expose incoming or locally proposed annotations and make their unapplied state unmistakable. Safe Redacted Copy refuses until they are applied or removed.",
+      "documentation": [
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Future UI should expose incoming or locally proposed annotations and make their unapplied state unmistakable. Safe Redacted Copy refuses until they are applied or removed."
+        ],
+        "processorRoles": [
+          "author",
+          "render"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "pdfe-product",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdfe.product.security.privacy-clean-copy",
+      "name": "Privacy-clean copy and metadata/attachment stripping",
+      "spec": [
+        {
+          "source": "pdfe-product",
+          "clauses": [
+            "editingSafetyPolicy.saveStrategy"
+          ]
+        }
+      ],
+      "classification": "product",
+      "decision": {
+        "state": "supported",
+        "rationale": "Ordinary saves preserve document context; security workflows need an explicit clean-copy option."
+      },
+      "modes": {
+        "parse": "unknown",
+        "mutate": "unknown",
+        "write": "unknown",
+        "author": "unknown"
+      },
+      "evidence": [],
+      "notes": "Ordinary Save preserves metadata and attachments. Save as Redacted Copy scrubs metadata; users may explicitly strip attachments and create a privacy-clean copy.",
+      "documentation": [
+        "REDACTION_AI_GUIDELINES.md",
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Ordinary Save preserves metadata and attachments. Save as Redacted Copy scrubs metadata; users may explicitly strip attachments and create a privacy-clean copy."
+        ],
+        "processorRoles": [
+          "author",
+          "mutate",
+          "parse",
+          "write"
+        ],
+        "supportLevel": "unknown",
+        "normativeSourcePins": [
+          {
+            "source": "pdfe-product",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdfe.product.security.external-links",
+      "name": "Safe external-link activation",
+      "spec": [
+        {
+          "source": "pdfe-product",
+          "clauses": [
+            "activeContentPolicy"
+          ]
+        }
+      ],
+      "classification": "product",
+      "decision": {
+        "state": "required",
+        "rationale": "Useful web links must not become an execution or local-resource boundary escape."
+      },
+      "modes": {
+        "parse": "unknown",
+        "extract": "unknown",
+        "execute": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "documentation",
+          "ref": "Adobe Acrobat Trust Manager; Microsoft URI activation security guidance; PDF Association action guidance"
+        }
+      ],
+      "notes": "Allow only deliberate https clicks; http is never followed; mailto confirms; all other schemes and non-URI actions are blocked or copy-only. PDF-controlled action chains never auto-run.",
+      "documentation": [
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Allow only deliberate https clicks; http is never followed; mailto confirms; all other schemes and non-URI actions are blocked or copy-only. PDF-controlled action chains never auto-run."
+        ],
+        "processorRoles": [
+          "execute",
+          "extract",
+          "parse"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "pdfe-product",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdfe.product.security.attachments",
+      "name": "Attachment disclosure, save, and stripping",
+      "spec": [
+        {
+          "source": "pdfe-product",
+          "clauses": [
+            "priorityCapabilities"
+          ]
+        }
+      ],
+      "classification": "product",
+      "decision": {
+        "state": "required",
+        "rationale": "Attachments are useful office data but must never execute implicitly or remain hidden from the user."
+      },
+      "modes": {
+        "parse": "unknown",
+        "extract": "unimplemented",
+        "preserve": "unknown",
+        "mutate": "unimplemented"
+      },
+      "evidence": [],
+      "notes": "Show attachments in a panel, permit explicit save to disk only, preserve by default, allow stripping on save, and warn when their presence is not otherwise obvious.",
+      "documentation": [
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Show attachments in a panel, permit explicit save to disk only, preserve by default, allow stripping on save, and warn when their presence is not otherwise obvious."
+        ],
+        "processorRoles": [
+          "extract",
+          "mutate",
+          "parse",
+          "preserve"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "pdfe-product",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdfe.product.security.signature-and-permission-warning",
+      "name": "Signature invalidation and advisory-permission override",
+      "spec": [
+        {
+          "source": "pdfe-product",
+          "clauses": [
+            "priorityCapabilities"
+          ]
+        }
+      ],
+      "classification": "product",
+      "decision": {
+        "state": "required",
+        "rationale": "Users may legitimately edit their documents but must understand signature and permission consequences."
+      },
+      "modes": {
+        "parse": "unknown",
+        "extract": "unknown",
+        "mutate": "unimplemented",
+        "write": "unimplemented"
+      },
+      "evidence": [],
+      "notes": "Permit editing after an interactive warning that signatures will be invalidated and removed. Permit explicit override of advisory flags such as no-printing; never recover passwords or bypass encryption.",
+      "documentation": [
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "migration-pending",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Permit editing after an interactive warning that signatures will be invalidated and removed. Permit explicit override of advisory flags such as no-printing; never recover passwords or bypass encryption."
+        ],
+        "processorRoles": [
+          "extract",
+          "mutate",
+          "parse",
+          "write"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "pdfe-product",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdfe.product.ocr.scanned-documents",
+      "name": "OCR for scanned documents",
+      "spec": [
+        {
+          "source": "pdfe-product",
+          "clauses": [
+            "priorityCapabilities"
+          ]
+        }
+      ],
+      "classification": "product",
+      "decision": {
+        "state": "deferred",
+        "rationale": "OCR is desired, but must wait for an explicit implementation decision and independent redaction-safety evidence."
+      },
+      "modes": {
+        "render": "not-applicable",
+        "extract": "unimplemented",
+        "author": "unimplemented"
+      },
+      "evidence": [],
+      "notes": "When authorized, track OCR search, selection, review and redaction separately, including accuracy and refusal metrics.",
+      "documentation": [
+        "REDACTION_AI_GUIDELINES.md"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "When authorized, track OCR search, selection, review and redaction separately, including accuracy and refusal metrics."
+        ],
+        "processorRoles": [
+          "author",
+          "extract",
+          "render"
+        ],
+        "supportLevel": "deferred",
+        "normativeSourcePins": [
+          {
+            "source": "pdfe-product",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdfe.product.security.audit-log",
+      "name": "Local exportable security-action audit log",
+      "spec": [
+        {
+          "source": "pdfe-product",
+          "clauses": [
+            "priorityCapabilities"
+          ]
+        }
+      ],
+      "classification": "product",
+      "decision": {
+        "state": "deferred",
+        "rationale": "Useful for legal and corporate workflows, but intentionally not current scope."
+      },
+      "modes": {
+        "extract": "unimplemented",
+        "author": "unimplemented"
+      },
+      "evidence": [],
+      "notes": "Future scope: redaction apply/remove, signature invalidation, attachment extraction/stripping, encryption changes, and external-link launches.",
+      "documentation": [],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Future scope: redaction apply/remove, signature invalidation, attachment extraction/stripping, encryption changes, and external-link launches."
+        ],
+        "processorRoles": [
+          "author",
+          "extract"
+        ],
+        "supportLevel": "deferred",
+        "normativeSourcePins": [
+          {
+            "source": "pdfe-product",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdfe.product.platform.printing",
+      "name": "Platform-specific printing",
+      "spec": [
+        {
+          "source": "pdfe-product",
+          "clauses": [
+            "priorityCapabilities"
+          ]
+        }
+      ],
+      "classification": "product",
+      "decision": {
+        "state": "deferred",
+        "rationale": "Printing is a future platform-by-platform decision, not a current cross-platform conformance promise."
+      },
+      "modes": {
+        "author": "unimplemented"
+      },
+      "evidence": [],
+      "notes": "Advanced print-production controls are excluded from product scope.",
+      "documentation": [],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Advanced print-production controls are excluded from product scope."
+        ],
+        "processorRoles": [
+          "author"
+        ],
+        "supportLevel": "deferred",
+        "normativeSourcePins": [
+          {
+            "source": "pdfe-product",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdfe.product.forms.restricted-javascript-research",
+      "name": "Restricted PDF JavaScript subset research",
+      "spec": [
+        {
+          "source": "pdfe-product",
+          "clauses": [
+            "activeContentPolicy.otherActions"
+          ]
+        }
+      ],
+      "classification": "product",
+      "decision": {
+        "state": "deferred",
+        "rationale": "Do not execute PDF JavaScript; investigate a bounded common-form subset only if a threat model proves it safe."
+      },
+      "modes": {
+        "execute": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "issue",
+          "ref": "#1294"
+        }
+      ],
+      "notes": "No general JavaScript engine. Any future subset must have no filesystem, process, network, dynamic loading, or arbitrary execution, plus enforceable CPU, memory, recursion, and document-size limits.",
+      "documentation": [
+        "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [
+          "#1294"
+        ],
+        "knownLimitations": [
+          "No general JavaScript engine. Any future subset must have no filesystem, process, network, dynamic loading, or arbitrary execution, plus enforceable CPU, memory, recursion, and document-size limits."
+        ],
+        "processorRoles": [
+          "execute"
+        ],
+        "supportLevel": "deferred",
+        "normativeSourcePins": [
+          {
+            "source": "pdfe-product",
+            "pin": "unversioned-secondary-source"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}

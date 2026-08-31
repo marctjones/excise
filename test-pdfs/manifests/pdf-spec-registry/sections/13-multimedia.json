@@ -1,0 +1,169 @@
+{
+  "$schema": "../schemas/section.schema.json",
+  "schemaVersion": 1,
+  "section": "multimedia",
+  "capabilities": [
+    {
+      "id": "pdf.17.multimedia.media",
+      "name": "Sound, movie, rendition, and screen annotations",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "13.2",
+            "13.3"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "13.2",
+            "13.3"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "preserve-only",
+        "rationale": "A document editor must not discard media merely because it does not play it."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unknown",
+        "write": "unknown",
+        "execute": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "annotation-support-matrix.notSupported.mediaPlayback"
+        }
+      ],
+      "notes": "Appearance-stream rendering and media playback are intentionally distinct.",
+      "documentation": [
+        "tests/annotation-support-matrix.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Appearance-stream rendering and media playback are intentionally distinct."
+        ],
+        "processorRoles": [
+          "execute",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    },
+    {
+      "id": "pdf.17.multimedia.richmedia-3d",
+      "name": "Rich media, 3D, and projection annotations",
+      "spec": [
+        {
+          "source": "iso-32000-1",
+          "clauses": [
+            "13.3",
+            "13.4"
+          ]
+        },
+        {
+          "source": "iso-32000-2",
+          "clauses": [
+            "13.3",
+            "13.4"
+          ]
+        }
+      ],
+      "classification": "optional",
+      "decision": {
+        "state": "preserve-only",
+        "rationale": "Embedding a runtime or 3D engine is outside the focused product boundary."
+      },
+      "modes": {
+        "parse": "unknown",
+        "preserve": "unknown",
+        "render": "unimplemented",
+        "write": "unknown",
+        "execute": "unimplemented"
+      },
+      "evidence": [
+        {
+          "kind": "legacy",
+          "ref": "pdf20.multimedia-3d"
+        }
+      ],
+      "notes": "Record byte-preservation evidence before claiming preserve-only.",
+      "documentation": [
+        "tests/annotation-support-matrix.json"
+      ],
+      "tracking": {
+        "owner": "PDF capability registry",
+        "reviewState": "policy-reviewed",
+        "implementationRefs": [],
+        "testRefs": [],
+        "fixtureRefs": [],
+        "corpusRefs": [],
+        "referenceToolRefs": [],
+        "architectureRefs": [],
+        "issueRefs": [],
+        "knownLimitations": [
+          "Record byte-preservation evidence before claiming preserve-only."
+        ],
+        "processorRoles": [
+          "execute",
+          "parse",
+          "preserve",
+          "render",
+          "write"
+        ],
+        "supportLevel": "planned",
+        "normativeSourcePins": [
+          {
+            "source": "iso-32000-1",
+            "pin": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff"
+          },
+          {
+            "source": "iso-32000-2",
+            "pin": "8faae7427427def093afe3ddff132b2e548043da50a9809eb318a1d8145a35a9"
+          }
+        ],
+        "errataStatus": "not-reviewed",
+        "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
+        "positiveTestRefs": [],
+        "negativeOrConservationTestRefs": [],
+        "explicitEvidenceGaps": [
+          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      }
+    }
+  ]
+}

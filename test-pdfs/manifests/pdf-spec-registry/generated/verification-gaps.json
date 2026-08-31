@@ -1,0 +1,1830 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/check-pdf-spec-registry.py",
+  "gaps": [
+    {
+      "capability": "pdf.17.syntax.file",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.file",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.file",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.objects",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.objects",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.objects",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.objects",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.filters",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.filters",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.filters",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.encryption",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.encryption",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.encryption",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.syntax.encryption",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.catalog-pages",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.catalog-pages",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.catalog-pages",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.catalog-pages",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.catalog-pages",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.navigation",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.navigation",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.navigation",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.navigation",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.navigation",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.navigation",
+      "mode": "author",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.metadata",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.metadata",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.metadata",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.metadata",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.metadata",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.embedded-files",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.embedded-files",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.embedded-files",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.embedded-files",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.embedded-files",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.document.embedded-files",
+      "mode": "author",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.state",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.state",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.state",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.state",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.state",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.paths-painting",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.paths-painting",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.paths-painting",
+      "mode": "render",
+      "implementationState": "partial",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.paths-painting",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.paths-painting",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.paths-painting",
+      "mode": "author",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.color",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.color",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.color",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.color",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.patterns-shadings",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.patterns-shadings",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.patterns-shadings",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.patterns-shadings",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.patterns-shadings",
+      "mode": "author",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.images",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.images",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.images",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.images",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.images",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.fonts",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.fonts",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.fonts",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.fonts",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.fonts",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.graphics.fonts",
+      "mode": "author",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.rendering.colour-conversion",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.rendering.colour-conversion",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.rendering.colour-conversion",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.compatibility.versions",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.compatibility.versions",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.compatibility.versions",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.compatibility.deprecated",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.compatibility.deprecated",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.compatibility.deprecated",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.compatibility.deprecated",
+      "mode": "execute",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.content.streams",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.content.streams",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.content.streams",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.content.streams",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.content.streams",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operators",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operators",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operators",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operators",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operators",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operators",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.content.text-state",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.content.text-state",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.content.text-state",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.content.text-state",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.content.text-state",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.content.text-state",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-001",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-001",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-002",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-002",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-003",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-003",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-004",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-004",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-005",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-005",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-006",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-006",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-007",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-007",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-008",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-008",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-009",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-009",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-010",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-010",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-011",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-011",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-012",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-012",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-013",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-013",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-014",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-014",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-015",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-015",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-016",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-016",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-017",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-017",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-018",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-018",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-019",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-019",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-020",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-020",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-021",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-021",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-022",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-022",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-023",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-023",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-024",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-024",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-025",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-025",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-026",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-026",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-027",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-027",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-028",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-028",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-029",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-029",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-030",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-030",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-031",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-031",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-032",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-032",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-033",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-033",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-034",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-034",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-035",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-035",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-036",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-036",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-037",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-037",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-038",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-038",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-039",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-039",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-040",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-040",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-041",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-041",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-042",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-042",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-043",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-043",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-044",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-044",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-045",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-045",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-046",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-046",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-047",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-047",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-048",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-048",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-049",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-049",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-050",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-050",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-051",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-051",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-052",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-052",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-053",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-053",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-054",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-054",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-055",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-055",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-056",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-056",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-057",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-057",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-058",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-058",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-059",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-059",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-060",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-060",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-061",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-061",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-062",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-062",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-063",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-063",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-064",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-064",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-065",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-065",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-066",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-066",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-067",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-067",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-068",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-068",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-069",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-069",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-070",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-070",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-071",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-071",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-072",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-072",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-073",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.20.content.operator-073",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.transparency.model",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.transparency.model",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.transparency.model",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.annotations",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.annotations",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.annotations",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.annotations",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.annotations",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.annotations",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.annotations",
+      "mode": "author",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-annotations",
+      "mode": "parse",
+      "implementationState": "partial",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-annotations",
+      "mode": "preserve",
+      "implementationState": "partial",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-annotations",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-annotations",
+      "mode": "mutate",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-annotations",
+      "mode": "write",
+      "implementationState": "partial",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-annotations",
+      "mode": "author",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-review-drafts",
+      "mode": "parse",
+      "implementationState": "partial",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-review-drafts",
+      "mode": "preserve",
+      "implementationState": "partial",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-review-drafts",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-review-drafts",
+      "mode": "mutate",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-review-drafts",
+      "mode": "write",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.redaction-review-drafts",
+      "mode": "author",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.forms",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.forms",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.forms",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.forms",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.forms",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.forms",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.forms",
+      "mode": "author",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.forms",
+      "mode": "execute",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.optional-content",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.optional-content",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.optional-content",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.optional-content",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.optional-content",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.optional-content",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interactive.optional-content",
+      "mode": "author",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interchange.signatures",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interchange.signatures",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interchange.signatures",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interchange.signatures",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interchange.signatures",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdf.17.interchange.signatures",
+      "mode": "author",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.safety.limited-editing",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.safety.limited-editing",
+      "mode": "render",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.safety.limited-editing",
+      "mode": "mutate",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.safety.limited-editing",
+      "mode": "write",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.redaction.review-panel",
+      "mode": "render",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.redaction.review-panel",
+      "mode": "author",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.privacy-clean-copy",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.privacy-clean-copy",
+      "mode": "mutate",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.privacy-clean-copy",
+      "mode": "write",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.privacy-clean-copy",
+      "mode": "author",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.external-links",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.external-links",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.external-links",
+      "mode": "execute",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.attachments",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.attachments",
+      "mode": "extract",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.attachments",
+      "mode": "preserve",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.attachments",
+      "mode": "mutate",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.signature-and-permission-warning",
+      "mode": "parse",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.signature-and-permission-warning",
+      "mode": "extract",
+      "implementationState": "unknown",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.signature-and-permission-warning",
+      "mode": "mutate",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    },
+    {
+      "capability": "pdfe.product.security.signature-and-permission-warning",
+      "mode": "write",
+      "implementationState": "unimplemented",
+      "reason": "no verification contract"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "canonicalRequirementSource": "The SHA-256-pinned ISO editions named in registry.json remain the sole normative source for a requirement claim.",
+  "candidateSources": ["pdf-issues", "arlington-pdf-model"],
+  "reviewRule": "A candidate issue or model change may open a review, but cannot silently change a capability requirement. Record the ISO clause, the candidate revision, the disposition, and the resulting issue before changing a decision or verification contract.",
+  "reviewStates": ["not-reviewed", "no-requirement-change", "requires-registry-change", "superseded"],
+  "pinnedRevisions": {
+    "pdf-issues": "223821c58055f6ed2b93a5f40304c25ffa86459f",
+    "arlington-pdf-model": "fe4a1a8897ec07f674c73160c35d748b29052f8f"
+  },
+  "lastReview": "2026-08-30",
+  "openDispositions": []
+}

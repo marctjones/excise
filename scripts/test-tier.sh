@@ -257,6 +257,7 @@ run_t0() {
     # generated DOT views against the checked-in source of truth.
     run_step "architecture-registry-selftest" scripts/check_architecture_registry.py --self-test
     run_step "architecture-registry" scripts/check-architecture-registry.sh
+    run_step "pdf-capability-registry" scripts/check-pdf-capability-registry.sh
     run_step "architecture-docs-selftest" scripts/check_architecture_docs.py --self-test
     run_step "architecture-docs" scripts/check-architecture-docs.sh
     # #1012: every gate must be falsifiable — breaking the property it guards

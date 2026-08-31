@@ -1,0 +1,50 @@
+# PDF capability scorecard
+
+Unknown modes receive no credit. Security gates are non-compensating.
+
+Promotion readiness is an evidence-backed planning ladder, not a conformance claim: discovery 10, source trace 30, executable direct test 50, fixture 65, independent evidence 90, reviewed strict implementation 100.
+
+Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
+
+| Area | Target modes | Implemented | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| overall | 964 | 0.1% | 15.9% | 3.4% | 89.1% | 29.3% | 931 |
+| annotation-subtypes | 112 | 0.0% | 10.0% | 0.0% | 100.0% | 0.0% | 112 |
+| content | 18 | 0.0% | 14.4% | 5.6% | 33.3% | 33.3% | 17 |
+| document | 22 | 0.0% | 10.0% | 0.0% | 0.0% | 0.0% | 22 |
+| graphics | 33 | 0.0% | 14.8% | 9.1% | 33.3% | 33.3% | 30 |
+| image-requirements | 108 | 0.0% | 10.0% | 0.0% | 100.0% | 0.0% | 108 |
+| interactive | 39 | 2.6% | 16.9% | 43.6% | 16.7% | 16.7% | 22 |
+| interchange | 6 | 0.0% | 10.0% | 16.7% | 0.0% | 0.0% | 5 |
+| multimedia | 0 | — | — | — | — | — | 0 |
+| operators | 292 | 0.0% | 27.5% | 0.0% | 100.0% | 100.0% | 292 |
+| optional-profiles | 0 | — | — | — | — | — | 0 |
+| product-capabilities | 21 | 0.0% | 10.0% | 42.9% | 0.0% | 0.0% | 12 |
+| renderer-requirements | 285 | 0.0% | 10.0% | 0.0% | 100.0% | 0.0% | 285 |
+| rendering | 10 | 0.0% | 10.0% | 10.0% | 0.0% | 0.0% | 9 |
+| syntax | 14 | 0.0% | 10.0% | 0.0% | 0.0% | 0.0% | 14 |
+| transparency | 4 | 0.0% | 30.0% | 25.0% | 100.0% | 100.0% | 3 |
+
+## Major categories
+
+| Category | Target modes | Implemented | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| File model | 36 | 0.0% | 10.0% | 0.0% | 0.0% | 0.0% | 36 |
+| Page content and rendering | 750 | 0.0% | 17.2% | 0.8% | 95.9% | 35.5% | 744 |
+| Interaction and annotations | 151 | 0.7% | 11.8% | 11.3% | 85.3% | 2.9% | 134 |
+| Interchange and profiles | 6 | 0.0% | 10.0% | 16.7% | 0.0% | 0.0% | 5 |
+| PDFE product capabilities | 21 | 0.0% | 10.0% | 42.9% | 0.0% | 0.0% | 12 |
+
+## Critical workflows
+
+| Workflow | Target modes | Implemented | Promotion readiness | Modes at >=50 | Modes at >=90 | Unknown |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| forms | 8 | 0.0% | 10.0% | 0 | 0 | 7 |
+| redaction | 11 | 9.1% | 34.5% | 5 | 1 | 1 |
+| rendering | 23 | 0.0% | 23.9% | 4 | 4 | 19 |
+| safe-save | 13 | 0.0% | 10.0% | 0 | 0 | 13 |
+
+## Evidence collection
+
+Collected candidates are discovery material, not implementation credit.
+All 282 capability leaves have a collection record: {'candidate-evidence': 22, 'registered-evidence': 260}.

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "baselineManifest": "benchmark-baselines.json",
+  "policy": "Benchmark results measure performance only; they never establish PDF conformance or redaction safety.",
+  "scenarios": [
+    {"id":"open","capabilities":["pdf.17.syntax.file","pdf.17.document.catalog-pages"],"command":"dotnet test Excise.Rendering.Tests --no-build -c Debug --filter FullyQualifiedName~OpenDocument_StaysUnder","metrics":["latency_ms","peak_rss_mb"],"status":"existing-harness"},
+    {"id":"render","capabilities":["pdf.17.content.streams","pdf.17.graphics.images","pdf.17.graphics.fonts"],"command":"dotnet test Excise.Rendering.Tests --no-build -c Debug --filter FullyQualifiedName~RenderSinglePage_StaysUnder","metrics":["median_latency_ms_per_page","peak_rss_mb"],"status":"existing-harness"},
+    {"id":"search","capabilities":["pdf.17.content.text-state"],"command":"dotnet test Excise.Rendering.Tests --no-build -c Debug --filter FullyQualifiedName~TextExtraction_StaysUnder","metrics":["latency_ms","peak_rss_mb"],"status":"existing-harness"},
+    {"id":"save","capabilities":["pdf.17.syntax.objects","pdf.17.document.metadata"],"command":"dotnet test Excise.Rendering.Tests --no-build -c Debug --filter FullyQualifiedName~SaveRoundTrip_StaysUnder","metrics":["latency_ms","peak_rss_mb"],"status":"existing-harness"},
+    {"id":"redact","capabilities":["pdf.17.security.redaction-content-removal"],"command":"dotnet test Excise.Rendering.Tests --no-build -c Debug --filter FullyQualifiedName~RedactText_CommonTermOnW9","metrics":["latency_ms","collateral_rate","refusal_rate"],"status":"existing-harness"},
+    {"id":"forms","capabilities":["pdf.17.interactive.forms"],"command":"dotnet test Excise.Rendering.Tests --no-build -c Debug --filter FullyQualifiedName~AcroFormFillAndSave_StaysUnder","metrics":["latency_ms","peak_rss_mb"],"status":"existing-harness"}
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "sourceOfTruth": "tests/corpora.tsv",
+  "identityPolicy": "A release benchmark, conformance report, or corpus-derived baseline must attach the per-file SHA-256 inventory emitted by scripts/build-pdf-corpus-governance.py --hash-files. Acquisition identity alone is not sufficient for a reproducible result.",
+  "privateDataPolicy": "Private, client, or locally sourced documents must never be uploaded, copied into public fixtures, or used by an external reference tool. They may be locally inventoried only after the operator confirms their authorization.",
+  "untrustedInputPolicy": "Every corpus file is untrusted input. Reference tools run as local subprocesses with time and resource limits; a malformed-file result is evidence, not permission to relax a security assertion.",
+  "duplicatePolicy": "Before accepting a new corpus or baseline, run scripts/analyze-pdf-corpus-duplicates.py over its SHA-256 inventory. Exact duplicates must be recorded; near-duplicates need an explicit rationale before they can enlarge a coverage denominator.",
+  "stabilityContracts": [
+    {"id":"skip-allowlists","paths":["tests/skip-allowlist/Excise.Core.Tests.txt","tests/skip-allowlist/Excise.Rendering.Tests.txt","tests/skip-allowlist/Excise.App.Tests.txt"],"rule":"A corpus change may not silently add a skip. Any changed allowlist entry requires its owning issue and an explicit expiry or review rationale."},
+    {"id":"extraction-parity-denominator","paths":["tests/extraction-parity/baseline.json"],"rule":"Changing fixture membership, page count, or floor requires a reviewed baseline update with the corpus SHA-256 inventory."},
+    {"id":"advance-parity-denominator","paths":["tests/advance-parity/baseline.json"],"rule":"Changing fixture membership, page count, or floor requires a reviewed baseline update with the corpus SHA-256 inventory."},
+    {"id":"performance-fixtures","paths":["tests/reference-performance/fixtures.json","docs/performance-baselines/2026-07-25-hotpath-baseline/workflow-profile.json"],"rule":"A performance fixture or budget change requires a new local result with host, tool version, and corpus SHA-256 inventory."}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
+  "acceptedFormats": ["trx"],
+  "resultDiscovery": ["TestResults/**/*.trx"],
+  "requiredRunMetadata": ["recordedAt", "gitRevision", "dotnetVersion", "host"],
+  "stalenessPolicy": "A result from a different git revision is historical evidence only; it cannot satisfy a current strict-promotion review."
+}
