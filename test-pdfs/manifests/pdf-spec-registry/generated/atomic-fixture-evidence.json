@@ -417,9 +417,18 @@
       "capability": "pdf.17.graphics.color",
       "section": "graphics",
       "mode": "render",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
+          "testRecord": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.17.graphics.color",
@@ -8825,8 +8834,8 @@
     "fixtureStatus": {
       "contracted-not-run": 146,
       "contracted-unresolved-reference": 4,
-      "not-contracted": 808,
-      "recorded-passing": 6
+      "not-contracted": 807,
+      "recorded-passing": 7
     }
   }
 }

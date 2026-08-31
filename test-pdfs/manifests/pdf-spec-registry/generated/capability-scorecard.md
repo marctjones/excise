@@ -8,11 +8,11 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Area | Target modes | Implemented | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| overall | 964 | 0.5% | 16.1% | 3.5% | 89.8% | 30.1% | 930 |
+| overall | 964 | 0.5% | 16.2% | 3.6% | 90.2% | 30.5% | 929 |
 | annotation-subtypes | 112 | 0.0% | 10.0% | 0.0% | 100.0% | 0.0% | 112 |
 | content | 18 | 0.0% | 14.4% | 5.6% | 33.3% | 33.3% | 17 |
 | document | 22 | 0.0% | 10.0% | 0.0% | 0.0% | 0.0% | 22 |
-| graphics | 33 | 12.1% | 20.9% | 12.1% | 66.7% | 66.7% | 29 |
+| graphics | 33 | 12.1% | 23.3% | 15.2% | 83.3% | 83.3% | 28 |
 | image-requirements | 108 | 0.0% | 10.0% | 0.0% | 100.0% | 0.0% | 108 |
 | interactive | 39 | 2.6% | 16.9% | 43.6% | 16.7% | 16.7% | 22 |
 | interchange | 6 | 0.0% | 10.0% | 16.7% | 0.0% | 0.0% | 5 |
@@ -30,7 +30,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | Category | Target modes | Implemented | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | File model | 36 | 0.0% | 10.0% | 0.0% | 0.0% | 0.0% | 36 |
-| Page content and rendering | 750 | 0.5% | 17.5% | 0.9% | 96.8% | 36.4% | 743 |
+| Page content and rendering | 750 | 0.5% | 17.6% | 1.1% | 97.2% | 36.9% | 742 |
 | Interaction and annotations | 151 | 0.7% | 11.8% | 11.3% | 85.3% | 2.9% | 134 |
 | Interchange and profiles | 6 | 0.0% | 10.0% | 16.7% | 0.0% | 0.0% | 5 |
 | PDFE product capabilities | 21 | 0.0% | 10.0% | 42.9% | 0.0% | 0.0% | 12 |

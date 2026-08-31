@@ -5014,6 +5014,18 @@
       ],
       "parentCapabilityModes": [
         {
+          "capability": "pdf.17.graphics.color",
+          "modes": [
+            "parse",
+            "preserve",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "registry-implementation-owner"
+          ]
+        },
+        {
           "capability": "pdf.17.graphics.state",
           "modes": [
             "mutate",
@@ -6922,6 +6934,10 @@
       "pdf.17.document.metadata:mutate": 15,
       "pdf.17.document.metadata:preserve": 15,
       "pdf.17.document.metadata:write": 15,
+      "pdf.17.graphics.color:parse": 1,
+      "pdf.17.graphics.color:preserve": 1,
+      "pdf.17.graphics.color:render": 1,
+      "pdf.17.graphics.color:write": 1,
       "pdf.17.graphics.fonts:extract": 28,
       "pdf.17.graphics.fonts:parse": 28,
       "pdf.17.graphics.fonts:render": 28,
