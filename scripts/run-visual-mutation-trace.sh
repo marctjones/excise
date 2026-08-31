@@ -20,6 +20,7 @@
 #   scripts/run-visual-mutation-trace.sh [--action rotate-right] [--pdf PATH]
 #                                        [--scroll mid|top] [--out DIR]
 #                                        [--timeout SECONDS] [--no-build]
+#                                        [--app PATH_TO_EXCISE_APP]
 #
 # Actions: rotate-right (default), rotate-left, rotate-180, remove-page,
 #          move-later, zoom-in.
@@ -34,6 +35,7 @@ SCROLL="mid"
 OUT="$ROOT/logs/visual-trace_$(date +%Y%m%d_%H%M%S)"
 TIMEOUT=120
 BUILD=1
+APP=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -43,6 +45,7 @@ while [ "$#" -gt 0 ]; do
     --out) OUT="$2"; shift 2 ;;
     --timeout) TIMEOUT="$2"; shift 2 ;;
     --no-build) BUILD=0; shift ;;
+    --app) APP="$2"; BUILD=0; shift 2 ;;
     -h|--help) sed -n '2,30p' "$0"; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
@@ -59,16 +62,33 @@ echo "==> visual trace: action=$ACTION scroll=$SCROLL"
 echo "    pdf=$PDF"
 echo "    out=$OUT"
 
+if [ -n "$APP" ]; then
+  APP="$(cd "$(dirname "$APP")" 2>/dev/null && pwd)/$(basename "$APP")"
+  APP_EXEC="$APP/Contents/MacOS/Excise.App"
+  if [ ! -x "$APP_EXEC" ]; then
+    echo "Packaged app executable not found: $APP_EXEC"
+    exit 1
+  fi
+  echo "    app=$APP"
+fi
+
 if [ "$BUILD" = "1" ]; then
   echo "==> building Excise.App (Debug)"
   dotnet build Excise.App -c Debug --nologo -v q || { echo "build failed"; exit 1; }
 fi
 
 LOG="$OUT/app.log"
-EXCISE_VISUAL_TRACE_OUT="$OUT" \
-EXCISE_VISUAL_TRACE_ACTION="$ACTION" \
-EXCISE_VISUAL_TRACE_SCROLL="$SCROLL" \
-  nohup dotnet run --project Excise.App -c Debug --no-build -- "$PDF" >"$LOG" 2>&1 &
+if [ -n "$APP" ]; then
+  EXCISE_VISUAL_TRACE_OUT="$OUT" \
+  EXCISE_VISUAL_TRACE_ACTION="$ACTION" \
+  EXCISE_VISUAL_TRACE_SCROLL="$SCROLL" \
+    nohup "$APP_EXEC" "$PDF" >"$LOG" 2>&1 &
+else
+  EXCISE_VISUAL_TRACE_OUT="$OUT" \
+  EXCISE_VISUAL_TRACE_ACTION="$ACTION" \
+  EXCISE_VISUAL_TRACE_SCROLL="$SCROLL" \
+    nohup dotnet run --project Excise.App -c Debug --no-build -- "$PDF" >"$LOG" 2>&1 &
+fi
 APP_PID=$!
 
 echo "==> app pid $APP_PID; waiting up to ${TIMEOUT}s for trajectory.csv"
@@ -80,7 +100,6 @@ for _ in $(seq 1 "$TIMEOUT"); do
 done
 # The runner shuts the app down itself; make sure it's gone.
 ps -p "$APP_PID" >/dev/null 2>&1 && kill "$APP_PID" 2>/dev/null
-pkill -f "Excise.App" 2>/dev/null
 
 if [ -f "$OUT/ERROR.txt" ]; then
   echo "TRACE ERROR:"; cat "$OUT/ERROR.txt"; exit 1
