@@ -435,8 +435,8 @@ def component_lineage(component_id: str, component_by_id: dict[str, dict]) -> li
 
 def validate_topology_join(design: dict, inventory: dict, topology: dict) -> list[str]:
     errors: list[str] = []
-    if topology.get("schemaVersion") != 2:
-        errors.append("topology: schemaVersion must be 2")
+    if topology.get("schemaVersion") != 3:
+        errors.append("topology: schemaVersion must be 3")
         return errors
     for schema_name in ("topology.schema.json", "architecture-conformance.schema.json"):
         if not (SCHEMA_ROOT / schema_name).is_file():
@@ -469,6 +469,11 @@ def validate_topology_join(design: dict, inventory: dict, topology: dict) -> lis
             errors.append(f"topology.symbols[{index}]: unknown project '{project_name}'")
         component = symbol.get("component")
         workflows = symbol.get("workflows")
+        reasons = symbol.get("seedReasons")
+        if not isinstance(reasons, list) or symbol.get("seed") != bool(reasons):
+            errors.append(
+                f"topology.symbols[{index}]: seed flag and seedReasons disagree"
+            )
         if component is None:
             if workflows != []:
                 errors.append(
@@ -483,6 +488,16 @@ def validate_topology_join(design: dict, inventory: dict, topology: dict) -> lis
             errors.append(
                 f"topology.symbols[{index}]: workflows differ from component '{component}'"
             )
+    mechanisms = topology.get("seeds", {}).get("dynamicMechanisms", [])
+    mechanism_names = [item.get("mechanism") for item in mechanisms]
+    expected_mechanisms = {
+        "xaml", "dependency-injection", "reflection", "source-generation",
+        "native-interop", "scripting",
+    }
+    if set(mechanism_names) != expected_mechanisms or len(mechanism_names) != len(expected_mechanisms):
+        errors.append(
+            "topology: dynamic mechanism summary must contain each supported mechanism exactly once"
+        )
     return errors
 
 
@@ -1113,6 +1128,17 @@ def run_self_test(
         for error in validate_topology_join(design, inventory, mutated_topology)
     ):
         print("FAIL: topology workflow mutation was not detected", file=sys.stderr)
+        return 1
+    mutated_topology = copy.deepcopy(topology)
+    seeded_symbol = next(
+        symbol for symbol in mutated_topology["symbols"] if symbol["seed"]
+    )
+    seeded_symbol["seedReasons"] = []
+    if not any(
+        "seed flag and seedReasons disagree" in error
+        for error in validate_topology_join(design, inventory, mutated_topology)
+    ):
+        print("FAIL: topology seed provenance mutation was not detected", file=sys.stderr)
         return 1
     print("PASS: normalized registries reject reference, inventory, and assessment drift")
     return 0

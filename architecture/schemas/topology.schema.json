@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "generator", "sourceRevision", "projects", "symbols", "typeDependencies", "methodCycles", "seeds", "blindSpots"],
   "properties": {
-    "schemaVersion": { "const": 2 },
+    "schemaVersion": { "const": 3 },
     "generator": { "const": "tools/Excise.Reachability" },
     "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "projects": {
@@ -33,7 +33,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["project", "kind", "symbol", "containingType", "namespace", "file", "component", "workflows", "startLine", "endLine", "declarationLines", "branchPoints", "fanIn", "fanOut", "reachable", "seed", "mutable", "declarationCount"],
+        "required": ["project", "kind", "symbol", "containingType", "namespace", "file", "component", "workflows", "startLine", "endLine", "declarationLines", "branchPoints", "fanIn", "fanOut", "reachable", "seed", "seedReasons", "mutable", "declarationCount"],
         "properties": {
           "project": { "type": "string", "minLength": 1 },
           "kind": { "type": "string", "minLength": 1 },
@@ -51,6 +51,19 @@
           "fanOut": { "type": "integer", "minimum": 0 },
           "reachable": { "type": "boolean" },
           "seed": { "type": "boolean" },
+          "seedReasons": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["category", "reason"],
+              "properties": {
+                "category": { "type": "string", "minLength": 1 },
+                "reason": { "type": "string", "minLength": 1 }
+              }
+            },
+            "uniqueItems": true
+          },
           "mutable": { "type": "boolean" },
           "declarationCount": { "type": "integer", "minimum": 0 }
         }
@@ -83,11 +96,35 @@
     "seeds": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["symbols", "xamlNames", "stringLiterals"],
+      "required": ["symbols", "categories", "dynamicMechanisms"],
       "properties": {
         "symbols": { "type": "integer", "minimum": 0 },
-        "xamlNames": { "type": "integer", "minimum": 0 },
-        "stringLiterals": { "type": "integer", "minimum": 0 }
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["category", "symbols"],
+            "properties": {
+              "category": { "type": "string", "minLength": 1 },
+              "symbols": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "dynamicMechanisms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mechanism", "modeling", "observations", "reason"],
+            "properties": {
+              "mechanism": { "type": "string", "minLength": 1 },
+              "modeling": { "enum": ["absent", "static-edge", "external-only", "qualified-seed", "qualified-seed-and-static-edge", "conservative-seed"] },
+              "observations": { "type": "integer", "minimum": 0 },
+              "reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
       }
     },
     "blindSpots": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }

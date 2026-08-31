@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "1998b6dd929ee7fc641e213b1a19ccba7f84e9e2",
+  "sourceRevision": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
   "inputs": {
     "designVersion": 2,
-    "topologySchemaVersion": 2
+    "topologySchemaVersion": 3
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5447,
+    "retainedSymbols": 5466,
     "observedComponentDependencies": 78,
     "declaredDependencies": 65,
     "acceptedExceptions": 1,
@@ -1522,8 +1522,8 @@
   ],
   "registryMismatches": [],
   "observationBlindSpots": [
-    "XAML and string/reflection seeds are conservative name matches, not proven runtime edges.",
-    "DI registrations, source-generated code, native callbacks, and dynamic scripting require explicit review.",
+    "XAML seeds remain conservative simple-name matches pending #1304's qualified member-edge work.",
+    "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
     "Declaration and branch counts are structural signals, not complexity verdicts.",
     "Symbol rows retain all types plus non-trivial methods and shared mutable members; project totals cover the full graph.",
     "Git change coupling is generated separately from commit history."
