@@ -240,7 +240,6 @@ internal sealed class ReachabilityAnalyzer(
 
         AddConservativeSeeds();
         TestReferenceResolver.Expand(_testReferences, _edges);
-        AddWholeTypeMemberClosure();
 
         var reachable = ComputeReachable();
         var rows = _nodes.Values
@@ -345,7 +344,7 @@ internal sealed class ReachabilityAnalyzer(
             [
                 DescribeXamlBlindSpots(),
                 "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
-                "Test-project evidence starts from semantic cross-compilation references and follows explicit production edges before the temporary whole-type compatibility closure.",
+                "Test-project evidence starts from semantic cross-compilation references and follows explicit production edges without treating every member of a reachable type as reachable.",
                 "Declaration and branch counts are structural signals, not complexity verdicts.",
                 "Symbol rows retain every unreachable symbol, all types, non-trivial methods, and shared mutable members; project totals cover the full graph.",
                 "Git change coupling is generated separately from commit history."
@@ -869,18 +868,6 @@ internal sealed class ReachabilityAnalyzer(
         foreach (var edge in MemberContractResolver.Resolve(_nodes.Keys))
         {
             AddEdge(edge.From, edge.To);
-        }
-    }
-
-    private void AddWholeTypeMemberClosure()
-    {
-        foreach (var symbol in _nodes.Keys.Where(symbol => symbol.ContainingType is not null))
-        {
-            var containingType = Original(symbol.ContainingType!);
-            if (_nodes.ContainsKey(containingType))
-            {
-                AddEdge(containingType, symbol);
-            }
         }
     }
 
