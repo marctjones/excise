@@ -185,3 +185,22 @@ namespaces remain stable for source and binary compatibility. Namespace names
 do not override source-root ownership. Relocations preserve Git history and do
 not change code provenance; a future public namespace redesign requires an
 explicit versioned API decision and approval-baseline change.
+
+## AD-015 — One object store owns document identity and parser lifetime
+
+**Status:** accepted
+
+Each `PdfDocument` contains exactly one internal `PdfDocumentObjectStore`. That
+store owns the source-stream disposition, parser and lexer lifetime, xref,
+parsed-object identity cache, reentrant parse lock, decompressor, object-stream
+cache, recursion guards, and security handler used while materializing objects.
+Object allocation, replacement, removal, reachability, writer enumeration, and
+disposal all consume that same state.
+
+`PdfDocument` remains the stable public compatibility facade and document-level
+policy surface. Its `GetObject`, `Resolve`, mutation, and writer hooks delegate
+to the single store; they do not maintain shadow caches or another graph. The
+existing `PdfParser`, `XRefParser`, `PdfDocumentWriter`, and redaction engine
+remain authoritative. A future open pipeline or save-session boundary must
+construct and consume this store rather than introducing another reader,
+document graph, or serializer.

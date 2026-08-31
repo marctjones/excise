@@ -58,15 +58,19 @@
         "Excise.Core.Tests/Editing",
         "Excise.Core.Tests/Operations",
         "Excise.Core/Content/PdfPageContentFacade.cs",
+        "Excise.Core/Document/PdfDocumentObjectStore.cs",
         "Excise.Core/Text/PdfPageTextFacade.cs",
         "Excise.Core/Text/PdfDocumentTextFacade.cs",
         "Excise.Core/Writing/PdfDocumentWritingFacade.cs"
       ],
       "gaps": [
-        "PdfDocument.cs remains a multi-thousand-line coordination surface. Content, text, writing, and encryption dependencies now follow their registered directions without changing the public document API."
+        "PdfDocumentObjectStore now owns the single stream/parser/xref/object-identity lifetime and PdfDocument.cs is below two thousand lines. Open/xref assembly, mutation-derived cache invalidation, and save lifecycle ownership remain tracked separately."
       ],
       "issueIds": [
-        1261
+        1261,
+        1325,
+        1326,
+        1327
       ]
     },
     {

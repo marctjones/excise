@@ -526,11 +526,17 @@ public class ObjectStreamResolutionTests
 
     private static IReadOnlyDictionary<int, Excise.Core.Parsing.XRefEntry> GetXRef(PdfDocument doc)
     {
-        // _xref is private; expose via reflection so this test can verify
-        // the actual entry types without changing PdfDocument's API.
-        var field = typeof(PdfDocument).GetField("_xref",
+        // This test intentionally inspects xref entry kinds. Keep that
+        // diagnostic coupling in tests rather than adding a test-only member
+        // to the production graph.
+        var storeField = typeof(PdfDocument).GetField("_objectStore",
             System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-            ?? throw new InvalidOperationException("PdfDocument._xref field not found");
-        return (Dictionary<int, Excise.Core.Parsing.XRefEntry>)field.GetValue(doc)!;
+            ?? throw new InvalidOperationException("PdfDocument._objectStore field not found");
+        var store = storeField.GetValue(doc)
+            ?? throw new InvalidOperationException("PdfDocument object store is null");
+        var xrefField = store.GetType().GetField("_xref",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("PdfDocumentObjectStore._xref field not found");
+        return (Dictionary<int, Excise.Core.Parsing.XRefEntry>)xrefField.GetValue(store)!;
     }
 }
