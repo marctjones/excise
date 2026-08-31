@@ -96,6 +96,33 @@ public class StructElementMcidTextTests
     }
 
     [Fact]
+    public void ResolveStructElementText_AfterPageMove_UsesCurrentPageOrder()
+    {
+        using var doc = PdfDocument.Open(PdfDocumentBuilder.Create()
+            .Tagged()
+            .Heading("First page", 1)
+            .PageBreak()
+            .Heading("Second page", 1)
+            .SaveToBytes());
+
+        var root = doc.GetStructureTree();
+        var headings = Descendants(root)
+            .Where(element => element.Type == "/H1")
+            .ToList();
+        headings.Should().HaveCount(2);
+        var secondPageHeading = headings[1];
+
+        doc.ResolveStructElementText(secondPageHeading).Trim().Should().Be("Second page");
+
+        doc.Pages.Move(1, 0);
+
+        doc.ResolveStructElementText(secondPageHeading).Trim().Should().Be("Second page",
+            "the page-dictionary index is rebuilt after a page-tree mutation");
+        doc.GetStructureTree().Should().NotBeSameAs(root,
+            "the parsed structure projection can embed page positions");
+    }
+
+    [Fact]
     public void ResolveStructElementText_UntaggedElement_ReturnsEmpty()
     {
         using var doc = PdfDocument.Open(PdfDocumentBuilder.Create()
@@ -106,5 +133,16 @@ public class StructElementMcidTextTests
         // empty rather than throwing.
         var orphan = new PdfStructElement("/H1");
         doc.ResolveStructElementText(orphan).Should().BeEmpty();
+    }
+
+    private static IEnumerable<PdfStructElement> Descendants(PdfStructElement? root)
+    {
+        if (root == null)
+            yield break;
+
+        yield return root;
+        foreach (var child in root.Children)
+        foreach (var descendant in Descendants(child))
+            yield return descendant;
     }
 }

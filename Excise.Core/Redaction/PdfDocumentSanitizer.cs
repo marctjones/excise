@@ -88,16 +88,39 @@ public static class PdfDocumentSanitizer
         bool On(RedactionCarriers c) => (carriers & c) != 0;
 
         var changed = false;
-        if (On(RedactionCarriers.Info)) changed |= ScrubInfo(document, actionable, caseSensitive);
-        if (On(RedactionCarriers.Xmp)) changed |= ScrubXmpMetadata(document, actionable, caseSensitive);
-        if (On(RedactionCarriers.Xfa)) changed |= XfaXmlCarrier.ScrubTerms(document, actionable, caseSensitive).Changed;
-        if (On(RedactionCarriers.Outlines)) changed |= ScrubOutlines(document, actionable, caseSensitive);
-        if (On(RedactionCarriers.Annotations)) changed |= ScrubAnnotationContents(document, actionable, caseSensitive);
-        if (On(RedactionCarriers.FormFields)) changed |= ScrubFormFieldNames(document, actionable, caseSensitive);
-        if (On(RedactionCarriers.StructTree)) changed |= ScrubStructTree(document, actionable, caseSensitive);       // #1151
-        if (On(RedactionCarriers.JavaScript)) changed |= ScrubJavaScript(document, actionable, caseSensitive);       // #1151
-        if (On(RedactionCarriers.EmbeddedFiles)) changed |= ScrubEmbeddedFiles(document, actionable, caseSensitive); // #1151
-        if (On(RedactionCarriers.ActionUris)) changed |= ScrubActionUris(document, actionable, caseSensitive);       // #1168
+        var invalidation = PdfDocumentDerivedStateScope.None;
+
+        void Record(bool stageChanged, PdfDocumentDerivedStateScope scope = PdfDocumentDerivedStateScope.None)
+        {
+            changed |= stageChanged;
+            if (stageChanged)
+                invalidation |= scope;
+        }
+
+        if (On(RedactionCarriers.Info))
+            Record(ScrubInfo(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.Metadata);
+        if (On(RedactionCarriers.Xmp))
+            Record(ScrubXmpMetadata(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.Metadata);
+        if (On(RedactionCarriers.Xfa))
+            Record(XfaXmlCarrier.ScrubTerms(document, actionable, caseSensitive).Changed);
+        if (On(RedactionCarriers.Outlines))
+            Record(ScrubOutlines(document, actionable, caseSensitive));
+        if (On(RedactionCarriers.Annotations))
+            Record(ScrubAnnotationContents(document, actionable, caseSensitive));
+        if (On(RedactionCarriers.FormFields))
+            Record(ScrubFormFieldNames(document, actionable, caseSensitive));
+        if (On(RedactionCarriers.StructTree))
+            Record(ScrubStructTree(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.StructureAndTagging); // #1151
+        if (On(RedactionCarriers.JavaScript))
+            Record(ScrubJavaScript(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1151
+        if (On(RedactionCarriers.EmbeddedFiles))
+            Record(ScrubEmbeddedFiles(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.Attachments); // #1151
+        if (On(RedactionCarriers.ActionUris))
+            Record(ScrubActionUris(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1168
+
+        if (invalidation != PdfDocumentDerivedStateScope.None)
+            document.InvalidateDerivedState(invalidation);
+
         return changed;
     }
 

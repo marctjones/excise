@@ -45,6 +45,7 @@ public class FullwidthFormsRedactionTests
     {
         var pdf = RtlPdfFixtures.SingleTj(fullwidthScalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
+        RtlRedactionTests.PinDeterministicId(doc);
 
         var storedText = string.Concat(fullwidthScalars.Select(char.ConvertFromUtf32));
 
@@ -184,22 +185,12 @@ public class FullwidthFormsRedactionTests
     /// ASCII (raw codes, hex carriers) + UTF-16BE (PDF Unicode text strings)
     /// + UTF-8 (XMP metadata).
     ///
-    /// The trailer <c>/ID</c> array is excised first. It is a random 16-byte
-    /// file identifier written twice as 32-hex-char strings and regenerated on
-    /// every save — content-independent, and no redaction code path can write
-    /// page text into it. A short ASCII needle made of hex-valid characters
-    /// ("123", "ABC") therefore collides with it ~0.7% of saves, which was the
-    /// SOLE source of this test's historical cross-platform flake (#771/#800):
-    /// over 20,000 saves the needle appeared inside <c>/ID</c> 139–143 times
-    /// and NOWHERE else (0 collisions in any real carrier). Lowercase "abc"
-    /// never collided — hex is uppercase — which is exactly why only the ABC
-    /// and 123 cases were ever reported. Excising this one random identifier
-    /// removes a false-positive source, not a leak-detection surface: every
-    /// real text carrier (content streams, ToUnicode, /ActualText, XMP,
-    /// annotations, hex text strings) is still searched in full. The Latin1
-    /// round-trip is a lossless byte↔char mapping, so the UTF-16BE and UTF-8
-    /// views still see every non-ASCII byte (e.g. fullwidth text stored as a
-    /// UTF-16BE PDF string).
+    /// Tests with short ASCII needles pin the trailer <c>/ID</c> before saving.
+    /// It is a random 16-byte identifier written as uppercase hex, so "123" or
+    /// "ABC" can occur there by chance even though no page text survived. A
+    /// deterministic all-zero ID removes only that content-independent source
+    /// of false positives; every real carrier (content streams, ToUnicode,
+    /// /ActualText, XMP, annotations, and text strings) remains searchable.
     /// </summary>
     private static string SearchableTextOf(byte[] saved)
     {

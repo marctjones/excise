@@ -250,6 +250,72 @@ public class NamedDestinationTests
         ReferenceEquals(dests1, dests2).Should().BeTrue();
     }
 
+    [Fact]
+    public void GetNamedDestinations_AfterPageMove_RebuildsCurrentPageNumber()
+    {
+        var pdf = MakePdfWithNamedDestinations(
+            "/Dests << /Target [5 0 R /Fit] >>");
+        using var doc = PdfDocument.Open(pdf);
+        var pages = doc.Pages;
+        var targetObject = doc.GetObject(5);
+        var before = doc.GetNamedDestinations();
+
+        before["Target"].PageNumber.Should().Be(3);
+
+        pages.Move(2, 0);
+
+        var after = doc.GetNamedDestinations();
+        after.Should().NotBeSameAs(before);
+        after["Target"].PageNumber.Should().Be(1);
+        doc.GetNamedDestinations().Should().BeSameAs(after,
+            "the rebuilt projection stays cached until another relevant mutation");
+        doc.Pages.Should().BeSameAs(pages);
+        doc.GetObject(5).Should().BeSameAs(targetObject,
+            "page-tree edits must preserve the authoritative indirect-object identity");
+    }
+
+    [Fact]
+    public void GetNamedDestinations_AfterPageInsert_RebuildsCurrentPageNumber()
+    {
+        var pdf = MakePdfWithNamedDestinations(
+            "/Dests << /Target [3 0 R /Fit] >>");
+        using var doc = PdfDocument.Open(pdf);
+        var pages = doc.Pages;
+        var targetObject = doc.GetObject(3);
+        var before = doc.GetNamedDestinations();
+
+        before["Target"].PageNumber.Should().Be(1);
+
+        pages.Insert(0, pages[2]);
+
+        var after = doc.GetNamedDestinations();
+        after.Should().NotBeSameAs(before);
+        after["Target"].PageNumber.Should().Be(2);
+        doc.Pages.Should().BeSameAs(pages);
+        doc.GetObject(3).Should().BeSameAs(targetObject);
+    }
+
+    [Fact]
+    public void GetNamedDestinations_AfterPageRemoval_RebuildsCurrentPageNumber()
+    {
+        var pdf = MakePdfWithNamedDestinations(
+            "/Dests << /Target [4 0 R /Fit] >>");
+        using var doc = PdfDocument.Open(pdf);
+        var pages = doc.Pages;
+        var targetObject = doc.GetObject(4);
+        var before = doc.GetNamedDestinations();
+
+        before["Target"].PageNumber.Should().Be(2);
+
+        pages.RemoveAt(0);
+
+        var after = doc.GetNamedDestinations();
+        after.Should().NotBeSameAs(before);
+        after["Target"].PageNumber.Should().Be(1);
+        doc.Pages.Should().BeSameAs(pages);
+        doc.GetObject(4).Should().BeSameAs(targetObject);
+    }
+
     // ─── Round-trip: parse → save → reopen → still resolves ────────────────
 
     [Fact]

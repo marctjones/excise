@@ -50,6 +50,24 @@ public class TaggedPdfTests
     }
 
     [Fact]
+    public void Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState()
+    {
+        var builder = PdfDocumentBuilder.Create()
+            .Tagged()
+            .Heading("Accessible heading")
+            .Paragraph("Accessible body");
+        using var doc = builder.Build();
+
+        doc.IsTaggedPdf.Should().BeFalse();
+        doc.GetStructureTree().Should().BeNull();
+
+        doc.SaveToBytes().Should().NotBeEmpty();
+
+        doc.IsTaggedPdf.Should().BeTrue();
+        doc.GetStructureTree().Should().NotBeNull();
+    }
+
+    [Fact]
     public void Tagged_PdfInfoReportsStructureForHeadingsParagraphsTables()
     {
         var pdf = PdfDocumentBuilder.Create().Tagged()

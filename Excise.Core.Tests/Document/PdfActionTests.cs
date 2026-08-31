@@ -1,6 +1,7 @@
 using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Operations;
 using Xunit;
 
 namespace Excise.Core.Tests.Document;
@@ -310,6 +311,39 @@ public class PdfActionTests
         scripts.Should().HaveCount(2);
         scripts["A"].JavaScriptSource.Should().Be("scriptA();");
         scripts["B"].JavaScriptSource.Should().Be("scriptB();");
+    }
+
+    [Fact]
+    public void Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews()
+    {
+        const string secret = "SecretMarker";
+        var pdf = BuildPdf(
+            catalogExtra: "/OpenAction 4 0 R /AA << /WS 5 0 R >> /Names << /JavaScript 6 0 R >>",
+            pageCount: 1,
+            extras: new ExtraObj[]
+            {
+                new DictObj($"<< /S /JavaScript /JS ({secret}\\(\\);) >>"),
+                new DictObj($"<< /S /URI /URI (https://example.com/{secret}) >>"),
+                new DictObj("<< /Names [(Boot) 7 0 R] >>"),
+                new DictObj($"<< /S /JavaScript /JS ({secret}Boot\\(\\);) >>"),
+            });
+        using var doc = PdfDocument.Open(pdf);
+        var openBefore = doc.OpenAction;
+        var additionalBefore = doc.AdditionalActions;
+        var scriptsBefore = doc.DocumentJavaScriptActions;
+
+        PdfDocumentSanitizer.ScrubTerms(
+            doc,
+            new[] { secret },
+            caseSensitive: true,
+            RedactionCarriers.JavaScript | RedactionCarriers.ActionUris).Should().BeTrue();
+
+        doc.OpenAction.Should().NotBeSameAs(openBefore);
+        doc.OpenAction!.JavaScriptSource.Should().Be("();");
+        doc.AdditionalActions.Should().NotBeSameAs(additionalBefore);
+        doc.AdditionalActions["WS"].Uri.Should().Be("https://example.com/");
+        doc.DocumentJavaScriptActions.Should().NotBeSameAs(scriptsBefore);
+        doc.DocumentJavaScriptActions["Boot"].JavaScriptSource.Should().Be("Boot();");
     }
 
     // ─── Round-trip ──────────────────────────────────────────────────────

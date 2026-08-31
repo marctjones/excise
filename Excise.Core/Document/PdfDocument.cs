@@ -931,26 +931,33 @@ public partial class PdfDocument : IDisposable
         {
             if (value == null) Catalog.Remove("Lang");
             else Catalog.SetString("Lang", value);
+            InvalidateDerivedState(PdfDocumentDerivedStateScope.Metadata);
         }
     }
 
     /// <summary>Set the document title (Info <c>/Title</c>).</summary>
-    public void SetTitle(string title) => EnsureInfo().SetString("Title", title ?? string.Empty);
+    public void SetTitle(string title) => SetInfoString("Title", title);
 
     /// <summary>Set the document author (Info <c>/Author</c>).</summary>
-    public void SetAuthor(string author) => EnsureInfo().SetString("Author", author ?? string.Empty);
+    public void SetAuthor(string author) => SetInfoString("Author", author);
 
     /// <summary>Set the document subject (Info <c>/Subject</c>).</summary>
-    public void SetSubject(string subject) => EnsureInfo().SetString("Subject", subject ?? string.Empty);
+    public void SetSubject(string subject) => SetInfoString("Subject", subject);
 
     /// <summary>Set the document keywords (Info <c>/Keywords</c>).</summary>
-    public void SetKeywords(string keywords) => EnsureInfo().SetString("Keywords", keywords ?? string.Empty);
+    public void SetKeywords(string keywords) => SetInfoString("Keywords", keywords);
 
     /// <summary>Set the creating application (Info <c>/Creator</c>).</summary>
-    public void SetCreator(string creator) => EnsureInfo().SetString("Creator", creator ?? string.Empty);
+    public void SetCreator(string creator) => SetInfoString("Creator", creator);
 
     /// <summary>Set the producer (Info <c>/Producer</c>).</summary>
-    public void SetProducer(string producer) => EnsureInfo().SetString("Producer", producer ?? string.Empty);
+    public void SetProducer(string producer) => SetInfoString("Producer", producer);
+
+    private void SetInfoString(string key, string? value)
+    {
+        EnsureInfo().SetString(key, value ?? string.Empty);
+        InvalidateDerivedState(PdfDocumentDerivedStateScope.Metadata);
+    }
 
     /// <summary>
     /// Return the Info dictionary, creating and wiring it into the trailer
@@ -1075,9 +1082,6 @@ public partial class PdfDocument : IDisposable
     /// </summary>
     public void ScrubEmbeddedFiles()
     {
-        // Clear the cache so subsequent calls will see the updated state
-        _embeddedFiles = null;
-
         // Remove modern PDF 2.0: /Catalog/Names/EmbeddedFiles
         var namesObj = Catalog.GetOptional("Names");
         if (namesObj != null && Resolve(namesObj) is PdfDictionary namesDict)
@@ -1085,6 +1089,8 @@ public partial class PdfDocument : IDisposable
 
         // Remove legacy: /Catalog/AF
         Catalog.Remove("AF");
+
+        InvalidateDerivedState(PdfDocumentDerivedStateScope.Attachments);
     }
 
     /// <summary>
@@ -1132,6 +1138,7 @@ public partial class PdfDocument : IDisposable
         // remains in the file until the next save rewrites the xref; the
         // catalog no longer points at it.
         Catalog.Remove("Metadata");
+        InvalidateDerivedState(PdfDocumentDerivedStateScope.Metadata);
 
         // Optionally scrub embedded files (portfolios, associated files).
         if (scrubAttachments)
@@ -1147,6 +1154,7 @@ public partial class PdfDocument : IDisposable
     {
         if (Info == null || keys == null) return;
         foreach (var k in keys) Info.Remove(k);
+        InvalidateDerivedState(PdfDocumentDerivedStateScope.Metadata);
     }
 
     private static readonly string[] InfoKeysToScrub = new[]
