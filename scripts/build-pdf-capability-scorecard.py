@@ -84,6 +84,8 @@ def main():
     registry = load(args.root / "registry.json")
     evidence_collection_path = args.root / "generated/evidence-collection.json"
     evidence_collection = load(evidence_collection_path) if evidence_collection_path.is_file() else None
+    attribution_path = args.root / "generated/evidence-attribution.json"
+    attribution = load(attribution_path) if attribution_path.is_file() else None
     collected = {row["id"]: row for row in evidence_collection.get("capabilities", [])} if evidence_collection else {}
     benchmarks = load(args.root / registry["benchmarkManifest"])["scenarios"]
     sections, all_rows = {}, []
@@ -101,7 +103,7 @@ def main():
     by_id = {row["id"]: row for row in all_rows}
     workflow_ids = {"redaction": ["pdf.17.security.redaction-content-removal", "pdf.17.interactive.redaction-annotations"], "forms": ["pdf.17.interactive.forms"], "safe-save": ["pdf.17.syntax.objects", "pdf.17.document.metadata", "pdfe.product.security.privacy-clean-copy"], "rendering": ["pdf.17.content.streams", "pdf.17.graphics.images", "pdf.17.graphics.fonts", "pdf.17.transparency.model"]}
     workflows = {name: summary([by_id[item] for item in ids if item in by_id], collected) for name, ids in workflow_ids.items()}
-    result = {"schemaVersion": 1, "generatedBy": "scripts/build-pdf-capability-scorecard.py", "policy": "Unknown is not credit; security gates do not compensate for unrelated coverage. Promotion readiness is evidence-backed planning progress and is never a conformance claim.", "overall": summary(all_rows, collected), "majorCategories": major_categories, "sections": sections, "workflows": workflows, "benchmarks": {"scenarios": len(benchmarks), "status": dict(sorted(readiness.items())), "readyPercent": percent(readiness["existing-harness"], len(benchmarks))}, "evidenceCollection": evidence_collection.get("summary") if evidence_collection else {"status": "not-generated"}}
+    result = {"schemaVersion": 1, "generatedBy": "scripts/build-pdf-capability-scorecard.py", "policy": "Unknown is not credit; security gates do not compensate for unrelated coverage. Promotion readiness is evidence-backed planning progress and is never a conformance claim.", "overall": summary(all_rows, collected), "majorCategories": major_categories, "sections": sections, "workflows": workflows, "benchmarks": {"scenarios": len(benchmarks), "status": dict(sorted(readiness.items())), "readyPercent": percent(readiness["existing-harness"], len(benchmarks))}, "evidenceCollection": evidence_collection.get("summary") if evidence_collection else {"status": "not-generated"}, "testAttribution": attribution.get("summary") if attribution else {"status":"not-generated"}}
     result["unplannedRequiredCapabilities"] = [r["id"] for r in all_rows if r["decision"]["state"] == "required" and not r.get("verification")]
     output = args.output or args.root / "generated/capability-scorecard.json"
     output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
@@ -124,6 +126,9 @@ def main():
         lines.append(f"All {collection['capabilities']} capability leaves have a collection record: {collection['collectionStates']}.")
     else:
         lines.append("Evidence collection has not been generated.")
+    attributed=result['testAttribution']
+    if 'targetModes' in attributed:
+        lines.extend(["", "## Test and benchmark attribution", "", f"Explicit test contracts: {attributed['modesWithExplicitContracts']}/{attributed['targetModes']}; passing recorded contracts: {attributed['modesWithPassingExplicitContracts']}/{attributed['targetModes']}; candidate test coverage: {attributed['modesWithTestCandidates']}/{attributed['targetModes']}. Benchmark harnesses: {attributed['benchmarkScenariosWithHarness']}/{attributed['benchmarkScenarios']}."])
     markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"wrote {output.relative_to(ROOT)} and {markdown.relative_to(ROOT)}")
 

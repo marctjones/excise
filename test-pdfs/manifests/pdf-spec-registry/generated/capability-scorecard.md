@@ -48,3 +48,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 Collected candidates are discovery material, not implementation credit.
 All 282 capability leaves have a collection record: {'candidate-evidence': 22, 'registered-evidence': 260}.
+
+## Test and benchmark attribution
+
+Explicit test contracts: 663/964; passing recorded contracts: 0/964; candidate test coverage: 212/964. Benchmark harnesses: 6/6.
