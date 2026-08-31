@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "e8a36fc499a625ff2d34170d4a9f98a71cc8b7c4",
+  "sourceRevision": "6dea46fd0aa27f57d0a7d9e9e14cf3186c082219",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5705,
+    "retainedSymbols": 5704,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -1088,14 +1088,14 @@
     {
       "source": "rendering",
       "target": "core",
-      "references": 140,
+      "references": 139,
       "typeDependencyCount": 10,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Rendering.RenderContext",
           "target": "Excise.Core.ColorSpaces.PdfColorSpace",
-          "references": 66
+          "references": 64
         }
       ]
     },

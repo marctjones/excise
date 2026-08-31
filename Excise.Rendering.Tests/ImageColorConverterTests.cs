@@ -11,7 +11,7 @@ public sealed class ImageColorConverterTests
     [Fact]
     public void GetImageColorConverter_DeviceGray_UsesExactByteTable()
     {
-        var converter = RenderContext.GetImageColorConverterForTests(PdfColorSpace.DeviceGray);
+        var converter = ImageColorConverter.For(PdfColorSpace.DeviceGray);
 
         converter.Should().NotBeNull();
         converter!.Strategy.Should().Be("OneComponentExactByteTable");
@@ -21,7 +21,7 @@ public sealed class ImageColorConverterTests
     [Fact]
     public void GetImageColorConverter_DeviceRgb_UsesContinuous3DLattice()
     {
-        var converter = RenderContext.GetImageColorConverterForTests(PdfColorSpace.DeviceRGB);
+        var converter = ImageColorConverter.For(PdfColorSpace.DeviceRGB);
 
         converter.Should().NotBeNull();
         converter!.Strategy.Should().Be("Continuous3DLattice");
@@ -31,7 +31,7 @@ public sealed class ImageColorConverterTests
     [Fact]
     public void GetImageColorConverter_DeviceCmyk_UsesContinuous4DLattice()
     {
-        var converter = RenderContext.GetImageColorConverterForTests(PdfColorSpace.DeviceCMYK);
+        var converter = ImageColorConverter.For(PdfColorSpace.DeviceCMYK);
 
         converter.Should().NotBeNull();
         converter!.Strategy.Should().Be("Continuous4DLattice");
@@ -53,7 +53,7 @@ public sealed class ImageColorConverterTests
                 new PdfString(new byte[] { 0, 0, 255, 255, 0, 0 })),
             doc);
 
-        var converter = RenderContext.GetImageColorConverterForTests(colorSpace);
+        var converter = ImageColorConverter.For(colorSpace);
 
         converter.Should().NotBeNull();
         converter!.Strategy.Should().Be("IndexedExactByteTable");
@@ -74,14 +74,14 @@ public sealed class ImageColorConverterTests
                 }),
             doc);
 
-        RenderContext.GetImageColorConverterForTests(lab).Should().BeNull();
+        ImageColorConverter.For(lab).Should().BeNull();
     }
 
     [Fact]
     public void GetImageColorConverter_ReusesConverterForColorSpaceInstance()
     {
-        var first = RenderContext.GetImageColorConverterForTests(PdfColorSpace.DeviceRGB);
-        var second = RenderContext.GetImageColorConverterForTests(PdfColorSpace.DeviceRGB);
+        var first = ImageColorConverter.For(PdfColorSpace.DeviceRGB);
+        var second = ImageColorConverter.For(PdfColorSpace.DeviceRGB);
 
         second.Should().BeSameAs(first);
     }
