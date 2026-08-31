@@ -174,16 +174,21 @@
       "evidence": [
         "Excise.Rendering.Tests",
         "Excise.Rendering.Tests/Differential",
+        "Excise.Rendering/RenderResourceScope.cs",
+        "Excise.Rendering.Tests/RenderResourceScopeTests.cs",
         "Excise.App/Services/PageImageRenderer.cs",
         "scripts/run-exploratory-corpus.sh"
       ],
       "gaps": [
-        "Renderer partials remain several thousand lines each and re-execute graphics/text state as an accepted architectural exception."
+        "A facade-owned per-page resource scope now gives nested render contexts one explicit cache lifetime, but operator dispatch, annotation policy, stateless image decoding, and DeviceCMYK/transparency execution state remain coupled across renderer partials. Rendering re-executes graphics/text state as an accepted architectural exception."
       ],
       "issueIds": [
-        986,
         1262,
-        1293
+        1293,
+        1329,
+        1330,
+        1331,
+        1332
       ]
     },
     {
@@ -518,7 +523,11 @@
         1263,
         1264,
         1265,
-        1293
+        1293,
+        1329,
+        1330,
+        1331,
+        1332
       ]
     },
     {
