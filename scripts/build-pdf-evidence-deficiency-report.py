@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate a mode-by-mode evidence deficiency report and prioritized review queue."""
 from __future__ import annotations
-import json
+import json, re
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -14,13 +14,16 @@ def linked(records, capability, mode):
  return [row['id'] for row in records if any(link['capability']==capability and mode in link['modes'] for link in row['parentCapabilityModes'])]
 def check_method(ref):
  return ref.rsplit('::', 1)[-1]
+def outcome_method(name):
+ match=re.search(r'\.([A-Za-z_][A-Za-z0-9_]*)\(', name)
+ return match.group(1) if match else name.rsplit('.', 1)[-1].split('(', 1)[0]
 def execution_status(checks, outcomes):
  """Report recorded execution separately from static evidence eligibility."""
  if not checks: return 'not-contracted', []
  by_method=defaultdict(list)
  for outcome in outcomes:
   name=outcome.get('testName') or ''
-  by_method[name.rsplit('.', 1)[-1]].append(outcome)
+  by_method[outcome_method(name)].append(outcome)
  recorded=[]
  for check in checks:
   matches=by_method.get(check_method(check['ref']), [])

@@ -37602,7 +37602,9 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "corpus",
@@ -37726,7 +37728,7 @@
       "section": "graphics",
       "workflow": "rendering",
       "mode": "render",
-      "currentState": "partial",
+      "currentState": "implemented",
       "deficiencies": [],
       "discoveryStatus": "mapped-source-and-test",
       "discoveryCandidates": {
@@ -38400,7 +38402,7 @@
         ],
         "architecture": []
       },
-      "executionStatus": "partial",
+      "executionStatus": "passed",
       "recordedChecks": [
         {
           "kind": "unit",
@@ -38419,7 +38421,9 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         }
       ],
       "priority": 80,
@@ -38541,14 +38545,14 @@
       "independentEvidence": [
         "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
       ],
-      "nextAction": "review mapped code and test candidates"
+      "nextAction": "none; strict implementation is recorded"
     },
     {
       "capability": "pdf.17.graphics.images",
       "section": "graphics",
       "workflow": "rendering",
       "mode": "render",
-      "currentState": "partial",
+      "currentState": "implemented",
       "deficiencies": [],
       "discoveryStatus": "mapped-source-and-test",
       "discoveryCandidates": {
@@ -39215,12 +39219,14 @@
         ],
         "architecture": []
       },
-      "executionStatus": "partial",
+      "executionStatus": "passed",
       "recordedChecks": [
         {
           "kind": "unit",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "atomic-fixture",
@@ -39232,7 +39238,9 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         }
       ],
       "priority": 80,
@@ -39349,7 +39357,7 @@
       "independentEvidence": [
         "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
       ],
-      "nextAction": "review mapped code and test candidates"
+      "nextAction": "none; strict implementation is recorded"
     },
     {
       "capability": "pdf.17.transparency.model",
@@ -40027,7 +40035,7 @@
         ],
         "architecture": []
       },
-      "executionStatus": "partial",
+      "executionStatus": "passed",
       "recordedChecks": [
         {
           "kind": "unit",
@@ -40046,7 +40054,9 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         }
       ],
       "priority": 80,
@@ -187384,7 +187394,7 @@
   ],
   "summary": {
     "targetModes": 964,
-    "strictImplemented": 1,
+    "strictImplemented": 3,
     "modesWithDeficiencies": 959,
     "deficiencies": {
       "no-accepted-atomic-fixture": 813,
@@ -187396,7 +187406,8 @@
     "executionStatus": {
       "not-contracted": 814,
       "not-recorded": 146,
-      "partial": 4
+      "partial": 1,
+      "passed": 3
     },
     "discoveryStatus": {
       "mapped-source-and-test": 58,
@@ -187423,7 +187434,8 @@
         "unknown": 1
       },
       "rendering": {
-        "partial": 4,
+        "implemented": 2,
+        "partial": 2,
         "unknown": 19
       },
       "safe-save": {
@@ -188087,19 +188099,19 @@
         "capability": "pdf.17.graphics.fonts",
         "mode": "render",
         "workflow": "rendering",
-        "currentState": "partial",
+        "currentState": "implemented",
         "deficiencies": [],
         "priority": 80,
-        "nextAction": "review mapped code and test candidates"
+        "nextAction": "none; strict implementation is recorded"
       },
       {
         "capability": "pdf.17.graphics.images",
         "mode": "render",
         "workflow": "rendering",
-        "currentState": "partial",
+        "currentState": "implemented",
         "deficiencies": [],
         "priority": 80,
-        "nextAction": "review mapped code and test candidates"
+        "nextAction": "none; strict implementation is recorded"
       }
     ]
   }

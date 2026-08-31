@@ -7,19 +7,19 @@
     "targetCapabilities": 266,
     "targetModes": 964,
     "modeStates": {
-      "implemented": 1,
-      "partial": 14,
+      "implemented": 3,
+      "partial": 12,
       "unimplemented": 18,
       "unknown": 931
     },
     "measuredModeCoveragePercent": 3.4,
-    "implementedModeCoveragePercent": 0.1,
+    "implementedModeCoveragePercent": 0.3,
     "promotionReadinessPercent": 15.9,
     "promotionReadinessMilestones": {
       "discoveredOrBetter": 964,
       "directTestOrBetter": 9,
       "independentEvidenceOrBetter": 5,
-      "strictImplemented": 1
+      "strictImplemented": 3
     },
     "verificationPlanCoveragePercent": 89.1,
     "executableVerificationCoveragePercent": 29.3,
@@ -389,18 +389,19 @@
       "targetCapabilities": 217,
       "targetModes": 750,
       "modeStates": {
-        "partial": 5,
+        "implemented": 2,
+        "partial": 3,
         "unimplemented": 1,
         "unknown": 744
       },
       "measuredModeCoveragePercent": 0.8,
-      "implementedModeCoveragePercent": 0.0,
-      "promotionReadinessPercent": 17.2,
+      "implementedModeCoveragePercent": 0.3,
+      "promotionReadinessPercent": 17.3,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 750,
         "directTestOrBetter": 4,
         "independentEvidenceOrBetter": 4,
-        "strictImplemented": 0
+        "strictImplemented": 2
       },
       "verificationPlanCoveragePercent": 95.9,
       "executableVerificationCoveragePercent": 35.5,
@@ -883,17 +884,18 @@
       "targetCapabilities": 6,
       "targetModes": 33,
       "modeStates": {
-        "partial": 3,
+        "implemented": 2,
+        "partial": 1,
         "unknown": 30
       },
       "measuredModeCoveragePercent": 9.1,
-      "implementedModeCoveragePercent": 0.0,
-      "promotionReadinessPercent": 14.8,
+      "implementedModeCoveragePercent": 6.1,
+      "promotionReadinessPercent": 15.5,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 33,
         "directTestOrBetter": 2,
         "independentEvidenceOrBetter": 2,
-        "strictImplemented": 0
+        "strictImplemented": 2
       },
       "verificationPlanCoveragePercent": 33.3,
       "executableVerificationCoveragePercent": 33.3,
@@ -1645,17 +1647,18 @@
       "targetCapabilities": 4,
       "targetModes": 23,
       "modeStates": {
-        "partial": 4,
+        "implemented": 2,
+        "partial": 2,
         "unknown": 19
       },
       "measuredModeCoveragePercent": 17.4,
-      "implementedModeCoveragePercent": 0.0,
-      "promotionReadinessPercent": 23.9,
+      "implementedModeCoveragePercent": 8.7,
+      "promotionReadinessPercent": 24.8,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 23,
         "directTestOrBetter": 4,
         "independentEvidenceOrBetter": 4,
-        "strictImplemented": 0
+        "strictImplemented": 2
       },
       "verificationPlanCoveragePercent": 100.0,
       "executableVerificationCoveragePercent": 100.0,

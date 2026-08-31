@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-08-31T03:17:57.585373+00:00",
-  "gitRevision": "7376fdbc0c9ecc0263ed3b96c4c64e01d32d6ec2",
+  "recordedAt": "2026-08-31T03:23:52.623114+00:00",
+  "gitRevision": "fd9fd66a26a701c2101e4e276e6eab402f527d3d",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -11,9 +11,267 @@
       "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-renderer-atomic.trx",
       "modifiedAt": "2026-08-31T02:45:59.642455+00:00",
       "sha256": "3fbd98ddd705a0b65d8fa15463456608f8783dce43f94d8362dc351523cef756"
+    },
+    {
+      "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "modifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "sha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-image-unit.trx",
+      "modifiedAt": "2026-08-31T03:23:33.600168+00:00",
+      "sha256": "ab3e02738e89fbf7a63de0483a083d0d2a660b420cd446e1e1929b0ee9fae089"
     }
   ],
   "outcomes": [
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/cdc-vis-covid-19.pdf\", pageNumber: 1)",
+      "outcome": "Passed",
+      "duration": "00:00:00.3594407",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/cdc-vis-covid-19.pdf\", pageNumber: 2)",
+      "outcome": "Passed",
+      "duration": "00:00:00.8599121",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-1040-instructions.pdf\", pageNumber: 1)",
+      "outcome": "Passed",
+      "duration": "00:00:00.6680945",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-1040-instructions.pdf\", pageNumber: 2)",
+      "outcome": "Passed",
+      "duration": "00:00:00.3369447",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-1040-instructions.pdf\", pageNumber: 20)",
+      "outcome": "Passed",
+      "duration": "00:00:00.4298740",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-1040-instructions.pdf\", pageNumber: 5)",
+      "outcome": "Passed",
+      "duration": "00:00:00.4453774",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-1040.pdf\", pageNumber: 1)",
+      "outcome": "Passed",
+      "duration": "00:00:00.3144434",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-1040.pdf\", pageNumber: 2)",
+      "outcome": "Passed",
+      "duration": "00:00:00.3260295",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-pub509-2026.pdf\", pageNumber: 1)",
+      "outcome": "Passed",
+      "duration": "00:00:00.4515514",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-pub509-2026.pdf\", pageNumber: 2)",
+      "outcome": "Passed",
+      "duration": "00:00:00.3590791",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-pub509-2026.pdf\", pageNumber: 5)",
+      "outcome": "Passed",
+      "duration": "00:00:00.3525132",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-w4.pdf\", pageNumber: 1)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2853374",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-w4.pdf\", pageNumber: 2)",
+      "outcome": "Passed",
+      "duration": "00:00:00.3337237",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-w4.pdf\", pageNumber: 5)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2662396",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-w9.pdf\", pageNumber: 1)",
+      "outcome": "Passed",
+      "duration": "00:00:00.3331526",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-w9.pdf\", pageNumber: 2)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2835802",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/irs-w9.pdf\", pageNumber: 5)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2612695",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/scotus-trump-v-anderson.pdf\", pageNumber: 1)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2312357",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/scotus-trump-v-anderson.pdf\", pageNumber: 2)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2372399",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/scotus-trump-v-anderson.pdf\", pageNumber: 20)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2415634",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/scotus-trump-v-anderson.pdf\", pageNumber: 5)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2660737",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/scotus-trump-v-us.pdf\", pageNumber: 1)",
+      "outcome": "Passed",
+      "duration": "00:00:00.3479600",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/scotus-trump-v-us.pdf\", pageNumber: 2)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2503285",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/scotus-trump-v-us.pdf\", pageNumber: 20)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2466512",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/scotus-trump-v-us.pdf\", pageNumber: 5)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2578976",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/state-ds11-passport.pdf\", pageNumber: 1)",
+      "outcome": "Passed",
+      "duration": "00:00:00.7347420",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/state-ds11-passport.pdf\", pageNumber: 2)",
+      "outcome": "Passed",
+      "duration": "00:00:00.5850137",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/state-ds11-passport.pdf\", pageNumber: 5)",
+      "outcome": "Passed",
+      "duration": "00:00:00.8884162",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/state-ds82-passport-renewal.pdf\", pageNumber: 1)",
+      "outcome": "Passed",
+      "duration": "00:00:00.5281872",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/state-ds82-passport-renewal.pdf\", pageNumber: 2)",
+      "outcome": "Passed",
+      "duration": "00:00:00.7744548",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/state-ds82-passport-renewal.pdf\", pageNumber: 5)",
+      "outcome": "Passed",
+      "duration": "00:00:01.1406004",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-mutool-differential.trx",
+      "resultModifiedAt": "2026-08-31T03:22:59.687808+00:00",
+      "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
+    },
     {
       "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha",
       "outcome": "Passed",
@@ -21,6 +279,14 @@
       "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-renderer-atomic.trx",
       "resultModifiedAt": "2026-08-31T02:45:59.642455+00:00",
       "trxSha256": "3fbd98ddd705a0b65d8fa15463456608f8783dce43f94d8362dc351523cef756"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
+      "outcome": "Passed",
+      "duration": "00:00:00.1469376",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-image-unit.trx",
+      "resultModifiedAt": "2026-08-31T03:23:33.600168+00:00",
+      "trxSha256": "ab3e02738e89fbf7a63de0483a083d0d2a660b420cd446e1e1929b0ee9fae089"
     },
     {
       "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_SimpleText_SingleFont",
@@ -40,10 +306,10 @@
     }
   ],
   "summary": {
-    "trxFiles": 1,
-    "tests": 3,
+    "trxFiles": 3,
+    "tests": 35,
     "outcomes": {
-      "Passed": 3
+      "Passed": 35
     },
     "status": "recorded"
   }

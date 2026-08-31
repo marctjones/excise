@@ -471,7 +471,7 @@
       "capability": "pdf.17.graphics.images",
       "section": "graphics",
       "mode": "render",
-      "currentState": "partial",
+      "currentState": "implemented",
       "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
@@ -528,7 +528,7 @@
       "capability": "pdf.17.graphics.fonts",
       "section": "graphics",
       "mode": "render",
-      "currentState": "partial",
+      "currentState": "implemented",
       "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
