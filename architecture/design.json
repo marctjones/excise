@@ -1,7 +1,7 @@
 {
   "$schema": "./schemas/design.schema.json",
   "schemaVersion": 1,
-  "designVersion": 1,
+  "designVersion": 2,
   "repositoryScope": "architecture/repository-scope.json",
   "components": [
     {
@@ -815,6 +815,60 @@
         "architecture-tooling"
       ],
       "output": "architecture/generated/target-components.dot"
+    },
+    {
+      "id": "current-component-types",
+      "title": "Excise observed component and type dependencies",
+      "mode": "observed-types",
+      "components": [
+        "core",
+        "core-primitives",
+        "core-parsing",
+        "core-document",
+        "core-content",
+        "core-fonts",
+        "core-text",
+        "core-redaction",
+        "core-writing",
+        "core-security",
+        "rendering",
+        "ocr-native",
+        "ocr",
+        "avalonia",
+        "cli",
+        "app",
+        "app-main-window",
+        "verification",
+        "architecture-tooling"
+      ],
+      "output": "architecture/generated/current-component-types.dot"
+    },
+    {
+      "id": "current-vs-target",
+      "title": "Excise observed versus desired component dependencies",
+      "mode": "comparison",
+      "components": [
+        "core",
+        "core-primitives",
+        "core-parsing",
+        "core-document",
+        "core-content",
+        "core-fonts",
+        "core-text",
+        "core-redaction",
+        "core-writing",
+        "core-security",
+        "rendering",
+        "ocr-native",
+        "ocr",
+        "avalonia",
+        "cli",
+        "app",
+        "app-main-window",
+        "verification",
+        "architecture-tooling"
+      ],
+      "output": "architecture/generated/current-vs-target.dot"
     }
   ]
 }

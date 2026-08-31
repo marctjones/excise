@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/marctjones/excise/blob/develop/architecture/schemas/architecture-conformance.schema.json",
+  "title": "Excise observed-versus-target architecture conformance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "generator", "sourceRevision", "inputs", "summary", "componentDependencies", "unownedCode", "unresolvedTypeDependencyExamples", "registryMismatches", "observationBlindSpots"],
+  "properties": {
+    "$schema": { "const": "../schemas/architecture-conformance.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "generator": { "const": "scripts/check_architecture_registry.py" },
+    "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["designVersion", "topologySchemaVersion"],
+      "properties": {
+        "designVersion": { "type": "integer", "minimum": 1 },
+        "topologySchemaVersion": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["analyzedProjects", "retainedSymbols", "observedComponentDependencies", "declaredDependencies", "acceptedExceptions", "undeclaredDependencies", "forbiddenDependencies", "unownedShippingProjects", "unownedShippingSymbols", "unresolvedTypeDependencies", "registryMismatches"],
+      "properties": {
+        "analyzedProjects": { "type": "integer", "minimum": 0 },
+        "retainedSymbols": { "type": "integer", "minimum": 0 },
+        "observedComponentDependencies": { "type": "integer", "minimum": 0 },
+        "declaredDependencies": { "type": "integer", "minimum": 0 },
+        "acceptedExceptions": { "type": "integer", "minimum": 0 },
+        "undeclaredDependencies": { "type": "integer", "minimum": 0 },
+        "forbiddenDependencies": { "type": "integer", "minimum": 0 },
+        "unownedShippingProjects": { "type": "integer", "minimum": 0 },
+        "unownedShippingSymbols": { "type": "integer", "minimum": 0 },
+        "unresolvedTypeDependencies": { "type": "integer", "minimum": 0 },
+        "registryMismatches": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "componentDependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "target", "references", "typeDependencyCount", "classification", "evidence"],
+        "properties": {
+          "source": { "$ref": "#/$defs/id" },
+          "target": { "$ref": "#/$defs/id" },
+          "references": { "type": "integer", "minimum": 1 },
+          "typeDependencyCount": { "type": "integer", "minimum": 1 },
+          "classification": { "enum": ["declared", "accepted_exception", "undeclared", "forbidden"] },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5,
+            "items": { "$ref": "#/$defs/typeDependency" }
+          }
+        }
+      }
+    },
+    "unownedCode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projects"],
+      "properties": {
+        "projects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "path", "classification", "projectComponent", "unownedSymbols"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "path": { "type": "string", "pattern": "\\.csproj$" },
+              "classification": { "enum": ["shipping", "test", "sample", "benchmark", "tool"] },
+              "projectComponent": { "type": ["string", "null"] },
+              "unownedSymbols": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "unresolvedTypeDependencyExamples": {
+      "type": "array",
+      "maxItems": 25,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sourceType", "targetType", "references", "sourceOwners", "targetOwners"],
+        "properties": {
+          "sourceType": { "type": "string", "minLength": 1 },
+          "targetType": { "type": "string", "minLength": 1 },
+          "references": { "type": "integer", "minimum": 1 },
+          "sourceOwners": { "$ref": "#/$defs/idArray" },
+          "targetOwners": { "$ref": "#/$defs/idArray" }
+        }
+      }
+    },
+    "registryMismatches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project", "reason"],
+        "properties": {
+          "project": { "type": "string", "pattern": "\\.csproj$" },
+          "reason": { "enum": ["missing_inventory_project", "classification_mismatch"] },
+          "topology": { "type": "string" },
+          "inventory": { "type": "string" }
+        }
+      }
+    },
+    "observationBlindSpots": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "idArray": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+    "typeDependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target", "references"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "references": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

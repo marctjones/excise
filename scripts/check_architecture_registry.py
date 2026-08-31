@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import defaultdict
 import copy
 import fnmatch
 import json
@@ -22,6 +23,8 @@ DEFAULT_DESIGN = ARCHITECTURE_ROOT / "design.json"
 DEFAULT_INVENTORY = ARCHITECTURE_ROOT / "inventory.generated.json"
 DEFAULT_ASSESSMENT = ARCHITECTURE_ROOT / "assessment.json"
 DEFAULT_DECISIONS = ARCHITECTURE_ROOT / "decisions.json"
+DEFAULT_TOPOLOGY = ARCHITECTURE_ROOT / "generated/code-topology.json"
+DEFAULT_CONFORMANCE = ARCHITECTURE_ROOT / "generated/architecture-conformance.json"
 SCHEMA_ROOT = ARCHITECTURE_ROOT / "schemas"
 
 STATUSES = {
@@ -51,9 +54,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--inventory", type=Path, default=DEFAULT_INVENTORY)
     parser.add_argument("--assessment", type=Path, default=DEFAULT_ASSESSMENT)
     parser.add_argument("--decisions", type=Path, default=DEFAULT_DECISIONS)
+    parser.add_argument("--topology", type=Path, default=DEFAULT_TOPOLOGY)
+    parser.add_argument("--conformance", type=Path, default=DEFAULT_CONFORMANCE)
     parser.add_argument("--write-inventory", action="store_true")
     parser.add_argument("--write-diagrams", action="store_true")
     parser.add_argument("--check-diagrams", action="store_true")
+    parser.add_argument("--write-conformance", action="store_true")
+    parser.add_argument("--check-conformance", action="store_true")
     parser.add_argument("--self-test", action="store_true")
     return parser.parse_args()
 
@@ -417,11 +424,470 @@ def validate_registry_set(
     return errors
 
 
+def component_lineage(component_id: str, component_by_id: dict[str, dict]) -> list[str]:
+    lineage: list[str] = []
+    current: str | None = component_id
+    while current is not None:
+        lineage.append(current)
+        current = component_by_id[current].get("parent")
+    return lineage
+
+
+def validate_topology_join(design: dict, inventory: dict, topology: dict) -> list[str]:
+    errors: list[str] = []
+    if topology.get("schemaVersion") != 2:
+        errors.append("topology: schemaVersion must be 2")
+        return errors
+    for schema_name in ("topology.schema.json", "architecture-conformance.schema.json"):
+        if not (SCHEMA_ROOT / schema_name).is_file():
+            errors.append(f"topology: missing schema architecture/schemas/{schema_name}")
+
+    component_by_id = {component["id"]: component for component in design["components"]}
+    inventory_by_path = {project["path"]: project for project in inventory["projects"]}
+    project_by_name: dict[str, dict] = {}
+    for index, project in enumerate(topology.get("projects", [])):
+        name = project.get("name")
+        path = project.get("path")
+        if not isinstance(name, str) or not name:
+            errors.append(f"topology.projects[{index}]: invalid name")
+            continue
+        if name in project_by_name:
+            errors.append(f"topology.projects[{index}]: duplicate name '{name}'")
+        project_by_name[name] = project
+        registered = inventory_by_path.get(path)
+        if registered is None:
+            errors.append(f"topology project {name}: path not in inventory: {path}")
+        elif project.get("classification") != registered["classification"]:
+            errors.append(f"topology project {name}: classification differs from inventory")
+        component = project.get("component")
+        if component is not None and component not in component_by_id:
+            errors.append(f"topology project {name}: unknown component '{component}'")
+
+    for index, symbol in enumerate(topology.get("symbols", [])):
+        project_name = symbol.get("project")
+        if project_name not in project_by_name:
+            errors.append(f"topology.symbols[{index}]: unknown project '{project_name}'")
+        component = symbol.get("component")
+        workflows = symbol.get("workflows")
+        if component is None:
+            if workflows != []:
+                errors.append(
+                    f"topology.symbols[{index}]: unowned symbol must have no workflows"
+                )
+            continue
+        if component not in component_by_id:
+            errors.append(f"topology.symbols[{index}]: unknown component '{component}'")
+            continue
+        expected_workflows = sorted(component_by_id[component].get("workflows", []))
+        if workflows != expected_workflows:
+            errors.append(
+                f"topology.symbols[{index}]: workflows differ from component '{component}'"
+            )
+    return errors
+
+
+def classify_observed_dependency(
+    source: str,
+    target: str,
+    component_by_id: dict[str, dict],
+    forbidden: set[tuple[str, str]],
+    accepted: set[tuple[str, str]],
+) -> str:
+    source_lineage = component_lineage(source, component_by_id)
+    target_lineage = component_lineage(target, component_by_id)
+    if any(
+        forbidden_source in source_lineage and forbidden_target in target_lineage
+        for forbidden_source, forbidden_target in forbidden
+    ):
+        return "forbidden"
+    if (source, target) in accepted:
+        return "accepted_exception"
+    if source in target_lineage[1:] or target in source_lineage[1:]:
+        return "declared"
+    target_family = set(target_lineage)
+    if any(
+        target_family.intersection(component_by_id[item].get("dependsOn", []))
+        for item in source_lineage
+    ):
+        return "declared"
+    return "undeclared"
+
+
+def generate_architecture_conformance(
+    design: dict, inventory: dict, assessment: dict, topology: dict
+) -> dict:
+    component_by_id = {component["id"]: component for component in design["components"]}
+    inventory_by_path = {project["path"]: project for project in inventory["projects"]}
+    project_by_name = {project["name"]: project for project in topology["projects"]}
+    forbidden = {
+        (relationship["source"], relationship["target"])
+        for relationship in assessment["relationships"]
+        if relationship["type"] == "must-not-depend-on"
+    }
+    accepted = {
+        (relationship["source"], relationship["target"])
+        for relationship in assessment["relationships"]
+        if relationship["implementationStatus"] == "accepted_exception"
+    }
+
+    type_owners: dict[str, set[str]] = defaultdict(set)
+    for symbol in topology["symbols"]:
+        if (
+            symbol["kind"] == "type"
+            and symbol["containingType"] is not None
+            and symbol["component"] is not None
+        ):
+            type_owners[symbol["containingType"]].add(symbol["component"])
+
+    observed: dict[tuple[str, str], dict] = {}
+    unresolved: list[dict] = []
+    for dependency in topology["typeDependencies"]:
+        source_owners = sorted(type_owners.get(dependency["source"], set()))
+        target_owners = sorted(type_owners.get(dependency["target"], set()))
+        if len(source_owners) != 1 or len(target_owners) != 1:
+            unresolved.append(
+                {
+                    "sourceType": dependency["source"],
+                    "targetType": dependency["target"],
+                    "references": dependency["references"],
+                    "sourceOwners": source_owners,
+                    "targetOwners": target_owners,
+                }
+            )
+            continue
+        source = source_owners[0]
+        target = target_owners[0]
+        if source == target:
+            continue
+        key = (source, target)
+        row = observed.setdefault(
+            key,
+            {"references": 0, "typeDependencies": []},
+        )
+        row["references"] += dependency["references"]
+        row["typeDependencies"].append(
+            {
+                "source": dependency["source"],
+                "target": dependency["target"],
+                "references": dependency["references"],
+            }
+        )
+
+    component_dependencies: list[dict] = []
+    for (source, target), row in sorted(observed.items()):
+        evidence = sorted(
+            row["typeDependencies"],
+            key=lambda item: (-item["references"], item["source"], item["target"]),
+        )
+        classification = classify_observed_dependency(
+            source, target, component_by_id, forbidden, accepted
+        )
+        component_dependencies.append(
+            {
+                "source": source,
+                "target": target,
+                "references": row["references"],
+                "typeDependencyCount": len(evidence),
+                "classification": classification,
+                "evidence": evidence[:5] if classification != "declared" else evidence[:1],
+            }
+        )
+
+    symbols_by_project: dict[str, list[dict]] = defaultdict(list)
+    for symbol in topology["symbols"]:
+        symbols_by_project[symbol["project"]].append(symbol)
+    unowned_projects = []
+    for name, symbols in sorted(symbols_by_project.items()):
+        project = project_by_name[name]
+        unowned = [symbol for symbol in symbols if symbol["component"] is None]
+        if project["component"] is None or unowned:
+            unowned_projects.append(
+                {
+                    "name": name,
+                    "path": project["path"],
+                    "classification": project["classification"],
+                    "projectComponent": project["component"],
+                    "unownedSymbols": len(unowned),
+                }
+            )
+
+    shipping_unowned_projects = sum(
+        1
+        for project in topology["projects"]
+        if project["classification"] == "shipping" and project["component"] is None
+    )
+    shipping_unowned_symbols = sum(
+        1
+        for symbol in topology["symbols"]
+        if symbol["component"] is None
+        and project_by_name[symbol["project"]]["classification"] == "shipping"
+    )
+    classification_counts = {
+        classification: sum(
+            1
+            for dependency in component_dependencies
+            if dependency["classification"] == classification
+        )
+        for classification in (
+            "declared", "accepted_exception", "undeclared", "forbidden"
+        )
+    }
+
+    registry_mismatches = []
+    for project in topology["projects"]:
+        registered = inventory_by_path.get(project["path"])
+        if registered is None:
+            registry_mismatches.append(
+                {"project": project["path"], "reason": "missing_inventory_project"}
+            )
+        elif registered["classification"] != project["classification"]:
+            registry_mismatches.append(
+                {
+                    "project": project["path"],
+                    "reason": "classification_mismatch",
+                    "topology": project["classification"],
+                    "inventory": registered["classification"],
+                }
+            )
+
+    return {
+        "$schema": "../schemas/architecture-conformance.schema.json",
+        "schemaVersion": 1,
+        "generator": "scripts/check_architecture_registry.py",
+        "sourceRevision": topology["sourceRevision"],
+        "inputs": {
+            "designVersion": design["designVersion"],
+            "topologySchemaVersion": topology["schemaVersion"],
+        },
+        "summary": {
+            "analyzedProjects": len(topology["projects"]),
+            "retainedSymbols": len(topology["symbols"]),
+            "observedComponentDependencies": len(component_dependencies),
+            "declaredDependencies": classification_counts["declared"],
+            "acceptedExceptions": classification_counts["accepted_exception"],
+            "undeclaredDependencies": classification_counts["undeclared"],
+            "forbiddenDependencies": classification_counts["forbidden"],
+            "unownedShippingProjects": shipping_unowned_projects,
+            "unownedShippingSymbols": shipping_unowned_symbols,
+            "unresolvedTypeDependencies": len(unresolved),
+            "registryMismatches": len(registry_mismatches),
+        },
+        "componentDependencies": component_dependencies,
+        "unownedCode": {"projects": unowned_projects},
+        "unresolvedTypeDependencyExamples": sorted(
+            unresolved,
+            key=lambda item: (item["sourceType"], item["targetType"]),
+        )[:25],
+        "registryMismatches": registry_mismatches,
+        "observationBlindSpots": topology["blindSpots"],
+    }
+
+
+def conformance_contract_errors(report: dict) -> list[str]:
+    summary = report["summary"]
+    errors: list[str] = []
+    if summary["forbiddenDependencies"]:
+        errors.append(
+            f"observed {summary['forbiddenDependencies']} forbidden component dependencies"
+        )
+    if summary["unownedShippingProjects"] or summary["unownedShippingSymbols"]:
+        errors.append(
+            "shipping topology is unowned: "
+            f"{summary['unownedShippingProjects']} projects, "
+            f"{summary['unownedShippingSymbols']} symbols"
+        )
+    if summary["registryMismatches"]:
+        errors.append(f"observed {summary['registryMismatches']} registry mismatches")
+    return errors
+
+
+def check_or_write_conformance(
+    report: dict, output: Path, write: bool, check: bool
+) -> list[str]:
+    errors = conformance_contract_errors(report)
+    expected = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
+    try:
+        output_label = repo_relative(output)
+    except ValueError:
+        output_label = output.as_posix()
+    if write:
+        write_atomic(output, expected)
+        print(f"wrote {output_label}")
+    if check:
+        if not output.exists():
+            errors.append(
+                f"conformance: missing {output_label}; run "
+                "scripts/check_architecture_registry.py --write-conformance"
+            )
+        elif output.read_text(encoding="utf-8") != expected:
+            errors.append(
+                f"conformance: stale {output_label}; run "
+                "scripts/check_architecture_registry.py --write-conformance"
+            )
+    return errors
+
+
 def dot_escape(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
 
 
-def generate_dot(design: dict, inventory: dict, assessment: dict, view: dict) -> str:
+def generate_observed_types_dot(
+    design: dict, assessment: dict, topology: dict, conformance: dict, view: dict
+) -> str:
+    component_by_id = {component["id"]: component for component in design["components"]}
+    assessment_by_id = {item["component"]: item for item in assessment["components"]}
+    symbol_counts: dict[str, int] = defaultdict(int)
+    for symbol in topology["symbols"]:
+        if symbol["component"] is not None:
+            symbol_counts[symbol["component"]] += 1
+    selected = set(view["components"])
+    lines = [
+        "// Generated by scripts/check_architecture_registry.py. Do not edit by hand.",
+        "digraph excise_architecture {",
+        "  graph [rankdir=BT, fontname=\"Helvetica\", labelloc=t, label=\""
+        + dot_escape(view["title"]) + "\"];",
+        "  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\"];",
+        "  edge [fontname=\"Helvetica\"];",
+    ]
+    by_layer: dict[str, list[dict]] = {}
+    for component_id in selected:
+        component = component_by_id[component_id]
+        by_layer.setdefault(component["layer"], []).append(component)
+    for layer in sorted(by_layer):
+        lines.append(f"  subgraph cluster_{dot_escape(layer)} {{")
+        lines.append(f'    label="{dot_escape(layer)}";')
+        lines.append('    color="#cbd5e1";')
+        for component in sorted(by_layer[layer], key=lambda item: item["id"]):
+            status = assessment_by_id[component["id"]]["implementationStatus"]
+            label = (
+                f"{component['name']}\n{status}\n"
+                f"{symbol_counts.get(component['id'], 0)} retained symbols"
+            )
+            lines.append(
+                f'    "{dot_escape(component["id"])}" '
+                f'[label="{dot_escape(label)}", fillcolor="{STATUS_COLORS[status]}"];'
+            )
+        lines.append("  }")
+
+    edge_styles = {
+        "declared": ("#475569", "solid", "1"),
+        "accepted_exception": ("#7e22ce", "dotted", "2"),
+        "undeclared": ("#d97706", "dashed", "2"),
+        "forbidden": ("#dc2626", "bold", "3"),
+    }
+    for dependency in conformance["componentDependencies"]:
+        if dependency["source"] not in selected or dependency["target"] not in selected:
+            continue
+        color, style, width = edge_styles[dependency["classification"]]
+        label = (
+            f"{dependency['references']} refs / "
+            f"{dependency['typeDependencyCount']} type pairs\n"
+            f"{dependency['classification']}"
+        )
+        lines.append(
+            f'  "{dot_escape(dependency["source"])}" -> '
+            f'"{dot_escape(dependency["target"])}" '
+            f'[label="{dot_escape(label)}", color="{color}", '
+            f'style="{style}", penwidth={width}];'
+        )
+    lines.append("}")
+    return "\n".join(lines) + "\n"
+
+
+def generate_current_vs_target_dot(
+    design: dict, assessment: dict, conformance: dict, view: dict
+) -> str:
+    component_by_id = {component["id"]: component for component in design["components"]}
+    assessment_by_id = {item["component"]: item for item in assessment["components"]}
+    selected = set(view["components"])
+    observed = {
+        (dependency["source"], dependency["target"]): dependency
+        for dependency in conformance["componentDependencies"]
+        if dependency["source"] in selected and dependency["target"] in selected
+    }
+    target = {
+        (component_id, dependency)
+        for component_id in selected
+        for dependency in component_by_id[component_id].get("dependsOn", [])
+        if dependency in selected
+    }
+    lines = [
+        "// Generated by scripts/check_architecture_registry.py. Do not edit by hand.",
+        "digraph excise_architecture {",
+        "  graph [rankdir=BT, fontname=\"Helvetica\", labelloc=t, label=\""
+        + dot_escape(view["title"]) + "\"];",
+        "  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\"];",
+        "  edge [fontname=\"Helvetica\"];",
+    ]
+    by_layer: dict[str, list[dict]] = {}
+    for component_id in selected:
+        component = component_by_id[component_id]
+        by_layer.setdefault(component["layer"], []).append(component)
+    for layer in sorted(by_layer):
+        lines.append(f"  subgraph cluster_{dot_escape(layer)} {{")
+        lines.append(f'    label="{dot_escape(layer)}";')
+        lines.append('    color="#cbd5e1";')
+        for component in sorted(by_layer[layer], key=lambda item: item["id"]):
+            status = assessment_by_id[component["id"]]["implementationStatus"]
+            label = f"{component['name']}\n{status}"
+            lines.append(
+                f'    "{dot_escape(component["id"])}" '
+                f'[label="{dot_escape(label)}", fillcolor="{STATUS_COLORS[status]}"];'
+            )
+        lines.append("  }")
+
+    for source, target_component in sorted(target | set(observed)):
+        dependency = observed.get((source, target_component))
+        if (source, target_component) in target and dependency is not None:
+            label = f"target + observed\n{dependency['references']} refs"
+            color, style, width = "#15803d", "solid", "2"
+        elif (source, target_component) in target:
+            label = "target only"
+            color, style, width = "#94a3b8", "dotted", "1"
+        else:
+            classification = dependency["classification"]
+            labels = {
+                "declared": "observed via parent boundary",
+                "accepted_exception": "accepted exception",
+                "undeclared": "observed, undeclared",
+                "forbidden": "FORBIDDEN",
+            }
+            styles = {
+                "declared": ("#2563eb", "dashed", "1"),
+                "accepted_exception": ("#7e22ce", "dotted", "2"),
+                "undeclared": ("#d97706", "dashed", "2"),
+                "forbidden": ("#dc2626", "bold", "3"),
+            }
+            label = f"{labels[classification]}\n{dependency['references']} refs"
+            color, style, width = styles[classification]
+        lines.append(
+            f'  "{dot_escape(source)}" -> "{dot_escape(target_component)}" '
+            f'[label="{dot_escape(label)}", color="{color}", '
+            f'style="{style}", penwidth={width}];'
+        )
+    lines.append("}")
+    return "\n".join(lines) + "\n"
+
+
+def generate_dot(
+    design: dict,
+    inventory: dict,
+    assessment: dict,
+    view: dict,
+    topology: dict | None = None,
+    conformance: dict | None = None,
+) -> str:
+    if view["mode"] == "observed-types":
+        if topology is None or conformance is None:
+            raise ValueError("observed-types diagram requires topology and conformance")
+        return generate_observed_types_dot(
+            design, assessment, topology, conformance, view
+        )
+    if view["mode"] == "comparison":
+        if conformance is None:
+            raise ValueError("comparison diagram requires conformance")
+        return generate_current_vs_target_dot(design, assessment, conformance, view)
+
     component_by_id = {component["id"]: component for component in design["components"]}
     assessment_by_id = {item["component"]: item for item in assessment["components"]}
     component_by_project = {
@@ -495,12 +961,20 @@ def generate_dot(design: dict, inventory: dict, assessment: dict, view: dict) ->
 
 
 def check_or_write_diagrams(
-    design: dict, inventory: dict, assessment: dict, write: bool, check: bool
+    design: dict,
+    inventory: dict,
+    assessment: dict,
+    topology: dict,
+    conformance: dict,
+    write: bool,
+    check: bool,
 ) -> list[str]:
     errors: list[str] = []
     for view in design["diagramViews"]:
         output = repo_path(view["output"])
-        expected = generate_dot(design, inventory, assessment, view)
+        expected = generate_dot(
+            design, inventory, assessment, view, topology, conformance
+        )
         if write:
             write_atomic(output, expected)
             print(f"wrote {repo_relative(output)}")
@@ -515,8 +989,15 @@ def check_or_write_diagrams(
     return errors
 
 
-def run_self_test(design: dict, inventory: dict, assessment: dict, decisions: dict) -> int:
+def run_self_test(
+    design: dict,
+    inventory: dict,
+    assessment: dict,
+    decisions: dict,
+    topology: dict,
+) -> int:
     baseline = validate_registry_set(design, inventory, assessment, decisions)
+    baseline.extend(validate_topology_join(design, inventory, topology))
     if baseline:
         print("FAIL: real normalized registries are invalid", file=sys.stderr)
         for error in baseline:
@@ -570,6 +1051,69 @@ def run_self_test(design: dict, inventory: dict, assessment: dict, decisions: di
     if first != second:
         print("FAIL: diagram generation is not deterministic", file=sys.stderr)
         return 1
+    first_report = generate_architecture_conformance(
+        design, inventory, assessment, topology
+    )
+    second_report = generate_architecture_conformance(
+        copy.deepcopy(design), copy.deepcopy(inventory),
+        copy.deepcopy(assessment), copy.deepcopy(topology),
+    )
+    if first_report != second_report:
+        print("FAIL: conformance generation is not deterministic", file=sys.stderr)
+        return 1
+    with tempfile.TemporaryDirectory(prefix="excise-architecture-selftest-") as directory:
+        output = Path(directory) / "architecture-conformance.json"
+        if check_or_write_conformance(first_report, output, write=True, check=True):
+            print("FAIL: fresh conformance output did not pass", file=sys.stderr)
+            return 1
+        output.write_text("{}\n", encoding="utf-8")
+        if not any(
+            "stale" in error
+            for error in check_or_write_conformance(
+                first_report, output, write=False, check=True
+            )
+        ):
+            print("FAIL: stale conformance mutation was not detected", file=sys.stderr)
+            return 1
+    for view in design["diagramViews"]:
+        first_view = generate_dot(
+            design, inventory, assessment, view, topology, first_report
+        )
+        second_view = generate_dot(
+            copy.deepcopy(design), copy.deepcopy(inventory),
+            copy.deepcopy(assessment), copy.deepcopy(view),
+            copy.deepcopy(topology), copy.deepcopy(first_report),
+        )
+        if first_view != second_view:
+            print(
+                f"FAIL: diagram generation is not deterministic for {view['id']}",
+                file=sys.stderr,
+            )
+            return 1
+    mutated_topology = copy.deepcopy(topology)
+    shipping_project = next(
+        project for project in mutated_topology["projects"]
+        if project["classification"] == "shipping"
+    )
+    shipping_project["component"] = None
+    mutated_report = generate_architecture_conformance(
+        design, inventory, assessment, mutated_topology
+    )
+    if not any("shipping topology is unowned" in error for error in conformance_contract_errors(mutated_report)):
+        print("FAIL: unowned shipping project mutation was not detected", file=sys.stderr)
+        return 1
+    mutated_topology = copy.deepcopy(topology)
+    owned_symbol = next(
+        symbol for symbol in mutated_topology["symbols"]
+        if symbol["component"] is not None
+    )
+    owned_symbol["workflows"] = ["not-a-workflow"]
+    if not any(
+        "workflows differ" in error
+        for error in validate_topology_join(design, inventory, mutated_topology)
+    ):
+        print("FAIL: topology workflow mutation was not detected", file=sys.stderr)
+        return 1
     print("PASS: normalized registries reject reference, inventory, and assessment drift")
     return 0
 
@@ -577,9 +1121,12 @@ def run_self_test(design: dict, inventory: dict, assessment: dict, decisions: di
 def main() -> int:
     args = parse_args()
     try:
-        design, inventory, assessment, decisions = [
+        design, inventory, assessment, decisions, topology = [
             load_json(path.resolve())
-            for path in (args.design, args.inventory, args.assessment, args.decisions)
+            for path in (
+                args.design, args.inventory, args.assessment, args.decisions,
+                args.topology,
+            )
         ]
     except ValueError as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
@@ -591,12 +1138,26 @@ def main() -> int:
         )
         print(f"wrote {repo_relative(args.inventory)}")
     if args.self_test:
-        return run_self_test(design, inventory, assessment, decisions)
+        return run_self_test(design, inventory, assessment, decisions, topology)
     errors = validate_registry_set(design, inventory, assessment, decisions)
+    errors.extend(validate_topology_join(design, inventory, topology))
+    conformance: dict = {}
+    if not errors:
+        conformance = generate_architecture_conformance(
+            design, inventory, assessment, topology
+        )
+        errors.extend(
+            check_or_write_conformance(
+                conformance,
+                args.conformance.resolve(),
+                write=args.write_conformance,
+                check=args.check_conformance,
+            )
+        )
     if not errors:
         errors.extend(
             check_or_write_diagrams(
-                design, inventory, assessment,
+                design, inventory, assessment, topology, conformance,
                 write=args.write_diagrams, check=args.check_diagrams,
             )
         )
@@ -610,7 +1171,10 @@ def main() -> int:
         f"{len(inventory['projects'])} observed projects, "
         f"{len(design['workflows'])} workflows, "
         f"{len(assessment['concerns'])} assessed concerns, and "
-        f"{len(decisions['decisions'])} decisions"
+        f"{len(decisions['decisions'])} decisions; "
+        f"{conformance['summary']['observedComponentDependencies']} observed component edges "
+        f"({conformance['summary']['undeclaredDependencies']} undeclared, "
+        f"{conformance['summary']['forbiddenDependencies']} forbidden)"
     )
     return 0
 
