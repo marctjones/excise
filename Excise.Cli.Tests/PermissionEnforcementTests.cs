@@ -1,5 +1,7 @@
 using System.IO;
 using AwesomeAssertions;
+using Excise.Cli.Commands;
+using Excise.Core.Document;
 using Excise.Core.Operations;
 using Excise.Core.Security;
 using Xunit;
@@ -234,6 +236,70 @@ public class PermissionEnforcementTests : IDisposable
         var written = DocumentAssemblyTestDriver.RunSplitToSinglePages(pdf, outDir,
             ignorePermissions: true);
         written.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void RunMerge_EncryptedInputsWithCommonPolicy_PreservesEncryption()
+    {
+        var first = RestrictedFixture(AllAllowedMask, "FIRST");
+        var second = RestrictedFixture(AllAllowedMask, "SECOND");
+        var output = TempPath(".pdf");
+
+        var result = DocumentAssemblyHandler.Merge(new MergeDocumentsRequest(
+            [first, second], output, IgnorePermissions: false),
+            TestContext.Current.CancellationToken);
+
+        result.OutputEncryptionPolicy.Should().Be(DocumentAssemblyEncryptionPolicy.Preserved);
+        using var merged = PdfDocument.Open(output);
+        merged.IsEncrypted.Should().BeTrue("encrypted inputs with a common policy must not leak plaintext");
+        merged.Permissions.RawValue.Should().Be((int)AllAllowedMask);
+        merged.PageCount.Should().Be(2);
+    }
+
+    [Fact]
+    public void RunSplit_EncryptedInput_PreservesEncryptionForEveryFragment()
+    {
+        var first = RestrictedFixture(AllAllowedMask, "FIRST");
+        var second = RestrictedFixture(AllAllowedMask, "SECOND");
+        var input = TempPath(".pdf");
+        DocumentAssemblyTestDriver.RunMerge([first, second], input);
+        var outputFolder = TempPath("");
+
+        var result = DocumentAssemblyHandler.Split(new SplitDocumentRequest(
+            input,
+            outputFolder,
+            SplitDocumentMode.Single,
+            Every: null,
+            Boundaries: [],
+            IgnorePermissions: false),
+            TestContext.Current.CancellationToken);
+
+        result.OutputEncryptionPolicy.Should().Be(DocumentAssemblyEncryptionPolicy.Preserved);
+        result.WrittenPaths.Should().HaveCount(2);
+        foreach (var path in result.WrittenPaths)
+        {
+            using var fragment = PdfDocument.Open(path);
+            fragment.IsEncrypted.Should().BeTrue("a split fragment must retain its source protection");
+            fragment.Permissions.RawValue.Should().Be((int)AllAllowedMask);
+        }
+    }
+
+    [Fact]
+    public async Task Merge_EncryptedAndPlaintextInputs_RejectsAmbiguousOutputPolicy()
+    {
+        var encrypted = RestrictedFixture(AllAllowedMask);
+        var plaintext = TempPath(".pdf");
+        File.WriteAllBytes(plaintext, TestPdfBuilder.SinglePage("PLAIN"));
+        var output = TempPath(".pdf");
+
+        var result = await RunCliCaptureAsync([
+            "merge", "--input", encrypted, "--input", plaintext, "--output", output,
+        ]);
+
+        result.ExitCode.Should().Be(1);
+        result.StdErr.Should().Contain("Cannot merge inputs with conflicting encryption policies");
+        result.StdErr.Should().Contain("excise decrypt");
+        File.Exists(output).Should().BeFalse("a rejected encryption policy must not create plaintext output");
     }
 
     [Fact]
