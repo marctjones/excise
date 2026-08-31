@@ -1,7 +1,7 @@
 {
   "$schema": "./schemas/assessment.schema.json",
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-30",
+  "reviewedAt": "2026-08-31",
   "statusDefinitions": {
     "implemented": "Present, production-reachable, and backed by named verification evidence.",
     "partial": "Present but has a documented boundary, structural risk, or incomplete verification.",
@@ -180,15 +180,18 @@
         "Excise.Rendering/RawSampleImageDecoder.cs",
         "Excise.Rendering/DctImageDecoder.cs",
         "Excise.Rendering/JpxImageDecoder.cs",
+        "Excise.Rendering/ContentOperatorRoute.cs",
+        "Excise.Rendering/SkiaRenderer.Operators.cs",
         "Excise.Rendering.Tests/EncodedImageDecoderTests.cs",
         "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
         "Excise.Rendering.Tests/DctImageDecoderTests.cs",
         "Excise.Rendering.Tests/JpxImageDecoderTests.cs",
+        "Excise.Rendering.Tests/ContentOperatorRouteTests.cs",
         "Excise.App/Services/PageImageRenderer.cs",
         "scripts/run-exploratory-corpus.sh"
       ],
       "gaps": [
-        "A facade-owned per-page resource scope gives nested render contexts one explicit cache lifetime, and typed context-free raw, encoded, DCT, and JPX decoders now own image sample and codec policy. Operator dispatch, annotation policy, and DeviceCMYK/transparency execution state remain coupled across renderer partials. Rendering re-executes graphics/text state as an accepted architectural exception."
+        "A facade-owned per-page resource scope gives nested render contexts one explicit cache lifetime; typed context-free raw, encoded, DCT, and JPX decoders own image sample and codec policy; and one allocation-free operator registry routes the single interpreter through reviewed family handlers with ordered cancellation, marked-content, optional-content, and Type 3 preconditions. Annotation policy and DeviceCMYK/transparency execution state remain coupled across renderer partials. Rendering re-executes graphics/text state as an accepted architectural exception."
       ],
       "issueIds": [
         1262,

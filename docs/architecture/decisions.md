@@ -47,6 +47,9 @@ content and security properties it must conserve, plus intentional removals.
 `Excise.Rendering` depends on Core and owns SkiaSharp rasterization. Operator
 families may be separated for maintainability, but they share one render
 context, graphics-state stack, resource policy, and cancellation/budget model.
+Operator names resolve once to typed kinds and reviewed families; this routing
+must not introduce a second stream walk, a second interpreter, or per-operator
+delegate allocation.
 
 ## AD-006 — Delivery and platform policy stay outside the domain
 
