@@ -2187,16 +2187,16 @@ internal partial class RenderContext
     /// Return the UNPOSITIONED glyph outline for <paramref name="glyphText"/>
     /// at the current font size, reusing a cached <see cref="SKPath"/> when the
     /// same (typeface, size, text) has been tessellated before on this page
-    /// (#598). The returned path is owned by <see cref="_glyphOutlineCache"/>
-    /// and disposed in DisposeOwnedResources — callers must treat it as
+    /// (#598). The returned path is owned by the per-page resource scope;
+    /// callers must treat it as
     /// immutable and only ever use the two-arg <c>Transform(matrix, dest)</c>
     /// or <c>dest.AddPath(cached)</c> forms, never an in-place transform. May
     /// be null (whitespace / bitmap-only faces), matching SKFont.GetTextPath.
     /// </summary>
     private SKPath? GetCachedGlyphOutline(SKFont font, SKTypeface typeface, string glyphText)
     {
-        var key = (typeface, BitConverter.SingleToInt32Bits(font.Size), glyphText);
-        if (_glyphOutlineCache.TryGetValue(key, out var cached))
+        var sizeBits = BitConverter.SingleToInt32Bits(font.Size);
+        if (_resourceScope.TryGetGlyphOutline(typeface, sizeBits, glyphText, out var cached))
         {
             GlyphOutlineCacheHits++;
             return cached;
@@ -2204,7 +2204,7 @@ internal partial class RenderContext
 
         GlyphOutlineCacheMisses++;
         var path = font.GetTextPath(glyphText, SKPoint.Empty);
-        _glyphOutlineCache[key] = path;
+        _resourceScope.CacheGlyphOutline(typeface, sizeBits, glyphText, path);
         return path;
     }
 
@@ -2303,15 +2303,15 @@ internal partial class RenderContext
     /// Glyph-ID counterpart of <see cref="GetCachedGlyphOutline"/> (#598):
     /// returns the UNPOSITIONED outline for a single glyph ID at the current
     /// font size, reusing a cached <see cref="SKPath"/> across the page. The
-    /// returned path is owned by <see cref="_glyphOutlineByIdCache"/> and must
+    /// returned path is owned by the per-page resource scope and must
     /// be treated as immutable — callers only ever use the offset/scale
     /// <c>AddPath</c> or two-arg <c>Transform</c> forms. May be null for glyphs
     /// with no outline, matching SKFont.GetGlyphPath.
     /// </summary>
     private SKPath? GetCachedGlyphOutlineById(SKFont font, SKTypeface typeface, ushort gid)
     {
-        var key = (typeface, BitConverter.SingleToInt32Bits(font.Size), gid);
-        if (_glyphOutlineByIdCache.TryGetValue(key, out var cached))
+        var sizeBits = BitConverter.SingleToInt32Bits(font.Size);
+        if (_resourceScope.TryGetGlyphOutlineById(typeface, sizeBits, gid, out var cached))
         {
             GlyphOutlineCacheHits++;
             return cached;
@@ -2319,7 +2319,7 @@ internal partial class RenderContext
 
         GlyphOutlineCacheMisses++;
         var path = font.GetGlyphPath(gid);
-        _glyphOutlineByIdCache[key] = path;
+        _resourceScope.CacheGlyphOutlineById(typeface, sizeBits, gid, path);
         return path;
     }
 

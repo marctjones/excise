@@ -19,6 +19,10 @@ internal sealed class RenderResourceScope : IDisposable
     private readonly List<SKBitmap> _ownedImageBitmaps = new();
     private readonly Dictionary<byte[], ContentStream> _parsedContentByBytes =
         new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<(SKTypeface Typeface, int SizeBits, string Text), SKPath?>
+        _glyphOutlines = new(GlyphOutlineKeyComparer.Instance);
+    private readonly Dictionary<(SKTypeface Typeface, int SizeBits, ushort Gid), SKPath?>
+        _glyphOutlinesById = new(GlyphIdOutlineKeyComparer.Instance);
     private bool _disposed;
 
     public bool TryGetDecodedImage(
@@ -79,19 +83,103 @@ internal sealed class RenderResourceScope : IDisposable
         _parsedContentByBytes[contentBytes] = content;
     }
 
+    public bool TryGetGlyphOutline(
+        SKTypeface typeface,
+        int sizeBits,
+        string text,
+        out SKPath? path)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        return _glyphOutlines.TryGetValue((typeface, sizeBits, text), out path);
+    }
+
+    public void CacheGlyphOutline(
+        SKTypeface typeface,
+        int sizeBits,
+        string text,
+        SKPath? path)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _glyphOutlines[(typeface, sizeBits, text)] = path;
+    }
+
+    public bool TryGetGlyphOutlineById(
+        SKTypeface typeface,
+        int sizeBits,
+        ushort glyphId,
+        out SKPath? path)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        return _glyphOutlinesById.TryGetValue((typeface, sizeBits, glyphId), out path);
+    }
+
+    public void CacheGlyphOutlineById(
+        SKTypeface typeface,
+        int sizeBits,
+        ushort glyphId,
+        SKPath? path)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _glyphOutlinesById[(typeface, sizeBits, glyphId)] = path;
+    }
+
     public void Dispose()
     {
         if (_disposed)
             return;
 
         _disposed = true;
+        foreach (var path in _glyphOutlines.Values)
+            path?.Dispose();
+        foreach (var path in _glyphOutlinesById.Values)
+            path?.Dispose();
         foreach (var bitmap in _ownedImageBitmaps)
             bitmap.Dispose();
 
+        _glyphOutlines.Clear();
+        _glyphOutlinesById.Clear();
         _ownedImageBitmaps.Clear();
         _imageBitmapsByReference.Clear();
         _imageBitmapsByStream.Clear();
         _parsedContentByBytes.Clear();
+    }
+
+    private sealed class GlyphOutlineKeyComparer
+        : IEqualityComparer<(SKTypeface Typeface, int SizeBits, string Text)>
+    {
+        public static readonly GlyphOutlineKeyComparer Instance = new();
+
+        public bool Equals(
+            (SKTypeface Typeface, int SizeBits, string Text) x,
+            (SKTypeface Typeface, int SizeBits, string Text) y)
+            => ReferenceEquals(x.Typeface, y.Typeface)
+               && x.SizeBits == y.SizeBits
+               && string.Equals(x.Text, y.Text, StringComparison.Ordinal);
+
+        public int GetHashCode((SKTypeface Typeface, int SizeBits, string Text) key)
+            => HashCode.Combine(
+                System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(key.Typeface),
+                key.SizeBits,
+                StringComparer.Ordinal.GetHashCode(key.Text));
+    }
+
+    private sealed class GlyphIdOutlineKeyComparer
+        : IEqualityComparer<(SKTypeface Typeface, int SizeBits, ushort Gid)>
+    {
+        public static readonly GlyphIdOutlineKeyComparer Instance = new();
+
+        public bool Equals(
+            (SKTypeface Typeface, int SizeBits, ushort Gid) x,
+            (SKTypeface Typeface, int SizeBits, ushort Gid) y)
+            => ReferenceEquals(x.Typeface, y.Typeface)
+               && x.SizeBits == y.SizeBits
+               && x.Gid == y.Gid;
+
+        public int GetHashCode((SKTypeface Typeface, int SizeBits, ushort Gid) key)
+            => HashCode.Combine(
+                System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(key.Typeface),
+                key.SizeBits,
+                key.Gid);
     }
 
     private static bool TryGetReferenceKey(

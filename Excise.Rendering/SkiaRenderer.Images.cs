@@ -555,12 +555,6 @@ internal partial class RenderContext
 
     private void DisposeOwnedResources()
     {
-        foreach (var glyphPath in _glyphOutlineCache.Values)
-            glyphPath?.Dispose();
-        _glyphOutlineCache.Clear();
-        foreach (var glyphPath in _glyphOutlineByIdCache.Values)
-            glyphPath?.Dispose();
-        _glyphOutlineByIdCache.Clear();
         foreach (var typeface in _embeddedTypefaces.Values)
             typeface.Dispose();
         _embeddedTypefaces.Clear();
