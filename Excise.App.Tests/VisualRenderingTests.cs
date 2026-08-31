@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using Microsoft.Extensions.Logging;
 using AwesomeAssertions;
+using Excise.Core.Document;
 using SkiaSharp;
 
 namespace Excise.App.Tests;
@@ -61,9 +61,7 @@ public class VisualRenderingTests
         var baselinesPath = Path.Combine(_testPdfPath, "baselines");
         Directory.CreateDirectory(baselinesPath);
 
-        // Setup service
-        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        var renderService = new PdfRenderService(loggerFactory.CreateLogger<PdfRenderService>());
+        var renderer = new PageImageRenderer();
 
         // Find PDF files (limit to a few for reasonable test duration)
         var pdfFiles = Directory.GetFiles(veraPdfPath, "*.pdf", SearchOption.AllDirectories);
@@ -87,7 +85,8 @@ public class VisualRenderingTests
             try
             {
                 // Render page 0
-                using var bitmap = await renderService.RenderPageAsync(pdfFile, 0, 72); // 72 DPI for speed
+                using var document = PdfDocument.Open(File.ReadAllBytes(pdfFile));
+                using var bitmap = await renderer.RenderPageAsync(document, 0, 72); // 72 DPI for speed
                 
                 if (bitmap == null)
                 {

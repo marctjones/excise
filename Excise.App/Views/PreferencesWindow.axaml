@@ -33,42 +33,6 @@
             <StackPanel Spacing="20">
 
                 <!-- Rendering Settings Section -->
-                <Border Background="{DynamicResource CardBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="20">
-                    <StackPanel Spacing="15">
-                        <TextBlock Text="Rendering &amp; Performance"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-
-                        <TextBlock Text="Configure PDF rendering and caching"
-                                   FontSize="11"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   TextWrapping="Wrap"/>
-
-                        <Separator/>
-
-                        <!-- Render Cache -->
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Render Cache Size" FontWeight="Medium"/>
-                            <NumericUpDown x:Name="RenderCacheSizeUpDown"
-                                           Value="{Binding RenderCacheMax}"
-                                           Minimum="1" Maximum="200"
-                                           Increment="5"
-                                           FormatString="0"
-                                           AutomationProperties.Name="Render Cache Size"
-                                           AutomationProperties.HelpText="Maximum number of rendered pages to keep in memory."/>
-                            <TextBlock Text="Maximum number of pages to keep in memory (higher = faster navigation, more RAM)"
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
                 <!-- Text Selection Settings Section (#774) -->
                 <Border Background="{DynamicResource CardBrush}"
                         BorderBrush="{DynamicResource BorderBrush}"

@@ -120,10 +120,7 @@ public partial class MainWindowViewModel
         OutlineNodes.Clear();
         this.RaisePropertyChanged(nameof(HasOutline));
 
-        CurrentPageImage = null;
         PdfCoreDocument = null;
-        _renderService.ClearCache();
-        this.RaisePropertyChanged(nameof(RenderCacheStats));
 
         IsRedactionMode = false;
         IsTypewriterMode = false;
@@ -283,7 +280,6 @@ public partial class MainWindowViewModel
             LastDocumentOpenTiming.TotalLoadElapsedMs);
         ResponsivenessReportWriter.TryWriteDocumentOpenReportFromEnvironment(
             LastDocumentOpenTiming,
-            _renderService.GetCacheStats(),
             _logger);
     }
 
@@ -298,7 +294,6 @@ public partial class MainWindowViewModel
         _textIndexSession.Cancel();
         _documentService.CloseDocument();
         PdfCoreDocument = null;
-        CurrentPageImage = null;
         ResetThumbnailSession();
         OutlineNodes.Clear();
         OperationStatus = string.Empty;

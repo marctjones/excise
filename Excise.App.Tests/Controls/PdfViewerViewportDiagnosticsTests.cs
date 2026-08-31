@@ -14,6 +14,25 @@ namespace Excise.App.Tests.Controls;
 public class PdfViewerViewportDiagnosticsTests
 {
     [FixedAvaloniaFact]
+    public void RenderDiagnostics_IdentifyBothViewerOwnedCaches()
+    {
+        var viewer = new PdfViewerControl();
+
+        var diagnostics = viewer.GetRenderDiagnostics();
+
+        diagnostics.ViewMode.Should().Be(PdfViewMode.SinglePage);
+        diagnostics.SinglePageEntryCount.Should().Be(0);
+        diagnostics.SinglePageCapacity.Should().Be(6);
+        diagnostics.SinglePageHits.Should().Be(0);
+        diagnostics.SinglePageMisses.Should().Be(0);
+        diagnostics.ContinuousEntryCount.Should().Be(0);
+        diagnostics.ContinuousResidentBytes.Should().Be(0);
+        diagnostics.ContinuousByteBudget.Should().Be(200L * 1024 * 1024);
+        diagnostics.ContinuousHits.Should().Be(0);
+        diagnostics.ContinuousInFlightCount.Should().Be(0);
+    }
+
+    [FixedAvaloniaFact]
     public void DiagnosticsAndScrollIntents_UseTheActiveViewportInBothModes()
     {
         var viewer = new PdfViewerControl();

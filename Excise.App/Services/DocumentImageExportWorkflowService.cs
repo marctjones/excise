@@ -9,14 +9,14 @@ namespace Excise.App.Services;
 /// </summary>
 internal sealed class DocumentImageExportWorkflowService
 {
-    private readonly PdfRenderService _renderService;
+    private readonly IPageImageRenderer _renderer;
     private readonly ILogger<DocumentImageExportWorkflowService> _logger;
 
     public DocumentImageExportWorkflowService(
-        PdfRenderService renderService,
+        IPageImageRenderer renderer,
         ILogger<DocumentImageExportWorkflowService> logger)
     {
-        _renderService = renderService ?? throw new ArgumentNullException(nameof(renderService));
+        _renderer = renderer ?? throw new ArgumentNullException(nameof(renderer));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -24,13 +24,16 @@ internal sealed class DocumentImageExportWorkflowService
         PageImageExportRequest request,
         CancellationToken cancellationToken = default)
     {
-        ValidateSource(request.SourcePath);
+        ArgumentNullException.ThrowIfNull(request.Document);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.OutputPath);
         ArgumentOutOfRangeException.ThrowIfNegative(request.PageIndex);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(
+            request.PageIndex,
+            request.Document.PageCount);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.Dpi);
 
-        using var bitmap = await _renderService.RenderPageAsync(
-            request.SourcePath,
+        using var bitmap = await _renderer.RenderPageAsync(
+            request.Document,
             request.PageIndex,
             request.Dpi,
             cancellationToken);
@@ -50,14 +53,14 @@ internal sealed class DocumentImageExportWorkflowService
         DocumentImageExportRequest request,
         CancellationToken cancellationToken = default)
     {
-        ValidateSource(request.SourcePath);
+        ArgumentNullException.ThrowIfNull(request.Document);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.OutputFolder);
-        ArgumentOutOfRangeException.ThrowIfNegative(request.PageCount);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.Dpi);
 
         var format = ImageExportFormat.Parse(request.Format);
-        var writtenPaths = new List<string>(request.PageCount);
-        for (var pageIndex = 0; pageIndex < request.PageCount; pageIndex++)
+        var pageCount = request.Document.PageCount;
+        var writtenPaths = new List<string>(pageCount);
+        for (var pageIndex = 0; pageIndex < pageCount; pageIndex++)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var outputPath = Path.Combine(
@@ -65,7 +68,7 @@ internal sealed class DocumentImageExportWorkflowService
                 $"page_{pageIndex + 1:D3}.{format.Extension}");
             var result = await ExportPageAsync(
                 new PageImageExportRequest(
-                    request.SourcePath,
+                    request.Document,
                     pageIndex,
                     outputPath,
                     request.Dpi),
@@ -77,16 +80,9 @@ internal sealed class DocumentImageExportWorkflowService
         _logger.LogInformation(
             "Exported {WrittenCount}/{PageCount} pages to {OutputFolder}",
             writtenPaths.Count,
-            request.PageCount,
+            pageCount,
             request.OutputFolder);
-        return new DocumentImageExportResult(request.PageCount, writtenPaths);
-    }
-
-    private static void ValidateSource(string sourcePath)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
-        if (!File.Exists(sourcePath))
-            throw new FileNotFoundException("The PDF source file does not exist.", sourcePath);
+        return new DocumentImageExportResult(pageCount, writtenPaths);
     }
 
     private static void WriteBitmap(SKBitmap bitmap, string outputPath, ImageExportFormat format)
@@ -118,7 +114,7 @@ internal sealed class DocumentImageExportWorkflowService
 }
 
 internal readonly record struct PageImageExportRequest(
-    string SourcePath,
+    Excise.Core.Document.PdfDocument Document,
     int PageIndex,
     string OutputPath,
     int Dpi);
@@ -130,8 +126,7 @@ internal sealed record PageImageExportResult(bool WasWritten, string OutputPath)
 }
 
 internal readonly record struct DocumentImageExportRequest(
-    string SourcePath,
-    int PageCount,
+    Excise.Core.Document.PdfDocument Document,
     string OutputFolder,
     string Format,
     int Dpi);

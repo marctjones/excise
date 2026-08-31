@@ -880,7 +880,6 @@ public class PointerInteractionTests : IDisposable
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             new PdfDocumentService(NullLogger<PdfDocumentService>.Instance),
-            new PdfRenderService(NullLogger<PdfRenderService>.Instance),
             new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
             new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
             new PdfSearchService(NullLogger<PdfSearchService>.Instance),

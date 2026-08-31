@@ -211,6 +211,13 @@ public class GuiWorkflowCoverageMatrixTests
                 Capability.Covered("render then reuse from disk cache", typeof(ThumbnailCacheTests), nameof(ThumbnailCacheTests.FirstCallRenders_SecondCallLoadsFromDisk)),
                 Capability.Covered("concurrent requests for the same page coalesce", typeof(ThumbnailCacheTests), nameof(ThumbnailCacheTests.ConcurrentRequestsForSamePage_CoalesceOnSingleTask)),
             ]),
+        new("Export the live page or document as images",
+            Modality.Mouse | Modality.Menu,
+            [
+                Capability.Covered("export current page to a non-empty PNG", typeof(FileOpsCommandTests), nameof(FileOpsCommandTests.ExportCurrentPageCommand_Execute_StubbedDialog_WritesNonEmptyPng)),
+                Capability.Covered("export reflects an unsaved live-document rotation", typeof(FileOpsCommandTests), nameof(FileOpsCommandTests.ExportCurrentPageCommand_UsesUnsavedLiveDocumentRotation)),
+                Capability.Covered("export one image per document page", typeof(FileOpsCommandTests), nameof(FileOpsCommandTests.ExportPagesCommand_Execute_StubbedDialog_WritesOnePngPerPage)),
+            ]),
         new("Search, select text, copy text",
             Modality.Mouse | Modality.Keyboard,
             [

@@ -96,9 +96,10 @@ scripts/run-visual-mutation-trace.sh \
 ```
 
 The trace writes frame PNGs, `trajectory.csv`, `meta.txt`, the saved PDF, and
-the packaged app log. Production automation uses the viewer's typed viewport
-snapshot and scroll intents; only viewer-owned code knows the private XAML
-template controls.
+the packaged app log. Its trajectory rows include the viewer's separately
+named single-page and continuous-cache counters. Production automation uses
+typed viewport/render snapshots and scroll intents; only viewer-owned code
+knows the private XAML template controls and bitmap lifetimes.
 
 ## Timing Budgets
 

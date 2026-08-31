@@ -277,7 +277,6 @@ public partial class MainWindowViewModel
         _documentService.LoadDocument(filePath, _documentService.CurrentUserPassword);
         PdfCoreDocument = _documentService.GetCurrentDocument();
         CurrentPageIndex = pageIndex;
-        _renderService.ClearCache();
         StartThumbnailSession(filePath, PdfCoreDocument!);
 
         _textIndexSession.Start(PdfCoreDocument!);

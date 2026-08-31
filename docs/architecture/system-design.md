@@ -91,6 +91,9 @@ chains are:
   not permission to create more walkers.
 - A render operation owns one context and graphics-state stack. Operator-family
   modules receive that state explicitly rather than recreating it.
+- Raster consumers share `SkiaRenderer` semantics but do not share an ambient
+  bitmap cache. Their keys, memory budgets, invalidation events, and ownership
+  differ, so cache unification would couple unrelated lifetimes.
 - The reusable viewer owns layout, input, selection, accessibility, and render
   scheduling. Its typed viewport diagnostics and scroll intents expose values,
   never template controls. The desktop app owns product workflows, automation
@@ -109,6 +112,20 @@ chains are:
   are established.
 - Native OCR and operating-system services are accessed through narrow adapters;
   capability absence has an explicit outcome.
+
+### Raster and bitmap lifetime ownership
+
+| Consumer | Owner and contract | Retention and termination |
+|---|---|---|
+| Single-page viewer | `PdfViewerControl` schedules renders; `SinglePageRenderLifetime` owns the active generation and a six-entry `(page, DPI)` LRU. | A newer request cancels the prior generation. Document/content invalidation disposes all entries; replacement and LRU eviction dispose the displaced bitmap. Visual-tree detach cancels work but retains entries because the same control may be reattached. |
+| Continuous viewer | `PdfViewerControl.Continuous` owns grid keys, scheduling, coalescing, and a 200 MiB tile LRU. | Document/content invalidation cancels the document generation, drops slot references, and disposes the cache. LRU eviction releases cache ownership without disposing a bitmap that may still be bound to a realized image; it becomes collectible after the slot releases it. Visual-tree detach cancels work while preserving reattachable state. |
+| Thumbnail sidebar | `ThumbnailSidebarSession` owns demand, prefetch/prewarm cancellation, and displayed Avalonia bitmaps; `ThumbnailCacheService` owns serialized raster requests and the persistent WebP cache. | Session reset/document replacement cancels background demand and disposes displayed bitmaps. The persistent cache is content/version keyed and trims least-recently-used document directories to 500 MiB; a missing or trimmed entry is regenerated. |
+| Page-image export | `DocumentImageExportWorkflowService` owns the render/encode/write transaction through the internal `IPageImageRenderer` boundary. | Export renders the current live `PdfDocument` exactly once per requested page, retains no cache, observes caller cancellation, and disposes each bitmap immediately after encoding. App code owns prompts, permission checks, paths, and progress; Rendering owns raster semantics. |
+
+The application responsiveness report is timing evidence, not cache telemetry.
+Schema version 2 reports document-open phases only. Hosts that need interactive
+cache evidence call `PdfViewerControl.GetRenderDiagnostics()`, whose immutable
+snapshot names the single-page and continuous owners separately.
 
 ## Cross-cutting invariants
 

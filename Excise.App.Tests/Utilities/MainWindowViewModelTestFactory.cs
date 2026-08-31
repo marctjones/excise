@@ -17,7 +17,6 @@ internal static class MainWindowViewModelTestFactory
         ILogger<MainWindowViewModel>? logger = null,
         ILoggerFactory? loggerFactory = null,
         PdfDocumentService? documentService = null,
-        PdfRenderService? renderService = null,
         RedactionService? redactionService = null,
         PdfTextExtractionService? textExtractionService = null,
         PdfSearchService? searchService = null,
@@ -38,7 +37,6 @@ internal static class MainWindowViewModelTestFactory
         loggerFactory ??= NullLoggerFactory.Instance;
         logger ??= NullLogger<MainWindowViewModel>.Instance;
         documentService ??= new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
-        renderService ??= new PdfRenderService(NullLogger<PdfRenderService>.Instance);
         redactionService ??= new RedactionService(
             NullLogger<RedactionService>.Instance,
             loggerFactory);
@@ -69,7 +67,7 @@ internal static class MainWindowViewModelTestFactory
             dialogService,
             NullLogger<PageOrganizationWorkflowService>.Instance);
         imageExportWorkflow ??= new DocumentImageExportWorkflowService(
-            renderService,
+            new PageImageRenderer(),
             NullLogger<DocumentImageExportWorkflowService>.Instance);
         annotationWorkflow ??= new AnnotationWorkflowService(
             documentService,
@@ -78,7 +76,6 @@ internal static class MainWindowViewModelTestFactory
         var viewModel = new MainWindowViewModel(
             logger,
             documentService,
-            renderService,
             redactionService,
             redactedCopyDialogFormatter,
             redactionWorkflowService,

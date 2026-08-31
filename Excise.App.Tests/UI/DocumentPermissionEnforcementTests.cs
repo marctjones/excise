@@ -4,6 +4,8 @@ using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
 using Excise.App.ViewModels;
+using Excise.Core.Document;
+using Excise.Rendering;
 using Xunit;
 
 namespace Excise.App.Tests.UI;
@@ -67,7 +69,6 @@ public class DocumentPermissionEnforcementTests : IDisposable
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             new PdfDocumentService(NullLogger<PdfDocumentService>.Instance),
-            new PdfRenderService(NullLogger<PdfRenderService>.Instance),
             new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
             new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
             new PdfSearchService(NullLogger<PdfSearchService>.Instance),
@@ -256,8 +257,10 @@ public class DocumentPermissionEnforcementTests : IDisposable
         var fixturePath = RestrictedFixturePathOrNull();
         Assert.SkipWhen(fixturePath == null, $"Fixture not available: {RestrictedFixtureRelativePath}");
 
-        var renderService = new PdfRenderService(NullLogger<PdfRenderService>.Instance);
-        var bitmap = await renderService.RenderPageAsync(fixturePath!, 0, 72);
+        using var document = PdfDocument.Open(File.ReadAllBytes(fixturePath!));
+        using var bitmap = await Task.Run(() => new SkiaRenderer().RenderPage(
+            document.GetPage(1),
+            new RenderOptions { Dpi = 72 }));
 
         bitmap.Should().NotBeNull("on-screen rendering must keep working on copy-forbidden documents");
     }

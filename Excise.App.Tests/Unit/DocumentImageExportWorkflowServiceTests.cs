@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Excise.App.Services;
+using Excise.Core.Document;
 using Microsoft.Extensions.Logging.Abstractions;
 using SkiaSharp;
 using Xunit;
@@ -11,13 +12,14 @@ public sealed class DocumentImageExportWorkflowServiceTests : IDisposable
     private readonly string _tempDir = Path.Combine(
         Path.GetTempPath(),
         $"excise-image-export-workflow-{Guid.NewGuid():N}");
-    private readonly string _sourcePath;
+    private readonly PdfDocument _document;
 
     public DocumentImageExportWorkflowServiceTests()
     {
         Directory.CreateDirectory(_tempDir);
-        _sourcePath = Path.Combine(_tempDir, "source.pdf");
-        File.WriteAllBytes(_sourcePath, new byte[] { 1 });
+        var sourcePath = Path.Combine(_tempDir, "source.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 3);
+        _document = PdfDocument.Open(File.ReadAllBytes(sourcePath));
     }
 
     [Fact]
@@ -27,7 +29,7 @@ public sealed class DocumentImageExportWorkflowServiceTests : IDisposable
         var workflow = CreateWorkflow(_ => CreateBitmap());
 
         var result = await workflow.ExportPageAsync(
-            new PageImageExportRequest(_sourcePath, 0, outputPath, 150));
+            new PageImageExportRequest(_document, 0, outputPath, 150));
 
         result.WasWritten.Should().BeTrue();
         result.OutputPath.Should().Be(outputPath);
@@ -43,7 +45,7 @@ public sealed class DocumentImageExportWorkflowServiceTests : IDisposable
         var workflow = CreateWorkflow(_ => CreateBitmap());
 
         var result = await workflow.ExportPagesAsync(
-            new DocumentImageExportRequest(_sourcePath, 3, _tempDir, "png", 72));
+            new DocumentImageExportRequest(_document, _tempDir, "png", 72));
 
         result.RequestedPageCount.Should().Be(3);
         result.SkippedPageCount.Should().Be(0);
@@ -60,15 +62,50 @@ public sealed class DocumentImageExportWorkflowServiceTests : IDisposable
         var workflow = CreateWorkflow(pageIndex => pageIndex == 1 ? null : CreateBitmap());
 
         var result = await workflow.ExportPagesAsync(
-            new DocumentImageExportRequest(_sourcePath, 3, _tempDir, "png", 72));
+            new DocumentImageExportRequest(_document, _tempDir, "png", 72));
 
         result.WrittenPaths.Should().HaveCount(2);
         result.SkippedPageCount.Should().Be(1);
         File.Exists(Path.Combine(_tempDir, "page_002.png")).Should().BeFalse();
     }
 
+    [Fact]
+    public async Task PageImageRenderer_RendersLiveRotationAtRequestedDpi()
+    {
+        var page = _document.GetPage(1);
+        page.Rotation = 90;
+        var renderer = new PageImageRenderer();
+
+        using var bitmap72 = await renderer.RenderPageAsync(_document, 0, 72);
+        using var bitmap150 = await renderer.RenderPageAsync(_document, 0, 150);
+
+        bitmap72.Should().NotBeNull();
+        bitmap72!.Width.Should().Be(792);
+        bitmap72.Height.Should().Be(612);
+        bitmap150.Should().NotBeNull();
+        bitmap150!.Width.Should().BeGreaterThan(bitmap72.Width);
+        bitmap150.Height.Should().BeGreaterThan(bitmap72.Height);
+    }
+
+    [Fact]
+    public async Task PageImageRenderer_PreCanceledRequestDoesNotRender()
+    {
+        var renderer = new PageImageRenderer();
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        var act = () => renderer.RenderPageAsync(
+            _document,
+            0,
+            72,
+            cancellation.Token);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
     public void Dispose()
     {
+        _document.Dispose();
         try
         {
             if (Directory.Exists(_tempDir))
@@ -82,7 +119,7 @@ public sealed class DocumentImageExportWorkflowServiceTests : IDisposable
     private static DocumentImageExportWorkflowService CreateWorkflow(
         Func<int, SKBitmap?> render) =>
         new(
-            new StubRenderService(render),
+            new StubPageImageRenderer(render),
             NullLogger<DocumentImageExportWorkflowService>.Instance);
 
     private static SKBitmap CreateBitmap()
@@ -92,14 +129,16 @@ public sealed class DocumentImageExportWorkflowServiceTests : IDisposable
         return bitmap;
     }
 
-    private sealed class StubRenderService(Func<int, SKBitmap?> render)
-        : PdfRenderService(NullLogger<PdfRenderService>.Instance)
+    private sealed class StubPageImageRenderer(Func<int, SKBitmap?> render) : IPageImageRenderer
     {
-        public override Task<SKBitmap?> RenderPageAsync(
-            string pdfPath,
+        public Task<SKBitmap?> RenderPageAsync(
+            PdfDocument document,
             int pageIndex,
-            int dpi = 150,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult(render(pageIndex));
+            int dpi,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(render(pageIndex));
+        }
     }
 }

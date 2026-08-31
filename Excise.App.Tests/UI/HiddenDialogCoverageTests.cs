@@ -54,7 +54,7 @@ public class HiddenDialogCoverageTests
             window,
             "PreferencesWindow",
             "Cancel Preferences",
-            arrowKey: new[] { "ReadingOrderStrategyComboBox", "WhitespaceModeComboBox", "RenderCacheSizeUpDown" });
+            arrowKey: new[] { "ReadingOrderStrategyComboBox", "WhitespaceModeComboBox" });
     }
 
     [FixedAvaloniaFact]

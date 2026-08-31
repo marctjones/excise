@@ -29,7 +29,6 @@ public class MainWindowViewModelTests
     private readonly Mock<ILogger<MainWindowViewModel>> _mockLogger;
     private readonly Mock<ILoggerFactory> _mockLoggerFactory;
     private readonly Mock<PdfDocumentService> _mockDocumentService;
-    private readonly Mock<PdfRenderService> _mockRenderService;
     private readonly Mock<RedactionService> _mockRedactionService;
     private readonly Mock<PdfTextExtractionService> _mockTextExtractionService;
     private readonly Mock<PdfSearchService> _mockSearchService;
@@ -43,8 +42,6 @@ public class MainWindowViewModelTests
         _mockLoggerFactory = new Mock<ILoggerFactory>();
         _mockDocumentService = new Mock<PdfDocumentService>(
             new Mock<ILogger<PdfDocumentService>>().Object);
-        _mockRenderService = new Mock<PdfRenderService>(
-            new Mock<ILogger<PdfRenderService>>().Object);
         _mockRedactionService = new Mock<RedactionService>(
             new Mock<ILogger<RedactionService>>().Object,
             _mockLoggerFactory.Object);
@@ -61,7 +58,6 @@ public class MainWindowViewModelTests
             _mockLogger.Object,
             _mockLoggerFactory.Object,
             _mockDocumentService.Object,
-            _mockRenderService.Object,
             _mockRedactionService.Object,
             _mockTextExtractionService.Object,
             _mockSearchService.Object,
@@ -258,19 +254,6 @@ public class MainWindowViewModelTests
         // we just verify the property exists and is accessible
         var totalPages = _viewModel.TotalPages;
         totalPages.Should().BeGreaterThanOrEqualTo(0);
-    }
-
-    [Fact]
-    public void RenderCacheMax_DefaultValueIsPositive()
-    {
-        _viewModel.RenderCacheMax.Should().BeGreaterThan(0);
-    }
-
-    [Fact]
-    public void RenderCacheMax_CanBeSet()
-    {
-        _viewModel.RenderCacheMax = 50;
-        _viewModel.RenderCacheMax.Should().Be(50);
     }
 
     [Fact]
@@ -1209,7 +1192,6 @@ public class MainWindowViewModelTests
             _mockLogger.Object,
             _mockLoggerFactory.Object,
             _mockDocumentService.Object,
-            _mockRenderService.Object,
             _mockRedactionService.Object,
             _mockTextExtractionService.Object,
             _mockSearchService.Object,
@@ -1590,23 +1572,6 @@ public class MainWindowViewModelTests
     #endregion
 
     #region Debug and Configuration Tests
-
-    [Fact]
-    public void RenderCacheMax_HasValidDefault()
-    {
-        var cacheMax = _viewModel.RenderCacheMax;
-        cacheMax.Should().BeGreaterThan(0);
-    }
-
-    [Fact]
-    public void RenderCacheMax_CanBeAdjusted()
-    {
-        _viewModel.RenderCacheMax = 100;
-        _viewModel.RenderCacheMax.Should().Be(100);
-
-        _viewModel.RenderCacheMax = 5;
-        _viewModel.RenderCacheMax.Should().Be(5);
-    }
 
     #endregion
 
