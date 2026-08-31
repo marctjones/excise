@@ -448,43 +448,16 @@ internal partial class RenderContext
         string colorSpace)
     {
         var key = CreateImageBitmapCacheKey(imageStream, width, height, bitsPerComponent, colorSpace);
-        if (TryGetImageReferenceKey(imageStream, out var referenceKey))
+        if (_resourceScope.TryGetDecodedImage(imageStream, key, out var bitmap))
         {
-            var cacheKey = (referenceKey.ObjectNumber, referenceKey.Generation, key);
-            if (!_imageBitmapByReference.TryGetValue(cacheKey, out var bitmap))
-            {
-                ImageBitmapCacheMisses++;
-                bitmap = DecodeImageBitmap(imageStream, width, height, bitsPerComponent, colorSpace);
-                TrackCachedImageBitmap(bitmap);
-                _imageBitmapByReference[cacheKey] = bitmap;
-            }
-            else
-            {
-                ImageBitmapCacheHits++;
-            }
-
+            ImageBitmapCacheHits++;
             return bitmap;
         }
 
-        if (!_imageBitmapByStream.TryGetValue(imageStream, out var streamCache))
-        {
-            streamCache = new Dictionary<ImageBitmapCacheKey, SKBitmap?>();
-            _imageBitmapByStream[imageStream] = streamCache;
-        }
-
-        if (!streamCache.TryGetValue(key, out var streamBitmap))
-        {
-            ImageBitmapCacheMisses++;
-            streamBitmap = DecodeImageBitmap(imageStream, width, height, bitsPerComponent, colorSpace);
-            TrackCachedImageBitmap(streamBitmap);
-            streamCache[key] = streamBitmap;
-        }
-        else
-        {
-            ImageBitmapCacheHits++;
-        }
-
-        return streamBitmap;
+        ImageBitmapCacheMisses++;
+        bitmap = DecodeImageBitmap(imageStream, width, height, bitsPerComponent, colorSpace);
+        _resourceScope.CacheDecodedImage(imageStream, key, bitmap);
+        return bitmap;
     }
 
     private SKBitmap? DecodeImageBitmap(
@@ -580,29 +553,8 @@ internal partial class RenderContext
             dctColorTransform);
     }
 
-    private void TrackCachedImageBitmap(SKBitmap? bitmap)
-    {
-        if (bitmap != null)
-            _cachedImageBitmaps.Add(bitmap);
-    }
-
-    private void DisposeImageBitmapCache()
-    {
-        // Child transparency-group / pattern contexts share the root's decoded
-        // images (#599); only the owner disposes, or a shared bitmap would be
-        // freed while a sibling context still holds it.
-        if (!_ownsImageBitmapCache)
-            return;
-        foreach (var bitmap in _cachedImageBitmaps)
-            bitmap.Dispose();
-        _cachedImageBitmaps.Clear();
-        _imageBitmapByReference.Clear();
-        _imageBitmapByStream.Clear();
-    }
-
     private void DisposeOwnedResources()
     {
-        DisposeImageBitmapCache();
         foreach (var glyphPath in _glyphOutlineCache.Values)
             glyphPath?.Dispose();
         _glyphOutlineCache.Clear();
@@ -614,20 +566,6 @@ internal partial class RenderContext
         _embeddedTypefaces.Clear();
         _deviceCmykBlendMask?.Dispose();
         _deviceCmykBlendMask = null;
-    }
-
-    private static bool TryGetImageReferenceKey(
-        Excise.Core.Primitives.PdfStream imageStream,
-        out (int ObjectNumber, int Generation) key)
-    {
-        if (imageStream.ObjectNumber.HasValue)
-        {
-            key = (imageStream.ObjectNumber.Value, imageStream.GenerationNumber ?? 0);
-            return true;
-        }
-
-        key = default;
-        return false;
     }
 
     private bool TryDrawImageWithSoftMask(
@@ -1018,7 +956,7 @@ internal partial class RenderContext
                 0,
                 1));
 
-            var child = new RenderContext(canvas, _page, _options, _cancellationToken, imageCacheOwner: this);
+            var child = new RenderContext(canvas, _page, _options, _resourceScope, _cancellationToken);
             child._resourcesStack.Push(_page.Resources);
             child._state = _state.Clone();
             child._state.SoftMask = null;

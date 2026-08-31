@@ -192,10 +192,10 @@ internal partial class RenderContext
                 groupCanvas,
                 _page,
                 _options,
+                _resourceScope,
                 _cancellationToken,
                 groupBitmap,
-                startsInDeviceCmykTransparencyGroup: true,
-                imageCacheOwner: this);
+                startsInDeviceCmykTransparencyGroup: true);
             child._resourcesStack.Push(_page.Resources);
             child._state = invocationState.Clone();
             child._state.BlendMode = SKBlendMode.SrcOver;

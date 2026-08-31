@@ -288,7 +288,7 @@ internal partial class RenderContext
             cellCanvas.Save();
             cellCanvas.ClipRect(cellBounds, SKClipOperation.Intersect, antialias: false);
 
-            child = new RenderContext(cellCanvas, _page, _options, _cancellationToken, imageCacheOwner: this);
+            child = new RenderContext(cellCanvas, _page, _options, _resourceScope, _cancellationToken);
             CopyRenderScopeTo(child);
             child._state = _state.Clone();
             child._state.FillPatternName = null;
