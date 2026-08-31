@@ -13,7 +13,6 @@ public class PreferencesViewModel : ViewModelBase
     private bool _ocrPreprocess = true;
     private bool _ocrBinarize = true;
     private double _ocrDenoiseRadius = 0.8;
-    private int _renderCacheMax = 20;
     private Excise.Core.Text.ReadingOrderStrategy _readingOrderStrategy =
         Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
     private Excise.Core.Text.WhitespaceMode _whitespaceMode =
@@ -67,13 +66,6 @@ public class PreferencesViewModel : ViewModelBase
     {
         get => _ocrDenoiseRadius;
         set => this.RaiseAndSetIfChanged(ref _ocrDenoiseRadius, value);
-    }
-
-    // Rendering Properties
-    public int RenderCacheMax
-    {
-        get => _renderCacheMax;
-        set => this.RaiseAndSetIfChanged(ref _renderCacheMax, value);
     }
 
     // Text-selection reading-order strategy (#774).
@@ -132,7 +124,6 @@ public class PreferencesViewModel : ViewModelBase
         OcrPreprocess = true;
         OcrBinarize = true;
         OcrDenoiseRadius = 0.8;
-        RenderCacheMax = 20;
         SelectedReadingOrderStrategy = Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
         SelectedWhitespaceMode = Excise.Core.Text.WhitespaceMode.Smart;
     }
@@ -144,14 +135,12 @@ public class PreferencesViewModel : ViewModelBase
 
     public void LoadFromMainViewModel(MainWindowViewModel mainViewModel)
     {
-        RenderCacheMax = mainViewModel.RenderCacheMax;
         SelectedReadingOrderStrategy = mainViewModel.ReadingOrderStrategy;
         SelectedWhitespaceMode = mainViewModel.WhitespaceMode;
     }
 
     public void SaveToMainViewModel(MainWindowViewModel mainViewModel)
     {
-        mainViewModel.RenderCacheMax = RenderCacheMax;
         mainViewModel.ReadingOrderStrategy = SelectedReadingOrderStrategy;
         mainViewModel.WhitespaceMode = SelectedWhitespaceMode;
     }

@@ -60,6 +60,13 @@ public sealed class SinglePageRenderLifetimeTests
         second.IsDisposed.Should().BeTrue("page 2 became the least-recent entry");
         third.IsDisposed.Should().BeFalse();
         lifetime.TryGet(pageNumber: 2, dpi: 120, out _, out _).Should().BeFalse();
+
+        var diagnostics = lifetime.GetCacheDiagnostics();
+        diagnostics.EntryCount.Should().Be(2);
+        diagnostics.Capacity.Should().Be(2);
+        diagnostics.Hits.Should().Be(1);
+        diagnostics.Misses.Should().Be(1);
+        diagnostics.IsDisposed.Should().BeFalse();
     }
 
     [Fact]

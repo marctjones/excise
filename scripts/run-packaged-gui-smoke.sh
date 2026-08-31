@@ -496,7 +496,7 @@ if wait_for_app_report; then
         app_report_status="FAIL"
     fi
     app_report_elapsed_ms=$(( $(now_ms) - launch_start_ms ))
-    record_row "app first-page responsiveness report" "$app_report_status" "$MODE" "$APP_RESPONSIVENESS_REPORT" "App emitted document-open phases and cache statistics." "" "$app_report_elapsed_ms" 8000 25000
+    record_row "app first-page responsiveness report" "$app_report_status" "$MODE" "$APP_RESPONSIVENESS_REPORT" "App emitted measured document-open timing phases." "" "$app_report_elapsed_ms" 8000 25000
 else
     app_report_elapsed_ms=$(( $(now_ms) - launch_start_ms ))
     report_detail="App did not emit app-responsiveness.json within ${TIMEOUT_SECONDS}s from startup args, launchctl environment, or one-shot request file."

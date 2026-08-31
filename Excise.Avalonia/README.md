@@ -50,6 +50,8 @@ Viewer.ZoomToActualSize();
 | `IsLoading` / `HasError` / `ErrorMessage` | read-only properties | render state |
 | `NextPage()` / `PreviousPage()` | methods | navigation |
 | `ZoomIn()` / `ZoomOut()` / `ZoomToActualSize()` | methods | zoom |
+| `GetViewportDiagnostics()` | method | immutable active-viewport snapshot without exposing template controls |
+| `GetRenderDiagnostics()` | method | immutable, explicitly separated single-page and continuous cache telemetry |
 | `AddSearchHighlight()` / `ClearSearchHighlights()` | methods | search overlay |
 | `PageChanged`, `TextSelected`, `LinkClicked`, `RedactionDrawn`, `FormFieldEdited`, `FormFieldRectDrawn`, `TypewriterTextCreated` | events | interaction callbacks |
 

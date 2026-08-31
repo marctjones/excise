@@ -13,6 +13,7 @@ using Excise.Core.Document;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
+using SkiaSharp;
 using Xunit;
 
 namespace Excise.App.Tests.UI;
@@ -192,6 +193,28 @@ public class FileOpsCommandTests
         Cleanup(tempDir);
     }
 
+    [FixedAvaloniaFact]
+    public async Task ExportCurrentPageCommand_UsesUnsavedLiveDocumentRotation()
+    {
+        var (sourcePath, _, tempDir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Rotate before export");
+        var outputPath = Path.Combine(tempDir, "rotated-page.png");
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        await vm.LoadDocumentAsync(sourcePath);
+        vm.PdfCoreDocument!.GetPage(1).Rotation = 90;
+        vm.StorageProviderOverride = CreateStorageProviderStub(saveFile: outputPath);
+
+        await vm.ExportCurrentPageCommand.Execute();
+
+        using var exported = SKBitmap.Decode(outputPath);
+        exported.Should().NotBeNull();
+        exported!.Width.Should().BeGreaterThan(exported.Height,
+            "export must rasterize the live rotated document instead of reopening the unrotated source path");
+
+        Cleanup(tempDir);
+    }
+
     // ── ExportPagesCommand ───────────────────────────────────────────────
     [FixedAvaloniaFact]
     public async Task ExportPagesCommand_Execute_StubbedDialog_WritesOnePngPerPage()
@@ -359,7 +382,6 @@ public class FileOpsCommandTests
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             new PdfDocumentService(NullLogger<PdfDocumentService>.Instance),
-            new PdfRenderService(NullLogger<PdfRenderService>.Instance),
             new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
             new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
             new PdfSearchService(NullLogger<PdfSearchService>.Instance),

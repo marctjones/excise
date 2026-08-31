@@ -18,7 +18,7 @@ internal static class ApplicationComposition
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton<PdfDocumentService>();
-        services.AddSingleton<PdfRenderService>();
+        services.AddSingleton<IPageImageRenderer, PageImageRenderer>();
         services.AddSingleton<RedactionService>();
         services.AddSingleton<RedactedCopyDialogFormatter>();
         services.AddSingleton<RedactionWorkflowService>();
@@ -50,7 +50,6 @@ internal static class ApplicationComposition
         new(
             services.GetRequiredService<Microsoft.Extensions.Logging.ILogger<MainWindowViewModel>>(),
             services.GetRequiredService<PdfDocumentService>(),
-            services.GetRequiredService<PdfRenderService>(),
             services.GetRequiredService<RedactionService>(),
             services.GetRequiredService<RedactedCopyDialogFormatter>(),
             services.GetRequiredService<RedactionWorkflowService>(),

@@ -46,6 +46,69 @@ public readonly struct PdfViewerViewportDiagnostics
     public bool IsAvailable { get; }
 }
 
+/// <summary>
+/// Immutable diagnostic snapshot of the two interactive render caches owned by
+/// <see cref="PdfViewerControl"/>. Thumbnail and image-export lifetimes are
+/// intentionally absent because they belong to their App workflows.
+/// </summary>
+public readonly struct PdfViewerRenderDiagnostics
+{
+    /// <summary>Create a render-cache diagnostic snapshot.</summary>
+    public PdfViewerRenderDiagnostics(
+        PdfViewMode viewMode,
+        int singlePageEntryCount,
+        int singlePageCapacity,
+        long singlePageHits,
+        long singlePageMisses,
+        int continuousEntryCount,
+        long continuousResidentBytes,
+        long continuousByteBudget,
+        int continuousHits,
+        int continuousInFlightCount)
+    {
+        ViewMode = viewMode;
+        SinglePageEntryCount = singlePageEntryCount;
+        SinglePageCapacity = singlePageCapacity;
+        SinglePageHits = singlePageHits;
+        SinglePageMisses = singlePageMisses;
+        ContinuousEntryCount = continuousEntryCount;
+        ContinuousResidentBytes = continuousResidentBytes;
+        ContinuousByteBudget = continuousByteBudget;
+        ContinuousHits = continuousHits;
+        ContinuousInFlightCount = continuousInFlightCount;
+    }
+
+    /// <summary>View mode active when the caches were sampled.</summary>
+    public PdfViewMode ViewMode { get; }
+
+    /// <summary>Single-page bitmaps currently retained by its LRU.</summary>
+    public int SinglePageEntryCount { get; }
+
+    /// <summary>Maximum number of bitmaps in the single-page LRU.</summary>
+    public int SinglePageCapacity { get; }
+
+    /// <summary>Single-page LRU hits since this viewer was constructed.</summary>
+    public long SinglePageHits { get; }
+
+    /// <summary>Single-page LRU misses since this viewer was constructed.</summary>
+    public long SinglePageMisses { get; }
+
+    /// <summary>Continuous-view tiles currently retained by its LRU.</summary>
+    public int ContinuousEntryCount { get; }
+
+    /// <summary>Estimated resident bytes retained by continuous-view tiles.</summary>
+    public long ContinuousResidentBytes { get; }
+
+    /// <summary>Continuous-view tile-cache byte budget.</summary>
+    public long ContinuousByteBudget { get; }
+
+    /// <summary>Continuous tile-cache hits since this viewer was constructed.</summary>
+    public int ContinuousHits { get; }
+
+    /// <summary>Continuous tile renders currently in flight.</summary>
+    public int ContinuousInFlightCount { get; }
+}
+
 public partial class PdfViewerControl
 {
     /// <summary>
@@ -63,6 +126,27 @@ public partial class PdfViewerControl
                 viewport.Viewport,
                 viewport.Offset,
                 true);
+    }
+
+    /// <summary>
+    /// Capture explicit telemetry for the viewer-owned single-page and
+    /// continuous render caches. The two caches remain separate because their
+    /// keys, retention budgets, and invalidation lifetimes differ.
+    /// </summary>
+    public PdfViewerRenderDiagnostics GetRenderDiagnostics()
+    {
+        var single = _singlePageRenderLifetime.GetCacheDiagnostics();
+        return new PdfViewerRenderDiagnostics(
+            ViewMode,
+            single.EntryCount,
+            single.Capacity,
+            single.Hits,
+            single.Misses,
+            _continuousCache.Count,
+            ContinuousCacheResidentBytes(),
+            ContinuousCacheByteBudget,
+            ContinuousRenderCacheHitCount,
+            _continuousInFlight.Count);
     }
 
     /// <summary>

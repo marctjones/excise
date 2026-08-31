@@ -158,6 +158,7 @@
       "evidence": [
         "Excise.Rendering.Tests",
         "Excise.Rendering.Tests/Differential",
+        "Excise.App/Services/PageImageRenderer.cs",
         "scripts/run-exploratory-corpus.sh"
       ],
       "gaps": [
@@ -165,7 +166,8 @@
       ],
       "issueIds": [
         986,
-        1262
+        1262,
+        1293
       ]
     },
     {
@@ -194,13 +196,16 @@
       "evidence": [
         "Excise.Avalonia.Tests",
         "Excise.App.Tests/UI",
-        "Excise.Avalonia/Controls/SinglePageRenderLifetime.cs"
+        "Excise.Avalonia/Controls/SinglePageRenderLifetime.cs",
+        "Excise.Avalonia/Controls/PdfViewerControl.Diagnostics.cs",
+        "Excise.Avalonia.Tests/SinglePageRenderLifetimeTests.cs"
       ],
       "gaps": [
-        "PdfViewerControl remains a large partial-class family after single-page render generation, cancellation-source, and bitmap-LRU lifetime moved to SinglePageRenderLifetime; continuous scheduling, layout, interaction, and accessibility boundaries still need measured decomposition."
+        "PdfViewerControl remains a large partial-class family after single-page render generation, cancellation-source, and bitmap-LRU lifetime moved to SinglePageRenderLifetime. Single-page and continuous caches now have disjoint documented ownership and typed telemetry, while continuous scheduling, layout, interaction, and accessibility boundaries still need measured decomposition."
       ],
       "issueIds": [
-        1264
+        1264,
+        1293
       ]
     },
     {
@@ -231,6 +236,9 @@
       "evidence": [
         "Excise.App.Tests",
         "Excise.App/Composition/ApplicationComposition.cs",
+        "Excise.App/Services/DocumentImageExportWorkflowService.cs",
+        "Excise.App/Services/PageImageRenderer.cs",
+        "Excise.App.Tests/Unit/DocumentImageExportWorkflowServiceTests.cs",
         "Excise.App.Tests/Unit/ApplicationCompositionTests.cs",
         "scripts/run-packaged-gui-smoke.sh"
       ],
@@ -243,7 +251,8 @@
         920,
         954,
         1239,
-        1270
+        1270,
+        1293
       ]
     },
     {
@@ -257,6 +266,7 @@
         "Excise.App/Services/DocumentSearchSession.cs",
         "Excise.App/Services/AnnotationWorkflowService.cs",
         "Excise.App/Services/DocumentImageExportWorkflowService.cs",
+        "Excise.App/Services/PageImageRenderer.cs",
         "Excise.App/Services/RedactionWorkflowService.cs",
         "Excise.App/Services/RedactedCopyDialogFormatter.cs",
         "Excise.App.Tests/Unit/DocumentSearchSessionTests.cs",
@@ -278,7 +288,8 @@
         1286,
         1287,
         1288,
-        1291
+        1291,
+        1293
       ]
     },
     {
@@ -373,7 +384,7 @@
         "avalonia"
       ],
       "symptoms": [
-        "MainWindowViewModel.cs is 3,078 lines before its additional partials; search-index and search-execution lifecycles, annotation mutation transactions, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, page/view/zoom viewport ownership, and one required composition contract are complete, but other workflow ownership remains concentrated.",
+        "MainWindowViewModel.cs is 2,985 lines before its additional partials; search-index and search-execution lifecycles, annotation mutation and page-image export transactions, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, page/view/zoom viewport ownership, and one required composition contract are complete, but other workflow ownership remains concentrated.",
         "Production uses an explicit validated service factory, tests use a named factory with explicit overrides and production-matching contracts, and design-time XAML no longer creates a second service graph.",
         "Document, editing, redaction, security, and background work still share mutable state; thumbnail, search-request, annotation-mutation, and page/view/zoom viewport lifetimes now have explicit owners, with same-page and same-mode feedback made idempotent."
       ],
@@ -401,7 +412,8 @@
         1285,
         1286,
         1287,
-        1288
+        1288,
+        1293
       ]
     },
     {
@@ -442,7 +454,8 @@
         1262,
         1263,
         1264,
-        1265
+        1265,
+        1293
       ]
     },
     {

@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
@@ -29,7 +28,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly PdfDocumentService _documentService;
-    private readonly PdfRenderService _renderService;
     private readonly RedactionService _redactionService;
     private readonly RedactedCopyDialogFormatter _redactedCopyDialogFormatter;
     private readonly RedactionWorkflowService _redactionWorkflowService;
@@ -59,7 +57,6 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     private string _currentFilePath = string.Empty;
-    private Bitmap? _currentPageImage;
     private PdfCoreDocument? _pdfCoreDocument;
     private Excise.Core.Text.ReadingOrderStrategy _readingOrderStrategy =
         Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
@@ -76,7 +73,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _selectedText = string.Empty;
     private ObservableCollection<string> _recentFiles = new();
     private ObservableCollection<PdfPageRect> _currentPageSearchHighlights = new();
-    private int _renderCacheMax = 20;
     private string _operationStatus = string.Empty;
     private readonly DocumentViewportSession _viewportSession = new();
     private readonly ThumbnailSidebarSession _thumbnailSession;
@@ -96,7 +92,6 @@ public partial class MainWindowViewModel : ViewModelBase
     internal MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
         PdfDocumentService documentService,
-        PdfRenderService renderService,
         RedactionService redactionService,
         RedactedCopyDialogFormatter redactedCopyDialogFormatter,
         RedactionWorkflowService redactionWorkflowService,
@@ -113,7 +108,6 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _logger = logger;
         _documentService = documentService;
-        _renderService = renderService;
         _redactionService = redactionService;
         _redactedCopyDialogFormatter = redactedCopyDialogFormatter;
         _redactionWorkflowService = redactionWorkflowService;
@@ -193,12 +187,6 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
     public ObservableCollection<ClipboardEntry> ClipboardHistory { get; } = new();
-
-    public Bitmap? CurrentPageImage
-    {
-        get => _currentPageImage;
-        set => this.RaiseAndSetIfChanged(ref _currentPageImage, value);
-    }
 
     public PdfCoreDocument? PdfCoreDocument
     {
@@ -854,21 +842,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
         await PublishToClipboardAndHistoryAsync(text);
     }
-
-    public int RenderCacheMax
-    {
-        get => _renderCacheMax;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _renderCacheMax, value);
-            _renderService.MaxCacheEntries = Math.Max(1, value);
-            this.RaisePropertyChanged(nameof(RenderCacheStats));
-        }
-    }
-
-    public PdfRenderService.CacheStatistics RenderCacheStats => _renderService.GetCacheStats();
-
-    internal bool AdjacentPagePrefetchEnabled { get; set; } = true;
 
     public string OperationStatus
     {
@@ -1556,7 +1529,6 @@ public partial class MainWindowViewModel : ViewModelBase
         DocumentStructureChanged?.Invoke(this, EventArgs.Empty);
 
         CurrentPageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
-        _renderService.ClearCache();
         var mutationVersion = System.Threading.Interlocked.Increment(ref _documentMutationVersion);
         if (!string.IsNullOrWhiteSpace(_currentFilePath))
         {
@@ -1796,8 +1768,8 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Fit-width/fit-page therefore compute zoom against 96-dpi dips;
     /// using the 120-dpi internal size here made continuous fit-width
     /// silently underfill the viewport by 20%. Reads page size from the
-    /// parsed PdfCoreDocument so we don't depend on the legacy
-    /// <c>_currentPageImage</c> being populated.
+    /// parsed PdfCoreDocument so fit calculations share the live document's
+    /// rotation-aware page geometry rather than a stale rendered bitmap.
     /// </summary>
     private bool TryGetMaxPageDimensionsInViewerDips(out double widthDip, out double heightDip)
     {
@@ -2121,10 +2093,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private void ResetClosedDocumentWorkspaceState()
     {
         _currentFilePath = string.Empty;
-        CurrentPageImage = null;
         PdfCoreDocument = null;
         ResetThumbnailSession();
-        _renderService.ClearCache();
 
         CurrentRedactionArea = new Rect();
         ClearCurrentTextSelection();
@@ -2268,8 +2238,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            var document = _documentService.GetCurrentDocument()
+                ?? throw new InvalidOperationException("No current document is available for export.");
             await _imageExportWorkflow.ExportPageAsync(
-                new PageImageExportRequest(_currentFilePath, CurrentPageIndex, outputPath, dpi));
+                new PageImageExportRequest(document, CurrentPageIndex, outputPath, dpi));
         }
         catch (Exception ex)
         {
@@ -2341,10 +2313,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            var document = _documentService.GetCurrentDocument()
+                ?? throw new InvalidOperationException("No current document is available for export.");
             var result = await _imageExportWorkflow.ExportPagesAsync(
                 new DocumentImageExportRequest(
-                    _currentFilePath,
-                    TotalPages,
+                    document,
                     outputFolder,
                     format,
                     dpi));

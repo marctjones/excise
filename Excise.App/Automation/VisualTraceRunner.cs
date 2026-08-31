@@ -41,7 +41,10 @@ public static class VisualTraceRunner
         var outDir = Environment.GetEnvironmentVariable("EXCISE_VISUAL_TRACE_OUT")!;
         var action = (Environment.GetEnvironmentVariable("EXCISE_VISUAL_TRACE_ACTION") ?? "rotate-right").Trim();
         Directory.CreateDirectory(outDir);
-        var csv = new StringBuilder("phase,frame,ms,offsetY,inkFraction,centroidX,centroidY\n");
+        var csv = new StringBuilder(
+            "phase,frame,ms,offsetY,inkFraction,centroidX,centroidY," +
+            "singlePageEntries,singlePageHits,singlePageMisses," +
+            "continuousEntries,continuousResidentBytes,continuousHits,continuousInFlight\n");
 
         try
         {
@@ -159,6 +162,7 @@ public static class VisualTraceRunner
     {
         int ms = frame * FrameIntervalMs;
         var viewport = viewer.GetViewportDiagnostics();
+        var rendering = viewer.GetRenderDiagnostics();
         double offsetY = viewport.IsAvailable ? viewport.Offset.Y : -1;
         var (ink, cx, cy, bmp) = CaptureCentroid(viewer);
         try
@@ -176,7 +180,14 @@ public static class VisualTraceRunner
            .Append(offsetY.ToString("F1", CultureInfo.InvariantCulture)).Append(',')
            .Append(ink.ToString("F5", CultureInfo.InvariantCulture)).Append(',')
            .Append(cx.ToString("F1", CultureInfo.InvariantCulture)).Append(',')
-           .Append(cy.ToString("F1", CultureInfo.InvariantCulture)).Append('\n');
+           .Append(cy.ToString("F1", CultureInfo.InvariantCulture)).Append(',')
+           .Append(rendering.SinglePageEntryCount).Append(',')
+           .Append(rendering.SinglePageHits).Append(',')
+           .Append(rendering.SinglePageMisses).Append(',')
+           .Append(rendering.ContinuousEntryCount).Append(',')
+           .Append(rendering.ContinuousResidentBytes).Append(',')
+           .Append(rendering.ContinuousHits).Append(',')
+           .Append(rendering.ContinuousInFlightCount).Append('\n');
     }
 
     private static (double ink, double cx, double cy, SKBitmap bmp) CaptureCentroid(PdfViewerControl viewer)

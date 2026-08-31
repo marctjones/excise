@@ -395,6 +395,7 @@
         "Excise.App/Services/DocumentSearchSession.cs",
         "Excise.App/Services/AnnotationWorkflowService.cs",
         "Excise.App/Services/DocumentImageExportWorkflowService.cs",
+        "Excise.App/Services/PageImageRenderer.cs",
         "Excise.App/Services/RedactionWorkflowService.cs",
         "Excise.App/Services/RedactedCopyDialogFormatter.cs"
       ],

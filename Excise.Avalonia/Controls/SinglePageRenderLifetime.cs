@@ -18,6 +18,8 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
     private readonly LinkedList<CacheEntry> _cache = new();
     private CancellationTokenSource? _activeRenderSource;
     private long _activeGeneration;
+    private long _cacheHits;
+    private long _cacheMisses;
     private bool _disposed;
 
     internal SinglePageRenderLifetime(int cacheCapacity)
@@ -75,11 +77,13 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
 
                 _cache.Remove(node);
                 _cache.AddFirst(node);
+                _cacheHits++;
                 bitmap = node.Value.Bitmap;
                 dipSize = node.Value.DipSize;
                 return true;
             }
 
+            _cacheMisses++;
             bitmap = null;
             dipSize = default;
             return false;
@@ -125,6 +129,19 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
                 return;
 
             DisposeCacheNoLock();
+        }
+    }
+
+    internal CacheDiagnostics GetCacheDiagnostics()
+    {
+        lock (_gate)
+        {
+            return new CacheDiagnostics(
+                EntryCount: _cache.Count,
+                Capacity: _cacheCapacity,
+                Hits: _cacheHits,
+                Misses: _cacheMisses,
+                IsDisposed: _disposed);
         }
     }
 
@@ -185,6 +202,13 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
         => ObjectDisposedException.ThrowIf(_disposed, this);
 
     private sealed record CacheEntry(int PageNumber, int Dpi, TBitmap Bitmap, Size DipSize);
+
+    internal readonly record struct CacheDiagnostics(
+        int EntryCount,
+        int Capacity,
+        long Hits,
+        long Misses,
+        bool IsDisposed);
 
     internal sealed class RenderLease : IDisposable
     {

@@ -12,7 +12,7 @@ namespace Excise.App.Tests.Unit;
 public class ResponsivenessReportTests
 {
     [Fact]
-    public void BuildDocumentOpenReport_ClassifiesPhaseBudgetsAndCacheStats()
+    public void BuildDocumentOpenReport_ClassifiesPhaseBudgetsWithoutMislabelingExportState()
     {
         var timing = new DocumentOpenTiming(
             FilePath: "/tmp/large.pdf",
@@ -23,18 +23,9 @@ public class ResponsivenessReportTests
             OutlineReadyElapsedMs: 5_700,
             SearchIndexStartedElapsedMs: 6_100,
             TotalLoadElapsedMs: 9_000);
-        var cache = new PdfRenderService.CacheStatistics(
-            Count: 1,
-            MaxEntries: 20,
-            Hits: 2,
-            Misses: 3,
-            CurrentBytes: 1234,
-            MaxBytes: 100 * 1024 * 1024,
-            HitRate: 0.4);
+        var report = ResponsivenessReportWriter.BuildDocumentOpenReport(timing);
 
-        var report = ResponsivenessReportWriter.BuildDocumentOpenReport(timing, cache);
-
-        report.SchemaVersion.Should().Be(1);
+        report.SchemaVersion.Should().Be(2);
         report.FileName.Should().Be("large.pdf");
         report.PageCount.Should().Be(455);
         report.OverallStatus.Should().Be("WARN");
@@ -42,7 +33,6 @@ public class ResponsivenessReportTests
             p.Workflow == "first_page_visible" &&
             p.Status == "WARN" &&
             p.ElapsedMs == 5_000);
-        report.RenderCache.HitRate.Should().Be(0.4);
     }
 
     [Fact]
@@ -66,17 +56,16 @@ public class ResponsivenessReportTests
                 OutlineReadyElapsedMs: 22,
                 SearchIndexStartedElapsedMs: 23,
                 TotalLoadElapsedMs: 24);
-            var cache = new PdfRenderService.CacheStatistics(1, 20, 0, 1, 512, 100 * 1024 * 1024, 0);
-
             ResponsivenessReportWriter.TryWriteDocumentOpenReportFromEnvironment(
                 timing,
-                cache,
                 NullLogger.Instance);
 
             File.Exists(outputPath).Should().BeTrue();
             using var document = JsonDocument.Parse(File.ReadAllText(outputPath));
+            document.RootElement.GetProperty("schemaVersion").GetInt32().Should().Be(2);
             document.RootElement.GetProperty("overallStatus").GetString().Should().Be("PASS");
-            document.RootElement.GetProperty("renderCache").GetProperty("misses").GetInt64().Should().Be(1);
+            document.RootElement.TryGetProperty("renderCache", out _).Should().BeFalse(
+                "the App export cache was never viewer telemetry");
         }
         finally
         {

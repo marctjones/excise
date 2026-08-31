@@ -79,7 +79,6 @@ public class EncryptedDocumentSaveWarningTests : IDisposable
             NullLogger<MainWindowViewModel>.Instance,
             loggerFactory,
             documentService,
-            new PdfRenderService(NullLogger<PdfRenderService>.Instance),
             new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
             new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
             new PdfSearchService(NullLogger<PdfSearchService>.Instance),

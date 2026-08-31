@@ -39,8 +39,7 @@ internal static class ResponsivenessReportWriter
         "Document open workflow completed after first visible page and background startup.");
 
     public static DocumentOpenResponsivenessReport BuildDocumentOpenReport(
-        DocumentOpenTiming timing,
-        PdfRenderService.CacheStatistics renderCache)
+        DocumentOpenTiming timing)
     {
         var phases = new List<ResponsivenessTimingPhase>
         {
@@ -58,29 +57,18 @@ internal static class ResponsivenessReportWriter
                 ? ResponsivenessStatus.Warn
                 : ResponsivenessStatus.Pass;
 
-        var cacheSnapshot = new ResponsivenessCacheStatistics(
-            Count: renderCache.Count,
-            MaxEntries: renderCache.MaxEntries,
-            Hits: renderCache.Hits,
-            Misses: renderCache.Misses,
-            CurrentBytes: renderCache.CurrentBytes,
-            MaxBytes: renderCache.MaxBytes,
-            HitRate: renderCache.HitRate);
-
         return new DocumentOpenResponsivenessReport(
-            SchemaVersion: 1,
+            SchemaVersion: 2,
             GeneratedUtc: DateTime.UtcNow,
             FilePath: timing.FilePath,
             FileName: Path.GetFileName(timing.FilePath),
             PageCount: timing.PageCount,
             OverallStatus: overallStatus.ToWireValue(),
-            Phases: phases,
-            RenderCache: cacheSnapshot);
+            Phases: phases);
     }
 
     public static void TryWriteDocumentOpenReportFromEnvironment(
         DocumentOpenTiming timing,
-        PdfRenderService.CacheStatistics renderCache,
         ILogger logger)
     {
         var reportPath = Environment.GetEnvironmentVariable(ReportPathEnvironmentVariable);
@@ -94,7 +82,7 @@ internal static class ResponsivenessReportWriter
             if (!string.IsNullOrEmpty(directory))
                 Directory.CreateDirectory(directory);
 
-            var report = BuildDocumentOpenReport(timing, renderCache);
+            var report = BuildDocumentOpenReport(timing);
             var json = JsonSerializer.Serialize(report, ExciseJsonContext.Default.DocumentOpenResponsivenessReport);
             File.WriteAllText(fullPath, json);
             logger.LogInformation("Wrote EXCISE responsiveness report: {ReportPath}", fullPath);
@@ -169,15 +157,6 @@ internal sealed record ResponsivenessTimingPhase(
     [property: JsonPropertyName("status")] string Status,
     [property: JsonPropertyName("detail")] string Detail);
 
-internal sealed record ResponsivenessCacheStatistics(
-    [property: JsonPropertyName("count")] int Count,
-    [property: JsonPropertyName("maxEntries")] int MaxEntries,
-    [property: JsonPropertyName("hits")] long Hits,
-    [property: JsonPropertyName("misses")] long Misses,
-    [property: JsonPropertyName("currentBytes")] long CurrentBytes,
-    [property: JsonPropertyName("maxBytes")] long MaxBytes,
-    [property: JsonPropertyName("hitRate")] double HitRate);
-
 internal sealed record DocumentOpenResponsivenessReport(
     [property: JsonPropertyName("schemaVersion")] int SchemaVersion,
     [property: JsonPropertyName("generatedUtc")] DateTime GeneratedUtc,
@@ -185,8 +164,7 @@ internal sealed record DocumentOpenResponsivenessReport(
     [property: JsonPropertyName("fileName")] string FileName,
     [property: JsonPropertyName("pageCount")] int PageCount,
     [property: JsonPropertyName("overallStatus")] string OverallStatus,
-    [property: JsonPropertyName("phases")] List<ResponsivenessTimingPhase> Phases,
-    [property: JsonPropertyName("renderCache")] ResponsivenessCacheStatistics RenderCache);
+    [property: JsonPropertyName("phases")] List<ResponsivenessTimingPhase> Phases);
 
 internal enum ResponsivenessStatus
 {

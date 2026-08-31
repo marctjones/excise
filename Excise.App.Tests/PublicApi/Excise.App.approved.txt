@@ -299,34 +299,6 @@ namespace Excise.App.Services
         public System.Collections.Generic.IReadOnlyList<string> SplitDocument(string outputFolder, Excise.App.Services.SplitMode mode, int pagesPerChunk = 1, System.Collections.Generic.IReadOnlyList<int>? boundaries = null) { }
         public bool VerifyPassword(string? candidate) { }
     }
-    public class PdfRenderService
-    {
-        public PdfRenderService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PdfRenderService> logger) { }
-        public int MaxCacheEntries { get; set; }
-        public long MaxCacheMemoryBytes { get; set; }
-        public void ClearCache() { }
-        public Excise.App.Services.PdfRenderService.CacheStatistics GetCacheStats() { }
-        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "Width",
-                "Height"})]
-        public System.ValueTuple<double, double> GetPageDimensions(string pdfPath, int pageIndex) { }
-        public void LogCacheStats() { }
-        public virtual System.Threading.Tasks.Task<SkiaSharp.SKBitmap?> RenderPageAsync(string pdfPath, int pageIndex, int dpi = 150, System.Threading.CancellationToken cancellationToken = default) { }
-        public virtual System.Threading.Tasks.Task<SkiaSharp.SKBitmap?> RenderPageFromStreamAsync(System.IO.Stream pdfStream, int pageIndex, int dpi = 150, System.Threading.CancellationToken cancellationToken = default) { }
-        public virtual System.Threading.Tasks.Task<SkiaSharp.SKBitmap?> RenderThumbnailAsync(string pdfPath, int pageIndex, int width = 200, System.Threading.CancellationToken cancellationToken = default) { }
-        public void TrimCacheForMemoryPressure(long targetBytes) { }
-        public class CacheStatistics : System.IEquatable<Excise.App.Services.PdfRenderService.CacheStatistics>
-        {
-            public CacheStatistics(int Count, int MaxEntries, long Hits, long Misses, long CurrentBytes, long MaxBytes, double HitRate) { }
-            public int Count { get; init; }
-            public long CurrentBytes { get; init; }
-            public double HitRate { get; init; }
-            public long Hits { get; init; }
-            public long MaxBytes { get; init; }
-            public int MaxEntries { get; init; }
-            public long Misses { get; init; }
-        }
-    }
     public class PdfSearchService
     {
         public PdfSearchService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PdfSearchService> logger) { }
@@ -656,7 +628,6 @@ namespace Excise.App.ViewModels
         public string CurrentModeText { get; }
         public int CurrentPage { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField> CurrentPageFormFields { get; }
-        public Avalonia.Media.Imaging.Bitmap? CurrentPageImage { get; set; }
         public int CurrentPageIndex { get; set; }
         public System.Collections.ObjectModel.ObservableCollection<Excise.Core.Document.PdfPageRect> CurrentPageSearchHighlights { get; set; }
         public string CurrentPageText { get; }
@@ -743,8 +714,6 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RemoveCurrentPageCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Guid, System.Reactive.Unit> RemovePendingRedactionCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RemoveSelectedPagesCommand { get; }
-        public int RenderCacheMax { get; set; }
-        public Excise.App.Services.PdfRenderService.CacheStatistics RenderCacheStats { get; }
         public long RenderVersion { get; }
         public bool RevealHiddenText { get; set; }
         public bool RevealRasterizedHidden { get; set; }
@@ -933,7 +902,6 @@ namespace Excise.App.ViewModels
         public double OcrLowConfidence { get; set; }
         public bool OcrPreprocess { get; set; }
         public Excise.Core.Text.ReadingOrderStrategy[] ReadingOrderStrategyOptions { get; }
-        public int RenderCacheMax { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ResetToDefaultsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveCommand { get; }
         public Excise.Core.Text.ReadingOrderStrategy SelectedReadingOrderStrategy { get; set; }

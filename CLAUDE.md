@@ -260,7 +260,8 @@ The codebase follows strict MVVM separation:
 
 **Service Layer** (`Services/`):
 - `PdfDocumentService.cs` - PDF loading, saving, page add/remove
-- `PdfRenderService.cs` - PDF-to-image rendering (uses Excise.Rendering / SkiaSharp)
+- `PageImageRenderer.cs` and `DocumentImageExportWorkflowService.cs` - uncached live-document page-image export over Excise.Rendering / SkiaSharp
+- `ThumbnailCacheService.cs` - on-demand thumbnail rendering and the bounded persistent thumbnail cache
 - `RedactionService.cs` - Orchestrates content-level redaction
 - `PdfTextExtractionService.cs` - Text extraction from PDFs
 - `PdfSearchService.cs` - Search functionality
@@ -682,7 +683,7 @@ had". An entry with no marker keeps the original unconditional behaviour, so
 ### PDF Rendering Issues
 
 - Rendering goes through Excise.Rendering (SkiaSharp); SkiaSharp carries its own native component
-- Check `PdfRenderService.cs` (GUI) and `Excise.Rendering/SkiaRenderer.cs` for rendering code
+- Check `Excise.Rendering/SkiaRenderer.cs` for raster semantics, `Excise.Avalonia/Controls/PdfViewerControl*.cs` for interactive scheduling/cache lifetime, `ThumbnailCacheService.cs` for thumbnails, and `PageImageRenderer.cs` for uncached image export
 
 ### Build Failures
 
@@ -1002,7 +1003,9 @@ Excise.Rendering/                     # SkiaSharp renderer
 Excise.App/                          # the Avalonia GUI (orchestration only)
 ├── Services/
 │   ├── PdfDocumentService.cs       # load/save/page manipulation
-│   ├── PdfRenderService.cs         # render to image
+│   ├── PageImageRenderer.cs        # uncached live-document export raster boundary
+│   ├── DocumentImageExportWorkflowService.cs # encode/write image exports
+│   ├── ThumbnailCacheService.cs    # thumbnail render + persistent cache
 │   └── RedactionService.cs         # ORCHESTRATES Excise.Core; owns no engine logic
 ├── ViewModels/MainWindowViewModel.cs   # (partial: .Commands/.Search/.Forms/…)
 ├── Views/MainWindow.axaml(.cs)

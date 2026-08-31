@@ -20,22 +20,17 @@
 Excise.App	nowhere	ApplyBatesNumbers	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	ConvertBack	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	DisplayName	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
-Excise.App	nowhere	GetPageDimensions	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	IsReplaying	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	LicenseFileName	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	LicenseKind	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	LicenseValue	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	MarkPageForOperation	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	PagesIndexed	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
-Excise.App	nowhere	RenderCacheStats	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
-Excise.App	nowhere	RenderPageFromStreamAsync	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
-Excise.App	nowhere	RenderThumbnailAsync	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	SetCommandId	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	SetShowToolTip	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	TypeIndicator	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	tests-only	AddOrUpdate	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	AddPagesFromPdf	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	AppliedCount	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ApplyBatesNumbersToSet	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	CalculateNextNumber	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	CurrentPageText	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
@@ -44,15 +39,12 @@ Excise.App	tests-only	GetCurrentDocumentAsStream	triage:test-covered app service
 Excise.App	tests-only	GetPageHeight	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	GetPageWidth	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	HasRecentFiles	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	LogCacheStats	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	MaxCacheMemoryBytes	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	PreferencesPath	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ShowInfo	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	SignFile	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	SuggestPageSubsetFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	SuggestSafeRedactedFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	TogglePin	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	TrimCacheForMemoryPressure	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ValidateScript	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.Core	nowhere	Failures	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
 Excise.Core	nowhere	SetCreator	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
