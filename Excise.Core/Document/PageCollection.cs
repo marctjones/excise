@@ -58,6 +58,16 @@ public class PageCollection : IReadOnlyList<PdfPage>
         LoadPagesRecursive(_pagesDict, 0, visited, depth: 0);
     }
 
+    /// <summary>
+    /// Refresh this stable collection after changing the authoritative page
+    /// tree, then invalidate document projections that embed page positions.
+    /// </summary>
+    private void ReloadAfterStructureMutation()
+    {
+        LoadPages();
+        _document.InvalidateDerivedState(PdfDocumentDerivedStateScope.PageTree);
+    }
+
     private int GetDeclaredRootPageCount()
     {
         try
@@ -314,7 +324,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
         _pagesDict["Kids"] = _kidsArray;
         _pagesDict.SetInt("Count", _pages.Count + 1);
 
-        LoadPages();
+        ReloadAfterStructureMutation();
         return _pages[^1];
     }
 
@@ -361,7 +371,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
         _pagesDict.SetInt("Count", _pages.Count + 1);
 
         // Reload pages to get correct page numbers
-        LoadPages();
+        ReloadAfterStructureMutation();
     }
 
     /// <summary>
@@ -381,7 +391,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
         _kidsArray.Add(pageRef);
         _pagesDict["Kids"] = _kidsArray;
         _pagesDict.SetInt("Count", _pages.Count + 1);
-        LoadPages();
+        ReloadAfterStructureMutation();
     }
 
     /// <summary>
@@ -406,7 +416,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
         _pagesDict.SetInt("Count", _pages.Count - 1);
 
         // Reload pages
-        LoadPages();
+        ReloadAfterStructureMutation();
     }
 
     /// <summary>
@@ -438,7 +448,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
         _pagesDict["Kids"] = _kidsArray;
 
         // Reload pages
-        LoadPages();
+        ReloadAfterStructureMutation();
     }
 
     /// <summary>
@@ -492,7 +502,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
         _kidsArray = flat;
         _pagesDict["Kids"] = flat;
         _pagesDict.SetInt("Count", _pages.Count);
-        LoadPages();
+        ReloadAfterStructureMutation();
     }
 
     /// <summary>

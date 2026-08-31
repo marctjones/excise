@@ -27,6 +27,7 @@ internal static class PdfAWriter
     {
         WriteXmp(document, conformance);
         WriteOutputIntent(document);
+        document.InvalidateDerivedState(PdfDocumentDerivedStateScope.Metadata);
     }
 
     private static void WriteXmp(PdfDocument document, PdfAConformance conformance)

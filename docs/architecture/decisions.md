@@ -204,3 +204,23 @@ existing `PdfParser`, `XRefParser`, `PdfDocumentWriter`, and redaction engine
 remain authoritative. A future open pipeline or save-session boundary must
 construct and consume this store rather than introducing another reader,
 document graph, or serializer.
+
+## AD-016 — Supported mutations invalidate derived state by source scope
+
+**Status:** accepted
+
+`PdfDocument` has one internal flags-based invalidation contract for parsed or
+projected views derived from the page tree, catalog actions and name trees,
+structure/tagging, optional content, attachments, metadata, and page labels.
+Each cache documents its authoritative PDF dictionary source and scope.
+Supported mutation paths invalidate their affected scopes after changing those
+dictionaries; they do not publish a public dirty-state API or a general event
+bus.
+
+Page-tree edits retain the stable `PageCollection` and authoritative indirect
+object identities. They rebuild the collection's page wrappers and invalidate
+only projections that embed page positions, including named destinations,
+tagged-text page lookup, and parsed structure state. Unrelated caches retain
+their identity until their own source scope changes. Raw dictionary edits made
+directly by external callers cannot be intercepted without a breaking API
+change and therefore remain outside this supported-mutation contract.

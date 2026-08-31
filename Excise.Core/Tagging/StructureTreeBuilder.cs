@@ -194,6 +194,9 @@ internal sealed class StructureTreeBuilder
         }
 
         WriteXmpMetadata();
+        _doc.InvalidateDerivedState(
+            PdfDocumentDerivedStateScope.StructureAndTagging |
+            PdfDocumentDerivedStateScope.Metadata);
     }
 
     /// <summary>

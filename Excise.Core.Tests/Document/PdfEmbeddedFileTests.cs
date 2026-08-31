@@ -2,6 +2,7 @@ using System.Linq;
 using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Operations;
 using Excise.Core.Primitives;
 using Xunit;
 
@@ -210,6 +211,24 @@ public class PdfEmbeddedFileTests
         var second = doc.GetEmbeddedFiles();
 
         first.Should().BeSameAs(second);
+    }
+
+    [Fact]
+    public void Sanitizer_AfterAttachmentCacheIsMaterialized_RebuildsFilteredView()
+    {
+        var pdf = BuildPdfWithEmbeddedFile("secret.txt", "contains SecretMarker here");
+        using var doc = PdfDocument.Open(pdf);
+        var before = doc.GetEmbeddedFiles();
+
+        PdfDocumentSanitizer.ScrubTerms(
+            doc,
+            new[] { "SecretMarker" },
+            caseSensitive: true,
+            RedactionCarriers.EmbeddedFiles).Should().BeTrue();
+
+        var after = doc.GetEmbeddedFiles();
+        after.Should().NotBeSameAs(before);
+        after.Should().BeEmpty();
     }
 
     [Fact]
