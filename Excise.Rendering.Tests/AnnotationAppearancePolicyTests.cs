@@ -118,6 +118,50 @@ public sealed class AnnotationAppearancePolicyTests
         Assert.Contains("no /AS", diagnostics[0], StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void SelectVisibleAnnotations_ReturnsTypedSelectionsAndDiagnostics()
+    {
+        var widget = Annotation(PdfAnnotationSubtype.Widget);
+        var invisibleUnknown = Annotation(
+            PdfAnnotationSubtype.Unknown,
+            PdfAnnotationFlags.Invisible);
+        var diagnostics = new List<string>();
+
+        var selected = AnnotationAppearancePolicy.SelectVisibleAnnotations(
+            [widget, invisibleUnknown],
+            new RenderOptions(),
+            diagnostics);
+
+        var only = Assert.Single(selected);
+        Assert.Same(widget, only.Annotation);
+        Assert.True(only.IsFieldOrLink);
+        Assert.Single(diagnostics);
+        Assert.Contains("non-standard subtype", diagnostics[0], StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(PdfAnnotationSubtype.Widget, nameof(AnnotationSynthesisKind.Widget))]
+    [InlineData(PdfAnnotationSubtype.Link, nameof(AnnotationSynthesisKind.Link))]
+    [InlineData(PdfAnnotationSubtype.Text, nameof(AnnotationSynthesisKind.StickyNote))]
+    [InlineData(PdfAnnotationSubtype.Square, nameof(AnnotationSynthesisKind.Square))]
+    [InlineData(PdfAnnotationSubtype.Circle, nameof(AnnotationSynthesisKind.Circle))]
+    [InlineData(PdfAnnotationSubtype.FreeText, nameof(AnnotationSynthesisKind.FreeText))]
+    [InlineData(PdfAnnotationSubtype.Highlight, nameof(AnnotationSynthesisKind.TextMarkup))]
+    [InlineData(PdfAnnotationSubtype.Underline, nameof(AnnotationSynthesisKind.TextMarkup))]
+    [InlineData(PdfAnnotationSubtype.Squiggly, nameof(AnnotationSynthesisKind.TextMarkup))]
+    [InlineData(PdfAnnotationSubtype.StrikeOut, nameof(AnnotationSynthesisKind.TextMarkup))]
+    [InlineData(PdfAnnotationSubtype.Line, nameof(AnnotationSynthesisKind.Line))]
+    [InlineData(PdfAnnotationSubtype.Polygon, nameof(AnnotationSynthesisKind.Polygon))]
+    [InlineData(PdfAnnotationSubtype.PolyLine, nameof(AnnotationSynthesisKind.PolyLine))]
+    [InlineData(PdfAnnotationSubtype.Ink, nameof(AnnotationSynthesisKind.Ink))]
+    [InlineData(PdfAnnotationSubtype.Stamp, nameof(AnnotationSynthesisKind.None))]
+    public void SelectSynthesis_RegistersFallbackBoundary(
+        PdfAnnotationSubtype subtype,
+        string expected)
+    {
+        Assert.Equal(expected, AnnotationAppearancePolicy.SelectSynthesis(subtype).ToString());
+    }
+
     private static PdfAnnotation Annotation(
         PdfAnnotationSubtype subtype,
         PdfAnnotationFlags flags = PdfAnnotationFlags.None,
