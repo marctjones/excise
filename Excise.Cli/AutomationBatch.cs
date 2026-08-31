@@ -7,8 +7,6 @@ using Excise.Core.Automation;
 using Excise.Core.Document;
 using Excise.Core.Parsing;
 using Excise.Core.Text.Segmentation;
-using Excise.Rendering;
-using SkiaSharp;
 
 namespace Excise.Cli;
 
@@ -339,20 +337,22 @@ partial class Program
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
         var output = ResolveRequiredOutputPath(step.Output, baseDirectory);
-        using var doc = OpenPdfDocument(input, step.Password);
-        RequireDocumentPermission(doc, DocumentAction.Extract, "page image export (render)",
-            step.IgnorePermissions ?? false, overrideHint: "ignorePermissions: true on this step");
         var page = step.Page ?? 1;
         var dpi = step.Dpi ?? 150;
-        ValidatePageNumber(doc, page);
-
-        var rendered = RenderPageToPng(doc, page, dpi, output);
+        var rendered = RenderPageHandler.Execute(new RenderPageRequest(
+            input,
+            output,
+            step.Password,
+            page,
+            dpi,
+            step.IgnorePermissions ?? false,
+            OverrideHint: "ignorePermissions: true on this step"));
         return new
         {
-            inputPath = input,
-            outputPath = output,
-            pageNumber = page,
-            dpi,
+            inputPath = rendered.InputPath,
+            outputPath = rendered.OutputPath,
+            rendered.PageNumber,
+            rendered.Dpi,
             rendered.Width,
             rendered.Height,
         };
@@ -488,21 +488,6 @@ partial class Program
             ? PdfDocument.Open(path)
             : PdfDocument.Open(path, password);
 
-    private static RenderedPageResult RenderPageToPng(PdfDocument doc, int page, int dpi, string outputPath)
-    {
-        ValidatePageNumber(doc, page);
-        EnsureOutputParent(outputPath);
-
-        var renderer = new SkiaRenderer();
-        var options = new RenderOptions { Dpi = dpi };
-        using var bitmap = renderer.RenderPage(doc.GetPage(page), options);
-        using var image = SKImage.FromBitmap(bitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-        using var stream = File.Open(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
-        data.SaveTo(stream);
-        return new RenderedPageResult(bitmap.Width, bitmap.Height);
-    }
-
     private static void WriteJson(object value)
         => Console.WriteLine(JsonSerializer.Serialize(value, AutomationJsonOptions));
 
@@ -635,7 +620,6 @@ partial class Program
         public object? Result { get; } = result;
     }
 
-    private sealed record RenderedPageResult(int Width, int Height);
 
 
     private sealed record AutomationBatchWorkflow(
