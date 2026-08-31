@@ -1,3 +1,5 @@
+using Excise.Core.Primitives;
+
 namespace Excise.Core.Graphics;
 
 /// <summary>
@@ -37,12 +39,12 @@ public class PdfPen
         if (Color.IsGrayscale)
         {
             // Use 'G' for grayscale stroking color
-            return $"{FormatNumber(Color.R)} G";
+            return $"{PdfNumberFormatter.Format(Color.R)} G";
         }
         else
         {
             // Use 'RG' for RGB stroking color
-            return $"{FormatNumber(Color.R)} {FormatNumber(Color.G)} {FormatNumber(Color.B)} RG";
+            return $"{PdfNumberFormatter.Format(Color.R)} {PdfNumberFormatter.Format(Color.G)} {PdfNumberFormatter.Format(Color.B)} RG";
         }
     }
 
@@ -51,13 +53,6 @@ public class PdfPen
     /// </summary>
     internal string GetLineWidthOperator()
     {
-        return $"{FormatNumber(Width)} w";
-    }
-
-    private static string FormatNumber(double value)
-    {
-        if (Math.Abs(value - Math.Round(value)) < 0.0001)
-            return ((int)Math.Round(value)).ToString();
-        return value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+        return $"{PdfNumberFormatter.Format(Width)} w";
     }
 }

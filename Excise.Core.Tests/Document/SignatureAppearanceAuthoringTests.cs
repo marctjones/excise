@@ -68,6 +68,18 @@ public class SignatureAppearanceAuthoringTests
     }
 
     [Fact]
+    public void ApplyVisibleAppearance_UsesCanonicalPdfNumberPrecision()
+    {
+        using var doc = PdfDocument.CreateNew();
+        var widget = WidgetWithRect(100, 600, 200.12345678, 660);
+
+        SignatureAppearanceAuthoring.ApplyVisibleAppearance(doc, widget, new[] { "signed" });
+
+        ContentOf(ResolveAppearance(doc, widget))
+            .Should().Contain("99.123457 59 re S");
+    }
+
+    [Fact]
     public void ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched()
     {
         using var doc = PdfDocument.CreateNew();

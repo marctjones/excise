@@ -536,12 +536,6 @@
       "rationale": "Document validation inspects tagging and operators through the authoritative content parser."
     },
     {
-      "source": "core-content",
-      "target": "core-writing",
-      "type": "uses",
-      "rationale": "Temporary exception #1319: content serialization consumes PdfNumberFormatter from writer ownership until the one canonical formatter moves to a neutral foundation."
-    },
-    {
       "source": "core-document",
       "target": "core-encryption",
       "type": "uses",

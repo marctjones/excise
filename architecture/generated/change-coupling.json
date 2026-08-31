@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "38ec607ab972928ba4ce6e65c6803e8b64cde2ce",
+  "sourceRevision": "13ae8731a9fa028d070a54e43c1b885209cc6907",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 197,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "38ec607ab972928ba4ce6e65c6803e8b64cde2ce",
-    "oldestProductionCommit": "7faf6ee53a40d28476d41123bfb238efd04cd3e8"
+    "newestProductionCommit": "13ae8731a9fa028d070a54e43c1b885209cc6907",
+    "oldestProductionCommit": "83727549f301386047a8610810574ac207f85564"
   },
   "files": [
     {
@@ -54,15 +54,19 @@
       "commits": 12
     },
     {
+      "path": "Excise.Core/Text/TextExtractor.cs",
+      "commits": 12
+    },
+    {
       "path": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
       "commits": 11
     },
     {
-      "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
+      "path": "Excise.Core/Content/ContentStreamWalker.cs",
       "commits": 11
     },
     {
-      "path": "Excise.Core/Text/TextExtractor.cs",
+      "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
       "commits": 11
     },
     {
@@ -79,10 +83,6 @@
     },
     {
       "path": "Excise.Core/Content/ContentStreamParser.cs",
-      "commits": 10
-    },
-    {
-      "path": "Excise.Core/Content/ContentStreamWalker.cs",
       "commits": 10
     },
     {
@@ -171,6 +171,10 @@
     },
     {
       "path": "Excise.App/ViewModels/PreferencesViewModel.cs",
+      "commits": 3
+    },
+    {
+      "path": "Excise.Core/Fonts/StandardFontMetrics.cs",
       "commits": 3
     },
     {
@@ -287,10 +291,6 @@
     },
     {
       "path": "Excise.Core/Fonts/CffSubsetter.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.Core/Fonts/StandardFontMetrics.cs",
       "commits": 2
     },
     {
@@ -550,10 +550,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Filters/Jbig2/Jbig2CapabilityClassifier.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Core/Filters/Jbig2/Jbig2Decoder.cs",
       "commits": 1
     },
@@ -562,7 +558,23 @@
       "commits": 1
     },
     {
+      "path": "Excise.Core/Fonts/AdobeGlyphList.cs",
+      "commits": 1
+    },
+    {
       "path": "Excise.Core/Fonts/CffParser.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Fonts/CidCMapParser.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Fonts/GlyphUnicodeDecoder.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Fonts/PredefinedCMapProvider.cs",
       "commits": 1
     },
     {
@@ -570,7 +582,15 @@
       "commits": 1
     },
     {
+      "path": "Excise.Core/Fonts/StandardMacGlyphOrder.cs",
+      "commits": 1
+    },
+    {
       "path": "Excise.Core/Fonts/SymbolCmapDecoder.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Fonts/ToUnicodeCMapParser.cs",
       "commits": 1
     },
     {
@@ -847,7 +867,7 @@
       "source": "Excise.Core/Content/ContentStreamParser.cs",
       "target": "Excise.Core/Text/TextExtractor.cs",
       "cochanges": 6,
-      "jaccard": 0.4
+      "jaccard": 0.375
     },
     {
       "source": "Excise.App/Views/MainWindow.axaml",
@@ -1402,12 +1422,6 @@
       "jaccard": 0.1818
     },
     {
-      "source": "Excise.Core/Text/Segmentation/AppearanceStreamRedactor.cs",
-      "target": "Excise.Core/Text/TextExtractor.cs",
-      "cochanges": 2,
-      "jaccard": 0.1818
-    },
-    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
       "target": "Excise.Core/Document/PdfAnnotation.cs",
       "cochanges": 2,
@@ -1438,6 +1452,12 @@
       "jaccard": 0.1667
     },
     {
+      "source": "Excise.Core/Text/Segmentation/AppearanceStreamRedactor.cs",
+      "target": "Excise.Core/Text/TextExtractor.cs",
+      "cochanges": 2,
+      "jaccard": 0.1667
+    },
+    {
       "source": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
       "target": "Excise.Core/Text/Segmentation/OperationReconstructor.cs",
       "cochanges": 2,
@@ -1452,6 +1472,12 @@
     {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
       "target": "Excise.Rendering/SkiaRenderer.cs",
+      "cochanges": 2,
+      "jaccard": 0.1538
+    },
+    {
+      "source": "Excise.Core/Fonts/StandardFontMetrics.cs",
+      "target": "Excise.Core/Text/TextExtractor.cs",
       "cochanges": 2,
       "jaccard": 0.1538
     },
@@ -1514,6 +1540,12 @@
       "target": "Excise.App/Views/MainWindow.axaml.cs",
       "cochanges": 2,
       "jaccard": 0.1
+    },
+    {
+      "source": "Excise.Core/Content/ContentStreamWalker.cs",
+      "target": "Excise.Core/Text/TextExtractor.cs",
+      "cochanges": 2,
+      "jaccard": 0.0952
     },
     {
       "source": "Excise.Core/Document/PdfAnnotation.cs",

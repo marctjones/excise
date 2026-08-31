@@ -986,6 +986,7 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 │   ├── ContentStreamWalker.cs      # ← THE content-stream state machine (see below)
 │   ├── ContentStreamParser.cs      # a SINK: operator bounds + decoded text
 │   └── ContentStreamWriter.cs      # serialize operators back to bytes
+├── Primitives/                     # PDF object graph + canonical PDF numeric token formatting
 ├── Operations/
 │   └── PdfDocumentSanitizer.cs     # /Info, XMP, outlines, annots (#608)
 ├── Document/                       # PdfDocument, PdfPage, PdfPageRect, coords

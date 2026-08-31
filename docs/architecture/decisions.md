@@ -151,3 +151,20 @@ policy. Reachability may follow interface dispatch from the content contract to
 the text implementation, but that synthesized runtime edge is not a reverse
 source dependency. Adding a second CMap parser, glyph table, or extraction walk
 requires an explicit superseding decision and provenance review.
+
+## AD-013 — PDF numeric tokens have one foundation formatter
+
+**Status:** accepted
+
+`core-primitives` owns the canonical real-number spelling used in PDF syntax:
+invariant culture, no exponent notation, at most six decimal places, trimmed
+zeros, and normalized negative zero. Content serialization, object writing,
+graphics, form flattening, annotation appearances, and signature appearances
+all consume that authority without applying independent near-integer or
+precision thresholds.
+
+Format-specific serialization remains distinct when it is not PDF syntax.
+In particular, XFDF is XML and retains an explicit XML-number contract. A
+different PDF quantization rule requires a named typed policy and evidence that
+the precision loss is part of the file-format behavior rather than an
+accidental local formatter.

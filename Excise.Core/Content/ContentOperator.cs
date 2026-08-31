@@ -480,7 +480,7 @@ public class ContentOperator
         return obj switch
         {
             PdfInteger i => i.Value.ToString(),
-            PdfReal r => Writing.PdfNumberFormatter.Format(r.Value),
+            PdfReal r => PdfNumberFormatter.Format(r.Value),
             PdfName n => "/" + n.Value,
             PdfString s => "(" + EscapeString(s.Value) + ")",
             PdfArray a => "[" + string.Join(" ", a.Select(FormatOperand)) + "]",

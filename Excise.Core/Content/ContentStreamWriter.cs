@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using Excise.Core.Primitives;
 
@@ -110,17 +109,7 @@ public class ContentStreamWriter
                 break;
 
             case PdfReal r:
-                var value = r.Value;
-                if (Math.Abs(value - Math.Round(value)) < 0.00001)
-                {
-                    _sb.Append(((long)Math.Round(value)).ToString(CultureInfo.InvariantCulture));
-                }
-                else
-                {
-                    // Deterministic fixed-precision format — "G" reproduces
-                    // platform-dependent float noise in the bytes (#762).
-                    _sb.Append(Writing.PdfNumberFormatter.Format(value));
-                }
+                _sb.Append(PdfNumberFormatter.Format(r.Value));
                 break;
 
             case PdfString s:

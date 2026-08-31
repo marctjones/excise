@@ -66,14 +66,7 @@ public static class PdfObjectWriter
                 break;
 
             case PdfReal r:
-                var value = r.Value;
-                // Write integers without decimal point
-                if (Math.Abs(value - Math.Round(value)) < 1e-10)
-                    sb.Append(((long)value).ToString(CultureInfo.InvariantCulture));
-                else
-                    // Deterministic fixed-precision format — "G" reproduces
-                    // platform-dependent float noise in the bytes (#762).
-                    sb.Append(PdfNumberFormatter.Format(value));
+                sb.Append(PdfNumberFormatter.Format(r.Value));
                 break;
 
             case PdfName n:

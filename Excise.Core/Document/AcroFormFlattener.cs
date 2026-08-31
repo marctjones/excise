@@ -177,10 +177,10 @@ internal static class AcroFormFlattener
         var name = AddXObjectResource(document, page, rawAppearance);
 
         sb.Append("q\n");
-        sb.Append(sx.ToString("0.####", CultureInfo.InvariantCulture)).Append(" 0 0 ")
-          .Append(sy.ToString("0.####", CultureInfo.InvariantCulture)).Append(' ')
-          .Append(ox.ToString("0.###", CultureInfo.InvariantCulture)).Append(' ')
-          .Append(oy.ToString("0.###", CultureInfo.InvariantCulture)).Append(" cm\n");
+        sb.Append(PdfNumberFormatter.Format(sx)).Append(" 0 0 ")
+          .Append(PdfNumberFormatter.Format(sy)).Append(' ')
+          .Append(PdfNumberFormatter.Format(ox)).Append(' ')
+          .Append(PdfNumberFormatter.Format(oy)).Append(" cm\n");
         sb.Append('/').Append(name).Append(" Do\n");
         sb.Append("Q\n");
     }
@@ -276,18 +276,18 @@ internal static class AcroFormFlattener
             firstY = rect.Bottom + 2.0;       // single-line: sit just above the bottom edge
 
         sb.Append("q\n");
-        sb.Append(rect.Left.ToString("0.###", CultureInfo.InvariantCulture)).Append(' ')
-          .Append(rect.Bottom.ToString("0.###", CultureInfo.InvariantCulture)).Append(' ')
-          .Append(rect.Width.ToString("0.###", CultureInfo.InvariantCulture)).Append(' ')
-          .Append(rect.Height.ToString("0.###", CultureInfo.InvariantCulture))
+        sb.Append(PdfNumberFormatter.Format(rect.Left)).Append(' ')
+          .Append(PdfNumberFormatter.Format(rect.Bottom)).Append(' ')
+          .Append(PdfNumberFormatter.Format(rect.Width)).Append(' ')
+          .Append(PdfNumberFormatter.Format(rect.Height))
           .Append(" re W n\n");
         sb.Append("BT\n");
         sb.Append('/').Append(fontResourceName).Append(' ')
-          .Append(fontSize.ToString("0.###", CultureInfo.InvariantCulture))
+          .Append(PdfNumberFormatter.Format(fontSize))
           .Append(" Tf\n");
         sb.Append("0 g\n");
-        sb.Append(x.ToString("0.###", CultureInfo.InvariantCulture)).Append(' ')
-          .Append(firstY.ToString("0.###", CultureInfo.InvariantCulture))
+        sb.Append(PdfNumberFormatter.Format(x)).Append(' ')
+          .Append(PdfNumberFormatter.Format(firstY))
           .Append(" Td\n");
 
         var maxLines = Math.Max(1, (int)Math.Floor(Math.Max(1, rect.Height - 4) / leading));
@@ -295,7 +295,7 @@ internal static class AcroFormFlattener
         {
             if (i > 0)
             {
-                sb.Append("0 ").Append((-leading).ToString("0.###", CultureInfo.InvariantCulture)).Append(" Td\n");
+                sb.Append("0 ").Append(PdfNumberFormatter.Format(-leading)).Append(" Td\n");
             }
             sb.Append('(').Append(EscapePdfString(lines[i])).Append(") Tj\n");
         }
@@ -340,10 +340,10 @@ internal static class AcroFormFlattener
         sb.Append("q\n");
         sb.Append("BT\n");
         sb.Append('/').Append(fontResourceName).Append(' ')
-          .Append(size.ToString("0.###", CultureInfo.InvariantCulture)).Append(" Tf\n");
+          .Append(PdfNumberFormatter.Format(size)).Append(" Tf\n");
         sb.Append("0 g\n");
-        sb.Append(x.ToString("0.###", CultureInfo.InvariantCulture)).Append(' ')
-          .Append(y.ToString("0.###", CultureInfo.InvariantCulture)).Append(" Td\n");
+        sb.Append(PdfNumberFormatter.Format(x)).Append(' ')
+          .Append(PdfNumberFormatter.Format(y)).Append(" Td\n");
         sb.Append("(X) Tj\n");
         sb.Append("ET\n");
         sb.Append("Q\n");

@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using Excise.Core.Graphics;
 using Excise.Core.Primitives;
@@ -1679,8 +1678,7 @@ public static class PdfAnnotationAuthoring
         sb.Append("h\n");
     }
 
-    private static string Num(double value) =>
-        value.ToString("0.####", CultureInfo.InvariantCulture);
+    private static string Num(double value) => PdfNumberFormatter.Format(value);
 
     private static PdfDictionary NewAnnotationDict(string subtype, PdfRectangle rect)
     {

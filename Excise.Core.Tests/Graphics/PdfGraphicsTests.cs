@@ -644,6 +644,18 @@ public class PdfGraphicsTests
     }
 
     [Fact]
+    public void PdfGraphics_Transform_UsesCanonicalPdfNumberPrecision()
+    {
+        var pdfData = CreateSimplePdf();
+        using var doc = PdfDocument.Open(pdfData);
+        using var graphics = doc.GetPage(1).GetGraphics();
+
+        graphics.Transform(1.23456789, 0, 0, 1, 0, 0);
+
+        graphics.GetOperators().Should().Contain("1.234568 0 0 1 0 0 cm");
+    }
+
+    [Fact]
     public void PdfGraphics_Fill_SetsFillColorAndOperator()
     {
         var pdfData = CreateSimplePdf();
@@ -934,6 +946,17 @@ public class PdfGraphicsTests
         var pen = new PdfPen(PdfColor.Black, 3);
         var op = pen.GetLineWidthOperator();
         op.Should().Be("3 w");
+    }
+
+    [Fact]
+    public void PdfPenAndBrush_UseCanonicalPdfNumberPrecision()
+    {
+        new PdfPen(PdfColor.Black, 1.23456789).GetLineWidthOperator()
+            .Should().Be("1.234568 w");
+
+        new PdfBrush(new PdfColor(0.12345678, 0.23456789, 0.34567891))
+            .GetFillColorOperator()
+            .Should().Be("0.123457 0.234568 0.345679 rg");
     }
 
     #endregion
