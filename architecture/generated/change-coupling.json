@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "5f7e9affb0311ec56d28a5f96378245dc591a939",
+  "sourceRevision": "ef969c961eb1d907f74f84d61f094e4b9633b427",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 197,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "5f7e9affb0311ec56d28a5f96378245dc591a939",
-    "oldestProductionCommit": "0dff4a1d22543a35f2f0fa780181d5e9f3143c22"
+    "newestProductionCommit": "ef969c961eb1d907f74f84d61f094e4b9633b427",
+    "oldestProductionCommit": "ce701f50d9885f6f98bbe0aadd0526de2d2ce151"
   },
   "files": [
     {
@@ -38,11 +38,11 @@
       "commits": 24
     },
     {
-      "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
-      "commits": 19
+      "path": "Excise.App/Views/MainWindow.axaml",
+      "commits": 18
     },
     {
-      "path": "Excise.App/Views/MainWindow.axaml",
+      "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
       "commits": 18
     },
     {
@@ -655,6 +655,126 @@
     },
     {
       "path": "Excise.Core/Primitives/PdfNumberFormatter.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/AppearanceStreamRedactor.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/CarrierTextRecovery.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/FormXObjectFlattener.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/GlyphBlanker.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/GlyphOverlapType.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/GlyphRemovalStrategy.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/GlyphRemover.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/HiddenTextDetector.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/ImageRedactor.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/ImageRegionRedactor.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/LetterFinder.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/LetterMatch.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/ObstructionStripper.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/OperandGlyphSplitter.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/OperationReconstructor.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/PdfPageRedactionExtensions.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/RedactedCopySafetyContract.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/RedactionCarrierAudit.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/RedactionCarriers.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/RedactionOptions.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/RedactionReport.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/StructureTreeRedactionScrubber.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/TextSegment.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/TextSegmenter.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Redaction/XfaXmlCarrier.cs",
       "commits": 1
     },
     {
@@ -1570,14 +1690,14 @@
       "jaccard": 0.1
     },
     {
-      "source": "Excise.Core/Content/ContentStreamWalker.cs",
-      "target": "Excise.Core/Text/TextExtractor.cs",
-      "cochanges": 2,
-      "jaccard": 0.0952
-    },
-    {
       "source": "Excise.Core/Document/PdfAnnotation.cs",
       "target": "Excise.Rendering/SkiaRenderer.Annotations.cs",
+      "cochanges": 2,
+      "jaccard": 0.1
+    },
+    {
+      "source": "Excise.Core/Content/ContentStreamWalker.cs",
+      "target": "Excise.Core/Text/TextExtractor.cs",
       "cochanges": 2,
       "jaccard": 0.0952
     },

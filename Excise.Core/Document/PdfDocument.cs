@@ -10,20 +10,7 @@ namespace Excise.Core.Document;
 /// </summary>
 public partial class PdfDocument : IDisposable
 {
-    private readonly Stream _stream;
-    private readonly bool _ownsStream;
-    private readonly Dictionary<int, XRefEntry> _xref;
-    private readonly Dictionary<int, PdfObject> _objectCache;
-    private readonly PdfParser _parser;
-    // Object resolution seeks and reads the single shared _parser/lexer stream and
-    // mutates _objectCache, so it is NOT safe to call from multiple threads at once
-    // (concurrent Seeks corrupt each other -> "Unexpected keyword 'obj'"). The GUI
-    // hits this when a background search-indexer parses pages while the UI thread
-    // reads links/renders. Serialize the whole resolve path; the lock is reentrant
-    // so recursive resolution (ObjStm containers, /Length references) is fine. (#376)
-    private readonly object _parseLock = new();
-    private readonly StreamDecompressor _decompressor;
-    private readonly Excise.Core.Security.PdfStandardSecurityHandler? _securityHandler;
+    private readonly PdfDocumentObjectStore _objectStore;
     private PageCollection? _pages;
     private IReadOnlyList<PdfOcg>? _ocgs;
     private PdfOcgConfig? _ocgConfig;
@@ -64,17 +51,7 @@ public partial class PdfDocument : IDisposable
     /// objects which are not valid inline in PDF syntax.
     /// </remarks>
     internal PdfReference AddIndirectObject(PdfObject obj)
-    {
-        int next = _xref.Count == 0 ? 1 : _xref.Keys.Max() + 1;
-        _xref[next] = new Excise.Core.Parsing.XRefEntry
-        {
-            Offset = 0, // filled in by the writer at serialize time
-            Generation = 0,
-            InUse = true,
-        };
-        _objectCache[next] = obj;
-        return new PdfReference(next, 0);
-    }
+        => _objectStore.AddIndirectObject(obj);
 
     /// <summary>
     /// The object number <see cref="AddIndirectObject"/> would allocate if
@@ -86,11 +63,11 @@ public partial class PdfDocument : IDisposable
     /// never become part of the persistent document graph (it is not
     /// reachable from the catalog, so re-adding it via
     /// <see cref="AddIndirectObject"/> on every save would leak an
-    /// ever-growing number of orphaned encrypt-dict objects into
-    /// <c>_xref</c>/<c>_objectCache</c> across repeated Save() calls on the
+    /// ever-growing number of orphaned encrypt-dict objects into the owned
+    /// object store across repeated Save() calls on the
     /// same <see cref="PdfDocument"/> instance).
     /// </remarks>
-    internal int NextFreeObjectNumber => _xref.Count == 0 ? 1 : _xref.Keys.Max() + 1;
+    internal int NextFreeObjectNumber => _objectStore.NextFreeObjectNumber;
 
     /// <summary>
     /// Overwrite the content of an already-registered indirect object.
@@ -106,9 +83,7 @@ public partial class PdfDocument : IDisposable
     /// call is left untouched; only the cached object changes.
     /// </remarks>
     internal void ReplaceIndirectObject(int objectNumber, PdfObject obj)
-    {
-        _objectCache[objectNumber] = obj;
-    }
+        => _objectStore.ReplaceIndirectObject(objectNumber, obj);
 
     /// <summary>
     /// Mark an indirect object as free so it is no longer serialized.
@@ -120,10 +95,7 @@ public partial class PdfDocument : IDisposable
     /// unreachable before calling this.
     /// </summary>
     internal void RemoveObject(int objectNumber)
-    {
-        _xref.Remove(objectNumber);
-        _objectCache.Remove(objectNumber);
-    }
+        => _objectStore.RemoveObject(objectNumber);
 
     /// <summary>
     /// Object numbers reachable from the trailer by walking the object graph
@@ -131,7 +103,7 @@ public partial class PdfDocument : IDisposable
     /// XObject is truly orphaned before <see cref="RemoveObject"/> frees it.
     /// </summary>
     internal HashSet<int> ComputeReachableObjects()
-        => ComputeReachableObjectsFrom(Trailer.Values);
+        => _objectStore.ComputeReachableObjects(Trailer.Values);
 
     /// <summary>
     /// Every XMP <c>/Metadata</c> stream reachable in the document, not just
@@ -170,41 +142,7 @@ public partial class PdfDocument : IDisposable
         var infoRef = Trailer.GetReferenceOrNull("Info");
         if (infoRef != null)
             roots.Add(infoRef);
-        return ComputeReachableObjectsFrom(roots);
-    }
-
-    private HashSet<int> ComputeReachableObjectsFrom(IEnumerable<PdfObject> roots)
-    {
-        var reachable = new HashSet<int>();
-        var stack = new Stack<PdfObject>();
-        foreach (var v in roots) stack.Push(v);
-
-        while (stack.Count > 0)
-        {
-            var o = stack.Pop();
-            switch (o)
-            {
-                case PdfReference r:
-                    if (reachable.Add(r.ObjectNum))
-                    {
-                        PdfObject target;
-                        try { target = GetObject(r.ObjectNum); }
-                        catch (Exception __ex) when (__ex is not OutOfMemoryException) { break; }
-                        stack.Push(target);
-                    }
-                    break;
-                case PdfStream s:           // PdfStream is a PdfDictionary
-                    foreach (var v in s.Values) stack.Push(v);
-                    break;
-                case PdfDictionary d:
-                    foreach (var v in d.Values) stack.Push(v);
-                    break;
-                case PdfArray a:
-                    foreach (var v in a) stack.Push(v);
-                    break;
-            }
-        }
-        return reachable;
+        return _objectStore.ComputeReachableObjects(roots);
     }
 
     /// <summary>
@@ -338,22 +276,11 @@ public partial class PdfDocument : IDisposable
         Excise.Core.Security.PdfStandardSecurityHandler? securityHandler = null,
         Excise.Core.Security.PdfPermissions? permissions = null)
     {
-        _stream = stream;
-        _ownsStream = ownsStream;
-        _xref = xref;
-        _objectCache = new Dictionary<int, PdfObject>();
-        _parser = new PdfParser(new PdfLexer(stream, ownsStream: false));
-        _decompressor = new StreamDecompressor();
-        _securityHandler = securityHandler;
+        _objectStore = new PdfDocumentObjectStore(stream, ownsStream, xref, securityHandler);
         Permissions = permissions ?? Excise.Core.Security.PdfPermissions.AllAllowed;
         // Owner-password opening is #324 (unsupported): every successful
         // open today verifies the USER password, so permissions apply.
         OpenedWithOwnerPassword = false;
-
-        // Let the parser resolve indirect /Length refs on stream dicts by
-        // calling back into our object cache — needed for PDFs (notably
-        // LibreOffice output) that write the length as an indirect ref.
-        _parser.IndirectObjectResolver = ResolveLengthReference;
 
         Trailer = trailer;
         Version = version;
@@ -944,440 +871,20 @@ public partial class PdfDocument : IDisposable
     /// Get an object by reference.
     /// </summary>
     public PdfObject GetObject(PdfReference reference)
-    {
-        return GetObject(reference.ObjectNum);
-    }
+        => _objectStore.GetObject(reference);
 
     /// <summary>
     /// Get an object by object number.
     /// </summary>
     public PdfObject GetObject(int objectNumber)
-    {
-      // Serialize the shared-stream seek/parse + cache mutation against concurrent
-      // readers (reentrant for recursive resolution). (#376)
-      lock (_parseLock)
-      {
-        // Check cache
-        if (_objectCache.TryGetValue(objectNumber, out var cached))
-            return cached;
-
-        // Find in xref.
-        //
-        // An object number with no xref entry is NOT an error. PDF 32000-1
-        // §7.3.10: "An indirect reference to an undefined object shall not be
-        // considered an error by a conforming reader; it shall be treated as a
-        // reference to the null object."
-        //
-        // So throwing here was spec-incorrect, and the inconsistency was
-        // visible two lines down — a FREE entry (the same condition, just
-        // recorded rather than omitted) already returned null. Files whose xref
-        // omits an object were condemned at open while mutool and pdftocairo
-        // read them (#884).
-        //
-        // Returning null can turn a hard failure into a page that renders
-        // without some content. That is the better failure: the
-        // missing-content gate (#883) catches a blank region, whereas a refused
-        // document produces nothing to inspect at all.
-        if (!_xref.TryGetValue(objectNumber, out var entry))
-            return PdfNull.Instance;
-
-        if (!entry.InUse)
-            return PdfNull.Instance;
-
-        PdfObject obj;
-
-        if (entry.IsCompressed)
-        {
-            // Object is in an object stream. The parent /ObjStm itself is
-            // decrypted by this same code path when GetObjectFromStream
-            // calls back into GetObject(streamNumber); the contained
-            // objects are then plaintext and need no further decryption.
-            obj = GetObjectFromStream(entry.ObjectStreamNumber!.Value, objectNumber);
-        }
-        else
-        {
-            // Regular object.
-            //
-            // A malformed object costs THAT OBJECT, not the document (#973).
-            // pdfium's bug_481363.pdf writes `6 0 obj [ /Lab 4< /WhitePoint ...`
-            // — the stray `4` turns the `<<` into a hex string, and the lexer
-            // hits '/' where a hex digit must be. That object is the page's
-            // /ColorSpace /CS1, so the throw propagated out of a resource
-            // lookup and refused the whole page, while mutool and pdftocairo
-            // both render one.
-            //
-            // Degrading to null is the same posture — and the same reasoning —
-            // as the missing-xref-entry branch above: §7.3.10 already makes an
-            // unresolvable reference the null object, and a page that renders
-            // without one resource is inspectable where a refused document is
-            // not. Only PdfParseException is caught: an OutOfMemoryException or
-            // a bug in our own parser must still surface.
-            //
-            // IsResourceGuard is excluded on purpose. A recursion-depth trip
-            // (#969/#971) is excise defending itself against hostile input, not
-            // evidence that the rest of the file is readable; silently nulling
-            // those objects would let a crafted file delete content at scale
-            // and would replace "maximum nesting depth exceeded" with a
-            // downstream "could not load document catalog".
-            _parser.Seek(entry.Offset);
-            PdfIndirectObject indirectObj;
-            try
-            {
-                indirectObj = _parser.ParseIndirectObject();
-            }
-            catch (PdfParseException ex) when (!ex.IsResourceGuard)
-            {
-                _objectCache[objectNumber] = PdfNull.Instance;
-                return PdfNull.Instance;
-            }
-
-            obj = indirectObj.Value;
-
-            // Apply the security handler before any /Filter pipeline.
-            // For RC4: ciphertext is stream's encoded bytes (post-compression
-            // on encrypt, so we decrypt FIRST and then run FlateDecode etc.).
-            // Strings inside the parsed object are also encrypted with the
-            // same per-object key — walk the dict and decrypt them in place.
-            // The /Encrypt dict itself is exempt (its strings are read with
-            // a one-shot lexer in Open() before we have a handler).
-            if (_securityHandler != null && !IsExemptFromEncryption(obj))
-            {
-                int objNum = indirectObj.ObjectNumber;
-                int gen = indirectObj.Generation;
-
-                if (obj is PdfStream stream)
-                {
-                    // §7.4.10: a stream may override the document's default
-                    // crypt filter with /Crypt /Name /Identity. Its bytes are
-                    // deliberately plaintext, so passing them to AES-CBC
-                    // would turn a valid stream into the #1048-style "input
-                    // data is not a complete block" failure (#1167).
-                    //
-                    // The /Crypt filter is an encryption stage, not a content
-                    // filter. Remove this no-op stage before the normal
-                    // decompressor runs; it has no /Crypt decoder and must
-                    // only receive actual content filters such as FlateDecode.
-                    if (!RemoveIdentityCryptFilter(stream))
-                    {
-                        var encrypted = stream.EncodedData;
-                        var decrypted = _securityHandler.DecryptStream(objNum, gen, encrypted);
-                        stream.SetEncodedData(decrypted);
-                    }
-                }
-                DecryptStringsInPlace(obj, objNum, gen);
-            }
-
-            // Decompress streams
-            if (obj is PdfStream s && s.IsFiltered)
-            {
-                // §7.3.8 makes every PDF stream an indirect object, so a
-                // conforming /DecodeParms << /JBIG2Globals n 0 R >> is ALWAYS
-                // a reference — resolve it before the filter pipeline runs, or
-                // the JBIG2 decoder never sees its shared symbol dictionary
-                // (#874).
-                ResolveJbig2GlobalsReferences(s);
-
-                try
-                {
-                    _decompressor.Decompress(s);
-                }
-                catch (Exception __ex) when (__ex is not OutOfMemoryException)
-                {
-                    // Some streams can't be decompressed (images, etc.) - that's OK
-                }
-            }
-        }
-
-        _objectCache[objectNumber] = obj;
-        return obj;
-      }
-    }
-
-    // ── Object-stream materialization cache (#743, epic #596) ───────────────
-    // GetObjectFromStream used to re-parse the full N-pair /ObjStm index and
-    // construct a fresh PdfParser + PdfLexer + MemoryStream for EVERY
-    // contained-object fetch — 76,233 parser instantiations + index re-parses
-    // on one save of irs-1040-instructions.pdf (785 streams), 67% of the save
-    // workflow and ~3.2 GB of managed allocation (#597 baseline, see
-    // docs/performance-baselines/2026-07-25-hotpath-baseline/). Instead, the
-    // first touch of an object stream parses the index once and batch-parses
-    // all N contained objects in a single pass; subsequent fetches are O(1)
-    // array lookups. Results are keyed by (stream, index) exactly like the
-    // old per-fetch path — the same byte offsets are parsed with the same
-    // parser configuration, just once instead of once per fetch — so object
-    // resolution is value-identical. This is caching only.
-    //
-    // Thread-safety: read and mutated only inside GetObjectFromStream, which
-    // is reachable only from GetObject under _parseLock (same discipline as
-    // _objectCache). Invalidation: an entry is keyed to the container
-    // PdfStream instance and its decoded buffer; if the container object or
-    // its decoded bytes are ever replaced (e.g. RemoveObject then re-parse),
-    // the identity check misses and the index is rebuilt from the new bytes.
-    private sealed class ObjectStreamCacheEntry
-    {
-        public required PdfStream Source { get; init; }
-        public required byte[] Data { get; init; }
-        public required int First { get; init; }
-        public required (int ObjNum, int Offset)[] Offsets { get; init; }
-        public required PdfObject?[] Objects { get; init; }
-
-        /// <summary>
-        /// Slot of each contained object number, built from the /ObjStm's own
-        /// N-pair index. This — not the xref's index-in-stream — is what
-        /// <see cref="GetObjectFromStream"/> resolves against (#869).
-        /// </summary>
-        public required Dictionary<int, int> SlotByObjectNumber { get; init; }
-    }
-
-    private readonly Dictionary<int, ObjectStreamCacheEntry> _objectStreamCache = new();
-
-    /// <summary>
-    /// Get an object from an object stream.
-    /// </summary>
-    private PdfObject GetObjectFromStream(int streamNumber, int objectNumber)
-    {
-        // Get the object stream
-        var streamObj = GetObject(streamNumber) as PdfStream
-            ?? throw new PdfParseException($"Object stream {streamNumber} not found");
-
-        // Ensure it's decoded
-        if (!streamObj.IsDecoded)
-        {
-            _decompressor.Decompress(streamObj);
-        }
-
-        var data = streamObj.DecodedData;
-
-        // Parse the index and batch-materialize on first touch (#743).
-        if (!_objectStreamCache.TryGetValue(streamNumber, out var cached)
-            || !ReferenceEquals(cached.Source, streamObj)
-            || !ReferenceEquals(cached.Data, data))
-        {
-            cached = MaterializeObjectStream(streamObj, data);
-            _objectStreamCache[streamNumber] = cached;
-        }
-
-        // Locate the slot BY OBJECT NUMBER, not by the xref's index-in-stream
-        // (#869).
-        //
-        // A type-2 xref entry's third field is the object's index within the
-        // /ObjStm, and in an xref STREAM the width of that field comes from /W.
-        // pdfjs/bug1978317.pdf declares /W [1 3 2] over 65,564 objects: field 3
-        // holds two bytes, so every index >= 65536 wraps. Its catalog really
-        // sits at slot 65541 of /ObjStm 65547, which the xref records as 5 —
-        // and slot 5 is a /Type /Annot /Subtype /Link. Positional lookup
-        // therefore returned a link annotation AS THE CATALOG, with no error,
-        // and the document died two steps later on "no Pages dictionary" while
-        // qpdf, mutool and pdftocairo all read it.
-        //
-        // The /ObjStm's own N-pair index names the object numbers it carries
-        // (ISO 32000-2 7.5.7) and is the authority here; the xref's index is a
-        // shortcut that a narrow /W, a bad producer, or a hostile file can make
-        // wrong. Resolving by number costs one dictionary lookup and cannot
-        // return a DIFFERENT object than the one asked for — which is the real
-        // defect: silently substituting one object for another is worse than
-        // any parse error, because nothing downstream can detect it.
-        if (!cached.SlotByObjectNumber.TryGetValue(objectNumber, out var slot))
-        {
-            // This stream does not contain the requested object, whatever the
-            // xref claims. Return null rather than whatever happens to occupy
-            // slot `index` — the same choice, for the same reason, as an xref
-            // entry that is missing altogether (see GetObject above): a page
-            // that renders without some content can be inspected, a confidently
-            // wrong object cannot.
-            return PdfNull.Instance;
-        }
-
-        // The batch pass already parsed this slot; a null slot means that one
-        // object failed to parse — retry it here so the caller sees the same
-        // exception the old per-fetch path would have thrown.
-        var obj = cached.Objects[slot];
-        if (obj != null)
-            return obj;
-
-        using var retryParser = new PdfParser(data);
-        retryParser.Seek(cached.First + cached.Offsets[slot].Offset);
-        obj = retryParser.ParseObject();
-        cached.Objects[slot] = obj;
-        return obj;
-    }
-
-    /// <summary>
-    /// Parse an /ObjStm's N-pair index once and batch-parse all N contained
-    /// objects with a single parser pass (#743). Per-object parse failures
-    /// leave the slot null; the failure is surfaced only if that specific
-    /// object is requested, matching the old lazy per-fetch behavior on
-    /// malformed streams.
-    /// </summary>
-    private static ObjectStreamCacheEntry MaterializeObjectStream(PdfStream streamObj, byte[] data)
-    {
-        // /N and /First are REQUIRED by §7.5.7, and GetInt throws a raw
-        // KeyNotFoundException when they are absent — which escaped
-        // PdfDocument.Open on a mutated object stream (#974, found by the
-        // #960 token fuzzer). An object stream missing its index is
-        // unparseable, so this is a genuine refusal; it just has to be typed.
-        if (!streamObj.ContainsKey("N") || !streamObj.ContainsKey("First"))
-            throw new PdfParseException(
-                "Object stream is missing the required /N or /First entry");
-
-        int n = streamObj.GetInt("N"); // Number of objects
-        int first = streamObj.GetInt("First"); // Offset to first object
-
-        // /N is attacker-controlled and sizes an allocation. An index entry is
-        // two integer tokens, so it cannot occupy fewer than 2 bytes of the
-        // decoded stream even at its most compact ("0 0"); anything claiming
-        // more entries than that is lying and would otherwise reach
-        // `new[n]` with n up to int.MaxValue — a raw OverflowException
-        // ("Array dimensions exceeded supported range") out of
-        // PdfDocument.Open, or an OOM on a slightly smaller lie
-        // (#974, found by the #960 token fuzzer).
-        if (n < 0 || (long)n * 2 > data.Length)
-            throw new PdfParseException(
-                $"Object stream declares /N {n}, which does not fit its {data.Length}-byte index");
-
-        // Parse the index (pairs of object number and byte offset)
-        using var parser = new PdfParser(data);
-        var offsets = new (int ObjNum, int Offset)[n];
-
-        for (int i = 0; i < n; i++)
-        {
-            var objNumToken = parser.Lexer.NextToken();
-            var offsetToken = parser.Lexer.NextToken();
-
-            if (objNumToken.Type != PdfTokenType.Integer || offsetToken.Type != PdfTokenType.Integer)
-                throw new PdfParseException("Invalid object stream index");
-
-            offsets[i] = (
-                int.Parse(objNumToken.Value),
-                int.Parse(offsetToken.Value)
-            );
-        }
-
-        var objects = new PdfObject?[n];
-        for (int i = 0; i < n; i++)
-        {
-            try
-            {
-                parser.Seek(first + offsets[i].Offset);
-                objects[i] = parser.ParseObject();
-            }
-            catch (Exception ex) when (ex is not OutOfMemoryException)
-            {
-                // Leave the slot null; surfaced on direct request.
-            }
-        }
-
-        // Object number -> slot, first occurrence wins. A well-formed /ObjStm
-        // never repeats an object number; if a damaged one does, the earlier
-        // definition is the one the index's own ordering names.
-        var slotByObjectNumber = new Dictionary<int, int>(n);
-        for (int i = 0; i < n; i++)
-            slotByObjectNumber.TryAdd(offsets[i].ObjNum, i);
-
-        return new ObjectStreamCacheEntry
-        {
-            Source = streamObj,
-            Data = data,
-            First = first,
-            Offsets = offsets,
-            Objects = objects,
-            SlotByObjectNumber = slotByObjectNumber,
-        };
-    }
-
-    // Guard against a hostile /JBIG2Globals reference cycle (an image whose
-    // globals point back at an object currently being materialized would
-    // otherwise recurse without limit). Keys are the TARGET object numbers of
-    // resolutions currently in flight. Touched only under _parseLock.
-    private readonly HashSet<int> _jbig2GlobalsResolutionsInFlight = new();
-
-    /// <summary>
-    /// Resolves an indirect <c>/DecodeParms /JBIG2Globals</c> reference on a
-    /// stream into the referenced <see cref="PdfStream"/>, in place, so the
-    /// /JBIG2Decode filter can hand the shared segments to the decoder (#874).
-    /// ISO 32000-2 §7.3.8 requires streams to be indirect objects, so on any
-    /// conforming file this entry is a <see cref="PdfReference"/>, never an
-    /// inline stream. Runs after the owning object has fully parsed, so the
-    /// re-entrant <see cref="GetObject(int)"/> seek cannot desync the shared
-    /// lexer for the object being read.
-    /// </summary>
-    private void ResolveJbig2GlobalsReferences(PdfStream stream)
-    {
-        foreach (var parms in stream.DecodeParams)
-        {
-            if (parms?.GetOptional("JBIG2Globals") is not PdfReference reference)
-                continue;
-
-            if (!_jbig2GlobalsResolutionsInFlight.Add(reference.ObjectNum))
-                continue;
-
-            try
-            {
-                if (GetObject(reference.ObjectNum) is PdfStream globals)
-                    parms["JBIG2Globals"] = globals;
-            }
-            catch (Exception __ex) when (__ex is not OutOfMemoryException)
-            {
-                // Leave the reference unresolved; the JBIG2 decode then fails
-                // the same way it would on a file with no usable globals.
-            }
-            finally
-            {
-                _jbig2GlobalsResolutionsInFlight.Remove(reference.ObjectNum);
-            }
-        }
-    }
-
-    // Guard against a hostile indirect /Length cycle — the same shape as the
-    // /JBIG2Globals guard above, on a far more reachable path (#969). A stream
-    // whose /Length points at its own object (or at an object whose own
-    // /Length points back) re-enters the parse of the object being parsed;
-    // _objectCache cannot break it because an object is only cached AFTER its
-    // parse completes. Keys are the TARGET object numbers of resolutions
-    // currently in flight.
-    private readonly HashSet<int> _lengthResolutionsInFlight = new();
-
-    /// <summary>
-    /// Parser callback for resolving indirect /Length refs on stream
-    /// dicts. The parser saves and restores the lexer position around
-    /// this call so we can safely re-enter <see cref="GetObject(int)"/>.
-    /// </summary>
-    /// <remarks>
-    /// Re-entrant resolution of an object number already in flight returns
-    /// null, which drops <c>PdfParser.ParseStream</c> onto its existing
-    /// scan-to-<c>endstream</c> fallback — exactly the path an unresolvable
-    /// /Length already takes. Before this guard the recursion was unbounded
-    /// and killed the PROCESS with a StackOverflowException, which .NET
-    /// cannot catch: no typed exception, no timeout, no corpus
-    /// classification, on a 422-byte document (#969).
-    /// </remarks>
-    private PdfObject? ResolveLengthReference(int objectNumber)
-    {
-        // Locked explicitly rather than relying on the caller: unlike the
-        // JBIG2 guard this runs from inside PdfParser.ParseStream, which is
-        // also reachable from the constructor's trailer/xref-stream parse.
-        // Monitor is reentrant, so nesting inside GetObject's lock is free.
-        lock (_parseLock)
-        {
-            if (!_lengthResolutionsInFlight.Add(objectNumber)) return null;
-            try { return GetObject(objectNumber); }
-            catch (Exception __ex) when (__ex is not OutOfMemoryException) { return null; }
-            finally { _lengthResolutionsInFlight.Remove(objectNumber); }
-        }
-    }
+        => _objectStore.GetObject(objectNumber);
 
     /// <summary>
     /// Resolve a reference to its actual object.
     /// If the object is a reference, follows it. Otherwise returns the object itself.
     /// </summary>
     public PdfObject Resolve(PdfObject obj)
-    {
-        while (obj is PdfReference reference)
-        {
-            obj = GetObject(reference);
-        }
-        return obj;
-    }
+        => _objectStore.Resolve(obj);
 
     /// <summary>
     /// Get document metadata title.
@@ -1667,12 +1174,7 @@ public partial class PdfDocument : IDisposable
     /// to reference a widget annotation from the structure tree (/OBJR).
     /// </summary>
     internal PdfReference? GetReferenceTo(PdfObject obj)
-    {
-        foreach (var (num, cached) in _objectCache)
-            if (ReferenceEquals(cached, obj))
-                return new PdfReference(num, 0);
-        return null;
-    }
+        => _objectStore.GetReferenceTo(obj);
 
     /// <summary>
     /// Encryption options that re-encrypt a save of this document with the
@@ -1709,7 +1211,8 @@ public partial class PdfDocument : IDisposable
     {
         if (!IsEncrypted) return null;
 
-        var algorithm = _securityHandler switch
+        var securityHandler = _objectStore.SecurityHandler;
+        var algorithm = securityHandler switch
         {
             { V: 5, R: 6 } => Excise.Core.Security.PdfEncryptionAlgorithm.Aes256,
             { V: 4, R: 4, UsesAes: true } => Excise.Core.Security.PdfEncryptionAlgorithm.Aes128,
@@ -1723,156 +1226,21 @@ public partial class PdfDocument : IDisposable
             UserPassword = userPassword,
             OwnerPassword = userPassword,
             Permissions = Permissions.RawValue,
-            EncryptMetadata = _securityHandler?.EncryptMetadata ?? true,
+            EncryptMetadata = securityHandler?.EncryptMetadata ?? true,
             Algorithm = algorithm,
         };
     }
 
     /// <summary>
-    /// Walk the parsed object tree and decrypt every <see cref="PdfString"/>
-    /// in place. Each indirect object has its own RC4 keystream derived
-    /// from (objNum, gen) — strings inside the same indirect object share
-    /// that keystream regardless of how deeply they're nested in dicts
-    /// or arrays.
+    /// True if this document was opened with a working security handler.
     /// </summary>
-    /// <summary>
-    /// §7.5.8.2 / §7.6.2: streams that are NEVER encrypted, so the security
-    /// handler must skip them entirely — body AND dictionary strings. Applying
-    /// AES-CBC to their unencrypted bytes throws "input data is not a complete
-    /// block" (#1048, hit on Save's <see cref="GetAllObjects"/> which is the
-    /// first path to touch the xref-stream object). Skipping the string pass
-    /// too is load-bearing: an xref stream's dictionary IS the trailer and
-    /// carries /ID, and that ID feeds R=4 key derivation — "decrypting" it
-    /// would silently write an undecryptable file, worse than the crash.
-    ///   • cross-reference streams (/Type /XRef) — always exempt.
-    ///   • the /Metadata stream when /EncryptMetadata is explicitly false
-    ///     (absent means true, i.e. still encrypted — do NOT exempt then).
-    ///
-    /// Per-stream <c>/Crypt /Name /Identity</c> is intentionally NOT listed
-    /// here. It exempts the stream bytes, not ordinary strings in that
-    /// indirect object's dictionary: those remain governed by the document's
-    /// <c>/StrF</c> filter. See <see cref="RemoveIdentityCryptFilter"/>.
-    /// </summary>
-    private bool IsExemptFromEncryption(PdfObject obj)
-    {
-        if (obj is not PdfStream stream) return false;
-        var type = stream.GetNameOrNull("Type");
-        if (type == "XRef") return true;
-        if (type == "Metadata" && _securityHandler is { EncryptMetadata: false }) return true;
-        return false;
-    }
+    public bool IsDecrypting => _objectStore.IsDecrypting;
 
     /// <summary>
-    /// Finds a per-stream <c>/Filter /Crypt</c> stage with
-    /// <c>/DecodeParms &lt;&lt; /Name /Identity &gt;&gt;</c>, removes that no-op
-    /// stage from the filter pipeline, and returns whether it was present.
-    ///
-    /// <para>PDF's array-valued <c>/Filter</c> and <c>/DecodeParms</c> entries
-    /// are positional (§7.4): remove the matching decode-parameter element
-    /// with the matching filter. Direct parameter dictionaries are the only
-    /// representation that reaches this point; <see cref="PdfParser"/>
-    /// resolves indirect <c>/DecodeParms</c> while parsing the stream.</para>
-    /// </summary>
-    private static bool RemoveIdentityCryptFilter(PdfStream stream)
-    {
-        var filters = stream.Filters;
-        if (filters.Count == 0)
-            return false;
-
-        var parameters = stream.DecodeParams;
-        var keptFilters = new List<PdfObject>(filters.Count);
-        var keptParameters = new List<PdfObject>(filters.Count);
-        var removedIdentityCrypt = false;
-
-        for (var i = 0; i < filters.Count; i++)
-        {
-            var parameter = i < parameters.Count ? parameters[i] : null;
-            var isIdentityCrypt = filters[i] == "Crypt"
-                && parameter?.GetNameOrNull("Name") == "Identity";
-
-            if (isIdentityCrypt)
-            {
-                removedIdentityCrypt = true;
-                continue;
-            }
-
-            keptFilters.Add(new PdfName(filters[i]));
-            keptParameters.Add((PdfObject?)parameter ?? PdfNull.Instance);
-        }
-
-        if (!removedIdentityCrypt)
-            return false;
-
-        if (keptFilters.Count == 0)
-        {
-            stream.Remove("Filter");
-            stream.Remove("DecodeParms");
-            return true;
-        }
-
-        stream["Filter"] = keptFilters.Count == 1 ? keptFilters[0] : new PdfArray(keptFilters);
-
-        // A missing DecodeParms entry is semantically different from an array
-        // containing only nulls, so retain it only when one existed originally.
-        if (stream.ContainsKey("DecodeParms"))
-            stream["DecodeParms"] = keptParameters.Count == 1
-                ? keptParameters[0]
-                : new PdfArray(keptParameters);
-
-        return true;
-    }
-
-    private void DecryptStringsInPlace(PdfObject root, int objNum, int gen)
-    {
-        if (_securityHandler == null) return;
-
-        // BFS via stack to avoid recursion depth on pathological PDFs.
-        var stack = new Stack<PdfObject>();
-        stack.Push(root);
-        while (stack.Count > 0)
-        {
-            var node = stack.Pop();
-            switch (node)
-            {
-                case PdfString str:
-                    str.ReplaceBytes(_securityHandler.DecryptString(objNum, gen, str.Bytes));
-                    break;
-                case PdfDictionary dict:
-                    foreach (var kv in dict)
-                        stack.Push(kv.Value);
-                    break;
-                case PdfArray arr:
-                    foreach (var item in arr) stack.Push(item);
-                    break;
-                // Streams: their dict's strings still need decryption,
-                // so recurse into the dict portion. The encoded data is
-                // handled separately by the caller.
-                // (PdfStream inherits from PdfDictionary so the dict
-                // case above already covers it — guard just in case.)
-            }
-        }
-    }
-
-    /// <summary>
-    /// True if this document was opened with a working security handler
-    /// (i.e. encryption is being decrypted transparently).
-    /// </summary>
-    public bool IsDecrypting => _securityHandler != null;
-
-    /// <summary>
-    /// Get all objects in the document (for writing).
+    /// Get all objects in the document for the single writer.
     /// </summary>
     internal IEnumerable<(int ObjectNumber, int Generation, PdfObject Object)> GetAllObjects()
-    {
-        foreach (var kvp in _xref)
-        {
-            if (kvp.Value.InUse)
-            {
-                var obj = GetObject(kvp.Key);
-                yield return (kvp.Key, kvp.Value.Generation, obj);
-            }
-        }
-    }
+        => _objectStore.GetAllObjects();
 
     /// <summary>
     /// Get the catalog reference for writing.
@@ -2134,10 +1502,5 @@ public partial class PdfDocument : IDisposable
     }
 
     /// <inheritdoc />
-    public void Dispose()
-    {
-        _parser.Dispose();
-        if (_ownsStream)
-            _stream.Dispose();
-    }
+    public void Dispose() => _objectStore.Dispose();
 }

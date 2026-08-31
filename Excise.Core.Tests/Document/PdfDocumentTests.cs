@@ -1001,11 +1001,15 @@ public class PdfDocumentTests
         var pdfData = CreateMinimalPdf();
         var stream = new MemoryStream(pdfData);
 
-        using var doc = PdfDocument.Open(stream, ownsStream: false);
-        doc.Should().NotBeNull();
+        using (var doc = PdfDocument.Open(stream, ownsStream: false))
+        {
+            doc.GetObject(doc.Trailer.GetReference("Root")).Should().BeSameAs(doc.Catalog);
+        }
 
-        // Stream should still be accessible after doc disposal
+        // The object store must release its parser but leave a borrowed stream open.
         stream.CanRead.Should().BeTrue();
+        stream.Position = 0;
+        stream.ReadByte().Should().Be((byte)'%');
         stream.Dispose();
     }
 
@@ -1044,6 +1048,21 @@ public class PdfDocumentTests
         var obj2 = doc.GetObject(1);
 
         ReferenceEquals(obj1, obj2).Should().BeTrue();
+    }
+
+    [Fact]
+    public void GetObject_ReferenceNumberAndResolve_ShareOneObjectIdentity()
+    {
+        using var doc = PdfDocument.Open(CreateMinimalPdf());
+        var catalogReference = doc.Trailer.GetReference("Root");
+
+        var byReference = doc.GetObject(catalogReference);
+        var byNumber = doc.GetObject(catalogReference.ObjectNum);
+        var resolved = doc.Resolve(catalogReference);
+
+        byReference.Should().BeSameAs(doc.Catalog);
+        byNumber.Should().BeSameAs(byReference);
+        resolved.Should().BeSameAs(byReference);
     }
 
     [Fact]
