@@ -62,7 +62,7 @@ partial class Program
             InfoCommand.Create(),
             CreateValidateCommand(),
             TextCommand.Create(),
-            CreateLettersCommand(),
+            LettersCommand.Create(),
             CreateRenderCommand(),
             CreateRedactCommand(),
             CreateMergeCommand(),
@@ -198,89 +198,6 @@ partial class Program
                 }
 
                 Environment.ExitCode = conformant ? 0 : 1;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error: {ex.Message}");
-                Environment.ExitCode = 1;
-            }
-        });
-
-        return command;
-    }
-
-    /// <summary>
-    /// excise letters <file> --page N - Show letters with positions
-    /// </summary>
-    static Command CreateLettersCommand()
-    {
-        var fileArg = new Argument<FileInfo>("file") { Description = "PDF file" };
-        var pageOption = new Option<int>("--page", "-p")
-        {
-            Description = "Page number (1-based)",
-            DefaultValueFactory = _ => 1,
-        };
-        var limitOption = new Option<int>("--limit", "-n")
-        {
-            Description = "Maximum letters to show",
-            DefaultValueFactory = _ => 50,
-        };
-
-        var ignorePermissionsOption = CreateIgnorePermissionsOption();
-        var forAccessibilityOption = CreateForAccessibilityOption();
-
-        var command = new Command("letters", "Show letters with position information")
-        {
-            fileArg,
-            pageOption,
-            limitOption,
-            ignorePermissionsOption,
-            forAccessibilityOption,
-        };
-
-        command.SetAction(parseResult =>
-        {
-            var file = parseResult.GetValue(fileArg)!;
-            var page = parseResult.GetValue(pageOption);
-            var limit = parseResult.GetValue(limitOption);
-            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
-            var forAccessibility = parseResult.GetValue(forAccessibilityOption);
-            if (!file.Exists)
-            {
-                Console.Error.WriteLine($"File not found: {file.FullName}");
-                return;
-            }
-
-            try
-            {
-                using var doc = PdfDocument.Open(file.FullName);
-                RequireDocumentPermission(doc, DocumentAction.Extract, "letter/text extraction",
-                    ignorePermissions, forAccessibility, accessibilityHint: "--for-accessibility");
-
-                if (page < 1 || page > doc.PageCount)
-                {
-                    Console.Error.WriteLine($"Invalid page number. Document has {doc.PageCount} pages.");
-                    return;
-                }
-
-                var p = doc.GetPage(page);
-                var letters = p.Letters;
-
-                Console.WriteLine($"Page {page}: {letters.Count} letters");
-                Console.WriteLine();
-                Console.WriteLine("Char  X       Y       Width   Font");
-                Console.WriteLine("----  ------  ------  ------  ----");
-
-                foreach (var letter in letters.Take(limit))
-                {
-                    var ch = letter.Value.Length == 1 && char.IsControl(letter.Value[0])
-                        ? $"\\x{(int)letter.Value[0]:X2}"
-                        : letter.Value;
-                    Console.WriteLine($"{ch,-4}  {letter.StartX,6:F1}  {letter.StartY,6:F1}  {letter.Width,6:F1}  {letter.FontName}");
-                }
-
-                if (letters.Count > limit)
-                    Console.WriteLine($"... and {letters.Count - limit} more letters");
             }
             catch (Exception ex)
             {
