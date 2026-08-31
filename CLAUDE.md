@@ -291,6 +291,10 @@ Table 52 text parameters that `q`/`Q` save and restore, §9.4.2 line stepping
 composed through the text matrix, the §9.4.4 glyph advance, the glyph cell
 transform, font resolution and the shared `GlyphUnicodeDecoder` cascade. It
 walks the bytes once and hands each glyph to a sink through a struct callback.
+Shared CMap parsing, registered CMap lookup, glyph-name tables, standard
+Macintosh glyph order, and `GlyphUnicodeDecoder` are source-owned under
+`Excise.Core/Fonts`; content walking and text extraction consume that one
+font-decoding authority.
 
 There are two sinks:
 

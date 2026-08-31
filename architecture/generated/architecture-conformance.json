@@ -2,17 +2,17 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "eeb2b9912572d8d119dbd47192290c2d041b824d",
+  "sourceRevision": "38ec607ab972928ba4ce6e65c6803e8b64cde2ce",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5652,
-    "observedComponentDependencies": 79,
+    "retainedSymbols": 5654,
+    "observedComponentDependencies": 77,
     "declaredDependencies": 74,
-    "acceptedExceptions": 5,
+    "acceptedExceptions": 3,
     "undeclaredDependencies": 0,
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
@@ -556,7 +556,7 @@
     {
       "source": "core-content",
       "target": "core-document",
-      "references": 105,
+      "references": 106,
       "typeDependencyCount": 18,
       "classification": "declared",
       "evidence": [
@@ -570,14 +570,14 @@
     {
       "source": "core-content",
       "target": "core-fonts",
-      "references": 28,
-      "typeDependencyCount": 7,
+      "references": 65,
+      "typeDependencyCount": 17,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Content.ContentStreamWalker",
-          "target": "Excise.Core.Fonts.CidFontWidths",
-          "references": 9
+          "target": "Excise.Core.Text.GlyphUnicodeDecoder",
+          "references": 10
         }
       ]
     },
@@ -606,40 +606,6 @@
           "source": "Excise.Core.Content.ContentStreamWalker",
           "target": "Excise.Core.Primitives.PdfDictionary",
           "references": 43
-        }
-      ]
-    },
-    {
-      "source": "core-content",
-      "target": "core-text",
-      "references": 45,
-      "typeDependencyCount": 11,
-      "classification": "accepted_exception",
-      "evidence": [
-        {
-          "source": "Excise.Core.Content.ContentStreamWalker",
-          "target": "Excise.Core.Text.GlyphUnicodeDecoder",
-          "references": 10
-        },
-        {
-          "source": "Excise.Core.Content.ContentStreamWalker",
-          "target": "Excise.Core.Text.PredefinedCMapProvider",
-          "references": 9
-        },
-        {
-          "source": "Excise.Core.Content.IContentStreamSink",
-          "target": "Excise.Core.Text.TextExtractor.LetterSink",
-          "references": 8
-        },
-        {
-          "source": "Excise.Core.Content.ContentStreamWalker",
-          "target": "Excise.Core.Text.CidCMap",
-          "references": 6
-        },
-        {
-          "source": "Excise.Core.Content.ContentStreamWalker",
-          "target": "Excise.Core.Text.ToUnicodeCMapParser",
-          "references": 4
         }
       ]
     },
@@ -749,33 +715,14 @@
     {
       "source": "core-fonts",
       "target": "core-primitives",
-      "references": 6,
-      "typeDependencyCount": 4,
+      "references": 77,
+      "typeDependencyCount": 12,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Fonts.CidFontWidths",
-          "target": "Excise.Core.Primitives.PdfArray",
-          "references": 2
-        }
-      ]
-    },
-    {
-      "source": "core-fonts",
-      "target": "core-text",
-      "references": 4,
-      "typeDependencyCount": 2,
-      "classification": "accepted_exception",
-      "evidence": [
-        {
-          "source": "Excise.Core.Fonts.SymbolCmapDecoder",
-          "target": "Excise.Core.Text.AdobeGlyphList",
-          "references": 2
-        },
-        {
-          "source": "Excise.Core.Fonts.TrueTypeFontFile",
-          "target": "Excise.Core.Text.StandardMacGlyphOrder",
-          "references": 2
+          "source": "Excise.Core.Text.GlyphUnicodeDecoder",
+          "target": "Excise.Core.Primitives.PdfDictionary",
+          "references": 22
         }
       ]
     },
@@ -880,8 +827,8 @@
     {
       "source": "core-text",
       "target": "core-document",
-      "references": 596,
-      "typeDependencyCount": 79,
+      "references": 586,
+      "typeDependencyCount": 78,
       "classification": "declared",
       "evidence": [
         {
@@ -894,14 +841,14 @@
     {
       "source": "core-text",
       "target": "core-fonts",
-      "references": 26,
-      "typeDependencyCount": 6,
+      "references": 5,
+      "typeDependencyCount": 2,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Text.GlyphUnicodeDecoder",
+          "source": "Excise.Core.Text.Segmentation.HiddenTextDetector",
           "target": "Excise.Core.Fonts.TrueTypeFontFile",
-          "references": 13
+          "references": 3
         }
       ]
     },
@@ -922,14 +869,14 @@
     {
       "source": "core-text",
       "target": "core-primitives",
-      "references": 424,
-      "typeDependencyCount": 99,
+      "references": 355,
+      "typeDependencyCount": 91,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Text.GlyphUnicodeDecoder",
+          "source": "Excise.Core.Text.Segmentation.FormXObjectFlattener",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 22
+          "references": 21
         }
       ]
     },
@@ -1124,8 +1071,8 @@
     {
       "source": "rendering",
       "target": "core-fonts",
-      "references": 41,
-      "typeDependencyCount": 7,
+      "references": 53,
+      "typeDependencyCount": 11,
       "classification": "declared",
       "evidence": [
         {
@@ -1166,8 +1113,8 @@
     {
       "source": "rendering",
       "target": "core-text",
-      "references": 21,
-      "typeDependencyCount": 5,
+      "references": 9,
+      "typeDependencyCount": 1,
       "classification": "declared",
       "evidence": [
         {
@@ -1413,6 +1360,7 @@
   "observationBlindSpots": [
     "XAML untyped binding paths: none. Unresolved typed member segments: none. Both sets are explicit rather than hidden by whole-file token matching.",
     "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
+    "Interface-to-implementation dispatch edges are retained for reachability but omitted from component dependencies; implementation declarations provide the compile-time dependency on their interfaces.",
     "Test-project evidence starts from semantic cross-compilation references and follows explicit production edges without treating every member of a reachable type as reachable.",
     "Declaration and branch counts are structural signals, not complexity verdicts.",
     "Symbol rows retain every unreachable symbol, all types, non-trivial methods, and shared mutable members; project totals cover the full graph.",

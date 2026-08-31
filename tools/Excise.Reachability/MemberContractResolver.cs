@@ -3,6 +3,20 @@ using Microsoft.CodeAnalysis.CSharp;
 
 internal static class MemberContractResolver
 {
+    /// <summary>
+    /// Interface-member to implementation-member edges model possible runtime
+    /// dispatch for reachability. They are not source dependencies in that
+    /// direction: the implementation declaration depends on the interface.
+    /// Architecture projection therefore omits these synthesized reverse edges
+    /// while the reachability graph retains them.
+    /// </summary>
+    internal static bool IsDispatchOnlyArchitectureEdge(MemberContractEdge edge) =>
+        edge.From.ContainingType?.TypeKind == TypeKind.Interface
+        && edge.To.ContainingType is not null
+        && !SymbolEqualityComparer.Default.Equals(
+            edge.From.ContainingType,
+            edge.To.ContainingType);
+
     public static IEnumerable<MemberContractEdge> Resolve(
         IEnumerable<ISymbol> symbols)
     {
@@ -183,6 +197,22 @@ internal static class MemberContractResolver
             Console.Error.WriteLine("FAIL: member contract self-test missed a dispatch edge.");
             Console.Error.WriteLine(
                 $"      edges: {string.Join(", ", actual.OrderBy(edge => edge.Item1).ThenBy(edge => edge.Item2).Select(edge => $"{edge.Item1} -> {edge.Item2}"))}");
+            return false;
+        }
+
+        var interfaceDispatchEdges = edges
+            .Where(edge => edge.From.ContainingType?.TypeKind == TypeKind.Interface
+                           && !SymbolEqualityComparer.Default.Equals(
+                               edge.From.ContainingType,
+                               edge.To.ContainingType))
+            .ToArray();
+        if (interfaceDispatchEdges.Length == 0
+            || interfaceDispatchEdges.Any(edge => !IsDispatchOnlyArchitectureEdge(edge))
+            || edges.Except(interfaceDispatchEdges)
+                .Any(IsDispatchOnlyArchitectureEdge))
+        {
+            Console.Error.WriteLine(
+                "FAIL: member contract self-test did not distinguish dispatch retention from source dependency direction.");
             return false;
         }
 

@@ -1,5 +1,4 @@
 using System.Text;
-using Excise.Core.Document;
 using Excise.Core.Fonts;
 using Excise.Core.Primitives;
 
@@ -57,7 +56,7 @@ internal sealed class GlyphUnicodeDecoder
     /// </summary>
     public static readonly GlyphUnicodeDecoder None = new(null, null);
 
-    private readonly PdfDocument? _document;
+    private readonly Func<PdfObject, PdfObject>? _resolve;
     private readonly Dictionary<int, string>? _toUnicodeMap;
     private readonly bool _toUnicodeIdentity;
     private readonly Dictionary<int, string>? _embeddedCidToUnicode;
@@ -67,10 +66,10 @@ internal sealed class GlyphUnicodeDecoder
     private readonly bool _useStandardMacGlyphOrder;
     private readonly Dictionary<int, string>? _simpleSymbolCodeToUnicode;
 
-    private GlyphUnicodeDecoder(PdfDocument? document, PdfDictionary? font)
+    private GlyphUnicodeDecoder(Func<PdfObject, PdfObject>? resolve, PdfDictionary? font)
     {
-        _document = document;
-        if (document == null || font == null)
+        _resolve = resolve;
+        if (resolve == null || font == null)
             return;
 
         // Order matters and is TextExtractor.LoadFontDerivedState's, unchanged:
@@ -83,12 +82,14 @@ internal sealed class GlyphUnicodeDecoder
         _embeddedCidToUnicode = _toUnicodeMap == null ? LoadEmbeddedCidToUnicodeMap(font) : null;
         _simpleSymbolCodeToUnicode = _toUnicodeMap == null ? LoadSimpleSymbolTrueTypeMap(font) : null;
         _fontEncodingName =
-            (document.Resolve(font.GetOptional("Encoding") ?? PdfNull.Instance) as PdfName)?.Value;
+            (resolve(font.GetOptional("Encoding") ?? PdfNull.Instance) as PdfName)?.Value;
     }
 
-    /// <summary>Build the decoder for one font dictionary.</summary>
-    public static GlyphUnicodeDecoder Build(PdfDocument? document, PdfDictionary? font) =>
-        document == null || font == null ? None : new GlyphUnicodeDecoder(document, font);
+    /// <summary>Build the decoder for one font dictionary and object resolver.</summary>
+    public static GlyphUnicodeDecoder Build(
+        Func<PdfObject, PdfObject>? resolve,
+        PdfDictionary? font) =>
+        resolve == null || font == null ? None : new GlyphUnicodeDecoder(resolve, font);
 
     /// <summary>
     /// True when the font declared a /ToUnicode CMap STREAM. Callers gate their
@@ -221,7 +222,7 @@ internal sealed class GlyphUnicodeDecoder
             return null;
 
         // Resolve the reference
-        var resolved = _document!.Resolve(toUnicodeObj);
+        var resolved = _resolve!(toUnicodeObj);
         if (resolved is not PdfStream stream)
             return null;
 
@@ -255,7 +256,7 @@ internal sealed class GlyphUnicodeDecoder
     {
         if (font == null)
             return false;
-        var toUnicode = _document!.Resolve(font.GetOptional("ToUnicode") ?? PdfNull.Instance);
+        var toUnicode = _resolve!(font.GetOptional("ToUnicode") ?? PdfNull.Instance);
         return toUnicode is PdfName name && (name.Value == "Identity-H" || name.Value == "Identity-V");
     }
 
@@ -273,21 +274,21 @@ internal sealed class GlyphUnicodeDecoder
         if (font.GetOptional("ToUnicode") != null)
             return false;
 
-        var enc = _document!.Resolve(font.GetOptional("Encoding") ?? PdfNull.Instance);
+        var enc = _resolve!(font.GetOptional("Encoding") ?? PdfNull.Instance);
         if (enc is not PdfName encName || (encName.Value != "Identity-H" && encName.Value != "Identity-V"))
             return false;
 
-        var descObj = _document!.Resolve(font.GetOptional("DescendantFonts") ?? PdfNull.Instance);
+        var descObj = _resolve!(font.GetOptional("DescendantFonts") ?? PdfNull.Instance);
         var descendant = descObj switch
         {
-            PdfArray arr when arr.Count > 0 => _document!.Resolve(arr[0]) as PdfDictionary,
+            PdfArray arr when arr.Count > 0 => _resolve!(arr[0]) as PdfDictionary,
             PdfDictionary d => d,
             _ => null,
         };
         if (descendant == null)
             return false;
 
-        if (_document!.Resolve(descendant.GetOptional("FontDescriptor") ?? PdfNull.Instance)
+        if (_resolve!(descendant.GetOptional("FontDescriptor") ?? PdfNull.Instance)
             is not PdfDictionary fd)
             return true; // no descriptor → treat as non-embedded
 
@@ -327,27 +328,27 @@ internal sealed class GlyphUnicodeDecoder
         if (font.GetOptional("ToUnicode") != null)
             return null;
 
-        var enc = _document!.Resolve(font.GetOptional("Encoding") ?? PdfNull.Instance);
+        var enc = _resolve!(font.GetOptional("Encoding") ?? PdfNull.Instance);
         if (enc is not PdfName encName || (encName.Value != "Identity-H" && encName.Value != "Identity-V"))
             return null;
 
         Dictionary<int, string>? map = null;
         try
         {
-            var descObj = _document!.Resolve(font.GetOptional("DescendantFonts") ?? PdfNull.Instance);
+            var descObj = _resolve!(font.GetOptional("DescendantFonts") ?? PdfNull.Instance);
             var descendant = descObj switch
             {
-                PdfArray arr when arr.Count > 0 => _document!.Resolve(arr[0]) as PdfDictionary,
+                PdfArray arr when arr.Count > 0 => _resolve!(arr[0]) as PdfDictionary,
                 PdfDictionary d => d,
                 _ => null,
             };
             if (descendant != null
-                && _document!.Resolve(descendant.GetOptional("FontDescriptor") ?? PdfNull.Instance)
+                && _resolve!(descendant.GetOptional("FontDescriptor") ?? PdfNull.Instance)
                     is PdfDictionary fd)
             {
-                if (_document!.Resolve(fd.GetOptional("FontFile2") ?? PdfNull.Instance) is PdfStream ff2)
+                if (_resolve!(fd.GetOptional("FontFile2") ?? PdfNull.Instance) is PdfStream ff2)
                     map = BuildCidToUnicodeFromTrueType(ff2.DecodedData, descendant);
-                else if (_document!.Resolve(fd.GetOptional("FontFile3") ?? PdfNull.Instance) is PdfStream ff3)
+                else if (_resolve!(fd.GetOptional("FontFile3") ?? PdfNull.Instance) is PdfStream ff3)
                     map = BuildCidToUnicodeFromCff(ff3.DecodedData);
             }
         }
@@ -387,10 +388,10 @@ internal sealed class GlyphUnicodeDecoder
         Dictionary<int, string>? map = null;
         try
         {
-            if (_document!.Resolve(font.GetOptional("FontDescriptor") ?? PdfNull.Instance)
+            if (_resolve!(font.GetOptional("FontDescriptor") ?? PdfNull.Instance)
                     is PdfDictionary fd
                 && (fd.GetInt("Flags", 0) & 0x4) != 0 // bit 3: Symbolic
-                && _document!.Resolve(fd.GetOptional("FontFile2") ?? PdfNull.Instance) is PdfStream ff2)
+                && _resolve!(fd.GetOptional("FontFile2") ?? PdfNull.Instance) is PdfStream ff2)
             {
                 var ttf = TrueTypeFontFile.Parse(ff2.DecodedData);
                 if (ttf.HasSymbolCmap)
@@ -463,7 +464,7 @@ internal sealed class GlyphUnicodeDecoder
         // code→CID→GID before the reverse-cmap lookup. /Identity or absent
         // means CID == GID.
         var cidToGidObj = descendant.GetOptional("CIDToGIDMap");
-        if (cidToGidObj != null && _document!.Resolve(cidToGidObj) is PdfStream cidToGidStream)
+        if (cidToGidObj != null && _resolve!(cidToGidObj) is PdfStream cidToGidStream)
         {
             var data = cidToGidStream.DecodedData;
             var byCid = new Dictionary<int, string>();
@@ -631,13 +632,13 @@ internal sealed class GlyphUnicodeDecoder
         if (font == null)
             return (null, null);
 
-        var encObj = _document!.Resolve(font.GetOptional("Encoding") ?? PdfNull.Instance);
+        var encObj = _resolve!(font.GetOptional("Encoding") ?? PdfNull.Instance);
         if (encObj is not PdfDictionary encDict)
             return (null, null);
 
         var baseEncoding = encDict.GetNameOrNull("BaseEncoding");
 
-        var diffsObj = _document!.Resolve(encDict.GetOptional("Differences") ?? PdfNull.Instance);
+        var diffsObj = _resolve!(encDict.GetOptional("Differences") ?? PdfNull.Instance);
         if (diffsObj is not PdfArray diffs || diffs.Count == 0)
             return (null, baseEncoding);
 
@@ -645,7 +646,7 @@ internal sealed class GlyphUnicodeDecoder
         int code = 0;
         foreach (var item in diffs)
         {
-            var resolved = _document!.Resolve(item);
+            var resolved = _resolve!(item);
             if (TryNumber(resolved, out var codeNum))
             {
                 code = (int)codeNum;

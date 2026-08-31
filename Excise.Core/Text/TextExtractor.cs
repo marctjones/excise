@@ -795,32 +795,4 @@ public class TextExtractor
         }
     }
 
-    /// <summary>
-    /// Get character width for standard Type1 fonts (Helvetica, Times, Courier, etc.)
-    /// Lives here but is called by <see cref="ContentStreamWalker"/>: it is the
-    /// last piece of font metrics that is neither in the font dictionary nor in
-    /// an embedded program, and a second copy is exactly how state machines
-    /// drift apart (#980).
-    /// </summary>
-    internal static double GetStandardFontWidth(string baseFont, int charCode)
-    {
-        // #1100: the real AFM metrics, for every one of the 14 -- not just
-        // Courier and Helvetica. This method used to fall through to a flat
-        // 600 for everything else, so all four Times faces advanced 0.6em per
-        // glyph regardless of the glyph, and Helvetica punctuation took the
-        // 556 "average" arm. See StandardFontMetrics for what that cost: the
-        // letter model drifted 74pt over a 22-character Times line, which is
-        // the geometry redaction matches and draws its black box against.
-        if (Fonts.StandardFontMetrics.TryGetWidth(baseFont, charCode, out var width))
-            return width;
-
-        // Outside 32-126, or a font that is not one of the 14. Unchanged: the
-        // codes above 126 need the font's /Encoding to resolve a glyph name,
-        // and inventing a WinAnsi assumption here would trade an obvious wrong
-        // answer for a confident one.
-        if (baseFont.StartsWith("Courier", StringComparison.Ordinal))
-            return 600;
-
-        return baseFont.StartsWith("Helvetica", StringComparison.Ordinal) ? 556 : 600;
-    }
 }

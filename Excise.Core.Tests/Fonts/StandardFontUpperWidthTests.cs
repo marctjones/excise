@@ -26,7 +26,7 @@ public class StandardFontUpperWidthTests
         return w;
     }
 
-    // --- The wired code>126 path (this flows through TextExtractor.GetStandardFontWidth) ---
+    // --- The wired code>126 path (this flows through StandardFontMetrics) ---
 
     [Theory]
     // Helvetica (WinAnsi code -> glyph -> Adobe AFM WX). 0x92 quoteright=222,

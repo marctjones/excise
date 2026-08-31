@@ -537,12 +537,6 @@
     },
     {
       "source": "core-content",
-      "target": "core-text",
-      "type": "uses",
-      "rationale": "Temporary exception #1318: the content walker currently consumes text-owned glyph/CMap decoders and a nested TextExtractor sink; those shared contracts must move below the two engines."
-    },
-    {
-      "source": "core-content",
       "target": "core-writing",
       "type": "uses",
       "rationale": "Temporary exception #1319: content serialization consumes PdfNumberFormatter from writer ownership until the one canonical formatter moves to a neutral foundation."
@@ -552,12 +546,6 @@
       "target": "core-encryption",
       "type": "uses",
       "rationale": "The document model stores the active standard security handler and exposes established permission and re-encryption contracts without depending on document-level validation."
-    },
-    {
-      "source": "core-fonts",
-      "target": "core-text",
-      "type": "uses",
-      "rationale": "Temporary ownership exception #1320: font decoders consume AdobeGlyphList and StandardMacGlyphOrder from text ownership until the tables move under the font contract."
     },
     {
       "source": "core-text",

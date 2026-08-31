@@ -41,6 +41,10 @@ second implementation-status list.
    than inheriting alphabetical file order. This distinguishes an engine-owned
    compatibility facade from document-model implementation without reclassifying
    callers that consume that facade.
+   Reachability retains synthesized interface-to-implementation dispatch edges
+   so implementations remain discoverable, but component conformance omits
+   those reverse runtime edges. The implementation declaration's interface
+   reference supplies the compile-time architecture direction.
    [`architecture-conformance.json`](../../architecture/generated/architecture-conformance.json)
    compares those observed type edges with target dependencies, explicit
    forbidden relationships, and accepted exceptions. The generated
