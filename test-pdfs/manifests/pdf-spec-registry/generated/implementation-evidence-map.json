@@ -398,13 +398,16 @@
         {
           "capability": "pdf.17.graphics.paths-painting",
           "modes": [
+            "author",
             "mutate",
             "parse",
+            "preserve",
             "render",
             "write"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-implementation-owner"
           ]
         },
         {
@@ -4935,13 +4938,16 @@
         {
           "capability": "pdf.17.graphics.paths-painting",
           "modes": [
+            "author",
             "mutate",
             "parse",
+            "preserve",
             "render",
             "write"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-implementation-owner"
           ]
         },
         {
@@ -6908,8 +6914,10 @@
       "pdf.17.graphics.images:extract": 23,
       "pdf.17.graphics.images:parse": 23,
       "pdf.17.graphics.images:render": 23,
+      "pdf.17.graphics.paths-painting:author": 2,
       "pdf.17.graphics.paths-painting:mutate": 17,
       "pdf.17.graphics.paths-painting:parse": 17,
+      "pdf.17.graphics.paths-painting:preserve": 2,
       "pdf.17.graphics.paths-painting:render": 17,
       "pdf.17.graphics.paths-painting:write": 17,
       "pdf.17.graphics.state:mutate": 17,

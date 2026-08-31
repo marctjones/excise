@@ -111,7 +111,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "partial",
+        "render": "implemented",
         "mutate": "unknown",
         "write": "unknown",
         "author": "unknown"
@@ -120,8 +120,33 @@
         {
           "kind": "legacy",
           "ref": "pdf20-operator-evidence"
+        },
+        {
+          "kind": "implementation",
+          "ref": "Excise.Rendering/SkiaRenderer.Paths.cs; Excise.Core/Content/ContentStreamParser.cs"
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding"
+        },
+        {
+          "kind": "atomic-fixture",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding"
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
         }
       ],
+      "verification": {
+        "status": "executable",
+        "requiredModes": ["render"],
+        "checks": [
+          {"kind": "unit", "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding", "modes": ["render"]},
+          {"kind": "atomic-fixture", "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding", "modes": ["render"]},
+          {"kind": "differential", "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool", "modes": ["render"]}
+        ]
+      },
       "notes": "Operator-level claims migrate from the Annex A evidence source; this feature adds rendering and mutation proof.",
       "documentation": [
         "CLAUDE.md"
@@ -129,9 +154,9 @@
       "tracking": {
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
-        "implementationRefs": [],
-        "testRefs": [],
-        "fixtureRefs": [],
+        "implementationRefs": ["Excise.Rendering/SkiaRenderer.Paths.cs", "Excise.Core/Content/ContentStreamParser.cs"],
+        "testRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding"],
+        "fixtureRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding"],
         "corpusRefs": [],
         "referenceToolRefs": [],
         "architectureRefs": [],

@@ -134774,6 +134774,15 @@
           ]
         },
         {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "render"
+          ],
+          "mappingSources": [
+            "registry-verification-contract"
+          ]
+        },
+        {
           "capability": "pdf.17.transparency.model",
           "modes": [
             "render"
@@ -148044,7 +148053,8 @@
             "write"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ]
         },
         {
@@ -193859,7 +193869,7 @@
       "pdf.17.graphics.images:render": 353,
       "pdf.17.graphics.paths-painting:mutate": 711,
       "pdf.17.graphics.paths-painting:parse": 711,
-      "pdf.17.graphics.paths-painting:render": 711,
+      "pdf.17.graphics.paths-painting:render": 712,
       "pdf.17.graphics.paths-painting:write": 711,
       "pdf.17.graphics.state:mutate": 711,
       "pdf.17.graphics.state:parse": 711,

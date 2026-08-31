@@ -50190,778 +50190,6 @@
       "nextAction": "review deterministic discovery candidates and accept/reject them"
     },
     {
-      "capability": "pdf.17.graphics.paths-painting",
-      "section": "graphics",
-      "workflow": "other",
-      "mode": "author",
-      "currentState": "unknown",
-      "deficiencies": [
-        "no-mapped-implementation-candidate",
-        "no-mapped-direct-test-candidate",
-        "no-accepted-atomic-fixture",
-        "no-accepted-independent-or-corpus-evidence",
-        "no-executable-mode-verification-contract"
-      ],
-      "discoveryStatus": "source-candidates-only",
-      "discoveryCandidates": {
-        "source": [
-          {
-            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Authoring/TextStyle.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Automation/PdfCommandIds.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentOperator.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "clipping",
-              "construction",
-              "line",
-              "painting",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStream.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "painting",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStreamParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "painting",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStreamWalker.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "clipping",
-              "construction",
-              "line",
-              "painting",
-              "path",
-              "style",
-              "colorspace",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/AcroFormFlattener.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PageCollection.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotation.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfDocument.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "path",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfFormAutoDetector.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfLink.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPage.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "colorspace",
-              "pdfgraphics",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPageTransition.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Editing/PdfTypewriterTextApplier.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Editing/PdfTypewriterTextStyle.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Jbig2/Jbig2TextRegionDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/CffParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/CffSubsetter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/StandardFontMetrics.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/SymbolCmapDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/TrueTypeFontFile.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/FdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/XfdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfFont.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfGraphics.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfPen.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfTrueTypeFont.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentSanitizer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/PdfLexer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/PdfParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "path",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/XRefParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Primitives/PdfName.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Security/PdfPermissions.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          }
-        ],
-        "test": [],
-        "architecture": []
-      },
-      "executionStatus": "not-contracted",
-      "recordedChecks": [],
-      "priority": 35,
-      "implementationCandidates": [],
-      "directTestCandidates": [],
-      "atomicFixtures": [],
-      "independentEvidence": [],
-      "nextAction": "review deterministic discovery candidates and accept/reject them"
-    },
-    {
-      "capability": "pdf.17.graphics.paths-painting",
-      "section": "graphics",
-      "workflow": "other",
-      "mode": "preserve",
-      "currentState": "unknown",
-      "deficiencies": [
-        "no-mapped-implementation-candidate",
-        "no-mapped-direct-test-candidate",
-        "no-accepted-atomic-fixture",
-        "no-accepted-independent-or-corpus-evidence",
-        "no-executable-mode-verification-contract"
-      ],
-      "discoveryStatus": "source-candidates-only",
-      "discoveryCandidates": {
-        "source": [
-          {
-            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Authoring/TextStyle.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Automation/PdfCommandIds.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentOperator.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "clipping",
-              "construction",
-              "line",
-              "painting",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStream.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "painting",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStreamParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "painting",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStreamWalker.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "clipping",
-              "construction",
-              "line",
-              "painting",
-              "path",
-              "style",
-              "colorspace",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/AcroFormFlattener.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PageCollection.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotation.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfDocument.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "path",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfFormAutoDetector.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfLink.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPage.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "colorspace",
-              "pdfgraphics",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPageTransition.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Editing/PdfTypewriterTextApplier.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Editing/PdfTypewriterTextStyle.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Jbig2/Jbig2TextRegionDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/CffParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/CffSubsetter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/StandardFontMetrics.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/SymbolCmapDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/TrueTypeFontFile.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/FdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/XfdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfFont.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfGraphics.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfPen.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfTrueTypeFont.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentSanitizer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/PdfLexer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/PdfParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "path",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/XRefParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Primitives/PdfName.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Security/PdfPermissions.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          }
-        ],
-        "test": [],
-        "architecture": []
-      },
-      "executionStatus": "not-contracted",
-      "recordedChecks": [],
-      "priority": 35,
-      "implementationCandidates": [],
-      "directTestCandidates": [],
-      "atomicFixtures": [],
-      "independentEvidence": [],
-      "nextAction": "review deterministic discovery candidates and accept/reject them"
-    },
-    {
       "capability": "pdf.17.graphics.state",
       "section": "graphics",
       "workflow": "other",
@@ -65176,6 +64404,782 @@
       "nextAction": "review deterministic discovery candidates and accept/reject them"
     },
     {
+      "capability": "pdf.17.graphics.paths-painting",
+      "section": "graphics",
+      "workflow": "other",
+      "mode": "author",
+      "currentState": "unknown",
+      "deficiencies": [
+        "no-mapped-direct-test-candidate",
+        "no-accepted-atomic-fixture",
+        "no-accepted-independent-or-corpus-evidence",
+        "no-executable-mode-verification-contract"
+      ],
+      "discoveryStatus": "mapped-source-only",
+      "discoveryCandidates": {
+        "source": [
+          {
+            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Authoring/TextStyle.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandIds.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentOperator.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "clipping",
+              "construction",
+              "line",
+              "painting",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStream.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "painting",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStreamParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "painting",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStreamWalker.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "clipping",
+              "construction",
+              "line",
+              "painting",
+              "path",
+              "style",
+              "colorspace",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/AcroFormFlattener.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PageCollection.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotation.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfDocument.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "path",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfFormAutoDetector.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfLink.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPage.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "colorspace",
+              "pdfgraphics",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPageTransition.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Editing/PdfTypewriterTextApplier.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Editing/PdfTypewriterTextStyle.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Jbig2/Jbig2TextRegionDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/CffParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/CffSubsetter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/StandardFontMetrics.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/SymbolCmapDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/TrueTypeFontFile.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/FdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/XfdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfFont.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfGraphics.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfPen.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfTrueTypeFont.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentSanitizer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/PdfLexer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/PdfParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "path",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/XRefParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Primitives/PdfName.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Security/PdfPermissions.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          }
+        ],
+        "test": [],
+        "architecture": []
+      },
+      "executionStatus": "not-contracted",
+      "recordedChecks": [],
+      "priority": 34,
+      "implementationCandidates": [
+        "Excise.Core/Content/ContentStreamParser.cs",
+        "Excise.Rendering/SkiaRenderer.Paths.cs"
+      ],
+      "directTestCandidates": [],
+      "atomicFixtures": [],
+      "independentEvidence": [],
+      "nextAction": "review deterministic discovery candidates and accept/reject them"
+    },
+    {
+      "capability": "pdf.17.graphics.paths-painting",
+      "section": "graphics",
+      "workflow": "other",
+      "mode": "preserve",
+      "currentState": "unknown",
+      "deficiencies": [
+        "no-mapped-direct-test-candidate",
+        "no-accepted-atomic-fixture",
+        "no-accepted-independent-or-corpus-evidence",
+        "no-executable-mode-verification-contract"
+      ],
+      "discoveryStatus": "mapped-source-only",
+      "discoveryCandidates": {
+        "source": [
+          {
+            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Authoring/TextStyle.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandIds.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentOperator.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "clipping",
+              "construction",
+              "line",
+              "painting",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStream.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "painting",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStreamParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "painting",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStreamWalker.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "clipping",
+              "construction",
+              "line",
+              "painting",
+              "path",
+              "style",
+              "colorspace",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/AcroFormFlattener.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PageCollection.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotation.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfDocument.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "path",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfFormAutoDetector.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfLink.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPage.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "colorspace",
+              "pdfgraphics",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPageTransition.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Editing/PdfTypewriterTextApplier.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Editing/PdfTypewriterTextStyle.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Jbig2/Jbig2TextRegionDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/CffParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/CffSubsetter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/StandardFontMetrics.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/SymbolCmapDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/TrueTypeFontFile.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/FdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/XfdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfFont.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfGraphics.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfPen.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfTrueTypeFont.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentSanitizer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/PdfLexer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/PdfParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "path",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/XRefParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Primitives/PdfName.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Security/PdfPermissions.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          }
+        ],
+        "test": [],
+        "architecture": []
+      },
+      "executionStatus": "not-contracted",
+      "recordedChecks": [],
+      "priority": 34,
+      "implementationCandidates": [
+        "Excise.Core/Content/ContentStreamParser.cs",
+        "Excise.Rendering/SkiaRenderer.Paths.cs"
+      ],
+      "directTestCandidates": [],
+      "atomicFixtures": [],
+      "independentEvidence": [],
+      "nextAction": "review deterministic discovery candidates and accept/reject them"
+    },
+    {
       "capability": "pdf.20.annotation.subtype-001",
       "section": "annotation-subtypes",
       "workflow": "other",
@@ -138289,489 +138293,6 @@
       "workflow": "other",
       "mode": "parse",
       "currentState": "unknown",
-      "deficiencies": [
-        "no-accepted-atomic-fixture",
-        "no-accepted-independent-or-corpus-evidence",
-        "no-executable-mode-verification-contract"
-      ],
-      "discoveryStatus": "mapped-source-and-test",
-      "discoveryCandidates": {
-        "source": [
-          {
-            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Authoring/TextStyle.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Automation/PdfCommandIds.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentOperator.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "clipping",
-              "construction",
-              "line",
-              "painting",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStream.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "painting",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStreamParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "painting",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Content/ContentStreamWalker.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "clipping",
-              "construction",
-              "line",
-              "painting",
-              "path",
-              "style",
-              "colorspace",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/AcroFormFlattener.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PageCollection.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotation.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfDocument.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "path",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfFormAutoDetector.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfLink.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPage.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "colorspace",
-              "pdfgraphics",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfPageTransition.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Editing/PdfTypewriterTextApplier.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Editing/PdfTypewriterTextStyle.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Jbig2/Jbig2TextRegionDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/CffParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/CffSubsetter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/StandardFontMetrics.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/SymbolCmapDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Fonts/TrueTypeFontFile.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/FdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/XfdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfFont.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfGraphics.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path",
-              "pdfgraphics"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfPen.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Graphics/PdfTrueTypeFont.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentSanitizer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/PdfLexer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/PdfParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "path",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Parsing/XRefParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "construction",
-              "line",
-              "path",
-              "style"
-            ]
-          },
-          {
-            "path": "Excise.Core/Primitives/PdfName.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "style",
-              "colorspace"
-            ]
-          },
-          {
-            "path": "Excise.Core/Security/PdfPermissions.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "line",
-              "path"
-            ]
-          }
-        ],
-        "test": [],
-        "architecture": []
-      },
-      "executionStatus": "not-contracted",
-      "recordedChecks": [],
-      "priority": 33,
-      "implementationCandidates": [
-        "Excise.Core/Content/ContentOperator.cs",
-        "Excise.Core/Content/ContentStream.cs",
-        "Excise.Core/Content/ContentStreamParser.cs",
-        "Excise.Core/Content/ContentStreamWalker.cs",
-        "Excise.Core/Content/ContentStreamWriter.cs",
-        "Excise.Core/Graphics/PdfBrush.cs",
-        "Excise.Core/Graphics/PdfColor.cs",
-        "Excise.Core/Graphics/PdfFont.cs",
-        "Excise.Core/Graphics/PdfGraphics.cs",
-        "Excise.Core/Graphics/PdfPen.cs",
-        "Excise.Core/Graphics/PdfTrueTypeFont.cs",
-        "Excise.Core/Graphics/TextWrapper.cs",
-        "Excise.Rendering/ContinuousTileClip.cs",
-        "Excise.Rendering/SkiaRenderer.Paths.cs",
-        "Excise.App/Models/ClipboardEntry.cs",
-        "Excise.App/Services/AppPaths.cs",
-        "Excise.App/ViewModels/PathAnnotationKind.cs"
-      ],
-      "directTestCandidates": [
-        "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Unrotated_VisualTopHalf_MapsToContentTopHalf",
-        "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Rotated90_VisualTopHalf_MapsToContentLEFTHalf_AxisSwap",
-        "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Rotated270_VisualTopHalf_MapsToContentRIGHTHalf",
-        "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Rendered_Rotated90_TopHalfBand_ShowsTheVisualTopContent_NotClippedOrShifted",
-        "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::AnnotationAuthoringDifferentialTests.AuthoredInk_IsDrawnByMutool_WithStrokeInkAlongThePolyline",
-        "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::AnnotationAuthoringDifferentialTests.AuthoredInk_IsDrawnByPdftocairo_WithStrokeInkAlongThePolyline",
-        "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::AnnotationAuthoringDifferentialTests.ExciseAndReferenceRenderer_AgreeOnAuthoredInkStrokes",
-        "Excise.Rendering.Tests/Differential/AnnotationBorderTests.cs::AnnotationBorderTests.ADashedBorderDrawsLessInkThanASolidOne",
-        "Excise.Rendering.Tests/Differential/AnnotationBorderTests.cs::AnnotationBorderTests.ADashedBorderIsAlsoDashedForAnIndependentRenderer",
-        "Excise.Rendering.Tests/Differential/ShapeAnnotationSynthesisTests.cs::ShapeAnnotationSynthesisTests.PolygonWithInteriorColorButNoStrokeColor_IsStillFilled",
-        "Excise.Rendering.Tests/Fonts/FontRenderingMatrixTests.cs::FontRenderingMatrixTests.StrokeRenderMode_IsHollowVersusFill",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Dash_BreaksStrokeIntoGaps_ComparedToSolidLine",
-        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Dash_EmptyArray_RendersSolidLine",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.Determinism_SameContentRenderedTwice_ProducesByteIdenticalBitmaps",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.DpiScaling_TwoDpisRelationship_BitmapSizeFollows2xDpiRatio",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.BackgroundFill_EmptyContentWithBackgroundColor_AllPixelsMatchBackground",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.TranslationInvariance_SameRectWithAndWithoutCMTransform_ContentRenders",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.IdentityTransform_ContentWithExplicitIdentityCM_ByteIdenticalToNoTransform",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.EmptyPageInvariant_DifferentPageSizes_BitmapDimensionsMatchCalculation",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.PageSizeProportionality_HalfHeightPage_BitmapHeightIsHalf",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.RgbColorRoundTrip_FilledRectangleWithColor_ColorChannelsDominantInPixels",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.CmykColorRoundTrip_FilledRectangleWithCmyk_RendersNonBackground",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.StrokeWidth_ThickStrokeVsThinStroke_ThickStrokeHasMorePixels",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.AntiAliasing_TextRenderingWithAA_DistinctIntermediateGrayValuesExist",
-        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.ScalingTransform_SmallRectWithSmallScale_BothRender",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_GrayscaleFillOperator_g_ShowsGrayPixel",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_GrayscaleStrokeOperator_G_ShowsGrayStroke",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_RgbStrokeOperator_RG_ShowsStrokeColor",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_CmykFillOperator_k_ShowsCyanMagentaYellowBlack",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_CmykStrokeOperator_K_ShowsStroke",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_DeviceRgbColorSpace_cs_scn",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_StrokingColorSpace_CS_SCN",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ImageXObject_ResolvesNamedIndexedColorSpaceResource",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ImageMaskXObject_DecodeArrayReversesStencilPolarity",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_CcittImageMaskXObject_UsesBlackSamplesAsDefaultStencil",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_OneBitImage_UsesDecodeArrayPolarity",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_SoftMaskedImage_ComposesStraightAlphaSamples",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FlateWrappedDctImage_DecodesTerminalJpegBytes",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_AnnotationAppearance_IsClippedToAnnotationRect",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_UnfilledApTextWidgetsWithValues_PaintBothAndRestoreFontStateBetween",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FillEvenOdd_fStar_Operator",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_StrokeOnly_S_Operator",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FillOnly_f_Operator",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_NoOp_n_Operator",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Transparency_OverlappingRectangles_BlendingApplied",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_StrokeAlpha_CA_Operator",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ClippingPath_W_NonzeroWinding",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ClippingPath_WStar_EvenOddRule",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Translation_cm_Operator",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Scaling_cm_Operator",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Rotation_cm_Operator",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_StateStack_SaveRestore",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ClippingPathThenNestedFilledPaths_RendersAllFills",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_SimpleText_SingleFont",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Text_LargerFontSize",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_EmptyContent_ShowsWhiteBackground",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_SingleOperator_JustRectangle",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_VariousDpis_ScalesDimensionsCorrectly",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_LetterSize_612x792Points",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_CustomSmallPage_50x50Points",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_CustomLargePage_1200x1600Points",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType6CoonsMesh_RendersMeshArea",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType2AxialShadingFill_UsesPatternResource",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType1TilingFill_UsesDirectPatternColorSpace",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType1TilingFill_ClipsContentToPatternBBox",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType1ColoredTilingFill_ComposesOverlappingCell",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_MissingPatternFill_DoesNotFallbackToSolidCurrentColor",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_EvaluatesAcrossDomain",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_MapsVerticalDomainUpwards",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ReturnsNonNullBitmap",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_AlreadyCancelledToken_Throws",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_MalformedFilteredContentStream_RendersBlankPageInsteadOfThrowing",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ImageOnlyJbig2ContentStream_RendersValidPrefixAndReportsDiagnostic",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_Isartor617_StreamWhitespaceBeforeEol_RendersBlankPage",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue14256_InlineImagesDoNotTokenizeData",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue14999_Type3CcittDecodeParmsRenderReadableGlyphMasks",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsBug859204_EmbeddedType1EncodingRendersBulletGlyph"
-      ],
-      "atomicFixtures": [],
-      "independentEvidence": [],
-      "nextAction": "review mapped code and test candidates"
-    },
-    {
-      "capability": "pdf.17.graphics.paths-painting",
-      "section": "graphics",
-      "workflow": "other",
-      "mode": "render",
-      "currentState": "partial",
       "deficiencies": [
         "no-accepted-atomic-fixture",
         "no-accepted-independent-or-corpus-evidence",
@@ -152588,6 +152109,511 @@
       ],
       "independentEvidence": [],
       "nextAction": "find or write a focused implementation/test pair"
+    },
+    {
+      "capability": "pdf.17.graphics.paths-painting",
+      "section": "graphics",
+      "workflow": "other",
+      "mode": "render",
+      "currentState": "implemented",
+      "deficiencies": [],
+      "discoveryStatus": "mapped-source-and-test",
+      "discoveryCandidates": {
+        "source": [
+          {
+            "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Authoring/TextStyle.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandIds.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentOperator.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "clipping",
+              "construction",
+              "line",
+              "painting",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStream.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "painting",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStreamParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "painting",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Content/ContentStreamWalker.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "clipping",
+              "construction",
+              "line",
+              "painting",
+              "path",
+              "style",
+              "colorspace",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/AcroFormFlattener.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PageCollection.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotation.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfDocument.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "path",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfFormAutoDetector.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfLink.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPage.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "colorspace",
+              "pdfgraphics",
+              "skiarenderer"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfPageTransition.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Editing/PdfTypewriterTextApplier.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Editing/PdfTypewriterTextStyle.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Jbig2/Jbig2TextRegionDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/CffParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/CffSubsetter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/StandardFontMetrics.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/SymbolCmapDecoder.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Fonts/TrueTypeFontFile.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/FdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/XfdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfFont.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfGraphics.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path",
+              "pdfgraphics"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfPen.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Graphics/PdfTrueTypeFont.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentSanitizer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/PdfLexer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/PdfParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "path",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Parsing/XRefParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "construction",
+              "line",
+              "path",
+              "style"
+            ]
+          },
+          {
+            "path": "Excise.Core/Primitives/PdfName.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "style",
+              "colorspace"
+            ]
+          },
+          {
+            "path": "Excise.Core/Security/PdfPermissions.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "line",
+              "path"
+            ]
+          }
+        ],
+        "test": [],
+        "architecture": []
+      },
+      "executionStatus": "passed",
+      "recordedChecks": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding",
+          "outcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "atomic-fixture",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding",
+          "outcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
+          "outcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "priority": 30,
+      "implementationCandidates": [
+        "Excise.Core/Content/ContentOperator.cs",
+        "Excise.Core/Content/ContentStream.cs",
+        "Excise.Core/Content/ContentStreamParser.cs",
+        "Excise.Core/Content/ContentStreamWalker.cs",
+        "Excise.Core/Content/ContentStreamWriter.cs",
+        "Excise.Core/Graphics/PdfBrush.cs",
+        "Excise.Core/Graphics/PdfColor.cs",
+        "Excise.Core/Graphics/PdfFont.cs",
+        "Excise.Core/Graphics/PdfGraphics.cs",
+        "Excise.Core/Graphics/PdfPen.cs",
+        "Excise.Core/Graphics/PdfTrueTypeFont.cs",
+        "Excise.Core/Graphics/TextWrapper.cs",
+        "Excise.Rendering/ContinuousTileClip.cs",
+        "Excise.Rendering/SkiaRenderer.Paths.cs",
+        "Excise.App/Models/ClipboardEntry.cs",
+        "Excise.App/Services/AppPaths.cs",
+        "Excise.App/ViewModels/PathAnnotationKind.cs"
+      ],
+      "directTestCandidates": [
+        "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Unrotated_VisualTopHalf_MapsToContentTopHalf",
+        "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Rotated90_VisualTopHalf_MapsToContentLEFTHalf_AxisSwap",
+        "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Rotated270_VisualTopHalf_MapsToContentRIGHTHalf",
+        "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Rendered_Rotated90_TopHalfBand_ShowsTheVisualTopContent_NotClippedOrShifted",
+        "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::AnnotationAuthoringDifferentialTests.AuthoredInk_IsDrawnByMutool_WithStrokeInkAlongThePolyline",
+        "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::AnnotationAuthoringDifferentialTests.AuthoredInk_IsDrawnByPdftocairo_WithStrokeInkAlongThePolyline",
+        "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::AnnotationAuthoringDifferentialTests.ExciseAndReferenceRenderer_AgreeOnAuthoredInkStrokes",
+        "Excise.Rendering.Tests/Differential/AnnotationBorderTests.cs::AnnotationBorderTests.ADashedBorderDrawsLessInkThanASolidOne",
+        "Excise.Rendering.Tests/Differential/AnnotationBorderTests.cs::AnnotationBorderTests.ADashedBorderIsAlsoDashedForAnIndependentRenderer",
+        "Excise.Rendering.Tests/Differential/ShapeAnnotationSynthesisTests.cs::ShapeAnnotationSynthesisTests.PolygonWithInteriorColorButNoStrokeColor_IsStillFilled",
+        "Excise.Rendering.Tests/Fonts/FontRenderingMatrixTests.cs::FontRenderingMatrixTests.StrokeRenderMode_IsHollowVersusFill",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Dash_BreaksStrokeIntoGaps_ComparedToSolidLine",
+        "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Dash_EmptyArray_RendersSolidLine",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.Determinism_SameContentRenderedTwice_ProducesByteIdenticalBitmaps",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.DpiScaling_TwoDpisRelationship_BitmapSizeFollows2xDpiRatio",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.BackgroundFill_EmptyContentWithBackgroundColor_AllPixelsMatchBackground",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.TranslationInvariance_SameRectWithAndWithoutCMTransform_ContentRenders",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.IdentityTransform_ContentWithExplicitIdentityCM_ByteIdenticalToNoTransform",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.EmptyPageInvariant_DifferentPageSizes_BitmapDimensionsMatchCalculation",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.PageSizeProportionality_HalfHeightPage_BitmapHeightIsHalf",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.RgbColorRoundTrip_FilledRectangleWithColor_ColorChannelsDominantInPixels",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.CmykColorRoundTrip_FilledRectangleWithCmyk_RendersNonBackground",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.StrokeWidth_ThickStrokeVsThinStroke_ThickStrokeHasMorePixels",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.AntiAliasing_TextRenderingWithAA_DistinctIntermediateGrayValuesExist",
+        "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.ScalingTransform_SmallRectWithSmallScale_BothRender",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_GrayscaleFillOperator_g_ShowsGrayPixel",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_GrayscaleStrokeOperator_G_ShowsGrayStroke",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_RgbStrokeOperator_RG_ShowsStrokeColor",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_CmykFillOperator_k_ShowsCyanMagentaYellowBlack",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_CmykStrokeOperator_K_ShowsStroke",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_DeviceRgbColorSpace_cs_scn",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_StrokingColorSpace_CS_SCN",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ImageXObject_ResolvesNamedIndexedColorSpaceResource",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ImageMaskXObject_DecodeArrayReversesStencilPolarity",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_CcittImageMaskXObject_UsesBlackSamplesAsDefaultStencil",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_OneBitImage_UsesDecodeArrayPolarity",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_SoftMaskedImage_ComposesStraightAlphaSamples",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FlateWrappedDctImage_DecodesTerminalJpegBytes",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_AnnotationAppearance_IsClippedToAnnotationRect",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_UnfilledApTextWidgetsWithValues_PaintBothAndRestoreFontStateBetween",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FillEvenOdd_fStar_Operator",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_StrokeOnly_S_Operator",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FillOnly_f_Operator",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_NoOp_n_Operator",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Transparency_OverlappingRectangles_BlendingApplied",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_StrokeAlpha_CA_Operator",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ClippingPath_W_NonzeroWinding",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ClippingPath_WStar_EvenOddRule",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Translation_cm_Operator",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Scaling_cm_Operator",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Rotation_cm_Operator",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_StateStack_SaveRestore",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ClippingPathThenNestedFilledPaths_RendersAllFills",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_SimpleText_SingleFont",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Text_LargerFontSize",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_EmptyContent_ShowsWhiteBackground",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_SingleOperator_JustRectangle",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_VariousDpis_ScalesDimensionsCorrectly",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_LetterSize_612x792Points",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_CustomSmallPage_50x50Points",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_CustomLargePage_1200x1600Points",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType6CoonsMesh_RendersMeshArea",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType2AxialShadingFill_UsesPatternResource",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType1TilingFill_UsesDirectPatternColorSpace",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType1TilingFill_ClipsContentToPatternBBox",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_PatternType1ColoredTilingFill_ComposesOverlappingCell",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_MissingPatternFill_DoesNotFallbackToSolidCurrentColor",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_EvaluatesAcrossDomain",
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_FunctionBasedShading_MapsVerticalDomainUpwards",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ReturnsNonNullBitmap",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_AlreadyCancelledToken_Throws",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_MalformedFilteredContentStream_RendersBlankPageInsteadOfThrowing",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ImageOnlyJbig2ContentStream_RendersValidPrefixAndReportsDiagnostic",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_Isartor617_StreamWhitespaceBeforeEol_RendersBlankPage",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue14256_InlineImagesDoNotTokenizeData",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue14999_Type3CcittDecodeParmsRenderReadableGlyphMasks",
+        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsBug859204_EmbeddedType1EncodingRendersBulletGlyph"
+      ],
+      "atomicFixtures": [
+        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding"
+      ],
+      "independentEvidence": [
+        "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
+      ],
+      "nextAction": "none; strict implementation is recorded"
     },
     {
       "capability": "pdf.20.renderer.requirement-018",
@@ -187394,27 +187420,28 @@
   ],
   "summary": {
     "targetModes": 964,
-    "strictImplemented": 3,
-    "modesWithDeficiencies": 959,
+    "strictImplemented": 4,
+    "modesWithDeficiencies": 958,
     "deficiencies": {
-      "no-accepted-atomic-fixture": 813,
-      "no-accepted-independent-or-corpus-evidence": 959,
-      "no-executable-mode-verification-contract": 304,
+      "no-accepted-atomic-fixture": 812,
+      "no-accepted-independent-or-corpus-evidence": 958,
+      "no-executable-mode-verification-contract": 303,
       "no-mapped-direct-test-candidate": 760,
-      "no-mapped-implementation-candidate": 906
+      "no-mapped-implementation-candidate": 904
     },
     "executionStatus": {
-      "not-contracted": 814,
+      "not-contracted": 813,
       "not-recorded": 146,
       "partial": 1,
-      "passed": 3
+      "passed": 4
     },
     "discoveryStatus": {
       "mapped-source-and-test": 58,
+      "mapped-source-only": 2,
       "mapped-test-only": 154,
       "no-repository-candidate": 396,
       "source-and-test-candidates": 310,
-      "source-candidates-only": 6,
+      "source-candidates-only": 4,
       "test-candidates-only": 40
     },
     "byWorkflow": {
@@ -187423,7 +187450,8 @@
         "unknown": 7
       },
       "other": {
-        "partial": 3,
+        "implemented": 1,
+        "partial": 2,
         "unimplemented": 15,
         "unknown": 891
       },
