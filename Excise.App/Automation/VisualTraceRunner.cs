@@ -49,18 +49,17 @@ public static class VisualTraceRunner
             if (viewer == null) { File.WriteAllText(Path.Combine(outDir, "ERROR.txt"), "PdfViewerControl not found"); Shutdown(); return; }
 
             await WaitInkedAsync(window, viewer);
-            var scroll = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer");
 
-            if (scroll != null && Environment.GetEnvironmentVariable("EXCISE_VISUAL_TRACE_SCROLL") == "mid")
+            if (Environment.GetEnvironmentVariable("EXCISE_VISUAL_TRACE_SCROLL") == "mid" &&
+                viewer.TrySetViewportVerticalFraction(0.4))
             {
-                scroll.Offset = new Vector(0, scroll.Extent.Height * 0.4);
                 await PumpAsync(window, 8);
             }
 
             // 1. Baseline (resting) frames.
             for (int i = 0; i < 5; i++)
             {
-                Sample(window, viewer, scroll, outDir, csv, "before", i);
+                Sample(window, viewer, outDir, csv, "before", i);
                 await Task.Delay(FrameIntervalMs);
             }
 
@@ -70,22 +69,20 @@ public static class VisualTraceRunner
             {
                 await Task.Delay(FrameIntervalMs);
                 window.UpdateLayout();
-                Sample(window, viewer, scroll, outDir, csv, "after", i);
+                Sample(window, viewer, outDir, csv, "after", i);
             }
 
             // 3. Scroll sweep — the user's "bounce" appears on scroll AFTER a mutation.
             //    Step the offset down in equal increments; a stable view moves the
             //    centroid smoothly with the offset, a bouncing one does not.
-            if (scroll != null)
+            if (viewer.GetViewportDiagnostics().IsAvailable)
             {
-                double max = Math.Max(0, scroll.Extent.Height - scroll.Viewport.Height);
                 for (int i = 0; i < 12; i++)
                 {
-                    double target = Math.Min(max, scroll.Offset.Y + 60);
-                    scroll.Offset = new Vector(0, target);
+                    viewer.TryScrollViewportBy(60);
                     await Task.Delay(FrameIntervalMs);
                     window.UpdateLayout();
-                    Sample(window, viewer, scroll, outDir, csv, "scroll", i);
+                    Sample(window, viewer, outDir, csv, "scroll", i);
                 }
             }
 
@@ -95,7 +92,7 @@ public static class VisualTraceRunner
             {
                 await Task.Delay(FrameIntervalMs);
                 window.UpdateLayout();
-                Sample(window, viewer, scroll, outDir, csv, "zoom", i);
+                Sample(window, viewer, outDir, csv, "zoom", i);
             }
 
             // 5. Save round-trip — must not crash or disturb the view.
@@ -107,7 +104,7 @@ public static class VisualTraceRunner
             {
                 await Task.Delay(FrameIntervalMs);
                 window.UpdateLayout();
-                Sample(window, viewer, scroll, outDir, csv, "save", i);
+                Sample(window, viewer, outDir, csv, "save", i);
             }
 
             File.WriteAllText(Path.Combine(outDir, "trajectory.csv"), csv.ToString());
@@ -157,11 +154,12 @@ public static class VisualTraceRunner
         if (cmd.CanExecute(null)) cmd.Execute(null);
     }
 
-    private static void Sample(Window window, PdfViewerControl viewer, ScrollViewer? scroll, string outDir, StringBuilder csv,
+    private static void Sample(Window window, PdfViewerControl viewer, string outDir, StringBuilder csv,
         string phase, int frame)
     {
         int ms = frame * FrameIntervalMs;
-        double offsetY = scroll?.Offset.Y ?? -1;
+        var viewport = viewer.GetViewportDiagnostics();
+        double offsetY = viewport.IsAvailable ? viewport.Offset.Y : -1;
         var (ink, cx, cy, bmp) = CaptureCentroid(viewer);
         try
         {

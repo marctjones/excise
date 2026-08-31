@@ -90,7 +90,9 @@ chains are:
 - A render operation owns one context and graphics-state stack. Operator-family
   modules receive that state explicitly rather than recreating it.
 - The reusable viewer owns layout, input, selection, accessibility, and render
-  scheduling. The desktop app owns product workflows and dialogs.
+  scheduling. Its typed viewport diagnostics and scroll intents expose values,
+  never template controls. The desktop app owns product workflows, automation
+  scenarios, artifact paths, and dialogs.
 - `MainWindowViewModel` is a composition surface. Feature state and workflows
   move behind focused collaborators when their ownership and conservation gates
   are established.

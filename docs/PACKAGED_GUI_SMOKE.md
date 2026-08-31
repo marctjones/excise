@@ -82,6 +82,24 @@ Reports are written under the current `logs/release-smoke_*` directory when run
 through `release-smoke.sh`, or under `logs/packaged-gui-smoke_*` when run
 directly.
 
+## Packaged Visual-Mutation Trace
+
+The packaged smoke proves launch and first-page responsiveness. To exercise the
+viewer diagnostics, controlled scrolling, mutation, zoom, and save path inside
+the same Native AOT bundle, pass that bundle to the visual trace:
+
+```bash
+scripts/run-visual-mutation-trace.sh \
+  --app /path/to/excise.app \
+  --pdf test-pdfs/federal/scotus-trump-v-us.pdf \
+  --scroll mid
+```
+
+The trace writes frame PNGs, `trajectory.csv`, `meta.txt`, the saved PDF, and
+the packaged app log. Production automation uses the viewer's typed viewport
+snapshot and scroll intents; only viewer-owned code knows the private XAML
+template controls.
+
 ## Timing Budgets
 
 Timing status is separate from rendering fidelity. A WARN is visible in the
