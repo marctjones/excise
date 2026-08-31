@@ -326,7 +326,7 @@
         "architecture/generated/change-coupling.json"
       ],
       "gaps": [
-        "The observed-versus-target report currently identifies 12 undeclared component edges for architectural review and 277 unresolved type edges confined to explicit non-shipping ownership gaps. Dynamic seed provenance now distinguishes XAML, DI, reflection, source generation, native interop, and scripting, but XAML is still a conservative simple-name rule and containing-type closure still hides member-level dead code (#1304)."
+        "The observed-versus-target report currently identifies 12 undeclared component edges for architectural review and 277 unresolved type edges confined to explicit non-shipping ownership gaps. Dynamic seed provenance distinguishes XAML, DI, reflection, source generation, native interop, and scripting. XAML now uses structural type, handler, member, and typed-path contracts; only the three members of the untyped search-result template use explicit name fallback. Containing-type closure still hides member-level dead code (#1304)."
       ],
       "issueIds": [
         940,
