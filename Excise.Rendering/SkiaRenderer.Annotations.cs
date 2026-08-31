@@ -7,6 +7,11 @@ namespace Excise.Rendering;
 
 internal partial class RenderContext
 {
+    private AcroFormAppearanceDefaults? _acroFormDefaults;
+
+    private AcroFormAppearanceDefaults AcroFormDefaults
+        => _acroFormDefaults ??= new AcroFormAppearanceDefaults(_page.Document);
+
     /// <summary>
     /// Render every visible annotation on the page on top of the main
     /// content. Each annotation's <c>/AP /N</c> stream is a Form XObject
@@ -87,132 +92,24 @@ internal partial class RenderContext
                 continue;
             }
 
-            // Annotation /Rect (PDF stores [llx lly urx ury], but some
-            // producers swap pairs — normalize both ways). Resolved BEFORE the
-            // appearance /BBox because it is also the fallback for a form that
-            // declares no usable one.
-            float rx1 = (float)Math.Min(annot.Rect.Left, annot.Rect.Right);
-            float ry1 = (float)Math.Min(annot.Rect.Bottom, annot.Rect.Top);
-            float rx2 = (float)Math.Max(annot.Rect.Left, annot.Rect.Right);
-            float ry2 = (float)Math.Max(annot.Rect.Bottom, annot.Rect.Top);
-            if (rx2 <= rx1 || ry2 <= ry1)
-            {
-                _options.Diagnostics?.Add(
-                    $"Annotation /{annot.Subtype} has a degenerate /Rect; appearance not drawn.");
-                continue;
-            }
+            var plan = AnnotationAppearanceExecution.Plan(
+                annot,
+                appearance,
+                _page.Document,
+                _options.AntiAlias);
+            if (plan.Diagnostic != null)
+                _options.Diagnostics?.Add(plan.Diagnostic);
 
-            // Appearance /BBox.
-            //
-            // Two shapes used to hit a silent `continue` here, dropping the
-            // annotation with no diagnostic at all (#888):
-            //
-            //   • /BBox is an INDIRECT REFERENCE (pdfium bug_1658.pdf). The
-            //     old `is not PdfArray` test inspected the reference object
-            //     itself and failed. RenderFormXObjectInner — one call away,
-            //     on the very same stream — already resolved this key through
-            //     ResolveArray; only this path did not. That asymmetry is the
-            //     whole bug.
-            //   • /BBox is ABSENT (pdfium bug_861842.pdf). §8.10.2 makes it
-            //     REQUIRED on a form XObject, so such a form is invalid and
-            //     there is no geometry to honour.
-            //
-            // The second case was first "fixed" here by synthesising a /BBox
-            // from the annotation /Rect. That was wrong, and the oracles said
-            // so: on a hand-authored BBox-less form both mutool and pdftocairo
-            // draw NOTHING, pdftocairo reporting "Syntax Error: Bad form
-            // bounding box". They still show bug_861842 because they fall back
-            // to the WIDGET's own chrome — border, background, /MK — not
-            // because they repair the form.
-            //
-            // So: do not invent geometry. Fall back to the same default
-            // appearance synthesis used when there is no /AP at all, which is
-            // what actually makes the annotation visible in other readers.
-            // Silently dropping it remains the one unacceptable option — excise
-            // is a redaction tool, and an annotation the reviewer never sees is
-            // content they cannot decide about while it still reaches the
-            // recipient.
-            var bboxArr = ResolveArray(appearance, "BBox");
-            if (bboxArr == null || bboxArr.Count < 4 ||
-                !TryGetArrayNumber(bboxArr, 0, out var bx1Value) ||
-                !TryGetArrayNumber(bboxArr, 1, out var by1Value) ||
-                !TryGetArrayNumber(bboxArr, 2, out var bx2Value) ||
-                !TryGetArrayNumber(bboxArr, 3, out var by2Value))
+            if (plan.Disposition == AnnotationAppearanceDisposition.Synthesize)
             {
-                _options.Diagnostics?.Add(
-                    $"Annotation /{annot.Subtype} appearance has no usable /BBox " +
-                    "(required by §8.10.2); drawing the default appearance instead.");
-                RenderDefaultAppearance(annot);
-                continue;
-            }
-            float bMinX = (float)Math.Min(bx1Value, bx2Value);
-            float bMinY = (float)Math.Min(by1Value, by2Value);
-            float bMaxX = (float)Math.Max(bx1Value, bx2Value);
-            float bMaxY = (float)Math.Max(by1Value, by2Value);
-            if (bMaxX <= bMinX || bMaxY <= bMinY)
-            {
-                _options.Diagnostics?.Add(
-                    $"Annotation /{annot.Subtype} appearance /BBox is degenerate; " +
-                    "drawing the default appearance instead.");
                 RenderDefaultAppearance(annot);
                 continue;
             }
 
-            // /Matrix may be indirect for the same reason /BBox may be.
-            var formMatrix = SKMatrix.Identity;
-            if (ResolveArray(appearance, "Matrix") is { Count: >= 6 } mArr)
-            {
-                formMatrix = GetMatrix(mArr);
-            }
-
-            // Transform the four bbox corners through the form's /Matrix
-            // and take the axis-aligned bounding box of the result. Spec
-            // step from §12.5.5: "a quadrilateral whose corners are the
-            // four corners of BBox transformed by Matrix … then the
-            // smallest rectangle enclosing those four points."
-            var p1 = formMatrix.MapPoint(new SKPoint(bMinX, bMinY));
-            var p2 = formMatrix.MapPoint(new SKPoint(bMaxX, bMinY));
-            var p3 = formMatrix.MapPoint(new SKPoint(bMaxX, bMaxY));
-            var p4 = formMatrix.MapPoint(new SKPoint(bMinX, bMaxY));
-            float bbMinX = Math.Min(Math.Min(p1.X, p2.X), Math.Min(p3.X, p4.X));
-            float bbMinY = Math.Min(Math.Min(p1.Y, p2.Y), Math.Min(p3.Y, p4.Y));
-            float bbMaxX = Math.Max(Math.Max(p1.X, p2.X), Math.Max(p3.X, p4.X));
-            float bbMaxY = Math.Max(Math.Max(p1.Y, p2.Y), Math.Max(p3.Y, p4.Y));
-            if (bbMaxX <= bbMinX || bbMaxY <= bbMinY)
-            {
-                _options.Diagnostics?.Add(
-                    $"Annotation /{annot.Subtype} appearance /BBox collapses to zero area " +
-                    "once /Matrix is applied; nothing drawn.");
+            if (plan.Disposition == AnnotationAppearanceDisposition.Skip)
                 continue;
-            }
 
-            // A = scale + translate that maps the AABB of the transformed
-            // bbox onto Rect. RenderFormXObject will additionally concat
-            // the form's own Matrix, so the final on-page transform is
-            // A · Matrix, which by construction takes BBox → Rect.
-            float sx = (rx2 - rx1) / (bbMaxX - bbMinX);
-            float sy = (ry2 - ry1) / (bbMaxY - bbMinY);
-            float tx = rx1 - bbMinX * sx;
-            float ty = ry1 - bbMinY * sy;
-            var fitMatrix = new SKMatrix(sx, 0, tx, 0, sy, ty, 0, 0, 1);
-
-            _canvas.Save();
-            try
-            {
-                _canvas.ClipRect(new SKRect(rx1, ry1, rx2, ry2), SKClipOperation.Intersect, _options.AntiAlias);
-                _canvas.Concat(in fitMatrix);
-                RenderFormXObject(appearance);
-            }
-            catch
-            {
-                // Never let one malformed annotation kill the rest of
-                // the page; it's strictly an overlay on top of content
-                // we've already successfully rendered.
-            }
-            finally
-            {
-                _canvas.Restore();
-            }
+            ExecuteAnnotationAppearance(plan.Request);
             }
             finally
             {
@@ -222,6 +119,37 @@ internal partial class RenderContext
                     opacityLayer.Dispose();
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Applies the already-reviewed appearance geometry and executes the Form
+    /// XObject through the same operator pipeline used by page content.
+    /// </summary>
+    private void ExecuteAnnotationAppearance(AnnotationAppearanceExecutionRequest request)
+    {
+        _canvas.Save();
+        try
+        {
+            _canvas.ClipRect(
+                request.ClipRect,
+                SKClipOperation.Intersect,
+                request.AntiAlias);
+            var fitMatrix = request.FitMatrix;
+            _canvas.Concat(in fitMatrix);
+            RenderFormXObject(request.Appearance);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            // One malformed overlay must not discard already-rendered page content.
+        }
+        finally
+        {
+            _canvas.Restore();
         }
     }
 
@@ -519,30 +447,6 @@ internal partial class RenderContext
                 path.LineTo((float)stroke[i].X, (float)stroke[i].Y);
             _canvas.DrawPath(path, paint);
         }
-    }
-
-    /// <summary>
-    /// Resolve and cache the AcroForm <c>/DR</c> resources dict (where
-    /// the document's interactive form keeps its default fonts) plus
-    /// the AcroForm <c>/DA</c> default-appearance string. Both are used
-    /// when a widget annotation lacks its own <c>/AP</c> and falls back
-    /// to drawing the field value through the variable-text path.
-    /// Cached per-render-context so we don't re-resolve per widget.
-    /// </summary>
-    private Excise.Core.Primitives.PdfDictionary? _acroFormDr;
-    private string? _acroFormDa;
-    private bool _acroFormResolved;
-    private void ResolveAcroFormResources()
-    {
-        if (_acroFormResolved) return;
-        _acroFormResolved = true;
-        var afObj = _page.Document.Catalog.GetOptional("AcroForm");
-        if (afObj == null) return;
-        if (_page.Document.Resolve(afObj) is not Excise.Core.Primitives.PdfDictionary af) return;
-        _acroFormDa = af.GetStringOrNull("DA");
-        var drObj = af.GetOptional("DR");
-        if (drObj == null) return;
-        _acroFormDr = _page.Document.Resolve(drObj) as Excise.Core.Primitives.PdfDictionary;
     }
 
     /// <summary>
@@ -1572,7 +1476,7 @@ internal partial class RenderContext
         Excise.Core.Document.PdfAnnotation annot, SKRect rect, string value,
         bool useAcroFormDaFallback = true, bool topAlign = false)
     {
-        ResolveAcroFormResources();
+        var acroFormDefaults = AcroFormDefaults;
 
         // An ABSENT /DA is not a reason to drop the value (#889).
         //
@@ -1596,10 +1500,10 @@ internal partial class RenderContext
         // so the auto-size and Helvetica fallback paths run exactly as they do
         // for a /DA that sets no font.
         var da = annot.RawDictionary.GetStringOrNull("DA")
-                 ?? (useAcroFormDaFallback ? _acroFormDa : null)
+                 ?? (useAcroFormDaFallback ? acroFormDefaults.DefaultAppearance : null)
                  ?? "";
 
-        _resourcesStack.Push(_acroFormDr);
+        _resourcesStack.Push(acroFormDefaults.Resources);
         _canvas.Save();
         try
         {
