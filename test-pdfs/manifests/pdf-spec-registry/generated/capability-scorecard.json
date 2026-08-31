@@ -1746,6 +1746,17 @@
       }
     }
   },
+  "testAttribution": {
+    "targetModes": 964,
+    "modesWithTestCandidates": 212,
+    "modesWithExplicitContracts": 663,
+    "modesWithPassingExplicitContracts": 0,
+    "modesWithRecordedPassingCandidate": 2,
+    "testMethods": 5970,
+    "testMethodsWithCapabilityCandidate": 3743,
+    "benchmarkScenarios": 6,
+    "benchmarkScenariosWithHarness": 6
+  },
   "unplannedRequiredCapabilities": [
     "pdf.17.syntax.file",
     "pdf.17.syntax.objects",
