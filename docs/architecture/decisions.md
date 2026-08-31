@@ -99,3 +99,22 @@ capability profile and formal, independently validated output modes are the
 only conformance statements. Every exception is represented in the PDF
 specification capability registry with its reason, mode-specific status, and
 evidence.
+
+## AD-010 — Public document facades do not reverse engine ownership
+
+**Status:** accepted
+
+`PdfPage` and `PdfDocument` remain the stable public document contracts. Their
+established content, text, and save convenience members remain on those types
+for source and binary compatibility, but their declarations and implementation
+live in partial files owned by `core-content`, `core-text`, and `core-writing`.
+The canonical `{TypeName}.cs` declaration owns the public type; each partial
+member's declaration file owns the dependency it makes. A cross-component
+partial type without exactly one canonical declaration fails architecture
+analysis.
+
+These facades must call or contain the one authoritative engine path; they do
+not authorize duplicate parsers, extractors, or writers. New workflow policy
+belongs in focused engine services rather than expanding the document model.
+Removing or relocating the compiled public members requires an explicitly
+versioned API decision and public-API approval change.

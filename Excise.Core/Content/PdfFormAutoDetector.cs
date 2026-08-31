@@ -28,6 +28,8 @@ public sealed record SuggestedField(
 /// case (Word-exported forms with underline placeholders) and miss
 /// gracefully on layouts it doesn't understand. The user is expected to
 /// review and adjust the suggestions before committing.
+/// The source lives with the content engine while its established document
+/// namespace remains unchanged for public API compatibility.
 /// </summary>
 public static class PdfFormAutoDetector
 {
