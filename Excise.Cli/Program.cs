@@ -70,7 +70,7 @@ partial class Program
             CreateAutodetectFieldsCommand(),
             CreateAuditCommand(),
             UnredactCommand.Create(),
-            CreateOcrCommand(),
+            OcrCommand.Create(),
             CreateMakeSearchableCommand(),
             CreateEncryptCommand(),
             CreateDecryptCommand(),
@@ -1244,98 +1244,6 @@ partial class Program
         => s.Replace("\\", "\\\\").Replace("\"", "\\\"")
             .Replace("\n", "\\n").Replace("\r", "\\r");
 
-
-    /// <summary>
-    /// excise ocr &lt;file&gt; [--page N] [--dpi 300] [--lang eng]
-    /// OCR a PDF page (or all pages) using the system tesseract CLI.
-    /// </summary>
-    static Command CreateOcrCommand()
-    {
-        var fileArg = new Argument<FileInfo>("file") { Description = "PDF file to OCR" };
-        var pageOption = new Option<int?>("--page", "-p") { Description = "Page to OCR (1-based). Omit for all pages." };
-        var dpiOption = new Option<int>("--dpi")
-        {
-            Description = "Render DPI for OCR (higher = slower, more accurate)",
-            DefaultValueFactory = _ => 300,
-        };
-        var langOption = new Option<string>("--lang")
-        {
-            Description = "Tesseract language code (e.g. eng, deu, eng+spa)",
-            DefaultValueFactory = _ => "eng",
-        };
-        var tessdataOption = new Option<string?>("--tessdata")
-        {
-            Description = "Path to a directory containing <lang>.traineddata. Defaults to TESSDATA_PREFIX.",
-        };
-
-        var ignorePermissionsOption = CreateIgnorePermissionsOption();
-        var forAccessibilityOption = CreateForAccessibilityOption();
-
-        var command = new Command("ocr", "Render and OCR a PDF page via tesseract")
-        {
-            fileArg, pageOption, dpiOption, langOption, tessdataOption,
-            ignorePermissionsOption, forAccessibilityOption,
-        };
-
-        command.SetAction(parseResult =>
-        {
-            var file = parseResult.GetValue(fileArg)!;
-            var page = parseResult.GetValue(pageOption);
-            var dpi = parseResult.GetValue(dpiOption);
-            var lang = parseResult.GetValue(langOption)!;
-            var tessdata = parseResult.GetValue(tessdataOption);
-            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
-            var forAccessibility = parseResult.GetValue(forAccessibilityOption);
-            if (!file.Exists)
-            {
-                Console.Error.WriteLine($"File not found: {file.FullName}");
-                Environment.ExitCode = 1;
-                return;
-            }
-
-            var ocr = new PdfOcrService(language: lang, dpi: dpi, tessdataPrefix: tessdata);
-            if (!ocr.IsAvailable())
-            {
-                Console.Error.WriteLine(
-                    "tesseract CLI not found on PATH. Install with `apt install tesseract-ocr` " +
-                    "(or your platform's equivalent).");
-                Environment.ExitCode = 1;
-                return;
-            }
-
-            try
-            {
-                // #918: read-only verb — stream, don't load resident.
-                using var doc = PdfDocument.Open(file.FullName);
-                RequireDocumentPermission(doc, DocumentAction.Extract, "OCR text extraction",
-                    ignorePermissions, forAccessibility, accessibilityHint: "--for-accessibility");
-                int from = page.GetValueOrDefault(1);
-                int to   = page.HasValue ? page.Value : doc.PageCount;
-
-                if (from < 1 || from > doc.PageCount || to < from || to > doc.PageCount)
-                {
-                    Console.Error.WriteLine($"Page out of range (document has {doc.PageCount} pages).");
-                    Environment.ExitCode = 1;
-                    return;
-                }
-
-                for (int p = from; p <= to; p++)
-                {
-                    if (doc.PageCount > 1)
-                        Console.WriteLine($"=== Page {p} ===");
-                    var result = ocr.RecognizePage(doc.GetPage(p));
-                    Console.WriteLine(result.Text);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error: {ex.Message}");
-                Environment.ExitCode = 1;
-            }
-        });
-
-        return command;
-    }
 
     static Command CreateMakeSearchableCommand()
     {
