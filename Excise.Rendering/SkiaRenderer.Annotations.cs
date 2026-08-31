@@ -27,6 +27,18 @@ internal partial class RenderContext
 
         foreach (var annot in annots)
         {
+            var visibility = AnnotationAppearancePolicy.EvaluateVisibility(annot, _options);
+            if (!visibility.ShouldRender)
+            {
+                if (visibility.Disposition == AnnotationVisibilityDisposition.UnsupportedInvisible)
+                {
+                    _options.Diagnostics?.Add(
+                        "Annotation of a non-standard subtype has the Invisible flag and no " +
+                        "handler; not drawn (§12.5.3).");
+                }
+                continue;
+            }
+
             // §12.5.2 /CA — the annotation's constant opacity, applied to
             // stroke AND fill, and to a baked /AP appearance stream just as
             // much as to a synthesized one. It is therefore applied HERE,
@@ -44,66 +56,20 @@ internal partial class RenderContext
             var opacityLayer = BeginAnnotationOpacityLayer(annot);
             try
             {
-            // Skip annotations the spec says shouldn't be displayed.
-            // Print=4 is fine — that's an opt-in for *also* including
-            // the annotation in printed output, not a "screen only" flag.
-            // #1021: two visibility groups. Field VALUES are page content a
-            // reviewer must see; review markup is clutter they may want gone.
-            // The split is by subtype and nothing else — a Widget or Link is
-            // "fields and links", everything else is a comment.
-            var isFieldOrLink =
-                annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Widget ||
-                annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Link;
-            if (isFieldOrLink && !_options.ShowFieldAndLinkAnnotations) continue;
-            if (!isFieldOrLink && !_options.ShowCommentAnnotations) continue;
-
-            var f = annot.Flags;
-            if ((f & (Excise.Core.Document.PdfAnnotationFlags.Hidden
-                    | Excise.Core.Document.PdfAnnotationFlags.NoView)) != 0
-                && !_options.RevealHiddenAnnotations)
-                continue;
-
             // #1021: the fillable-field tint, Acrobat's "Highlight Existing
             // Fields". Drawn UNDER the field's own appearance so it never
             // obscures a value, and only when asked — see the warning on
             // RenderOptions.HighlightFormFields about export paths.
-            if (isFieldOrLink && _options.HighlightFormFields &&
+            if (visibility.IsFieldOrLink && _options.HighlightFormFields &&
                 annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Widget)
             {
                 DrawFieldHighlight(annot);
             }
 
-            // Invisible (bit 1) is NARROWER than its name, and reading it as
-            // "never draw" is wrong. §12.5.3 Table 165:
-            //
-            //   "If set, do not display the annotation if it does not belong to
-            //    one of the standard annotation types AND no annotation handler
-            //    is available. If clear, display such an unsupported annotation
-            //    using an appearance stream specified by its appearance
-            //    dictionary, if any."
-            //
-            // So the flag only ever governs annotations of a NON-STANDARD
-            // subtype. For a standard one — /Line, /Circle, /Square … — it has
-            // no effect at all, and an /AP present on such an annotation must
-            // still be drawn.
-            //
-            // Treating it as an unconditional skip blanked two conformance
-            // fixtures that exist to test exactly this: veraPDF 6-3-2-t02-fail-a
-            // (/Line, Invisible+Print, /AP /N present) and isartor-6-5-3-t02-fail-d
-            // (/Circle, same shape). mutool and pdftocairo both draw them.
-            //
-            // PdfAnnotationSubtype.Unknown is precisely "not one of the standard
-            // types", so it is the only case where the flag applies.
-            if ((f & Excise.Core.Document.PdfAnnotationFlags.Invisible) != 0 &&
-                annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Unknown)
-            {
-                _options.Diagnostics?.Add(
-                    "Annotation of a non-standard subtype has the Invisible flag and no " +
-                    "handler; not drawn (§12.5.3).");
-                continue;
-            }
-
-            var appearance = ResolveAppearanceN(annot);
+            var appearance = AnnotationAppearancePolicy.ResolveNormalAppearance(
+                annot,
+                _page.Document,
+                _options.Diagnostics);
             if (appearance == null)
             {
                 // No baked /AP /N stream — synthesize a minimal default
@@ -260,17 +226,6 @@ internal partial class RenderContext
     }
 
     /// <summary>
-    /// Resolve <paramref name="annot"/>'s normal appearance to a Form
-    /// XObject stream. <c>/AP /N</c> is either:
-    /// <list type="bullet">
-    /// <item>a single stream — used regardless of state, or</item>
-    /// <item>a dictionary keyed by state name (Off / Yes / etc.) where
-    ///   <c>/AS</c> picks the active entry — Widget annotations and
-    ///   appearance-stateful ones use this.</item>
-    /// </list>
-    /// Returns null when no usable appearance is present.
-    /// </summary>
-    /// <summary>
     /// VIEWER CHROME, never page content (#1021). A translucent tint over a
     /// form field's <c>/Rect</c> so a user can see what is fillable.
     /// </summary>
@@ -299,88 +254,6 @@ internal partial class RenderContext
             Color = new SKColor(0x33, 0x66, 0xCC, 0x30),
         };
         _canvas.DrawRect(rect, paint);
-    }
-
-    private Excise.Core.Primitives.PdfStream? ResolveAppearanceN(Excise.Core.Document.PdfAnnotation annot)
-    {
-        var apObj = annot.RawDictionary.GetOptional("AP");
-        if (apObj == null) return null;
-        if (_page.Document.Resolve(apObj) is not Excise.Core.Primitives.PdfDictionary ap) return null;
-        var nObj = ap.GetOptional("N");
-        if (nObj == null) return null;
-        var resolved = _page.Document.Resolve(nObj);
-
-        if (resolved is Excise.Core.Primitives.PdfStream stream)
-            return stream;
-
-        if (resolved is Excise.Core.Primitives.PdfDictionary stateDict)
-        {
-            var stateName = annot.RawDictionary.GetNameOrNull("AS");
-            if (stateName != null)
-            {
-                var stateObj = stateDict.GetOptional(stateName);
-                if (stateObj != null &&
-                    _page.Document.Resolve(stateObj) is Excise.Core.Primitives.PdfStream s)
-                    return s;
-
-                // /AS NAMES A STATE THAT /AP /N DOES NOT DEFINE — draw nothing.
-                //
-                // This is not a malformed file, it is the normal way an OFF
-                // checkbox is written. §12.5.5: /AS selects the appearance from
-                // the sub-dictionary, and producers routinely omit /Off from /N
-                // precisely because "off" means there is nothing to draw. IRS
-                // Form W-9 is written exactly this way:
-                //
-                //   /AP << /D << /1 12 0 R /Off 11 0 R >>
-                //          /N << /1 13 0 R >> >>     <- no /Off
-                //   /AS /Off   /V /Off
-                //
-                // Falling through to "first usable entry" here picked /1 — the
-                // CHECKED appearance — and drew a tick in every unchecked box on
-                // a blank federal form. mutool renders the same page with empty
-                // boxes. Found by looking at a screenshot, not by a test.
-                return null;
-            }
-
-            // No /AS at all. A single-entry /N is unambiguous; anything else is
-            // a guess, and guessing which state a form field is in is how the
-            // bug above happened.
-            //
-            // #1054: this loop USED to return the first resolvable entry
-            // whatever the count — and PdfDictionary iteration order is not a
-            // specified property, so which appearance got drawn did not follow
-            // the file. Measured on one checkbox written two ways, identical
-            // apart from the order of /On and /Off inside /AP /N:
-            //
-            //     /On first   -> excise drew the ON state
-            //     /Off first  -> excise drew the OFF state
-            //
-            // The same bytes could render a checkbox ticked or unticked. For a
-            // reviewer deciding what to redact from the rendered page, that is
-            // not a cosmetic defect.
-            //
-            // Drawing NOTHING is both the majority behaviour and the spec's:
-            // mutool and Ghostscript draw nothing, pdftocairo picks /Off, and
-            // §12.5.5 makes /AS the selector — without it the appearance is
-            // simply not determined. It is also the posture excise already
-            // takes one branch up, where /AS names a state /N does not define.
-            Excise.Core.Primitives.PdfStream? only = null;
-            foreach (var kvp in stateDict)
-            {
-                if (_page.Document.Resolve(kvp.Value) is not Excise.Core.Primitives.PdfStream s)
-                    continue;
-                if (only != null)
-                {
-                    _options.Diagnostics?.Add(
-                        $"Annotation /{annot.Subtype} has no /AS and /AP /N defines several " +
-                        "appearance states; nothing drawn (§12.5.5 makes /AS the selector).");
-                    return null;
-                }
-                only = s;
-            }
-            return only;
-        }
-        return null;
     }
 
     /// <summary>
@@ -757,7 +630,7 @@ internal partial class RenderContext
         //   * an ON checkbox draws a check mark — corroborated 3/3;
         //   * an OFF checkbox draws NOTHING, no box — corroborated 3/3;
         //   * the state comes from /AS ALONE. A /V of /Yes with no /AS draws
-        //     nothing anywhere, which matches how ResolveAppearanceN above
+        //     nothing anywhere, which matches the normal-appearance policy
         //     already refuses to guess a state.
         // Radio is deliberately NOT implemented: one renderer of three draws a
         // dot and the other two draw nothing, so implementing it means electing
@@ -821,7 +694,7 @@ internal partial class RenderContext
     /// <c>Off</c>. Absent <c>/AS</c> is NOT treated as on: a checkbox whose
     /// only evidence is <c>/V /Yes</c> draws nothing in mutool, pdftocairo or
     /// pdftoppm, and guessing a state is what put a tick in every empty box of
-    /// a blank IRS W-9 once already (see <see cref="ResolveAppearanceN"/>).
+    /// a blank IRS W-9 once already (see <see cref="AnnotationAppearancePolicy"/>).
     /// </summary>
     private static bool IsWidgetAppearanceStateOn(Excise.Core.Document.PdfAnnotation annot)
     {
