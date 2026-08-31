@@ -14,37 +14,6 @@ partial class Program
 {
     static Task<int> Main(string[] args) => RunAsync(args);
 
-    private static PdfDocument OpenInputForOutput(string inputPath, string outputPath, string? userPassword = null)
-    {
-        // #918: keep same-path input/output commands working on Windows by
-        // avoiding a held read FileStream only when the output resolves to the
-        // input. Distinct-output commands can stream the source instead of
-        // keeping the whole PDF resident.
-        if (PathsReferToSameFile(inputPath, outputPath))
-        {
-            var bytes = File.ReadAllBytes(inputPath);
-            return userPassword is null
-                ? PdfDocument.Open(bytes)
-                : PdfDocument.Open(bytes, userPassword);
-        }
-
-        return userPassword is null
-            ? PdfDocument.Open(inputPath)
-            : PdfDocument.Open(inputPath, userPassword);
-    }
-
-    private static bool PathsReferToSameFile(string left, string right)
-    {
-        var comparison = OperatingSystem.IsWindows()
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
-
-        return string.Equals(
-            Path.TrimEndingDirectorySeparator(Path.GetFullPath(left)),
-            Path.TrimEndingDirectorySeparator(Path.GetFullPath(right)),
-            comparison);
-    }
-
     /// <summary>
     /// Build and invoke the root command. Exposed for tests so they can
     /// exercise the CLI parsing + handler pipeline without spawning a
@@ -370,7 +339,7 @@ partial class Program
         bool drawBox = true, (double R, double G, double B)? boxColor = null,
         bool ocrImageText = false, Action<int, int>? progress = null)
     {
-        using var doc = OpenInputForOutput(inputPath, outputPath, password);
+        using var doc = PdfDocumentLifetime.OpenInputForOutput(inputPath, outputPath, password);
 
         var reEncryption = allowDecrypt ? null : doc.GetReEncryptionOptions(password);
         if (doc.IsEncrypted && allowDecrypt)
@@ -827,7 +796,7 @@ partial class Program
     internal static int RunFillForm(string inputPath, string outputPath, string[] fields, bool flatten,
         bool ignorePermissions = false)
     {
-        using var doc = OpenInputForOutput(inputPath, outputPath);
+        using var doc = PdfDocumentLifetime.OpenInputForOutput(inputPath, outputPath);
         RequireDocumentPermission(doc, DocumentAction.FillForms, "filling form fields", ignorePermissions);
 
         var form = doc.GetAcroForm()
@@ -945,7 +914,7 @@ partial class Program
         string? value, string[] options, bool ignorePermissions = false)
     {
         var rect = ParseRect(rectStr);
-        using var doc = OpenInputForOutput(inputPath, outputPath);
+        using var doc = PdfDocumentLifetime.OpenInputForOutput(inputPath, outputPath);
         RequireDocumentPermission(doc, DocumentAction.ModifyContents,
             "adding form fields", ignorePermissions);
 
@@ -1044,7 +1013,7 @@ partial class Program
             try
             {
                 using var doc = apply
-                    ? OpenInputForOutput(input.FullName, output!.FullName)
+                    ? PdfDocumentLifetime.OpenInputForOutput(input.FullName, output!.FullName)
                     : PdfDocument.Open(input.FullName);
                 if (apply)
                 {
@@ -1330,7 +1299,7 @@ partial class Program
         Excise.Core.Document.PdfDocument doc;
         try
         {
-            doc = OpenInputForOutput(inputPath, outputPath);
+            doc = PdfDocumentLifetime.OpenInputForOutput(inputPath, outputPath);
         }
         catch (Excise.Core.Parsing.PdfEncryptionNotSupportedException)
         {
@@ -1428,7 +1397,7 @@ partial class Program
     /// </summary>
     internal static void RunDecrypt(string inputPath, string outputPath, string? password)
     {
-        using var doc = OpenInputForOutput(inputPath, outputPath, password);
+        using var doc = PdfDocumentLifetime.OpenInputForOutput(inputPath, outputPath, password);
         if (!doc.IsEncrypted)
             throw new InvalidOperationException("Source PDF is not encrypted; nothing to decrypt.");
 
