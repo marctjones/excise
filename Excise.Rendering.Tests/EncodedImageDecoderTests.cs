@@ -34,4 +34,17 @@ public sealed class EncodedImageDecoderTests
             "Skia may ignore a preferred decode size for codecs without scaled decode support");
         decoded.Height.Should().Be(2);
     }
+
+    [Fact]
+    public void CancellationIsPropagatedInsteadOfReportedAsMalformedData()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        var act = () => EncodedImageDecoder.Decode(new EncodedImageDecodeRequest(
+            new byte[] { 1, 2, 3, 4 },
+            CancellationToken: cancellation.Token));
+
+        act.Should().Throw<OperationCanceledException>();
+    }
 }

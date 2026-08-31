@@ -491,13 +491,16 @@ internal partial class RenderContext
 
                 return EncodedImageDecoder.Decode(new EncodedImageDecodeRequest(
                     dctData,
-                    GetDecodeSize(width, height, targetWidth, targetHeight)));
+                    GetDecodeSize(width, height, targetWidth, targetHeight),
+                    _cancellationToken));
             }
 
             if (filters.Contains("JPXDecode"))
             {
                 var bitmap = DecodeJpxImage(imageStream, width, height);
-                bitmap ??= EncodedImageDecoder.Decode(new EncodedImageDecodeRequest(imageStream.EncodedData));
+                bitmap ??= EncodedImageDecoder.Decode(new EncodedImageDecodeRequest(
+                    imageStream.EncodedData,
+                    CancellationToken: _cancellationToken));
                 return bitmap;
             }
 
@@ -508,6 +511,10 @@ internal partial class RenderContext
                 bitsPerComponent,
                 colorSpace,
                 imageStream);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch
         {
@@ -975,255 +982,21 @@ internal partial class RenderContext
 
     private SKBitmap? DecodeJpxImage(Excise.Core.Primitives.PdfStream imageStream, int sourceWidth, int sourceHeight)
     {
-        try
-        {
-            var colorSpaceObject = imageStream.GetOptional("ColorSpace");
-            var colorSpace = colorSpaceObject != null
-                ? ResolveImageColorSpace(colorSpaceObject)
-                : PdfColorSpace.DeviceRGB;
-
-            var desiredComponents = Math.Max(1, colorSpace.Components);
-            if (colorSpace.Components >= 3 && imageStream.GetOptional("SMask") == null)
-                desiredComponents++;
-
-            var estimatedTarget = EstimateImageDecodeSize(sourceWidth, sourceHeight);
-            var image = desiredComponents == 1 && imageStream.GetOptional("SMask") != null
-                ? JpxDecoder.TryDecodeOpenJpegGray(GetTerminalJpxData(imageStream))
-                : TryDecodeJpxWithOpenJpeg(imageStream, sourceWidth, sourceHeight, estimatedTarget.Width, estimatedTarget.Height, desiredComponents);
-            if (image == null && (long)sourceWidth * sourceHeight <= MaxExpandedSoftMaskPixels)
-                image = JpxDecoder.TryDecodeManaged(GetTerminalJpxData(imageStream), desiredComponents);
-            if (image == null || sourceWidth <= 0 || sourceHeight <= 0 || image.Components <= 0)
-                return null;
-
-            var components = image.ComponentData;
-            if (components.Length == 0)
-                return null;
-
-            var decodedWidth = image.Width > 0 ? image.Width : sourceWidth;
-            var decodedHeight = image.Height > 0 ? image.Height : sourceHeight;
-            var (targetWidth, targetHeight) = image.BitsPerComponent > 8
-                ? ClampImageTargetSize(sourceWidth, sourceHeight, sourceWidth, sourceHeight)
-                : ClampImageTargetSize(decodedWidth, decodedHeight, estimatedTarget.Width, estimatedTarget.Height);
-
-            var pixels = new byte[checked(targetWidth * targetHeight * 4)];
-            var dst = 0;
-            var sourcePixelCount = (long)decodedWidth * decodedHeight;
-            var hasExternalSoftMask = imageStream.GetOptional("SMask") != null;
-            var hasEmbeddedAlpha = !hasExternalSoftMask &&
-                                   components.Length > colorSpace.Components &&
-                                   colorSpace.Components >= 1;
-            var imageColorConverter = ImageColorConverter.For(colorSpace);
-            for (int y = 0; y < targetHeight; y++)
-            {
-                var sourceY = MapTargetToSource(y, targetHeight, decodedHeight);
-                var sourceRow = (long)sourceY * decodedWidth;
-                for (int x = 0; x < targetWidth; x++)
-                {
-                    var sourceX = MapTargetToSource(x, targetWidth, decodedWidth);
-                    var idx = sourceRow + sourceX;
-                    if (idx >= sourcePixelCount)
-                        continue;
-
-                    double rd;
-                    double gd;
-                    double bd;
-                    if (image.ComponentsAreDisplayRgb && components.Length >= 3)
-                    {
-                        rd = NormalizeJpxSampleToUnit(
-                            idx < components[0].LongLength ? components[0][(int)idx] : 0,
-                            image.BitsPerComponent);
-                        gd = NormalizeJpxSampleToUnit(
-                            idx < components[1].LongLength ? components[1][(int)idx] : 0,
-                            image.BitsPerComponent);
-                        bd = NormalizeJpxSampleToUnit(
-                            idx < components[2].LongLength ? components[2][(int)idx] : 0,
-                            image.BitsPerComponent);
-                    }
-                    else if (colorSpace.Type == PdfColorSpaceType.Indexed)
-                    {
-                        var index = idx < components[0].Length ? components[0][idx] : 0;
-                        if (imageColorConverter != null)
-                        {
-                            var rgb = imageColorConverter.ToRgb(index);
-                            rd = rgb.R / 255.0;
-                            gd = rgb.G / 255.0;
-                            bd = rgb.B / 255.0;
-                        }
-                        else
-                        {
-                            (rd, gd, bd) = colorSpace.ToRgb([index]);
-                        }
-                    }
-                    else
-                    {
-                        var values = new double[Math.Max(1, colorSpace.Components)];
-                        for (int c = 0; c < values.Length; c++)
-                        {
-                            var componentIndex = GetJpxColorComponentIndex(image, colorSpace, c, components.Length);
-                            var sample = componentIndex < components.Length && idx < components[componentIndex].LongLength
-                                ? components[componentIndex][(int)idx]
-                                : 0;
-                            values[c] = colorSpace.DecodeSampleByte(c, NormalizeJpxSampleToByte(sample, image.BitsPerComponent));
-                        }
-
-                        if (imageColorConverter != null)
-                        {
-                            var rgb = imageColorConverter.ToRgb(values);
-                            rd = rgb.R / 255.0;
-                            gd = rgb.G / 255.0;
-                            bd = rgb.B / 255.0;
-                        }
-                        else
-                        {
-                            (rd, gd, bd) = colorSpace.ToRgb(values);
-                        }
-                    }
-
-                    var alpha = 255;
-                    if (hasEmbeddedAlpha)
-                    {
-                        var alphaComponentIndex = GetJpxAlphaComponentIndex(image, colorSpace.Components, components.Length);
-                        var alphaComponent = components[alphaComponentIndex];
-                        if (idx < alphaComponent.LongLength)
-                            alpha = NormalizeJpxSampleToByte(alphaComponent[(int)idx], image.BitsPerComponent);
-                    }
-
-                    pixels[dst++] = (byte)Math.Clamp(rd * 255, 0, 255);
-                    pixels[dst++] = (byte)Math.Clamp(gd * 255, 0, 255);
-                    pixels[dst++] = (byte)Math.Clamp(bd * 255, 0, 255);
-                    pixels[dst++] = (byte)alpha;
-                }
-            }
-
-            return CreateBitmapFromRgbaBytes(targetWidth, targetHeight, pixels);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private JpxImage? TryDecodeJpxWithOpenJpeg(
-        Excise.Core.Primitives.PdfStream imageStream,
-        int sourceWidth,
-        int sourceHeight,
-        int targetWidth,
-        int targetHeight,
-        int desiredComponents)
-    {
-        var reduceFactor = ChooseOpenJpegReduceFactor(sourceWidth, sourceHeight, targetWidth, targetHeight);
-        return JpxDecoder.TryDecodeOpenJpeg(GetTerminalJpxData(imageStream), reduceFactor);
-    }
-
-    private static int ChooseOpenJpegReduceFactor(int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
-    {
-        const int maxOpenJpegReduction = 5;
-        var reduce = 0;
-        while (reduce < maxOpenJpegReduction)
-        {
-            var next = reduce + 1;
-            var nextWidth = Math.Max(1, sourceWidth >> next);
-            var nextHeight = Math.Max(1, sourceHeight >> next);
-            if (nextWidth < targetWidth || nextHeight < targetHeight)
-            {
-                var currentWidth = Math.Max(1, sourceWidth >> reduce);
-                var currentHeight = Math.Max(1, sourceHeight >> reduce);
-                if ((long)currentWidth * currentHeight > MaxExpandedSoftMaskPixels)
-                {
-                    reduce = next;
-                    continue;
-                }
-
-                break;
-            }
-
-            reduce = next;
-        }
-
-        return reduce;
-    }
-
-    private static int GetJpxColorComponentIndex(
-        JpxImage image,
-        PdfColorSpace colorSpace,
-        int requestedComponent,
-        int decodedComponentCount)
-    {
-        if (image.ComponentDefinitions.Count > 0)
-        {
-            var association = requestedComponent + 1;
-            foreach (var component in image.ComponentDefinitions)
-            {
-                if (component.Type == 0 &&
-                    component.Association == association &&
-                    component.ComponentIndex >= 0 &&
-                    component.ComponentIndex < decodedComponentCount)
-                {
-                    return component.ComponentIndex;
-                }
-            }
-        }
-
-        if (decodedComponentCount >= 3 &&
-            requestedComponent < 3 &&
-            !image.ComponentsAreLogicalColorOrder &&
-            colorSpace.Components == 3 &&
-            (colorSpace.Type == PdfColorSpaceType.DeviceRGB ||
-             colorSpace.Type == PdfColorSpaceType.CalRGB ||
-             colorSpace.Type == PdfColorSpaceType.ICCBased))
-        {
-            // CSJ2K exposes decoded color components in bitmap BGR order for
-            // RGB JP2 images. PDF color conversion expects logical RGB order.
-            return 2 - requestedComponent;
-        }
-
-        return requestedComponent;
-    }
-
-    private static int GetJpxAlphaComponentIndex(JpxImage image, int fallbackIndex, int decodedComponentCount)
-    {
-        if (image.ComponentDefinitions.Count > 0)
-        {
-            foreach (var component in image.ComponentDefinitions)
-            {
-                if (component.Type is 1 or 2 &&
-                    component.ComponentIndex >= 0 &&
-                    component.ComponentIndex < decodedComponentCount)
-                {
-                    return component.ComponentIndex;
-                }
-            }
-        }
-
-        return Math.Clamp(fallbackIndex, 0, Math.Max(0, decodedComponentCount - 1));
-    }
-
-    private static byte NormalizeJpxSampleToByte(int sample, int bitsPerComponent)
-    {
-        if (bitsPerComponent <= 8)
-            return (byte)Math.Clamp(sample, 0, 255);
-
-        var maxSample = bitsPerComponent >= 31
-            ? int.MaxValue
-            : (1 << bitsPerComponent) - 1;
-        if (maxSample <= 255)
-            return (byte)Math.Clamp(sample, 0, 255);
-
-        var normalized = (long)Math.Clamp(sample, 0, maxSample) * 255 + (maxSample / 2);
-        return (byte)(normalized / maxSample);
-    }
-
-    private static double NormalizeJpxSampleToUnit(int sample, int bitsPerComponent)
-    {
-        if (bitsPerComponent <= 8)
-            return Math.Clamp(sample, 0, 255) / 255.0;
-
-        var maxSample = bitsPerComponent >= 31
-            ? int.MaxValue
-            : (1 << bitsPerComponent) - 1;
-        return maxSample > 0
-            ? Math.Clamp(sample, 0, maxSample) / (double)maxSample
-            : 0;
+        var colorSpaceObject = imageStream.GetOptional("ColorSpace");
+        var colorSpace = colorSpaceObject != null
+            ? ResolveImageColorSpace(colorSpaceObject)
+            : PdfColorSpace.DeviceRGB;
+        var estimatedTarget = EstimateImageDecodeSize(sourceWidth, sourceHeight);
+        return JpxImageDecoder.Decode(new JpxImageDecodeRequest(
+            GetTerminalJpxData(imageStream),
+            sourceWidth,
+            sourceHeight,
+            estimatedTarget.Width,
+            estimatedTarget.Height,
+            colorSpace,
+            imageStream.GetOptional("SMask") != null,
+            MaxExpandedSoftMaskPixels,
+            _cancellationToken));
     }
 
     private (int Width, int Height) EstimateImageDecodeSize(int sourceWidth, int sourceHeight)
@@ -1389,7 +1162,7 @@ internal partial class RenderContext
         return decoded == expectedLength;
     }
 
-    private static SoftMaskAlpha? DecodeSoftMaskData(
+    private SoftMaskAlpha? DecodeSoftMaskData(
         Excise.Core.Primitives.PdfStream maskStream,
         int width,
         int height,
@@ -1403,7 +1176,8 @@ internal partial class RenderContext
         {
             using var maskBitmap = EncodedImageDecoder.Decode(new EncodedImageDecodeRequest(
                 GetTerminalDctData(maskStream, filters),
-                GetDecodeSize(width, height, targetWidth, targetHeight)));
+                GetDecodeSize(width, height, targetWidth, targetHeight),
+                _cancellationToken));
             if (maskBitmap != null)
                 return new SoftMaskAlpha(
                     ExtractSoftMaskAlpha(maskBitmap, targetWidth, targetHeight, maskStream),
@@ -1427,7 +1201,9 @@ internal partial class RenderContext
             }
 
             using var maskBitmap = EncodedImageDecoder.Decode(
-                new EncodedImageDecodeRequest(maskStream.EncodedData));
+                new EncodedImageDecodeRequest(
+                    maskStream.EncodedData,
+                    CancellationToken: _cancellationToken));
             if (maskBitmap != null)
                 return new SoftMaskAlpha(ExtractSoftMaskAlpha(maskBitmap, targetWidth, targetHeight, maskStream), targetWidth, targetHeight);
         }
@@ -2053,7 +1829,8 @@ internal partial class RenderContext
             pdfColorSpace,
             componentsPerPixel,
             GetImageDecodeArray(stream),
-            colorKeyMask));
+            colorKeyMask,
+            _cancellationToken));
     }
 
     private static SKBitmap? CreateBitmapFromRgbaBytes(

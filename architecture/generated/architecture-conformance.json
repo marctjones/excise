@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "d6862622540ad6fd6e34071d448473cd90785b78",
+  "sourceRevision": "1318804d873ef32dcb56c5822b5ef59c800f2970",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5706,
+    "retainedSymbols": 5713,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -1088,14 +1088,14 @@
     {
       "source": "rendering",
       "target": "core",
-      "references": 139,
-      "typeDependencyCount": 10,
+      "references": 143,
+      "typeDependencyCount": 13,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Rendering.RenderContext",
           "target": "Excise.Core.ColorSpaces.PdfColorSpace",
-          "references": 60
+          "references": 53
         }
       ]
     },
@@ -1164,12 +1164,12 @@
     {
       "source": "rendering",
       "target": "core-parsing",
-      "references": 33,
-      "typeDependencyCount": 4,
+      "references": 35,
+      "typeDependencyCount": 6,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Rendering.RenderContext",
+          "source": "Excise.Rendering.JpxImageDecoder",
           "target": "Excise.Core.Filters.Jpx.JpxImage",
           "references": 16
         }
@@ -1178,7 +1178,7 @@
     {
       "source": "rendering",
       "target": "core-primitives",
-      "references": 562,
+      "references": 561,
       "typeDependencyCount": 27,
       "classification": "declared",
       "evidence": [
