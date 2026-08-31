@@ -40,6 +40,23 @@ internal static class XamlSeedResolver
             }
         }
 
+        foreach (var typeName in catalog.InstantiatedTypes.Order(StringComparer.Ordinal))
+        {
+            foreach (var type in sourceTypes[typeName])
+            {
+                foreach (var constructor in type.InstanceConstructors
+                             .Where(constructor => constructor.Parameters.Length == 0)
+                             .Select(Original)
+                             .Where(sourceSymbols.Contains))
+                {
+                    AddSeed(
+                        constructor,
+                        "xaml-constructor",
+                        "parameterless constructor activated by compiled AXAML");
+                }
+            }
+        }
+
         foreach (var reference in catalog.QualifiedMembers
                      .OrderBy(reference => reference.ContainingType, StringComparer.Ordinal)
                      .ThenBy(reference => reference.Member, StringComparer.Ordinal)
@@ -210,6 +227,7 @@ internal static class XamlSeedResolver
                               {
                                   internal sealed class MainWindow
                                   {
+                                      public MainWindow() { }
                                       private void OnClick() { }
                                   }
                               }
@@ -233,6 +251,7 @@ internal static class XamlSeedResolver
                               {
                                   internal sealed class PdfViewerControl
                                   {
+                                      public PdfViewerControl() { }
                                       public object? Document { get; set; }
                                   }
                               }
@@ -263,6 +282,7 @@ internal static class XamlSeedResolver
         var requiredSeeds = new[]
         {
             ("OnClick", "xaml-handler"),
+            (".ctor", "xaml-constructor"),
             ("Document", "xaml-member"),
             ("StaticLabel", "xaml-member"),
             ("Child", "xaml-binding"),

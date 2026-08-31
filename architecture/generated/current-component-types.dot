@@ -6,47 +6,47 @@ digraph excise_architecture {
   subgraph cluster_delivery {
     label="delivery";
     color="#cbd5e1";
-    "app" [label="Excise.App project\npartial\n686 retained symbols", fillcolor="#fff3bf"];
-    "cli" [label="Excise.Cli project\npartial\n119 retained symbols", fillcolor="#fff3bf"];
+    "app" [label="Excise.App project\npartial\n689 retained symbols", fillcolor="#fff3bf"];
+    "cli" [label="Excise.Cli project\npartial\n120 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {
     label="engine";
     color="#cbd5e1";
-    "core-content" [label="Content-stream walker and sinks\nimplemented\n240 retained symbols", fillcolor="#d8f3dc"];
-    "core-document" [label="Document model and mutation boundary\npartial\n537 retained symbols", fillcolor="#fff3bf"];
+    "core-content" [label="Content-stream walker and sinks\nimplemented\n248 retained symbols", fillcolor="#d8f3dc"];
+    "core-document" [label="Document model and mutation boundary\npartial\n538 retained symbols", fillcolor="#fff3bf"];
     "core-fonts" [label="Font decoding, metrics, and subsetting\npartial\n114 retained symbols", fillcolor="#fff3bf"];
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n0 retained symbols", fillcolor="#fff3bf"];
-    "core-security" [label="Encryption, permissions, signatures, and document validation\npartial\n101 retained symbols", fillcolor="#fff3bf"];
-    "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n481 retained symbols", fillcolor="#d8f3dc"];
+    "core-security" [label="Encryption, permissions, signatures, and document validation\npartial\n102 retained symbols", fillcolor="#fff3bf"];
+    "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n482 retained symbols", fillcolor="#d8f3dc"];
     "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n47 retained symbols", fillcolor="#d8f3dc"];
     "rendering" [label="Excise.Rendering project\npartial\n721 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_foundation {
     label="foundation";
     color="#cbd5e1";
-    "core" [label="Excise.Core project\nimplemented\n395 retained symbols", fillcolor="#d8f3dc"];
-    "core-parsing" [label="Parser, xref, filters, and hostile-input boundary\nimplemented\n559 retained symbols", fillcolor="#d8f3dc"];
-    "core-primitives" [label="PDF primitives and object graph\nimplemented\n140 retained symbols", fillcolor="#d8f3dc"];
+    "core" [label="Excise.Core project\nimplemented\n401 retained symbols", fillcolor="#d8f3dc"];
+    "core-parsing" [label="Parser, xref, filters, and hostile-input boundary\nimplemented\n561 retained symbols", fillcolor="#d8f3dc"];
+    "core-primitives" [label="PDF primitives and object graph\nimplemented\n151 retained symbols", fillcolor="#d8f3dc"];
   }
   subgraph cluster_integration {
     label="integration";
     color="#cbd5e1";
-    "ocr" [label="Excise.Ocr project\nimplemented\n43 retained symbols", fillcolor="#d8f3dc"];
+    "ocr" [label="Excise.Ocr project\nimplemented\n44 retained symbols", fillcolor="#d8f3dc"];
     "ocr-native" [label="Excise.Ocr.Native project\nimplemented\n31 retained symbols", fillcolor="#d8f3dc"];
   }
   subgraph cluster_presentation {
     label="presentation";
     color="#cbd5e1";
-    "app-main-window" [label="Main-window orchestration and feature state\npartial\n347 retained symbols", fillcolor="#fff3bf"];
-    "avalonia" [label="Excise.Avalonia project\npartial\n401 retained symbols", fillcolor="#fff3bf"];
+    "app-main-window" [label="Main-window orchestration and feature state\npartial\n350 retained symbols", fillcolor="#fff3bf"];
+    "avalonia" [label="Excise.Avalonia project\npartial\n402 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_verification {
     label="verification";
     color="#cbd5e1";
-    "architecture-tooling" [label="Architecture registry, reachability, and derived diagrams\npartial\n124 retained symbols", fillcolor="#fff3bf"];
+    "architecture-tooling" [label="Architecture registry, reachability, and derived diagrams\npartial\n135 retained symbols", fillcolor="#fff3bf"];
     "verification" [label="Repository verification system\npartial\n0 retained symbols", fillcolor="#fff3bf"];
   }
-  "app" -> "app-main-window" [label="252 refs / 18 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app" -> "app-main-window" [label="253 refs / 18 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core" [label="33 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-content" [label="9 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-document" [label="314 refs / 50 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -55,12 +55,12 @@ digraph excise_architecture {
   "app" -> "core-text" [label="47 refs / 15 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "ocr" [label="29 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "rendering" [label="3 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "app-main-window" -> "app" [label="495 refs / 56 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "app-main-window" -> "core" [label="7 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app-main-window" -> "app" [label="496 refs / 56 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app-main-window" -> "core" [label="8 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core-document" [label="309 refs / 44 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core-parsing" [label="3 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core-security" [label="35 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "app-main-window" -> "core-text" [label="65 refs / 17 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app-main-window" -> "core-text" [label="66 refs / 17 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "ocr" [label="24 refs / 5 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "rendering" [label="3 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core" [label="7 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -79,15 +79,15 @@ digraph excise_architecture {
   "core" -> "core-document" [label="309 refs / 34 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-fonts" [label="38 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-parsing" [label="11 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core" -> "core-primitives" [label="340 refs / 45 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core" -> "core-primitives" [label="342 refs / 45 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-writing" [label="4 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-document" [label="71 refs / 9 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-content" -> "core-fonts" [label="28 refs / 7 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-parsing" [label="6 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-primitives" [label="273 refs / 36 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-content" -> "core-text" [label="37 refs / 10 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
+  "core-content" -> "core-text" [label="45 refs / 11 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-content" -> "core-writing" [label="4 refs / 2 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
-  "core-document" -> "core" [label="36 refs / 12 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-document" -> "core" [label="38 refs / 12 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-content" [label="13 refs / 5 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-parsing" [label="80 refs / 10 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-primitives" [label="1363 refs / 174 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -104,7 +104,7 @@ digraph excise_architecture {
   "core-security" -> "core-primitives" [label="102 refs / 24 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core" [label="4 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core-content" [label="220 refs / 35 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-text" -> "core-document" [label="586 refs / 76 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
+  "core-text" -> "core-document" [label="588 refs / 76 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-text" -> "core-fonts" [label="26 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core-parsing" [label="2 refs / 1 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-text" -> "core-primitives" [label="414 refs / 95 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];

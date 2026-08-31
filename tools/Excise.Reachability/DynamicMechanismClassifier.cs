@@ -57,6 +57,18 @@ internal static class DynamicMechanismClassifier
             .OfType<INamedTypeSymbol>()
             .LastOrDefault();
 
+    public static INamedTypeSymbol? ResolveDependencyInjectionActivationType(
+        IMethodSymbol method)
+    {
+        if (Classify(method) != DynamicInvocationKind.DependencyInjectionRegistration
+            || method.Parameters.Any(parameter => parameter.Type.TypeKind == TypeKind.Delegate))
+        {
+            return null;
+        }
+
+        return method.TypeArguments.OfType<INamedTypeSymbol>().LastOrDefault();
+    }
+
     public static DynamicAttributeKind Classify(INamedTypeSymbol? attributeType)
     {
         return attributeType?.ToDisplayString() switch
@@ -86,6 +98,7 @@ internal static class DynamicMechanismClassifier
                                   public static class ServiceCollectionExtensions
                                   {
                                       public static void AddSingleton<T>(object services) { }
+                                      public static void AddSingleton<T>(object services, Func<object, T> factory) { }
                                   }
                               }
 
@@ -113,6 +126,8 @@ internal static class DynamicMechanismClassifier
                                   {
                                       Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions
                                           .AddSingleton<Globals>(new object());
+                                      Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions
+                                          .AddSingleton<Globals>(new object(), _ => new Globals());
                                       Assembly.Load("System.Runtime");
                                       Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript
                                           .Create("return 1;", new object(), typeof(Globals));
@@ -146,6 +161,21 @@ internal static class DynamicMechanismClassifier
         if (requiredInvocations.Any(kind => !invocationKinds.Contains(kind)))
         {
             Console.Error.WriteLine("FAIL: dynamic mechanism self-test missed an invocation contract.");
+            return false;
+        }
+
+        var dependencyInjectionMethods = root.DescendantNodes()
+            .OfType<InvocationExpressionSyntax>()
+            .Select(invocation => model.GetSymbolInfo(invocation).Symbol as IMethodSymbol)
+            .Where(method => method is not null
+                             && Classify(method) == DynamicInvocationKind.DependencyInjectionRegistration)
+            .ToArray();
+        if (!dependencyInjectionMethods.Any(method =>
+                ResolveDependencyInjectionActivationType(method!)?.Name == "Globals")
+            || !dependencyInjectionMethods.Any(method =>
+                ResolveDependencyInjectionActivationType(method!) is null))
+        {
+            Console.Error.WriteLine("FAIL: dynamic mechanism self-test misclassified DI activation.");
             return false;
         }
 
