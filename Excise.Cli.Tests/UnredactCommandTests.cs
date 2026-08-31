@@ -2,7 +2,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using AwesomeAssertions;
+using Excise.Cli.Commands;
 using Xunit;
 
 namespace Excise.Cli.Tests;
@@ -109,6 +111,143 @@ public class UnredactCommandTests
         finally { File.Delete(pdf); }
     }
 
+    [Fact]
+    public void Handler_CertainChannelReturnsTypedReportWithoutSecondCliProcess()
+    {
+        var pdf = WriteFakeRedaction();
+        try
+        {
+            var outcome = UnredactCommandHandler.Execute(
+                new UnredactCommandInput(
+                    pdf,
+                    "certain",
+                    DictionaryPath: null,
+                    Tolerance: 0.5,
+                    MaxCandidates: 200,
+                    UseOcr: false,
+                    NoCorroboration: false),
+                TestContext.Current.CancellationToken);
+
+            outcome.ExitCode.Should().Be(3);
+            outcome.Error.Should().BeNull();
+            outcome.Report.Should().NotBeNull();
+            outcome.Report!.Certain.Should().ContainSingle();
+            outcome.Report.Certain[0].Text.Should().Contain("Farrar");
+            outcome.Report.Certain[0].HiddenBy.Should().Contain("rectangle");
+            outcome.Report.Residue.Should().BeEmpty();
+            outcome.Report.Quantification.Should().Be(new UnredactQuantification(
+                Findings: 1,
+                FullyRecoverable: 1,
+                WidthResidueGaps: 0,
+                WidthResidueBitsTotal: 0,
+                Recovered: 1,
+                Corroboration: "n/a (certain mode)"));
+        }
+        finally { File.Delete(pdf); }
+    }
+
+    [Fact]
+    public void Handler_OwnsValidationCancellationAndExitStatus()
+    {
+        var pdf = WriteFakeRedaction();
+        try
+        {
+            UnredactCommandInput Input(string mode, string? dictionary = null) => new(
+                pdf,
+                mode,
+                dictionary,
+                Tolerance: 0.5,
+                MaxCandidates: 200,
+                UseOcr: false,
+                NoCorroboration: false);
+
+            var invalidMode = UnredactCommandHandler.Execute(
+                Input("wrong"),
+                TestContext.Current.CancellationToken);
+            invalidMode.ExitCode.Should().Be(2);
+            invalidMode.Error.Should().Be("--mode must be certain, residue, or both");
+
+            var missingDictionary = UnredactCommandHandler.Execute(
+                Input("residue"),
+                TestContext.Current.CancellationToken);
+            missingDictionary.ExitCode.Should().Be(2);
+            missingDictionary.Error.Should().Contain("dictionary");
+
+            using var cancelled = new CancellationTokenSource();
+            cancelled.Cancel();
+            var cancelledOutcome = UnredactCommandHandler.Execute(Input("certain"), cancelled.Token);
+            cancelledOutcome.ExitCode.Should().Be(1);
+            cancelledOutcome.Error.Should().Be("Operation cancelled.");
+        }
+        finally { File.Delete(pdf); }
+    }
+
+    [Fact]
+    public void TypedOutput_PreservesJsonAndHumanContracts()
+    {
+        var report = new UnredactReport(
+            new UnredactQuantification(1, 1, 0, 0, 1, "n/a (certain mode)"),
+            new[] { new UnredactCertainFinding(1, "SECRET", "black filled rectangle", 12.3, 45.6) },
+            Array.Empty<UnredactResidueFinding>());
+        var outcome = new UnredactCommandOutcome(3, report, null);
+
+        using var json = new StringWriter();
+        using var jsonError = new StringWriter();
+        UnredactCommandOutput.Write(outcome, json: true, json, jsonError);
+        jsonError.ToString().Should().BeEmpty();
+        json.ToString().Should().Contain("\"fullyRecoverable\": 1");
+        json.ToString().Should().Contain("\"hiddenBy\": \"black filled rectangle\"");
+        json.ToString().Should().NotContain("\"confidence\"",
+            "non-OCR findings did not expose a null confidence field before the extraction");
+        using (var parsed = JsonDocument.Parse(json.ToString()))
+        {
+            parsed.RootElement.EnumerateObject().Select(property => property.Name)
+                .Should().Equal("quantification", "certain", "residue");
+            parsed.RootElement.GetProperty("quantification").EnumerateObject()
+                .Select(property => property.Name)
+                .Should().Equal(
+                    "findings", "fullyRecoverable", "widthResidueGaps",
+                    "widthResidueBitsTotal", "recovered", "corroboration");
+            parsed.RootElement.GetProperty("certain")[0].EnumerateObject()
+                .Select(property => property.Name)
+                .Should().Equal("page", "text", "hiddenBy", "x", "y");
+        }
+
+        var residueReport = new UnredactReport(
+            new UnredactQuantification(1, 0, 1, 1, 0, "mutool (independent)"),
+            Array.Empty<UnredactCertainFinding>(),
+            new[]
+            {
+                new UnredactResidueFinding(
+                    1, 10.5, "Helvetica", 12, "Standard14Exact",
+                    2, 1, 0.5, new[] { "ALPHA", "BRAVO" }, "ok"),
+            });
+        using var residueJson = new StringWriter();
+        UnredactCommandOutput.Write(
+            new UnredactCommandOutcome(4, residueReport, null),
+            json: true,
+            residueJson,
+            jsonError);
+        using (var parsed = JsonDocument.Parse(residueJson.ToString()))
+        {
+            parsed.RootElement.GetProperty("residue")[0].EnumerateObject()
+                .Select(property => property.Name)
+                .Should().Equal(
+                    "page", "gapWidthPt", "font", "sizePt", "metricSource",
+                    "candidatesFit", "residualEntropyBits", "contextAdjustedBits",
+                    "candidates", "status");
+        }
+
+        using var human = new StringWriter();
+        using var humanError = new StringWriter();
+        UnredactCommandOutput.Write(outcome, json: false, human, humanError);
+        humanError.ToString().Should().BeEmpty();
+        human.ToString().Should().Contain(
+            "QUANTIFICATION — 1 finding(s), 1 RECOVERED: 1 text present, 0 width-residue gap(s) leaking 0 bits total.");
+        human.ToString().Should().Contain(
+            "page 1 (12.3,45.6) [black filled rectangle]: \"SECRET\"");
+    }
+
     private static string RepoRootPath() => RepoRoot();
 
     /// <summary>A synthetic corpus case path, or null if the corpus is absent.</summary>
@@ -143,6 +282,38 @@ public class UnredactCommandTests
             exit.Should().Be(4, "a width-preserving redaction leaves residue");
             output.Should().Contain(answer, "the true answer must be among the width-fit candidates");
             output.Should().Contain("bits", "residue reports entropy, never asserts");
+        }
+        finally { File.Delete(redacted); File.Delete(dict); }
+    }
+
+    [Fact]
+    public void Handler_ResidueChannelReturnsTypedFindingWithoutSecondUnredactProcess()
+    {
+        var pdf = CorpusCase("B1-helvetica12-original", "original");
+        Assert.SkipWhen(pdf == null, "synthetic corpus absent");
+        var answer = Path.GetFileNameWithoutExtension(pdf!).Split('-').Last();
+        var redacted = Path.Combine(Path.GetTempPath(), $"ur-handler-{Guid.NewGuid():N}.pdf");
+        var dict = Path.Combine(Path.GetTempPath(), $"dict-handler-{Guid.NewGuid():N}.txt");
+        File.WriteAllLines(dict, new[] { answer, "Zzzzzz", "Qqqqqqqqqq" });
+        try
+        {
+            RunRedact(pdf!, redacted, answer);
+            var outcome = UnredactCommandHandler.Execute(
+                new UnredactCommandInput(
+                    redacted,
+                    "residue",
+                    dict,
+                    Tolerance: 0.5,
+                    MaxCandidates: 200,
+                    UseOcr: false,
+                    NoCorroboration: false),
+                TestContext.Current.CancellationToken);
+
+            outcome.ExitCode.Should().Be(4);
+            outcome.Report!.Certain.Should().BeEmpty();
+            outcome.Report.Residue.Should().Contain(
+                finding => finding.Candidates.Contains(answer));
+            outcome.Report.Quantification.Corroboration.Should().Be("mutool (independent)");
         }
         finally { File.Delete(redacted); File.Delete(dict); }
     }
