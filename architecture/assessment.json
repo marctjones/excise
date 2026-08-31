@@ -320,16 +320,22 @@
         "scripts/check-reachability.sh --quiet",
         "scripts/check-unwired-api.sh --quiet",
         "architecture/generated/code-topology.json",
+        "architecture/generated/architecture-conformance.json",
+        "architecture/generated/current-component-types.dot",
+        "architecture/generated/current-vs-target.dot",
         "architecture/generated/change-coupling.json"
       ],
       "gaps": [
-        "The generated topology is evidence; explicit current-versus-target violation reports and reviewer-oriented diagram views remain to be added."
+        "The observed-versus-target report currently identifies 12 undeclared component edges for architectural review and 277 unresolved type edges confined to explicit non-shipping ownership gaps; dynamic reachability seed contracts remain incomplete."
       ],
       "issueIds": [
         940,
         1234,
         1247,
-        1248
+        1248,
+        1300,
+        1301,
+        1302
       ]
     }
   ],

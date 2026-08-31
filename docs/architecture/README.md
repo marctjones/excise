@@ -28,6 +28,13 @@ second implementation-status list.
    symbol rows use the most-specific `ownership` root, fall back to the project
    container, and derive workflow IDs from `design.json`. A null component is
    explicit unregistered code, not an inferred directory owner.
+   [`architecture-conformance.json`](../../architecture/generated/architecture-conformance.json)
+   compares those observed type edges with target dependencies, explicit
+   forbidden relationships, and accepted exceptions. The generated
+   [`current-component-types.dot`](../../architecture/generated/current-component-types.dot)
+   and [`current-vs-target.dot`](../../architecture/generated/current-vs-target.dot)
+   provide compact reviewer views; undeclared edges are review candidates,
+   while forbidden edges and unowned shipping code fail the registry gate.
    [`change-coupling.json`](../../architecture/generated/change-coupling.json)
    records fixed-window production files that repeatedly change together.
    The large topology file is compact generated JSON; query it with `jq`
