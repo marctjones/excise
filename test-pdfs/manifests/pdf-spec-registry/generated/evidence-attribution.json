@@ -21726,20 +21726,26 @@
         {
           "kind": "unit",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "atomic-fixture",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
-      "explicitContractStatus": "not-run",
+      "explicitContractStatus": "passing",
       "benchmarkScenarios": []
     },
     {
@@ -26276,20 +26282,26 @@
         {
           "kind": "unit",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "atomic-fixture",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
-      "explicitContractStatus": "not-run",
+      "explicitContractStatus": "passing",
       "benchmarkScenarios": []
     },
     {
@@ -28575,7 +28587,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type7TensorPatchMeshPatternFill_MutoolAgreesInkIsDrawn",
@@ -28610,7 +28624,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShading_PaintsCenterToEdgeGradient",
@@ -28918,7 +28934,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type7TensorPatchMeshPatternFill_MutoolAgreesInkIsDrawn",
@@ -28953,7 +28971,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShading_PaintsCenterToEdgeGradient",
@@ -29240,20 +29260,26 @@
         {
           "kind": "unit",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "atomic-fixture",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
-      "explicitContractStatus": "not-run",
+      "explicitContractStatus": "passing",
       "benchmarkScenarios": []
     },
     {
@@ -29277,7 +29303,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type7TensorPatchMeshPatternFill_MutoolAgreesInkIsDrawn",
@@ -29312,7 +29340,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShading_PaintsCenterToEdgeGradient",
@@ -29620,7 +29650,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type7TensorPatchMeshPatternFill_MutoolAgreesInkIsDrawn",
@@ -29655,7 +29687,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_RadialShading_PaintsCenterToEdgeGradient",
@@ -32238,20 +32272,26 @@
         {
           "kind": "unit",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "atomic-fixture",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
-      "explicitContractStatus": "not-run",
+      "explicitContractStatus": "passing",
       "benchmarkScenarios": [
         "render"
       ]
@@ -35689,20 +35729,26 @@
         {
           "kind": "unit",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "atomic-fixture",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
-      "explicitContractStatus": "not-run",
+      "explicitContractStatus": "passing",
       "benchmarkScenarios": [
         "render"
       ]
@@ -39252,17 +39298,23 @@
         {
           "kind": "unit",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "atomic-fixture",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "corpus",
@@ -39270,7 +39322,7 @@
           "recordedOutcomes": []
         }
       ],
-      "explicitContractStatus": "not-run",
+      "explicitContractStatus": "partial-or-failing",
       "benchmarkScenarios": [
         "render"
       ]
@@ -57106,20 +57158,26 @@
         {
           "kind": "unit",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "atomic-fixture",
           "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
-      "explicitContractStatus": "not-run",
+      "explicitContractStatus": "passing",
       "benchmarkScenarios": []
     },
     {
@@ -81479,8 +81537,8 @@
     "targetModes": 964,
     "modesWithTestCandidates": 212,
     "modesWithExplicitContracts": 663,
-    "modesWithPassingExplicitContracts": 0,
-    "modesWithRecordedPassingCandidate": 2,
+    "modesWithPassingExplicitContracts": 6,
+    "modesWithRecordedPassingCandidate": 6,
     "testMethods": 5970,
     "testMethodsWithCapabilityCandidate": 3743,
     "benchmarkScenarios": 6,
