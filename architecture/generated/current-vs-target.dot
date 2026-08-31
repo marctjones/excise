@@ -13,7 +13,7 @@ digraph excise_architecture {
     label="engine";
     color="#cbd5e1";
     "core-content" [label="Content-stream walker and sinks\nimplemented", fillcolor="#d8f3dc"];
-    "core-document" [label="Document model and mutation boundary\npartial", fillcolor="#fff3bf"];
+    "core-document" [label="Document model and mutation boundary\nimplemented", fillcolor="#d8f3dc"];
     "core-fonts" [label="Font decoding, metrics, and subsetting\npartial", fillcolor="#fff3bf"];
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial", fillcolor="#fff3bf"];
     "core-security" [label="Document conformance and structural validation\npartial", fillcolor="#fff3bf"];
@@ -96,9 +96,9 @@ digraph excise_architecture {
   "core-content" -> "core-parsing" [label="target + observed\n6 refs", color="#15803d", style="solid", penwidth=2];
   "core-content" -> "core-primitives" [label="target + observed\n299 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core" [label="observed via parent boundary\n38 refs", color="#2563eb", style="dashed", penwidth=1];
-  "core-document" -> "core-encryption" [label="target + observed\n34 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-encryption" [label="target + observed\n19 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core-parsing" [label="target + observed\n80 refs", color="#15803d", style="solid", penwidth=2];
-  "core-document" -> "core-primitives" [label="target + observed\n1213 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-primitives" [label="target + observed\n1205 refs", color="#15803d", style="solid", penwidth=2];
   "core-encryption" -> "core-parsing" [label="target + observed\n11 refs", color="#15803d", style="solid", penwidth=2];
   "core-encryption" -> "core-primitives" [label="target + observed\n19 refs", color="#15803d", style="solid", penwidth=2];
   "core-fonts" -> "core-parsing" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
@@ -120,9 +120,9 @@ digraph excise_architecture {
   "core-text" -> "core-document" [label="target + observed\n133 refs", color="#15803d", style="solid", penwidth=2];
   "core-text" -> "core-fonts" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "core-text" -> "core-primitives" [label="target + observed\n52 refs", color="#15803d", style="solid", penwidth=2];
-  "core-writing" -> "core-document" [label="target + observed\n14 refs", color="#15803d", style="solid", penwidth=2];
-  "core-writing" -> "core-encryption" [label="target + observed\n45 refs", color="#15803d", style="solid", penwidth=2];
-  "core-writing" -> "core-primitives" [label="target + observed\n114 refs", color="#15803d", style="solid", penwidth=2];
+  "core-writing" -> "core-document" [label="target + observed\n10 refs", color="#15803d", style="solid", penwidth=2];
+  "core-writing" -> "core-encryption" [label="target + observed\n61 refs", color="#15803d", style="solid", penwidth=2];
+  "core-writing" -> "core-primitives" [label="target + observed\n130 refs", color="#15803d", style="solid", penwidth=2];
   "ocr" -> "core" [label="target + observed\n5 refs", color="#15803d", style="solid", penwidth=2];
   "ocr" -> "core-document" [label="observed via parent boundary\n54 refs", color="#2563eb", style="dashed", penwidth=1];
   "ocr" -> "core-encryption" [label="observed via parent boundary\n1 refs", color="#2563eb", style="dashed", penwidth=1];
