@@ -383,67 +383,6 @@ namespace Excise.App.Services
             public string Path { get; set; }
         }
     }
-    public enum RedactedContentVerificationStatus
-    {
-        NotChecked = 0,
-        Verified = 1,
-        Warning = 2,
-    }
-    public sealed class RedactedCopySafetyOptions : System.IEquatable<Excise.App.Services.RedactedCopySafetyOptions>
-    {
-        public RedactedCopySafetyOptions() { }
-        public bool RunHiddenTextAudit { get; init; }
-        public bool RunRasterRedactionAudit { get; init; }
-        public bool ScrubAttachments { get; init; }
-        public bool ScrubMetadata { get; init; }
-        public bool VerifyCapturedSelectionText { get; init; }
-        public static Excise.App.Services.RedactedCopySafetyOptions Default { get; }
-    }
-    public sealed class RedactedCopySafetyReport : System.IEquatable<Excise.App.Services.RedactedCopySafetyReport>
-    {
-        public RedactedCopySafetyReport(
-                    int RedactionAreaCount,
-                    int SkippedRedactionAreaCount,
-                    int CapturedSelectionPreviewCount,
-                    int CheckedSelectionPreviewCount,
-                    int RemainingSelectionPreviewCount,
-                    int SkippedShortPreviewCount,
-                    Excise.App.Services.RedactedContentVerificationStatus ContentVerificationStatus,
-                    bool MetadataScrubbed,
-                    int InfoFieldsScrubbed,
-                    bool HadXmpMetadata,
-                    bool AttachmentsScrubbed,
-                    int EmbeddedFileCountBefore,
-                    Excise.App.Services.RedactedContentVerificationStatus HiddenTextAuditStatus,
-                    int HiddenTextFindingCount,
-                    Excise.App.Services.RedactedContentVerificationStatus RasterRedactionAuditStatus,
-                    int RemainingRasterOverlapCount,
-                    System.Collections.Generic.IReadOnlyList<string> Warnings) { }
-        public bool AttachmentsScrubbed { get; init; }
-        public int CapturedSelectionPreviewCount { get; init; }
-        public int CheckedSelectionPreviewCount { get; init; }
-        public Excise.App.Services.RedactedContentVerificationStatus ContentVerificationStatus { get; init; }
-        public int EmbeddedFileCountBefore { get; init; }
-        public bool HadXmpMetadata { get; init; }
-        public bool HasWarnings { get; }
-        public Excise.App.Services.RedactedContentVerificationStatus HiddenTextAuditStatus { get; init; }
-        public int HiddenTextFindingCount { get; init; }
-        public int InfoFieldsScrubbed { get; init; }
-        public bool MetadataScrubbed { get; init; }
-        public Excise.App.Services.RedactedContentVerificationStatus RasterRedactionAuditStatus { get; init; }
-        public int RedactionAreaCount { get; init; }
-        public int RemainingRasterOverlapCount { get; init; }
-        public int RemainingSelectionPreviewCount { get; init; }
-        public int SkippedRedactionAreaCount { get; init; }
-        public int SkippedShortPreviewCount { get; init; }
-        public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
-    }
-    public sealed class RedactedCopySafetyService
-    {
-        public RedactedCopySafetyService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.RedactedCopySafetyService> logger) { }
-        public string FormatForDialog(string savedPath, Excise.App.Services.RedactedCopySafetyReport report) { }
-        public Excise.App.Services.RedactedCopySafetyReport PrepareRedactedCopy(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IReadOnlyCollection<Excise.App.Models.PendingRedaction> requestedRedactions, int skippedRedactionAreaCount = 0, Excise.App.Services.RedactedCopySafetyOptions? options = null) { }
-    }
     public class RedactionOptions
     {
         public RedactionOptions() { }

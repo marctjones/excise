@@ -1941,6 +1941,97 @@ namespace Excise.Core.Text.Segmentation
         public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.RedactionOptions options) { }
         public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true, bool closeWidth = false) { }
     }
+    public enum RedactedContentVerificationStatus
+    {
+        NotChecked = 0,
+        Verified = 1,
+        Warning = 2,
+    }
+    public sealed class RedactedCopySafetyArea : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyArea>
+    {
+        public RedactedCopySafetyArea(int PageNumber, Excise.Core.Document.PdfPageRect PageArea, string? CapturedText = null) { }
+        public string? CapturedText { get; init; }
+        public Excise.Core.Document.PdfPageRect PageArea { get; init; }
+        public int PageNumber { get; init; }
+    }
+    public enum RedactedCopySafetyFailureStage
+    {
+        MetadataInspection = 0,
+        AttachmentInspection = 1,
+        MetadataScrub = 2,
+        AttachmentScrub = 3,
+        RequestedTermScrub = 4,
+        ContentVerification = 5,
+        HiddenTextAudit = 6,
+        RasterRedactionAudit = 7,
+    }
+    public sealed class RedactedCopySafetyOptions : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyOptions>
+    {
+        public RedactedCopySafetyOptions() { }
+        public bool RunCarrierAudit { get; init; }
+        public bool RunHiddenTextAudit { get; init; }
+        public bool RunRasterRedactionAudit { get; init; }
+        public bool ScrubAttachments { get; init; }
+        public bool ScrubMetadata { get; init; }
+        public bool ScrubRequestedTerms { get; init; }
+        public bool VerifyRequestedTerms { get; init; }
+        public static Excise.Core.Text.Segmentation.RedactedCopySafetyOptions Default { get; }
+    }
+    public static class RedactedCopySafetyPolicy
+    {
+        public static Excise.Core.Text.Segmentation.RedactedCopySafetyReport Evaluate(Excise.Core.Document.PdfDocument document, Excise.Core.Text.Segmentation.RedactedCopySafetyRequest request) { }
+    }
+    public sealed class RedactedCopySafetyReport : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyReport>
+    {
+        public RedactedCopySafetyReport(
+                    int RedactionAreaCount,
+                    int SkippedRedactionAreaCount,
+                    int RequestedTermCount,
+                    int CheckedTermCount,
+                    int RemainingTermCount,
+                    int SkippedShortTermCount,
+                    Excise.Core.Text.Segmentation.RedactedContentVerificationStatus ContentVerificationStatus,
+                    bool MetadataScrubbed,
+                    int InfoFieldsScrubbed,
+                    bool HadXmpMetadata,
+                    bool AttachmentsScrubbed,
+                    int EmbeddedFileCountBefore,
+                    Excise.Core.Text.Segmentation.RedactedContentVerificationStatus HiddenTextAuditStatus,
+                    int HiddenTextFindingCount,
+                    Excise.Core.Text.Segmentation.RedactedContentVerificationStatus RasterRedactionAuditStatus,
+                    int RemainingRasterOverlapCount,
+                    System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyFailureStage> FailedStages,
+                    System.Collections.Generic.IReadOnlyList<string> Warnings) { }
+        public bool AttachmentsScrubbed { get; init; }
+        public int CheckedTermCount { get; init; }
+        public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus ContentVerificationStatus { get; init; }
+        public int EmbeddedFileCountBefore { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyFailureStage> FailedStages { get; init; }
+        public bool HadXmpMetadata { get; init; }
+        public bool HasWarnings { get; }
+        public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus HiddenTextAuditStatus { get; init; }
+        public int HiddenTextFindingCount { get; init; }
+        public int InfoFieldsScrubbed { get; init; }
+        public bool MetadataScrubbed { get; init; }
+        public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus RasterRedactionAuditStatus { get; init; }
+        public int RedactionAreaCount { get; init; }
+        public int RemainingRasterOverlapCount { get; init; }
+        public int RemainingTermCount { get; init; }
+        public int RequestedTermCount { get; init; }
+        public int SkippedRedactionAreaCount { get; init; }
+        public int SkippedShortTermCount { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
+    }
+    public sealed class RedactedCopySafetyRequest : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyRequest>
+    {
+        public RedactedCopySafetyRequest(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyArea> RedactionAreas, System.Collections.Generic.IReadOnlyList<string> RequestedTerms, int SkippedRedactionAreaCount, Excise.Core.Text.Segmentation.RedactedCopySafetyOptions Options) { }
+        public Excise.Core.Text.Segmentation.RedactedCopySafetyOptions Options { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyArea> RedactionAreas { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> RequestedTerms { get; init; }
+        public int SkippedRedactionAreaCount { get; init; }
+        public static Excise.Core.Text.Segmentation.RedactedCopySafetyRequest ForAreas(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyArea> areas, int skippedRedactionAreaCount = 0, Excise.Core.Text.Segmentation.RedactedCopySafetyOptions? options = null) { }
+        public static Excise.Core.Text.Segmentation.RedactedCopySafetyRequest ForTerms(System.Collections.Generic.IReadOnlyList<string> terms, Excise.Core.Text.Segmentation.RedactedCopySafetyOptions? options = null) { }
+    }
     public sealed class RedactionCarrierAudit : System.IEquatable<Excise.Core.Text.Segmentation.RedactionCarrierAudit>
     {
         public const int ScrubFloor = 3;

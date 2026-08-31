@@ -137,7 +137,6 @@ public sealed class RedactionWorkflowServiceTests : IDisposable
         var loggerFactory = NullLoggerFactory.Instance;
         return new RedactionWorkflowService(
             new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
-            new RedactedCopySafetyService(NullLogger<RedactedCopySafetyService>.Instance),
             new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
             NullLogger<RedactionWorkflowService>.Instance);
     }

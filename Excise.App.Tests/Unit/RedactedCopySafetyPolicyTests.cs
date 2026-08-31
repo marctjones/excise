@@ -9,19 +9,19 @@ using Excise.App.Tests.Utilities;
 using System;
 using System.IO;
 using System.Text;
+using System.Linq;
 using Xunit;
 
 namespace Excise.App.Tests.Unit;
 
-public class RedactedCopySafetyServiceTests : IDisposable
+public class RedactedCopySafetyPolicyTests : IDisposable
 {
-    private readonly RedactedCopySafetyService _service =
-        new(NullLogger<RedactedCopySafetyService>.Instance);
+    private readonly RedactedCopyDialogFormatter _formatter = new();
     private readonly RedactionService _redactionService =
         new(NullLogger<RedactionService>.Instance, NullLoggerFactory.Instance);
     private readonly string _tempDir;
 
-    public RedactedCopySafetyServiceTests()
+    public RedactedCopySafetyPolicyTests()
     {
         _tempDir = Path.Combine(Path.GetTempPath(), $"excise-redacted-copy-safety-{Guid.NewGuid():N}");
         Directory.CreateDirectory(_tempDir);
@@ -45,8 +45,8 @@ public class RedactedCopySafetyServiceTests : IDisposable
         _redactionService.RedactArea(
             page, PdfPageRect.FromContentPoints(1, new PdfRectangle(40, 675, 560, 750)));
 
-        var report = _service.PrepareRedactedCopy(document, Array.Empty<PendingRedaction>());
-        var dialog = _service.FormatForDialog(Path.Combine(_tempDir, "out.pdf"), report);
+        var report = PrepareRedactedCopy(document, Array.Empty<PendingRedaction>());
+        var dialog = _formatter.Format(Path.Combine(_tempDir, "out.pdf"), report);
 
         report.HasWarnings.Should().BeTrue(
             "an area redaction cannot examine bookmark titles or annotations away from the box");
@@ -74,9 +74,9 @@ public class RedactedCopySafetyServiceTests : IDisposable
         _redactionService.RedactArea(
             page, PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, page.Width, page.Height)));
 
-        var dialog = _service.FormatForDialog(
+        var dialog = _formatter.Format(
             Path.Combine(_tempDir, "out.pdf"),
-            _service.PrepareRedactedCopy(document, Array.Empty<PendingRedaction>()));
+            PrepareRedactedCopy(document, Array.Empty<PendingRedaction>()));
 
         dialog.Should().NotContain("not examined",
             "nothing was left unexamined, so nothing should be reported");
@@ -106,7 +106,7 @@ public class RedactedCopySafetyServiceTests : IDisposable
             },
         };
 
-        var report = _service.PrepareRedactedCopy(document, pending);
+        var report = PrepareRedactedCopy(document, pending);
         var output = Path.Combine(_tempDir, "captured-carriers-out.pdf");
         document.Save(output);
         var combined = Encoding.Latin1.GetString(File.ReadAllBytes(output)) +
@@ -133,7 +133,7 @@ public class RedactedCopySafetyServiceTests : IDisposable
         var area = new PdfRectangle(0, 0, page.Width, page.Height);
         _redactionService.RedactArea(page, PdfPageRect.FromContentPoints(1, area));
 
-        var report = _service.PrepareRedactedCopy(document, new[]
+        var report = PrepareRedactedCopy(document, new[]
         {
             new PendingRedaction
             {
@@ -142,7 +142,7 @@ public class RedactedCopySafetyServiceTests : IDisposable
                 PreviewText = "CARRIERSECRET",
             },
         });
-        var dialog = _service.FormatForDialog("out.pdf", report);
+        var dialog = _formatter.Format("out.pdf", report);
 
         dialog.Should().Contain("XFA").And.Contain("not examined",
             "unsafe XML must never disappear behind an unqualified success dialog");
@@ -230,11 +230,11 @@ public class RedactedCopySafetyServiceTests : IDisposable
             }
         };
 
-        var report = _service.PrepareRedactedCopy(document, pending);
-        var dialog = _service.FormatForDialog(Path.Combine(_tempDir, "redacted.pdf"), report);
+        var report = PrepareRedactedCopy(document, pending);
+        var dialog = _formatter.Format(Path.Combine(_tempDir, "redacted.pdf"), report);
 
         report.ContentVerificationStatus.Should().Be(RedactedContentVerificationStatus.Verified);
-        report.RemainingSelectionPreviewCount.Should().Be(0);
+        report.RemainingTermCount.Should().Be(0);
         report.HiddenTextAuditStatus.Should().Be(RedactedContentVerificationStatus.Verified);
         page.Text.Should().NotContain("SECRET");
         dialog.Should().NotContain("SECRET");
@@ -257,13 +257,44 @@ public class RedactedCopySafetyServiceTests : IDisposable
             }
         };
 
-        var report = _service.PrepareRedactedCopy(document, pending);
-        var dialog = _service.FormatForDialog(Path.Combine(_tempDir, "redacted.pdf"), report);
+        var report = PrepareRedactedCopy(document, pending);
+        var dialog = _formatter.Format(Path.Combine(_tempDir, "redacted.pdf"), report);
 
         report.ContentVerificationStatus.Should().Be(RedactedContentVerificationStatus.Warning);
-        report.RemainingSelectionPreviewCount.Should().Be(1);
-        report.Warnings.Should().Contain(w => w.Contains("captured selection preview"));
+        report.RemainingTermCount.Should().Be(1);
+        report.Warnings.Should().Contain(w => w.Contains("requested redaction term"));
         dialog.Should().NotContain("SECRET");
+    }
+
+    [Fact]
+    public void DialogFormatter_PartialMetadataFailure_IsNotReportedAsNotRequested()
+    {
+        var report = new RedactedCopySafetyReport(
+            RedactionAreaCount: 1,
+            SkippedRedactionAreaCount: 0,
+            RequestedTermCount: 1,
+            CheckedTermCount: 0,
+            RemainingTermCount: 0,
+            SkippedShortTermCount: 0,
+            ContentVerificationStatus: RedactedContentVerificationStatus.Warning,
+            MetadataScrubbed: false,
+            InfoFieldsScrubbed: 0,
+            HadXmpMetadata: false,
+            AttachmentsScrubbed: false,
+            EmbeddedFileCountBefore: 0,
+            HiddenTextAuditStatus: RedactedContentVerificationStatus.NotChecked,
+            HiddenTextFindingCount: 0,
+            RasterRedactionAuditStatus: RedactedContentVerificationStatus.NotChecked,
+            RemainingRasterOverlapCount: 0,
+            FailedStages: new[] { RedactedCopySafetyFailureStage.MetadataScrub },
+            Warnings: new[] { "Metadata scrub could not be completed." });
+
+        var dialog = _formatter.Format("out.pdf", report);
+
+        report.HasWarnings.Should().BeTrue();
+        dialog.Should().Contain("Metadata scrub: failed; see warnings");
+        dialog.Should().NotContain("Metadata scrub: not requested",
+            "a partial failure must never be presented as an intentional opt-out");
     }
 
     [Fact]
@@ -279,7 +310,7 @@ public class RedactedCopySafetyServiceTests : IDisposable
         document.GetXmpMetadata().Should().NotBeNull();
         document.GetEmbeddedFiles().Should().ContainSingle();
 
-        var report = _service.PrepareRedactedCopy(document, Array.Empty<PendingRedaction>());
+        var report = PrepareRedactedCopy(document, Array.Empty<PendingRedaction>());
         var outputPath = Path.Combine(_tempDir, "scrubbed.pdf");
         document.Save(outputPath);
 
@@ -309,8 +340,8 @@ public class RedactedCopySafetyServiceTests : IDisposable
             }
         };
 
-        var report = _service.PrepareRedactedCopy(document, pending);
-        var dialog = _service.FormatForDialog(Path.Combine(_tempDir, "redacted.pdf"), report);
+        var report = PrepareRedactedCopy(document, pending);
+        var dialog = _formatter.Format(Path.Combine(_tempDir, "redacted.pdf"), report);
 
         report.RasterRedactionAuditStatus.Should().Be(RedactedContentVerificationStatus.Warning);
         report.RemainingRasterOverlapCount.Should().Be(1);
@@ -327,7 +358,7 @@ public class RedactedCopySafetyServiceTests : IDisposable
 
         document.GetPage(1).RedactArea(area);
 
-        var report = _service.PrepareRedactedCopy(document, new[]
+        var report = PrepareRedactedCopy(document, new[]
         {
             new PendingRedaction
             {
@@ -359,6 +390,23 @@ public class RedactedCopySafetyServiceTests : IDisposable
         {
         }
     }
+
+    private static RedactedCopySafetyReport PrepareRedactedCopy(
+        PdfDocument document,
+        IReadOnlyCollection<PendingRedaction> redactions,
+        int skippedRedactionAreaCount = 0,
+        RedactedCopySafetyOptions? options = null) =>
+        RedactedCopySafetyPolicy.Evaluate(
+            document,
+            RedactedCopySafetyRequest.ForAreas(
+                redactions
+                    .Select(redaction => new RedactedCopySafetyArea(
+                        redaction.PageNumber,
+                        redaction.PageArea,
+                        redaction.PreviewText))
+                    .ToArray(),
+                skippedRedactionAreaCount,
+                options));
 
     private static byte[] BuildPdfWithMetadataXmpAndEmbeddedFile(
         string title,

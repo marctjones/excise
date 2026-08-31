@@ -72,6 +72,34 @@ public class RedactCommandTests : IDisposable
     }
 
     [Fact]
+    public void RunRedactWithNotes_PreservesUnrelatedMetadataUnderCliTermPolicy()
+    {
+        var input = TempPath(".pdf");
+        var output = TempPath(".pdf");
+        byte[] sourceBytes;
+        using (var source = PdfDocument.Open(
+                   TestPdfBuilder.SinglePage("Confidential content here")))
+        {
+            source.SetTitle("Public quarterly report");
+            sourceBytes = source.SaveToBytes();
+        }
+        File.WriteAllBytes(input, sourceBytes);
+
+        var (count, notes) = Program.RunRedactWithNotes(
+            input,
+            output,
+            "Confidential",
+            caseSensitive: false);
+
+        count.Should().Be(1);
+        notes.Should().BeEmpty();
+        using var redacted = PdfDocument.Open(output);
+        redacted.Title.Should().Be("Public quarterly report",
+            "CLI term redaction is surgical; GUI-style wholesale safe-share metadata removal " +
+            "would be a compatibility-breaking policy change");
+    }
+
+    [Fact]
     public void RunRedact_RemovesExactMatch_FromContentStream()
     {
         // HELLO WORLD → redact WORLD

@@ -2,30 +2,28 @@ using Excise.App.Models;
 using Excise.Core.Document;
 using Excise.Core.Editing;
 using Excise.Core.Security;
+using Excise.Core.Text.Segmentation;
 using Microsoft.Extensions.Logging;
 
 namespace Excise.App.Services;
 
 /// <summary>
 /// Owns the desktop redaction transaction boundary. It delegates glyph
-/// removal to <see cref="RedactionService"/> and carrier verification to
-/// <see cref="RedactedCopySafetyService"/>; it never implements either.
+/// removal to <see cref="RedactionService"/> and carrier verification to the
+/// shared <see cref="RedactedCopySafetyPolicy"/>; it never implements either.
 /// </summary>
 internal sealed class RedactionWorkflowService
 {
     private readonly RedactionService _redactionService;
-    private readonly RedactedCopySafetyService _safetyService;
     private readonly PdfTextExtractionService _textExtractionService;
     private readonly ILogger<RedactionWorkflowService> _logger;
 
     public RedactionWorkflowService(
         RedactionService redactionService,
-        RedactedCopySafetyService safetyService,
         PdfTextExtractionService textExtractionService,
         ILogger<RedactionWorkflowService> logger)
     {
         _redactionService = redactionService ?? throw new ArgumentNullException(nameof(redactionService));
-        _safetyService = safetyService ?? throw new ArgumentNullException(nameof(safetyService));
         _textExtractionService = textExtractionService ?? throw new ArgumentNullException(nameof(textExtractionService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -78,10 +76,18 @@ internal sealed class RedactionWorkflowService
         var appliedTypewriterOperations = PdfTypewriterTextApplier.Apply(
             request.Document,
             request.TypewriterOperations);
-        var safetyReport = _safetyService.PrepareRedactedCopy(
+        var safetyReport = RedactedCopySafetyPolicy.Evaluate(
             request.Document,
-            request.Redactions.Select(ToPendingRedaction).ToArray(),
-            skippedCount);
+            RedactedCopySafetyRequest.ForAreas(
+                request.Redactions.Select(ToSafetyArea).ToArray(),
+                skippedCount));
+
+        foreach (var failedStage in safetyReport.FailedStages)
+        {
+            _logger.LogWarning(
+                "Redacted-copy safety stage {SafetyStage} could not complete",
+                failedStage);
+        }
 
         return new RedactionApplicationResult(
             request.Redactions.Count - skippedCount,
@@ -103,13 +109,8 @@ internal sealed class RedactionWorkflowService
         return new RedactedCopyResult(request.OutputPath, application);
     }
 
-    private static PendingRedaction ToPendingRedaction(RedactionAreaTransaction redaction) =>
-        new()
-        {
-            PageNumber = redaction.PageNumber,
-            PageArea = redaction.PageArea,
-            PreviewText = redaction.PreviewText
-        };
+    private static RedactedCopySafetyArea ToSafetyArea(RedactionAreaTransaction redaction) =>
+        new(redaction.PageNumber, redaction.PageArea, redaction.PreviewText);
 }
 
 internal readonly record struct RedactionMarkRequest(

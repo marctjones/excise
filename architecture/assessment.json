@@ -115,6 +115,9 @@
         "scripts/verify-true-redaction.sh",
         "scripts/check-redaction-oracles.sh",
         "Excise.Core.Tests/Text/Segmentation",
+        "Excise.Core/Text/Segmentation/RedactedCopySafetyContract.cs",
+        "Excise.Core/Text/Segmentation/RedactedCopySafetyPolicy.cs",
+        "Excise.Core.Tests/Text/Segmentation/RedactedCopySafetyPolicyTests.cs",
         "Excise.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs"
       ],
       "gaps": [
@@ -122,7 +125,8 @@
       ],
       "issueIds": [
         1029,
-        1077
+        1077,
+        1291
       ]
     },
     {
@@ -210,10 +214,12 @@
         "Excise.Cli/Commands/UnredactCommand.cs",
         "Excise.Cli/Commands/UnredactCommandHandler.cs",
         "Excise.Cli/Commands/UnredactCommandModels.cs",
-        "Excise.Cli/Commands/UnredactCommandOutput.cs"
+        "Excise.Cli/Commands/UnredactCommandOutput.cs",
+        "Excise.Cli/Commands/CliRedactedCopySafetyAdapter.cs",
+        "Excise.Cli.Tests/RedactCommandTests.cs"
       ],
       "gaps": [
-        "Program.cs remains a 2,211-line command host after save-size-report, command-metadata, fill-form, and typed unredact adapter extractions; the remaining command boundaries still need measured decomposition and duplicate-policy analysis."
+        "Program.cs remains a 2,218-line command host after save-size-report, command-metadata, fill-form, typed unredact, and safe-copy policy adapter extractions; the remaining command boundaries still need measured decomposition and duplicate-policy analysis."
       ],
       "issueIds": [
         1263
@@ -252,6 +258,7 @@
         "Excise.App/Services/AnnotationWorkflowService.cs",
         "Excise.App/Services/DocumentImageExportWorkflowService.cs",
         "Excise.App/Services/RedactionWorkflowService.cs",
+        "Excise.App/Services/RedactedCopyDialogFormatter.cs",
         "Excise.App.Tests/Unit/DocumentSearchSessionTests.cs",
         "Excise.App.Tests/Unit/AnnotationWorkflowServiceTests.cs",
         "Excise.App.Tests/Unit/DocumentImageExportWorkflowServiceTests.cs",
@@ -270,7 +277,8 @@
         1285,
         1286,
         1287,
-        1288
+        1288,
+        1291
       ]
     },
     {

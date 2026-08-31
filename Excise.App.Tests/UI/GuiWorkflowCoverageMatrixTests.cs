@@ -277,9 +277,9 @@ public class GuiWorkflowCoverageMatrixTests
         new("Metadata and attachment scrub status for redacted copies",
             Modality.Menu,
             [
-                Capability.Covered("scrubs Info/XMP/embedded files before save", typeof(RedactedCopySafetyServiceTests), nameof(RedactedCopySafetyServiceTests.PrepareRedactedCopy_ScrubsInfoXmpAndEmbeddedFilesBeforeSave)),
-                Capability.Covered("surfaces unexamined bookmark/off-box carriers rather than guessing", typeof(RedactedCopySafetyServiceTests), nameof(RedactedCopySafetyServiceTests.PrepareRedactedCopy_WithBookmarksAndOffBoxAnnotations_SaysTheyWereNotExamined)),
-                Capability.Covered("warns when raster still overlaps the redaction area", typeof(RedactedCopySafetyServiceTests), nameof(RedactedCopySafetyServiceTests.PrepareRedactedCopy_WhenRasterStillOverlapsRedactionArea_WarnsForManualReview)),
+                Capability.Covered("scrubs Info/XMP/embedded files before save", typeof(RedactedCopySafetyPolicyTests), nameof(RedactedCopySafetyPolicyTests.PrepareRedactedCopy_ScrubsInfoXmpAndEmbeddedFilesBeforeSave)),
+                Capability.Covered("surfaces unexamined bookmark/off-box carriers rather than guessing", typeof(RedactedCopySafetyPolicyTests), nameof(RedactedCopySafetyPolicyTests.PrepareRedactedCopy_WithBookmarksAndOffBoxAnnotations_SaysTheyWereNotExamined)),
+                Capability.Covered("warns when raster still overlaps the redaction area", typeof(RedactedCopySafetyPolicyTests), nameof(RedactedCopySafetyPolicyTests.PrepareRedactedCopy_WhenRasterStillOverlapsRedactionArea_WarnsForManualReview)),
             ]),
         new("Audit hidden text with clear user-facing states",
             Modality.Mouse | Modality.Menu,
