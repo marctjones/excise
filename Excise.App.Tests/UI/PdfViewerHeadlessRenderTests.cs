@@ -568,27 +568,24 @@ public class PdfViewerHeadlessRenderTests
         var imageSource = (Bitmap)pdfImage!.Source!;
         var displayed = DecodeAvaloniaBitmap(imageSource);
 
-        // Since the #693 display unification the page shows at
-        // imgDip × 96/renderDpi on screen (0.8 at the default 120), so a
-        // 96-dpi surface can never be 1:1 with the bitmap's pixels. Size the
-        // viewer to the DISPLAYED dips and sample the surface at the render
-        // DPI instead: 0.8 × (120/96) = 1.0 — the comparison stays
-        // pixel-exact with the bitmap.
-        const double displayScale = 96.0 / 120.0;
-        var dipW = displayed.Width * displayScale;
-        var dipH = displayed.Height * displayScale;
-        viewer.Width = dipW;
-        viewer.Height = dipH;
-        window.Width = dipW;
-        window.Height = dipH;
-        viewer.Measure(new Size(dipW, dipH));
-        viewer.Arrange(new Rect(0, 0, dipW, dipH));
+        // The source bitmap is deliberately stamped at 96 DPI (non-96 stamps
+        // are mispainted by Avalonia; see #697) and its explicitly assigned
+        // Image dimensions carry the actual layout size. Capture the actual
+        // Image visual at that scale. Capturing the whole ScrollViewer instead
+        // includes clipping and scrollbar layout, which is viewer chrome rather
+        // than a change to the page pixels under test.
+        var dipW = displayed.Width;
+        var dipH = displayed.Height;
+        pdfImage.Width = dipW;
+        pdfImage.Height = dipH;
+        pdfImage.Measure(new Size(dipW, dipH));
+        pdfImage.Arrange(new Rect(0, 0, dipW, dipH));
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(50);
 
         using var renderTarget = new RenderTargetBitmap(
-            new PixelSize(displayed.Width, displayed.Height), new Vector(120, 120));
-        renderTarget.Render(viewer);
+            new PixelSize(displayed.Width, displayed.Height), new Vector(96, 96));
+        renderTarget.Render(pdfImage);
         var visualSurface = DecodeAvaloniaBitmap(renderTarget);
 
         window.Close();

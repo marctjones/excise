@@ -76,6 +76,17 @@ namespace Excise.App.Models
         public string PreviewText { get; set; }
         public int RenderDpi { get; set; }
     }
+    public sealed class SearchMatch
+    {
+        public SearchMatch() { }
+        public string Context { get; init; }
+        public double Height { get; init; }
+        public string MatchedText { get; init; }
+        public int PageIndex { get; init; }
+        public double Width { get; init; }
+        public double X { get; init; }
+        public double Y { get; init; }
+    }
     public sealed class TextRedactionResult : System.IEquatable<Excise.App.Models.TextRedactionResult>
     {
         public TextRedactionResult(bool Success, int RedactionCount, string? ErrorMessage = null) { }
@@ -302,21 +313,10 @@ namespace Excise.App.Services
     public class PdfSearchService
     {
         public PdfSearchService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PdfSearchService> logger) { }
-        public System.Collections.Generic.List<Excise.App.Services.PdfSearchService.SearchMatch> Search(string pdfPath, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, System.IProgress<Excise.App.Services.PdfSearchService.SearchProgress>? progress = null) { }
-        public System.Collections.Generic.List<Excise.App.Services.PdfSearchService.SearchMatch> Search(Excise.App.Services.DocumentTextIndex index, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, System.Threading.CancellationToken cancellationToken = default, System.IProgress<Excise.App.Services.PdfSearchService.SearchProgress>? progress = null) { }
-        public System.Collections.Generic.List<Excise.App.Services.PdfSearchService.SearchMatch> Search(Excise.Core.Document.PdfDocument document, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, System.Threading.CancellationToken cancellationToken = default, System.IProgress<Excise.App.Services.PdfSearchService.SearchProgress>? progress = null) { }
-        public System.Collections.Generic.List<Excise.App.Services.PdfSearchService.SearchMatch> SearchInPage(Excise.Core.Document.PdfPage page, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, int pageIndex = 0) { }
-        public class SearchMatch
-        {
-            public SearchMatch() { }
-            public string Context { get; set; }
-            public double Height { get; set; }
-            public string MatchedText { get; set; }
-            public int PageIndex { get; set; }
-            public double Width { get; set; }
-            public double X { get; set; }
-            public double Y { get; set; }
-        }
+        public System.Collections.Generic.List<Excise.App.Models.SearchMatch> Search(string pdfPath, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, System.IProgress<Excise.App.Services.PdfSearchService.SearchProgress>? progress = null) { }
+        public System.Collections.Generic.List<Excise.App.Models.SearchMatch> Search(Excise.App.Services.DocumentTextIndex index, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, System.Threading.CancellationToken cancellationToken = default, System.IProgress<Excise.App.Services.PdfSearchService.SearchProgress>? progress = null) { }
+        public System.Collections.Generic.List<Excise.App.Models.SearchMatch> Search(Excise.Core.Document.PdfDocument document, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, System.Threading.CancellationToken cancellationToken = default, System.IProgress<Excise.App.Services.PdfSearchService.SearchProgress>? progress = null) { }
+        public System.Collections.Generic.List<Excise.App.Models.SearchMatch> SearchInPage(Excise.Core.Document.PdfPage page, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, int pageIndex = 0) { }
         public readonly struct SearchProgress : System.IEquatable<Excise.App.Services.PdfSearchService.SearchProgress>
         {
             public SearchProgress(int PagesScanned, int TotalPages, int MatchesFound) { }
@@ -681,7 +681,7 @@ namespace Excise.App.ViewModels
         public bool IsTypewriterMode { get; set; }
         public bool IsTypewriterStyleInspectorVisible { get; }
         public ReactiveUI.ReactiveCommand<Excise.App.Models.OutlineNode, System.Reactive.Unit> JumpToOutlineCommand { get; }
-        public ReactiveUI.ReactiveCommand<Excise.App.Services.PdfSearchService.SearchMatch, System.Reactive.Unit>? JumpToSearchMatchCommand { get; }
+        public ReactiveUI.ReactiveCommand<Excise.App.Models.SearchMatch, System.Reactive.Unit>? JumpToSearchMatchCommand { get; }
         public Excise.App.ViewModels.DocumentOpenTiming? LastDocumentOpenTiming { get; }
         public int LoadDocumentTimeoutSeconds { get; set; }
         public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> LoadRecentFileCommand { get; }
@@ -725,7 +725,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveFileCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveFlattenedFormCopyCommand { get; }
         public bool SearchCaseSensitive { get; set; }
-        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Services.PdfSearchService.SearchMatch> SearchMatches { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.SearchMatch> SearchMatches { get; set; }
         public string SearchProgressText { get; }
         public string SearchResultText { get; }
         public string SearchText { get; set; }
@@ -818,7 +818,7 @@ namespace Excise.App.ViewModels
         public void GoToNextPendingTypewriterEdit() { }
         public System.Threading.Tasks.Task InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex) { }
         public void JumpToOutline(Excise.App.Models.OutlineNode? node) { }
-        public void JumpToSearchMatch(Excise.App.Services.PdfSearchService.SearchMatch match) { }
+        public void JumpToSearchMatch(Excise.App.Models.SearchMatch match) { }
         public System.Threading.Tasks.Task LoadDocumentAsync(string filePath) { }
         public System.Threading.Tasks.Task LoadDocumentCommand(string filePath) { }
         public void MarkPageForOperation(int pageIndex, bool isSelected) { }
