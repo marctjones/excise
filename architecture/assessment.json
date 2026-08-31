@@ -326,7 +326,7 @@
         "architecture/generated/change-coupling.json"
       ],
       "gaps": [
-        "The observed-versus-target report currently identifies 12 undeclared component edges for architectural review and 277 unresolved type edges confined to explicit non-shipping ownership gaps; dynamic reachability seed contracts remain incomplete."
+        "The observed-versus-target report currently identifies 12 undeclared component edges for architectural review and 277 unresolved type edges confined to explicit non-shipping ownership gaps. Dynamic seed provenance now distinguishes XAML, DI, reflection, source generation, native interop, and scripting, but XAML is still a conservative simple-name rule and containing-type closure still hides member-level dead code (#1304)."
       ],
       "issueIds": [
         940,

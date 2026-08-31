@@ -27,7 +27,10 @@ second implementation-status list.
    project rows join to inventory classifications and project components; its
    symbol rows use the most-specific `ownership` root, fall back to the project
    container, and derive workflow IDs from `design.json`. A null component is
-   explicit unregistered code, not an inferred directory owner.
+   explicit unregistered code, not an inferred directory owner. Seeded symbols
+   carry category/reason provenance, and the seed summary records whether XAML,
+   DI, reflection, source generation, native interop, and scripting use static
+   edges, qualified seeds, conservative seeds, or have no observed entry path.
    [`architecture-conformance.json`](../../architecture/generated/architecture-conformance.json)
    compares those observed type edges with target dependencies, explicit
    forbidden relationships, and accepted exceptions. The generated

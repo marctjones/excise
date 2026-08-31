@@ -178,9 +178,16 @@ internal sealed class ReachabilityAnalyzer(
 
     private readonly Dictionary<ISymbol, Node> _nodes = new(SymbolEqualityComparer.Default);
     private readonly Dictionary<ISymbol, HashSet<ISymbol>> _edges = new(SymbolEqualityComparer.Default);
-    private readonly HashSet<ISymbol> _seeds = new(SymbolEqualityComparer.Default);
+    private readonly Dictionary<ISymbol, HashSet<TopologySeedReason>> _seeds =
+        new(SymbolEqualityComparer.Default);
     private readonly HashSet<string> _xamlNames = new(StringComparer.Ordinal);
-    private readonly HashSet<string> _stringLiterals = new(StringComparer.Ordinal);
+    private readonly HashSet<INamedTypeSymbol> _scriptGlobals =
+        new(SymbolEqualityComparer.Default);
+    private int _dependencyInjectionRegistrations;
+    private int _externalReflectionLoads;
+    private int _sourceGenerationRoots;
+    private int _nativeImports;
+    private int _nativeCallbacks;
 
     public async Task<AnalysisResult> AnalyzeAsync()
     {
@@ -270,7 +277,7 @@ internal sealed class ReachabilityAnalyzer(
             .Select(node => ToTopologySymbol(
                 node,
                 reachable.Contains(node.Symbol),
-                _seeds.Contains(node.Symbol),
+                _seeds.GetValueOrDefault(node.Symbol),
                 fanIn.GetValueOrDefault(node.Symbol),
                 _edges.GetValueOrDefault(node.Symbol)?.Count ?? 0))
             .OrderBy(row => row.Project, StringComparer.Ordinal)
@@ -315,21 +322,70 @@ internal sealed class ReachabilityAnalyzer(
             .ToArray();
 
         return new TopologyReport(
-            2,
+            3,
             "tools/Excise.Reachability",
             GitRevision(),
             projects,
             symbols,
             typeEdges,
             BuildMethodCycles(),
-            new TopologySeedSummary(_seeds.Count, _xamlNames.Count, _stringLiterals.Count),
+            BuildSeedSummary(),
             [
-                "XAML and string/reflection seeds are conservative name matches, not proven runtime edges.",
-                "DI registrations, source-generated code, native callbacks, and dynamic scripting require explicit review.",
+                "XAML seeds remain conservative simple-name matches pending #1304's qualified member-edge work.",
+                "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
                 "Declaration and branch counts are structural signals, not complexity verdicts.",
                 "Symbol rows retain all types plus non-trivial methods and shared mutable members; project totals cover the full graph.",
                 "Git change coupling is generated separately from commit history."
             ]);
+    }
+
+    private TopologySeedSummary BuildSeedSummary()
+    {
+        var categories = _seeds
+            .SelectMany(pair => pair.Value
+                .Select(reason => (reason.Category, Symbol: pair.Key)))
+            .GroupBy(item => item.Category, StringComparer.Ordinal)
+            .Select(group => new TopologySeedCategory(
+                group.Key,
+                group.Select(item => item.Symbol)
+                    .Distinct(SymbolEqualityComparer.Default)
+                    .Count()))
+            .OrderBy(item => item.Category, StringComparer.Ordinal)
+            .ToArray();
+        var mechanisms = new[]
+        {
+            new DynamicMechanismSummary(
+                "dependency-injection",
+                "static-edge",
+                _dependencyInjectionRegistrations,
+                "Closed-generic registrations and explicit factories are ordinary Roslyn type/call edges."),
+            new DynamicMechanismSummary(
+                "native-interop",
+                _nativeCallbacks > 0 ? "qualified-seed-and-static-edge" : "static-edge",
+                _nativeImports + _nativeCallbacks,
+                $"Outbound imports use static managed declarations; {_nativeCallbacks} managed native callbacks require qualified seeds."),
+            new DynamicMechanismSummary(
+                "reflection",
+                "external-only",
+                _externalReflectionLoads,
+                "Observed Assembly.Load calls name external framework assemblies; no first-party member lookup was found."),
+            new DynamicMechanismSummary(
+                "scripting",
+                _scriptGlobals.Count > 0 ? "qualified-seed" : "absent",
+                _scriptGlobals.Count,
+                "CSharpScript globals types are resolved semantically from typeof(...) and seed only their public surface."),
+            new DynamicMechanismSummary(
+                "source-generation",
+                "static-edge",
+                _sourceGenerationRoots,
+                "Source-generator attributes and generated partial declarations retain statically referenced first-party types."),
+            new DynamicMechanismSummary(
+                "xaml",
+                "conservative-seed",
+                _xamlNames.Count,
+                "Compiled Avalonia XAML currently seeds matching symbol names; qualified binding/handler edges are tracked by #1304.")
+        };
+        return new TopologySeedSummary(_seeds.Count, categories, mechanisms);
     }
 
     private static bool IsTopologyRelevant(SymbolTopology symbol)
@@ -348,7 +404,7 @@ internal sealed class ReachabilityAnalyzer(
     private SymbolTopology ToTopologySymbol(
         Node node,
         bool reachable,
-        bool seed,
+        IReadOnlySet<TopologySeedReason>? seedReasons,
         int fanIn,
         int fanOut)
     {
@@ -398,7 +454,10 @@ internal sealed class ReachabilityAnalyzer(
             fanIn,
             fanOut,
             reachable,
-            seed,
+            seedReasons is not null,
+            seedReasons?.OrderBy(reason => reason.Category, StringComparer.Ordinal)
+                .ThenBy(reason => reason.Reason, StringComparer.Ordinal)
+                .ToArray() ?? [],
             mutable,
             declarations.Length);
     }
@@ -590,13 +649,7 @@ internal sealed class ReachabilityAnalyzer(
 
     private void CollectReferences(SemanticModel semanticModel, SyntaxNode root)
     {
-        foreach (var literal in root.DescendantNodes().OfType<LiteralExpressionSyntax>())
-        {
-            if (literal.Token.ValueText.Length >= 3)
-            {
-                _stringLiterals.Add(literal.Token.ValueText);
-            }
-        }
+        CollectDynamicMechanisms(semanticModel, root);
 
         foreach (var node in root.DescendantNodes())
         {
@@ -615,7 +668,10 @@ internal sealed class ReachabilityAnalyzer(
             var caller = FindContainingDeclaredSymbol(semanticModel, node);
             if (caller is null)
             {
-                _seeds.Add(referenced);
+                AddSeed(
+                    referenced,
+                    "static-root",
+                    "referenced outside a declared source member");
                 continue;
             }
 
@@ -626,7 +682,68 @@ internal sealed class ReachabilityAnalyzer(
             }
             else
             {
-                _seeds.Add(referenced);
+                AddSeed(
+                    referenced,
+                    "static-root",
+                    "referenced from generated or external source");
+            }
+        }
+    }
+
+    private void CollectDynamicMechanisms(SemanticModel semanticModel, SyntaxNode root)
+    {
+        foreach (var invocation in root.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            var method = semanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol
+                         ?? semanticModel.GetSymbolInfo(invocation).CandidateSymbols
+                             .OfType<IMethodSymbol>()
+                             .FirstOrDefault();
+            if (method is null)
+            {
+                continue;
+            }
+
+            switch (DynamicMechanismClassifier.Classify(method))
+            {
+                case DynamicInvocationKind.DependencyInjectionRegistration:
+                    _dependencyInjectionRegistrations++;
+                    break;
+                case DynamicInvocationKind.ExternalAssemblyLoad:
+                    _externalReflectionLoads++;
+                    break;
+                case DynamicInvocationKind.ScriptGlobals:
+                    var globalsType = DynamicMechanismClassifier.ResolveScriptGlobalsType(
+                        invocation, semanticModel);
+                    if (globalsType is not null)
+                    {
+                        _scriptGlobals.Add((INamedTypeSymbol)Original(globalsType));
+                    }
+                    break;
+            }
+        }
+
+        foreach (var attribute in root.DescendantNodes().OfType<AttributeSyntax>())
+        {
+            switch (DynamicMechanismClassifier.Classify(
+                        semanticModel.GetTypeInfo(attribute).Type as INamedTypeSymbol))
+            {
+                case DynamicAttributeKind.SourceGenerationRoot:
+                    _sourceGenerationRoots++;
+                    break;
+                case DynamicAttributeKind.NativeImport:
+                    _nativeImports++;
+                    break;
+                case DynamicAttributeKind.NativeCallback:
+                    _nativeCallbacks++;
+                    if (attribute.Parent?.Parent is MemberDeclarationSyntax declaration
+                        && semanticModel.GetDeclaredSymbol(declaration) is { } callback)
+                    {
+                        AddSeed(
+                            callback,
+                            "native-callback",
+                            "marked UnmanagedCallersOnly for native entry");
+                    }
+                    break;
             }
         }
     }
@@ -667,13 +784,29 @@ internal sealed class ReachabilityAnalyzer(
         foreach (var node in _nodes.Values)
         {
             var symbol = node.Symbol;
-            if (IsPublicPackageSurface(node.Project.Name, symbol)
-                || IsApplicationEntry(symbol)
-                || IsFrameworkEntry(symbol)
-                || IsXamlBound(symbol)
-                || IsStringReferenced(symbol))
+            if (IsPublicPackageSurface(node.Project.Name, symbol))
             {
-                _seeds.Add(symbol);
+                AddSeed(symbol, "public-api", "public or protected package surface");
+            }
+            if (IsApplicationEntry(symbol))
+            {
+                AddSeed(symbol, "application-entry", "application lifetime entry point");
+            }
+            if (IsFrameworkEntry(symbol))
+            {
+                AddSeed(symbol, "framework-callback", "override or explicit interface callback");
+            }
+            if (IsXamlBound(symbol))
+            {
+                AddSeed(symbol, "xaml-convention", "simple name appears in compiled Avalonia XAML");
+            }
+            if (IsScriptSurface(symbol))
+            {
+                var globals = symbol as INamedTypeSymbol ?? symbol.ContainingType!;
+                AddSeed(
+                    symbol,
+                    "script-globals",
+                    $"public surface of qualified CSharpScript globals type {Display(globals)}");
             }
 
             if (symbol.ContainingType is { } containingType)
@@ -686,6 +819,17 @@ internal sealed class ReachabilityAnalyzer(
                 }
             }
         }
+    }
+
+    private void AddSeed(ISymbol symbol, string category, string reason)
+    {
+        symbol = Original(symbol);
+        if (!_seeds.TryGetValue(symbol, out var reasons))
+        {
+            reasons = [];
+            _seeds[symbol] = reasons;
+        }
+        reasons.Add(new TopologySeedReason(category, reason));
     }
 
     private static bool IsPublicPackageSurface(string projectName, ISymbol symbol)
@@ -744,15 +888,24 @@ internal sealed class ReachabilityAnalyzer(
         return false;
     }
 
-    private bool IsStringReferenced(ISymbol symbol)
+    private bool IsScriptSurface(ISymbol symbol)
     {
-        return _stringLiterals.Contains(symbol.Name);
+        var type = symbol as INamedTypeSymbol ?? symbol.ContainingType;
+        if (type is null || !_scriptGlobals.Contains((INamedTypeSymbol)Original(type)))
+        {
+            return false;
+        }
+
+        return symbol is INamedTypeSymbol
+               || symbol.DeclaredAccessibility is Accessibility.Public
+                   or Accessibility.Protected
+                   or Accessibility.ProtectedOrInternal;
     }
 
     private HashSet<ISymbol> ComputeReachable()
     {
         var reachable = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
-        var pending = new Stack<ISymbol>(_seeds);
+        var pending = new Stack<ISymbol>(_seeds.Keys);
 
         while (pending.TryPop(out var symbol))
         {
@@ -884,6 +1037,7 @@ internal sealed record SymbolTopology(
     int FanOut,
     bool Reachable,
     bool Seed,
+    IReadOnlyList<TopologySeedReason> SeedReasons,
     bool Mutable,
     int DeclarationCount);
 
@@ -891,7 +1045,20 @@ internal sealed record TypeDependency(string Source, string Target, int Referenc
 
 internal sealed record MethodCycle(IReadOnlyList<string> Members);
 
-internal sealed record TopologySeedSummary(int Symbols, int XamlNames, int StringLiterals);
+internal sealed record TopologySeedSummary(
+    int Symbols,
+    IReadOnlyList<TopologySeedCategory> Categories,
+    IReadOnlyList<DynamicMechanismSummary> DynamicMechanisms);
+
+internal sealed record TopologySeedCategory(string Category, int Symbols);
+
+internal sealed record TopologySeedReason(string Category, string Reason);
+
+internal sealed record DynamicMechanismSummary(
+    string Mechanism,
+    string Modeling,
+    int Observations,
+    string Reason);
 
 internal static class TopologyWriter
 {
@@ -1161,6 +1328,11 @@ internal static class SelfTest
         }
 
         if (!ArchitectureOwnershipIndex.RunSelfTest())
+        {
+            return 1;
+        }
+
+        if (!DynamicMechanismClassifier.RunSelfTest())
         {
             return 1;
         }
