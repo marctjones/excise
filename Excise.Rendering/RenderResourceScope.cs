@@ -23,6 +23,10 @@ internal sealed class RenderResourceScope : IDisposable
         _glyphOutlines = new(GlyphOutlineKeyComparer.Instance);
     private readonly Dictionary<(SKTypeface Typeface, int SizeBits, ushort Gid), SKPath?>
         _glyphOutlinesById = new(GlyphIdOutlineKeyComparer.Instance);
+    private readonly Dictionary<(int ObjectNumber, int Generation, int TargetWidth, int TargetHeight), SoftMaskAlpha?>
+        _softMasksByReference = new();
+    private readonly Dictionary<PdfStream, Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>>
+        _softMasksByStream = new(ReferenceEqualityComparer.Instance);
     private bool _disposed;
 
     public bool TryGetDecodedImage(
@@ -123,6 +127,54 @@ internal sealed class RenderResourceScope : IDisposable
         _glyphOutlinesById[(typeface, sizeBits, glyphId)] = path;
     }
 
+    public bool TryGetSoftMask(
+        PdfObject maskObject,
+        PdfStream maskStream,
+        int targetWidth,
+        int targetHeight,
+        out SoftMaskAlpha? mask)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        if (TryGetSoftMaskReferenceKey(maskObject, maskStream, out var referenceKey))
+        {
+            return _softMasksByReference.TryGetValue(
+                (referenceKey.ObjectNumber, referenceKey.Generation, targetWidth, targetHeight),
+                out mask);
+        }
+
+        if (_softMasksByStream.TryGetValue(maskStream, out var streamCache))
+            return streamCache.TryGetValue((targetWidth, targetHeight), out mask);
+
+        mask = null;
+        return false;
+    }
+
+    public void CacheSoftMask(
+        PdfObject maskObject,
+        PdfStream maskStream,
+        int targetWidth,
+        int targetHeight,
+        SoftMaskAlpha? mask)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        if (TryGetSoftMaskReferenceKey(maskObject, maskStream, out var referenceKey))
+        {
+            _softMasksByReference[
+                (referenceKey.ObjectNumber, referenceKey.Generation, targetWidth, targetHeight)] = mask;
+            return;
+        }
+
+        if (!_softMasksByStream.TryGetValue(maskStream, out var streamCache))
+        {
+            streamCache = new Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>();
+            _softMasksByStream[maskStream] = streamCache;
+        }
+
+        streamCache[(targetWidth, targetHeight)] = mask;
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -142,6 +194,8 @@ internal sealed class RenderResourceScope : IDisposable
         _imageBitmapsByReference.Clear();
         _imageBitmapsByStream.Clear();
         _parsedContentByBytes.Clear();
+        _softMasksByReference.Clear();
+        _softMasksByStream.Clear();
     }
 
     private sealed class GlyphOutlineKeyComparer
@@ -195,7 +249,23 @@ internal sealed class RenderResourceScope : IDisposable
         key = default;
         return false;
     }
+
+    private static bool TryGetSoftMaskReferenceKey(
+        PdfObject maskObject,
+        PdfStream maskStream,
+        out (int ObjectNumber, int Generation) key)
+    {
+        if (maskObject is PdfReference reference)
+        {
+            key = (reference.ObjectNum, reference.Generation);
+            return true;
+        }
+
+        return TryGetReferenceKey(maskStream, out key);
+    }
 }
+
+internal sealed record SoftMaskAlpha(byte[] Data, int Width, int Height);
 
 internal readonly record struct ImageBitmapCacheKey(
     int Width,

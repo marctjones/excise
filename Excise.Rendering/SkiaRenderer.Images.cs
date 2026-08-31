@@ -1311,32 +1311,18 @@ internal partial class RenderContext
         int targetWidth,
         int targetHeight)
     {
-        SoftMaskAlpha? maskData;
-        if (TryGetSoftMaskReferenceKey(maskObj, maskStream, out var key))
+        if (_resourceScope.TryGetSoftMask(
+                maskObj,
+                maskStream,
+                targetWidth,
+                targetHeight,
+                out var maskData))
         {
-            var cacheKey = (key.ObjectNumber, key.Generation, targetWidth, targetHeight);
-            if (!_softMaskAlphaByReference.TryGetValue(cacheKey, out maskData))
-            {
-                maskData = DecodeSoftMaskData(maskStream, maskWidth, maskHeight, targetWidth, targetHeight);
-                _softMaskAlphaByReference[cacheKey] = maskData;
-            }
-        }
-        else
-        {
-            if (!_softMaskAlphaByStream.TryGetValue(maskStream, out var streamCache))
-            {
-                streamCache = new Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>();
-                _softMaskAlphaByStream[maskStream] = streamCache;
-            }
-
-            var cacheKey = (targetWidth, targetHeight);
-            if (!streamCache.TryGetValue(cacheKey, out maskData))
-            {
-                maskData = DecodeSoftMaskData(maskStream, maskWidth, maskHeight, targetWidth, targetHeight);
-                streamCache[cacheKey] = maskData;
-            }
+            return maskData;
         }
 
+        maskData = DecodeSoftMaskData(maskStream, maskWidth, maskHeight, targetWidth, targetHeight);
+        _resourceScope.CacheSoftMask(maskObj, maskStream, targetWidth, targetHeight, maskData);
         return maskData;
     }
 
@@ -1902,27 +1888,6 @@ internal partial class RenderContext
         => new(
             Math.Clamp(targetWidth, 1, sourceWidth),
             Math.Clamp(targetHeight, 1, sourceHeight));
-
-    private static bool TryGetSoftMaskReferenceKey(
-        Excise.Core.Primitives.PdfObject maskObj,
-        Excise.Core.Primitives.PdfStream maskStream,
-        out (int ObjectNumber, int Generation) key)
-    {
-        if (maskObj is PdfReference reference)
-        {
-            key = (reference.ObjectNum, reference.Generation);
-            return true;
-        }
-
-        if (maskStream.ObjectNumber.HasValue)
-        {
-            key = (maskStream.ObjectNumber.Value, maskStream.GenerationNumber ?? 0);
-            return true;
-        }
-
-        key = default;
-        return false;
-    }
 
     private static byte[] ExtractSoftMaskAlpha(SKBitmap maskBitmap, int width, int height, Excise.Core.Primitives.PdfStream maskStream)
     {

@@ -19,7 +19,7 @@ digraph excise_architecture {
     "core-security" [label="Document conformance and structural validation\npartial\n54 retained symbols", fillcolor="#fff3bf"];
     "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n147 retained symbols", fillcolor="#d8f3dc"];
     "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n61 retained symbols", fillcolor="#d8f3dc"];
-    "rendering" [label="Excise.Rendering project\npartial\n701 retained symbols", fillcolor="#fff3bf"];
+    "rendering" [label="Excise.Rendering project\npartial\n703 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_foundation {
     label="foundation";
@@ -128,6 +128,6 @@ digraph excise_architecture {
   "rendering" -> "core-document" [label="269 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-fonts" [label="53 refs / 11 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-parsing" [label="33 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "rendering" -> "core-primitives" [label="566 refs / 26 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "rendering" -> "core-primitives" [label="568 refs / 27 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "rendering" -> "core-text" [label="9 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
 }

@@ -460,9 +460,6 @@ internal partial class RenderContext
     // (Tr 7, clip-without-paint). Painting operators still contribute their
     // geometry to _type3ClipCollector but must not mark the page.
     private bool _type3ClipOnlyPass;
-    private readonly Dictionary<(int ObjectNumber, int Generation, int TargetWidth, int TargetHeight), SoftMaskAlpha?> _softMaskAlphaByReference = new();
-    private readonly Dictionary<Excise.Core.Primitives.PdfStream, Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>> _softMaskAlphaByStream =
-        new(ReferenceEqualityComparer.Instance);
     // Observability hook for tests: parse-cache hits on the current thread
     // (rendering executes synchronously on the calling thread). Thread-static
     // so parallel test collections cannot interfere with each other's counts.
@@ -490,7 +487,6 @@ internal partial class RenderContext
 
     private readonly CancellationToken _cancellationToken;
 
-    private sealed record SoftMaskAlpha(byte[] Data, int Width, int Height);
     public RenderContext(
         SKCanvas canvas,
         PdfPage page,
