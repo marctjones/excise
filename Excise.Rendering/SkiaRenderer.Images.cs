@@ -489,15 +489,15 @@ internal partial class RenderContext
                         return decoded;
                 }
 
-                return SafeDecode(
+                return EncodedImageDecoder.Decode(new EncodedImageDecodeRequest(
                     dctData,
-                    GetDecodeSize(width, height, targetWidth, targetHeight));
+                    GetDecodeSize(width, height, targetWidth, targetHeight)));
             }
 
             if (filters.Contains("JPXDecode"))
             {
                 var bitmap = DecodeJpxImage(imageStream, width, height);
-                bitmap ??= SafeDecode(imageStream.EncodedData);
+                bitmap ??= EncodedImageDecoder.Decode(new EncodedImageDecodeRequest(imageStream.EncodedData));
                 return bitmap;
             }
 
@@ -1401,9 +1401,9 @@ internal partial class RenderContext
         var filters = maskStream.Filters;
         if (IsTerminalDctFilter(filters))
         {
-            using var maskBitmap = SafeDecode(
+            using var maskBitmap = EncodedImageDecoder.Decode(new EncodedImageDecodeRequest(
                 GetTerminalDctData(maskStream, filters),
-                GetDecodeSize(width, height, targetWidth, targetHeight));
+                GetDecodeSize(width, height, targetWidth, targetHeight)));
             if (maskBitmap != null)
                 return new SoftMaskAlpha(
                     ExtractSoftMaskAlpha(maskBitmap, targetWidth, targetHeight, maskStream),
@@ -1426,7 +1426,8 @@ internal partial class RenderContext
                 }
             }
 
-            using var maskBitmap = SafeDecode(maskStream.EncodedData);
+            using var maskBitmap = EncodedImageDecoder.Decode(
+                new EncodedImageDecodeRequest(maskStream.EncodedData));
             if (maskBitmap != null)
                 return new SoftMaskAlpha(ExtractSoftMaskAlpha(maskBitmap, targetWidth, targetHeight, maskStream), targetWidth, targetHeight);
         }
@@ -3057,35 +3058,4 @@ internal partial class RenderContext
         }
     }
 
-    /// <summary>
-    /// Wrap SKBitmap.Decode so any exception (ArgumentNullException
-    /// when SkiaSharp can't find a codec for this image format,
-    /// AccessViolationException on truncated/corrupt input, etc.)
-    /// returns null instead of propagating up and crashing the
-    /// page render. Found by the pdf.js corpus differential —
-    /// 8 fixtures with JPEG2000 inline images caused
-    /// "Value cannot be null. (Parameter 'codec')" because
-    /// SkiaSharp's Linux build ships without a JPX codec.
-    /// </summary>
-    private static SKBitmap? SafeDecode(byte[]? bytes, SKSizeI? targetSize = null)
-    {
-        if (bytes == null || bytes.Length == 0) return null;
-        try
-        {
-            if (targetSize is { Width: > 0, Height: > 0 } size)
-            {
-                var scaled = SKBitmap.Decode(
-                    bytes,
-                    new SKImageInfo(size.Width, size.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
-                if (scaled != null)
-                    return scaled;
-            }
-
-            return SKBitmap.Decode(bytes);
-        }
-        catch
-        {
-            return null;
-        }
-    }
 }
