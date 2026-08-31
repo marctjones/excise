@@ -135,3 +135,19 @@ code does not depend on validation and validation does not move into the
 document model. The public `Excise.Core.Security` namespace remains stable;
 source-root and component ownership establish dependency direction. There is
 one standard security handler and one writer encryption path.
+
+## AD-012 — Font interpretation owns shared glyph decoding facts
+
+**Status:** accepted
+
+`core-fonts` owns CMap parsing, registered CMap lookup, glyph-name tables,
+standard Macintosh glyph order, and the one glyph-to-Unicode cascade used by
+content walking and text extraction. The decoder receives an object-resolution
+function rather than owning a document so it remains below both consumers.
+
+`core-content` owns the neutral typed sink and the single stateful walk.
+`core-text` implements the extraction sink and owns reading-order and selection
+policy. Reachability may follow interface dispatch from the content contract to
+the text implementation, but that synthesized runtime edge is not a reverse
+source dependency. Adding a second CMap parser, glyph table, or extraction walk
+requires an explicit superseding decision and provenance review.

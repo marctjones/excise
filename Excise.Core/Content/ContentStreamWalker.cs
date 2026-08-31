@@ -111,7 +111,7 @@ internal interface IContentStreamSink
 /// <para><b>One walk, many sinks — a new consumer adds a sink, never a
 /// parser.</b> This class exists because the walk used to exist twice
 /// (<see cref="ContentStreamParser"/> aggregating glyph cells into operator
-/// bounding boxes, <see cref="Text.TextExtractor"/> emitting letters) and every
+/// bounding boxes, <c>TextExtractor</c> emitting letters) and every
 /// RC1 defect lived in the divergence between the copies: §9.4.2 line stepping
 /// (#942/#899), the advance terms inside horizontal scaling (#734), the glyph
 /// cell (#833/#980), the array nesting bound (#971), the hex-digit skip (#974),
@@ -1717,7 +1717,7 @@ internal sealed class ContentStreamWalker
             return Text.GlyphUnicodeDecoder.None;
         if (_decoderCache.TryGetValue(font, out var cached))
             return cached;
-        var decoder = Text.GlyphUnicodeDecoder.Build(_page.Document, font);
+        var decoder = Text.GlyphUnicodeDecoder.Build(_page.Document.Resolve, font);
         _decoderCache[font] = decoder;
         return decoder;
     }
@@ -2001,7 +2001,7 @@ internal sealed class ContentStreamWalker
 
             var baseFont = _currentFont.GetNameOrNull("BaseFont");
             if (baseFont != null)
-                return Text.TextExtractor.GetStandardFontWidth(baseFont, charCode);
+                return Fonts.StandardFontMetrics.GetWidthOrFallback(baseFont, charCode);
         }
 
         return 600; // Default width

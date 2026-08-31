@@ -7,7 +7,7 @@ using Xunit;
 namespace Excise.Core.Tests.Text;
 
 /// <summary>
-/// Tests for TextExtractor.GetStandardFontWidth method.
+/// Tests for the standard-font width path used by the shared content walker.
 /// Covers all switch arms in Helvetica character width table (ASCII 32-122),
 /// Courier fixed-width path, default fallback, and encoding methods.
 /// </summary>
@@ -15,7 +15,7 @@ public class StandardFontWidthTests
 {
     /// <summary>
     /// Theory test for Helvetica character widths.
-    /// Tests all switch arms in the GetStandardFontWidth Helvetica branch.
+    /// Tests the Helvetica width branches through extraction.
     /// Each test extracts a single character with Helvetica /F1 font
     /// and verifies the Letter width matches the expected width value.
     /// </summary>
@@ -145,7 +145,7 @@ public class StandardFontWidthTests
     public void ExtractLetters_TimesRomanFont_UsesDefaultFallback()
     {
         // #1100 — this test used to PIN THE DEFECT. It asserted 600 units for
-        // Times-Roman 'X' because Times fell through GetStandardFontWidth's
+        // Times-Roman 'X' because Times fell through the standard-font width path's
         // Courier/Helvetica arms to a flat 600, and the test was written to
         // cover that arm rather than to state what the width should be.
         //

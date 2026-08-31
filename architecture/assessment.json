@@ -77,13 +77,12 @@
         "Excise.Core.Tests/Text/TextMatrixLineSteppingTests.cs"
       ],
       "gaps": [
-        "The renderer necessarily re-executes graphics/text state as an accepted exception; content also temporarily depends upward on text-owned glyph decoding (#1318) and writer-owned number formatting (#1319)."
+        "The renderer necessarily re-executes graphics/text state as an accepted exception; content temporarily depends upward on writer-owned number formatting (#1319). Shared glyph/CMap decoding is font-owned."
       ],
       "issueIds": [
         980,
         986,
         992,
-        1318,
         1319
       ]
     },
@@ -95,12 +94,11 @@
         "Excise.Core.Tests/Text"
       ],
       "gaps": [
-        "Full PDF font-model completeness remains broader than the currently supported corpus, and two font lookup tables remain text-owned until #1320."
+        "Full PDF font-model completeness and provenance coverage remain broader than the currently supported corpus; shared glyph/CMap decoders and lookup tables are now font-owned."
       ],
       "issueIds": [
         1242,
-        1265,
-        1320
+        1265
       ]
     },
     {
@@ -351,7 +349,7 @@
         "architecture/generated/artifact-set.json"
       ],
       "gaps": [
-        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; four remaining Core direction/ownership defects are explicit issue-linked exceptions (#1318-#1321), and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
+        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; two remaining Core direction/ownership defects are explicit issue-linked exceptions (#1319 and #1321), and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
       ],
       "issueIds": [
         940,
@@ -411,12 +409,6 @@
     },
     {
       "source": "core-content",
-      "target": "core-text",
-      "type": "uses",
-      "implementationStatus": "accepted_exception"
-    },
-    {
-      "source": "core-content",
       "target": "core-writing",
       "type": "uses",
       "implementationStatus": "accepted_exception"
@@ -426,12 +418,6 @@
       "target": "core-encryption",
       "type": "uses",
       "implementationStatus": "implemented"
-    },
-    {
-      "source": "core-fonts",
-      "target": "core-text",
-      "type": "uses",
-      "implementationStatus": "accepted_exception"
     },
     {
       "source": "core-text",

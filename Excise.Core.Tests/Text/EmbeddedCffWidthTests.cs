@@ -85,7 +85,7 @@ public class EmbeddedCffWidthTests
         // when the rung is disabled) is 667/1000 em == 66.7pt at 100pt. The two
         // are far apart, so a test that lands on expectedA can only have gone
         // through the CFF rung.
-        var standard14A = Excise.Core.Text.TextExtractor.GetStandardFontWidth("Helvetica", 'A') * 100.0 / 1000.0;
+        var standard14A = StandardFontMetrics.GetWidthOrFallback("Helvetica", 'A') * 100.0 / 1000.0;
         standard14A.Should().BeApproximately(66.7, 0.1, "Helvetica AFM 'A' is 667");
         expectedA.Should().NotBeApproximately(standard14A, 5.0,
             "the fixture only proves something if the CFF advance differs from the standard-14 guess");
@@ -113,7 +113,7 @@ public class EmbeddedCffWidthTests
         var info = CffParser.Parse(TestFontFixtures.LoadInconsolataCffBytes())!;
         info.GlyphNameToIndex.TryGetValue("A", out var gid);
         var cffWidth = info.AdvanceWidth(gid) * 100.0 / info.UnitsPerEm;               // 50.0
-        var std14 = Excise.Core.Text.TextExtractor.GetStandardFontWidth("Helvetica", 'A') * 100.0 / 1000.0; // 66.7
+        var std14 = StandardFontMetrics.GetWidthOrFallback("Helvetica", 'A') * 100.0 / 1000.0; // 66.7
 
         System.Math.Abs(cffWidth - std14).Should().BeGreaterThan(10.0,
             "the mutation-proof depends on these two widths being far apart");

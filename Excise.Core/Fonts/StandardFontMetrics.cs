@@ -434,6 +434,27 @@ internal static class StandardFontMetrics
     }
 
     /// <summary>
+    /// Returns the authoritative standard-14 width when available, otherwise
+    /// the historical conservative fallback used by the shared content walk.
+    /// Keeping this policy beside the metrics prevents content and extraction
+    /// from growing separate width tables or guesses.
+    /// </summary>
+    internal static double GetWidthOrFallback(string baseFont, int charCode)
+    {
+        if (TryGetWidth(baseFont, charCode, out var width))
+            return width;
+
+        // Outside 32-126, or a font that is not one of the 14. The codes above
+        // 126 need the font's /Encoding to resolve a glyph name, and inventing
+        // a WinAnsi assumption here would trade an obvious wrong answer for a
+        // confident one.
+        if (baseFont.StartsWith("Courier", StringComparison.Ordinal))
+            return 600;
+
+        return baseFont.StartsWith("Helvetica", StringComparison.Ordinal) ? 556 : 600;
+    }
+
+    /// <summary>
     /// The advance for a glyph named <paramref name="glyphName"/> in
     /// <paramref name="baseFont"/>, from the Adobe AFM metrics — the name→width
     /// step an /Encoding /Differences remap resolves through. True only for the

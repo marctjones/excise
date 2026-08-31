@@ -333,10 +333,14 @@ internal sealed class ReachabilityAnalyzer(
                 var sourceComponent = _nodes.TryGetValue(source, out var sourceNode)
                     ? architecture.ResolveSymbol(source, sourceNode.Project).Component
                     : null;
-                return edge.Value.Select(target => (
-                    Source: ContainingType(source),
-                    SourceComponent: sourceComponent,
-                    Target: ContainingType(target)));
+                return edge.Value
+                    .Select(Original)
+                    .Where(target => !MemberContractResolver.IsDispatchOnlyArchitectureEdge(
+                        new MemberContractEdge(source, target)))
+                    .Select(target => (
+                        Source: ContainingType(source),
+                        SourceComponent: sourceComponent,
+                        Target: ContainingType(target)));
             })
             .Where(edge => edge.Source is not null
                            && edge.Target is not null
@@ -387,6 +391,7 @@ internal sealed class ReachabilityAnalyzer(
             [
                 DescribeXamlBlindSpots(),
                 "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
+                "Interface-to-implementation dispatch edges are retained for reachability but omitted from component dependencies; implementation declarations provide the compile-time dependency on their interfaces.",
                 "Test-project evidence starts from semantic cross-compilation references and follows explicit production edges without treating every member of a reachable type as reachable.",
                 "Declaration and branch counts are structural signals, not complexity verdicts.",
                 "Symbol rows retain every unreachable symbol, all types, non-trivial methods, and shared mutable members; project totals cover the full graph.",
