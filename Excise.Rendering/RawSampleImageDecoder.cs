@@ -4,33 +4,48 @@ using SkiaSharp;
 namespace Excise.Rendering;
 
 /// <summary>
-/// Fast, context-free conversion for the common undecorated 8-bit Device
-/// color spaces. Requests outside this exact contract return null so the one
-/// general PDF sample path can handle Decode arrays, masks, and complex spaces.
+/// Context-free conversion of decoded PDF image samples. The renderer resolves
+/// indirect objects and image-mask paint state before constructing the request;
+/// this type owns sample unpacking, Decode arrays, colour-key masking, and
+/// colour-space conversion.
 /// </summary>
 internal static class RawSampleImageDecoder
 {
-    private const int CmykLatticeSize = 17;
-    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<PdfColorSpace, float[]>
-        CmykLattices = new();
-
-    public static SKBitmap? TryDecodeFast(RawSampleImageDecodeRequest request)
+    public static SKBitmap? Decode(RawSampleImageDecodeRequest request)
     {
-        if (request.BitsPerComponent != 8 ||
-            request.ColorSpace == null ||
-            request.HasDecodeArray ||
-            request.Width <= 0 ||
-            request.Height <= 0)
+        if (request.ColorSpace == null || request.Width <= 0 || request.Height <= 0)
         {
             return null;
         }
 
+        try
+        {
+            if (request.DecodeArray == null && request.ColorKeyMask == null)
+            {
+                var fastBitmap = TryDecodeFast(request);
+                if (fastBitmap != null)
+                    return fastBitmap;
+            }
+
+            return DecodeGeneral(request);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static SKBitmap? TryDecodeFast(RawSampleImageDecodeRequest request)
+    {
+        if (request.BitsPerComponent != 8)
+            return null;
+
         var expectedPixels = checked((long)request.Width * request.Height);
-        var requiredBytes = expectedPixels * request.ComponentsPerPixel;
+        var requiredBytes = checked(expectedPixels * request.ComponentsPerPixel);
         if (requiredBytes > request.Samples.LongLength)
             return null;
 
-        return request.ColorSpace.Type switch
+        return request.ColorSpace!.Type switch
         {
             PdfColorSpaceType.DeviceGray when request.ComponentsPerPixel == 1 =>
                 CreateGrayBitmap(request.Samples, request.Width, request.Height),
@@ -40,6 +55,250 @@ internal static class RawSampleImageDecoder
                 CreateCmykBitmap(request.Samples, request.Width, request.Height, request.ColorSpace),
             _ => null
         };
+    }
+
+    private static SKBitmap? DecodeGeneral(RawSampleImageDecodeRequest request)
+    {
+        var colorSpace = request.ColorSpace!;
+        var componentsPerPixel = request.ComponentsPerPixel;
+        if (componentsPerPixel <= 0)
+            return null;
+
+        var bitmap = new SKBitmap(
+            request.Width,
+            request.Height,
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul);
+        var pixels = SkiaBitmapPixelBuffer.GetWritableSpan(bitmap);
+        if (pixels.IsEmpty)
+        {
+            bitmap.Dispose();
+            return null;
+        }
+
+        try
+        {
+            var sourceIndex = 0;
+            var destinationIndex = 0;
+            var pixelValues = new double[componentsPerPixel];
+            var maxSample = Math.Pow(2, request.BitsPerComponent) - 1;
+            var imageColorConverter = request.DecodeArray == null
+                ? ImageColorConverter.For(colorSpace)
+                : null;
+            var rawSamples = request.ColorKeyMask != null
+                ? new int[componentsPerPixel]
+                : null;
+
+            for (var y = 0; y < request.Height; y++)
+            {
+                for (var x = 0; x < request.Width; x++)
+                {
+                    byte red = 0, green = 0, blue = 0, alpha = 255;
+                    var samplesRead = false;
+
+                    if (request.BitsPerComponent > 1)
+                    {
+                        if (request.BitsPerComponent == 8 &&
+                            sourceIndex + componentsPerPixel <= request.Samples.Length)
+                        {
+                            for (var component = 0; component < componentsPerPixel; component++)
+                            {
+                                var sample = request.Samples[sourceIndex + component];
+                                if (rawSamples != null)
+                                    rawSamples[component] = sample;
+                                pixelValues[component] = DecodeImageSample(
+                                    request.DecodeArray,
+                                    colorSpace,
+                                    component,
+                                    sample,
+                                    maxSample);
+                            }
+                            sourceIndex += componentsPerPixel;
+                            samplesRead = true;
+                            ConvertPixel(
+                                colorSpace,
+                                imageColorConverter,
+                                pixelValues,
+                                out red,
+                                out green,
+                                out blue);
+                        }
+                        else if (request.BitsPerComponent != 8)
+                        {
+                            var rowBits = checked(request.Width * componentsPerPixel * request.BitsPerComponent);
+                            var rowStrideBits = AlignBitsToByte(rowBits);
+                            var bitOffset = checked(
+                                (y * rowStrideBits) +
+                                (x * componentsPerPixel * request.BitsPerComponent));
+                            if (bitOffset + (componentsPerPixel * request.BitsPerComponent) <=
+                                request.Samples.Length * 8)
+                            {
+                                for (var component = 0; component < componentsPerPixel; component++)
+                                {
+                                    var sample = ReadPackedImageSample(
+                                        request.Samples,
+                                        bitOffset + (component * request.BitsPerComponent),
+                                        request.BitsPerComponent);
+                                    if (rawSamples != null)
+                                        rawSamples[component] = sample;
+                                    pixelValues[component] = DecodeImageSample(
+                                        request.DecodeArray,
+                                        colorSpace,
+                                        component,
+                                        sample,
+                                        maxSample);
+                                }
+
+                                samplesRead = true;
+                                ConvertPixel(
+                                    colorSpace,
+                                    imageColorConverter,
+                                    pixelValues,
+                                    out red,
+                                    out green,
+                                    out blue);
+                            }
+                        }
+                    }
+                    else if (request.BitsPerComponent == 1)
+                    {
+                        var byteIndex = sourceIndex / 8;
+                        var bitIndex = 7 - (sourceIndex % 8);
+                        var sample = byteIndex < request.Samples.Length
+                            ? (request.Samples[byteIndex] >> bitIndex) & 1
+                            : 0;
+                        pixelValues[0] = DecodeImageSample(
+                            request.DecodeArray,
+                            colorSpace,
+                            0,
+                            sample,
+                            maxSample);
+                        ConvertPixel(
+                            colorSpace,
+                            imageColorConverter,
+                            pixelValues,
+                            out red,
+                            out green,
+                            out blue);
+                        if (rawSamples != null)
+                            rawSamples[0] = sample;
+                        samplesRead = true;
+                        sourceIndex++;
+                    }
+
+                    if (samplesRead &&
+                        rawSamples != null &&
+                        IsColorKeyMasked(rawSamples, request.ColorKeyMask!))
+                    {
+                        alpha = 0;
+                    }
+
+                    pixels[destinationIndex++] = red;
+                    pixels[destinationIndex++] = green;
+                    pixels[destinationIndex++] = blue;
+                    pixels[destinationIndex++] = alpha;
+                }
+
+                if (request.BitsPerComponent == 1)
+                    sourceIndex = AlignBitsToByte(sourceIndex);
+            }
+        }
+        catch
+        {
+            bitmap.Dispose();
+            return null;
+        }
+
+        return bitmap;
+    }
+
+    private static void ConvertPixel(
+        PdfColorSpace colorSpace,
+        ImageColorConverter? converter,
+        double[] values,
+        out byte red,
+        out byte green,
+        out byte blue)
+    {
+        if (converter != null)
+        {
+            var rgb = converter.ToRgb(values);
+            red = rgb.R;
+            green = rgb.G;
+            blue = rgb.B;
+            return;
+        }
+
+        var converted = colorSpace.ToRgb(values);
+        red = (byte)Math.Clamp(converted.R * 255, 0, 255);
+        green = (byte)Math.Clamp(converted.G * 255, 0, 255);
+        blue = (byte)Math.Clamp(converted.B * 255, 0, 255);
+    }
+
+    private static int AlignBitsToByte(int bitCount)
+        => ((bitCount + 7) / 8) * 8;
+
+    private static int ReadPackedImageSample(byte[] data, int bitOffset, int bitsPerComponent)
+    {
+        var sample = 0;
+        for (var i = 0; i < bitsPerComponent; i++)
+        {
+            var absoluteBit = bitOffset + i;
+            var byteIndex = absoluteBit / 8;
+            if (byteIndex >= data.Length)
+                break;
+
+            var bitIndex = 7 - (absoluteBit % 8);
+            sample = (sample << 1) | ((data[byteIndex] >> bitIndex) & 1);
+        }
+
+        return sample;
+    }
+
+    private static double DecodeImageSample(
+        double[]? decode,
+        PdfColorSpace colorSpace,
+        int componentIndex,
+        int sample,
+        double maxSample)
+    {
+        var offset = componentIndex * 2;
+        if (decode != null && decode.Length >= offset + 2)
+        {
+            var decodeMinimum = decode[offset];
+            var decodeMaximum = decode[offset + 1];
+            return maxSample > 0
+                ? decodeMinimum + sample * ((decodeMaximum - decodeMinimum) / maxSample)
+                : decodeMinimum;
+        }
+
+        if (colorSpace.Type == PdfColorSpaceType.Indexed)
+            return sample;
+
+        var normalizedByte = maxSample > 0
+            ? (byte)Math.Clamp((int)Math.Round(sample * (255.0 / maxSample)), 0, 255)
+            : (byte)0;
+        return colorSpace.DecodeSampleByte(componentIndex, normalizedByte);
+    }
+
+    /// <summary>
+    /// Colour-key ranges are tested against raw samples, before colour-space
+    /// conversion. A pixel is transparent only when every component is inside
+    /// its inclusive range (PDF 32000-1 section 8.9.6.4).
+    /// </summary>
+    private static bool IsColorKeyMasked(int[] rawSamples, int[] ranges)
+    {
+        for (var component = 0; component < rawSamples.Length; component++)
+        {
+            var minimum = ranges[component * 2];
+            var maximum = ranges[(component * 2) + 1];
+            if (minimum > maximum)
+                (minimum, maximum) = (maximum, minimum);
+            if (rawSamples[component] < minimum || rawSamples[component] > maximum)
+                return false;
+        }
+
+        return true;
     }
 
     private static SKBitmap? CreateGrayBitmap(byte[] data, int width, int height)
@@ -103,15 +362,18 @@ internal static class RawSampleImageDecoder
             return null;
         }
 
-        // #915: sample the color space once into a 17^4 lattice rather than
-        // running a locked/allocating ICC conversion for every image pixel.
-        var lut = GetCmykLattice(colorSpace);
+        var converter = ImageColorConverter.For(colorSpace);
+        if (converter == null)
+        {
+            bitmap.Dispose();
+            return null;
+        }
+
         var src = 0;
         var dst = 0;
         for (var i = 0; i < width * height; i++)
         {
-            var (r, g, b) = LatticeToRgb(
-                lut,
+            var (r, g, b) = converter.ToRgb(
                 data[src],
                 data[src + 1],
                 data[src + 2],
@@ -125,69 +387,6 @@ internal static class RawSampleImageDecoder
 
         return bitmap;
     }
-
-    private static float[] GetCmykLattice(PdfColorSpace colorSpace)
-        => CmykLattices.GetValue(colorSpace, static cs =>
-        {
-            const int n = CmykLatticeSize;
-            var lut = new float[n * n * n * n * 3];
-            var cmyk = new double[4];
-            var index = 0;
-            for (var c = 0; c < n; c++)
-            for (var m = 0; m < n; m++)
-            for (var y = 0; y < n; y++)
-            for (var k = 0; k < n; k++)
-            {
-                cmyk[0] = c / (double)(n - 1);
-                cmyk[1] = m / (double)(n - 1);
-                cmyk[2] = y / (double)(n - 1);
-                cmyk[3] = k / (double)(n - 1);
-                var (r, g, b) = cs.ToRgb(cmyk);
-                lut[index++] = (float)r;
-                lut[index++] = (float)g;
-                lut[index++] = (float)b;
-            }
-
-            return lut;
-        });
-
-    private static (byte R, byte G, byte B) LatticeToRgb(
-        float[] lut,
-        byte cyan,
-        byte magenta,
-        byte yellow,
-        byte black)
-    {
-        const int n = CmykLatticeSize;
-        const double scale = (n - 1) / 255.0;
-
-        var fc = cyan * scale; var ic = (int)fc; var tc = fc - ic; if (ic >= n - 1) { ic = n - 2; tc = 1; }
-        var fm = magenta * scale; var im = (int)fm; var tm = fm - im; if (im >= n - 1) { im = n - 2; tm = 1; }
-        var fy = yellow * scale; var iy = (int)fy; var ty = fy - iy; if (iy >= n - 1) { iy = n - 2; ty = 1; }
-        var fk = black * scale; var ik = (int)fk; var tk = fk - ik; if (ik >= n - 1) { ik = n - 2; tk = 1; }
-
-        double r = 0, g = 0, b = 0;
-        for (var dc = 0; dc <= 1; dc++)
-        for (var dm = 0; dm <= 1; dm++)
-        for (var dy = 0; dy <= 1; dy++)
-        for (var dk = 0; dk <= 1; dk++)
-        {
-            var weight = (dc == 0 ? 1 - tc : tc) * (dm == 0 ? 1 - tm : tm)
-                         * (dy == 0 ? 1 - ty : ty) * (dk == 0 ? 1 - tk : tk);
-            if (weight == 0)
-                continue;
-
-            var offset = ((((ic + dc) * n + (im + dm)) * n + (iy + dy)) * n + (ik + dk)) * 3;
-            r += weight * lut[offset];
-            g += weight * lut[offset + 1];
-            b += weight * lut[offset + 2];
-        }
-
-        return (
-            (byte)Math.Clamp(r * 255, 0, 255),
-            (byte)Math.Clamp(g * 255, 0, 255),
-            (byte)Math.Clamp(b * 255, 0, 255));
-    }
 }
 
 internal readonly record struct RawSampleImageDecodeRequest(
@@ -197,7 +396,8 @@ internal readonly record struct RawSampleImageDecodeRequest(
     int BitsPerComponent,
     PdfColorSpace? ColorSpace,
     int ComponentsPerPixel,
-    bool HasDecodeArray);
+    double[]? DecodeArray,
+    int[]? ColorKeyMask);
 
 internal static class SkiaBitmapPixelBuffer
 {
