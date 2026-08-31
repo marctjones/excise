@@ -16,7 +16,7 @@ digraph excise_architecture {
     "core-document" [label="Document model and mutation boundary\ntarget", fillcolor="#dbeafe"];
     "core-fonts" [label="Font decoding, metrics, and subsetting\ntarget", fillcolor="#dbeafe"];
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\ntarget", fillcolor="#dbeafe"];
-    "core-security" [label="Encryption, permissions, signatures, and document validation\ntarget", fillcolor="#dbeafe"];
+    "core-security" [label="Document conformance and structural validation\ntarget", fillcolor="#dbeafe"];
     "core-text" [label="Text extraction, ordering, search geometry, and selection\ntarget", fillcolor="#dbeafe"];
     "core-writing" [label="Fresh-write serialization and encryption preservation\ntarget", fillcolor="#dbeafe"];
     "rendering" [label="Excise.Rendering project\ntarget", fillcolor="#dbeafe"];
@@ -25,6 +25,7 @@ digraph excise_architecture {
     label="foundation";
     color="#cbd5e1";
     "core" [label="Excise.Core project\ntarget", fillcolor="#dbeafe"];
+    "core-encryption" [label="Encryption contracts, permissions, and standard security handler\ntarget", fillcolor="#dbeafe"];
     "core-parsing" [label="Parser, xref, filters, and hostile-input boundary\ntarget", fillcolor="#dbeafe"];
     "core-primitives" [label="PDF primitives and object graph\ntarget", fillcolor="#dbeafe"];
   }
@@ -67,9 +68,12 @@ digraph excise_architecture {
   "core-content" -> "core-primitives" [label="depends", style="solid"];
   "core-content" -> "core-text" [label="uses", style="dotted"];
   "core-content" -> "core-writing" [label="uses", style="dotted"];
+  "core-document" -> "core-encryption" [label="depends", style="solid"];
+  "core-document" -> "core-encryption" [label="uses", style="dotted"];
   "core-document" -> "core-parsing" [label="depends", style="solid"];
   "core-document" -> "core-primitives" [label="depends", style="solid"];
-  "core-document" -> "core-security" [label="uses", style="dotted"];
+  "core-encryption" -> "core-parsing" [label="depends", style="solid"];
+  "core-encryption" -> "core-primitives" [label="depends", style="solid"];
   "core-fonts" -> "core-parsing" [label="depends", style="solid"];
   "core-fonts" -> "core-primitives" [label="depends", style="solid"];
   "core-fonts" -> "core-text" [label="uses", style="dotted"];
@@ -82,7 +86,6 @@ digraph excise_architecture {
   "core-security" -> "core-content" [label="depends", style="solid"];
   "core-security" -> "core-content" [label="uses", style="dotted"];
   "core-security" -> "core-document" [label="depends", style="solid"];
-  "core-security" -> "core-parsing" [label="depends", style="solid"];
   "core-security" -> "core-primitives" [label="depends", style="solid"];
   "core-text" -> "core-content" [label="depends", style="solid"];
   "core-text" -> "core-document" [label="depends", style="solid"];
@@ -92,8 +95,8 @@ digraph excise_architecture {
   "core-text" -> "core-primitives" [label="depends", style="solid"];
   "core-text" -> "core-primitives" [label="uses", style="dotted"];
   "core-writing" -> "core-document" [label="depends", style="solid"];
+  "core-writing" -> "core-encryption" [label="depends", style="solid"];
   "core-writing" -> "core-primitives" [label="depends", style="solid"];
-  "core-writing" -> "core-security" [label="depends", style="solid"];
   "ocr" -> "core" [label="project", style="solid"];
   "ocr" -> "ocr-native" [label="project", style="solid"];
   "ocr" -> "rendering" [label="project", style="solid"];

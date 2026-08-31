@@ -2,7 +2,7 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "de27332e5cdb91373e8bc4bd32f0157e22bf6953",
+  "sourceRevision": "eeb2b9912572d8d119dbd47192290c2d041b824d",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
@@ -10,9 +10,9 @@
   "summary": {
     "analyzedProjects": 12,
     "retainedSymbols": 5652,
-    "observedComponentDependencies": 77,
-    "declaredDependencies": 71,
-    "acceptedExceptions": 6,
+    "observedComponentDependencies": 79,
+    "declaredDependencies": 74,
+    "acceptedExceptions": 5,
     "undeclaredDependencies": 0,
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
@@ -79,6 +79,20 @@
     },
     {
       "source": "app",
+      "target": "core-encryption",
+      "references": 6,
+      "typeDependencyCount": 2,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.App.ViewModels.SecurityDialogViewModel",
+          "target": "Excise.Core.Security.PdfEncryptionAlgorithm",
+          "references": 5
+        }
+      ]
+    },
+    {
+      "source": "app",
       "target": "core-primitives",
       "references": 54,
       "typeDependencyCount": 19,
@@ -88,20 +102,6 @@
           "source": "Excise.App.Services.SignatureApplicationService",
           "target": "Excise.Core.Primitives.PdfDictionary",
           "references": 13
-        }
-      ]
-    },
-    {
-      "source": "app",
-      "target": "core-security",
-      "references": 6,
-      "typeDependencyCount": 2,
-      "classification": "declared",
-      "evidence": [
-        {
-          "source": "Excise.App.ViewModels.SecurityDialogViewModel",
-          "target": "Excise.Core.Security.PdfEncryptionAlgorithm",
-          "references": 5
         }
       ]
     },
@@ -205,6 +205,20 @@
     },
     {
       "source": "app-main-window",
+      "target": "core-encryption",
+      "references": 35,
+      "typeDependencyCount": 4,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.App.ViewModels.MainWindowViewModel",
+          "target": "Excise.Core.Security.PdfPermissions",
+          "references": 27
+        }
+      ]
+    },
+    {
+      "source": "app-main-window",
       "target": "core-parsing",
       "references": 3,
       "typeDependencyCount": 1,
@@ -214,20 +228,6 @@
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.Core.Parsing.PdfEncryptionNotSupportedException",
           "references": 3
-        }
-      ]
-    },
-    {
-      "source": "app-main-window",
-      "target": "core-security",
-      "references": 35,
-      "typeDependencyCount": 4,
-      "classification": "declared",
-      "evidence": [
-        {
-          "source": "Excise.App.ViewModels.MainWindowViewModel",
-          "target": "Excise.Core.Security.PdfPermissions",
-          "references": 27
         }
       ]
     },
@@ -387,6 +387,20 @@
     },
     {
       "source": "cli",
+      "target": "core-encryption",
+      "references": 17,
+      "typeDependencyCount": 3,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Cli.Program",
+          "target": "Excise.Core.Security.PdfEncryptionOptions",
+          "references": 7
+        }
+      ]
+    },
+    {
+      "source": "cli",
       "target": "core-parsing",
       "references": 2,
       "typeDependencyCount": 1,
@@ -402,13 +416,13 @@
     {
       "source": "cli",
       "target": "core-security",
-      "references": 33,
-      "typeDependencyCount": 7,
+      "references": 16,
+      "typeDependencyCount": 4,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Cli.Program",
-          "target": "Excise.Core.Security.PdfEncryptionOptions",
+          "target": "Excise.Core.Validation.ValidationResult",
           "references": 7
         }
       ]
@@ -664,6 +678,20 @@
     },
     {
       "source": "core-document",
+      "target": "core-encryption",
+      "references": 29,
+      "typeDependencyCount": 4,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Document.PdfDocument",
+          "target": "Excise.Core.Security.PdfPermissions",
+          "references": 10
+        }
+      ]
+    },
+    {
+      "source": "core-document",
       "target": "core-parsing",
       "references": 78,
       "typeDependencyCount": 10,
@@ -691,31 +719,30 @@
       ]
     },
     {
-      "source": "core-document",
-      "target": "core-security",
-      "references": 29,
-      "typeDependencyCount": 4,
-      "classification": "accepted_exception",
+      "source": "core-encryption",
+      "target": "core-parsing",
+      "references": 11,
+      "typeDependencyCount": 2,
+      "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Document.PdfDocument",
-          "target": "Excise.Core.Security.PdfPermissions",
-          "references": 10
-        },
+          "source": "Excise.Core.Security.PdfStandardSecurityHandler",
+          "target": "Excise.Core.Parsing.PdfEncryptionNotSupportedException",
+          "references": 7
+        }
+      ]
+    },
+    {
+      "source": "core-encryption",
+      "target": "core-primitives",
+      "references": 19,
+      "typeDependencyCount": 2,
+      "classification": "declared",
+      "evidence": [
         {
-          "source": "Excise.Core.Document.PdfDocument",
-          "target": "Excise.Core.Security.PdfStandardSecurityHandler",
-          "references": 10
-        },
-        {
-          "source": "Excise.Core.Document.PdfDocument",
-          "target": "Excise.Core.Security.PdfEncryptionOptions",
-          "references": 6
-        },
-        {
-          "source": "Excise.Core.Document.PdfDocument",
-          "target": "Excise.Core.Security.PdfEncryptionAlgorithm",
-          "references": 3
+          "source": "Excise.Core.Security.PdfStandardSecurityHandler",
+          "target": "Excise.Core.Primitives.PdfDictionary",
+          "references": 15
         }
       ]
     },
@@ -810,27 +837,13 @@
     },
     {
       "source": "core-security",
-      "target": "core-parsing",
-      "references": 11,
-      "typeDependencyCount": 2,
-      "classification": "declared",
-      "evidence": [
-        {
-          "source": "Excise.Core.Security.PdfStandardSecurityHandler",
-          "target": "Excise.Core.Parsing.PdfEncryptionNotSupportedException",
-          "references": 7
-        }
-      ]
-    },
-    {
-      "source": "core-security",
       "target": "core-primitives",
-      "references": 102,
-      "typeDependencyCount": 24,
+      "references": 83,
+      "typeDependencyCount": 22,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Security.PdfStandardSecurityHandler",
+          "source": "Excise.Core.Validation.StructTreeAnalysis",
           "target": "Excise.Core.Primitives.PdfDictionary",
           "references": 15
         }
@@ -936,6 +949,20 @@
     },
     {
       "source": "core-writing",
+      "target": "core-encryption",
+      "references": 45,
+      "typeDependencyCount": 4,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Writing.PdfDocumentWriter",
+          "target": "Excise.Core.Security.PdfEncryptionOptions",
+          "references": 17
+        }
+      ]
+    },
+    {
+      "source": "core-writing",
       "target": "core-primitives",
       "references": 112,
       "typeDependencyCount": 20,
@@ -945,20 +972,6 @@
           "source": "Excise.Core.Writing.PdfDocumentWriter",
           "target": "Excise.Core.Primitives.PdfDictionary",
           "references": 21
-        }
-      ]
-    },
-    {
-      "source": "core-writing",
-      "target": "core-security",
-      "references": 45,
-      "typeDependencyCount": 4,
-      "classification": "declared",
-      "evidence": [
-        {
-          "source": "Excise.Core.Writing.PdfDocumentWriter",
-          "target": "Excise.Core.Security.PdfEncryptionOptions",
-          "references": 17
         }
       ]
     },
@@ -992,7 +1005,7 @@
     },
     {
       "source": "ocr",
-      "target": "core-security",
+      "target": "core-encryption",
       "references": 1,
       "typeDependencyCount": 1,
       "classification": "declared",

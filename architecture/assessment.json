@@ -63,11 +63,10 @@
         "Excise.Core/Writing/PdfDocumentWritingFacade.cs"
       ],
       "gaps": [
-        "PdfDocument.cs remains a multi-thousand-line coordination surface, and its mixed security/validation boundary (#1317) creates the remaining reverse dependency. Content, text, and writing compatibility facades were source-owned by their engines under #1316 without changing the public document API."
+        "PdfDocument.cs remains a multi-thousand-line coordination surface. Content, text, writing, and encryption dependencies now follow their registered directions without changing the public document API."
       ],
       "issueIds": [
-        1261,
-        1317
+        1261
       ]
     },
     {
@@ -141,6 +140,19 @@
       ]
     },
     {
+      "component": "core-encryption",
+      "implementationStatus": "implemented",
+      "evidence": [
+        "Excise.Core/Encryption",
+        "Excise.Core.Tests/Security",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs",
+        "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs",
+        "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs"
+      ],
+      "gaps": [],
+      "issueIds": []
+    },
+    {
       "component": "core-writing",
       "implementationStatus": "implemented",
       "evidence": [
@@ -154,16 +166,13 @@
       "component": "core-security",
       "implementationStatus": "partial",
       "evidence": [
-        "Excise.Core.Tests/Security",
         "Excise.Core.Tests/Validation",
         "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs"
       ],
       "gaps": [
-        "Some permission enforcement and platform trust behavior lives at delivery-layer action boundaries by design. Encryption state and document-dependent validation remain cyclic until #1317."
+        "Platform signature trust behavior remains at delivery-layer action boundaries by design; structural and conformance validation remains distinct from platform trust evaluation."
       ],
-      "issueIds": [
-        1317
-      ]
+      "issueIds": []
     },
     {
       "component": "rendering",
@@ -342,7 +351,7 @@
         "architecture/generated/artifact-set.json"
       ],
       "gaps": [
-        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; five remaining Core direction/ownership defects are explicit issue-linked exceptions (#1317-#1321), and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
+        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified; four remaining Core direction/ownership defects are explicit issue-linked exceptions (#1318-#1321), and unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
       ],
       "issueIds": [
         940,
@@ -414,9 +423,9 @@
     },
     {
       "source": "core-document",
-      "target": "core-security",
+      "target": "core-encryption",
       "type": "uses",
-      "implementationStatus": "accepted_exception"
+      "implementationStatus": "implemented"
     },
     {
       "source": "core-fonts",

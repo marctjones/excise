@@ -45,8 +45,8 @@ delivery surfaces. Stable IDs are shown in parentheses.
 
 | Layer | Components | Responsibility |
 |---|---|---|
-| Foundation | Core project (`core`), PDF primitives (`core-primitives`), parsing and filters (`core-parsing`) | Represent and safely load untrusted PDF structures. |
-| Domain engine | Document/mutation (`core-document`), content walking (`core-content`), fonts (`core-fonts`), text (`core-text`), redaction (`core-redaction`), writing (`core-writing`), security/validation (`core-security`) | Own PDF semantics and mutations without UI or platform policy. |
+| Foundation | Core project (`core`), PDF primitives (`core-primitives`), parsing and filters (`core-parsing`), encryption contracts and standard security handler (`core-encryption`) | Represent, safely load, and decrypt untrusted PDF structures. |
+| Domain engine | Document/mutation (`core-document`), content walking (`core-content`), fonts (`core-fonts`), text (`core-text`), redaction (`core-redaction`), writing (`core-writing`), document validation (`core-security`) | Own PDF semantics and mutations without UI or platform policy. |
 | Rendering engine | Renderer (`rendering`) | Interpret pages into raster output behind a stable API and one explicit render context. |
 | Optional integration | Native OCR (`ocr-native`), OCR coordination (`ocr`) | Isolate native lifetime and add searchable-PDF behavior only when requested. |
 | Presentation | Reusable Avalonia viewer (`avalonia`) | Own viewport layout, scheduling, input, selection, and accessibility presentation. |

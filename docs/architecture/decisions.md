@@ -118,3 +118,20 @@ not authorize duplicate parsers, extractors, or writers. New workflow policy
 belongs in focused engine services rather than expanding the document model.
 Removing or relocating the compiled public members requires an explicitly
 versioned API decision and public-API approval change.
+
+## AD-011 — Encryption state sits below document validation
+
+**Status:** accepted
+
+`core-encryption` owns the standard security handler, writer-side encryptor,
+password processing, permission value contracts, and legacy cryptographic
+transforms. It depends only on PDF primitives and parsing diagnostics. The
+document model and writer may depend on that lower layer to preserve established
+public security contracts and encryption state.
+
+`core-security` owns document-dependent structural and conformance validation.
+It may inspect the authoritative document and content models, but encryption
+code does not depend on validation and validation does not move into the
+document model. The public `Excise.Core.Security` namespace remains stable;
+source-root and component ownership establish dependency direction. There is
+one standard security handler and one writer encryption path.
