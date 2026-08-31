@@ -6,7 +6,7 @@ digraph excise_architecture {
   subgraph cluster_delivery {
     label="delivery";
     color="#cbd5e1";
-    "app" [label="Excise.App project\npartial\n693 retained symbols", fillcolor="#fff3bf"];
+    "app" [label="Excise.App project\npartial\n694 retained symbols", fillcolor="#fff3bf"];
     "cli" [label="Excise.Cli project\npartial\n120 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {
@@ -43,7 +43,7 @@ digraph excise_architecture {
   subgraph cluster_verification {
     label="verification";
     color="#cbd5e1";
-    "architecture-tooling" [label="Architecture registry, reachability, and derived diagrams\npartial\n136 retained symbols", fillcolor="#fff3bf"];
+    "architecture-tooling" [label="Architecture registry, reachability, and derived diagrams\npartial\n149 retained symbols", fillcolor="#fff3bf"];
     "verification" [label="Repository verification system\npartial\n0 retained symbols", fillcolor="#fff3bf"];
   }
   "app" -> "app-main-window" [label="253 refs / 18 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
