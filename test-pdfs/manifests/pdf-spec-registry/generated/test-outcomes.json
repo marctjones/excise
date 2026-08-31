@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-08-31T03:53:36.314366+00:00",
-  "gitRevision": "ad5a523beb6d41c8220619c8a8b7381dc14f49f1",
+  "recordedAt": "2026-08-31T04:17:20.490182+00:00",
+  "gitRevision": "d18701643708fb078d57313f7b341fde130ad04a",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -41,9 +41,960 @@
       "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-pattern-shading.trx",
       "modifiedAt": "2026-08-31T03:37:42.326521+00:00",
       "sha256": "ca0edce9c89d3d3d50f639a806dff9dbb88e36060f96b1cea59828af6e3fc1d9"
+    },
+    {
+      "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "modifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "sha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-independent.trx",
+      "modifiedAt": "2026-08-31T04:15:58.324636+00:00",
+      "sha256": "5a8afd74f761062342935bc9d4f6d83a27ce24f4599bc4c1a9b9496044a7eaae"
+    },
+    {
+      "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-independent-render.trx",
+      "modifiedAt": "2026-08-31T04:16:14.626150+00:00",
+      "sha256": "02a3952b095eb37ad658d8d38a6df06b17cc6dccebfade1506a6e16f6bae5c35"
     }
   ],
   "outcomes": [
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Caret\", expectedSubtype: Caret)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0037948",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Circle\", expectedSubtype: Circle)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001574",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"FileAttachment\", expectedSubtype: FileAttachment)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0004067",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"FreeText\", expectedSubtype: FreeText)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001052",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Highlight\", expectedSubtype: Highlight)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001174",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Ink\", expectedSubtype: Ink)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006120",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Line\", expectedSubtype: Line)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0015077",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Link\", expectedSubtype: Link)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0007923",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Movie\", expectedSubtype: Movie)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001800",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"PolyLine\", expectedSubtype: PolyLine)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001216",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Polygon\", expectedSubtype: Polygon)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005532",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Popup\", expectedSubtype: Popup)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002400",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Redact\", expectedSubtype: Redact)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000991",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Screen\", expectedSubtype: Screen)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001029",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Sound\", expectedSubtype: Sound)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001131",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Square\", expectedSubtype: Square)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001211",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Squiggly\", expectedSubtype: Squiggly)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001022",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Stamp\", expectedSubtype: Stamp)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001067",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"StrikeOut\", expectedSubtype: StrikeOut)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002568",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Text\", expectedSubtype: Text)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001242",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Underline\", expectedSubtype: Underline)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001647",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Watermark\", expectedSubtype: Watermark)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001292",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes(subtypeName: \"Widget\", expectedSubtype: Widget)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003983",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AnnotWithMissingRect_SkipsIt",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002133",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AnnotationFlags_AllFlagsRecognized",
+      "outcome": "Passed",
+      "duration": "00:00:00.0074226",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AnnotationReferenceInArray_Resolved",
+      "outcome": "Passed",
+      "duration": "00:00:00.0007616",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AnnotsNotArray_ReturnsEmpty",
+      "outcome": "Passed",
+      "duration": "00:00:00.0069503",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AppearancePresent_HasAppearanceTrue",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003452",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_BSDictionary_AllFields_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006390",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_BSDictionary_OverridesBorderArrayWidth",
+      "outcome": "Passed",
+      "duration": "00:00:00.0068610",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_BSDictionary_PartialFields_OnlySetPresent",
+      "outcome": "Passed",
+      "duration": "00:00:00.0004485",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_BSDictionary_RealNumber_W_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005689",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_BSNotDictionary_IgnoredGracefully",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006817",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_BorderArray_WidthAndDashExtracted",
+      "outcome": "Passed",
+      "duration": "00:00:00.0018057",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_CmykColor_BlackInk_ConvertsCorrectly",
+      "outcome": "Passed",
+      "duration": "00:00:00.0004775",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_CmykColor_ConvertedToRgb",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010778",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_ColorNotArray_NoColor",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002520",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_CreationDateField_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0004732",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_DateWithDPrefix_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003951",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_DateWithNegativeOffset_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010647",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_DateWithPositiveOffset_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0034022",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_DateWithoutDPrefix_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006860",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_FileAttachment_EFDictNotDictionary_ReturnsFileNameOnly",
+      "outcome": "Passed",
+      "duration": "00:00:00.0022540",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_FileAttachment_FSNotDictionary_AllFieldsNull",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006703",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_FileAttachment_FallsBackTo_F_WhenNoUF",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002719",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_FileAttachment_FileStreamNotStream_ReturnsFileNameOnly",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005046",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_FileAttachment_NoEFDict_ReturnsFileNameOnly",
+      "outcome": "Passed",
+      "duration": "00:00:00.0004920",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_FileAttachment_NoFS_AllAttachmentFieldsNull",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003637",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_FileAttachment_NoFileStreamInEF_ReturnsFileNameOnly",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006062",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_FileAttachment_ReadsName_FromUF",
+      "outcome": "Passed",
+      "duration": "00:00:00.0004939",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_GrayColor_ConvertedToRgb",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005356",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_IconNameParsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002376",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_InkAnnotation_NoInkList_StrokesNull",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003617",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_InkAnnotation_StrokesCaptured",
+      "outcome": "Passed",
+      "duration": "00:00:00.0012224",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_InvalidColorArray_NoColor",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002808",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_InvalidDate_NoDate",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005994",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_LineAnnotation_LEndpoints_Captured",
+      "outcome": "Passed",
+      "duration": "00:00:00.0017119",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_LineAnnotation_NoLArray_LineEndpointsNull",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006054",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_LineEndpoints_TooFewElements_LineEndpointsNull",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003727",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_LinkActionNotDictionary_IgnoredGracefully",
+      "outcome": "Passed",
+      "duration": "00:00:00.0017737",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_LinkAnnotationWithGoToAction_ResolvesPage",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010846",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_LinkAnnotationWithUriAction_ExposesUri",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002623",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_LinkWithGoToRAction_IgnoredAsUnsupported",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003086",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_LinkWithoutPageInMap_NoDestinationPage",
+      "outcome": "Passed",
+      "duration": "00:00:00.0030773",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_MixedValidAndInvalidAnnotations_OnlyValidParsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0827500",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_MultipleAnnotations_AllParsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0017430",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_NoAnnots_ReturnsEmpty",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003239",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_NoAppearance_HasAppearanceFalse",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005469",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_NoBorder_BorderFieldsNull",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006510",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_NoFlags_DefaultsToZero",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005022",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_NoOpenFlag_DefaultsFalse",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003463",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_NonLineAnnotation_LineEndpoints_AreNull",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002458",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_NonTextMarkup_IsTextMarkupFalse",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002825",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_NullAnnotsObject_ReturnsEmpty",
+      "outcome": "Passed",
+      "duration": "00:00:00.0008766",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_OpenFlagFalse_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002553",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_OpenFlagTrue_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002542",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_PolyLineAnnotation_VerticesCaptured",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003031",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_PolygonAnnotation_VerticesCaptured",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006089",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_QuadPoints_CalculatesBoundingBox",
+      "outcome": "Passed",
+      "duration": "00:00:00.0004438",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_QuadPoints_InvalidLength_NoQuadPoints",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003088",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_QuadPoints_MultipleQuads_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003799",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_QuadPoints_NotArray_NoQuadPoints",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002186",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_QuadPoints_SingleQuad_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0314689",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_QuadPoints_TooFewElements_NoQuadPoints",
+      "outcome": "Passed",
+      "duration": "00:00:00.0032518",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_RawDictionary_AlwaysAvailable",
+      "outcome": "Passed",
+      "duration": "00:00:00.0009143",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_RectAsNull_SkipsIt",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002862",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_RectWithFewerThan4Elements_SkipsIt",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002576",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_RgbColor_Parsed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0018256",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_SingleTextAnnotation_ParsesAllFields",
+      "outcome": "Passed",
+      "duration": "00:00:00.0009082",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_TextMarkupAnnotations_IsTextMarkupTrue(subtypeName: \"Highlight\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0004470",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_TextMarkupAnnotations_IsTextMarkupTrue(subtypeName: \"Squiggly\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002183",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_TextMarkupAnnotations_IsTextMarkupTrue(subtypeName: \"StrikeOut\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0003829",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_TextMarkupAnnotations_IsTextMarkupTrue(subtypeName: \"Underline\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001024",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_UnknownSubtype_ParsedAsUnknown",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002902",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_VerticesArray_OddNumberOfCoords_TruncatesUnpaired",
+      "outcome": "Passed",
+      "duration": "00:00:00.0017782",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.FormXObjectRedactionTests.FlattenOverlapping_FormCollidingEveryResourceCategory_RenamesAndRewritesAllOps",
+      "outcome": "Passed",
+      "duration": "00:00:00.0128281",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.FormXObjectRedactionTests.RedactArea_FormResourceNameCollision_RenamesAndKeepsBothFonts",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010836",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.FormXObjectRedactionTests.RedactArea_FormSharedByAnotherPage_LeavesOtherPageIntact",
+      "outcome": "Passed",
+      "duration": "00:00:00.0013308",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.FormXObjectRedactionTests.RedactArea_FormViaInheritedPageResources_IsFlattened",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006767",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.FormXObjectRedactionTests.RedactArea_FormWhoseBBoxMissesArea_IsLeftAsDoAndNotFlattened",
+      "outcome": "Passed",
+      "duration": "00:00:00.0017439",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.FormXObjectRedactionTests.RedactArea_FormWithCollidingExtGStateAndRealMatrix_RenamesAndFlattens",
+      "outcome": "Passed",
+      "duration": "00:00:00.0026715",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.FormXObjectRedactionTests.RedactArea_FormWithMatrixUnderPageCm_FlattensAndRedacts",
+      "outcome": "Passed",
+      "duration": "00:00:00.0013960",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.FormXObjectRedactionTests.RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+      "outcome": "Passed",
+      "duration": "00:00:00.0041347",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.FormXObjectRedactionTests.RedactArea_NestedForm_RemovesInnermostText",
+      "outcome": "Passed",
+      "duration": "00:00:00.0008146",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.FormXObjectRedactionTests.RedactArea_OverFormText_RemovesItFromSavedPdfBytes",
+      "outcome": "Passed",
+      "duration": "00:00:00.3137175",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.FormXObjectRedactionTests.RedactArea_PageWithImageAndForm_RedactsFormLeavesImageDo",
+      "outcome": "Passed",
+      "duration": "00:00:00.0036677",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.InlineImageRedactionEndToEndTests.HiddenTextDetector_FlagsTextHiddenUnderInlineImage",
+      "outcome": "Passed",
+      "duration": "00:00:00.2734595",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.InlineImageRedactionEndToEndTests.RedactArea_AwayFromInlineImage_PreservesBytesOnRoundTrip",
+      "outcome": "Passed",
+      "duration": "00:00:00.0232880",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.InlineImageRedactionEndToEndTests.RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
+      "outcome": "Passed",
+      "duration": "00:00:00.0064932",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.NonPageCarrierRedactionLeakTests.FullSave_GarbageCollectsPreviousRevisionOfRedactedContent",
+      "outcome": "Passed",
+      "duration": "00:00:00.0015678",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.NonPageCarrierRedactionLeakTests.Redaction_DoesNotLeaveSecretInInfoDictionary",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006663",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.NonPageCarrierRedactionLeakTests.Redaction_DoesNotLeaveSecretInOutlineTitles",
+      "outcome": "Passed",
+      "duration": "00:00:00.0009103",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.NonPageCarrierRedactionLeakTests.Redaction_DoesNotLeaveSecretInXmpMetadata",
+      "outcome": "Passed",
+      "duration": "00:00:00.3210042",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.NonPageCarrierRedactionLeakTests.Sanitizer_LeavesUnrelatedMetadataIntact",
+      "outcome": "Passed",
+      "duration": "00:00:00.0039047",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.StructureTreeRedactionLeakTests.RedactArea_LeavesUnrelatedStructureTreeTextIntact",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010624",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.StructureTreeRedactionLeakTests.RedactArea_RemovesActualTextFromTheStructureTree",
+      "outcome": "Passed",
+      "duration": "00:00:00.3324157",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.StructureTreeRedactionLeakTests.RedactArea_RemovesAltTextFromTheStructureTree",
+      "outcome": "Passed",
+      "duration": "00:00:00.0011145",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-core.trx",
+      "resultModifiedAt": "2026-08-31T04:15:05.403531+00:00",
+      "trxSha256": "d0604f777915d14246a69da355923c347fb4ddffbfc709c6ef65472d87c42832"
+    },
     {
       "testName": "Excise.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool(relativePath: \"test-pdfs/smoke/cdc-vis-covid-19.pdf\", pageNumber: 1)",
       "outcome": "Passed",
@@ -293,6 +1244,46 @@
       "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
     },
     {
+      "testName": "Excise.Rendering.Tests.Differential.RedactionReferenceVerificationTests.RedactedGlyphs_AreNotDrawnByAnIndependentRenderer(rotation: 0)",
+      "outcome": "Passed",
+      "duration": "00:00:00.3981731",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-independent-render.trx",
+      "resultModifiedAt": "2026-08-31T04:16:14.626150+00:00",
+      "trxSha256": "02a3952b095eb37ad658d8d38a6df06b17cc6dccebfade1506a6e16f6bae5c35"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RedactionReferenceVerificationTests.RedactedGlyphs_AreNotDrawnByAnIndependentRenderer(rotation: 180)",
+      "outcome": "Passed",
+      "duration": "00:00:01.0102856",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-independent-render.trx",
+      "resultModifiedAt": "2026-08-31T04:16:14.626150+00:00",
+      "trxSha256": "02a3952b095eb37ad658d8d38a6df06b17cc6dccebfade1506a6e16f6bae5c35"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RedactionReferenceVerificationTests.RedactedGlyphs_AreNotDrawnByAnIndependentRenderer(rotation: 270)",
+      "outcome": "Passed",
+      "duration": "00:00:00.2163028",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-independent-render.trx",
+      "resultModifiedAt": "2026-08-31T04:16:14.626150+00:00",
+      "trxSha256": "02a3952b095eb37ad658d8d38a6df06b17cc6dccebfade1506a6e16f6bae5c35"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RedactionReferenceVerificationTests.RedactedGlyphs_AreNotDrawnByAnIndependentRenderer(rotation: 90)",
+      "outcome": "Passed",
+      "duration": "00:00:00.1533799",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-independent-render.trx",
+      "resultModifiedAt": "2026-08-31T04:16:14.626150+00:00",
+      "trxSha256": "02a3952b095eb37ad658d8d38a6df06b17cc6dccebfade1506a6e16f6bae5c35"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RedactionReferenceVerificationTests.RedactedText_IsNotRecoverableByAnIndependentExtractor",
+      "outcome": "Passed",
+      "duration": "00:00:00.5998583",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-redaction-independent.trx",
+      "resultModifiedAt": "2026-08-31T04:15:58.324636+00:00",
+      "trxSha256": "5a8afd74f761062342935bc9d4f6d83a27ce24f4599bc4c1a9b9496044a7eaae"
+    },
+    {
       "testName": "Excise.Rendering.Tests.Differential.ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
       "outcome": "Passed",
       "duration": "00:00:00.4306702",
@@ -366,10 +1357,10 @@
     }
   ],
   "summary": {
-    "trxFiles": 7,
-    "tests": 40,
+    "trxFiles": 10,
+    "tests": 162,
     "outcomes": {
-      "Passed": 40
+      "Passed": 162
     },
     "status": "recorded"
   }

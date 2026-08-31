@@ -63,19 +63,22 @@ def implementation_evidence_progress(row, mode, collected, attribution):
     return min(score, 95)
 
 
-def summary(rows, collected, attribution=None):
+def summary(rows, collected, attribution=None, mode_filter=None):
     # Deferred/preserve-only/blocked work is intentionally outside the current
     # product implementation denominator. Unknown evidence remains visible.
     target = [r for r in rows if r["decision"]["state"] in {"required", "supported"}]
-    modes = [(r["id"], mode, state) for r in target for mode, state in r["modes"].items() if state != "not-applicable"]
+    modes = [(r["id"], mode, state) for r in target for mode, state in r["modes"].items()
+             if state != "not-applicable" and (mode_filter is None or mode in mode_filter)]
     states = Counter(state for _, _, state in modes)
     verified = [r for r in target if r.get("verification")]
     executable = [r for r in verified if r["verification"].get("status", "executable") == "executable"]
     security = [r for r in target if r.get("verification", {}).get("securitySensitive")]
     security_ready = [r for r in security if {"security", "differential"}.issubset({c["kind"] for c in r["verification"]["checks"]})]
-    readiness = [promotion_readiness(row, mode, collected) for row in target for mode, state in row["modes"].items() if state != "not-applicable"]
+    readiness = [promotion_readiness(row, mode, collected) for row in target for mode, state in row["modes"].items()
+                 if state != "not-applicable" and (mode_filter is None or mode in mode_filter)]
     attribution = attribution or {}
-    implementation_progress = [implementation_evidence_progress(row, mode, collected, attribution) for row in target for mode, state in row["modes"].items() if state != "not-applicable"]
+    implementation_progress = [implementation_evidence_progress(row, mode, collected, attribution) for row in target for mode, state in row["modes"].items()
+                               if state != "not-applicable" and (mode_filter is None or mode in mode_filter)]
     return {
         "capabilities": len(rows), "targetCapabilities": len(target),
         "targetModes": len(modes), "modeStates": dict(sorted(states.items())),
@@ -120,14 +123,38 @@ def main():
         major_categories[group["id"]] = {"name": group["name"], "sections": group["sections"], **summary(group_rows, collected, attribution_by_mode)}
     readiness = Counter(item["status"] for item in benchmarks)
     by_id = {row["id"]: row for row in all_rows}
-    workflow_ids = {"redaction": ["pdf.17.security.redaction-content-removal", "pdf.17.interactive.redaction-annotations"], "forms": ["pdf.17.interactive.forms"], "safe-save": ["pdf.17.syntax.objects", "pdf.17.document.metadata", "pdfe.product.security.privacy-clean-copy"], "rendering": ["pdf.17.content.streams", "pdf.17.graphics.images", "pdf.17.graphics.fonts", "pdf.17.transparency.model"]}
-    workflows = {name: summary([by_id[item] for item in ids if item in by_id], collected, attribution_by_mode) for name, ids in workflow_ids.items()}
-    result = {"schemaVersion": 1, "generatedBy": "scripts/build-pdf-capability-scorecard.py", "policy": "Unknown is not credit; security gates do not compensate for unrelated coverage. Promotion readiness is evidence-backed planning progress and is never a conformance claim.", "implementationEvidenceProgressPolicy": "A capped, non-conformance progress measure: reviewed partial state, explicit test contracts, passing recorded contracts, atomic fixtures, independent/corpus checks, and benchmark harnesses receive credit. Only a reviewed implemented mode reaches 100%.", "overall": summary(all_rows, collected, attribution_by_mode), "majorCategories": major_categories, "sections": sections, "workflows": workflows, "benchmarks": {"scenarios": len(benchmarks), "status": dict(sorted(readiness.items())), "readyPercent": percent(readiness["existing-harness"], len(benchmarks))}, "evidenceCollection": evidence_collection.get("summary") if evidence_collection else {"status": "not-generated"}, "testAttribution": attribution.get("summary") if attribution else {"status":"not-generated"}}
+    workflow_specs = {
+        "redaction": {
+            "ids": ["pdf.17.security.redaction-content-removal"],
+            "modes": {"preserve", "render", "extract", "mutate", "write"},
+        },
+        "redaction-annotations": {
+            "ids": ["pdf.17.interactive.redaction-annotations"],
+            "modes": None,
+        },
+        "forms": {
+            "ids": ["pdf.17.interactive.forms"],
+            "modes": None,
+        },
+        "safe-save": {
+            "ids": ["pdf.17.syntax.objects", "pdf.17.document.metadata", "pdfe.product.security.privacy-clean-copy"],
+            "modes": {"preserve", "write"},
+        },
+        "rendering": {
+            "ids": ["pdf.17.content.streams", "pdf.17.graphics.images", "pdf.17.graphics.fonts", "pdf.17.transparency.model"],
+            "modes": {"render"},
+        },
+    }
+    workflows = {
+        name: summary([by_id[item] for item in spec["ids"] if item in by_id], collected, attribution_by_mode, spec["modes"])
+        for name, spec in workflow_specs.items()
+    }
+    result = {"schemaVersion": 1, "generatedBy": "scripts/build-pdf-capability-scorecard.py", "policy": "Unknown is not credit; security gates do not compensate for unrelated coverage. Promotion readiness is evidence-backed planning progress and is never a conformance claim.", "implementationEvidenceProgressPolicy": "A capped, non-conformance progress measure: reviewed partial state, explicit test contracts, passing recorded contracts, atomic fixtures, independent/corpus checks, and benchmark harnesses receive credit. Only a reviewed implemented mode reaches 100%.", "workflowScopePolicy": "A workflow score includes only the processor roles required by that user workflow. For example, rendering measures render modes, while separate capability/section scores retain parse, preserve, mutate, write, and authoring gaps.", "overall": summary(all_rows, collected, attribution_by_mode), "majorCategories": major_categories, "sections": sections, "workflows": workflows, "benchmarks": {"scenarios": len(benchmarks), "status": dict(sorted(readiness.items())), "readyPercent": percent(readiness["existing-harness"], len(benchmarks))}, "evidenceCollection": evidence_collection.get("summary") if evidence_collection else {"status": "not-generated"}, "testAttribution": attribution.get("summary") if attribution else {"status":"not-generated"}}
     result["unplannedRequiredCapabilities"] = [r["id"] for r in all_rows if r["decision"]["state"] == "required" and not r.get("verification")]
     output = args.output or args.root / "generated/capability-scorecard.json"
     output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     markdown = args.markdown or args.root / "generated/capability-scorecard.md"
-    lines = ["# PDF capability scorecard", "", "Unknown modes receive no credit. Security gates are non-compensating.", "", "Implementation evidence progress gives capped credit for reviewed state, contracts, passing runs, fixtures, independent evidence, and performance harnesses; it is never a conformance claim.", "", f"Critical-path benchmark readiness: {result['benchmarks']['readyPercent']}% ({result['benchmarks']['status']}).", "", "| Area | Target modes | Strict | Evidence progress | Promotion readiness | Measured | Unknown |", "| --- | ---: | ---: | ---: | ---: | ---: | ---: |"]
+    lines = ["# PDF capability scorecard", "", "Unknown modes receive no credit. Security gates are non-compensating.", "", "Implementation evidence progress gives capped credit for reviewed state, contracts, passing runs, fixtures, independent evidence, and performance harnesses; it is never a conformance claim.", "", "Workflow scores include only the processor roles that workflow needs; section and category scores retain every required/supported role.", "", f"Critical-path benchmark readiness: {result['benchmarks']['readyPercent']}% ({result['benchmarks']['status']}).", "", "| Area | Target modes | Strict | Evidence progress | Promotion readiness | Measured | Unknown |", "| --- | ---: | ---: | ---: | ---: | ---: | ---: |"]
     for name, item in [("overall", result["overall"]), *sorted(result["sections"].items())]:
         def display(value):
             return "—" if value is None else f"{value}%"
