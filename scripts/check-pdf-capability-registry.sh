@@ -11,6 +11,7 @@ python3 scripts/build-pdf-evidence-deficiency-report.py
 python3 scripts/collect-pdf-test-outcomes.py
 python3 scripts/collect-pdf-reference-tool-evidence.py
 python3 scripts/build-pdf-atomic-fixture-map.py
+python3 scripts/build-pdf-evidence-attribution.py
 python3 scripts/build-pdf-capability-scorecard.py
 git diff --exit-code -- \
   test-pdfs/manifests/pdf-spec-registry/generated/summary.json \
@@ -25,5 +26,6 @@ git diff --exit-code -- \
   test-pdfs/manifests/pdf-spec-registry/generated/test-outcomes.json \
   test-pdfs/manifests/pdf-spec-registry/generated/reference-tool-evidence.json \
   test-pdfs/manifests/pdf-spec-registry/generated/atomic-fixture-evidence.json \
+  test-pdfs/manifests/pdf-spec-registry/generated/evidence-attribution.json \
   test-pdfs/manifests/pdf-spec-registry/generated/implementation-evidence-map.json \
   test-pdfs/manifests/pdf-spec-registry/generated/test-suite-evidence-map.json
