@@ -59,7 +59,7 @@ partial class Program
         {
             CommandMetadataCommand.Create(),
             CreateBatchCommand(),
-            CreateInfoCommand(),
+            InfoCommand.Create(),
             CreateValidateCommand(),
             CreateTextCommand(),
             CreateLettersCommand(),
@@ -86,115 +86,6 @@ partial class Program
         var parserExitCode = rootCommand.Parse(args).Invoke();
         var handlerExitCode = Environment.ExitCode;
         return Task.FromResult(parserExitCode != 0 ? parserExitCode : handlerExitCode);
-    }
-
-    /// <summary>
-    /// excise info <file> - Show PDF document information
-    /// </summary>
-    static Command CreateInfoCommand()
-    {
-        var fileArg = new Argument<FileInfo>("file") { Description = "PDF file to analyze" };
-        var jsonOption = new Option<bool>("--json")
-        {
-            Description = "Write document information as JSON",
-            DefaultValueFactory = _ => false,
-        };
-        var passwordOption = new Option<string?>("--password")
-        {
-            Description = "User password for encrypted PDFs",
-        };
-        var command = new Command("info", "Show PDF document information")
-        {
-            fileArg,
-            jsonOption,
-            passwordOption,
-        };
-
-        command.SetAction(parseResult =>
-        {
-            var file = parseResult.GetValue(fileArg)!;
-            var json = parseResult.GetValue(jsonOption);
-            var password = parseResult.GetValue(passwordOption);
-            if (!file.Exists)
-            {
-                Console.Error.WriteLine($"File not found: {file.FullName}");
-                Environment.ExitCode = 1;
-                return;
-            }
-
-            try
-            {
-                using var doc = OpenPdfDocument(file.FullName, password);
-
-                if (json)
-                {
-                    WriteJson(new
-                    {
-                        schemaVersion = 1,
-                        command = PdfCommandIds.DocumentInfo,
-                        status = "PASS",
-                        file = file.FullName,
-                        sizeBytes = file.Length,
-                        version = doc.Version,
-                        pageCount = doc.PageCount,
-                        encrypted = doc.IsEncrypted,
-                        metadata = new
-                        {
-                            doc.Title,
-                            doc.Author,
-                            doc.Subject,
-                            doc.Creator,
-                            doc.Producer,
-                        },
-                        pages = Enumerable.Range(1, Math.Min(doc.PageCount, 10))
-                            .Select(pageNumber =>
-                            {
-                                var page = doc.GetPage(pageNumber);
-                                return new
-                                {
-                                    pageNumber,
-                                    width = page.Width,
-                                    height = page.Height,
-                                };
-                            })
-                            .ToArray(),
-                    });
-                    return;
-                }
-
-                Console.WriteLine($"File: {file.Name}");
-                Console.WriteLine($"Size: {file.Length:N0} bytes");
-                Console.WriteLine();
-                Console.WriteLine("=== Document Info ===");
-                Console.WriteLine($"PDF Version: {doc.Version}");
-                Console.WriteLine($"Page Count: {doc.PageCount}");
-                Console.WriteLine($"Encrypted: {doc.IsEncrypted}");
-                Console.WriteLine();
-
-                if (doc.Title != null) Console.WriteLine($"Title: {doc.Title}");
-                if (doc.Author != null) Console.WriteLine($"Author: {doc.Author}");
-                if (doc.Subject != null) Console.WriteLine($"Subject: {doc.Subject}");
-                if (doc.Creator != null) Console.WriteLine($"Creator: {doc.Creator}");
-                if (doc.Producer != null) Console.WriteLine($"Producer: {doc.Producer}");
-
-                Console.WriteLine();
-                Console.WriteLine("=== Pages ===");
-                for (int i = 1; i <= Math.Min(doc.PageCount, 10); i++)
-                {
-                    var page = doc.GetPage(i);
-                    Console.WriteLine($"  Page {i}: {page.Width:F0} x {page.Height:F0} pts ({page.Width / 72:F1}\" x {page.Height / 72:F1}\")");
-                }
-                if (doc.PageCount > 10)
-                    Console.WriteLine($"  ... and {doc.PageCount - 10} more pages");
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error: {ex.Message}");
-                Environment.ExitCode = 1;
-            }
-        });
-
-        return command;
     }
 
     /// <summary>
