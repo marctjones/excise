@@ -8,11 +8,11 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Area | Target modes | Implemented | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| overall | 964 | 0.1% | 15.9% | 3.4% | 89.1% | 29.3% | 931 |
+| overall | 964 | 0.3% | 15.9% | 3.4% | 89.1% | 29.3% | 931 |
 | annotation-subtypes | 112 | 0.0% | 10.0% | 0.0% | 100.0% | 0.0% | 112 |
 | content | 18 | 0.0% | 14.4% | 5.6% | 33.3% | 33.3% | 17 |
 | document | 22 | 0.0% | 10.0% | 0.0% | 0.0% | 0.0% | 22 |
-| graphics | 33 | 0.0% | 14.8% | 9.1% | 33.3% | 33.3% | 30 |
+| graphics | 33 | 6.1% | 15.5% | 9.1% | 33.3% | 33.3% | 30 |
 | image-requirements | 108 | 0.0% | 10.0% | 0.0% | 100.0% | 0.0% | 108 |
 | interactive | 39 | 2.6% | 16.9% | 43.6% | 16.7% | 16.7% | 22 |
 | interchange | 6 | 0.0% | 10.0% | 16.7% | 0.0% | 0.0% | 5 |
@@ -30,7 +30,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | Category | Target modes | Implemented | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | File model | 36 | 0.0% | 10.0% | 0.0% | 0.0% | 0.0% | 36 |
-| Page content and rendering | 750 | 0.0% | 17.2% | 0.8% | 95.9% | 35.5% | 744 |
+| Page content and rendering | 750 | 0.3% | 17.3% | 0.8% | 95.9% | 35.5% | 744 |
 | Interaction and annotations | 151 | 0.7% | 11.8% | 11.3% | 85.3% | 2.9% | 134 |
 | Interchange and profiles | 6 | 0.0% | 10.0% | 16.7% | 0.0% | 0.0% | 5 |
 | PDFE product capabilities | 21 | 0.0% | 10.0% | 42.9% | 0.0% | 0.0% | 12 |
@@ -41,7 +41,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | forms | 8 | 0.0% | 10.0% | 0 | 0 | 7 |
 | redaction | 11 | 9.1% | 34.5% | 5 | 1 | 1 |
-| rendering | 23 | 0.0% | 23.9% | 4 | 4 | 19 |
+| rendering | 23 | 8.7% | 24.8% | 4 | 4 | 19 |
 | safe-save | 13 | 0.0% | 10.0% | 0 | 0 | 13 |
 
 ## Evidence collection

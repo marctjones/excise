@@ -355,7 +355,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "partial",
+        "render": "implemented",
         "extract": "unknown",
         "mutate": "unknown",
         "write": "unknown"
@@ -496,7 +496,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "partial",
+        "render": "implemented",
         "extract": "unknown",
         "mutate": "unknown",
         "write": "unknown",

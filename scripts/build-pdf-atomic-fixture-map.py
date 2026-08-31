@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build a mode-level inventory of accepted atomic-fixture contracts and runs."""
 from __future__ import annotations
-import json
+import json, re
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -11,13 +11,16 @@ OUT=REG/'generated/atomic-fixture-evidence.json'
 
 def load(path): return json.loads(path.read_text(encoding='utf-8'))
 def method(ref): return ref.rsplit('::',1)[-1]
+def outcome_method(name):
+ match=re.search(r'\.([A-Za-z_][A-Za-z0-9_]*)\(', name)
+ return match.group(1) if match else name.rsplit('.',1)[-1].split('(',1)[0]
 def main():
  registry=load(REG/'registry.json')
  tests=load(REG/'generated/test-suite-evidence-map.json')['tests']
  outcomes=load(REG/'generated/test-outcomes.json').get('outcomes',[])
  test_index={(row['path'],row['method']):row['id'] for row in tests}
  outcome_index=defaultdict(set)
- for outcome in outcomes: outcome_index[(outcome.get('testName') or '').rsplit('.',1)[-1]].add(outcome['outcome'])
+ for outcome in outcomes: outcome_index[outcome_method(outcome.get('testName') or '')].add(outcome['outcome'])
  rows=[]
  for section in registry['sections']:
   for cap in load(REG/section['path'])['capabilities']:
