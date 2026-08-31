@@ -67,8 +67,28 @@ public class CommandMetadataCommandTests
         }
 
         exitCode.Should().Be(1);
-        Environment.ExitCode.Should().Be(1);
         captured.ToString().Should().Contain("Unknown command id: missing.command");
-        Environment.ExitCode = 0;
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsHandlerOutcomeWithoutMutatingProcessExitCode()
+    {
+        var previousExitCode = Environment.ExitCode;
+        Environment.ExitCode = 73;
+        var previousOut = Console.Out;
+        Console.SetOut(new StringWriter());
+        try
+        {
+            var exitCode = await Program.RunAsync(["commands", "--json"]);
+
+            exitCode.Should().Be(0);
+            Environment.ExitCode.Should().Be(73,
+                "the invocation contract returns the handler outcome instead of changing process-global state");
+        }
+        finally
+        {
+            Console.SetOut(previousOut);
+            Environment.ExitCode = previousExitCode;
+        }
     }
 }

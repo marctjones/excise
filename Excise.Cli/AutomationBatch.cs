@@ -69,8 +69,6 @@ partial class Program
 
     private static int ExecuteBatchCommand(FileInfo workflowFile, FileInfo? outputFile, bool json, bool progress)
     {
-        Environment.ExitCode = AutomationExitSuccess;
-
         if (!workflowFile.Exists)
             return CompleteBatchContractError(json, outputFile, $"Workflow file not found: {workflowFile.FullName}");
 
@@ -116,7 +114,6 @@ partial class Program
                 ? AutomationExitContractError
                 : AutomationExitOperationFailed;
 
-        Environment.ExitCode = exitCode;
         return exitCode;
     }
 
@@ -150,7 +147,6 @@ partial class Program
         else
             Console.Error.WriteLine(message);
 
-        Environment.ExitCode = AutomationExitContractError;
         return AutomationExitContractError;
     }
 

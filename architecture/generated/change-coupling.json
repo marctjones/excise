@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "cbe301b404fd3956d7823e19883b9c2a8da564f4",
+  "sourceRevision": "77e8a4ba226e4a38c7c548bb2f2eb999dc1e8ae7",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 198,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "cbe301b404fd3956d7823e19883b9c2a8da564f4",
-    "oldestProductionCommit": "0ee9ee42173203724f28818484eccb72dd4ccb98"
+    "newestProductionCommit": "77e8a4ba226e4a38c7c548bb2f2eb999dc1e8ae7",
+    "oldestProductionCommit": "633cca24da5af84d1a0ea897d07230bf6a6eb23c"
   },
   "files": [
     {
@@ -398,10 +398,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.App/Services/PdfDocumentService.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.App/Services/PdfRenderService.cs",
       "commits": 1
     },
@@ -527,6 +523,14 @@
     },
     {
       "path": "Excise.Cli/Commands/LettersCommand.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Cli/Commands/MakeSearchableCommand.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Cli/Commands/MakeSearchableCommandHandler.cs",
       "commits": 1
     },
     {
