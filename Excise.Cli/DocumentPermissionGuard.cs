@@ -48,9 +48,6 @@ partial class Program
     internal static Option<bool> CreateIgnorePermissionsOption()
         => CliPermissionOptions.CreateIgnorePermissionsOption();
 
-    internal static Option<bool> CreateForAccessibilityOption()
-        => CliPermissionOptions.CreateForAccessibilityOption();
-
     /// <summary>
     /// Compatibility entry point for existing command handlers. New handlers
     /// call <see cref="DocumentPermissionGuard.Require"/> directly so policy

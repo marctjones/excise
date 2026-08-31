@@ -488,27 +488,6 @@ partial class Program
     private static void WriteJson(object value)
         => Console.WriteLine(JsonSerializer.Serialize(value, AutomationJsonOptions));
 
-    private static void WriteTextJson(string file, int pageCount, IReadOnlyList<TextPageResult> pages)
-    {
-        WriteJson(new
-        {
-            schemaVersion = 1,
-            command = PdfCommandIds.ExtractText,
-            status = "PASS",
-            file,
-            pageCount,
-            pages,
-        });
-    }
-
-    private static void ValidatePageNumber(PdfDocument doc, int page)
-    {
-        if (page < 1 || page > doc.PageCount)
-            throw new AutomationContractException(
-                "PAGE_OUT_OF_RANGE",
-                $"Page {page} is outside the document range 1..{doc.PageCount}.");
-    }
-
     private static string? NormalizeAutomationCommand(string? command)
     {
         if (string.IsNullOrWhiteSpace(command))
