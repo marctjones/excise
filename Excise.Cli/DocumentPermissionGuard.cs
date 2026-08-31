@@ -3,6 +3,28 @@ using Excise.Core.Document;
 
 namespace Excise.Cli;
 
+/// <summary>What a gated verb is about to do, mapped to the /P bit that governs it.</summary>
+internal enum DocumentAction
+{
+    /// <summary>Copy/extract content out of the document — /P bit 5 (with the bit 10 accessibility carve-out for text).</summary>
+    Extract,
+
+    /// <summary>Modify document contents (e.g. add form fields) — /P bit 4.</summary>
+    ModifyContents,
+
+    /// <summary>Fill in existing interactive form fields — /P bit 6 or bit 9.</summary>
+    FillForms,
+
+    /// <summary>Assemble the document — insert/rotate/delete pages, split, merge — /P bit 11.</summary>
+    AssembleDocument,
+}
+
+/// <summary>
+/// Thrown when a document's /P permissions deny the requested action and no
+/// override was supplied.
+/// </summary>
+internal sealed class PdfPermissionDeniedException(string message) : InvalidOperationException(message);
+
 /// <summary>
 /// Document-permission (/P) enforcement for the CLI — issue #642.
 ///
@@ -23,31 +45,38 @@ namespace Excise.Cli;
 /// </summary>
 partial class Program
 {
-    /// <summary>What a gated verb is about to do, mapped to the /P bit that governs it.</summary>
-    internal enum DocumentAction
-    {
-        /// <summary>Copy/extract content out of the document — /P bit 5 (with the bit 10 accessibility carve-out for text).</summary>
-        Extract,
+    internal static Option<bool> CreateIgnorePermissionsOption()
+        => CliPermissionOptions.CreateIgnorePermissionsOption();
 
-        /// <summary>Modify document contents (e.g. add form fields) — /P bit 4.</summary>
-        ModifyContents,
-
-        /// <summary>Fill in existing interactive form fields — /P bit 6 or bit 9.</summary>
-        FillForms,
-
-        /// <summary>Assemble the document — insert/rotate/delete pages, split, merge — /P bit 11.</summary>
-        AssembleDocument,
-    }
+    internal static Option<bool> CreateForAccessibilityOption()
+        => CliPermissionOptions.CreateForAccessibilityOption();
 
     /// <summary>
-    /// Thrown when a document's /P permissions deny the requested action and
-    /// no override was supplied. Same shape as
-    /// <see cref="LowConfidenceExtractionException"/>: verbs' generic catch
-    /// prints the message on stderr and fails with a non-zero exit code.
+    /// Compatibility entry point for existing command handlers. New handlers
+    /// call <see cref="DocumentPermissionGuard.Require"/> directly so policy
+    /// ownership does not remain coupled to the CLI composition root.
     /// </summary>
-    internal sealed class PdfPermissionDeniedException(string message) : InvalidOperationException(message);
+    internal static void RequireDocumentPermission(
+        PdfDocument doc,
+        DocumentAction action,
+        string actionDescription,
+        bool ignorePermissions,
+        bool forAccessibility = false,
+        string? accessibilityHint = null,
+        string overrideHint = "--ignore-permissions")
+        => DocumentPermissionGuard.Require(
+            doc,
+            action,
+            actionDescription,
+            ignorePermissions,
+            forAccessibility,
+            accessibilityHint,
+            overrideHint);
+}
 
-    static Option<bool> CreateIgnorePermissionsOption() => new("--ignore-permissions")
+internal static class CliPermissionOptions
+{
+    internal static Option<bool> CreateIgnorePermissionsOption() => new("--ignore-permissions")
     {
         Description = "Proceed even when the document's /P permission flags deny this action. " +
             "Explicit override for legitimate use — e.g. you are the document owner (excise cannot " +
@@ -55,14 +84,17 @@ partial class Program
         DefaultValueFactory = _ => false,
     };
 
-    static Option<bool> CreateForAccessibilityOption() => new("--for-accessibility")
+    internal static Option<bool> CreateForAccessibilityOption() => new("--for-accessibility")
     {
         Description = "Extract text in support of accessibility (screen readers, assistive " +
             "technology). Honoured when the document denies general copy/extraction (/P bit 5) " +
             "but grants extraction for accessibility (/P bit 10).",
         DefaultValueFactory = _ => false,
     };
+}
 
+internal static class DocumentPermissionGuard
+{
     /// <summary>
     /// Enforce the document's effective /P permissions for
     /// <paramref name="action"/>. No-op when the action is allowed (or the
@@ -80,7 +112,7 @@ partial class Program
     /// <param name="forAccessibility">For <see cref="DocumentAction.Extract"/>: the caller invoked the /P bit 10 accessibility carve-out.</param>
     /// <param name="accessibilityHint">How this surface spells the accessibility carve-out (e.g. "--for-accessibility"), or null when the surface has none.</param>
     /// <param name="overrideHint">How this surface spells the override (CLI flag vs batch-step property).</param>
-    internal static void RequireDocumentPermission(
+    internal static void Require(
         PdfDocument doc,
         DocumentAction action,
         string actionDescription,

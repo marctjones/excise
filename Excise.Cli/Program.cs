@@ -61,7 +61,7 @@ partial class Program
             CreateBatchCommand(),
             InfoCommand.Create(),
             CreateValidateCommand(),
-            CreateTextCommand(),
+            TextCommand.Create(),
             CreateLettersCommand(),
             CreateRenderCommand(),
             CreateRedactCommand(),
@@ -198,105 +198,6 @@ partial class Program
                 }
 
                 Environment.ExitCode = conformant ? 0 : 1;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error: {ex.Message}");
-                Environment.ExitCode = 1;
-            }
-        });
-
-        return command;
-    }
-
-    /// <summary>
-    /// excise text <file> [--page N] - Extract text from PDF
-    /// </summary>
-    static Command CreateTextCommand()
-    {
-        var fileArg = new Argument<FileInfo>("file") { Description = "PDF file" };
-        var pageOption = new Option<int?>("--page", "-p") { Description = "Specific page number (1-based)" };
-        var jsonOption = new Option<bool>("--json")
-        {
-            Description = "Write extracted text as JSON",
-            DefaultValueFactory = _ => false,
-        };
-        var passwordOption = new Option<string?>("--password")
-        {
-            Description = "User password for encrypted PDFs",
-        };
-        var ignorePermissionsOption = CreateIgnorePermissionsOption();
-        var forAccessibilityOption = CreateForAccessibilityOption();
-
-        var command = new Command("text", "Extract text from PDF")
-        {
-            fileArg,
-            pageOption,
-            jsonOption,
-            passwordOption,
-            ignorePermissionsOption,
-            forAccessibilityOption,
-        };
-
-        command.SetAction(parseResult =>
-        {
-            var file = parseResult.GetValue(fileArg)!;
-            var page = parseResult.GetValue(pageOption);
-            var json = parseResult.GetValue(jsonOption);
-            var password = parseResult.GetValue(passwordOption);
-            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
-            var forAccessibility = parseResult.GetValue(forAccessibilityOption);
-            if (!file.Exists)
-            {
-                Console.Error.WriteLine($"File not found: {file.FullName}");
-                Environment.ExitCode = 1;
-                return;
-            }
-
-            try
-            {
-                using var doc = OpenPdfDocument(file.FullName, password);
-                RequireDocumentPermission(doc, DocumentAction.Extract, "text extraction",
-                    ignorePermissions, forAccessibility, accessibilityHint: "--for-accessibility");
-
-                if (page.HasValue)
-                {
-                    if (page.Value < 1 || page.Value > doc.PageCount)
-                    {
-                        Console.Error.WriteLine($"Invalid page number. Document has {doc.PageCount} pages.");
-                        Environment.ExitCode = 1;
-                        return;
-                    }
-                    var p = doc.GetPage(page.Value);
-                    if (json)
-                    {
-                        WriteTextJson(file.FullName, doc.PageCount, [new(page.Value, p.Text)]);
-                        return;
-                    }
-                    Console.WriteLine($"=== Page {page.Value} ===");
-                    Console.WriteLine(p.Text);
-                }
-                else
-                {
-                    if (json)
-                    {
-                        var pages = Enumerable.Range(1, doc.PageCount)
-                            .Select(pageNumber => new TextPageResult(pageNumber, doc.GetPage(pageNumber).Text))
-                            .ToArray();
-                        WriteTextJson(file.FullName, doc.PageCount, pages);
-                        return;
-                    }
-
-                    for (int i = 1; i <= doc.PageCount; i++)
-                    {
-                        var p = doc.GetPage(i);
-                        if (doc.PageCount > 1)
-                            Console.WriteLine($"=== Page {i} ===");
-                        Console.WriteLine(p.Text);
-                        if (i < doc.PageCount)
-                            Console.WriteLine();
-                    }
-                }
             }
             catch (Exception ex)
             {

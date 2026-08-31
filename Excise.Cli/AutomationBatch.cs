@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Excise.Cli.Commands;
 using Excise.Core.Automation;
 using Excise.Core.Document;
 using Excise.Core.Parsing;
@@ -275,6 +276,12 @@ partial class Program
                 : ex.Message + " (In batch workflows, the override is ignorePermissions: true on this step.)";
             throw new AutomationContractException("PERMISSION_DENIED", message, "SECURITY");
         }
+        catch (DocumentPageOutOfRangeException ex)
+        {
+            throw new AutomationContractException(
+                "PAGE_OUT_OF_RANGE",
+                $"Page {ex.PageNumber} is outside the document range 1..{ex.PageCount}.");
+        }
     }
 
     private static object ExecuteAutomationStepCore(
@@ -298,37 +305,33 @@ partial class Program
     private static object ExecuteInfoStep(AutomationBatchStep step, string baseDirectory)
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
-        using var doc = OpenPdfDocument(input, step.Password);
+        var result = InfoCommandHandler.Execute(new DocumentInfoRequest(input, step.Password));
         return new
         {
-            inputPath = input,
-            version = doc.Version,
-            pageCount = doc.PageCount,
-            encrypted = doc.IsEncrypted,
-            metadata = new
-            {
-                doc.Title,
-                doc.Author,
-                doc.Subject,
-                doc.Creator,
-                doc.Producer,
-            },
+            inputPath = result.FilePath,
+            result.Version,
+            result.PageCount,
+            result.Encrypted,
+            result.Metadata,
         };
     }
 
     private static object ExecuteTextStep(AutomationBatchStep step, string baseDirectory)
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
-        using var doc = OpenPdfDocument(input, step.Password);
-        RequireDocumentPermission(doc, DocumentAction.Extract, "text extraction",
-            step.IgnorePermissions ?? false, step.ForAccessibility ?? false,
-            accessibilityHint: "forAccessibility: true", overrideHint: "ignorePermissions: true on this step");
-        var pages = ReadTextPages(doc, step.Page);
+        var result = TextInspectionHandler.Execute(new TextInspectionRequest(
+            input,
+            step.Password,
+            step.Page,
+            step.IgnorePermissions ?? false,
+            step.ForAccessibility ?? false,
+            AccessibilityHint: "forAccessibility: true",
+            OverrideHint: "ignorePermissions: true on this step"));
         return new
         {
-            inputPath = input,
-            pageCount = doc.PageCount,
-            pages,
+            inputPath = result.FilePath,
+            result.PageCount,
+            result.Pages,
         };
     }
 
@@ -516,19 +519,6 @@ partial class Program
         });
     }
 
-    private static IReadOnlyList<TextPageResult> ReadTextPages(PdfDocument doc, int? page)
-    {
-        if (page.HasValue)
-        {
-            ValidatePageNumber(doc, page.Value);
-            return [new TextPageResult(page.Value, doc.GetPage(page.Value).Text)];
-        }
-
-        return Enumerable.Range(1, doc.PageCount)
-            .Select(pageNumber => new TextPageResult(pageNumber, doc.GetPage(pageNumber).Text))
-            .ToArray();
-    }
-
     private static void ValidatePageNumber(PdfDocument doc, int page)
     {
         if (page < 1 || page > doc.PageCount)
@@ -647,7 +637,6 @@ partial class Program
 
     private sealed record RenderedPageResult(int Width, int Height);
 
-    private sealed record TextPageResult(int PageNumber, string Text);
 
     private sealed record AutomationBatchWorkflow(
         int? SchemaVersion,
