@@ -173,6 +173,11 @@ jobs:
       - name: Build (Debug)
         run: dotnet build excise.sln -c Debug
 
+      - name: Verify coherent architecture artifact set
+        run: |
+          ./scripts/check-architecture-artifacts.sh --self-test
+          ./scripts/check-architecture-artifacts.sh
+
       - name: Run Excise.Core.Tests with coverage
         run: |
           dotnet test Excise.Core.Tests --no-build -c Debug \
