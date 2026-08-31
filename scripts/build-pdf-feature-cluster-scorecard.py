@@ -34,6 +34,7 @@ def cluster_name(section: str, capability: dict) -> str:
 def main():
     registry = load(REG / "registry.json")
     attribution = load(REG / "generated/evidence-attribution.json")
+    batches = load(REG / "review-batches.json")["batches"]
     by_mode = {(row["capability"], row["mode"]): row for row in attribution["modes"]}
     clusters = defaultdict(list)
     for section in registry["sections"]:
@@ -52,6 +53,10 @@ def main():
         ]
         states = Counter(state for _, _, state in modes)
         attributed = [by_mode.get((capability["id"], mode), {}) for capability, mode, _ in modes]
+        issue_refs = [
+            batch["issue"] for batch in batches
+            if batch["section"] == section and any(name.startswith(prefix) for prefix in batch["clusterPrefixes"])
+        ]
         rows.append({
             "section": section,
             "cluster": name,
@@ -62,6 +67,7 @@ def main():
             "explicitContractModes": sum(bool(item.get("explicitContracts")) for item in attributed),
             "passingContractModes": sum(item.get("explicitContractStatus") == "passing" for item in attributed),
             "testCandidateModes": sum(bool(item.get("testCandidates")) for item in attributed),
+            "reviewBatchIssues": issue_refs,
         })
     result = {
         "schemaVersion": 1,

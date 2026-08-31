@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "policy": "Each batch owns a bounded set of existing registry clusters. A batch must leave every selected leaf with an explicit product decision and reviewed mode state; it may not infer support from candidates.",
+  "batches": [
+    {"issue": "#1337", "section": "image-requirements", "clusterPrefixes": ["stream-filter:", "stream-filter-arrays"]},
+    {"issue": "#1338", "section": "image-requirements", "clusterPrefixes": ["image-filter:", "image-dictionary:", "image-placement:"]},
+    {"issue": "#1339", "section": "graphics", "clusterPrefixes": ["Fonts, encodings, CMaps"]},
+    {"issue": "#1340", "section": "operators", "clusterPrefixes": ["Content-stream"]},
+    {"issue": "#1341", "section": "graphics", "clusterPrefixes": ["Path construction", "Color spaces", "Patterns, shadings", "Graphics state"]},
+    {"issue": "#1342", "section": "annotation-subtypes", "clusterPrefixes": [""]}
+  ]
+}
