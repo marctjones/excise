@@ -7,7 +7,7 @@ digraph excise_architecture {
     label="delivery";
     color="#cbd5e1";
     "app" [label="Excise.App project\npartial\n729 retained symbols", fillcolor="#fff3bf"];
-    "cli" [label="Excise.Cli project\npartial\n145 retained symbols", fillcolor="#fff3bf"];
+    "cli" [label="Excise.Cli project\npartial\n275 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {
     label="engine";
@@ -72,16 +72,16 @@ digraph excise_architecture {
   "avalonia" -> "core-primitives" [label="8 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core-text" [label="46 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "rendering" [label="22 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "cli" -> "core" [label="36 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "cli" -> "core" [label="37 refs / 8 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-content" [label="9 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "cli" -> "core-document" [label="153 refs / 12 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "cli" -> "core-document" [label="141 refs / 25 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-encryption" [label="17 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-parsing" [label="2 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "cli" -> "core-redaction" [label="55 refs / 14 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "cli" -> "core-security" [label="16 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "cli" -> "core-redaction" [label="53 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "cli" -> "core-security" [label="28 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-text" [label="6 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-writing" [label="6 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "cli" -> "ocr" [label="72 refs / 15 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "cli" -> "ocr" [label="69 refs / 21 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "rendering" [label="20 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-document" [label="316 refs / 36 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-fonts" [label="38 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

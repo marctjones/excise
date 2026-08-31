@@ -262,13 +262,26 @@
         "Excise.Cli/Commands/UnredactCommandModels.cs",
         "Excise.Cli/Commands/UnredactCommandOutput.cs",
         "Excise.Cli/Commands/CliRedactedCopySafetyAdapter.cs",
-        "Excise.Cli.Tests/RedactCommandTests.cs"
+        "Excise.Cli/Commands/InfoCommandHandler.cs",
+        "Excise.Cli/Commands/TextInspectionHandler.cs",
+        "Excise.Cli/Commands/RenderPageHandler.cs",
+        "Excise.Cli/Commands/ValidationHandler.cs",
+        "Excise.Cli/Commands/OcrInspectionHandler.cs",
+        "Excise.Cli/Commands/AuditInspectionHandler.cs",
+        "Excise.Cli/AutomationBatch.cs",
+        "Excise.Cli.Tests/RedactCommandTests.cs",
+        "Excise.Cli.Tests/AuditInspectionHandlerTests.cs"
       ],
       "gaps": [
-        "Program.cs remains a 2,218-line command host after save-size-report, command-metadata, fill-form, typed unredact, and safe-copy policy adapter extractions; the remaining command boundaries still need measured decomposition and duplicate-policy analysis."
+        "Program.cs is 1,439 physical lines after its info, text, letters, render, validation, OCR, and audit workflows moved behind typed handlers; deterministic topology now records 23 methods, 824 declaration lines, 123 branch points, and 257 fan-out there. Mutation, assembly, searchable-output, encryption, and composition-root boundaries remain to be decomposed.",
+        "AutomationBatch.cs now reuses the info, text, render, and audit handlers, but its fill-form, add-field, redaction, sequencing, and result-envelope paths still record 28 methods, 431 declaration lines, 62 branch points, and 257 fan-out and need explicit convergence review."
       ],
       "issueIds": [
-        1263
+        1263,
+        1333,
+        1334,
+        1335,
+        1336
       ]
     },
     {

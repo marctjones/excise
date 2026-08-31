@@ -98,10 +98,10 @@ chains are:
   scheduling. Its typed viewport diagnostics and scroll intents expose values,
   never template controls. The desktop app owns product workflows, automation
   scenarios, artifact paths, and dialogs.
-- CLI command registration owns option parsing and dispatch. Focused handlers
-  own typed delivery inputs/results, cancellation and resource lifetime, exit
-  policy, and presentation; they compose Core, Rendering, and OCR engines
-  without copying those engines or pushing console policy inward.
+- CLI command adapters own option parsing, presentation, and exit/error
+  translation. Focused handlers own typed delivery inputs/results,
+  cancellation, and resource lifetime; they compose Core, Rendering, and OCR
+  engines without copying those engines or pushing console policy inward.
 - Redacted-copy scrub and audit requests, options, statuses, and reports belong
   to `core-redaction`. Desktop dialogs, CLI notes/JSON/exit codes, file paths,
   passwords, and encryption choices are delivery adapters. Delivery surfaces

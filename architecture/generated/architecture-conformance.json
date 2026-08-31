@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "c97de571b93a65cbfb6ff7616ea233e7bb62ebf3",
+  "sourceRevision": "0c2810f983df93fa4deef06834e582e0de5c7bcd",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 5774,
+    "retainedSymbols": 5904,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -374,14 +374,14 @@
     {
       "source": "cli",
       "target": "core",
-      "references": 36,
-      "typeDependencyCount": 4,
+      "references": 37,
+      "typeDependencyCount": 8,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Cli.Program",
           "target": "Excise.Core.Automation.PdfCommandIds",
-          "references": 22
+          "references": 16
         }
       ]
     },
@@ -402,14 +402,14 @@
     {
       "source": "cli",
       "target": "core-document",
-      "references": 153,
-      "typeDependencyCount": 12,
+      "references": 141,
+      "typeDependencyCount": 25,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Cli.Program",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 95
+          "references": 45
         }
       ]
     },
@@ -444,28 +444,28 @@
     {
       "source": "cli",
       "target": "core-redaction",
-      "references": 55,
-      "typeDependencyCount": 14,
+      "references": 53,
+      "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Program",
+          "source": "Excise.Cli.Commands.AuditCommand",
           "target": "Excise.Core.Text.Segmentation.HiddenTextRecord",
-          "references": 14
+          "references": 9
         }
       ]
     },
     {
       "source": "cli",
       "target": "core-security",
-      "references": 16,
-      "typeDependencyCount": 4,
+      "references": 28,
+      "typeDependencyCount": 6,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Program",
+          "source": "Excise.Cli.Commands.ValidateCommand",
           "target": "Excise.Core.Validation.ValidationResult",
-          "references": 7
+          "references": 12
         }
       ]
     },
@@ -477,7 +477,7 @@
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Program",
+          "source": "Excise.Cli.Commands.LetterInspectionHandler",
           "target": "Excise.Core.Text.Letter",
           "references": 6
         }
@@ -500,14 +500,14 @@
     {
       "source": "cli",
       "target": "ocr",
-      "references": 72,
-      "typeDependencyCount": 15,
+      "references": 69,
+      "typeDependencyCount": 21,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Program",
-          "target": "Excise.Ocr.PdfOcrService",
-          "references": 15
+          "source": "Excise.Cli.Commands.AuditCommand",
+          "target": "Excise.Ocr.DifferentialOcrHit",
+          "references": 9
         }
       ]
     },
