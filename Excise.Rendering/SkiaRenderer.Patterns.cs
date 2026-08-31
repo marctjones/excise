@@ -1029,52 +1029,6 @@ internal partial class RenderContext
         return Math.Clamp((int)Math.Ceiling(visiblePixels / 3), 24, 96);
     }
 
-    private static SKPoint EvaluateCoonsPatchPoint(IReadOnlyList<SKPoint> points, double u, double v)
-    {
-        var top = CubicBezier(points[0], points[1], points[2], points[3], u);
-        var right = CubicBezier(points[3], points[4], points[5], points[6], v);
-        var bottom = CubicBezier(points[9], points[8], points[7], points[6], u);
-        var left = CubicBezier(points[0], points[11], points[10], points[9], v);
-
-        var topLeft = points[0];
-        var topRight = points[3];
-        var bottomRight = points[6];
-        var bottomLeft = points[9];
-
-        var x =
-            ((1 - v) * top.X) +
-            (v * bottom.X) +
-            ((1 - u) * left.X) +
-            (u * right.X) -
-            (((1 - u) * (1 - v) * topLeft.X) +
-             (u * (1 - v) * topRight.X) +
-             (u * v * bottomRight.X) +
-             ((1 - u) * v * bottomLeft.X));
-        var y =
-            ((1 - v) * top.Y) +
-            (v * bottom.Y) +
-            ((1 - u) * left.Y) +
-            (u * right.Y) -
-            (((1 - u) * (1 - v) * topLeft.Y) +
-             (u * (1 - v) * topRight.Y) +
-             (u * v * bottomRight.Y) +
-             ((1 - u) * v * bottomLeft.Y));
-
-        return new SKPoint((float)x, (float)y);
-    }
-
-    private static SKPoint CubicBezier(SKPoint p0, SKPoint p1, SKPoint p2, SKPoint p3, double t)
-    {
-        var mt = 1 - t;
-        var b0 = mt * mt * mt;
-        var b1 = 3 * t * mt * mt;
-        var b2 = 3 * t * t * mt;
-        var b3 = t * t * t;
-        return new SKPoint(
-            (float)((p0.X * b0) + (p1.X * b1) + (p2.X * b2) + (p3.X * b3)),
-            (float)((p0.Y * b0) + (p1.Y * b1) + (p2.Y * b2) + (p3.Y * b3)));
-    }
-
     private static SKPoint EvaluateTensorPatchPoint(IReadOnlyList<SKPoint> points, double u, double v)
     {
         Span<double> bu = stackalloc double[4];
@@ -1617,21 +1571,6 @@ internal partial class RenderContext
         };
     }
 
-    private static SKColor ComponentsToSkColor(double[] comps, string colorSpace)
-    {
-        return colorSpace switch
-        {
-            "DeviceGray" or "G" =>
-                comps.Length >= 1 ? ToGray(comps[0]) : SKColors.Black,
-            "DeviceRGB" or "RGB" =>
-                comps.Length >= 3 ? ToRGB(comps[0], comps[1], comps[2]) : SKColors.Black,
-            "DeviceCMYK" or "CMYK" =>
-                comps.Length >= 4 ? CmykToColor(comps[0], comps[1], comps[2], comps[3]) : SKColors.Black,
-            _ => comps.Length >= 3 ? ToRGB(comps[0], comps[1], comps[2])
-               : comps.Length >= 1 ? ToGray(comps[0]) : SKColors.Black
-        };
-    }
-
     private static SKColor ComponentsToSkColor(double[] comps, PdfColorSpace colorSpace)
     {
         if (comps.Length == 0)
@@ -1639,12 +1578,6 @@ internal partial class RenderContext
 
         var (r, g, b) = colorSpace.ToRgb(comps);
         return ToRGB(r, g, b);
-    }
-
-    private static SKColor ToGray(double g)
-    {
-        byte v = (byte)Math.Clamp(g * 255, 0, 255);
-        return new SKColor(v, v, v);
     }
 
     private static SKColor ToRGB(double r, double g, double b) =>

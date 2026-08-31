@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using Excise.Core.Content;
 using Excise.Core.Primitives;
@@ -3111,25 +3110,6 @@ internal partial class RenderContext
                 GetCidWidthThousandths(cid) / 2.0,
                 Excise.Core.Fonts.CidFontWidths.SpecDefaultVerticalOriginY);
 
-    // Returns the raw PDF string bytes WITHOUT decoding via encoding. Simple
-    // fonts route these through DecodeTextBytes → Unicode → RenderText; Type0
-    // fonts interpret the bytes directly as 2-byte CIDs via RenderCidBytes.
-    private byte[] ParsePdfStringBytes(string operand)
-    {
-        if (string.IsNullOrEmpty(operand))
-            return Array.Empty<byte>();
-
-        // Literal string: (text)
-        if (operand.StartsWith("(") && operand.EndsWith(")"))
-            return UnescapePdfStringBytes(operand.Substring(1, operand.Length - 2));
-
-        // Hex string: <hexdata>
-        if (operand.StartsWith("<") && operand.EndsWith(">"))
-            return DecodeHexStringBytes(operand.Substring(1, operand.Length - 2));
-
-        return Encoding.Latin1.GetBytes(operand);
-    }
-
     internal static byte[] UnescapePdfStringBytes(string s)
     {
         var unescaped = new List<byte>(s.Length);
@@ -3184,20 +3164,6 @@ internal partial class RenderContext
             }
         }
         return unescaped.ToArray();
-    }
-
-    private static byte[] DecodeHexStringBytes(string hex)
-    {
-        hex = new string(hex.Where(c => !char.IsWhiteSpace(c)).ToArray());
-        if (hex.Length % 2 != 0) hex += "0";
-
-        var bytes = new byte[hex.Length / 2];
-        for (int i = 0; i < bytes.Length; i++)
-        {
-            if (byte.TryParse(hex.Substring(i * 2, 2), NumberStyles.HexNumber, null, out var b))
-                bytes[i] = b;
-        }
-        return bytes;
     }
 
     private string DecodeTextBytes(byte[] bytes)

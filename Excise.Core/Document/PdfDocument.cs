@@ -1048,55 +1048,6 @@ public class PdfDocument : IDisposable
     }
 
     /// <summary>
-    /// Find a page in the page tree by index.
-    /// </summary>
-    private PdfDictionary FindPage(PdfDictionary node, int targetIndex, int currentIndex)
-    {
-        var type = node.GetNameOrNull("Type");
-
-        if (type == "Page")
-        {
-            if (currentIndex == targetIndex)
-                return node;
-            throw new PdfParseException($"Page index mismatch: expected {targetIndex}, at {currentIndex}");
-        }
-
-        // It's a Pages node
-        var kids = node.GetArray("Kids");
-        int index = currentIndex;
-
-        foreach (var kidRef in kids)
-        {
-            if (kidRef is not PdfReference kr)
-                throw new PdfParseException("Invalid page tree: kid is not a reference");
-
-            var kid = GetObject(kr) as PdfDictionary
-                ?? throw new PdfParseException("Invalid page tree: kid is not a dictionary");
-
-            var kidType = kid.GetNameOrNull("Type");
-
-            if (kidType == "Page")
-            {
-                if (index == targetIndex)
-                    return kid;
-                index++;
-            }
-            else
-            {
-                // Pages node
-                int count = kid.GetInt("Count");
-                if (targetIndex >= index && targetIndex < index + count)
-                {
-                    return FindPage(kid, targetIndex, index);
-                }
-                index += count;
-            }
-        }
-
-        throw new PdfParseException($"Could not find page {targetIndex}");
-    }
-
-    /// <summary>
     /// Get an object by reference.
     /// </summary>
     public PdfObject GetObject(PdfReference reference)

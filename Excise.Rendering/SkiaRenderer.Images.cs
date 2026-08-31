@@ -2955,22 +2955,8 @@ internal partial class RenderContext
         return sample;
     }
 
-    private static double DecodeImageSample(
-        Excise.Core.Primitives.PdfStream stream,
-        PdfColorSpace colorSpace,
-        int componentIndex,
-        int sample,
-        int bitsPerComponent)
-        => DecodeImageSample(
-            stream.GetOptional("Decode") as Excise.Core.Primitives.PdfArray,
-            colorSpace,
-            componentIndex,
-            sample,
-            Math.Pow(2, bitsPerComponent) - 1);
-
-    // Hoisted variant used by the raw-image fill loop: the caller resolves the
-    // /Decode array and max-sample constant once per image instead of once per
-    // component per pixel (#599). Arithmetic is identical to the overload above.
+    // The raw-image fill loop resolves the /Decode array and max-sample constant
+    // once per image instead of once per component per pixel (#599).
     private static double DecodeImageSample(
         Excise.Core.Primitives.PdfArray? decode,
         PdfColorSpace colorSpace,

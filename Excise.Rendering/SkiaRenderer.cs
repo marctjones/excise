@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using System.Threading;
 using BitMiracle.LibJpeg.Classic;
@@ -1908,12 +1907,5 @@ internal partial class RenderContext
     };
 
     #endregion
-
-    private static double ParseNumber(string s)
-    {
-        if (double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
-            return result;
-        return 0;
-    }
 
 }
