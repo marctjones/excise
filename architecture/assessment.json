@@ -176,11 +176,19 @@
         "Excise.Rendering.Tests/Differential",
         "Excise.Rendering/RenderResourceScope.cs",
         "Excise.Rendering.Tests/RenderResourceScopeTests.cs",
+        "Excise.Rendering/EncodedImageDecoder.cs",
+        "Excise.Rendering/RawSampleImageDecoder.cs",
+        "Excise.Rendering/DctImageDecoder.cs",
+        "Excise.Rendering/JpxImageDecoder.cs",
+        "Excise.Rendering.Tests/EncodedImageDecoderTests.cs",
+        "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
+        "Excise.Rendering.Tests/DctImageDecoderTests.cs",
+        "Excise.Rendering.Tests/JpxImageDecoderTests.cs",
         "Excise.App/Services/PageImageRenderer.cs",
         "scripts/run-exploratory-corpus.sh"
       ],
       "gaps": [
-        "A facade-owned per-page resource scope now gives nested render contexts one explicit cache lifetime, but operator dispatch, annotation policy, stateless image decoding, and DeviceCMYK/transparency execution state remain coupled across renderer partials. Rendering re-executes graphics/text state as an accepted architectural exception."
+        "A facade-owned per-page resource scope gives nested render contexts one explicit cache lifetime, and typed context-free raw, encoded, DCT, and JPX decoders now own image sample and codec policy. Operator dispatch, annotation policy, and DeviceCMYK/transparency execution state remain coupled across renderer partials. Rendering re-executes graphics/text state as an accepted architectural exception."
       ],
       "issueIds": [
         1262,
