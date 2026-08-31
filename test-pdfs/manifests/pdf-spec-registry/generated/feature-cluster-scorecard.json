@@ -16,7 +16,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -31,7 +34,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -46,7 +52,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -61,7 +70,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -76,7 +88,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -91,7 +106,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -106,7 +124,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -121,7 +142,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -136,7 +160,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -151,7 +178,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -166,7 +196,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -181,7 +214,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -196,7 +232,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -211,7 +250,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -226,7 +268,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -241,7 +286,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -256,7 +304,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -271,7 +322,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -286,7 +340,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -301,7 +358,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -316,7 +376,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -331,7 +394,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -346,7 +412,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -361,7 +430,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -376,7 +448,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -391,7 +466,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -406,7 +484,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "annotation-subtypes",
@@ -421,7 +502,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 4,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1342"
+      ]
     },
     {
       "section": "content",
@@ -436,7 +520,8 @@
       "unknownModeCount": 6,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "content",
@@ -452,7 +537,8 @@
       "unknownModeCount": 5,
       "explicitContractModes": 1,
       "passingContractModes": 0,
-      "testCandidateModes": 5
+      "testCandidateModes": 5,
+      "reviewBatchIssues": []
     },
     {
       "section": "content",
@@ -467,7 +553,8 @@
       "unknownModeCount": 6,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 3
+      "testCandidateModes": 3,
+      "reviewBatchIssues": []
     },
     {
       "section": "document",
@@ -482,7 +569,8 @@
       "unknownModeCount": 5,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 3
+      "testCandidateModes": 3,
+      "reviewBatchIssues": []
     },
     {
       "section": "document",
@@ -497,7 +585,8 @@
       "unknownModeCount": 5,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 3
+      "testCandidateModes": 3,
+      "reviewBatchIssues": []
     },
     {
       "section": "document",
@@ -512,7 +601,8 @@
       "unknownModeCount": 6,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "document",
@@ -527,7 +617,8 @@
       "unknownModeCount": 6,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "graphics",
@@ -543,7 +634,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 1,
       "passingContractModes": 1,
-      "testCandidateModes": 2
+      "testCandidateModes": 2,
+      "reviewBatchIssues": [
+        "#1341"
+      ]
     },
     {
       "section": "graphics",
@@ -559,7 +653,10 @@
       "unknownModeCount": 6,
       "explicitContractModes": 1,
       "passingContractModes": 1,
-      "testCandidateModes": 3
+      "testCandidateModes": 3,
+      "reviewBatchIssues": [
+        "#1339"
+      ]
     },
     {
       "section": "graphics",
@@ -575,7 +672,10 @@
       "unknownModeCount": 4,
       "explicitContractModes": 1,
       "passingContractModes": 1,
-      "testCandidateModes": 4
+      "testCandidateModes": 4,
+      "reviewBatchIssues": [
+        "#1341"
+      ]
     },
     {
       "section": "graphics",
@@ -591,7 +691,8 @@
       "unknownModeCount": 5,
       "explicitContractModes": 1,
       "passingContractModes": 1,
-      "testCandidateModes": 3
+      "testCandidateModes": 3,
+      "reviewBatchIssues": []
     },
     {
       "section": "graphics",
@@ -607,7 +708,10 @@
       "unknownModeCount": 5,
       "explicitContractModes": 1,
       "passingContractModes": 1,
-      "testCandidateModes": 4
+      "testCandidateModes": 4,
+      "reviewBatchIssues": [
+        "#1341"
+      ]
     },
     {
       "section": "graphics",
@@ -622,7 +726,10 @@
       "unknownModeCount": 5,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 2
+      "testCandidateModes": 2,
+      "reviewBatchIssues": [
+        "#1341"
+      ]
     },
     {
       "section": "image-requirements",
@@ -637,7 +744,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "image-requirements",
@@ -652,7 +760,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "image-requirements",
@@ -667,7 +776,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "image-requirements",
@@ -682,7 +792,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "image-requirements",
@@ -697,7 +808,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "image-requirements",
@@ -712,7 +824,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "image-requirements",
@@ -727,7 +840,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "image-requirements",
@@ -742,7 +856,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "image-requirements",
@@ -757,7 +872,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "image-requirements",
@@ -772,7 +888,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1338"
+      ]
     },
     {
       "section": "image-requirements",
@@ -787,7 +906,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1338"
+      ]
     },
     {
       "section": "image-requirements",
@@ -802,7 +924,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1338"
+      ]
     },
     {
       "section": "image-requirements",
@@ -817,7 +942,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1338"
+      ]
     },
     {
       "section": "image-requirements",
@@ -833,7 +961,10 @@
       "unknownModeCount": 6,
       "explicitContractModes": 6,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1338"
+      ]
     },
     {
       "section": "image-requirements",
@@ -848,7 +979,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1338"
+      ]
     },
     {
       "section": "image-requirements",
@@ -864,7 +998,10 @@
       "unknownModeCount": 6,
       "explicitContractModes": 6,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1338"
+      ]
     },
     {
       "section": "image-requirements",
@@ -880,7 +1017,10 @@
       "unknownModeCount": 6,
       "explicitContractModes": 6,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1338"
+      ]
     },
     {
       "section": "image-requirements",
@@ -896,7 +1036,10 @@
       "unknownModeCount": 6,
       "explicitContractModes": 6,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1338"
+      ]
     },
     {
       "section": "image-requirements",
@@ -911,7 +1054,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1338"
+      ]
     },
     {
       "section": "image-requirements",
@@ -926,7 +1072,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1338"
+      ]
     },
     {
       "section": "image-requirements",
@@ -941,7 +1090,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "image-requirements",
@@ -956,7 +1106,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1337"
+      ]
     },
     {
       "section": "image-requirements",
@@ -971,7 +1124,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1337"
+      ]
     },
     {
       "section": "image-requirements",
@@ -986,7 +1142,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1337"
+      ]
     },
     {
       "section": "image-requirements",
@@ -1001,7 +1160,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1337"
+      ]
     },
     {
       "section": "image-requirements",
@@ -1018,7 +1180,10 @@
       "unknownModeCount": 9,
       "explicitContractModes": 9,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1337"
+      ]
     },
     {
       "section": "image-requirements",
@@ -1035,7 +1200,10 @@
       "unknownModeCount": 9,
       "explicitContractModes": 9,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1337"
+      ]
     },
     {
       "section": "image-requirements",
@@ -1050,7 +1218,10 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": [
+        "#1337"
+      ]
     },
     {
       "section": "interactive",
@@ -1066,7 +1237,8 @@
       "unknownModeCount": 7,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 4
+      "testCandidateModes": 4,
+      "reviewBatchIssues": []
     },
     {
       "section": "interactive",
@@ -1081,7 +1253,8 @@
       "unknownModeCount": 7,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 4
+      "testCandidateModes": 4,
+      "reviewBatchIssues": []
     },
     {
       "section": "interactive",
@@ -1097,7 +1270,8 @@
       "unknownModeCount": 0,
       "explicitContractModes": 5,
       "passingContractModes": 0,
-      "testCandidateModes": 5
+      "testCandidateModes": 5,
+      "reviewBatchIssues": []
     },
     {
       "section": "interactive",
@@ -1114,7 +1288,8 @@
       "unknownModeCount": 1,
       "explicitContractModes": 3,
       "passingContractModes": 1,
-      "testCandidateModes": 4
+      "testCandidateModes": 4,
+      "reviewBatchIssues": []
     },
     {
       "section": "interactive",
@@ -1131,7 +1306,8 @@
       "unknownModeCount": 1,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "interactive",
@@ -1147,7 +1323,8 @@
       "unknownModeCount": 6,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "interchange",
@@ -1163,7 +1340,8 @@
       "unknownModeCount": 5,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "operators",
@@ -1250,7 +1428,10 @@
       "unknownModeCount": 292,
       "explicitContractModes": 146,
       "passingContractModes": 0,
-      "testCandidateModes": 146
+      "testCandidateModes": 146,
+      "reviewBatchIssues": [
+        "#1340"
+      ]
     },
     {
       "section": "product-capabilities",
@@ -1266,7 +1447,8 @@
       "unknownModeCount": 2,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "product-capabilities",
@@ -1282,7 +1464,8 @@
       "unknownModeCount": 2,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "product-capabilities",
@@ -1297,7 +1480,8 @@
       "unknownModeCount": 4,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 2
+      "testCandidateModes": 2,
+      "reviewBatchIssues": []
     },
     {
       "section": "product-capabilities",
@@ -1313,7 +1497,8 @@
       "unknownModeCount": 2,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "product-capabilities",
@@ -1329,7 +1514,8 @@
       "unknownModeCount": 2,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 3
+      "testCandidateModes": 3,
+      "reviewBatchIssues": []
     },
     {
       "section": "product-capabilities",
@@ -1344,7 +1530,8 @@
       "unknownModeCount": 0,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1359,7 +1546,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1374,7 +1562,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1389,7 +1578,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1404,7 +1594,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1419,7 +1610,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1434,7 +1626,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1449,7 +1642,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1464,7 +1658,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1479,7 +1674,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1494,7 +1690,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1509,7 +1706,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1524,7 +1722,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1539,7 +1738,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1554,7 +1754,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1569,7 +1770,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1584,7 +1786,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1599,7 +1802,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1614,7 +1818,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1629,7 +1834,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1644,7 +1850,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1659,7 +1866,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1674,7 +1882,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1689,7 +1898,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1704,7 +1914,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1719,7 +1930,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1734,7 +1946,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1749,7 +1962,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1764,7 +1978,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1779,7 +1994,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1794,7 +2010,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1809,7 +2026,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1824,7 +2042,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1839,7 +2058,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1854,7 +2074,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1869,7 +2090,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1884,7 +2106,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1899,7 +2122,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1914,7 +2138,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1929,7 +2154,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1944,7 +2170,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1959,7 +2186,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1974,7 +2202,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -1989,7 +2218,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2004,7 +2234,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2019,7 +2250,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2034,7 +2266,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2049,7 +2282,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2064,7 +2298,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2079,7 +2314,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2094,7 +2330,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2109,7 +2346,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2124,7 +2362,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2139,7 +2378,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2154,7 +2394,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2169,7 +2410,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2184,7 +2426,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2199,7 +2442,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2214,7 +2458,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2229,7 +2474,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2244,7 +2490,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2259,7 +2506,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2274,7 +2522,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2289,7 +2538,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2304,7 +2554,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2319,7 +2570,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2334,7 +2586,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2349,7 +2602,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2364,7 +2618,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2379,7 +2634,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2394,7 +2650,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2409,7 +2666,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2424,7 +2682,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2439,7 +2698,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2454,7 +2714,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2469,7 +2730,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2484,7 +2746,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2499,7 +2762,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2514,7 +2778,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2529,7 +2794,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2544,7 +2810,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2559,7 +2826,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2574,7 +2842,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2589,7 +2858,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2604,7 +2874,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2619,7 +2890,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2634,7 +2906,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2649,7 +2922,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2664,7 +2938,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2679,7 +2954,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2694,7 +2970,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2709,7 +2986,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2724,7 +3002,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2739,7 +3018,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2754,7 +3034,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "renderer-requirements",
@@ -2769,7 +3050,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 3,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "rendering",
@@ -2784,7 +3066,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "rendering",
@@ -2800,7 +3083,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "rendering",
@@ -2815,7 +3099,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "syntax",
@@ -2830,7 +3115,8 @@
       "unknownModeCount": 4,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 4
+      "testCandidateModes": 4,
+      "reviewBatchIssues": []
     },
     {
       "section": "syntax",
@@ -2845,7 +3131,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 3
+      "testCandidateModes": 3,
+      "reviewBatchIssues": []
     },
     {
       "section": "syntax",
@@ -2860,7 +3147,8 @@
       "unknownModeCount": 4,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 4
+      "testCandidateModes": 4,
+      "reviewBatchIssues": []
     },
     {
       "section": "syntax",
@@ -2875,7 +3163,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 0,
       "passingContractModes": 0,
-      "testCandidateModes": 0
+      "testCandidateModes": 0,
+      "reviewBatchIssues": []
     },
     {
       "section": "transparency",
@@ -2891,7 +3180,8 @@
       "unknownModeCount": 3,
       "explicitContractModes": 1,
       "passingContractModes": 1,
-      "testCandidateModes": 2
+      "testCandidateModes": 2,
+      "reviewBatchIssues": []
     }
   ],
   "summary": {
