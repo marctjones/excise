@@ -360,7 +360,7 @@ public class PermissionEnforcementTests : IDisposable
         var pdf = RestrictedFixture(DenyCopyAndAccessibilityMask, text: "REDACTME NOW");
         var output = TempPath(".pdf");
 
-        var count = Program.RunRedact(pdf, output, "REDACTME", caseSensitive: false,
+        var count = RedactCommandTestDriver.RunRedact(pdf, output, "REDACTME", caseSensitive: false,
             allowDecrypt: true);
 
         count.Should().BeGreaterThan(0, "redaction must work regardless of /P restrictions");

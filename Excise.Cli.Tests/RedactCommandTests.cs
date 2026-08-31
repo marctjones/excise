@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using AwesomeAssertions;
 using Excise.Cli;
+using Excise.Cli.Commands;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
@@ -13,7 +14,7 @@ namespace Excise.Cli.Tests;
 
 /// <summary>
 /// Tests for the <c>excise redact</c> subcommand. Exercises both the
-/// internal <see cref="Program.RunRedact"/> core and the CLI surface
+/// typed <see cref="RedactCommandHandler"/> core and the CLI surface
 /// (<see cref="Program.RunAsync"/>) so we catch regressions in either
 /// the argument parser or the redaction pipeline itself.
 /// </summary>
@@ -46,7 +47,7 @@ public class RedactCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, TestPdfBuilder.SinglePage("Ng and other content"));
 
-        var (_, notes) = Program.RunRedactWithNotes(input, output, "Ng", caseSensitive: false);
+        var (_, notes) = RedactCommandTestDriver.RunRedactWithNotes(input, output, "Ng", caseSensitive: false);
 
         notes.Should().Contain(n => n.Contains("'Ng'") && n.Contains("metadata"),
             "page content is redacted but the sanitizer's 3-character floor skips carriers — " +
@@ -64,7 +65,7 @@ public class RedactCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, TestPdfBuilder.SinglePage("Confidential content here"));
 
-        var (_, notes) = Program.RunRedactWithNotes(input, output, "Confidential", caseSensitive: false);
+        var (_, notes) = RedactCommandTestDriver.RunRedactWithNotes(input, output, "Confidential", caseSensitive: false);
 
         notes.Should().BeEmpty(
             "no bookmarks, no annotation text, and the term is above the floor — there is " +
@@ -85,7 +86,7 @@ public class RedactCommandTests : IDisposable
         }
         File.WriteAllBytes(input, sourceBytes);
 
-        var (count, notes) = Program.RunRedactWithNotes(
+        var (count, notes) = RedactCommandTestDriver.RunRedactWithNotes(
             input,
             output,
             "Confidential",
@@ -107,7 +108,7 @@ public class RedactCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO WORLD"));
 
-        int count = Program.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false);
+        int count = RedactCommandTestDriver.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false);
 
         count.Should().Be(1);
 
@@ -126,7 +127,7 @@ public class RedactCommandTests : IDisposable
         var path = TempPath(".pdf");
         File.WriteAllBytes(path, TestPdfBuilder.SinglePage("HELLO WORLD"));
 
-        int count = Program.RunRedact(path, path, "WORLD", caseSensitive: false);
+        int count = RedactCommandTestDriver.RunRedact(path, path, "WORLD", caseSensitive: false);
 
         count.Should().Be(1);
         using var doc = PdfDocument.Open(File.ReadAllBytes(path));
@@ -150,7 +151,7 @@ public class RedactCommandTests : IDisposable
         Assert.SkipWhen(!File.Exists(input), "image-baked-text fixture not present");
         var output = TempPath(".pdf");
 
-        Program.RunRedact(input, output, "IMAGEBAKEDSECRET", caseSensitive: false,
+        RedactCommandTestDriver.RunRedact(input, output, "IMAGEBAKEDSECRET", caseSensitive: false,
             ocrImageText: true).Should().Be(1,
                 "OCR must locate the image-only term before the normal structural and image-redaction path runs (#1186)");
 
@@ -223,7 +224,7 @@ public class RedactCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO WORLD"));
 
-        int count = Program.RunRedact(inputPath, outputPath, "BANANA", caseSensitive: false);
+        int count = RedactCommandTestDriver.RunRedact(inputPath, outputPath, "BANANA", caseSensitive: false);
 
         count.Should().Be(0);
         File.Exists(outputPath).Should().BeTrue("output is always written even when no matches found");
@@ -241,7 +242,7 @@ public class RedactCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO WORLD"));
 
-        int count = Program.RunRedact(inputPath, outputPath, "world", caseSensitive: false);
+        int count = RedactCommandTestDriver.RunRedact(inputPath, outputPath, "world", caseSensitive: false);
 
         count.Should().Be(1);
         using var doc = PdfDocument.Open(File.ReadAllBytes(outputPath));
@@ -256,7 +257,7 @@ public class RedactCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO WORLD"));
 
-        int count = Program.RunRedact(inputPath, outputPath, "world", caseSensitive: true);
+        int count = RedactCommandTestDriver.RunRedact(inputPath, outputPath, "world", caseSensitive: true);
 
         count.Should().Be(0, "case-sensitive search must not match an all-caps word");
     }
@@ -345,9 +346,7 @@ public class RedactCommandTests : IDisposable
             Console.SetError(prevErr);
         }
 
-        // System.CommandLine invokes the handler (exit code 0) after our
-        // explicit Environment.ExitCode=1, but what matters to the user
-        // is the error message and that no output file was written.
+        exitCode.Should().Be(1);
         capturedErr.ToString().Should().Contain("File not found");
         File.Exists(outputPath).Should().BeFalse();
     }
@@ -364,7 +363,7 @@ public class RedactCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO WORLD"));
 
-        int count = Program.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false, allowDecrypt: false);
+        int count = RedactCommandTestDriver.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false, allowDecrypt: false);
 
         count.Should().Be(1);
         File.Exists(outputPath).Should().BeTrue();
@@ -391,7 +390,7 @@ public class RedactCommandTests : IDisposable
         int count;
         try
         {
-            count = Program.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false);
+            count = RedactCommandTestDriver.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false);
         }
         finally
         {
@@ -419,7 +418,7 @@ public class RedactCommandTests : IDisposable
         var inputPath = WriteEncryptedFixture("HELLO WORLD", password: "pw123");
         var outputPath = TempPath(".pdf");
 
-        int count = Program.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false, password: "pw123");
+        int count = RedactCommandTestDriver.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false, password: "pw123");
 
         count.Should().Be(1);
 
@@ -448,7 +447,7 @@ public class RedactCommandTests : IDisposable
         Console.SetError(capturedErr);
         try
         {
-            Program.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false, allowDecrypt: true);
+            RedactCommandTestDriver.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false, allowDecrypt: true);
         }
         finally
         {
@@ -562,7 +561,7 @@ public class RedactCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("TARGET TARGET TARGET"));
 
-        int count = Program.RunRedact(inputPath, outputPath, "TARGET", caseSensitive: false);
+        int count = RedactCommandTestDriver.RunRedact(inputPath, outputPath, "TARGET", caseSensitive: false);
 
         count.Should().Be(3);
         using var doc = PdfDocument.Open(File.ReadAllBytes(outputPath));
@@ -622,7 +621,7 @@ public class RedactCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
 
-        int count = Program.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false, drawBox: false);
+        int count = RedactCommandTestDriver.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false, drawBox: false);
 
         count.Should().Be(1);
 
@@ -649,7 +648,7 @@ public class RedactCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
 
-        int count = Program.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false);
+        int count = RedactCommandTestDriver.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false);
 
         count.Should().Be(1);
         SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "SECRET").Should().BeEmpty();
@@ -666,7 +665,7 @@ public class RedactCommandTests : IDisposable
         var outputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
 
-        int count = Program.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false,
+        int count = RedactCommandTestDriver.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false,
             drawBox: true, boxColor: (1.0, 1.0, 1.0));
 
         count.Should().Be(1);
@@ -687,7 +686,7 @@ public class RedactCommandTests : IDisposable
     [InlineData("128,128,128", 128 / 255.0, 128 / 255.0, 128 / 255.0)]
     public void TryParseBoxColor_AcceptsNamedAndRgb(string spec, double r, double g, double b)
     {
-        Program.TryParseBoxColor(spec, out var color, out var error).Should().BeTrue();
+        RedactCommand.TryParseBoxColor(spec, out var color, out var error).Should().BeTrue();
         error.Should().BeNull();
         color.Should().NotBeNull();
         color!.Value.R.Should().BeApproximately(r, 1e-9);
@@ -705,7 +704,7 @@ public class RedactCommandTests : IDisposable
     [InlineData("a,b,c")]        // non-numeric
     public void TryParseBoxColor_RejectsBadSpec(string spec)
     {
-        Program.TryParseBoxColor(spec, out var color, out var error).Should().BeFalse();
+        RedactCommand.TryParseBoxColor(spec, out var color, out var error).Should().BeFalse();
         color.Should().BeNull();
         error.Should().NotBeNullOrEmpty();
     }
