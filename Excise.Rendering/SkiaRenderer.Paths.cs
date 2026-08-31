@@ -282,7 +282,7 @@ internal partial class RenderContext
         using var dash = CreateDashEffect();
         if (dash != null) paint.PathEffect = dash;
 
-        if (_deviceCmykKnockoutGroupDepth <= 0 &&
+        if (!_deviceCmyk.IsInKnockoutGroup &&
             TryPaintDeviceCmykBlendPath(
                 _currentPath,
                 _state.StrokeDeviceCmyk,
@@ -462,27 +462,6 @@ internal partial class RenderContext
         _currentPath = null;
     }
 
-    // Reusable coverage mask for TryPaintDeviceCmykBlendPath (#599). Grows to
-    // the largest path bounds seen during this context's render and is cleared
-    // before each use, so per-path work is a bounded memset + one rasterization
-    // instead of a full-page bitmap allocation per painted path. Disposed in
-    // DisposeOwnedResources.
-    private SKBitmap? _deviceCmykBlendMask;
-
-    private SKBitmap GetDeviceCmykBlendMask(int width, int height)
-    {
-        var existing = _deviceCmykBlendMask;
-        if (existing != null && existing.Width >= width && existing.Height >= height)
-            return existing;
-
-        // Grow-only: never shrink below a size already needed this render.
-        var newWidth = Math.Max(width, existing?.Width ?? 0);
-        var newHeight = Math.Max(height, existing?.Height ?? 0);
-        existing?.Dispose();
-        _deviceCmykBlendMask = new SKBitmap(newWidth, newHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
-        return _deviceCmykBlendMask;
-    }
-
     private bool TryPaintDeviceCmykBlendPath(SKPath path, DeviceCmykColor? sourceCmyk, float alpha)
         => TryPaintDeviceCmykBlendPath(
             path,
@@ -507,8 +486,7 @@ internal partial class RenderContext
         SKPathEffect? pathEffect)
     {
         if (_rootBitmap == null ||
-            _deviceCmykBackdrop == null ||
-            _deviceCmykTransparencyGroupDepth <= 0 ||
+            !_deviceCmyk.IsInTransparencyGroup ||
             sourceCmyk == null ||
             _state.SoftMask != null)
         {
@@ -571,9 +549,9 @@ internal partial class RenderContext
                 var effectiveAlpha = Math.Clamp(alpha * coverage, 0, 1);
                 if (effectiveAlpha <= 0)
                 {
-                    if (_deviceCmykKnockoutGroupDepth > 0)
+                    if (_deviceCmyk.IsInKnockoutGroup)
                         ResetDeviceCmykKnockoutPixel(rootPixels, rootRowBytes, x, y, 0);
-                    else if (_deviceCmykPreserveZeroAlphaShape)
+                    else if (_deviceCmyk.PreserveZeroAlphaShape)
                         PreserveDeviceCmykShapePixel(rootPixels, rootRowBytes, x, y, coverage);
                     continue;
                 }
@@ -583,13 +561,13 @@ internal partial class RenderContext
                     // for these retained-backdrop blend modes, while knockout groups
                     // must use the subtractive DeviceCMYK path so neutral nested
                     // forms do not leave a visible X.
-                    _deviceCmykIsolatedGroupDepth > 0 &&
+                    _deviceCmyk.IsInIsolatedGroup &&
                     !isNormalBlend &&
                     blend is PdfSeparableBlendMode.Lighten or
                         PdfSeparableBlendMode.Screen or
                         PdfSeparableBlendMode.ColorDodge;
                 if (IsZeroInk(source) &&
-                    _deviceCmykKnockoutGroupDepth <= 0 &&
+                    !_deviceCmyk.IsInKnockoutGroup &&
                     !useDirectBlendFunctions &&
                     !isNormalBlend &&
                     blend is not PdfSeparableBlendMode.Difference and
@@ -602,7 +580,7 @@ internal partial class RenderContext
                     continue;
                 }
 
-                var backdrop = _deviceCmykBackdrop.Get(x, y);
+                var backdrop = _deviceCmyk.Backdrop!.Get(x, y);
                 if (IsFullBlackInk(source) &&
                     IsZeroInk(backdrop) &&
                     !useDirectBlendFunctions &&
@@ -614,14 +592,14 @@ internal partial class RenderContext
 
                 var rootOffset = (y * rootRowBytes) + (x * 4);
                 var dstAlphaByte = rootPixels[rootOffset + 3];
-                if (_deviceCmykKnockoutGroupDepth > 0)
+                if (_deviceCmyk.IsInKnockoutGroup)
                 {
                     // The reset writes alpha 0, so the destination alpha the
                     // final composite sees is 0 (previously dst.Alpha of the
                     // SKColor returned by the reset — always its alpha arg).
                     ResetDeviceCmykKnockoutPixel(rootPixels, rootRowBytes, x, y, 0);
                     dstAlphaByte = 0;
-                    backdrop = _deviceCmykBackdrop.Get(x, y);
+                    backdrop = _deviceCmyk.Backdrop!.Get(x, y);
                 }
 
                 var blended = isNormalBlend
@@ -630,10 +608,10 @@ internal partial class RenderContext
                         backdrop,
                         source,
                         blend,
-                        _deviceCmykBackdrop.GetAlpha(x, y),
+                        _deviceCmyk.Backdrop!.GetAlpha(x, y),
                         useDirectBlendFunctions);
-                _deviceCmykBackdrop.CompositeSourceOver(x, y, blended, effectiveAlpha);
-                var output = _deviceCmykBackdrop.Get(x, y);
+                _deviceCmyk.Backdrop!.CompositeSourceOver(x, y, blended, effectiveAlpha);
+                var output = _deviceCmyk.Backdrop.Get(x, y);
                 var (r, g, b) = DeviceCmykToRgb(output);
                 var dstAlpha = dstAlphaByte / 255.0;
                 var outAlpha = effectiveAlpha + (dstAlpha * (1 - effectiveAlpha));
@@ -691,7 +669,7 @@ internal partial class RenderContext
         var maskOriginY = boundMaskToWindow ? top : 0;
         var maskWidth = boundMaskToWindow ? right - left : _rootBitmap!.Width;
         var maskHeight = boundMaskToWindow ? bottom - top : _rootBitmap!.Height;
-        var mask = GetDeviceCmykBlendMask(maskWidth, maskHeight);
+        var mask = _deviceCmyk.GetBlendMask(maskWidth, maskHeight);
         var maskMatrix = matrix;
         maskMatrix.TransX -= maskOriginX;
         maskMatrix.TransY -= maskOriginY;
@@ -863,8 +841,8 @@ internal partial class RenderContext
         if (_rootBitmap == null ||
             sourceCmyk == null ||
             _state.SoftMask != null ||
-            _deviceCmykTransparencyGroupDepth > 0 ||
-            _deviceCmykKnockoutGroupDepth > 0)
+            _deviceCmyk.IsInTransparencyGroup ||
+            _deviceCmyk.IsInKnockoutGroup)
         {
             return false;
         }
@@ -977,10 +955,10 @@ internal partial class RenderContext
 
     private void ResetDeviceCmykKnockoutPixel(Span<byte> rootPixels, int rootRowBytes, int x, int y, byte alpha)
     {
-        var initialBackdrop = _deviceCmykKnockoutInitialBackdrop?.Get(x, y)
+        var initialBackdrop = _deviceCmyk.KnockoutInitialBackdrop?.Get(x, y)
                               ?? new DeviceCmykColor(0, 0, 0, 0);
-        var initialAlpha = _deviceCmykKnockoutInitialBackdrop?.GetAlpha(x, y) ?? (alpha / 255.0);
-        _deviceCmykBackdrop!.Set(x, y, initialBackdrop, initialAlpha);
+        var initialAlpha = _deviceCmyk.KnockoutInitialBackdrop?.GetAlpha(x, y) ?? (alpha / 255.0);
+        _deviceCmyk.Backdrop!.Set(x, y, initialBackdrop, initialAlpha);
         var (initialR, initialG, initialB) = DeviceCmykToRgb(initialBackdrop);
         WritePremulRgba(
             rootPixels,
@@ -993,7 +971,7 @@ internal partial class RenderContext
 
     private void PreserveDeviceCmykShapePixel(Span<byte> rootPixels, int rootRowBytes, int x, int y, double coverage)
     {
-        var backdrop = _deviceCmykBackdrop!.Get(x, y);
+        var backdrop = _deviceCmyk.Backdrop!.Get(x, y);
         var (r, g, b) = DeviceCmykToRgb(backdrop);
         var offset = (y * rootRowBytes) + (x * 4);
         var dstAlpha = rootPixels[offset + 3] / 255.0;

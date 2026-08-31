@@ -571,8 +571,7 @@ internal partial class RenderContext
         foreach (var typeface in _embeddedTypefaces.Values)
             typeface.Dispose();
         _embeddedTypefaces.Clear();
-        _deviceCmykBlendMask?.Dispose();
-        _deviceCmykBlendMask = null;
+        _deviceCmyk.Dispose();
     }
 
     private bool TryDrawImageWithSoftMask(
@@ -803,8 +802,7 @@ internal partial class RenderContext
     private void CompositeImageIntoDeviceCmykBackdrop(SKBitmap image, int imageWidth, int imageHeight, SKPaint imagePaint)
     {
         if (_rootBitmap == null ||
-            _deviceCmykBackdrop == null ||
-            _deviceCmykTransparencyGroupDepth <= 0 ||
+            !_deviceCmyk.IsInTransparencyGroup ||
             image.Width <= 0 ||
             image.Height <= 0 ||
             imageWidth <= 0 ||
@@ -871,16 +869,16 @@ internal partial class RenderContext
                     pixel.Red / 255.0,
                     pixel.Green / 255.0,
                     pixel.Blue / 255.0);
-                var backdrop = _deviceCmykBackdrop.Get(x, y);
+                var backdrop = _deviceCmyk.Backdrop!.Get(x, y);
                 var blended = isNormalBlend
                     ? source
                     : BlendDeviceCmykWithBackdropAlpha(
                         backdrop,
                         source,
                         blend,
-                        _deviceCmykBackdrop.GetAlpha(x, y),
+                        _deviceCmyk.Backdrop!.GetAlpha(x, y),
                         direct: false);
-                _deviceCmykBackdrop.CompositeSourceOver(x, y, blended, alpha);
+                _deviceCmyk.Backdrop!.CompositeSourceOver(x, y, blended, alpha);
             }
         }
     }

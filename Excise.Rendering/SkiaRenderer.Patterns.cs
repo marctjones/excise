@@ -60,8 +60,8 @@ internal partial class RenderContext
 
     private bool MarkDeviceCmykBackdropDirtyWhenRendered(bool rendered)
     {
-        if (rendered && _deviceCmykTransparencyGroupDepth > 0)
-            _deviceCmykBackdropDirtyFromRgbPaint = true;
+        if (rendered)
+            _deviceCmyk.MarkBackdropDirtyFromRgbPaint();
 
         return rendered;
     }
