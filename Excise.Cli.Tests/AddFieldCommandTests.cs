@@ -74,7 +74,7 @@ public class AddFieldCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, BarePdf());
 
-        Program.RunAddField(input, output, "Text", "Name", page: 1,
+        FormMutationTestDriver.RunAddField(input, output, "Text", "Name", page: 1,
             rectStr: "72,700,300,720", value: "default", options: Array.Empty<string>());
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(output));
@@ -90,7 +90,7 @@ public class AddFieldCommandTests : IDisposable
         var path = TempPath(".pdf");
         File.WriteAllBytes(path, BarePdf());
 
-        Program.RunAddField(path, path, "Text", "Name", page: 1,
+        FormMutationTestDriver.RunAddField(path, path, "Text", "Name", page: 1,
             rectStr: "72,700,300,720", value: "default", options: Array.Empty<string>());
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(path));
@@ -106,7 +106,7 @@ public class AddFieldCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, BarePdf());
 
-        Program.RunAddField(input, output, "Checkbox", "Agree", page: 1,
+        FormMutationTestDriver.RunAddField(input, output, "Checkbox", "Agree", page: 1,
             rectStr: "72,700,90,720", value: "Yes", options: Array.Empty<string>());
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(output));
@@ -122,7 +122,7 @@ public class AddFieldCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, BarePdf());
 
-        var act = () => Program.RunAddField(input, output, "Choice", "Country",
+        var act = () => FormMutationTestDriver.RunAddField(input, output, "Choice", "Country",
             page: 1, rectStr: "72,700,200,720", value: null, options: Array.Empty<string>());
 
         act.Should().Throw<ArgumentException>().WithMessage("*--option is required*");
@@ -135,7 +135,7 @@ public class AddFieldCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, BarePdf());
 
-        Program.RunAddField(input, output, "Choice", "Country", page: 1,
+        FormMutationTestDriver.RunAddField(input, output, "Choice", "Country", page: 1,
             rectStr: "72,700,200,720", value: "US", options: new[] { "US", "UK" });
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(output));
@@ -151,7 +151,7 @@ public class AddFieldCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, BarePdf());
 
-        var act = () => Program.RunAddField(input, output, "Banana", "F",
+        var act = () => FormMutationTestDriver.RunAddField(input, output, "Banana", "F",
             page: 1, rectStr: "72,700,90,720", value: null, options: Array.Empty<string>());
 
         act.Should().Throw<ArgumentException>().WithMessage("*Unknown field type*");
@@ -164,7 +164,7 @@ public class AddFieldCommandTests : IDisposable
         var output = TempPath(".pdf");
         File.WriteAllBytes(input, BarePdf());
 
-        var act = () => Program.RunAddField(input, output, "Text", "F",
+        var act = () => FormMutationTestDriver.RunAddField(input, output, "Text", "F",
             page: 1, rectStr: "not-a-rect", value: null, options: Array.Empty<string>());
 
         act.Should().Throw<ArgumentException>();

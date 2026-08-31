@@ -367,14 +367,18 @@ partial class Program
             throw new AutomationContractException("MISSING_FIELDS", "form.fillForm requires fields or field assignments.");
 
         EnsureOutputParent(output);
-        var updated = RunFillForm(input, output, fields, step.Flatten ?? false,
-            step.IgnorePermissions ?? false);
+        var result = FormMutationHandler.Fill(new FillFormRequest(
+            input,
+            output,
+            fields,
+            step.Flatten ?? false,
+            step.IgnorePermissions ?? false));
         return new
         {
-            inputPath = input,
-            outputPath = output,
-            updatedFieldCount = updated,
-            flattened = step.Flatten ?? false,
+            inputPath = result.InputPath,
+            outputPath = result.OutputPath,
+            updatedFieldCount = result.UpdatedFieldCount,
+            flattened = result.Flattened,
         };
     }
 
@@ -389,7 +393,7 @@ partial class Program
             throw new AutomationContractException("MISSING_RECT", "form.addField requires rect.");
 
         EnsureOutputParent(output);
-        RunAddField(
+        var result = FormMutationHandler.AddField(new AddFieldRequest(
             input,
             output,
             step.Type ?? "Text",
@@ -398,15 +402,15 @@ partial class Program
             step.Rect!,
             step.Value,
             step.Option ?? Array.Empty<string>(),
-            step.IgnorePermissions ?? false);
+            step.IgnorePermissions ?? false));
 
         return new
         {
-            inputPath = input,
-            outputPath = output,
-            fieldName = step.Name,
-            fieldType = step.Type ?? "Text",
-            pageNumber = step.Page ?? 1,
+            inputPath = result.InputPath,
+            outputPath = result.OutputPath,
+            fieldName = result.FieldName,
+            fieldType = result.FieldType,
+            pageNumber = result.PageNumber,
         };
     }
 
