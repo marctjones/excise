@@ -950,7 +950,14 @@ partial class Program
         // Without this the CLI prints an unqualified success line while
         // bookmark titles and off-page annotations were never looked at.
         // Collect BEFORE saving so it reflects the document that was written.
-        var carrierNotes = RedactionCarrierAudit.Inspect(doc, new[] { text }).Describe().ToList();
+        // The shared safe-copy policy owns the post-redaction carrier audit.
+        // CLI term redaction deliberately does not enable the GUI safe-share
+        // defaults here: RedactText already scrubbed this exact term, while
+        // wholesale metadata/attachment removal, hidden-text audit, and
+        // geometry-based raster audit would change established CLI semantics.
+        var carrierNotes = CliRedactedCopySafetyAdapter
+            .AuditTermRedaction(doc, text)
+            .ToList();
         if (ocrResult != null)
             carrierNotes.Add(
                 $"OCR IMAGE TEXT: added {ocrResult.TotalWordsWritten} invisible OCR word(s) before redaction; " +

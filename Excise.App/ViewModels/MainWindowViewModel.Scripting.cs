@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Excise.Core.Document;
+using Excise.Core.Text.Segmentation;
 using Excise.App.Services;
 using ReactiveUI;
 using System;
@@ -376,9 +377,15 @@ public partial class MainWindowViewModel
 
                 using (var redactedDocument = Excise.Core.Document.PdfDocument.Open(System.IO.File.ReadAllBytes(filePath)))
                 {
-                    var report = _redactedCopySafetyService.PrepareRedactedCopy(
+                    var report = RedactedCopySafetyPolicy.Evaluate(
                         redactedDocument,
-                        requestedRedactions);
+                        RedactedCopySafetyRequest.ForAreas(
+                            requestedRedactions
+                                .Select(redaction => new RedactedCopySafetyArea(
+                                    redaction.PageNumber,
+                                    redaction.PageArea,
+                                    redaction.PreviewText))
+                                .ToArray()));
                     // #643: keep an encrypted source's protection on the final
                     // scripted output (the intermediate files carried it too —
                     // see RedactionService.RedactText).

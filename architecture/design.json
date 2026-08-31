@@ -395,7 +395,8 @@
         "Excise.App/Services/DocumentSearchSession.cs",
         "Excise.App/Services/AnnotationWorkflowService.cs",
         "Excise.App/Services/DocumentImageExportWorkflowService.cs",
-        "Excise.App/Services/RedactionWorkflowService.cs"
+        "Excise.App/Services/RedactionWorkflowService.cs",
+        "Excise.App/Services/RedactedCopyDialogFormatter.cs"
       ],
       "targetState": "Become a thin workspace shell over separately testable document-session, navigation, redaction, editing, security, and background-workflow owners.",
       "workflows": [

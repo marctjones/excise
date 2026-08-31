@@ -155,7 +155,7 @@ public partial class MainWindowViewModel
         await LoadDocumentAsync(result.OutputPath);
         await _dialogService.ShowMessageAsync(
             "Success",
-            _redactedCopySafetyService.FormatForDialog(
+            _redactedCopyDialogFormatter.Format(
                 result.OutputPath,
                 result.Application.SafetyReport));
     }
@@ -178,7 +178,7 @@ public partial class MainWindowViewModel
     // ApplyAllRedactionsCommand cannot resolve a destination and would bail
     // before the redaction pipeline runs. When set, this supplies the save
     // destination directly (return null to model a cancelled picker). Every
-    // step after path resolution — PrepareRedactedCopy, document.Save,
+    // step after path resolution — shared safety evaluation, document.Save,
     // MoveToApplied, reload — runs unchanged. Unset in production, so behaviour
     // is identical to the real save dialog. See RedactionAndSearchCommandTests.
     private Func<string, Task<string?>>? _redactedSavePathProviderForTests;

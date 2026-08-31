@@ -24,7 +24,7 @@ internal static class MainWindowViewModelTestFactory
         SignatureVerificationService? signatureService = null,
         FilenameSuggestionService? filenameSuggestionService = null,
         ToastService? toastService = null,
-        RedactedCopySafetyService? redactedCopySafetyService = null,
+        RedactedCopyDialogFormatter? redactedCopyDialogFormatter = null,
         RedactionWorkflowService? redactionWorkflowService = null,
         DocumentTextIndexSession? textIndexSession = null,
         IUserDialogService? dialogService = null,
@@ -42,13 +42,11 @@ internal static class MainWindowViewModelTestFactory
         redactionService ??= new RedactionService(
             NullLogger<RedactionService>.Instance,
             loggerFactory);
-        redactedCopySafetyService ??= new RedactedCopySafetyService(
-            NullLogger<RedactedCopySafetyService>.Instance);
+        redactedCopyDialogFormatter ??= new RedactedCopyDialogFormatter();
         textExtractionService ??= new PdfTextExtractionService(
             NullLogger<PdfTextExtractionService>.Instance);
         redactionWorkflowService ??= new RedactionWorkflowService(
             redactionService,
-            redactedCopySafetyService,
             textExtractionService,
             NullLogger<RedactionWorkflowService>.Instance);
         searchService ??= new PdfSearchService(NullLogger<PdfSearchService>.Instance);
@@ -82,7 +80,7 @@ internal static class MainWindowViewModelTestFactory
             documentService,
             renderService,
             redactionService,
-            redactedCopySafetyService,
+            redactedCopyDialogFormatter,
             redactionWorkflowService,
             textExtractionService,
             searchSession,

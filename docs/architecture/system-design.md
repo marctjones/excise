@@ -68,8 +68,10 @@ chains are:
   pages → viewer schedules and presents → text model supplies search/selection.
 - **Redact and save (`redact-save`)**: delivery captures intent → shared text
   semantics locate candidates → redaction removes glyph/image/carrier content →
-  writer produces a fresh safe copy → independent verification judges saved
-  bytes, extraction, and ink.
+  the shared safe-copy policy applies requested scrub and audit channels → the
+  delivery adapter preserves its explicit encryption and presentation contract
+  while the writer produces a fresh copy → independent verification judges
+  saved bytes, extraction, and ink.
 - **Edit and save (`edit-save`)**: delivery owns transient intent → typed domain
   mutations apply under conservation policy → writer serializes → reopened
   rendering and focused tests judge the result.
@@ -97,6 +99,11 @@ chains are:
   own typed delivery inputs/results, cancellation and resource lifetime, exit
   policy, and presentation; they compose Core, Rendering, and OCR engines
   without copying those engines or pushing console policy inward.
+- Redacted-copy scrub and audit requests, options, statuses, and reports belong
+  to `core-redaction`. Desktop dialogs, CLI notes/JSON/exit codes, file paths,
+  passwords, and encryption choices are delivery adapters. Delivery surfaces
+  may choose different explicit option sets, but they do not reimplement the
+  underlying carrier, text, hidden-content, or raster audit policy.
 - `MainWindowViewModel` is a composition surface. Feature state and workflows
   move behind focused collaborators when their ownership and conservation gates
   are established.

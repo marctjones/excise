@@ -31,7 +31,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly PdfDocumentService _documentService;
     private readonly PdfRenderService _renderService;
     private readonly RedactionService _redactionService;
-    private readonly RedactedCopySafetyService _redactedCopySafetyService;
+    private readonly RedactedCopyDialogFormatter _redactedCopyDialogFormatter;
     private readonly RedactionWorkflowService _redactionWorkflowService;
     private readonly PdfTextExtractionService _textExtractionService;
     private readonly SignatureVerificationWorkflowService _signatureWorkflowService;
@@ -98,7 +98,7 @@ public partial class MainWindowViewModel : ViewModelBase
         PdfDocumentService documentService,
         PdfRenderService renderService,
         RedactionService redactionService,
-        RedactedCopySafetyService redactedCopySafetyService,
+        RedactedCopyDialogFormatter redactedCopyDialogFormatter,
         RedactionWorkflowService redactionWorkflowService,
         PdfTextExtractionService textExtractionService,
         DocumentSearchSession searchSession,
@@ -115,7 +115,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _documentService = documentService;
         _renderService = renderService;
         _redactionService = redactionService;
-        _redactedCopySafetyService = redactedCopySafetyService;
+        _redactedCopyDialogFormatter = redactedCopyDialogFormatter;
         _redactionWorkflowService = redactionWorkflowService;
         _textExtractionService = textExtractionService;
         _searchSession = searchSession;

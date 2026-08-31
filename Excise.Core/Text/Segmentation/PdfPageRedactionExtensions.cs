@@ -72,8 +72,8 @@ public static class PdfPageRedactionExtensions
     /// <para>
     /// Embedded files are NOT dropped: <c>ScrubMetadata(scrubAttachments:
     /// false)</c>. Attachment removal is a wider promise than this parameter
-    /// makes, and it already has its own home in the GUI's redacted-copy flow
-    /// (<c>RedactedCopySafetyService</c>) and under <c>RemoveAllMetadata</c>.
+    /// makes, and it already has its own home in the shared safe-copy policy
+    /// (<see cref="RedactedCopySafetyPolicy"/>) and under <c>RemoveAllMetadata</c>.
     /// </para>
     /// </remarks>
     /// <summary>

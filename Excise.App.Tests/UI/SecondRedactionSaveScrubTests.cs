@@ -35,7 +35,7 @@ namespace Excise.App.Tests.UI;
 /// discriminate. Both are stated at their assertions.
 ///
 /// The fixture carries the term in page content, /Info, XMP AND an embedded
-/// file. The attachment was included because <c>PrepareRedactedCopy</c>'s
+/// file. The attachment was included because the shared safe-copy policy's
 /// <c>ScrubMetadata(scrubAttachments: true)</c> is the one thing a plain save
 /// does not replicate — #896 and #897 already cover /Info and XMP at the engine
 /// level regardless of save path. It turned out not to discriminate either,
@@ -153,7 +153,7 @@ public class SecondRedactionSaveScrubTests : IDisposable
         // because I mutation-tested it and it has no teeth on its own.
         //
         // Forcing IsOriginalFile false (so Ctrl+S really does fall through to
-        // SaveDocument without PrepareRedactedCopy) leaves this assertion
+        // SaveDocument without shared safe-copy evaluation) leaves this assertion
         // PASSING. The reason is the second, stronger answer to #898: the FIRST
         // pass already scrubbed /Info, XMP and the embedded file, so by the
         // second save there is no carrier left to skip.
