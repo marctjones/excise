@@ -202,8 +202,8 @@ policy surface. Its `GetObject`, `Resolve`, mutation, and writer hooks delegate
 to the single store; they do not maintain shadow caches or another graph. The
 existing `PdfParser`, `XRefParser`, `PdfDocumentWriter`, and redaction engine
 remain authoritative. The document-open pipeline constructs this store, and a
-future save-session boundary must consume it rather than introducing another
-reader, document graph, or serializer.
+writing-owned save-session boundary consumes it rather than introducing
+another reader, document graph, or serializer.
 
 ## AD-016 — Supported mutations invalidate derived state by source scope
 
@@ -245,3 +245,28 @@ through the same open path. The parsing foundation does not depend on the
 document component. A borrowed stream remains caller-owned on success and
 failure; an owned stream transfers to the object store on success and is
 disposed by the pipeline or store on failure.
+
+## AD-018 — One save lifecycle owns finalization and writer graph views
+
+**Status:** accepted
+
+Every `PdfDocument.Save` overload and direct `PdfDocumentWriter.Write` enters
+one writing-owned save lifecycle. Constructing a writer and making document
+queries do not enter that lifecycle. At the start of each write, every
+registered idempotent finalizer runs exactly once: embedded-font subsetting,
+tagged-structure emission, and PDF/A policy therefore precede serialization
+through the same contract rather than independent save paths.
+
+After finalization, one `PdfDocumentSaveSession` exposes the existing object
+store to the writer. It captures catalog, Info, file-ID, version, and temporary
+encryption-number policy, and lazily computes one catalog-and-Info-reachable
+object snapshot. A compressed-format fallback reuses that snapshot instead of
+walking a potentially different graph. Stale `/Prev` and source `/Encrypt`
+branches remain outside the fresh-write roots; a new `/Encrypt` dictionary is
+write-local and never mutates persistent document identity.
+
+`PdfDocumentWriter` remains the sole fresh-write serializer. The public Save,
+writer-constructor, and `GetReEncryptionOptions` surfaces remain compatibility
+facades with the established plaintext default. The lifecycle composes the
+single `PdfDocumentObjectStore`; it is not another object graph, parser,
+incremental writer, or encryption implementation.

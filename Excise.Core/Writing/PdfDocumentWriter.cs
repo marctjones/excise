@@ -18,6 +18,7 @@ public class PdfDocumentWriter
     private readonly Dictionary<int, long> _objectOffsets = new();
     private readonly Dictionary<int, (int ObjectStreamNumber, int Index)> _compressedObjectEntries = new();
 
+    private PdfDocumentSaveSession? _saveSession;
     private PdfStandardSecurityEncryptor? _encryptor;
     private int _encryptObjNum;
     private PdfDictionary? _encryptDict;
@@ -34,6 +35,8 @@ public class PdfDocumentWriter
     /// </summary>
     public void Write(Stream stream)
     {
+        _saveSession = _document.BeginSaveSession();
+
         if (_encryptionOptions != null)
             PrepareEncryption();
 
@@ -61,14 +64,14 @@ public class PdfDocumentWriter
 
     private bool ShouldUseCompressedObjects()
         => _encryptionOptions == null
-           && VersionAtLeast(_document.Version, 1, 5)
+           && VersionAtLeast(SaveSession.Version, 1, 5)
            && !IsPdfA1();
 
     private bool IsPdfA1()
     {
-        if (_document.Catalog.GetOptional("Metadata") is not { } metadataRef)
+        if (SaveSession.Catalog.GetOptional("Metadata") is not { } metadataRef)
             return false;
-        if (_document.Resolve(metadataRef) is not PdfStream metadata)
+        if (SaveSession.Resolve(metadataRef) is not PdfStream metadata)
             return false;
 
         var xmp = Encoding.UTF8.GetString(metadata.DecodedData);
@@ -94,7 +97,8 @@ public class PdfDocumentWriter
     /// written. Kept entirely local to this writer instance/call — never
     /// persisted onto <see cref="_document"/> — so repeated Save() calls on
     /// the same PdfDocument don't leak growing numbers of orphaned
-    /// encrypt-dict objects (see <see cref="PdfDocument.NextFreeObjectNumber"/>).
+    /// encrypt-dict objects. The save session supplies a non-mutating next
+    /// object number from the single document store.
     ///
     /// Must run before <see cref="WriteTrailer"/> would otherwise generate a
     /// fresh <c>/ID</c> — R=4's Algorithms 2/3/5 all hash <c>/ID[0]</c> into
@@ -126,7 +130,7 @@ public class PdfDocumentWriter
         // the /Encrypt dict is referenced only from the trailer, never from
         // the catalog, so it must never go through AddIndirectObject (which
         // would make it "real" and reachable-adjacent in the document).
-        _encryptObjNum = _document.NextFreeObjectNumber;
+        _encryptObjNum = SaveSession.NextFreeObjectNumber;
         _encryptDict = BuildEncryptDictionary(_encryptor, options);
     }
 
@@ -179,7 +183,7 @@ public class PdfDocumentWriter
     {
         if (_idArray != null) return _idArray;
 
-        var existingId = _document.Trailer.TryGetArray("ID", out var trailerId) ? trailerId : null;
+        var existingId = SaveSession.ExistingIdArray;
         if (existingId is { Count: > 0 })
         {
             _idArray = existingId;
@@ -283,7 +287,7 @@ public class PdfDocumentWriter
 
     private void WriteHeader(BinaryWriter writer)
     {
-        var header = $"%PDF-{_document.Version}\n";
+        var header = $"%PDF-{SaveSession.Version}\n";
         writer.Write(Encoding.ASCII.GetBytes(header));
 
         // Write binary marker (PDF spec recommends this for binary files)
@@ -294,20 +298,12 @@ public class PdfDocumentWriter
     {
         _objectOffsets.Clear();
         _compressedObjectEntries.Clear();
-        var reachable = _document.ComputeSaveReachableObjects();
-
-        // Get all objects sorted by object number for consistent output
-        var objects = _document.GetAllObjects()
-            .Where(o => reachable.Contains(o.ObjectNumber))
-            .OrderBy(o => o.ObjectNumber)
-            .ToList();
-
-        foreach (var (objNum, gen, obj) in objects)
+        foreach (var (objNum, gen, obj) in SaveSession.Objects)
         {
             // Skip cross-reference plumbing: object streams (/ObjStm) and
-            // cross-reference streams (/XRef). GetAllObjects already yields the
-            // ObjStm's members decompressed as standalone objects, and we emit
-            // a classic xref table + trailer, so these containers are redundant.
+            // cross-reference streams (/XRef). The save session already yields
+            // the ObjStm's members decompressed as standalone objects, and we
+            // emit a classic xref table + trailer, so these containers are redundant.
             // Re-emitting an /ObjStm would also be a security leak: an object
             // freed via RemoveObject (e.g. a redacted Form XObject inlined and
             // pruned, #359) would still ship inside the container's bytes. Their
@@ -335,14 +331,11 @@ public class PdfDocumentWriter
         _objectOffsets.Clear();
         _compressedObjectEntries.Clear();
 
-        var reachable = _document.ComputeSaveReachableObjects();
-        var allObjects = _document.GetAllObjects()
-            .Where(o => reachable.Contains(o.ObjectNumber))
+        var allObjects = SaveSession.Objects
             .Where(o => !IsCrossReferencePlumbing(o.Object))
-            .OrderBy(o => o.ObjectNumber)
             .ToList();
 
-        var rootRef = _document.GetCatalogReference();
+        var rootRef = SaveSession.CatalogReference;
         var packable = allObjects
             .Where(o => CanPackIntoObjectStream(o, rootRef))
             .ToList();
@@ -617,10 +610,10 @@ public class PdfDocumentWriter
         var trailer = new PdfDictionary
         {
             ["Size"] = new PdfInteger(size),
-            ["Root"] = _document.GetCatalogReference()
+            ["Root"] = SaveSession.CatalogReference
         };
 
-        var infoRef = _document.Trailer.GetReferenceOrNull("Info");
+        var infoRef = SaveSession.InfoReference;
         if (infoRef != null)
             trailer["Info"] = infoRef;
 
@@ -631,4 +624,9 @@ public class PdfDocumentWriter
 
         return trailer;
     }
+
+    private PdfDocumentSaveSession SaveSession
+        => _saveSession
+           ?? throw new InvalidOperationException(
+               "A save session is available only while Write is running.");
 }

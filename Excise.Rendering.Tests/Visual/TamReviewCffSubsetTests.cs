@@ -107,13 +107,48 @@ public sealed class TamReviewCffSubsetTests
 
     private static PdfDictionary? FindFontByBaseName(PdfDocument doc, string baseName)
     {
-        foreach (var (_, _, obj) in doc.GetAllObjects())
+        var visitedReferences = new HashSet<(int ObjectNumber, int Generation)>();
+        var visitedObjects = new HashSet<PdfObject>(ReferenceEqualityComparer.Instance);
+        var pending = new Stack<PdfObject>();
+        pending.Push(doc.Catalog);
+
+        while (pending.Count > 0)
         {
-            if (obj is PdfDictionary dict &&
-                dict.GetNameOrNull("Type") == "Font" &&
-                dict.GetNameOrNull("BaseFont") == baseName)
-                return dict;
+            var current = pending.Pop();
+            if (current is PdfReference reference)
+            {
+                if (visitedReferences.Add((reference.ObjectNum, reference.Generation)))
+                    pending.Push(doc.Resolve(reference));
+                continue;
+            }
+
+            if (!visitedObjects.Add(current))
+                continue;
+
+            if (current is PdfDictionary font
+                && font.GetNameOrNull("Type") == "Font"
+                && font.GetNameOrNull("BaseFont") == baseName)
+            {
+                return font;
+            }
+
+            switch (current)
+            {
+                case PdfStream stream:
+                    foreach (var value in stream.Values)
+                        pending.Push(value);
+                    break;
+                case PdfDictionary dictionary:
+                    foreach (var value in dictionary.Values)
+                        pending.Push(value);
+                    break;
+                case PdfArray array:
+                    foreach (var value in array)
+                        pending.Push(value);
+                    break;
+            }
         }
+
         return null;
     }
 

@@ -54,22 +54,6 @@ public partial class PdfDocument : IDisposable
         => _objectStore.AddIndirectObject(obj);
 
     /// <summary>
-    /// The object number <see cref="AddIndirectObject"/> would allocate if
-    /// called right now — computed without mutating the xref/object cache.
-    /// </summary>
-    /// <remarks>
-    /// Used by <see cref="Excise.Core.Writing.PdfDocumentWriter"/> to reserve
-    /// a number for a write-time-only <c>/Encrypt</c> dictionary that must
-    /// never become part of the persistent document graph (it is not
-    /// reachable from the catalog, so re-adding it via
-    /// <see cref="AddIndirectObject"/> on every save would leak an
-    /// ever-growing number of orphaned encrypt-dict objects into the owned
-    /// object store across repeated Save() calls on the
-    /// same <see cref="PdfDocument"/> instance).
-    /// </remarks>
-    internal int NextFreeObjectNumber => _objectStore.NextFreeObjectNumber;
-
-    /// <summary>
     /// Overwrite the content of an already-registered indirect object.
     /// </summary>
     /// <remarks>
@@ -127,22 +111,6 @@ public partial class PdfDocument : IDisposable
             if (mdRef is PdfReference r && !seen.Add(r.ObjectNum)) continue;
             if (Resolve(mdRef) is PdfStream md) yield return md;
         }
-    }
-
-    /// <summary>
-    /// Object numbers reachable from the trailer shape emitted by
-    /// <see cref="Excise.Core.Writing.PdfDocumentWriter"/>. This intentionally
-    /// excludes original-trailer entries that are not preserved on save, such
-    /// as /Prev and /Encrypt, so full-save output also garbage-collects
-    /// stale incremental-update objects.
-    /// </summary>
-    internal HashSet<int> ComputeSaveReachableObjects()
-    {
-        var roots = new List<PdfObject> { GetCatalogReference() };
-        var infoRef = Trailer.GetReferenceOrNull("Info");
-        if (infoRef != null)
-            roots.Add(infoRef);
-        return _objectStore.ComputeReachableObjects(roots);
     }
 
     /// <summary>
@@ -766,101 +734,10 @@ public partial class PdfDocument : IDisposable
         "Trapped"
     };
 
-    #region Save Methods
-
-    // Actions run just before serialization — used by embedded fonts to finalize
-    // their FontFile2 subset once every glyph that will be drawn is known (#393).
-    private readonly List<Action> _preSaveActions = new();
-
-    /// <summary>
-    /// Register an action to run immediately before the document is serialized.
-    /// Idempotent actions only — it may run on each Save.
-    /// </summary>
-    internal void RegisterPreSaveAction(Action action) => _preSaveActions.Add(action);
-
-    /// <summary>
-    /// Find the indirect reference of a cached object instance (by identity), or
-    /// null if it isn't a top-level indirect object. Used by tagged-PDF authoring
-    /// to reference a widget annotation from the structure tree (/OBJR).
-    /// </summary>
-    internal PdfReference? GetReferenceTo(PdfObject obj)
-        => _objectStore.GetReferenceTo(obj);
-
-    /// <summary>
-    /// Encryption options that re-encrypt a save of this document with the
-    /// same protection its source was opened with (#643): same algorithm
-    /// where the writer supports it, same <c>/P</c> permission mask, same
-    /// <c>/EncryptMetadata</c> choice. Returns <c>null</c> when the source
-    /// was not encrypted — so <c>doc.Save(path, doc.GetReEncryptionOptions(pw))</c>
-    /// is always safe: unencrypted sources stay unencrypted.
-    /// </summary>
-    /// <remarks>
-    /// Algorithm mapping: V=5 R=6 sources round-trip as
-    /// <see cref="Excise.Core.Security.PdfEncryptionAlgorithm.Aes256"/>; V=4 R=4
-    /// AESV2 sources as <see cref="Excise.Core.Security.PdfEncryptionAlgorithm.Aes128"/>.
-    /// Sources excise can decrypt but whose algorithm the writer does not emit
-    /// (RC4: V=1 R=2, V=2 R=3, and V=4 R=4 with CFM=V2) are re-encrypted as
-    /// AES-256 — always an upgrade, never a downgrade. The same upgrade
-    /// applies when the source's /Encrypt could not be fully parsed but the
-    /// trailer says the file is encrypted.
-    ///
-    /// The owner password of the source cannot be recovered from a
-    /// user-password open (#324 — excise verifies user passwords only), so the
-    /// returned options reuse <paramref name="userPassword"/> as the owner
-    /// password: nobody gains authority they did not already have, and the
-    /// legitimate holder of the user password is not locked out of their own
-    /// re-saved file. A source opened with the empty password re-encrypts
-    /// with the empty password.
-    /// </remarks>
-    /// <param name="userPassword">
-    /// The password this document was opened with (<c>null</c>/empty for the
-    /// empty user password — the common case). The caller supplies it because
-    /// the document does not retain the password text after open.
-    /// </param>
-    public Excise.Core.Security.PdfEncryptionOptions? GetReEncryptionOptions(string? userPassword)
-    {
-        if (!IsEncrypted) return null;
-
-        var securityHandler = _objectStore.SecurityHandler;
-        var algorithm = securityHandler switch
-        {
-            { V: 5, R: 6 } => Excise.Core.Security.PdfEncryptionAlgorithm.Aes256,
-            { V: 4, R: 4, UsesAes: true } => Excise.Core.Security.PdfEncryptionAlgorithm.Aes128,
-            // RC4 variants (V=1/2, V=4 CFM=V2) and unparseable /Encrypt:
-            // upgrade to the PDF 2.0 native algorithm.
-            _ => Excise.Core.Security.PdfEncryptionAlgorithm.Aes256,
-        };
-
-        return new Excise.Core.Security.PdfEncryptionOptions
-        {
-            UserPassword = userPassword,
-            OwnerPassword = userPassword,
-            Permissions = Permissions.RawValue,
-            EncryptMetadata = securityHandler?.EncryptMetadata ?? true,
-            Algorithm = algorithm,
-        };
-    }
-
     /// <summary>
     /// True if this document was opened with a working security handler.
     /// </summary>
     public bool IsDecrypting => _objectStore.IsDecrypting;
-
-    /// <summary>
-    /// Get all objects in the document for the single writer.
-    /// </summary>
-    internal IEnumerable<(int ObjectNumber, int Generation, PdfObject Object)> GetAllObjects()
-        => _objectStore.GetAllObjects();
-
-    /// <summary>
-    /// Get the catalog reference for writing.
-    /// </summary>
-    internal PdfReference GetCatalogReference()
-    {
-        return Trailer.Get<PdfReference>("Root");
-    }
-
-    #endregion
 
     /// <summary>
     /// Get the page label for a given page number (1-based).
