@@ -689,8 +689,16 @@ public class SkiaRendererCoverageTests
         // Act
         using var bitmap = renderer.RenderPage(doc.GetPage(1));
 
-        // Assert - both rectangles rendered with independent colors
-        bitmap.Should().NotBeNull();
+        // Assert - q/Q restores the pre-save graphics state.  These fixed
+        // pixels make this a discriminating atomic fixture rather than a
+        // merely non-crashing render smoke test.
+        const float scale = 150f / 72f;
+        var restoredRed = bitmap.GetPixel((int)(150 * scale), bitmap.Height - (int)(150 * scale));
+        var postRestoreGreen = bitmap.GetPixel((int)(250 * scale), bitmap.Height - (int)(250 * scale));
+        restoredRed.Red.Should().BeGreaterThan(220);
+        restoredRed.Green.Should().BeLessThan(30);
+        postRestoreGreen.Green.Should().BeGreaterThan(220);
+        postRestoreGreen.Red.Should().BeLessThan(30);
     }
 
     [Fact]

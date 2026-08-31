@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-08-31T03:26:06.235026+00:00",
-  "gitRevision": "1040d6188edc4597bf2b4a49533f362928d2bd8e",
+  "recordedAt": "2026-08-31T03:27:49.839450+00:00",
+  "gitRevision": "3cc58e1dfbff1a042e0636e676b13b0df90de8ae",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -26,6 +26,11 @@
       "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-path-clip-atomic.trx",
       "modifiedAt": "2026-08-31T03:26:06.112051+00:00",
       "sha256": "ccede934db9c9ca763dd5e5a4085145f2be38b9ea86dc114f89fff1dc91ad7f0"
+    },
+    {
+      "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-graphics-state-atomic.trx",
+      "modifiedAt": "2026-08-31T03:27:45.242434+00:00",
+      "sha256": "23858548152b20a195263acd765704ba8ec82f841887bcf6a4091726404a3902"
     }
   ],
   "outcomes": [
@@ -310,6 +315,14 @@
       "trxSha256": "3fbd98ddd705a0b65d8fa15463456608f8783dce43f94d8362dc351523cef756"
     },
     {
+      "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_StateStack_SaveRestore",
+      "outcome": "Passed",
+      "duration": "00:00:00.1056026",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-graphics-state-atomic.trx",
+      "resultModifiedAt": "2026-08-31T03:27:45.242434+00:00",
+      "trxSha256": "23858548152b20a195263acd765704ba8ec82f841887bcf6a4091726404a3902"
+    },
+    {
       "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_Transparency_OverlappingRectangles_BlendingApplied",
       "outcome": "Passed",
       "duration": "00:00:00.0128599",
@@ -319,10 +332,10 @@
     }
   ],
   "summary": {
-    "trxFiles": 4,
-    "tests": 36,
+    "trxFiles": 5,
+    "tests": 37,
     "outcomes": {
-      "Passed": 36
+      "Passed": 37
     },
     "status": "recorded"
   }

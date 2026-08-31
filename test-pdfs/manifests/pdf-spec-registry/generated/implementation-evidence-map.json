@@ -5012,7 +5012,21 @@
       "facets": [
         "product-integration-general"
       ],
-      "parentCapabilityModes": [],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "registry-implementation-owner"
+          ]
+        }
+      ],
       "promotion": "review-required"
     },
     {
@@ -6920,10 +6934,11 @@
       "pdf.17.graphics.paths-painting:preserve": 2,
       "pdf.17.graphics.paths-painting:render": 17,
       "pdf.17.graphics.paths-painting:write": 17,
-      "pdf.17.graphics.state:mutate": 17,
-      "pdf.17.graphics.state:parse": 17,
-      "pdf.17.graphics.state:render": 17,
-      "pdf.17.graphics.state:write": 17,
+      "pdf.17.graphics.state:mutate": 18,
+      "pdf.17.graphics.state:parse": 18,
+      "pdf.17.graphics.state:preserve": 1,
+      "pdf.17.graphics.state:render": 18,
+      "pdf.17.graphics.state:write": 18,
       "pdf.17.interactive.annotations:mutate": 8,
       "pdf.17.interactive.annotations:parse": 8,
       "pdf.17.interactive.annotations:preserve": 8,
