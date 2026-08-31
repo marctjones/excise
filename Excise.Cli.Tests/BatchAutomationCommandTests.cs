@@ -306,6 +306,37 @@ public class BatchAutomationCommandTests : IDisposable
         result.StdErr.Should().Contain("File not found");
     }
 
+    [Fact]
+    public async Task RunAsync_BatchTextPageOutsideDocument_PreservesStableContractError()
+    {
+        var directory = TempDirectory();
+        var input = Path.Combine(directory, "input.pdf");
+        var workflow = Path.Combine(directory, "workflow.json");
+        File.WriteAllBytes(input, TestPdfBuilder.SinglePage("ONLY ONE PAGE"));
+        File.WriteAllText(workflow, JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1,
+            steps = new object[]
+            {
+                new
+                {
+                    id = "text-page-two",
+                    command = PdfCommandIds.ExtractText,
+                    input = "input.pdf",
+                    page = 2,
+                },
+            },
+        }));
+
+        var result = await RunCliCaptureAsync(["batch", workflow, "--json"]);
+
+        result.ExitCode.Should().Be(2);
+        using var document = JsonDocument.Parse(result.StdOut);
+        var error = document.RootElement.GetProperty("steps")[0].GetProperty("error");
+        error.GetProperty("code").GetString().Should().Be("PAGE_OUT_OF_RANGE");
+        error.GetProperty("category").GetString().Should().Be("SCHEMA");
+    }
+
     private string TempPath(string suffix)
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-cli-batch-{Guid.NewGuid():N}{suffix}");

@@ -193,7 +193,7 @@ public class PermissionEnforcementTests : IDisposable
         var output = TempPath(".pdf");
 
         var act = () => Program.RunAddField(pdf, output, "Text", "field1", 1, "100,100,300,130", null, []);
-        act.Should().Throw<Program.PdfPermissionDeniedException>()
+        act.Should().Throw<PdfPermissionDeniedException>()
             .WithMessage("*bit 4*");
         File.Exists(output).Should().BeFalse();
 
@@ -212,7 +212,7 @@ public class PermissionEnforcementTests : IDisposable
         var output = TempPath(".pdf");
 
         var act = () => Program.RunMerge([pdf], output);
-        act.Should().Throw<Program.PdfPermissionDeniedException>()
+        act.Should().Throw<PdfPermissionDeniedException>()
             .WithMessage("*bit 11*");
         File.Exists(output).Should().BeFalse("a merge blocked by /P bit 11 must not produce a file");
 
@@ -227,7 +227,7 @@ public class PermissionEnforcementTests : IDisposable
         var outDir = TempPath("");   // RunSplit creates the directory itself
 
         var act = () => Program.RunSplit(pdf, outDir, PdfDocumentSplitter.SplitToSinglePages);
-        act.Should().Throw<Program.PdfPermissionDeniedException>()
+        act.Should().Throw<PdfPermissionDeniedException>()
             .WithMessage("*bit 11*");
         Directory.Exists(outDir).Should().BeFalse("a split blocked by /P bit 11 must not write fragments");
 
@@ -249,7 +249,7 @@ public class PermissionEnforcementTests : IDisposable
         var output = TempPath(".pdf");
 
         var act = () => Program.RunFillForm(restricted, output, ["name=Jane"], flatten: false);
-        act.Should().Throw<Program.PdfPermissionDeniedException>()
+        act.Should().Throw<PdfPermissionDeniedException>()
             .WithMessage("*bit 6 or 9*");
 
         Program.RunFillForm(restricted, output, ["name=Jane"], flatten: false, ignorePermissions: true)
