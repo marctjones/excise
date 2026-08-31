@@ -2,7 +2,7 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "13ae8731a9fa028d070a54e43c1b885209cc6907",
+  "sourceRevision": "5f7e9affb0311ec56d28a5f96378245dc591a939",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
@@ -10,9 +10,9 @@
   "summary": {
     "analyzedProjects": 12,
     "retainedSymbols": 5653,
-    "observedComponentDependencies": 76,
-    "declaredDependencies": 74,
-    "acceptedExceptions": 2,
+    "observedComponentDependencies": 83,
+    "declaredDependencies": 82,
+    "acceptedExceptions": 1,
     "undeclaredDependencies": 0,
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
@@ -66,8 +66,8 @@
     {
       "source": "app",
       "target": "core-document",
-      "references": 307,
-      "typeDependencyCount": 49,
+      "references": 305,
+      "typeDependencyCount": 48,
       "classification": "declared",
       "evidence": [
         {
@@ -107,9 +107,23 @@
     },
     {
       "source": "app",
+      "target": "core-redaction",
+      "references": 8,
+      "typeDependencyCount": 5,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.App.Services.RedactionService",
+          "target": "Excise.Core.Operations.PdfDocumentSanitizer",
+          "references": 2
+        }
+      ]
+    },
+    {
+      "source": "app",
       "target": "core-text",
-      "references": 47,
-      "typeDependencyCount": 15,
+      "references": 41,
+      "typeDependencyCount": 11,
       "classification": "declared",
       "evidence": [
         {
@@ -233,15 +247,29 @@
     },
     {
       "source": "app-main-window",
-      "target": "core-text",
-      "references": 66,
-      "typeDependencyCount": 17,
+      "target": "core-redaction",
+      "references": 62,
+      "typeDependencyCount": 15,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Services.RedactedCopyDialogFormatter",
           "target": "Excise.Core.Text.Segmentation.RedactedCopySafetyReport",
           "references": 22
+        }
+      ]
+    },
+    {
+      "source": "app-main-window",
+      "target": "core-text",
+      "references": 4,
+      "typeDependencyCount": 2,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.App.ViewModels.MainWindowViewModel",
+          "target": "Excise.Core.Text.ReadingOrderStrategy",
+          "references": 2
         }
       ]
     },
@@ -415,6 +443,20 @@
     },
     {
       "source": "cli",
+      "target": "core-redaction",
+      "references": 55,
+      "typeDependencyCount": 14,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Cli.Program",
+          "target": "Excise.Core.Text.Segmentation.HiddenTextRecord",
+          "references": 14
+        }
+      ]
+    },
+    {
+      "source": "cli",
       "target": "core-security",
       "references": 16,
       "typeDependencyCount": 4,
@@ -430,14 +472,14 @@
     {
       "source": "cli",
       "target": "core-text",
-      "references": 61,
-      "typeDependencyCount": 15,
+      "references": 6,
+      "typeDependencyCount": 1,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Cli.Program",
-          "target": "Excise.Core.Text.Segmentation.HiddenTextRecord",
-          "references": 14
+          "target": "Excise.Core.Text.Letter",
+          "references": 6
         }
       ]
     },
@@ -654,8 +696,8 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1334,
-      "typeDependencyCount": 177,
+      "references": 1202,
+      "typeDependencyCount": 163,
       "classification": "declared",
       "evidence": [
         {
@@ -718,6 +760,90 @@
           "source": "Excise.Core.Parsing.XRefParser",
           "target": "Excise.Core.Primitives.PdfDictionary",
           "references": 25
+        }
+      ]
+    },
+    {
+      "source": "core-redaction",
+      "target": "core-content",
+      "references": 184,
+      "typeDependencyCount": 30,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Text.Segmentation.FormXObjectFlattener",
+          "target": "Excise.Core.Content.ContentOperator",
+          "references": 32
+        }
+      ]
+    },
+    {
+      "source": "core-redaction",
+      "target": "core-document",
+      "references": 504,
+      "typeDependencyCount": 61,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions",
+          "target": "Excise.Core.Document.PdfRectangle",
+          "references": 45
+        }
+      ]
+    },
+    {
+      "source": "core-redaction",
+      "target": "core-fonts",
+      "references": 5,
+      "typeDependencyCount": 2,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Text.Segmentation.HiddenTextDetector",
+          "target": "Excise.Core.Fonts.TrueTypeFontFile",
+          "references": 3
+        }
+      ]
+    },
+    {
+      "source": "core-redaction",
+      "target": "core-parsing",
+      "references": 2,
+      "typeDependencyCount": 1,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Text.Segmentation.ImageRegionRedactor",
+          "target": "Excise.Core.Filters.BasicStreamFilters",
+          "references": 2
+        }
+      ]
+    },
+    {
+      "source": "core-redaction",
+      "target": "core-primitives",
+      "references": 435,
+      "typeDependencyCount": 92,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Operations.PdfDocumentSanitizer",
+          "target": "Excise.Core.Primitives.PdfDictionary",
+          "references": 36
+        }
+      ]
+    },
+    {
+      "source": "core-redaction",
+      "target": "core-text",
+      "references": 84,
+      "typeDependencyCount": 14,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions",
+          "target": "Excise.Core.Text.Letter",
+          "references": 27
         }
       ]
     },
@@ -794,22 +920,22 @@
     {
       "source": "core-text",
       "target": "core-content",
-      "references": 220,
-      "typeDependencyCount": 35,
+      "references": 36,
+      "typeDependencyCount": 5,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Text.Segmentation.FormXObjectFlattener",
-          "target": "Excise.Core.Content.ContentOperator",
-          "references": 32
+          "source": "Excise.Core.Text.TextExtractor",
+          "target": "Excise.Core.Content.ContentStreamWalker",
+          "references": 18
         }
       ]
     },
     {
       "source": "core-text",
       "target": "core-document",
-      "references": 586,
-      "typeDependencyCount": 78,
+      "references": 133,
+      "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
         {
@@ -821,43 +947,15 @@
     },
     {
       "source": "core-text",
-      "target": "core-fonts",
-      "references": 5,
-      "typeDependencyCount": 2,
-      "classification": "declared",
-      "evidence": [
-        {
-          "source": "Excise.Core.Text.Segmentation.HiddenTextDetector",
-          "target": "Excise.Core.Fonts.TrueTypeFontFile",
-          "references": 3
-        }
-      ]
-    },
-    {
-      "source": "core-text",
-      "target": "core-parsing",
-      "references": 2,
-      "typeDependencyCount": 1,
-      "classification": "accepted_exception",
-      "evidence": [
-        {
-          "source": "Excise.Core.Text.Segmentation.ImageRegionRedactor",
-          "target": "Excise.Core.Filters.BasicStreamFilters",
-          "references": 2
-        }
-      ]
-    },
-    {
-      "source": "core-text",
       "target": "core-primitives",
-      "references": 355,
-      "typeDependencyCount": 91,
+      "references": 52,
+      "typeDependencyCount": 13,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Text.Segmentation.FormXObjectFlattener",
+          "source": "Excise.Core.Text.TextExtractor",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 21
+          "references": 15
         }
       ]
     },
@@ -947,7 +1045,7 @@
     },
     {
       "source": "ocr",
-      "target": "core-text",
+      "target": "core-redaction",
       "references": 2,
       "typeDependencyCount": 1,
       "classification": "declared",

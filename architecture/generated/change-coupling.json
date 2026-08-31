@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "13ae8731a9fa028d070a54e43c1b885209cc6907",
+  "sourceRevision": "5f7e9affb0311ec56d28a5f96378245dc591a939",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 197,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "13ae8731a9fa028d070a54e43c1b885209cc6907",
-    "oldestProductionCommit": "83727549f301386047a8610810574ac207f85564"
+    "newestProductionCommit": "5f7e9affb0311ec56d28a5f96378245dc591a939",
+    "oldestProductionCommit": "0dff4a1d22543a35f2f0fa780181d5e9f3143c22"
   },
   "files": [
     {
@@ -174,6 +174,10 @@
       "commits": 3
     },
     {
+      "path": "Excise.Core/Document/AcroFormFlattener.cs",
+      "commits": 3
+    },
+    {
       "path": "Excise.Core/Fonts/StandardFontMetrics.cs",
       "commits": 3
     },
@@ -278,7 +282,7 @@
       "commits": 2
     },
     {
-      "path": "Excise.Core/Document/AcroFormFlattener.cs",
+      "path": "Excise.Core/Content/ContentOperator.cs",
       "commits": 2
     },
     {
@@ -494,7 +498,7 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Content/ContentOperator.cs",
+      "path": "Excise.Core/Content/ContentStreamWriter.cs",
       "commits": 1
     },
     {
@@ -503,6 +507,10 @@
     },
     {
       "path": "Excise.Core/Content/PdfPageContentFacade.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
       "commits": 1
     },
     {
@@ -515,6 +523,10 @@
     },
     {
       "path": "Excise.Core/Document/PdfRasterPageAuthoring.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Document/SignatureAppearanceAuthoring.cs",
       "commits": 1
     },
     {
@@ -543,10 +555,6 @@
     },
     {
       "path": "Excise.Core/Filters/BasicStreamFilters.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Core/Filters/Ccitt/CcittCapabilityClassifier.cs",
       "commits": 1
     },
     {
@@ -602,6 +610,18 @@
       "commits": 1
     },
     {
+      "path": "Excise.Core/Graphics/PdfBrush.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Graphics/PdfGraphics.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Graphics/PdfPen.cs",
+      "commits": 1
+    },
+    {
       "path": "Excise.Core/Graphics/PdfTrueTypeFont.cs",
       "commits": 1
     },
@@ -631,6 +651,10 @@
     },
     {
       "path": "Excise.Core/Primitives/PdfDictionary.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Primitives/PdfNumberFormatter.cs",
       "commits": 1
     },
     {
@@ -687,6 +711,10 @@
     },
     {
       "path": "Excise.Core/Writing/PdfDocumentWritingFacade.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Writing/PdfObjectWriter.cs",
       "commits": 1
     },
     {

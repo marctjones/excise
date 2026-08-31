@@ -189,18 +189,20 @@
       "kind": "subsystem",
       "layer": "engine",
       "parent": "core",
-      "pathRole": "evidence",
+      "pathRole": "ownership",
       "sourceRoots": [
-        "Excise.Core/Text/Segmentation",
-        "Excise.Core/Operations/PdfDocumentSanitizer.cs"
+        "Excise.Core/Redaction"
       ],
       "targetState": "Every shipping entry point uses the same fail-secure pipeline, and every security claim is judged by a non-Excise oracle or an explicit reason.",
       "workflows": [
         "redact-save"
       ],
       "dependsOn": [
+        "core-primitives",
+        "core-parsing",
         "core-content",
         "core-document",
+        "core-fonts",
         "core-text",
         "core-writing"
       ]
@@ -512,6 +514,12 @@
       "rationale": "Glyph removal must use the one authoritative content walk and reconstruction path."
     },
     {
+      "source": "core-redaction",
+      "target": "core-parsing",
+      "type": "uses",
+      "rationale": "Image-region redaction uses the authoritative foundation filter implementation to decode and safely re-encode supported image streams; it does not copy parser/filter code."
+    },
+    {
       "source": "core-content",
       "target": "core-document",
       "type": "uses",
@@ -527,7 +535,7 @@
       "source": "core-text",
       "target": "core-primitives",
       "type": "uses",
-      "rationale": "Text decoding and extraction interpret the parsed PDF object graph directly; redaction-owned references currently inflate this edge until #1321 establishes a distinct owner."
+      "rationale": "Text decoding and extraction interpret the parsed PDF object graph directly."
     },
     {
       "source": "core-security",
@@ -540,12 +548,6 @@
       "target": "core-encryption",
       "type": "uses",
       "rationale": "The document model stores the active standard security handler and exposes established permission and re-encryption contracts without depending on document-level validation."
-    },
-    {
-      "source": "core-text",
-      "target": "core-parsing",
-      "type": "uses",
-      "rationale": "Temporary ownership exception #1321: ImageRegionRedactor is assigned to core-text because redaction has no non-overlapping owned source root; establish the redaction boundary and reclassify the dependency."
     },
     {
       "source": "verification",

@@ -168,3 +168,20 @@ In particular, XFDF is XML and retains an explicit XML-number contract. A
 different PDF quantization rule requires a named typed policy and evidence that
 the precision loss is part of the file-format behavior rather than an
 accidental local formatter.
+
+## AD-014 — Redaction has a physical owner without breaking API namespaces
+
+**Status:** accepted
+
+`core-redaction` owns the production files under `Excise.Core/Redaction` for
+glyph and image removal, content reconstruction, structure and interactive
+scrubbing, document-carrier sanitation, audits, reports, and safe-copy policy.
+It consumes the authoritative content, document, font, text, filter, primitive,
+and writing contracts; it must not copy those engines or introduce a second
+redaction pipeline.
+
+The compiled `Excise.Core.Text.Segmentation` and `Excise.Core.Operations`
+namespaces remain stable for source and binary compatibility. Namespace names
+do not override source-root ownership. Relocations preserve Git history and do
+not change code provenance; a future public namespace redesign requires an
+explicit versioned API decision and approval-baseline change.
