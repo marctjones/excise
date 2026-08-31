@@ -25,9 +25,22 @@ if (!MSBuildLocator.IsRegistered)
     MSBuildLocator.RegisterDefaults();
 }
 
-using var workspace = MSBuildWorkspace.Create();
+// Static architecture analysis must not depend on NuGet vulnerability-service
+// availability or mutate the user's shared HTTP cache. Dependency auditing has
+// its own deterministic gate; disabling it for workspace evaluation keeps
+// Roslyn symbol identity stable in restricted/offline environments.
+using var workspace = MSBuildWorkspace.Create(new Dictionary<string, string>
+{
+    ["NuGetAudit"] = "false"
+});
+var workspaceFailures = new List<string>();
 workspace.RegisterWorkspaceFailedHandler(e =>
 {
+    if (e.Diagnostic.Kind == WorkspaceDiagnosticKind.Failure)
+    {
+        workspaceFailures.Add(e.Diagnostic.Message);
+    }
+
     if (!options.Quiet)
     {
         Console.Error.WriteLine($"workspace {e.Diagnostic.Kind}: {e.Diagnostic.Message}");
@@ -36,6 +49,19 @@ workspace.RegisterWorkspaceFailedHandler(e =>
 
 var solutionPath = Path.GetFullPath(options.SolutionPath);
 var solution = await workspace.OpenSolutionAsync(solutionPath);
+if (workspaceFailures.Count > 0)
+{
+    Console.Error.WriteLine(
+        $"FAIL: MSBuild workspace reported {workspaceFailures.Count} failure(s); " +
+        "refusing to emit an incomplete reachability graph.");
+    foreach (var failure in workspaceFailures.Distinct(StringComparer.Ordinal).Take(10))
+    {
+        Console.Error.WriteLine($"  - {failure}");
+    }
+
+    return 1;
+}
+
 var architecture = ArchitectureOwnershipIndex.Load(
     Path.GetDirectoryName(solutionPath) ?? Environment.CurrentDirectory,
     options.ArchitectureDesignPath,
