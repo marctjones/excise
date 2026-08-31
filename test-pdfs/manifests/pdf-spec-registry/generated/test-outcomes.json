@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-08-31T03:23:52.623114+00:00",
-  "gitRevision": "fd9fd66a26a701c2101e4e276e6eab402f527d3d",
+  "recordedAt": "2026-08-31T03:26:06.235026+00:00",
+  "gitRevision": "1040d6188edc4597bf2b4a49533f362928d2bd8e",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -21,6 +21,11 @@
       "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-image-unit.trx",
       "modifiedAt": "2026-08-31T03:23:33.600168+00:00",
       "sha256": "ab3e02738e89fbf7a63de0483a083d0d2a660b420cd446e1e1929b0ee9fae089"
+    },
+    {
+      "path": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-path-clip-atomic.trx",
+      "modifiedAt": "2026-08-31T03:26:06.112051+00:00",
+      "sha256": "ccede934db9c9ca763dd5e5a4085145f2be38b9ea86dc114f89fff1dc91ad7f0"
     }
   ],
   "outcomes": [
@@ -273,6 +278,14 @@
       "trxSha256": "8aee54b2b5ea6df783e437ec7a577e5b5c57f853634974dbd7998edae36755bf"
     },
     {
+      "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_ClippingPath_W_NonzeroWinding",
+      "outcome": "Passed",
+      "duration": "00:00:00.1150512",
+      "trx": "/Users/marc/Documents/GitHub/pdfe/TestResults/registry-path-clip-atomic.trx",
+      "resultModifiedAt": "2026-08-31T03:26:06.112051+00:00",
+      "trxSha256": "ccede934db9c9ca763dd5e5a4085145f2be38b9ea86dc114f89fff1dc91ad7f0"
+    },
+    {
       "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha",
       "outcome": "Passed",
       "duration": "00:00:00.0322756",
@@ -306,10 +319,10 @@
     }
   ],
   "summary": {
-    "trxFiles": 3,
-    "tests": 35,
+    "trxFiles": 4,
+    "tests": 36,
     "outcomes": {
-      "Passed": 35
+      "Passed": 36
     },
     "status": "recorded"
   }

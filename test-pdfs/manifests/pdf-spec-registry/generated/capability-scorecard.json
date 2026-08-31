@@ -7,22 +7,22 @@
     "targetCapabilities": 266,
     "targetModes": 964,
     "modeStates": {
-      "implemented": 3,
-      "partial": 12,
+      "implemented": 4,
+      "partial": 11,
       "unimplemented": 18,
       "unknown": 931
     },
     "measuredModeCoveragePercent": 3.4,
-    "implementedModeCoveragePercent": 0.3,
-    "promotionReadinessPercent": 15.9,
+    "implementedModeCoveragePercent": 0.4,
+    "promotionReadinessPercent": 16.0,
     "promotionReadinessMilestones": {
       "discoveredOrBetter": 964,
-      "directTestOrBetter": 9,
-      "independentEvidenceOrBetter": 5,
-      "strictImplemented": 3
+      "directTestOrBetter": 10,
+      "independentEvidenceOrBetter": 6,
+      "strictImplemented": 4
     },
-    "verificationPlanCoveragePercent": 89.1,
-    "executableVerificationCoveragePercent": 29.3,
+    "verificationPlanCoveragePercent": 89.5,
+    "executableVerificationCoveragePercent": 29.7,
     "securityGate": {
       "target": 1,
       "ready": 1,
@@ -389,22 +389,22 @@
       "targetCapabilities": 217,
       "targetModes": 750,
       "modeStates": {
-        "implemented": 2,
-        "partial": 3,
+        "implemented": 3,
+        "partial": 2,
         "unimplemented": 1,
         "unknown": 744
       },
       "measuredModeCoveragePercent": 0.8,
-      "implementedModeCoveragePercent": 0.3,
-      "promotionReadinessPercent": 17.3,
+      "implementedModeCoveragePercent": 0.4,
+      "promotionReadinessPercent": 17.4,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 750,
-        "directTestOrBetter": 4,
-        "independentEvidenceOrBetter": 4,
-        "strictImplemented": 2
+        "directTestOrBetter": 5,
+        "independentEvidenceOrBetter": 5,
+        "strictImplemented": 3
       },
-      "verificationPlanCoveragePercent": 95.9,
-      "executableVerificationCoveragePercent": 35.5,
+      "verificationPlanCoveragePercent": 96.3,
+      "executableVerificationCoveragePercent": 35.9,
       "securityGate": {
         "target": 0,
         "ready": 0,
@@ -884,21 +884,20 @@
       "targetCapabilities": 6,
       "targetModes": 33,
       "modeStates": {
-        "implemented": 2,
-        "partial": 1,
+        "implemented": 3,
         "unknown": 30
       },
       "measuredModeCoveragePercent": 9.1,
-      "implementedModeCoveragePercent": 6.1,
-      "promotionReadinessPercent": 15.5,
+      "implementedModeCoveragePercent": 9.1,
+      "promotionReadinessPercent": 18.2,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 33,
-        "directTestOrBetter": 2,
-        "independentEvidenceOrBetter": 2,
-        "strictImplemented": 2
+        "directTestOrBetter": 3,
+        "independentEvidenceOrBetter": 3,
+        "strictImplemented": 3
       },
-      "verificationPlanCoveragePercent": 33.3,
-      "executableVerificationCoveragePercent": 33.3,
+      "verificationPlanCoveragePercent": 50.0,
+      "executableVerificationCoveragePercent": 50.0,
       "securityGate": {
         "target": 0,
         "ready": 0,
@@ -1754,7 +1753,6 @@
     "pdf.17.document.catalog-pages",
     "pdf.17.document.metadata",
     "pdf.17.graphics.state",
-    "pdf.17.graphics.paths-painting",
     "pdf.17.graphics.color",
     "pdf.17.rendering.colour-conversion",
     "pdf.17.compatibility.versions",
