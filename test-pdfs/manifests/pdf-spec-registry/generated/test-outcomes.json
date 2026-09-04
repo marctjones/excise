@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-04T22:09:03.319598+00:00",
-  "gitRevision": "3326416ffe80f1a5fe4c0b15eb392069be6cb27b",
+  "recordedAt": "2026-09-04T22:20:34.621568+00:00",
+  "gitRevision": "3fb1d496d24d152ba9f8b562450dcc577a5bb673",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
