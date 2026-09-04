@@ -6,6 +6,41 @@ semantic versioning.
 
 ## [Unreleased]
 
+Nothing user-facing has shipped since 3.9.1. The 114 commits on `develop` are
+tooling, architecture registries, and CLI refactors — with three exceptions
+noted under Fixed.
+
+### Build and verification
+- **GitHub Actions was removed.** All gates now run locally on macOS
+  (`LOCAL_GATES.md`); `CI_GATES.md` is gone and `tests/coverage-floors.tsv`
+  keeps only the `full` profile. Releases are locally-built unsigned macOS
+  apps until GitHub is reinstated for Linux/Windows packaging only (#1355).
+- **The macOS NativeAOT publish builds again.** Homebrew keeps OpenSSL and
+  brotli keg-only, so the ilcompiler link line could not resolve `-lssl` or
+  `-lbrotlienc`; the AOT release gate had been red on this since the toolchain
+  bump.
+
+### Architecture and registries
+- A checked architecture registry with Roslyn-derived code topology,
+  member-level reachability, XAML structural resolution, and observed boundary
+  drift (#1234, #1247, #1248, #1300-#1304, #1316).
+- PDF capability evidence scorecards, implementation-evidence progress
+  scoring, and test/benchmark attribution.
+
+### Fixed
+- **Encrypted assembly output is preserved** through CLI `merge`/`split`
+  (#1343).
+- **Mutation-derived state is invalidated** rather than served stale (#1326).
+- **Editing-mode cleanup is idempotent** (#1268).
+
+### Known problems at this point
+- The capability registry measures whether evidence paperwork exists, not what
+  is implemented: its `testRefs` cannot join to real test names at all
+  (#1344), and 929 of 964 modes read `unknown` because nobody filled a form
+  (#1345). Tracked under milestone RC22.
+- Rendering is 3.5-7x slower than mutool on heavy pages; 72% of the Altona
+  render is per-pixel colour conversion (#1350).
+
 ## [3.9.1] - 2026-08-29
 
 ### Security and redaction
