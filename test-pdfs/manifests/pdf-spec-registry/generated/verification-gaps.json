@@ -232,12 +232,6 @@
     },
     {
       "capability": "pdf.17.graphics.state",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.state",
       "mode": "mutate",
       "implementationState": "unknown",
       "reason": "no verification contract"
@@ -258,12 +252,6 @@
       "capability": "pdf.17.graphics.paths-painting",
       "mode": "preserve",
       "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.paths-painting",
-      "mode": "render",
-      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
@@ -293,12 +281,6 @@
     {
       "capability": "pdf.17.graphics.color",
       "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.color",
-      "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"
     },
@@ -1504,18 +1486,6 @@
     },
     {
       "capability": "pdf.17.interactive.redaction-annotations",
-      "mode": "parse",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.redaction-annotations",
-      "mode": "preserve",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.redaction-annotations",
       "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"
@@ -1524,12 +1494,6 @@
       "capability": "pdf.17.interactive.redaction-annotations",
       "mode": "mutate",
       "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.redaction-annotations",
-      "mode": "write",
-      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
