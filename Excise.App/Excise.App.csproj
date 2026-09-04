@@ -83,6 +83,23 @@
     <NoWarn>$(NoWarn);IL2104;IL3053</NoWarn>
   </PropertyGroup>
 
+  <!-- macOS NativeAOT link fix.
+       .NET 10's ilcompiler links libSystem.Net.Security.Native.a, whose link
+       line carries `-lssl -lcrypto`. Homebrew's OpenSSL is keg-only, so it is
+       NOT on the default linker search path and the publish dies with
+       `ld: library 'ssl' not found` (then 'brotlienc') — a link failure, several minutes into an
+       otherwise clean AOT compile, with the real cause buried under an MSB3073
+       wrapper that only quotes the clang command line.
+
+       The same applies to brotli. Each path is conditioned on existing, so
+       this is a no-op on a machine that resolves them some other way, and on every non-macOS host. -->
+  <ItemGroup Condition="'$(PublishAot)' == 'true' and '$([MSBuild]::IsOSPlatform(OSX))' == 'true'">
+    <LinkerArg Include="-L/opt/homebrew/opt/openssl@3/lib" Condition="Exists('/opt/homebrew/opt/openssl@3/lib')" />
+    <LinkerArg Include="-L/usr/local/opt/openssl@3/lib"  Condition="Exists('/usr/local/opt/openssl@3/lib')" />
+    <LinkerArg Include="-L/opt/homebrew/opt/brotli/lib"  Condition="Exists('/opt/homebrew/opt/brotli/lib')" />
+    <LinkerArg Include="-L/usr/local/opt/brotli/lib"     Condition="Exists('/usr/local/opt/brotli/lib')" />
+  </ItemGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="Excise.App.Tests" />
   </ItemGroup>
