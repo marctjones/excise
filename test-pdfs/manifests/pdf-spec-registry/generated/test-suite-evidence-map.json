@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "9fbf45bb0f0f54c6bf058b68e2fa34372553da0edae742bdff8fb20ac03d0ecf",
+  "sourceFingerprint": "00fd03558161e651eda7afcd71465a72e32f92959c8ca1815caf58ae254776ce",
   "tests": [
     {
       "id": "Excise.Core.Tests/Authoring/AuthoringCoverageTests.cs::AuthoringCoverageTests.TextStyle_WithHelpers_AreImmutableCopies",
@@ -190235,6 +190235,75 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Cli.Tests/AuditInspectionHandlerTests.cs::AuditInspectionHandlerTests.Execute_ShallowAudit_ReturnsStructuralLeaksWithoutOcrProbe",
+      "path": "Excise.Cli.Tests/AuditInspectionHandlerTests.cs",
+      "class": "AuditInspectionHandlerTests",
+      "method": "Execute_ShallowAudit_ReturnsStructuralLeaksWithoutOcrProbe",
+      "line": 36,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/AuditInspectionHandlerTests.cs::AuditInspectionHandlerTests.Execute_DeepAudit_UsesInjectedDifferentialScanner",
+      "path": "Excise.Cli.Tests/AuditInspectionHandlerTests.cs",
+      "class": "AuditInspectionHandlerTests",
+      "method": "Execute_DeepAudit_UsesInjectedDifferentialScanner",
+      "line": 52,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/AuditInspectionHandlerTests.cs::AuditInspectionHandlerTests.Execute_DeepAuditWithoutRecognizer_ThrowsTypedAvailabilityFailure",
+      "path": "Excise.Cli.Tests/AuditInspectionHandlerTests.cs",
+      "class": "AuditInspectionHandlerTests",
+      "method": "Execute_DeepAuditWithoutRecognizer_ThrowsTypedAvailabilityFailure",
+      "line": 69,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/AuditInspectionHandlerTests.cs::AuditInspectionHandlerTests.RunAsync_ShallowJson_PreservesAuditSchemaAndFindingExitCode",
+      "path": "Excise.Cli.Tests/AuditInspectionHandlerTests.cs",
+      "class": "AuditInspectionHandlerTests",
+      "method": "RunAsync_ShallowJson_PreservesAuditSchemaAndFindingExitCode",
+      "line": 82,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Cli.Tests/BatchAutomationCommandTests.cs::BatchAutomationCommandTests.RunAsync_BatchJson_RunsInfoTextAndRender_WithProgressAndReport",
       "path": "Excise.Cli.Tests/BatchAutomationCommandTests.cs",
       "class": "BatchAutomationCommandTests",
@@ -190512,6 +190581,34 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Cli.Tests/BatchAutomationCommandTests.cs::BatchAutomationCommandTests.RunAsync_BatchTextPageOutsideDocument_PreservesStableContractError",
+      "path": "Excise.Cli.Tests/BatchAutomationCommandTests.cs",
+      "class": "BatchAutomationCommandTests",
+      "method": "RunAsync_BatchTextPageOutsideDocument_PreservesStableContractError",
+      "line": 310,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/BatchAutomationCommandTests.cs::BatchAutomationCommandTests.RunAsync_BatchFormAndAuditSteps_UseSharedHandlerContracts",
+      "path": "Excise.Cli.Tests/BatchAutomationCommandTests.cs",
+      "class": "BatchAutomationCommandTests",
+      "method": "RunAsync_BatchFormAndAuditSteps_UseSharedHandlerContracts",
+      "line": 341,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Cli.Tests/BenchmarkSuiteTests.cs::BenchmarkSuiteTests.TryParseBenchmarkOracles_AcceptsAliasesAndRejectsUnknownTools",
       "path": "Excise.Cli.Tests/BenchmarkSuiteTests.cs",
       "class": "BenchmarkSuiteTests",
@@ -190765,6 +190862,54 @@
       "class": "CommandMetadataCommandTests",
       "method": "RunAsync_CommandsUnknownId_FailsClearly",
       "line": 54,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "safe-save-and-metadata"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/CommandMetadataCommandTests.cs::CommandMetadataCommandTests.RunAsync_ReturnsHandlerOutcomeWithoutMutatingProcessExitCode",
+      "path": "Excise.Cli.Tests/CommandMetadataCommandTests.cs",
+      "class": "CommandMetadataCommandTests",
+      "method": "RunAsync_ReturnsHandlerOutcomeWithoutMutatingProcessExitCode",
+      "line": 74,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192444,11 +192589,128 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs::EncryptDecryptCommandTests.TryParseAlgorithm_AcceptsSupportedNames",
+      "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
+      "class": "EncryptDecryptCommandTests",
+      "method": "TryParseAlgorithm_AcceptsSupportedNames",
+      "line": 42,
+      "xunitKind": "theory",
+      "kind": "test-method",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs::EncryptDecryptCommandTests.RunAsync_EncryptUnknownAlgorithm_RejectsBeforeWritingOutput",
+      "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
+      "class": "EncryptDecryptCommandTests",
+      "method": "RunAsync_EncryptUnknownAlgorithm_RejectsBeforeWritingOutput",
+      "line": 51,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs::EncryptDecryptCommandTests.RunAsync_EncryptThenDecrypt_RoundTripsThroughCommandAdapters",
+      "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
+      "class": "EncryptDecryptCommandTests",
+      "method": "RunAsync_EncryptThenDecrypt_RoundTripsThroughCommandAdapters",
+      "line": 75,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs::EncryptDecryptCommandTests.RunEncrypt_Aes256_ProducesEncryptedFile_PlaintextGoneFromSavedBytes",
       "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
       "class": "EncryptDecryptCommandTests",
       "method": "RunEncrypt_Aes256_ProducesEncryptedFile_PlaintextGoneFromSavedBytes",
-      "line": 40,
+      "line": 104,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192521,7 +192783,7 @@
       "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
       "class": "EncryptDecryptCommandTests",
       "method": "RunEncrypt_SameInputAndOutputPath_ProducesEncryptedFile",
-      "line": 60,
+      "line": 124,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192597,7 +192859,7 @@
       "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
       "class": "EncryptDecryptCommandTests",
       "method": "RunEncrypt_Aes128_ReportsR4InTheEncryptDictionary",
-      "line": 77,
+      "line": 141,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192636,7 +192898,7 @@
       "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
       "class": "EncryptDecryptCommandTests",
       "method": "RunEncrypt_AlreadyEncryptedSource_ThrowsWithDecryptFirstGuidance",
-      "line": 93,
+      "line": 157,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192675,7 +192937,7 @@
       "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
       "class": "EncryptDecryptCommandTests",
       "method": "RunDecrypt_RoundTrip_RemovesEncryptionAndPreservesContent",
-      "line": 110,
+      "line": 174,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192714,7 +192976,7 @@
       "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
       "class": "EncryptDecryptCommandTests",
       "method": "RunDecrypt_SameInputAndOutputPath_RemovesEncryptionAndPreservesContent",
-      "line": 130,
+      "line": 194,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192790,7 +193052,7 @@
       "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
       "class": "EncryptDecryptCommandTests",
       "method": "RunDecrypt_UnencryptedSource_Throws",
-      "line": 146,
+      "line": 210,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192829,7 +193091,7 @@
       "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
       "class": "EncryptDecryptCommandTests",
       "method": "RunDecrypt_WrongPassword_Throws",
-      "line": 158,
+      "line": 222,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192868,7 +193130,7 @@
       "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
       "class": "EncryptDecryptCommandTests",
       "method": "ChangePasswordFlow_DecryptThenEncrypt_OldPasswordStopsWorking",
-      "line": 173,
+      "line": 237,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192907,7 +193169,7 @@
       "path": "Excise.Cli.Tests/FillFormCommandTests.cs",
       "class": "FillFormCommandTests",
       "method": "RunFillForm_SingleField_UpdatesValue",
-      "line": 84,
+      "line": 85,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192921,7 +193183,7 @@
       "path": "Excise.Cli.Tests/FillFormCommandTests.cs",
       "class": "FillFormCommandTests",
       "method": "RunFillForm_SameInputAndOutputPath_UpdatesValue",
-      "line": 98,
+      "line": 99,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192972,7 +193234,7 @@
       "path": "Excise.Cli.Tests/FillFormCommandTests.cs",
       "class": "FillFormCommandTests",
       "method": "RunFillForm_MultipleFields_UpdatesAll",
-      "line": 111,
+      "line": 112,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -192986,7 +193248,7 @@
       "path": "Excise.Cli.Tests/FillFormCommandTests.cs",
       "class": "FillFormCommandTests",
       "method": "RunFillForm_WithFlatten_RemovesAcroForm",
-      "line": 128,
+      "line": 129,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193013,7 +193275,7 @@
       "path": "Excise.Cli.Tests/FillFormCommandTests.cs",
       "class": "FillFormCommandTests",
       "method": "RunFillForm_UnknownField_Throws",
-      "line": 144,
+      "line": 145,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193027,7 +193289,7 @@
       "path": "Excise.Cli.Tests/FillFormCommandTests.cs",
       "class": "FillFormCommandTests",
       "method": "RunFillForm_MalformedField_Throws",
-      "line": 157,
+      "line": 158,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193041,7 +193303,7 @@
       "path": "Excise.Cli.Tests/FillFormCommandTests.cs",
       "class": "FillFormCommandTests",
       "method": "RunAsync_FillFormSubcommand_EndToEnd",
-      "line": 170,
+      "line": 171,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193055,7 +193317,465 @@
       "path": "Excise.Cli.Tests/FillFormCommandTests.cs",
       "class": "FillFormCommandTests",
       "method": "RunAsync_FillForm_NoFields_ReportsError",
-      "line": 202,
+      "line": 203,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/InfoCommandHandlerTests.cs::InfoCommandHandlerTests.Execute_ReturnsTypedDocumentAndPageInformation",
+      "path": "Excise.Cli.Tests/InfoCommandHandlerTests.cs",
+      "class": "InfoCommandHandlerTests",
+      "method": "Execute_ReturnsTypedDocumentAndPageInformation",
+      "line": 23,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/InfoCommandHandlerTests.cs::InfoCommandHandlerTests.Execute_ZeroPageDetailLimit_ReturnsSummaryWithoutPageDetails",
+      "path": "Excise.Cli.Tests/InfoCommandHandlerTests.cs",
+      "class": "InfoCommandHandlerTests",
+      "method": "Execute_ZeroPageDetailLimit_ReturnsSummaryWithoutPageDetails",
+      "line": 42,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/InfoCommandHandlerTests.cs::InfoCommandHandlerTests.Execute_MissingFile_ThrowsFileNotFoundException",
+      "path": "Excise.Cli.Tests/InfoCommandHandlerTests.cs",
+      "class": "InfoCommandHandlerTests",
+      "method": "Execute_MissingFile_ThrowsFileNotFoundException",
+      "line": 58,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/InfoCommandHandlerTests.cs::InfoCommandHandlerTests.Execute_CanceledRequest_StopsBeforeOpeningDocument",
+      "path": "Excise.Cli.Tests/InfoCommandHandlerTests.cs",
+      "class": "InfoCommandHandlerTests",
+      "method": "Execute_CanceledRequest_StopsBeforeOpeningDocument",
+      "line": 71,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/LetterInspectionHandlerTests.cs::LetterInspectionHandlerTests.Execute_ReturnsBoundedTypedLetterPositions",
+      "path": "Excise.Cli.Tests/LetterInspectionHandlerTests.cs",
+      "class": "LetterInspectionHandlerTests",
+      "method": "Execute_ReturnsBoundedTypedLetterPositions",
+      "line": 23,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/LetterInspectionHandlerTests.cs::LetterInspectionHandlerTests.Execute_PageOutsideDocument_ThrowsTypedRangeFailure",
+      "path": "Excise.Cli.Tests/LetterInspectionHandlerTests.cs",
+      "class": "LetterInspectionHandlerTests",
+      "method": "Execute_PageOutsideDocument_ThrowsTypedRangeFailure",
+      "line": 40,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/LetterInspectionHandlerTests.cs::LetterInspectionHandlerTests.Execute_NegativeLimit_IsRejectedBeforeDocumentWork",
+      "path": "Excise.Cli.Tests/LetterInspectionHandlerTests.cs",
+      "class": "LetterInspectionHandlerTests",
+      "method": "Execute_NegativeLimit_IsRejectedBeforeDocumentWork",
+      "line": 52,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/LettersCommandTests.cs::LettersCommandTests.RunAsync_MissingFile_ReturnsOperationFailure",
+      "path": "Excise.Cli.Tests/LettersCommandTests.cs",
+      "class": "LettersCommandTests",
+      "method": "RunAsync_MissingFile_ReturnsOperationFailure",
+      "line": 22,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/LettersCommandTests.cs::LettersCommandTests.RunAsync_PageOutsideDocument_ReturnsOperationFailure",
+      "path": "Excise.Cli.Tests/LettersCommandTests.cs",
+      "class": "LettersCommandTests",
+      "method": "RunAsync_PageOutsideDocument_ReturnsOperationFailure",
+      "line": 35,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/LettersCommandTests.cs::LettersCommandTests.RunAsync_NegativeLimit_ReturnsOperationFailure",
+      "path": "Excise.Cli.Tests/LettersCommandTests.cs",
+      "class": "LettersCommandTests",
+      "method": "RunAsync_NegativeLimit_ReturnsOperationFailure",
+      "line": 44,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs::MakeSearchableCommandHandlerTests.Execute_ReturnsTypedSavedOutcome_WithoutWritingPresentationChannels",
+      "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+      "class": "MakeSearchableCommandHandlerTests",
+      "method": "Execute_ReturnsTypedSavedOutcome_WithoutWritingPresentationChannels",
+      "line": 25,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "safe-save-and-metadata"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs::MakeSearchableCommandHandlerTests.Execute_PreCancelled_DoesNotProbeConverterOrWriteOutput",
+      "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+      "class": "MakeSearchableCommandHandlerTests",
+      "method": "Execute_PreCancelled_DoesNotProbeConverterOrWriteOutput",
+      "line": 63,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs::MakeSearchableCommandHandlerTests.Execute_PageOutsideDocument_ThrowsTypedRangeFailureBeforeConversionOrSave",
+      "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+      "class": "MakeSearchableCommandHandlerTests",
+      "method": "Execute_PageOutsideDocument_ThrowsTypedRangeFailureBeforeConversionOrSave",
+      "line": 79,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "safe-save-and-metadata"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs::MakeSearchableCommandHandlerTests.Execute_SameInputAndOutputPath_DetachesBeforeSaving",
+      "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+      "class": "MakeSearchableCommandHandlerTests",
+      "method": "Execute_SameInputAndOutputPath_DetachesBeforeSaving",
+      "line": 94,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "content-and-graphics"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs::MakeSearchableCommandHandlerTests.Execute_EmptyPasswordEncryptedInput_ReEncryptsSavedOutput",
+      "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+      "class": "MakeSearchableCommandHandlerTests",
+      "method": "Execute_EmptyPasswordEncryptedInput_ReEncryptsSavedOutput",
+      "line": 108,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "safe-save-and-metadata",
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs::MakeSearchableCommandHandlerTests.RunAsync_MissingInput_PreservesTextErrorAndExitCode",
+      "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+      "class": "MakeSearchableCommandHandlerTests",
+      "method": "RunAsync_MissingInput_PreservesTextErrorAndExitCode",
+      "line": 131,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs::MakeSearchableCommandHandlerTests.RunAsync_TextPage_PreservesHumanOutputAndExitCode",
+      "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+      "class": "MakeSearchableCommandHandlerTests",
+      "method": "RunAsync_TextPage_PreservesHumanOutputAndExitCode",
+      "line": 153,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/OcrInspectionHandlerTests.cs::OcrInspectionHandlerTests.Execute_UsesInjectedRecognizerAndReturnsTypedPageText",
+      "path": "Excise.Cli.Tests/OcrInspectionHandlerTests.cs",
+      "class": "OcrInspectionHandlerTests",
+      "method": "Execute_UsesInjectedRecognizerAndReturnsTypedPageText",
+      "line": 24,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/OcrInspectionHandlerTests.cs::OcrInspectionHandlerTests.Execute_UnavailableRecognizer_FailsBeforeOpeningPages",
+      "path": "Excise.Cli.Tests/OcrInspectionHandlerTests.cs",
+      "class": "OcrInspectionHandlerTests",
+      "method": "Execute_UnavailableRecognizer_FailsBeforeOpeningPages",
+      "line": 40,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/OcrInspectionHandlerTests.cs::OcrInspectionHandlerTests.Execute_PageOutsideDocument_ThrowsTypedRangeFailure",
+      "path": "Excise.Cli.Tests/OcrInspectionHandlerTests.cs",
+      "class": "OcrInspectionHandlerTests",
+      "method": "Execute_PageOutsideDocument_ThrowsTypedRangeFailure",
+      "line": 51,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/OcrInspectionHandlerTests.cs::OcrInspectionHandlerTests.Execute_CanceledRequest_DoesNotProbeRecognizer",
+      "path": "Excise.Cli.Tests/OcrInspectionHandlerTests.cs",
+      "class": "OcrInspectionHandlerTests",
+      "method": "Execute_CanceledRequest_DoesNotProbeRecognizer",
+      "line": 62,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193069,7 +193789,7 @@
       "path": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs",
       "class": "PageAssemblyCorrectnessTests",
       "method": "RunMerge_ConcatenatesEveryInputPageInOrder_PerIndependentOracle",
-      "line": 74,
+      "line": 76,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193083,7 +193803,86 @@
       "path": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs",
       "class": "PageAssemblyCorrectnessTests",
       "method": "RunMerge_ProducesAStructurallyValidPdf_PerQpdf",
-      "line": 101,
+      "line": 103,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs::PageAssemblyCorrectnessTests.Merge_SameInputAndOutputPath_DetachesSourceBeforeSaving",
+      "path": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs",
+      "class": "PageAssemblyCorrectnessTests",
+      "method": "Merge_SameInputAndOutputPath_DetachesSourceBeforeSaving",
+      "line": 117,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "content-and-graphics"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs::PageAssemblyCorrectnessTests.DocumentAssemblyHandler_CancelledMerge_DoesNotOpenOrWriteOutput",
+      "path": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs",
+      "class": "PageAssemblyCorrectnessTests",
+      "method": "DocumentAssemblyHandler_CancelledMerge_DoesNotOpenOrWriteOutput",
+      "line": 134,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs::PageAssemblyCorrectnessTests.RunAsync_MergeMissingInput_PreservesTextErrorAndExitCode",
+      "path": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs",
+      "class": "PageAssemblyCorrectnessTests",
+      "method": "RunAsync_MergeMissingInput_PreservesTextErrorAndExitCode",
+      "line": 151,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193097,7 +193896,7 @@
       "path": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs",
       "class": "PageAssemblyCorrectnessTests",
       "method": "RunSplit_ToSinglePages_BurstsOnePdfPerPageWithTheRightContent_PerIndependentOracle",
-      "line": 117,
+      "line": 175,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193111,7 +193910,7 @@
       "path": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs",
       "class": "PageAssemblyCorrectnessTests",
       "method": "RunSplit_Fragments_AreStructurallyValid_PerQpdf",
-      "line": 152,
+      "line": 212,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193121,11 +193920,205 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Cli.Tests/PdfDocumentLifetimeTests.cs::PdfDocumentLifetimeTests.PathsReferToSameFile_NormalizesRelativeSegments",
+      "path": "Excise.Cli.Tests/PdfDocumentLifetimeTests.cs",
+      "class": "PdfDocumentLifetimeTests",
+      "method": "PathsReferToSameFile_NormalizesRelativeSegments",
+      "line": 24,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "document-structure",
+        "content-and-graphics"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/PdfDocumentLifetimeTests.cs::PdfDocumentLifetimeTests.OpenInputForOutput_SamePathCanBeSavedBackToSource",
+      "path": "Excise.Cli.Tests/PdfDocumentLifetimeTests.cs",
+      "class": "PdfDocumentLifetimeTests",
+      "method": "OpenInputForOutput_SamePathCanBeSavedBackToSource",
+      "line": 33,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "safe-save-and-metadata",
+        "document-structure",
+        "content-and-graphics"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Cli.Tests/PermissionEnforcementTests.cs::PermissionEnforcementTests.Text_CopyForbidden_FailsClosed",
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "Text_CopyForbidden_FailsClosed",
-      "line": 55,
+      "line": 57,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193164,7 +194157,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "Text_CopyForbidden_ForAccessibility_HonoursBit10CarveOut",
-      "line": 71,
+      "line": 73,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193203,7 +194196,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "Text_CopyAndAccessibilityForbidden_ForAccessibilityDoesNotBypass",
-      "line": 84,
+      "line": 86,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193242,7 +194235,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "Text_CopyForbidden_IgnorePermissions_OverridesLoudly",
-      "line": 98,
+      "line": 100,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193281,7 +194274,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "Text_AllAllowedEncrypted_IsNotGated",
-      "line": 111,
+      "line": 113,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193320,7 +194313,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "Text_PrintOnlyForbidden_IsNotGated",
-      "line": 123,
+      "line": 125,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193359,7 +194352,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "Letters_CopyForbidden_FailsClosed_AndOverrides",
-      "line": 137,
+      "line": 139,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193398,7 +194391,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "Render_CopyForbidden_FailsClosed_AndOverrides",
-      "line": 151,
+      "line": 153,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193437,7 +194430,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "Text_GdayOwnerFixture_CopyForbidden_FailsClosed_ButAccessibilityWorks",
-      "line": 169,
+      "line": 171,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193476,7 +194469,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "RunAddField_ModifyForbidden_FailsClosed_AndOverrides",
-      "line": 189,
+      "line": 191,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193515,7 +194508,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "RunMerge_AssembleForbidden_FailsClosed_AndOverrides",
-      "line": 208,
+      "line": 210,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193554,7 +194547,124 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "RunSplit_AssembleForbidden_FailsClosed_AndOverrides",
-      "line": 224,
+      "line": 226,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/PermissionEnforcementTests.cs::PermissionEnforcementTests.RunMerge_EncryptedInputsWithCommonPolicy_PreservesEncryption",
+      "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
+      "class": "PermissionEnforcementTests",
+      "method": "RunMerge_EncryptedInputsWithCommonPolicy_PreservesEncryption",
+      "line": 242,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/PermissionEnforcementTests.cs::PermissionEnforcementTests.RunSplit_EncryptedInput_PreservesEncryptionForEveryFragment",
+      "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
+      "class": "PermissionEnforcementTests",
+      "method": "RunSplit_EncryptedInput_PreservesEncryptionForEveryFragment",
+      "line": 260,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/PermissionEnforcementTests.cs::PermissionEnforcementTests.Merge_EncryptedAndPlaintextInputs_RejectsAmbiguousOutputPolicy",
+      "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
+      "class": "PermissionEnforcementTests",
+      "method": "Merge_EncryptedAndPlaintextInputs_RejectsAmbiguousOutputPolicy",
+      "line": 288,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193593,7 +194703,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "RunFillForm_FillForbidden_FailsClosed",
-      "line": 240,
+      "line": 306,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193632,7 +194742,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "RunFillForm_Bit9Granted_Bit6Denied_StillFills",
-      "line": 260,
+      "line": 326,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193671,7 +194781,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "Batch_TextStep_CopyForbidden_FailsWithPermissionDenied_AndStepOverridesWork",
-      "line": 285,
+      "line": 351,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193710,7 +194820,7 @@
       "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
       "class": "PermissionEnforcementTests",
       "method": "RunRedact_ModifyForbiddenDocument_StillRedacts",
-      "line": 353,
+      "line": 419,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193772,11 +194882,92 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Cli.Tests/RedactCommandHandlerTests.cs::RedactCommandHandlerTests.Execute_ReturnsTypedOutcome_WithoutWritingPresentationChannels",
+      "path": "Excise.Cli.Tests/RedactCommandHandlerTests.cs",
+      "class": "RedactCommandHandlerTests",
+      "method": "Execute_ReturnsTypedOutcome_WithoutWritingPresentationChannels",
+      "line": 23,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/RedactCommandHandlerTests.cs::RedactCommandHandlerTests.Execute_PreCancelled_DoesNotOpenOrWriteFiles",
+      "path": "Excise.Cli.Tests/RedactCommandHandlerTests.cs",
+      "class": "RedactCommandHandlerTests",
+      "method": "Execute_PreCancelled_DoesNotOpenOrWriteFiles",
+      "line": 60,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/RedactCommandHandlerTests.cs::RedactCommandHandlerTests.Execute_RejectsConflictingFlattenAndStructuralOptions",
+      "path": "Excise.Cli.Tests/RedactCommandHandlerTests.cs",
+      "class": "RedactCommandHandlerTests",
+      "method": "Execute_RejectsConflictingFlattenAndStructuralOptions",
+      "line": 77,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Cli.Tests/RedactCommandTests.cs::RedactCommandTests.RunRedactWithNotes_TermBelowTheScrubFloor_ReportsThatMetadataWasNotScrubbed",
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedactWithNotes_TermBelowTheScrubFloor_ReportsThatMetadataWasNotScrubbed",
-      "line": 43,
+      "line": 44,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193837,7 +195028,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedactWithNotes_OrdinaryTerm_PlainDocument_ReportsNothing",
-      "line": 61,
+      "line": 62,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193864,7 +195055,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedactWithNotes_PreservesUnrelatedMetadataUnderCliTermPolicy",
-      "line": 75,
+      "line": 76,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193925,7 +195116,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_RemovesExactMatch_FromContentStream",
-      "line": 103,
+      "line": 104,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193989,7 +195180,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_SameInputAndOutputPath_RemovesExactMatch",
-      "line": 124,
+      "line": 125,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194053,7 +195244,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_OcrImageText_RemovesASecretBakedOnlyIntoPixels",
-      "line": 140,
+      "line": 141,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194092,7 +195283,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunAsync_RedactFlattenOcr_ReplacesTheSourceWithCleanImageOnlyOutput",
-      "line": 165,
+      "line": 166,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194131,7 +195322,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunAsync_RedactFlattenOcr_NoMatch_FailsWithoutWritingOutput",
-      "line": 185,
+      "line": 186,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194158,7 +195349,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunAsync_RedactFlattenOcr_EncryptedSource_PreservesPasswordProtection",
-      "line": 201,
+      "line": 202,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194210,7 +195401,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_NoMatch_ReturnsZero_AndOutputExists",
-      "line": 220,
+      "line": 221,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194237,7 +195428,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_CaseInsensitive_MatchesDifferentCase",
-      "line": 238,
+      "line": 239,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194264,7 +195455,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_CaseSensitive_DoesNotMatchDifferentCase",
-      "line": 253,
+      "line": 254,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194291,7 +195482,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunAsync_RedactSubcommand_EndToEnd_ProducesRedactedOutput",
-      "line": 265,
+      "line": 266,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194318,7 +195509,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunAsync_RedactProgress_WritesPageBasedOverallPercentToStderr",
-      "line": 300,
+      "line": 301,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194345,7 +195536,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunAsync_RedactSubcommand_InputDoesNotExist_ReportsError",
-      "line": 329,
+      "line": 330,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194372,7 +195563,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_UnencryptedSource_AllowDecryptFalse_StillSucceeds",
-      "line": 361,
+      "line": 360,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194424,7 +195615,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_EncryptedSource_Default_ReEncryptsWithSamePermissions",
-      "line": 383,
+      "line": 382,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194476,7 +195667,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_EncryptedSource_WithPassword_ReEncryptsWithThatPassword",
-      "line": 417,
+      "line": 416,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194528,7 +195719,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_EncryptedSource_WithAllowDecrypt_WritesPlaintextAndWarns",
-      "line": 441,
+      "line": 440,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194580,7 +195771,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunAsync_RedactSubcommand_AllowDecryptFlag_IsRecognized",
-      "line": 485,
+      "line": 484,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194607,7 +195798,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunAsync_RedactSubcommand_PasswordOption_OpensAndReEncrypts",
-      "line": 522,
+      "line": 521,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194659,7 +195850,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_MultipleMatches_AllRemoved",
-      "line": 555,
+      "line": 554,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194686,7 +195877,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_NoBox_RemovesTextFromSavedBytes_AndDrawsNoRectangle",
-      "line": 619,
+      "line": 618,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194747,7 +195938,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_DefaultBox_DrawsBlackRectangle_AndRemovesText",
-      "line": 643,
+      "line": 642,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194774,7 +195965,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunRedact_BoxColorWhite_DrawsWhiteRectangle_AndRemovesText",
-      "line": 663,
+      "line": 662,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194801,7 +195992,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "TryParseBoxColor_AcceptsNamedAndRgb",
-      "line": 688,
+      "line": 687,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -194828,7 +196019,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "TryParseBoxColor_RejectsBadSpec",
-      "line": 706,
+      "line": 705,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -194855,7 +196046,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunAsync_Redact_NoBoxFlag_EndToEnd_RemovesTextAndDrawsNoBox",
-      "line": 714,
+      "line": 713,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194882,7 +196073,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunAsync_Redact_BoxColorRgb_EndToEnd_DrawsThatColor",
-      "line": 746,
+      "line": 745,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194909,7 +196100,7 @@
       "path": "Excise.Cli.Tests/RedactCommandTests.cs",
       "class": "RedactCommandTests",
       "method": "RunAsync_Redact_NoBoxAndBoxColorTogether_IsRejected",
-      "line": 777,
+      "line": 776,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194936,7 +196127,7 @@
       "path": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs",
       "class": "RedactionConfidencePolicyTests",
       "method": "Ok_NoWarnings_DoesNotThrow",
-      "line": 23,
+      "line": 24,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194963,7 +196154,7 @@
       "path": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs",
       "class": "RedactionConfidencePolicyTests",
       "method": "Ok_WithStrict_StillDoesNotThrow_OracleWasAvailable",
-      "line": 30,
+      "line": 31,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -194990,7 +196181,7 @@
       "path": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs",
       "class": "RedactionConfidencePolicyTests",
       "method": "Degraded_ReturnsOneWarning_DoesNotThrow",
-      "line": 38,
+      "line": 39,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -195017,7 +196208,7 @@
       "path": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs",
       "class": "RedactionConfidencePolicyTests",
       "method": "Severe_WithoutOverride_Throws",
-      "line": 46,
+      "line": 47,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -195044,7 +196235,7 @@
       "path": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs",
       "class": "RedactionConfidencePolicyTests",
       "method": "Severe_WithAllowLowConfidence_ReturnsWarning_DoesNotThrow",
-      "line": 54,
+      "line": 55,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -195071,7 +196262,7 @@
       "path": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs",
       "class": "RedactionConfidencePolicyTests",
       "method": "Unverified_NoOracle_WithoutStrict_ReturnsWarning_DoesNotThrow",
-      "line": 62,
+      "line": 63,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -195098,7 +196289,7 @@
       "path": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs",
       "class": "RedactionConfidencePolicyTests",
       "method": "Unverified_NoOracle_WithStrict_Throws",
-      "line": 70,
+      "line": 71,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -195125,7 +196316,7 @@
       "path": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs",
       "class": "RedactionConfidencePolicyTests",
       "method": "Unverified_OneBadPage_OracleWasAvailable_TreatedAsWarnNotNoOracle",
-      "line": 78,
+      "line": 79,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -195145,6 +196336,48 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/RenderPageHandlerTests.cs::RenderPageHandlerTests.Execute_RendersPngAndCreatesOutputDirectory",
+      "path": "Excise.Cli.Tests/RenderPageHandlerTests.cs",
+      "class": "RenderPageHandlerTests",
+      "method": "Execute_RendersPngAndCreatesOutputDirectory",
+      "line": 23,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/RenderPageHandlerTests.cs::RenderPageHandlerTests.Execute_PageOutsideDocument_DoesNotCreateOutput",
+      "path": "Excise.Cli.Tests/RenderPageHandlerTests.cs",
+      "class": "RenderPageHandlerTests",
+      "method": "Execute_PageOutsideDocument_DoesNotCreateOutput",
+      "line": 42,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/RenderPageHandlerTests.cs::RenderPageHandlerTests.Execute_CanceledRequest_DoesNotCreateOutput",
+      "path": "Excise.Cli.Tests/RenderPageHandlerTests.cs",
+      "class": "RenderPageHandlerTests",
+      "method": "Execute_CanceledRequest_DoesNotCreateOutput",
+      "line": 54,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -195289,6 +196522,48 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/TextInspectionHandlerTests.cs::TextInspectionHandlerTests.Execute_ReturnsTypedTextForAllOrSelectedPages",
+      "path": "Excise.Cli.Tests/TextInspectionHandlerTests.cs",
+      "class": "TextInspectionHandlerTests",
+      "method": "Execute_ReturnsTypedTextForAllOrSelectedPages",
+      "line": 25,
+      "xunitKind": "theory",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/TextInspectionHandlerTests.cs::TextInspectionHandlerTests.Execute_PageOutsideDocument_ThrowsTypedRangeFailure",
+      "path": "Excise.Cli.Tests/TextInspectionHandlerTests.cs",
+      "class": "TextInspectionHandlerTests",
+      "method": "Execute_PageOutsideDocument_ThrowsTypedRangeFailure",
+      "line": 42,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/TextInspectionHandlerTests.cs::TextInspectionHandlerTests.Execute_CanceledRequest_StopsBeforeOpeningDocument",
+      "path": "Excise.Cli.Tests/TextInspectionHandlerTests.cs",
+      "class": "TextInspectionHandlerTests",
+      "method": "Execute_CanceledRequest_StopsBeforeOpeningDocument",
+      "line": 54,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -195877,6 +197152,76 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Cli.Tests/ValidationHandlerTests.cs::ValidationHandlerTests.Execute_AlwaysRunsBoundedPdfUaValidation",
+      "path": "Excise.Cli.Tests/ValidationHandlerTests.cs",
+      "class": "ValidationHandlerTests",
+      "method": "Execute_AlwaysRunsBoundedPdfUaValidation",
+      "line": 26,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/ValidationHandlerTests.cs::ValidationHandlerTests.Execute_RequestedPdfAValidation_IsIncludedInTypedResult",
+      "path": "Excise.Cli.Tests/ValidationHandlerTests.cs",
+      "class": "ValidationHandlerTests",
+      "method": "Execute_RequestedPdfAValidation_IsIncludedInTypedResult",
+      "line": 40,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/ValidationHandlerTests.cs::ValidationHandlerTests.Execute_CanceledRequest_StopsBeforeOpeningDocument",
+      "path": "Excise.Cli.Tests/ValidationHandlerTests.cs",
+      "class": "ValidationHandlerTests",
+      "method": "Execute_CanceledRequest_StopsBeforeOpeningDocument",
+      "line": 53,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/ValidationHandlerTests.cs::ValidationHandlerTests.RunAsync_InvalidPdfALevel_ReturnsCleanOperationFailure",
+      "path": "Excise.Cli.Tests/ValidationHandlerTests.cs",
+      "class": "ValidationHandlerTests",
+      "method": "RunAsync_InvalidPdfALevel_ReturnsCleanOperationFailure",
+      "line": 66,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli.Tests/ValidationHandlerTests.cs::ValidationHandlerTests.RunAsync_JsonReport_PreservesBoundedCheckerShape",
+      "path": "Excise.Cli.Tests/ValidationHandlerTests.cs",
+      "class": "ValidationHandlerTests",
+      "method": "RunAsync_JsonReport_PreservesBoundedCheckerShape",
+      "line": 75,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Cli.Tests/VisualDiffCommandTests.cs::VisualDiffCommandTests.AnalyzeVisualDiff_ColorToneDrift_ClassifiesAsLowImpactColor",
       "path": "Excise.Cli.Tests/VisualDiffCommandTests.cs",
       "class": "VisualDiffCommandTests",
@@ -196050,31 +197395,31 @@
     }
   ],
   "summary": {
-    "records": 6031,
+    "records": 6084,
     "facets": {
       "annotations": 342,
-      "content-and-graphics": 717,
-      "document-structure": 858,
+      "content-and-graphics": 721,
+      "document-structure": 860,
       "fonts": 646,
       "forms": 172,
       "images": 369,
-      "product-integration-general": 2564,
-      "redaction": 598,
-      "safe-save-and-metadata": 481,
-      "security-and-encryption": 350,
+      "product-integration-general": 2599,
+      "redaction": 602,
+      "safe-save-and-metadata": 486,
+      "security-and-encryption": 357,
       "transparency": 43
     },
     "parentCapabilityModes": {
-      "pdf.17.content.streams:mutate": 717,
-      "pdf.17.content.streams:parse": 717,
-      "pdf.17.content.streams:render": 720,
-      "pdf.17.content.streams:write": 717,
-      "pdf.17.document.catalog-pages:parse": 858,
-      "pdf.17.document.catalog-pages:preserve": 858,
-      "pdf.17.document.catalog-pages:write": 858,
-      "pdf.17.document.metadata:mutate": 481,
-      "pdf.17.document.metadata:preserve": 481,
-      "pdf.17.document.metadata:write": 481,
+      "pdf.17.content.streams:mutate": 721,
+      "pdf.17.content.streams:parse": 721,
+      "pdf.17.content.streams:render": 724,
+      "pdf.17.content.streams:write": 721,
+      "pdf.17.document.catalog-pages:parse": 860,
+      "pdf.17.document.catalog-pages:preserve": 860,
+      "pdf.17.document.catalog-pages:write": 860,
+      "pdf.17.document.metadata:mutate": 486,
+      "pdf.17.document.metadata:preserve": 486,
+      "pdf.17.document.metadata:write": 486,
       "pdf.17.graphics.color:render": 2,
       "pdf.17.graphics.fonts:extract": 646,
       "pdf.17.graphics.fonts:parse": 646,
@@ -196082,14 +197427,14 @@
       "pdf.17.graphics.images:extract": 369,
       "pdf.17.graphics.images:parse": 369,
       "pdf.17.graphics.images:render": 370,
-      "pdf.17.graphics.paths-painting:mutate": 717,
-      "pdf.17.graphics.paths-painting:parse": 717,
-      "pdf.17.graphics.paths-painting:render": 718,
-      "pdf.17.graphics.paths-painting:write": 717,
-      "pdf.17.graphics.state:mutate": 717,
-      "pdf.17.graphics.state:parse": 717,
-      "pdf.17.graphics.state:render": 719,
-      "pdf.17.graphics.state:write": 717,
+      "pdf.17.graphics.paths-painting:mutate": 721,
+      "pdf.17.graphics.paths-painting:parse": 721,
+      "pdf.17.graphics.paths-painting:render": 722,
+      "pdf.17.graphics.paths-painting:write": 721,
+      "pdf.17.graphics.state:mutate": 721,
+      "pdf.17.graphics.state:parse": 721,
+      "pdf.17.graphics.state:render": 723,
+      "pdf.17.graphics.state:write": 721,
       "pdf.17.interactive.annotations:mutate": 342,
       "pdf.17.interactive.annotations:parse": 342,
       "pdf.17.interactive.annotations:preserve": 342,
@@ -196103,22 +197448,22 @@
       "pdf.17.interactive.redaction-annotations:preserve": 342,
       "pdf.17.interactive.redaction-annotations:render": 342,
       "pdf.17.interactive.redaction-annotations:write": 1,
-      "pdf.17.security.redaction-content-removal:extract": 598,
-      "pdf.17.security.redaction-content-removal:mutate": 598,
+      "pdf.17.security.redaction-content-removal:extract": 602,
+      "pdf.17.security.redaction-content-removal:mutate": 602,
       "pdf.17.security.redaction-content-removal:preserve": 3,
-      "pdf.17.security.redaction-content-removal:render": 598,
-      "pdf.17.security.redaction-content-removal:write": 598,
-      "pdf.17.syntax.encryption:mutate": 350,
-      "pdf.17.syntax.encryption:parse": 350,
-      "pdf.17.syntax.encryption:preserve": 350,
-      "pdf.17.syntax.encryption:write": 350,
-      "pdf.17.syntax.file:parse": 858,
-      "pdf.17.syntax.file:preserve": 858,
-      "pdf.17.syntax.file:write": 858,
-      "pdf.17.syntax.objects:mutate": 481,
-      "pdf.17.syntax.objects:parse": 858,
-      "pdf.17.syntax.objects:preserve": 1213,
-      "pdf.17.syntax.objects:write": 1213,
+      "pdf.17.security.redaction-content-removal:render": 602,
+      "pdf.17.security.redaction-content-removal:write": 602,
+      "pdf.17.syntax.encryption:mutate": 357,
+      "pdf.17.syntax.encryption:parse": 357,
+      "pdf.17.syntax.encryption:preserve": 357,
+      "pdf.17.syntax.encryption:write": 357,
+      "pdf.17.syntax.file:parse": 860,
+      "pdf.17.syntax.file:preserve": 860,
+      "pdf.17.syntax.file:write": 860,
+      "pdf.17.syntax.objects:mutate": 486,
+      "pdf.17.syntax.objects:parse": 860,
+      "pdf.17.syntax.objects:preserve": 1219,
+      "pdf.17.syntax.objects:write": 1219,
       "pdf.17.transparency.model:parse": 43,
       "pdf.17.transparency.model:render": 44,
       "pdf.20.content.operator-001:parse": 1,
@@ -196267,15 +197612,15 @@
       "pdf.20.content.operator-072:preserve": 1,
       "pdf.20.content.operator-073:parse": 1,
       "pdf.20.content.operator-073:preserve": 1,
-      "pdfe.product.security.privacy-clean-copy:mutate": 481,
-      "pdfe.product.security.privacy-clean-copy:preserve": 481,
-      "pdfe.product.security.privacy-clean-copy:write": 481,
-      "pdfe.product.security.signature-and-permission-warning:mutate": 350,
-      "pdfe.product.security.signature-and-permission-warning:parse": 350,
-      "pdfe.product.security.signature-and-permission-warning:preserve": 350,
-      "pdfe.product.security.signature-and-permission-warning:write": 350
+      "pdfe.product.security.privacy-clean-copy:mutate": 486,
+      "pdfe.product.security.privacy-clean-copy:preserve": 486,
+      "pdfe.product.security.privacy-clean-copy:write": 486,
+      "pdfe.product.security.signature-and-permission-warning:mutate": 357,
+      "pdfe.product.security.signature-and-permission-warning:parse": 357,
+      "pdfe.product.security.signature-and-permission-warning:preserve": 357,
+      "pdfe.product.security.signature-and-permission-warning:write": 357
     },
-    "fallbackRecords": 2564,
+    "fallbackRecords": 2599,
     "allRecordsMapped": true
   }
 }

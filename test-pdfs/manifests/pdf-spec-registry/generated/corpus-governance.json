@@ -464,7 +464,10 @@
       "safetyTier": "untrusted-input",
       "owner": "PDF capability registry",
       "consumerReferences": [
-        "Excise.Cli/Program.cs",
+        "Excise.Cli/Commands/MakeSearchableCommand.cs",
+        "Excise.Cli/Commands/MakeSearchableCommandHandler.cs",
+        "Excise.Cli/Commands/OcrCommand.cs",
+        "Excise.Cli/Commands/OcrInspectionHandler.cs",
         "Excise.Ocr.Native/NativeOcrEngine.cs",
         "Excise.Ocr.Tests/DifferentialOcrAuditorTests.cs",
         "Excise.Ocr.Tests/PdfOcrServiceNativeFastPathTests.cs",

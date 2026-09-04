@@ -5586,7 +5586,7 @@
         ],
         "architecture": []
       },
-      "executionStatus": "partial",
+      "executionStatus": "passed",
       "recordedChecks": [
         {
           "kind": "atomic-fixture",
@@ -5612,7 +5612,9 @@
         {
           "kind": "corpus",
           "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         }
       ],
       "priority": 131,
@@ -6194,7 +6196,7 @@
         ],
         "architecture": []
       },
-      "executionStatus": "partial",
+      "executionStatus": "passed",
       "recordedChecks": [
         {
           "kind": "unit",
@@ -6227,7 +6229,9 @@
         {
           "kind": "corpus",
           "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         }
       ],
       "priority": 130,
@@ -6927,7 +6931,7 @@
         ],
         "architecture": []
       },
-      "executionStatus": "partial",
+      "executionStatus": "passed",
       "recordedChecks": [
         {
           "kind": "unit",
@@ -6981,12 +6985,16 @@
         {
           "kind": "corpus",
           "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "benchmark",
           "ref": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs::RedactText_CommonTermOnW9_StaysUnderFiveSeconds",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         }
       ],
       "priority": 130,
@@ -7689,7 +7697,7 @@
         ],
         "architecture": []
       },
-      "executionStatus": "partial",
+      "executionStatus": "passed",
       "recordedChecks": [
         {
           "kind": "atomic-fixture",
@@ -7708,7 +7716,9 @@
         {
           "kind": "corpus",
           "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         }
       ],
       "priority": 130,
@@ -8408,7 +8418,7 @@
         ],
         "architecture": []
       },
-      "executionStatus": "partial",
+      "executionStatus": "passed",
       "recordedChecks": [
         {
           "kind": "unit",
@@ -8462,12 +8472,16 @@
         {
           "kind": "corpus",
           "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         },
         {
           "kind": "benchmark",
           "ref": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs::RedactText_CommonTermOnW9_StaysUnderFiveSeconds",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         }
       ],
       "priority": 130,
@@ -34125,7 +34139,8 @@
         "Excise.Core/Writing/PdfDocumentWritingFacade.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRedactor.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRenderer.cs",
-        "Excise.App/Services/PdfDocumentService.cs"
+        "Excise.App/Services/PdfDocumentService.cs",
+        "Excise.Cli/Commands/PdfDocumentLifetime.cs"
       ],
       "directTestCandidates": [
         "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
@@ -37439,7 +37454,7 @@
         ],
         "architecture": []
       },
-      "executionStatus": "partial",
+      "executionStatus": "passed",
       "recordedChecks": [
         {
           "kind": "unit",
@@ -37465,7 +37480,9 @@
         {
           "kind": "corpus",
           "ref": "Excise.Rendering.Tests/Corpus/ConformanceTests.cs::ConformanceTests_SmokeCorpus_ParsesAndRendersWithoutCrashing",
-          "outcomes": []
+          "outcomes": [
+            "Passed"
+          ]
         }
       ],
       "priority": 80,
@@ -40634,6 +40651,15 @@
             ]
           },
           {
+            "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "metadata",
+              "pdfe",
+              "security"
+            ]
+          },
+          {
             "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -40689,15 +40715,6 @@
             "matchedTerms": [
               "attachment",
               "copy"
-            ]
-          },
-          {
-            "path": "tests/format-compatibility-suite.json",
-            "kind": "test",
-            "matchedTerms": [
-              "metadata",
-              "pdfe",
-              "redaction"
             ]
           }
         ],
@@ -41415,6 +41432,15 @@
             ]
           },
           {
+            "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "metadata",
+              "pdfe",
+              "security"
+            ]
+          },
+          {
             "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -41470,15 +41496,6 @@
             "matchedTerms": [
               "attachment",
               "copy"
-            ]
-          },
-          {
-            "path": "tests/format-compatibility-suite.json",
-            "kind": "test",
-            "matchedTerms": [
-              "metadata",
-              "pdfe",
-              "redaction"
             ]
           }
         ],
@@ -42194,6 +42211,15 @@
             ]
           },
           {
+            "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "metadata",
+              "pdfe",
+              "security"
+            ]
+          },
+          {
             "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -42249,15 +42275,6 @@
             "matchedTerms": [
               "attachment",
               "copy"
-            ]
-          },
-          {
-            "path": "tests/format-compatibility-suite.json",
-            "kind": "test",
-            "matchedTerms": [
-              "metadata",
-              "pdfe",
-              "redaction"
             ]
           }
         ],
@@ -43071,6 +43088,15 @@
             ]
           },
           {
+            "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "metadata",
+              "pdfe",
+              "security"
+            ]
+          },
+          {
             "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -43126,15 +43152,6 @@
             "matchedTerms": [
               "attachment",
               "copy"
-            ]
-          },
-          {
-            "path": "tests/format-compatibility-suite.json",
-            "kind": "test",
-            "matchedTerms": [
-              "metadata",
-              "pdfe",
-              "redaction"
             ]
           }
         ],
@@ -93195,6 +93212,15 @@
             ]
           },
           {
+            "path": "Excise.App.Tests/UI/PdfViewerHeadlessRenderTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "stamp",
+              "annotation"
+            ]
+          },
+          {
             "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -93646,6 +93672,15 @@
               "stamp",
               "annotation",
               "redact"
+            ]
+          },
+          {
+            "path": "Excise.App.Tests/UI/PdfViewerHeadlessRenderTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "stamp",
+              "annotation"
             ]
           },
           {
@@ -94103,6 +94138,15 @@
             ]
           },
           {
+            "path": "Excise.App.Tests/UI/PdfViewerHeadlessRenderTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "stamp",
+              "annotation"
+            ]
+          },
+          {
             "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -94554,6 +94598,15 @@
               "stamp",
               "annotation",
               "redact"
+            ]
+          },
+          {
+            "path": "Excise.App.Tests/UI/PdfViewerHeadlessRenderTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "stamp",
+              "annotation"
             ]
           },
           {
@@ -110590,6 +110643,15 @@
               "image",
               "image",
               "jpx"
+            ]
+          },
+          {
+            "path": "Excise.Cli.Tests/RedactCommandTestDriver.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "crypt",
+              "image",
+              "image"
             ]
           },
           {
@@ -110928,6 +110990,15 @@
             ]
           },
           {
+            "path": "Excise.Cli.Tests/RedactCommandTestDriver.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "crypt",
+              "image",
+              "image"
+            ]
+          },
+          {
             "path": "Excise.Cli.Tests/RedactCommandTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -111260,6 +111331,15 @@
               "image",
               "image",
               "jpx"
+            ]
+          },
+          {
+            "path": "Excise.Cli.Tests/RedactCommandTestDriver.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "crypt",
+              "image",
+              "image"
             ]
           },
           {
@@ -137525,7 +137605,8 @@
         "Excise.Core/Writing/PdfDocumentWritingFacade.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRedactor.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRenderer.cs",
-        "Excise.App/Services/PdfDocumentService.cs"
+        "Excise.App/Services/PdfDocumentService.cs",
+        "Excise.Cli/Commands/PdfDocumentLifetime.cs"
       ],
       "directTestCandidates": [
         "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
@@ -138501,7 +138582,8 @@
         "Excise.Core/Writing/PdfDocumentWritingFacade.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRedactor.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRenderer.cs",
-        "Excise.App/Services/PdfDocumentService.cs"
+        "Excise.App/Services/PdfDocumentService.cs",
+        "Excise.Cli/Commands/PdfDocumentLifetime.cs"
       ],
       "directTestCandidates": [
         "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
@@ -139477,7 +139559,8 @@
         "Excise.Core/Writing/PdfDocumentWritingFacade.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRedactor.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRenderer.cs",
-        "Excise.App/Services/PdfDocumentService.cs"
+        "Excise.App/Services/PdfDocumentService.cs",
+        "Excise.Cli/Commands/PdfDocumentLifetime.cs"
       ],
       "directTestCandidates": [
         "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
@@ -142684,6 +142767,24 @@
             ]
           },
           {
+            "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "crypt",
+              "encryption",
+              "permissions"
+            ]
+          },
+          {
+            "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "crypt",
+              "encryption",
+              "permissions"
+            ]
+          },
+          {
             "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -142700,24 +142801,6 @@
               "encryption",
               "filters",
               "permissions"
-            ]
-          },
-          {
-            "path": "Excise.Cli.Tests/TestPdfBuilder.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "crypt",
-              "encryption",
-              "permissions",
-              "xref"
-            ]
-          },
-          {
-            "path": "tests/corpora.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "crypt",
-              "encryption"
             ]
           }
         ],
@@ -142743,6 +142826,8 @@
         "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
         "Excise.App/ViewModels/SecurityDialogViewModel.cs",
         "Excise.App/Views/SecurityDialog.axaml.cs",
+        "Excise.Cli/Commands/EncryptCommand.cs",
+        "Excise.Cli/Commands/EncryptionCommandHandler.cs",
         "Excise.Cli/DocumentPermissionGuard.cs"
       ],
       "directTestCandidates": [
@@ -143550,6 +143635,24 @@
             ]
           },
           {
+            "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "crypt",
+              "encryption",
+              "permissions"
+            ]
+          },
+          {
+            "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "crypt",
+              "encryption",
+              "permissions"
+            ]
+          },
+          {
             "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -143566,24 +143669,6 @@
               "encryption",
               "filters",
               "permissions"
-            ]
-          },
-          {
-            "path": "Excise.Cli.Tests/TestPdfBuilder.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "crypt",
-              "encryption",
-              "permissions",
-              "xref"
-            ]
-          },
-          {
-            "path": "tests/corpora.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "crypt",
-              "encryption"
             ]
           }
         ],
@@ -143609,6 +143694,8 @@
         "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
         "Excise.App/ViewModels/SecurityDialogViewModel.cs",
         "Excise.App/Views/SecurityDialog.axaml.cs",
+        "Excise.Cli/Commands/EncryptCommand.cs",
+        "Excise.Cli/Commands/EncryptionCommandHandler.cs",
         "Excise.Cli/DocumentPermissionGuard.cs"
       ],
       "directTestCandidates": [
@@ -144416,6 +144503,24 @@
             ]
           },
           {
+            "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "crypt",
+              "encryption",
+              "permissions"
+            ]
+          },
+          {
+            "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "crypt",
+              "encryption",
+              "permissions"
+            ]
+          },
+          {
             "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -144432,24 +144537,6 @@
               "encryption",
               "filters",
               "permissions"
-            ]
-          },
-          {
-            "path": "Excise.Cli.Tests/TestPdfBuilder.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "crypt",
-              "encryption",
-              "permissions",
-              "xref"
-            ]
-          },
-          {
-            "path": "tests/corpora.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "crypt",
-              "encryption"
             ]
           }
         ],
@@ -144475,6 +144562,8 @@
         "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
         "Excise.App/ViewModels/SecurityDialogViewModel.cs",
         "Excise.App/Views/SecurityDialog.axaml.cs",
+        "Excise.Cli/Commands/EncryptCommand.cs",
+        "Excise.Cli/Commands/EncryptionCommandHandler.cs",
         "Excise.Cli/DocumentPermissionGuard.cs"
       ],
       "directTestCandidates": [
@@ -145282,6 +145371,24 @@
             ]
           },
           {
+            "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "crypt",
+              "encryption",
+              "permissions"
+            ]
+          },
+          {
+            "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "crypt",
+              "encryption",
+              "permissions"
+            ]
+          },
+          {
             "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -145298,24 +145405,6 @@
               "encryption",
               "filters",
               "permissions"
-            ]
-          },
-          {
-            "path": "Excise.Cli.Tests/TestPdfBuilder.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "crypt",
-              "encryption",
-              "permissions",
-              "xref"
-            ]
-          },
-          {
-            "path": "tests/corpora.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "crypt",
-              "encryption"
             ]
           }
         ],
@@ -145341,6 +145430,8 @@
         "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
         "Excise.App/ViewModels/SecurityDialogViewModel.cs",
         "Excise.App/Views/SecurityDialog.axaml.cs",
+        "Excise.Cli/Commands/EncryptCommand.cs",
+        "Excise.Cli/Commands/EncryptionCommandHandler.cs",
         "Excise.Cli/DocumentPermissionGuard.cs"
       ],
       "directTestCandidates": [
@@ -145901,7 +145992,8 @@
         "Excise.Core/Writing/PdfDocumentWritingFacade.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRedactor.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRenderer.cs",
-        "Excise.App/Services/PdfDocumentService.cs"
+        "Excise.App/Services/PdfDocumentService.cs",
+        "Excise.Cli/Commands/PdfDocumentLifetime.cs"
       ],
       "directTestCandidates": [
         "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
@@ -146461,7 +146553,8 @@
         "Excise.Core/Writing/PdfDocumentWritingFacade.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRedactor.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRenderer.cs",
-        "Excise.App/Services/PdfDocumentService.cs"
+        "Excise.App/Services/PdfDocumentService.cs",
+        "Excise.Cli/Commands/PdfDocumentLifetime.cs"
       ],
       "directTestCandidates": [
         "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
@@ -147021,7 +147114,8 @@
         "Excise.Core/Writing/PdfDocumentWritingFacade.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRedactor.cs",
         "Excise.Rendering/Differential/PdfBoxReferenceRenderer.cs",
-        "Excise.App/Services/PdfDocumentService.cs"
+        "Excise.App/Services/PdfDocumentService.cs",
+        "Excise.Cli/Commands/PdfDocumentLifetime.cs"
       ],
       "directTestCandidates": [
         "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
@@ -161459,6 +161553,16 @@
             ]
           },
           {
+            "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "pdfe",
+              "save",
+              "ocr",
+              "security"
+            ]
+          },
+          {
             "path": "Excise.Cli.Tests/RedactCommandTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -162070,6 +162174,16 @@
               "pdfe",
               "save",
               "stripping",
+              "security"
+            ]
+          },
+          {
+            "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "pdfe",
+              "save",
+              "ocr",
               "security"
             ]
           },
@@ -162689,6 +162803,16 @@
             ]
           },
           {
+            "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "pdfe",
+              "save",
+              "ocr",
+              "security"
+            ]
+          },
+          {
             "path": "Excise.Cli.Tests/RedactCommandTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -163300,6 +163424,16 @@
               "pdfe",
               "save",
               "stripping",
+              "security"
+            ]
+          },
+          {
+            "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "pdfe",
+              "save",
+              "ocr",
               "security"
             ]
           },
@@ -164084,7 +164218,6 @@
             "matchedTerms": [
               "override",
               "signature",
-              "ocr",
               "security"
             ]
           },
@@ -164398,7 +164531,6 @@
             "matchedTerms": [
               "override",
               "signature",
-              "ocr",
               "security"
             ]
           },
@@ -164459,6 +164591,8 @@
         "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
         "Excise.App/ViewModels/SecurityDialogViewModel.cs",
         "Excise.App/Views/SecurityDialog.axaml.cs",
+        "Excise.Cli/Commands/EncryptCommand.cs",
+        "Excise.Cli/Commands/EncryptionCommandHandler.cs",
         "Excise.Cli/DocumentPermissionGuard.cs"
       ],
       "directTestCandidates": [
@@ -164811,7 +164945,6 @@
             "matchedTerms": [
               "override",
               "signature",
-              "ocr",
               "security"
             ]
           },
@@ -164872,6 +165005,8 @@
         "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
         "Excise.App/ViewModels/SecurityDialogViewModel.cs",
         "Excise.App/Views/SecurityDialog.axaml.cs",
+        "Excise.Cli/Commands/EncryptCommand.cs",
+        "Excise.Cli/Commands/EncryptionCommandHandler.cs",
         "Excise.Cli/DocumentPermissionGuard.cs"
       ],
       "directTestCandidates": [
@@ -165224,7 +165359,6 @@
             "matchedTerms": [
               "override",
               "signature",
-              "ocr",
               "security"
             ]
           },
@@ -165285,6 +165419,8 @@
         "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
         "Excise.App/ViewModels/SecurityDialogViewModel.cs",
         "Excise.App/Views/SecurityDialog.axaml.cs",
+        "Excise.Cli/Commands/EncryptCommand.cs",
+        "Excise.Cli/Commands/EncryptionCommandHandler.cs",
         "Excise.Cli/DocumentPermissionGuard.cs"
       ],
       "directTestCandidates": [
@@ -178294,6 +178430,7 @@
             "matchedTerms": [
               "opt-in",
               "redaction",
+              "acroform",
               "action",
               "redact"
             ]
@@ -179133,6 +179270,7 @@
             "matchedTerms": [
               "opt-in",
               "redaction",
+              "acroform",
               "action",
               "redact"
             ]
@@ -179972,6 +180110,7 @@
             "matchedTerms": [
               "opt-in",
               "redaction",
+              "acroform",
               "action",
               "redact"
             ]
@@ -180811,6 +180950,7 @@
             "matchedTerms": [
               "opt-in",
               "redaction",
+              "acroform",
               "action",
               "redact"
             ]
@@ -181650,6 +181790,7 @@
             "matchedTerms": [
               "opt-in",
               "redaction",
+              "acroform",
               "action",
               "redact"
             ]
@@ -182489,6 +182630,7 @@
             "matchedTerms": [
               "opt-in",
               "redaction",
+              "acroform",
               "action",
               "redact"
             ]
@@ -189776,8 +189918,7 @@
     "executionStatus": {
       "not-contracted": 803,
       "not-recorded": 148,
-      "partial": 6,
-      "passed": 7
+      "passed": 13
     },
     "discoveryStatus": {
       "mapped-source-and-test": 60,

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "9fbf45bb0f0f54c6bf058b68e2fa34372553da0edae742bdff8fb20ac03d0ecf",
+  "sourceFingerprint": "00fd03558161e651eda7afcd71465a72e32f92959c8ca1815caf58ae254776ce",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -7467,6 +7467,56 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Cli/Commands/AddFieldCommand.cs",
+      "path": "Excise.Cli/Commands/AddFieldCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/AuditCommand.cs",
+      "path": "Excise.Cli/Commands/AuditCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/AuditInspectionHandler.cs",
+      "path": "Excise.Cli/Commands/AuditInspectionHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/AutodetectFieldsCommand.cs",
+      "path": "Excise.Cli/Commands/AutodetectFieldsCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/CliJson.cs",
+      "path": "Excise.Cli/Commands/CliJson.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Cli/Commands/CliRedactedCopySafetyAdapter.cs",
       "path": "Excise.Cli/Commands/CliRedactedCopySafetyAdapter.cs",
       "kind": "source-file",
@@ -7534,8 +7584,308 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Cli/Commands/DecryptCommand.cs",
+      "path": "Excise.Cli/Commands/DecryptCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/DocumentAssemblyHandler.cs",
+      "path": "Excise.Cli/Commands/DocumentAssemblyHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/EncryptCommand.cs",
+      "path": "Excise.Cli/Commands/EncryptCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/EncryptionCommandHandler.cs",
+      "path": "Excise.Cli/Commands/EncryptionCommandHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Cli/Commands/FillFormCommand.cs",
       "path": "Excise.Cli/Commands/FillFormCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/FormMutationHandler.cs",
+      "path": "Excise.Cli/Commands/FormMutationHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/InfoCommand.cs",
+      "path": "Excise.Cli/Commands/InfoCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/InfoCommandHandler.cs",
+      "path": "Excise.Cli/Commands/InfoCommandHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/LetterInspectionHandler.cs",
+      "path": "Excise.Cli/Commands/LetterInspectionHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/LettersCommand.cs",
+      "path": "Excise.Cli/Commands/LettersCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/MakeSearchableCommand.cs",
+      "path": "Excise.Cli/Commands/MakeSearchableCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/MakeSearchableCommandHandler.cs",
+      "path": "Excise.Cli/Commands/MakeSearchableCommandHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/MergeCommand.cs",
+      "path": "Excise.Cli/Commands/MergeCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/OcrCommand.cs",
+      "path": "Excise.Cli/Commands/OcrCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/OcrInspectionHandler.cs",
+      "path": "Excise.Cli/Commands/OcrInspectionHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/PdfDocumentLifetime.cs",
+      "path": "Excise.Cli/Commands/PdfDocumentLifetime.cs",
+      "kind": "source-file",
+      "facets": [
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/RedactCommand.cs",
+      "path": "Excise.Cli/Commands/RedactCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/RedactCommandHandler.cs",
+      "path": "Excise.Cli/Commands/RedactCommandHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/RenderCommand.cs",
+      "path": "Excise.Cli/Commands/RenderCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/RenderPageHandler.cs",
+      "path": "Excise.Cli/Commands/RenderPageHandler.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -7585,6 +7935,36 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/SplitCommand.cs",
+      "path": "Excise.Cli/Commands/SplitCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/TextCommand.cs",
+      "path": "Excise.Cli/Commands/TextCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/TextInspectionHandler.cs",
+      "path": "Excise.Cli/Commands/TextInspectionHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -7680,6 +8060,26 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Cli/Commands/ValidateCommand.cs",
+      "path": "Excise.Cli/Commands/ValidateCommand.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Cli/Commands/ValidationHandler.cs",
+      "path": "Excise.Cli/Commands/ValidationHandler.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Cli/DocumentPermissionGuard.cs",
       "path": "Excise.Cli/DocumentPermissionGuard.cs",
       "kind": "source-file",
@@ -7726,18 +8126,18 @@
     }
   ],
   "summary": {
-    "records": 337,
+    "records": 366,
     "facets": {
       "annotations": 10,
       "content-and-graphics": 18,
-      "document-structure": 31,
+      "document-structure": 32,
       "fonts": 28,
       "forms": 8,
       "images": 28,
-      "product-integration-general": 159,
-      "redaction": 47,
+      "product-integration-general": 183,
+      "redaction": 49,
       "safe-save-and-metadata": 16,
-      "security-and-encryption": 17,
+      "security-and-encryption": 19,
       "transparency": 2
     },
     "parentCapabilityModes": {
@@ -7745,9 +8145,9 @@
       "pdf.17.content.streams:parse": 18,
       "pdf.17.content.streams:render": 18,
       "pdf.17.content.streams:write": 18,
-      "pdf.17.document.catalog-pages:parse": 31,
-      "pdf.17.document.catalog-pages:preserve": 31,
-      "pdf.17.document.catalog-pages:write": 31,
+      "pdf.17.document.catalog-pages:parse": 32,
+      "pdf.17.document.catalog-pages:preserve": 32,
+      "pdf.17.document.catalog-pages:write": 32,
       "pdf.17.document.metadata:mutate": 16,
       "pdf.17.document.metadata:preserve": 16,
       "pdf.17.document.metadata:write": 16,
@@ -7784,32 +8184,32 @@
       "pdf.17.interactive.redaction-annotations:parse": 10,
       "pdf.17.interactive.redaction-annotations:preserve": 10,
       "pdf.17.interactive.redaction-annotations:render": 10,
-      "pdf.17.security.redaction-content-removal:extract": 47,
-      "pdf.17.security.redaction-content-removal:mutate": 47,
-      "pdf.17.security.redaction-content-removal:render": 47,
-      "pdf.17.security.redaction-content-removal:write": 47,
-      "pdf.17.syntax.encryption:mutate": 17,
-      "pdf.17.syntax.encryption:parse": 17,
-      "pdf.17.syntax.encryption:preserve": 17,
-      "pdf.17.syntax.encryption:write": 17,
-      "pdf.17.syntax.file:parse": 31,
-      "pdf.17.syntax.file:preserve": 31,
-      "pdf.17.syntax.file:write": 31,
+      "pdf.17.security.redaction-content-removal:extract": 49,
+      "pdf.17.security.redaction-content-removal:mutate": 49,
+      "pdf.17.security.redaction-content-removal:render": 49,
+      "pdf.17.security.redaction-content-removal:write": 49,
+      "pdf.17.syntax.encryption:mutate": 19,
+      "pdf.17.syntax.encryption:parse": 19,
+      "pdf.17.syntax.encryption:preserve": 19,
+      "pdf.17.syntax.encryption:write": 19,
+      "pdf.17.syntax.file:parse": 32,
+      "pdf.17.syntax.file:preserve": 32,
+      "pdf.17.syntax.file:write": 32,
       "pdf.17.syntax.objects:mutate": 16,
-      "pdf.17.syntax.objects:parse": 31,
-      "pdf.17.syntax.objects:preserve": 44,
-      "pdf.17.syntax.objects:write": 44,
+      "pdf.17.syntax.objects:parse": 32,
+      "pdf.17.syntax.objects:preserve": 45,
+      "pdf.17.syntax.objects:write": 45,
       "pdf.17.transparency.model:parse": 2,
       "pdf.17.transparency.model:render": 2,
       "pdfe.product.security.privacy-clean-copy:mutate": 16,
       "pdfe.product.security.privacy-clean-copy:preserve": 16,
       "pdfe.product.security.privacy-clean-copy:write": 16,
-      "pdfe.product.security.signature-and-permission-warning:mutate": 17,
-      "pdfe.product.security.signature-and-permission-warning:parse": 17,
-      "pdfe.product.security.signature-and-permission-warning:preserve": 17,
-      "pdfe.product.security.signature-and-permission-warning:write": 17
+      "pdfe.product.security.signature-and-permission-warning:mutate": 19,
+      "pdfe.product.security.signature-and-permission-warning:parse": 19,
+      "pdfe.product.security.signature-and-permission-warning:preserve": 19,
+      "pdfe.product.security.signature-and-permission-warning:write": 19
     },
-    "fallbackRecords": 159,
+    "fallbackRecords": 183,
     "allRecordsMapped": true
   }
 }
