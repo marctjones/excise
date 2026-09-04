@@ -73,10 +73,10 @@ WHAT THIS DELIBERATELY DOES NOT CHECK, AND WHY
   used to pin them by string existence (scripts/verify-doc-claims.sh and
   Excise.App.Tests/Documentation/DocumentationClaimTests.cs) were both deleted
   on 2026-08-16 — pinning prose against prose never caught a real drift here,
-  while THIS gate, which re-derives numbers, has. CI_GATES.md and
+  while THIS gate, which re-derives numbers, has. LOCAL_GATES.md and
   CHANGELOG.md DO use the same "don't hard-code this, it goes stale" idiom
   (checked at the time this gate was written) but were left out rather than
-  widened blind: CI_GATES.md's instances all correctly state NO live number
+  widened blind: LOCAL_GATES.md's instances all correctly state NO live number
   next to the warning (the lesson already learned there), and CHANGELOG.md's
   is historical narrative — explicitly out of scope per the issue's own
   "Acceptance" section — plus one paragraph that CITES its own old wrong

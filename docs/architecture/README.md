@@ -76,7 +76,7 @@ normalized content, then verify exact artifact bytes through the set manifest.
 | What is implemented, partial, planned, or unknown? | Architecture assessment data, backed by named evidence |
 | What work remains? | GitHub Issues and the current milestone |
 | What shipped? | `CHANGELOG.md` and release artifacts |
-| How is a property verified? | Test/gate contracts such as `CI_GATES.md`, corpus manifests, and registry evidence |
+| How is a property verified? | Test/gate contracts such as `LOCAL_GATES.md`, corpus manifests, and registry evidence |
 | What did an old plan or investigation say? | Git history and its linked issue; historical plans are not kept as current docs |
 
 ## What does not belong here
