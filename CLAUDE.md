@@ -501,7 +501,7 @@ most of the time.
 | Tier | Cost | What | When |
 |------|------|------|------|
 | `t0` | ~30s | Build + Excise.Core/Cli/Avalonia tests + `check-doc-claim-freshness.sh` + `check-gate-asymmetry.sh` + `verify-true-redaction.sh` | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. |
-| `t1` | ~10m | `t0` + the full redaction test suites + `Excise.Rendering.Tests` (deterministic) + `check-skip-budget.sh` | What CI blocks a PR on. `scripts/ci-test.sh` is now a thin wrapper around this. |
+| `t1` | ~10m | `t0` + the full redaction test suites + `Excise.Rendering.Tests` (deterministic) + `check-skip-budget.sh` | Before merging anything to `develop`. This is what CI used to block a PR on; there is no CI now (see `LOCAL_GATES.md`), so running it is on you. |
 | `t2` | ~30m | `scripts/release-smoke.sh --release-tests` | Release candidate. |
 | `t3` | — | `t2` plus the same on macOS and Windows (#647) | Before tagging a release. |
 
@@ -534,7 +534,7 @@ scripts/run-full-suite.sh --list      # the plan, runs nothing
 
 Re-running after any interruption skips what already passed. `--resume` also
 exists on `test-tier.sh` (all tiers) and `release-smoke.sh`; both default to
-OFF so the pre-push hook and CI keep skipping nothing.
+OFF so the pre-push hook keeps skipping nothing.
 
 Three properties worth not breaking:
 
@@ -626,7 +626,11 @@ Some.Test.Name   # needs the poppler corpus [requires: corpus:poppler]
 `tool:NAME` (on PATH), `corpus:NAME` (`test-pdfs/NAME` non-empty), `env:NAME`.
 All listed specs must be present.
 
-This exists because the allowlist is calibrated for a corpus-**less** CI runner.
+This exists because the allowlist was calibrated for a corpus-**less** CI runner.
+⚠️ That runner is GONE (GitHub Actions removed 2026-09-04). The conditioning
+mechanism is kept because it is still the right shape for a machine missing an
+optional tool or corpus, but the entries were tuned for an environment that no
+longer exists — expect to re-tune them against this machine, not to trust them.
 Most entries gate on a gitignored corpus or an optional tool, so on a
 corpus-equipped dev machine those tests *run* — and the reverse check
 ("allow-listed skips are no longer skipping") fired on every local run, on all

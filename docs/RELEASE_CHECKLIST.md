@@ -39,7 +39,7 @@ you tag, and look at the results yourself.
 
 - **This checklist is tier T2/T3** (`scripts/test-tier.sh t2`/`t3`, #646) — the
   release-candidate and third-party-distribution gates. T0 (pre-push) and T1
-  (what CI blocks a PR on) are lighter and run far more often; see
+  (what CI used to block a PR on) are lighter and run far more often; see
   `CLAUDE.md`'s "Test Tiers" section for the full table and the blast-radius
   rule for picking one. Everything below this line is what T2/T3 actually run.
 - Run `scripts/release-smoke.sh --visual --package --packaged-gui --aot --version <version>` before tagging a release candidate.
@@ -80,7 +80,7 @@ you tag, and look at the results yourself.
   default Release output, and the GUI hidden-text toggle does not load
   `Excise.Ocr` before the user asks for raster OCR.
   Listed here because of the #941 gate audit: this script was referenced by NO
-  tier, NO CI workflow, and NO document — it existed, looked authoritative, and
+  tier, no gate, and NO document — it existed, looked authoritative, and
   never ran. A gate nobody invokes is the purest form of a gate that guards
   nothing. Release is the right tier for it (it publishes), so it lives here.
 - **Read the `full` coverage profile — an OBSERVATION, not a gate.**
@@ -93,95 +93,26 @@ you tag, and look at the results yourself.
   ```
   Deliberately NOT a release blocker. Blocking a tag on a coverage number invites
   lowering the number to ship — the same asymmetry `check-gate-asymmetry.sh`
-  exists to prevent for perf-vs-correctness. CI already enforces the `ci` floor
+  exists to prevent for perf-vs-correctness. The release path enforces the `full` floor
   on every push, free, within ~9 minutes of a regression landing; that is where a
   ratchet earns its keep.
 
   **What to look at is the GAP between the two profiles.** Measured on
-  `Excise.Rendering`: `ci` **54.36%** (read off a CI run), `full` **87.49%**.
-
-  That gap is **two** mechanisms, not one:
-
-  | | | |
-  |---|---|---|
-  | 54.36% | CI runner, filtered | 86 of 468 tests **skip** for want of a corpus or tool |
-  | 78.41% | dev machine, same filter | nothing skips — **not a profile, and not a substitute for the `ci` number** |
-  | 87.49% | dev machine, unfiltered | Corpus/Differential/Benchmark/Visual included |
-
-  The middle row is the trap. Copying CI's filter onto a dev machine looks like
-  measuring the `ci` profile and is wrong by 24 points; doing exactly that put a
-  0.76 floor in `tests/coverage-floors.tsv` and turned CI red for four commits.
-  **Read a `ci` number off a CI run.**
-
-  The 78.41 → 87.49 half is the Corpus and Differential tests — the ones that
-  cannot run on a corpus-less runner, and the ones that exist because excise
-  must not be its own oracle.
-
-  So: **if `full` has converged toward `ci`, that is not coverage improving.** It
-  means the differential tests stopped contributing — skipped on a missing
-  corpus, filtered out, or quietly deleted — and the release is being cut with
-  the oracle-backed half of the suite switched off. Investigate before tagging
-  rather than welcoming the tidier number.
-
-  `full` runs only on this path, so it is where rot hides; `ci` gets attention on
-  every push. That asymmetry is the whole reason this line exists.
+  `Excise.Rendering`: `full` **87.49%** — corpora and reference tools
+  present, unfiltered. There is only ONE coverage profile now; the `ci`
+  profile was deleted with GitHub Actions on 2026-09-04 (LOCAL_GATES.md).
+  The lesson it taught survives it: a filter is not an environment, so
+  never read a number for one environment while standing in another.
 - **Run the skip budget** for every suite you touched:
   `scripts/check-skip-budget.sh <project>.csproj`
   A test that silently stops running is coverage loss you cannot see — this is
   how a security-relevant assertion (`HiddenTextToggles_DoNotLoadOcrAssembly…`)
   quietly stopped executing while the suite stayed green (#619).
 - Run `dotnet build excise.sln --no-restore`.
-- **Confirm the Linux rendering-oracle gate is green.** The release workflow's
-  `rendering-gate` job (`.github/workflows/rendering-linux.yml`, also run on
-  every push by `ci.yml`) installs `mutool`/`gs`/`pdftocairo`/`tesseract` and
-  runs the rendering `Differential` + `Corpus` tests that the fast tool-less PR
-  gate skips — it is the only CI check of excise's renderer/extractor against an
-  independent oracle, and `publish` depends on it, so a tag cannot ship
-  installers if it is red. It covers the self-generating and ~32 checked-in
-  fixtures; the licensed real-world corpus is still measured only by the local
-  T2 `release-smoke.sh --release-tests` step below.
-- Run `dotnet test --no-build --filter "FullyQualifiedName~Redaction"` after any redaction-adjacent change.
-- Run the signature verification and UI workflow gates in `scripts/release-smoke.sh`.
-- Run the dedicated accessibility gate:
-  `scripts/release-smoke.sh --quick --only=accessibility`. This uses
-  `scripts/run-accessibility-smoke.sh` to verify semantic command metadata,
-  accessible names/descriptions/shortcuts/states, status announcements, and
-  representative keyboard-only reachability without taking keyboard or mouse
-  focus. Platform AX/UIA/AT-SPI procedures are documented in
-  `docs/ACCESSIBILITY_RELEASE_CHECKLIST.md`.
-- Run the dedicated automation API gate:
-  `scripts/release-smoke.sh --quick --only=automation`. This uses
-  `scripts/run-automation-smoke.sh` to verify `excise commands`, JSON output,
-  batch workflow reports, progress NDJSON, password redaction, destructive
-  command refusal, and a real render workflow without taking keyboard or mouse
-  focus. The platform contract and examples are documented in
-  `docs/AUTOMATION_API.md`.
-- Run the dedicated UX/icon audit gate:
-  `scripts/release-smoke.sh --quick --only=ux`. This uses
-  `scripts/run-ux-icon-audit.sh` to capture headless screenshots for empty/open,
-  document navigation, search, redaction, forms, typewriter/annotation, and
-  preferences states while verifying toolbar/menu vector icons, tooltips, and
-  accessibility command IDs. This is separate from GUI display parity.
-- Run the dedicated benchmark gate:
-  `scripts/release-smoke.sh --quick --only=benchmark`. This uses
-  `scripts/run-benchmarks.sh suite` to emit `benchmark-report.json`,
-  `benchmark-pages.csv`, `benchmark-hotpaths.json`, and
-  `benchmark-report.md` with excise parse/text/render timing, excise-owned hot-path
-  buckets, reference-render fidelity when installed reference CLIs are present,
-  RMSE/SSIM metrics, redaction-completeness evidence, and explicit license
-  isolation for subprocess-only reference renderers. The default
-  `scripts/run-benchmarks.sh` wrapper additionally writes
-  `latest-performance-baseline.json` and `latest-performance-baseline.md` to
-  index benchmark, corpus, GUI display, and GUI workflow hotspot artifacts.
-- Run the dedicated Native AOT release-lane gate before shipping an AOT
-  artifact:
-  `scripts/release-smoke.sh --quick --only=aot`. This uses
-  `scripts/run-aot-smoke.sh` to publish/package the GUI with
-  `-p:PublishAot=true`, capture IL/AOT warning output, split `.dSYM`/`.pdb`
-  symbols from the user-facing macOS app bundle, assert that the AOT payload has
-  `0` managed `.dll` sidecars, and write `aot-smoke.json` plus `aot-smoke.md`.
-  Use `scripts/run-aot-smoke.sh --gui-smoke` on an interactive macOS runner for
-  packaged AOT launch/open/render evidence.
+- **Confirm the local rendering-oracle gates are green.** Run
+  `scripts/test-tier.sh t2` on this machine with mutool, Ghostscript and
+  pdftocairo on PATH. The Linux CI job that used to own this was removed
+  on 2026-09-04; the oracles now run where the corpora already live.
 - **AOT support matrix (#595, decided 2026-07-20)** — release notes and docs
   must not claim AOT targets beyond this table; update the table (and file the
   probe evidence) before promoting any RID:
