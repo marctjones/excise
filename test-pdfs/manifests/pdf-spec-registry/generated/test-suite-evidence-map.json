@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "f3bceec0cc8c1af5ba583774fa860c70c2975b565e20a67c1dfd5c075ca38dc3",
+  "sourceFingerprint": "9fbf45bb0f0f54c6bf058b68e2fa34372553da0edae742bdff8fb20ac03d0ecf",
   "tests": [
     {
       "id": "Excise.Core.Tests/Authoring/AuthoringCoverageTests.cs::AuthoringCoverageTests.TextStyle_WithHelpers_AreImmutableCopies",
@@ -1349,11 +1349,59 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::TaggedPdfTests.Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState",
+      "path": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs",
+      "class": "TaggedPdfTests",
+      "method": "Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState",
+      "line": 53,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "safe-save-and-metadata"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::TaggedPdfTests.Tagged_PdfInfoReportsStructureForHeadingsParagraphsTables",
       "path": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs",
       "class": "TaggedPdfTests",
       "method": "Tagged_PdfInfoReportsStructureForHeadingsParagraphsTables",
-      "line": 53,
+      "line": 71,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -1367,7 +1415,7 @@
       "path": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs",
       "class": "TaggedPdfTests",
       "method": "Tagged_ContentStreamHasMarkedContent",
-      "line": 73,
+      "line": 91,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -1418,7 +1466,7 @@
       "path": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs",
       "class": "TaggedPdfTests",
       "method": "Tagged_TableNestsTableTrTdTh",
-      "line": 84,
+      "line": 102,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -1432,7 +1480,7 @@
       "path": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs",
       "class": "TaggedPdfTests",
       "method": "Tagged_DecorativeContentIsMarkedAsArtifact",
-      "line": 99,
+      "line": 117,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -1446,7 +1494,7 @@
       "path": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs",
       "class": "TaggedPdfTests",
       "method": "Tagged_FormFields_AppearInStructureTreeAsForm",
-      "line": 113,
+      "line": 131,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -1473,7 +1521,7 @@
       "path": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs",
       "class": "TaggedPdfTests",
       "method": "NotTagged_HasNoStructTree",
-      "line": 128,
+      "line": 146,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -1487,7 +1535,7 @@
       "path": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs",
       "class": "TaggedPdfTests",
       "method": "Tagged_MultiPageParagraph_SpansPagesWithStructParents",
-      "line": 138,
+      "line": 156,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -32594,11 +32642,53 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Document/NamedDestinationTests.cs::NamedDestinationTests.GetNamedDestinations_AfterPageMove_RebuildsCurrentPageNumber",
+      "path": "Excise.Core.Tests/Document/NamedDestinationTests.cs",
+      "class": "NamedDestinationTests",
+      "method": "GetNamedDestinations_AfterPageMove_RebuildsCurrentPageNumber",
+      "line": 254,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core.Tests/Document/NamedDestinationTests.cs::NamedDestinationTests.GetNamedDestinations_AfterPageInsert_RebuildsCurrentPageNumber",
+      "path": "Excise.Core.Tests/Document/NamedDestinationTests.cs",
+      "class": "NamedDestinationTests",
+      "method": "GetNamedDestinations_AfterPageInsert_RebuildsCurrentPageNumber",
+      "line": 278,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core.Tests/Document/NamedDestinationTests.cs::NamedDestinationTests.GetNamedDestinations_AfterPageRemoval_RebuildsCurrentPageNumber",
+      "path": "Excise.Core.Tests/Document/NamedDestinationTests.cs",
+      "class": "NamedDestinationTests",
+      "method": "GetNamedDestinations_AfterPageRemoval_RebuildsCurrentPageNumber",
+      "line": 299,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Document/NamedDestinationTests.cs::NamedDestinationTests.GetNamedDestinations_RoundTrip_LegacyDests_SurvivesSaveAndReopen",
       "path": "Excise.Core.Tests/Document/NamedDestinationTests.cs",
       "class": "NamedDestinationTests",
       "method": "GetNamedDestinations_RoundTrip_LegacyDests_SurvivesSaveAndReopen",
-      "line": 256,
+      "line": 322,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -32646,7 +32736,7 @@
       "path": "Excise.Core.Tests/Document/NamedDestinationTests.cs",
       "class": "NamedDestinationTests",
       "method": "GetNamedDestinations_RoundTrip_ModernNamesTree_SurvivesSaveAndReopen",
-      "line": 274,
+      "line": 340,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -32694,7 +32784,7 @@
       "path": "Excise.Core.Tests/Document/NamedDestinationTests.cs",
       "class": "NamedDestinationTests",
       "method": "GetNamedDestinations_RoundTrip_DoesNotAppearOnPlainDocument",
-      "line": 289,
+      "line": 355,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37055,7 +37145,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "OpenAction_Absent_ReturnsNull",
-      "line": 20,
+      "line": 21,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37069,7 +37159,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "OpenAction_GoToActionDictionary_ResolvesDestinationPage",
-      "line": 29,
+      "line": 30,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37083,7 +37173,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "OpenAction_LegacyBareDestinationArray_ResolvesAsImplicitGoTo",
-      "line": 46,
+      "line": 47,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37097,7 +37187,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "OpenAction_JavaScriptAsTextString_DecodesSourceButNeverRuns",
-      "line": 59,
+      "line": 60,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37111,7 +37201,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "OpenAction_JavaScriptAsStream_DecodesSourceFromStreamBytes",
-      "line": 76,
+      "line": 77,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37125,7 +37215,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "OpenAction_NamedAction_CapturesName",
-      "line": 96,
+      "line": 97,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37139,7 +37229,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "OpenAction_UriAction_CapturesUri",
-      "line": 110,
+      "line": 111,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37153,7 +37243,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "OpenAction_DangerousActionTypes_AreStillModeled_JustNeverExecuted",
-      "line": 124,
+      "line": 125,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37167,7 +37257,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "OpenAction_NextChain_ParsesFollowOnActions",
-      "line": 140,
+      "line": 141,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37181,7 +37271,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "DocumentAdditionalActions_Absent_ReturnsEmpty",
-      "line": 163,
+      "line": 164,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37195,7 +37285,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "DocumentAdditionalActions_WcAndWs_ParsedByTriggerKey",
-      "line": 172,
+      "line": 173,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37209,7 +37299,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "PageAdditionalActions_Absent_ReturnsEmpty",
-      "line": 193,
+      "line": 194,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37223,7 +37313,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "PageAdditionalActions_OAndC_ParsedByTriggerKey",
-      "line": 202,
+      "line": 203,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37237,7 +37327,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "DocumentJavaScriptActions_Absent_ReturnsEmpty",
-      "line": 263,
+      "line": 264,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37251,7 +37341,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "DocumentJavaScriptActions_NameTreeLeaf_ParsesEachEntry",
-      "line": 272,
+      "line": 273,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37265,7 +37355,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "DocumentJavaScriptActions_KidsSubtree_WalksAllBranches",
-      "line": 292,
+      "line": 293,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37275,11 +37365,72 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+      "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
+      "class": "PdfActionTests",
+      "method": "Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+      "line": 317,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "redaction",
+        "safe-save-and-metadata"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Actions_RoundTrip_SurviveSaveAndReopen",
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "Actions_RoundTrip_SurviveSaveAndReopen",
-      "line": 318,
+      "line": 352,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37327,7 +37478,7 @@
       "path": "Excise.Core.Tests/Document/PdfActionTests.cs",
       "class": "PdfActionTests",
       "method": "Actions_RoundTrip_DoNotAppearOnPlainDocument",
-      "line": 342,
+      "line": 376,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37527,11 +37678,50 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_UsesCanonicalPdfNumberPrecision",
+      "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
+      "class": "PdfAnnotationAuthoringTests",
+      "method": "AddSquareAnnotation_UsesCanonicalPdfNumberPrecision",
+      "line": 124,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddCircleAnnotation_WritesInteriorColorAndBezierAppearance",
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddCircleAnnotation_WritesInteriorColorAndBezierAppearance",
-      "line": 124,
+      "line": 148,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37570,7 +37760,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddShapeAnnotations_SurviveSaveAndReload_WithAppearanceIntact",
-      "line": 154,
+      "line": 178,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37643,7 +37833,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddSquareAnnotation_RejectsPartialInteriorColor",
-      "line": 198,
+      "line": 222,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -37682,7 +37872,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddCircleAnnotation_RejectsInvisibleShape",
-      "line": 212,
+      "line": 236,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37721,7 +37911,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddSquareAnnotation_RejectsNegativeBorderWidthAndBadColor",
-      "line": 225,
+      "line": 249,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37760,7 +37950,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddFreeTextAnnotation_WritesSpecCorrectDictionaryAndAppearance",
-      "line": 247,
+      "line": 271,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37799,7 +37989,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddFreeTextAnnotation_WrapsLongTextAndEscapesDelimiters",
-      "line": 309,
+      "line": 333,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37838,7 +38028,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddFreeTextAnnotation_WritesQuaddingValue",
-      "line": 333,
+      "line": 357,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -37877,7 +38067,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddFreeTextAnnotation_SurvivesSaveAndReload_WithAppearanceIntact",
-      "line": 346,
+      "line": 370,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37950,7 +38140,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddFreeTextAnnotation_RejectsEmptyTextAndBadArguments",
-      "line": 384,
+      "line": 408,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -37989,7 +38179,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddInkAnnotation_WritesSpecCorrectDictionaryAndAppearance",
-      "line": 410,
+      "line": 434,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38028,7 +38218,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddInkAnnotation_SurvivesSaveAndReload_WithAppearanceIntact",
-      "line": 487,
+      "line": 511,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38101,7 +38291,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddInkAnnotation_RejectsBadArguments",
-      "line": 537,
+      "line": 561,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38140,7 +38330,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddHighlightAnnotation_RejectsInvalidColor",
-      "line": 572,
+      "line": 596,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38179,7 +38369,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddTextMarkupAnnotations_WriteQuadPointsColorAndAppearance",
-      "line": 591,
+      "line": 615,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -38218,7 +38408,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddStrikeOutAnnotation_DrawsHigherThanUnderline",
-      "line": 627,
+      "line": 651,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38257,7 +38447,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddUnderlineAnnotation_RejectsInvalidColorAndRect",
-      "line": 649,
+      "line": 673,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38296,7 +38486,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddLineAnnotation_WritesEndpointsColorAndAppearance",
-      "line": 664,
+      "line": 688,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38335,7 +38525,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddArrowAnnotation_WritesLineEndingsAndDrawsArrowhead",
-      "line": 695,
+      "line": 719,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38374,7 +38564,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddLineAnnotation_RejectsBadArguments",
-      "line": 719,
+      "line": 743,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38413,7 +38603,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddPolygonAnnotation_WritesVerticesAndClosedFilledAppearance",
-      "line": 737,
+      "line": 761,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38452,7 +38642,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddPolyLineAnnotation_WritesOpenStrokedAppearance",
-      "line": 763,
+      "line": 787,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38491,7 +38681,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddPolygonAndPolyLine_RejectBadArguments",
-      "line": 785,
+      "line": 809,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38530,7 +38720,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddStampAnnotation_WritesStandardNameAndAppearance",
-      "line": 810,
+      "line": 834,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38569,7 +38759,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddStampAnnotation_RejectsNonStandardName",
-      "line": 834,
+      "line": 858,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38608,7 +38798,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "StandardStampNames_AreAllAccepted",
-      "line": 845,
+      "line": 869,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38647,7 +38837,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddImageStampAnnotation_EmbedsImageXObjectInAppearance",
-      "line": 858,
+      "line": 882,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38698,7 +38888,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "AddImageStampAnnotation_RejectsMismatchedPixelBufferSize",
-      "line": 896,
+      "line": 920,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38749,7 +38939,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "StampAnnotations_SurviveSaveAndReload",
-      "line": 908,
+      "line": 932,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38822,7 +39012,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "SetAnnotationContents_UpdatesContentsAndModDate",
-      "line": 929,
+      "line": 953,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38861,7 +39051,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "SetAnnotationColor_UpdatesCArray",
-      "line": 947,
+      "line": 971,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38900,7 +39090,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "SetAnnotationColor_RejectsOutOfRangeComponents",
-      "line": 962,
+      "line": 986,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38939,7 +39129,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "SetAnnotationOpacity_WritesCA",
-      "line": 973,
+      "line": 997,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -38989,7 +39179,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "RemoveAnnotation_DetachesFromPageAnnots",
-      "line": 988,
+      "line": 1012,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -39028,7 +39218,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "RemoveAnnotation_SurvivesSaveAndReload",
-      "line": 1007,
+      "line": 1031,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -39101,7 +39291,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "SetReplyTo_WritesIrtReferenceAndRt",
-      "line": 1028,
+      "line": 1052,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -39140,7 +39330,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "SetReplyTo_SurvivesSaveAndReload",
-      "line": 1047,
+      "line": 1071,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -39213,7 +39403,7 @@
       "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
       "class": "PdfAnnotationAuthoringTests",
       "method": "SetReplyTo_RejectsUnattachedParentAndBadReplyType",
-      "line": 1071,
+      "line": 1095,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -39803,7 +39993,8 @@
             "render"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ]
         },
         {
@@ -48294,6 +48485,198 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Document/PdfDocumentOpenPipelineTests.cs::PdfDocumentOpenPipelineTests.Open_ParseFailure_DisposesOwnedStream",
+      "path": "Excise.Core.Tests/Document/PdfDocumentOpenPipelineTests.cs",
+      "class": "PdfDocumentOpenPipelineTests",
+      "method": "Open_ParseFailure_DisposesOwnedStream",
+      "line": 12,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core.Tests/Document/PdfDocumentOpenPipelineTests.cs::PdfDocumentOpenPipelineTests.Open_ParseFailure_LeavesBorrowedStreamOpen",
+      "path": "Excise.Core.Tests/Document/PdfDocumentOpenPipelineTests.cs",
+      "class": "PdfDocumentOpenPipelineTests",
+      "method": "Open_ParseFailure_LeavesBorrowedStreamOpen",
+      "line": 24,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core.Tests/Document/PdfDocumentOpenPipelineTests.cs::PdfDocumentOpenPipelineTests.Open_CatalogValidationFailure_DisposesConstructedObjectStore",
+      "path": "Excise.Core.Tests/Document/PdfDocumentOpenPipelineTests.cs",
+      "class": "PdfDocumentOpenPipelineTests",
+      "method": "Open_CatalogValidationFailure_DisposesConstructedObjectStore",
+      "line": 37,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core.Tests/Document/PdfDocumentOpenPipelineTests.cs::PdfDocumentOpenPipelineTests.CreateNew_UsesInitializedOpenPipelineAndSingleObjectIdentity",
+      "path": "Excise.Core.Tests/Document/PdfDocumentOpenPipelineTests.cs",
+      "class": "PdfDocumentOpenPipelineTests",
+      "method": "CreateNew_UsesInitializedOpenPipelineAndSingleObjectIdentity",
+      "line": 50,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.Open_MinimalPdf_ReturnsDocument",
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
@@ -51174,7 +51557,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Open_FromFilePath_OpensSuccessfully",
-      "line": 1013,
+      "line": 1017,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51259,7 +51642,55 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "GetObject_RepeatedAccess_UsesCachedObject",
-      "line": 1037,
+      "line": 1041,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetObject_ReferenceNumberAndResolve_ShareOneObjectIdentity",
+      "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
+      "class": "PdfDocumentTests",
+      "method": "GetObject_ReferenceNumberAndResolve_ShareOneObjectIdentity",
+      "line": 1054,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51307,7 +51738,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "GetObject_UndefinedObjectNumber_ResolvesToNull",
-      "line": 1050,
+      "line": 1069,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51355,7 +51786,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "GetPage_OutOfRange_High_ThrowsException",
-      "line": 1067,
+      "line": 1086,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51403,7 +51834,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "GetPage_NegativeNumber_ThrowsException",
-      "line": 1079,
+      "line": 1098,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51451,7 +51882,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Version_MultipleVersionFormats_ParsesCorrectly",
-      "line": 1095,
+      "line": 1114,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51499,7 +51930,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Dispose_ClosesStreamWhenOwned",
-      "line": 1155,
+      "line": 1174,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51547,7 +51978,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Dispose_DoesNotCloseStreamWhenNotOwned",
-      "line": 1167,
+      "line": 1186,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51595,7 +52026,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Open_InvalidPdfBytes_ThrowsParseException",
-      "line": 1184,
+      "line": 1203,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51643,7 +52074,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Open_EmptyByteArray_ThrowsParseException",
-      "line": 1194,
+      "line": 1213,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51691,7 +52122,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Open_MissingFilePath_ThrowsIOException",
-      "line": 1204,
+      "line": 1223,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51776,7 +52207,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "SaveAndLoad_PreservesPageCount",
-      "line": 1217,
+      "line": 1236,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51848,7 +52279,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Open_InvalidPdfStructure_ThrowsPdfParseException",
-      "line": 1281,
+      "line": 1300,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51896,7 +52327,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Dispose_CalledTwice_DoesNotThrow",
-      "line": 1296,
+      "line": 1315,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51944,7 +52375,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Dispose_ClosesStreamOwned",
-      "line": 1306,
+      "line": 1325,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -51992,7 +52423,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Info_WithoutInfoDict_ReturnsNull",
-      "line": 1326,
+      "line": 1345,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52040,7 +52471,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "Page_CropBox_WithExplicitCropBox_ReturnsCropBox",
-      "line": 1341,
+      "line": 1360,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52088,7 +52519,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "FindPage_NestedPageTree_WithMultiLevelHierarchy_ReturnsCorrectPage",
-      "line": 1398,
+      "line": 1417,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52136,7 +52567,7 @@
       "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
       "class": "PdfDocumentTests",
       "method": "FindPage_NestedPageTreeWithMultiplePages_ReturnsCorrectPageByIndex",
-      "line": 1466,
+      "line": 1485,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52184,7 +52615,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "HasEmbeddedFiles_NoEmbeddedFilesPresent_ReturnsFalse",
-      "line": 21,
+      "line": 22,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52198,7 +52629,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_NoEmbeddedFilesPresent_ReturnsEmptyList",
-      "line": 30,
+      "line": 31,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52212,7 +52643,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_SingleFileViaNameTree_ReturnsFileWithName",
-      "line": 39,
+      "line": 40,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52226,7 +52657,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_HasEmbeddedFiles_ReturnsTrue",
-      "line": 55,
+      "line": 56,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52240,7 +52671,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_MultipleFiles_ReturnsAll",
-      "line": 64,
+      "line": 65,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52254,7 +52685,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_FileWithDescription_CapturesDescription",
-      "line": 82,
+      "line": 83,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52268,7 +52699,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_FileWithMimeType_CapturesMimeType",
-      "line": 97,
+      "line": 98,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52282,7 +52713,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_FileWithCreationDate_CapturesDate",
-      "line": 112,
+      "line": 113,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52296,7 +52727,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_NestedNameTree_ResolvesThroughKids",
-      "line": 135,
+      "line": 136,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52310,7 +52741,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "ScrubEmbeddedFiles_RemovesEmbeddedFiles",
-      "line": 147,
+      "line": 148,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52337,7 +52768,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "ScrubEmbeddedFiles_IsIdempotent",
-      "line": 162,
+      "line": 163,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52364,7 +52795,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "ScrubEmbeddedFiles_OnDocumentWithoutEmbeddedFiles_DoesNotThrow",
-      "line": 175,
+      "line": 176,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52391,7 +52822,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed",
-      "line": 185,
+      "line": 186,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52452,7 +52883,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_Caching_SameInstanceReturned",
-      "line": 204,
+      "line": 205,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52462,11 +52893,59 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.Sanitizer_AfterAttachmentCacheIsMaterialized_RebuildsFilteredView",
+      "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
+      "class": "PdfEmbeddedFileTests",
+      "method": "Sanitizer_AfterAttachmentCacheIsMaterialized_RebuildsFilteredView",
+      "line": 217,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "safe-save-and-metadata"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubMetadata_WithScrubAttachments_RemovesAttachments",
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "ScrubMetadata_WithScrubAttachments_RemovesAttachments",
-      "line": 216,
+      "line": 235,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52527,7 +53006,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "ScrubMetadata_WithoutScrubAttachments_LeavesAttachments",
-      "line": 232,
+      "line": 251,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52588,7 +53067,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "ScrubMetadata_DefaultParameter_ScrubsAttachments",
-      "line": 249,
+      "line": 268,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52649,7 +53128,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_MalformedNameTree_DoesNotThrow",
-      "line": 261,
+      "line": 280,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52663,7 +53142,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_RawDictionary_IsPreserved",
-      "line": 275,
+      "line": 294,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52677,7 +53156,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_LegacyCatalogAFArray_ExtractsFiles",
-      "line": 289,
+      "line": 308,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52725,7 +53204,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_LegacyNamesAFArray_ExtractsFiles",
-      "line": 303,
+      "line": 322,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52739,7 +53218,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_DateWithPositiveTimezoneOffset_ParsesCorrectly",
-      "line": 315,
+      "line": 334,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52753,7 +53232,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_DateWithNegativeTimezoneOffset_ParsesCorrectly",
-      "line": 340,
+      "line": 359,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52767,7 +53246,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_DateWithoutTimezone_DefaultsToZero",
-      "line": 364,
+      "line": 383,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52781,7 +53260,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_DateTooShort_ReturnsNull",
-      "line": 380,
+      "line": 399,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -52795,7 +53274,7 @@
       "path": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
       "class": "PdfEmbeddedFileTests",
       "method": "GetEmbeddedFiles_DateMissingDPrefix_StillParses",
-      "line": 396,
+      "line": 415,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -57214,11 +57693,50 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_UsesCanonicalPdfNumberPrecision",
+      "path": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs",
+      "class": "SignatureAppearanceAuthoringTests",
+      "method": "ApplyVisibleAppearance_UsesCanonicalPdfNumberPrecision",
+      "line": 71,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
       "path": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs",
       "class": "SignatureAppearanceAuthoringTests",
       "method": "ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
-      "line": 71,
+      "line": 83,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -57270,7 +57788,7 @@
       "path": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs",
       "class": "SignatureAppearanceAuthoringTests",
       "method": "ApplyVisibleAppearance_MissingRect_AddsNoAppearance",
-      "line": 83,
+      "line": 95,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -57309,7 +57827,7 @@
       "path": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs",
       "class": "SignatureAppearanceAuthoringTests",
       "method": "ApplyVisibleAppearance_RectNotAnArray_AddsNoAppearance",
-      "line": 95,
+      "line": 107,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -57348,7 +57866,7 @@
       "path": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs",
       "class": "SignatureAppearanceAuthoringTests",
       "method": "ApplyVisibleAppearance_ZeroAreaRect_IsInvisibleSignature",
-      "line": 110,
+      "line": 122,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -57387,7 +57905,7 @@
       "path": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs",
       "class": "SignatureAppearanceAuthoringTests",
       "method": "ApplyVisibleAppearance_LongLine_IsTruncatedWithEllipsis",
-      "line": 124,
+      "line": 136,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -57426,7 +57944,7 @@
       "path": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs",
       "class": "SignatureAppearanceAuthoringTests",
       "method": "ApplyVisibleAppearance_ExtremelyNarrowBox_DrawsUntruncatedLine",
-      "line": 138,
+      "line": 150,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -57465,7 +57983,7 @@
       "path": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs",
       "class": "SignatureAppearanceAuthoringTests",
       "method": "ApplyVisibleAppearance_MoreLinesThanFit_StopsAtBBoxBottom",
-      "line": 153,
+      "line": 165,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -57504,7 +58022,7 @@
       "path": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs",
       "class": "SignatureAppearanceAuthoringTests",
       "method": "ApplyVisibleAppearance_EscapesLiteralStringMetacharactersAndNonAscii",
-      "line": 170,
+      "line": 182,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -57543,7 +58061,7 @@
       "path": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs",
       "class": "SignatureAppearanceAuthoringTests",
       "method": "ApplyVisibleAppearance_NullArguments_Throw",
-      "line": 185,
+      "line": 197,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -57630,11 +58148,37 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::StructElementMcidTextTests.ResolveStructElementText_AfterPageMove_UsesCurrentPageOrder",
+      "path": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs",
+      "class": "StructElementMcidTextTests",
+      "method": "ResolveStructElementText_AfterPageMove_UsesCurrentPageOrder",
+      "line": 99,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::StructElementMcidTextTests.ResolveStructElementText_UntaggedElement_ReturnsEmpty",
       "path": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs",
       "class": "StructElementMcidTextTests",
       "method": "ResolveStructElementText_UntaggedElement_ReturnsEmpty",
-      "line": 99,
+      "line": 126,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -73736,11 +74280,62 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfGraphics_Transform_UsesCanonicalPdfNumberPrecision",
+      "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
+      "class": "PdfGraphicsTests",
+      "method": "PdfGraphics_Transform_UsesCanonicalPdfNumberPrecision",
+      "line": 647,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "content-and-graphics"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfGraphics_Fill_SetsFillColorAndOperator",
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_Fill_SetsFillColorAndOperator",
-      "line": 647,
+      "line": 659,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -73791,7 +74386,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_FillAndStroke_SetsBothOperators",
-      "line": 667,
+      "line": 679,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -73842,7 +74437,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_DrawString_WithFont_AddsFontOperators",
-      "line": 685,
+      "line": 697,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -73905,7 +74500,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_DrawString_WithAlignment_Center_AdjustsPosition",
-      "line": 701,
+      "line": 713,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -73956,7 +74551,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_DrawString_WithAlignment_Right_AdjustsPosition",
-      "line": 717,
+      "line": 729,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74007,7 +74602,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_DrawInvisibleText_EmitsRenderMode3",
-      "line": 733,
+      "line": 745,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74058,7 +74653,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_DrawInvisibleText_ResetsRenderModeAndScaleAfterward",
-      "line": 750,
+      "line": 762,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74109,7 +74704,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_DrawInvisibleText_ScalesToTargetWidth",
-      "line": 774,
+      "line": 786,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74160,7 +74755,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_DrawInvisibleText_SkipsCharactersFontCannotEncode",
-      "line": 795,
+      "line": 807,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74248,7 +74843,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_DrawInvisibleText_AfterFlush_LettersAndTextReflectTheWord",
-      "line": 810,
+      "line": 822,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74299,7 +74894,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_MeasureString_ReturnsNonZeroSize",
-      "line": 826,
+      "line": 838,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74350,7 +74945,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_MeasureString_EmptyString_ReturnsZero",
-      "line": 836,
+      "line": 848,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74401,7 +74996,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfGraphics_Flush_WritesToContentStream",
-      "line": 846,
+      "line": 858,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74452,7 +75047,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfPen_BlackStatic_IsCreated",
-      "line": 868,
+      "line": 880,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74503,7 +75098,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfPen_WhiteStatic_IsCreated",
-      "line": 876,
+      "line": 888,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74554,7 +75149,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfPen_RedStatic_IsCreated",
-      "line": 884,
+      "line": 896,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74605,7 +75200,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfPen_WithColor_StoresColor",
-      "line": 892,
+      "line": 904,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74656,7 +75251,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfPen_WithNegativeWidth_ClipsToZero",
-      "line": 900,
+      "line": 912,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74707,7 +75302,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfPen_GetStrokeColorOperator_GrayscaleBlack_ProducesOperator",
-      "line": 907,
+      "line": 919,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74758,7 +75353,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfPen_GetStrokeColorOperator_Rgb_ProducesRgOperator",
-      "line": 915,
+      "line": 927,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74809,7 +75404,7 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfPen_GetLineWidthOperator_ProducesWOperator",
-      "line": 923,
+      "line": 935,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -74860,7 +75455,58 @@
       "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
       "class": "PdfGraphicsTests",
       "method": "PdfPen_GetLineWidthOperator_IntegerWidth_FormatsAsInteger",
-      "line": 932,
+      "line": 944,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "content-and-graphics"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfPenAndBrush_UseCanonicalPdfNumberPrecision",
+      "path": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs",
+      "class": "PdfGraphicsTests",
+      "method": "PdfPenAndBrush_UseCanonicalPdfNumberPrecision",
+      "line": 952,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -103349,11 +103995,13 @@
           "modes": [
             "extract",
             "mutate",
+            "preserve",
             "render",
             "write"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ]
         }
       ],
@@ -103720,7 +104368,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
       "class": "FullwidthFormsRedactionTests",
       "method": "RedactText_KatakanaNeedle_RemovesHalfwidthKatakana",
-      "line": 77,
+      "line": 78,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -103747,7 +104395,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
       "class": "FullwidthFormsRedactionTests",
       "method": "RedactText_VoicedKatakanaNeedle_RemovesHalfwidthPair",
-      "line": 102,
+      "line": 103,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -103774,7 +104422,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
       "class": "FullwidthFormsRedactionTests",
       "method": "RedactText_FullwidthNeedle_AlsoRemovesAsciiText",
-      "line": 125,
+      "line": 126,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -103801,7 +104449,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
       "class": "FullwidthFormsRedactionTests",
       "method": "RedactText_AsciiNeedle_DoesNotTouchUnrelatedText",
-      "line": 143,
+      "line": 144,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -103828,7 +104476,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
       "class": "FullwidthFormsRedactionTests",
       "method": "RedactText_CompatibilityCharsOutsideTheBlock_AreNotFolded",
-      "line": 166,
+      "line": 167,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -106994,7 +107642,8 @@
             "write"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ]
         },
         {
@@ -108000,7 +108649,8 @@
             "write"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ]
         },
         {
@@ -112486,11 +113136,13 @@
           "modes": [
             "extract",
             "mutate",
+            "preserve",
             "render",
             "write"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ]
         }
       ],
@@ -122719,6 +123371,247 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.QueriesAndWriterConstruction_DoNotRunPreSaveActions",
+      "path": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs",
+      "class": "PdfDocumentSaveLifecycleTests",
+      "method": "QueriesAndWriterConstruction_DoNotRunPreSaveActions",
+      "line": 14,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "safe-save-and-metadata",
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.PreSaveObjectRegistration_IsIncludedInTheSameSaveGraph",
+      "path": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs",
+      "class": "PdfDocumentSaveLifecycleTests",
+      "method": "PreSaveObjectRegistration_IsIncludedInTheSameSaveGraph",
+      "line": 42,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "safe-save-and-metadata",
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
+      "path": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs",
+      "class": "PdfDocumentSaveLifecycleTests",
+      "method": "RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
+      "line": 69,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "safe-save-and-metadata",
+        "security-and-encryption",
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs::PdfDocumentWriterEncryptionTests.Write_WithEncryptionOptions_EmitsEncryptDictionaryInTrailer",
       "path": "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs",
       "class": "PdfDocumentWriterEncryptionTests",
@@ -129200,11 +130093,25 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Writing/PdfNumberFormatterTests.cs::PdfNumberFormatterTests.PdfRealEmitters_UseTheSameNearIntegerPolicy",
+      "path": "Excise.Core.Tests/Writing/PdfNumberFormatterTests.cs",
+      "class": "PdfNumberFormatterTests",
+      "method": "PdfRealEmitters_UseTheSameNearIntegerPolicy",
+      "line": 57,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Writing/PdfNumberFormatterTests.cs::PdfNumberFormatterTests.Format_TypicalValues_UsesMinimalDigits",
       "path": "Excise.Core.Tests/Writing/PdfNumberFormatterTests.cs",
       "class": "PdfNumberFormatterTests",
       "method": "Format_TypicalValues_UsesMinimalDigits",
-      "line": 64,
+      "line": 81,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -129218,7 +130125,7 @@
       "path": "Excise.Core.Tests/Writing/PdfNumberFormatterTests.cs",
       "class": "PdfNumberFormatterTests",
       "method": "Format_BelowPrecision_CollapsesToZeroWithoutSign",
-      "line": 73,
+      "line": 90,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -129232,7 +130139,7 @@
       "path": "Excise.Core.Tests/Writing/PdfNumberFormatterTests.cs",
       "class": "PdfNumberFormatterTests",
       "method": "Format_NeverUsesExponentNotation",
-      "line": 81,
+      "line": 98,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -129246,7 +130153,7 @@
       "path": "Excise.Core.Tests/Writing/PdfNumberFormatterTests.cs",
       "class": "PdfNumberFormatterTests",
       "method": "Format_IsCultureIndependent",
-      "line": 90,
+      "line": 107,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -129260,7 +130167,7 @@
       "path": "Excise.Core.Tests/Writing/PdfNumberFormatterTests.cs",
       "class": "PdfNumberFormatterTests",
       "method": "ContentStreamWriter_NoisyTmAndRe_EmitsCleanDeterministicBytes",
-      "line": 108,
+      "line": 125,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -129345,7 +130252,7 @@
       "path": "Excise.Core.Tests/Writing/PdfNumberFormatterTests.cs",
       "class": "PdfNumberFormatterTests",
       "method": "PdfObjectWriter_NoisyReal_SerializesClean",
-      "line": 131,
+      "line": 148,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -129393,7 +130300,7 @@
       "path": "Excise.Core.Tests/Writing/PdfNumberFormatterTests.cs",
       "class": "PdfNumberFormatterTests",
       "method": "ContentOperator_ToString_UsesSameCleanFormat",
-      "line": 144,
+      "line": 161,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -131648,6 +132555,732 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
+      "path": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs",
+      "class": "AcroFormAppearanceDefaultsTests",
+      "method": "Defaults_ResolveDocumentAppearanceAndResourcesOnce",
+      "line": 9,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "forms"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.forms",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_MissingAcroFormReturnsEmptyDefaults",
+      "path": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs",
+      "class": "AcroFormAppearanceDefaultsTests",
+      "method": "Defaults_MissingAcroFormReturnsEmptyDefaults",
+      "line": 33,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "forms"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.forms",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearanceExecutionTests.cs::AnnotationAppearanceExecutionTests.Plan_MapsTransformedBoundingBoxOntoAnnotationRect",
+      "path": "Excise.Rendering.Tests/AnnotationAppearanceExecutionTests.cs",
+      "class": "AnnotationAppearanceExecutionTests",
+      "method": "Plan_MapsTransformedBoundingBoxOntoAnnotationRect",
+      "line": 9,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearanceExecutionTests.cs::AnnotationAppearanceExecutionTests.Plan_RequestsSynthesisForMissingOrDegenerateBoundingBox",
+      "path": "Excise.Rendering.Tests/AnnotationAppearanceExecutionTests.cs",
+      "class": "AnnotationAppearanceExecutionTests",
+      "method": "Plan_RequestsSynthesisForMissingOrDegenerateBoundingBox",
+      "line": 35,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearanceExecutionTests.cs::AnnotationAppearanceExecutionTests.Plan_SkipsDegenerateAnnotationRect",
+      "path": "Excise.Rendering.Tests/AnnotationAppearanceExecutionTests.cs",
+      "class": "AnnotationAppearanceExecutionTests",
+      "method": "Plan_SkipsDegenerateAnnotationRect",
+      "line": 58,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs::AnnotationAppearancePolicyTests.EvaluateVisibility_UsesTheFieldsAndCommentsBoundary",
+      "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+      "class": "AnnotationAppearancePolicyTests",
+      "method": "EvaluateVisibility_UsesTheFieldsAndCommentsBoundary",
+      "line": 13,
+      "xunitKind": "theory",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs::AnnotationAppearancePolicyTests.EvaluateVisibility_HiddenFlagsRequireAuditMode",
+      "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+      "class": "AnnotationAppearancePolicyTests",
+      "method": "EvaluateVisibility_HiddenFlagsRequireAuditMode",
+      "line": 34,
+      "xunitKind": "theory",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs::AnnotationAppearancePolicyTests.EvaluateVisibility_InvisibleOnlySuppressesUnknownSubtypes",
+      "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+      "class": "AnnotationAppearancePolicyTests",
+      "method": "EvaluateVisibility_InvisibleOnlySuppressesUnknownSubtypes",
+      "line": 48,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs::AnnotationAppearancePolicyTests.ResolveNormalAppearance_ReturnsDirectStream",
+      "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+      "class": "AnnotationAppearancePolicyTests",
+      "method": "ResolveNormalAppearance_ReturnsDirectStream",
+      "line": 62,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs::AnnotationAppearancePolicyTests.ResolveNormalAppearance_UsesNamedState",
+      "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+      "class": "AnnotationAppearancePolicyTests",
+      "method": "ResolveNormalAppearance_UsesNamedState",
+      "line": 74,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs::AnnotationAppearancePolicyTests.ResolveNormalAppearance_DoesNotGuessMissingNamedState",
+      "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+      "class": "AnnotationAppearancePolicyTests",
+      "method": "ResolveNormalAppearance_DoesNotGuessMissingNamedState",
+      "line": 88,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs::AnnotationAppearancePolicyTests.ResolveNormalAppearance_AcceptsOnlyUnambiguousStateWithoutSelector",
+      "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+      "class": "AnnotationAppearancePolicyTests",
+      "method": "ResolveNormalAppearance_AcceptsOnlyUnambiguousStateWithoutSelector",
+      "line": 100,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs::AnnotationAppearancePolicyTests.SelectVisibleAnnotations_ReturnsTypedSelectionsAndDiagnostics",
+      "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+      "class": "AnnotationAppearancePolicyTests",
+      "method": "SelectVisibleAnnotations_ReturnsTypedSelectionsAndDiagnostics",
+      "line": 122,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs::AnnotationAppearancePolicyTests.SelectSynthesis_RegistersFallbackBoundary",
+      "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+      "class": "AnnotationAppearancePolicyTests",
+      "method": "SelectSynthesis_RegistersFallbackBoundary",
+      "line": 158,
+      "xunitKind": "theory",
+      "kind": "test-method",
+      "facets": [
+        "annotations"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ContentOperatorRouteTests.cs::ContentOperatorRouteTests.Resolve_RegistersEverySupportedOperatorExactlyOnce",
+      "path": "Excise.Rendering.Tests/ContentOperatorRouteTests.cs",
+      "class": "ContentOperatorRouteTests",
+      "method": "Resolve_RegistersEverySupportedOperatorExactlyOnce",
+      "line": 20,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "content-and-graphics"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ContentOperatorRouteTests.cs::ContentOperatorRouteTests.Resolve_LeavesUnknownOperatorsUnrouted",
+      "path": "Excise.Rendering.Tests/ContentOperatorRouteTests.cs",
+      "class": "ContentOperatorRouteTests",
+      "method": "Resolve_LeavesUnknownOperatorsUnrouted",
+      "line": 43,
+      "xunitKind": "theory",
+      "kind": "test-method",
+      "facets": [
+        "content-and-graphics"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ContentOperatorRouteTests.cs::ContentOperatorRouteTests.Resolve_IdentifiesOnlyMarkedContentScopeOperators",
+      "path": "Excise.Rendering.Tests/ContentOperatorRouteTests.cs",
+      "class": "ContentOperatorRouteTests",
+      "method": "Resolve_IdentifiesOnlyMarkedContentScopeOperators",
+      "line": 57,
+      "xunitKind": "theory",
+      "kind": "test-method",
+      "facets": [
+        "content-and-graphics"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ContentOperatorRouteTests.cs::ContentOperatorRouteTests.Resolve_IdentifiesEveryType3ColorLockOperator",
+      "path": "Excise.Rendering.Tests/ContentOperatorRouteTests.cs",
+      "class": "ContentOperatorRouteTests",
+      "method": "Resolve_IdentifiesEveryType3ColorLockOperator",
+      "line": 75,
+      "xunitKind": "theory",
+      "kind": "test-method",
+      "facets": [
+        "content-and-graphics"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Unrotated_VisualTopHalf_MapsToContentTopHalf",
       "path": "Excise.Rendering.Tests/ContinuousTileClipTests.cs",
       "class": "ContinuousTileClipTests",
@@ -132090,6 +133723,177 @@
         "product-integration-general"
       ],
       "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DctImageDecoderTests.cs::DctImageDecoderTests.DeclaredRgbColorTransformDecodesWithoutAContext",
+      "path": "Excise.Rendering.Tests/DctImageDecoderTests.cs",
+      "class": "DctImageDecoderTests",
+      "method": "DeclaredRgbColorTransformDecodesWithoutAContext",
+      "line": 11,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DctImageDecoderTests.cs::DctImageDecoderTests.TransformPolicyUsesDeclaredValueAndCmykFallback",
+      "path": "Excise.Rendering.Tests/DctImageDecoderTests.cs",
+      "class": "DctImageDecoderTests",
+      "method": "TransformPolicyUsesDeclaredValueAndCmykFallback",
+      "line": 38,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DctImageDecoderTests.cs::DctImageDecoderTests.CancellationIsPropagatedInsteadOfReportedAsMalformedData",
+      "path": "Excise.Rendering.Tests/DctImageDecoderTests.cs",
+      "class": "DctImageDecoderTests",
+      "method": "CancellationIsPropagatedInsteadOfReportedAsMalformedData",
+      "line": 55,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.InactiveState_DoesNotCreateBackdropOrTrackRgbPaint",
+      "path": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs",
+      "class": "DeviceCmykExecutionStateTests",
+      "method": "InactiveState_DoesNotCreateBackdropOrTrackRgbPaint",
+      "line": 10,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.EnterChildGroup_RecordsReviewedLifetimeState",
+      "path": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs",
+      "class": "DeviceCmykExecutionStateTests",
+      "method": "EnterChildGroup_RecordsReviewedLifetimeState",
+      "line": 25,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.CompleteChildGroup_SynchronizesDirtyBackdropOnce",
+      "path": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs",
+      "class": "DeviceCmykExecutionStateTests",
+      "method": "CompleteChildGroup_SynchronizesDirtyBackdropOnce",
+      "line": 56,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.CompleteChildGroup_FailedSynchronizationRetainsDirtyState",
+      "path": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs",
+      "class": "DeviceCmykExecutionStateTests",
+      "method": "CompleteChildGroup_FailedSynchronizationRetainsDirtyState",
+      "line": 77,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.BlendMask_IsGrowOnlyAndDisposedWithOwner",
+      "path": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs",
+      "class": "DeviceCmykExecutionStateTests",
+      "method": "BlendMask_IsGrowOnlyAndDisposedWithOwner",
+      "line": 93,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images",
+        "transparency"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
       "promotion": "review-required"
     },
     {
@@ -140034,7 +141838,8 @@
             "write"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ]
         }
       ],
@@ -140073,7 +141878,8 @@
             "write"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ]
         }
       ],
@@ -140409,11 +142215,13 @@
           "modes": [
             "extract",
             "mutate",
+            "preserve",
             "render",
             "write"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ]
         }
       ],
@@ -143050,10 +144858,12 @@
             "mutate",
             "parse",
             "preserve",
-            "render"
+            "render",
+            "write"
           ],
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ]
         },
         {
@@ -143434,6 +145244,84 @@
             "mutate",
             "render",
             "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EncodedImageDecoderTests.cs::EncodedImageDecoderTests.EmptyAndMalformedPayloadsAreRefused",
+      "path": "Excise.Rendering.Tests/EncodedImageDecoderTests.cs",
+      "class": "EncodedImageDecoderTests",
+      "method": "EmptyAndMalformedPayloadsAreRefused",
+      "line": 10,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EncodedImageDecoderTests.cs::EncodedImageDecoderTests.ValidPayloadFallsBackToIntrinsicSizeWhenCodecDoesNotScale",
+      "path": "Excise.Rendering.Tests/EncodedImageDecoderTests.cs",
+      "class": "EncodedImageDecoderTests",
+      "method": "ValidPayloadFallsBackToIntrinsicSizeWhenCodecDoesNotScale",
+      "line": 18,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EncodedImageDecoderTests.cs::EncodedImageDecoderTests.CancellationIsPropagatedInsteadOfReportedAsMalformedData",
+      "path": "Excise.Rendering.Tests/EncodedImageDecoderTests.cs",
+      "class": "EncodedImageDecoderTests",
+      "method": "CancellationIsPropagatedInsteadOfReportedAsMalformedData",
+      "line": 39,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
           ],
           "mappingSources": [
             "keyword-facet-candidate"
@@ -146316,6 +148204,58 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/JpxImageDecoderTests.cs::JpxImageDecoderTests.MalformedPayloadIsRefusedWithoutAContext",
+      "path": "Excise.Rendering.Tests/JpxImageDecoderTests.cs",
+      "class": "JpxImageDecoderTests",
+      "method": "MalformedPayloadIsRefusedWithoutAContext",
+      "line": 10,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/JpxImageDecoderTests.cs::JpxImageDecoderTests.CancellationIsPropagatedInsteadOfReportedAsMalformedData",
+      "path": "Excise.Rendering.Tests/JpxImageDecoderTests.cs",
+      "class": "JpxImageDecoderTests",
+      "method": "CancellationIsPropagatedInsteadOfReportedAsMalformedData",
+      "line": 25,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxSoftMaskRenderTests.JpxSoftMasks_ClearImageBackgrounds_RenderedOutOfProcess",
       "path": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs",
       "class": "JpxSoftMaskRenderTests",
@@ -147287,10 +149227,233 @@
             "write"
           ],
           "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.DeviceRgbSamplesAreCopiedWithoutAContext",
+      "path": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
+      "class": "RawSampleImageDecoderTests",
+      "method": "DeviceRgbSamplesAreCopiedWithoutAContext",
+      "line": 11,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
             "keyword-facet-candidate"
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.DeviceCmykSamplesUseTheColorSpaceLattice",
+      "path": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
+      "class": "RawSampleImageDecoderTests",
+      "method": "DeviceCmykSamplesUseTheColorSpaceLattice",
+      "line": 29,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.DecodeArrayIsAppliedWithoutAContext",
+      "path": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
+      "class": "RawSampleImageDecoderTests",
+      "method": "DecodeArrayIsAppliedWithoutAContext",
+      "line": 51,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.ColorKeyMaskUsesRawSamplesBeforeColorConversion",
+      "path": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
+      "class": "RawSampleImageDecoderTests",
+      "method": "ColorKeyMaskUsesRawSamplesBeforeColorConversion",
+      "line": 68,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.PackedFourBitSamplesAreUnpackedPerRow",
+      "path": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
+      "class": "RawSampleImageDecoderTests",
+      "method": "PackedFourBitSamplesAreUnpackedPerRow",
+      "line": 86,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.OneBitRowsHonorBytePadding",
+      "path": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
+      "class": "RawSampleImageDecoderTests",
+      "method": "OneBitRowsHonorBytePadding",
+      "line": 104,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.CancellationIsPropagatedInsteadOfReportedAsMalformedData",
+      "path": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
+      "class": "RawSampleImageDecoderTests",
+      "method": "CancellationIsPropagatedInsteadOfReportedAsMalformedData",
+      "line": 122,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/RenderResourceScopeTests.cs::RenderResourceScopeTests.BorrowersShareTheOwnersIndirectImageEntry",
+      "path": "Excise.Rendering.Tests/RenderResourceScopeTests.cs",
+      "class": "RenderResourceScopeTests",
+      "method": "BorrowersShareTheOwnersIndirectImageEntry",
+      "line": 25,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/RenderResourceScopeTests.cs::RenderResourceScopeTests.FailedDecodeIsCachedAndScopeRejectsUseAfterOwnerDisposes",
+      "path": "Excise.Rendering.Tests/RenderResourceScopeTests.cs",
+      "class": "RenderResourceScopeTests",
+      "method": "FailedDecodeIsCachedAndScopeRejectsUseAfterOwnerDisposes",
+      "line": 39,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -151994,11 +154157,25 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_SelfReferentialFormXObject_SkipsRecursiveDoAndKeepsOuterPaint",
+      "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
+      "class": "SkiaRendererTests",
+      "method": "RenderPage_SelfReferentialFormXObject_SkipsRecursiveDoAndKeepsOuterPaint",
+      "line": 3515,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ScaledImageXObject_AppliesCTM",
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ScaledImageXObject_AppliesCTM",
-      "line": 3515,
+      "line": 3533,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152024,7 +154201,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_StrokeAlpha_AppliesTransparency",
-      "line": 3535,
+      "line": 3553,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152049,7 +154226,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_FillAlpha_AppliesTransparency",
-      "line": 3555,
+      "line": 3573,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152074,7 +154251,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_BothAlphas_AppliesBothTransparencies",
-      "line": 3575,
+      "line": 3593,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152099,7 +154276,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_LineWidth_AppliesStrokeWidth",
-      "line": 3595,
+      "line": 3613,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152113,7 +154290,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_LineCap_AppliesCapStyle",
-      "line": 3614,
+      "line": 3632,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152127,7 +154304,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_LineJoin_AppliesJoinStyle",
-      "line": 3634,
+      "line": 3652,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152141,7 +154318,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_MiterLimit_AppliesMiterLimit",
-      "line": 3654,
+      "line": 3672,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152155,7 +154332,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_CombinedParameters_AppliesAll",
-      "line": 3673,
+      "line": 3691,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152169,7 +154346,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_AlphaClampedToValidRange",
-      "line": 3697,
+      "line": 3715,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152194,7 +154371,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_MissingDictionary_ContinuesRendering",
-      "line": 3717,
+      "line": 3735,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152208,7 +154385,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_FormXObjectExtGState_AppliesLocallyAndDoesNotLeak",
-      "line": 3736,
+      "line": 3754,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152235,7 +154412,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_FormXObjectUnbalancedSave_DoesNotLeakCallerGraphicsState",
-      "line": 3757,
+      "line": 3775,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152333,7 +154510,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_SMask_AppliesForFilledRect",
-      "line": 3773,
+      "line": 3791,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152359,7 +154536,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Flatness_SetsTolerance",
-      "line": 3804,
+      "line": 3822,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152373,7 +154550,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Flatness_AcceptsValidRange",
-      "line": 3834,
+      "line": 3852,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -152387,7 +154564,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RenderingIntent_AbsoluteColorimetric",
-      "line": 3858,
+      "line": 3876,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152401,7 +154578,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RenderingIntent_RelativeColorimetric",
-      "line": 3880,
+      "line": 3898,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152415,7 +154592,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RenderingIntent_Saturation",
-      "line": 3901,
+      "line": 3919,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152429,7 +154606,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RenderingIntent_Perceptual",
-      "line": 3922,
+      "line": 3940,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152443,7 +154620,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RenderingIntent_WithColorSpace",
-      "line": 3943,
+      "line": 3961,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152457,7 +154634,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CombinedFlatnessAndRenderingIntent",
-      "line": 3965,
+      "line": 3983,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152471,7 +154648,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_Grayscale_RendersWithoutError",
-      "line": 3996,
+      "line": 4014,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152497,7 +154674,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_RGB_RendersWithoutError",
-      "line": 4030,
+      "line": 4048,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152523,7 +154700,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_1BitMonochrome_RendersWithoutError",
-      "line": 4059,
+      "line": 4077,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152549,7 +154726,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_WithFilter_RendersWithoutError",
-      "line": 4089,
+      "line": 4107,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152575,7 +154752,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_WithTransformation_AppliesCTM",
-      "line": 4119,
+      "line": 4137,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152601,7 +154778,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MultipleInlineImages_RendersAll",
-      "line": 4148,
+      "line": 4166,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152627,7 +154804,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_MixedWithOtherContent_RendersCorrectly",
-      "line": 4189,
+      "line": 4207,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152653,7 +154830,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
-      "line": 4224,
+      "line": 4242,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152667,7 +154844,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ShadingPattern_WithClipping_RestrictsShading",
-      "line": 4244,
+      "line": 4262,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152718,7 +154895,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ShadingPattern_WithTransformation_AppliesCTM",
-      "line": 4266,
+      "line": 4284,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152732,7 +154909,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ShadingPattern_MissingResource_ContinuesRendering",
-      "line": 4288,
+      "line": 4306,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152746,7 +154923,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type5MeshShadingPatternFill_RendersInsteadOfNothing",
-      "line": 4321,
+      "line": 4339,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152760,7 +154937,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type7TensorPatchShadingPatternFill_RendersInsteadOfNothing",
-      "line": 4339,
+      "line": 4357,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152774,7 +154951,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_UnsupportedShadingTypeInPatternFill_RecordsDiagnosticInsteadOfSilentFailure",
-      "line": 4358,
+      "line": 4376,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152788,7 +154965,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_UnsupportedShadingTypeInShOperator_RecordsDiagnosticInsteadOfSilentFailure",
-      "line": 4378,
+      "line": 4396,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152802,7 +154979,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_PdfjsIssue18816_Type7TensorPatchPatternFillRendersRealWorldFile",
-      "line": 4396,
+      "line": 4414,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152816,7 +154993,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContentPoint_MP_DoesNotAffectRendering",
-      "line": 4429,
+      "line": 4447,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152830,7 +155007,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContentPoint_DP_WithProperties",
-      "line": 4451,
+      "line": 4469,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152844,7 +155021,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContentSequence_BMC_EMC_WrapsContent",
-      "line": 4472,
+      "line": 4490,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152858,7 +155035,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContentSequence_BDC_EMC_WithProperties",
-      "line": 4494,
+      "line": 4512,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152872,7 +155049,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_NestedMarkedContent_MultipleSequences",
-      "line": 4516,
+      "line": 4534,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152886,7 +155063,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContent_MixedWithGraphics",
-      "line": 4542,
+      "line": 4560,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152937,7 +155114,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContent_AllOperatorTypes",
-      "line": 4567,
+      "line": 4585,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -152951,7 +155128,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_RendersCharProcPathGlyph",
-      "line": 4599,
+      "line": 4617,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153014,7 +155191,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_NonDefaultFontMatrixScalesGlyphSpace",
-      "line": 4621,
+      "line": 4639,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153040,7 +155217,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_CharProcUsesFontResourcesForImageGlyph",
-      "line": 4638,
+      "line": 4656,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153078,7 +155255,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d0ColoredGlyph_HonorsCharProcColor",
-      "line": 4655,
+      "line": 4673,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153104,7 +155281,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d1UncoloredGlyph_IgnoresCharProcColor_PaintsInTextColor",
-      "line": 4674,
+      "line": 4692,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153130,7 +155307,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d1ImageMaskXObjectGlyph_PaintsInTextFillColor",
-      "line": 4696,
+      "line": 4714,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153168,7 +155345,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d1InlineImageMaskGlyph_PaintsInTextFillColor",
-      "line": 4721,
+      "line": 4739,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153206,7 +155383,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d0ImageMaskGlyph_HonorsCharProcColor",
-      "line": 4745,
+      "line": 4763,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153244,7 +155421,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d0ColoredImageGlyph_KeepsImageOwnColor",
-      "line": 4766,
+      "line": 4784,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153282,7 +155459,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d1BBox_ClipsGlyphDescription",
-      "line": 4786,
+      "line": 4804,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153345,7 +155522,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d1AllZeroBBox_DoesNotClip",
-      "line": 4813,
+      "line": 4831,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153408,7 +155585,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_MissingWidths_AdvancesByCharProcWx",
-      "line": 4831,
+      "line": 4849,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153434,7 +155611,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_NonzeroWyOperand_IsIgnored_GlyphsStayOnBaseline",
-      "line": 4860,
+      "line": 4878,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153460,7 +155637,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_WidthsOverridesCharProcWx",
-      "line": 4891,
+      "line": 4909,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153486,7 +155663,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_MissingCharProc_SkipsGlyphButStillAdvances",
-      "line": 4917,
+      "line": 4935,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153512,7 +155689,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_RotatedFontMatrix_AdvanceIsMappedXComponent",
-      "line": 4940,
+      "line": 4958,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153538,7 +155715,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_StrayD1InPageStream_DoesNotLockColorOrClipPage",
-      "line": 4968,
+      "line": 4986,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153589,7 +155766,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_ClipsSubsequentPaintToGlyphShape",
-      "line": 5016,
+      "line": 5034,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153652,7 +155829,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_GlyphItselfPaintsNothing",
-      "line": 5038,
+      "line": 5056,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153678,7 +155855,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr4_FillsGlyphAndClipsSubsequentPaint",
-      "line": 5058,
+      "line": 5076,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153741,7 +155918,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr0_DoesNotClipSubsequentPaint",
-      "line": 5082,
+      "line": 5100,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153804,7 +155981,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_ClipAccumulatesAcrossGlyphs",
-      "line": 5102,
+      "line": 5120,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153867,7 +156044,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_InternalCmShapesClipCoverage",
-      "line": 5125,
+      "line": 5143,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153930,7 +156107,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_StrokedCharProcClipsToStrokeOutline",
-      "line": 5148,
+      "line": 5166,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -153993,7 +156170,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_D1BBoxBoundsClipContribution",
-      "line": 5171,
+      "line": 5189,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -154056,7 +156233,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_ImageGlyphContributesItsBounds",
-      "line": 5195,
+      "line": 5213,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -154094,7 +156271,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CompatibilitySection_BX_EX_IgnoresUnknown",
-      "line": 5218,
+      "line": 5236,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -154108,7 +156285,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CompatibilitySection_NestedBX_EX",
-      "line": 5243,
+      "line": 5261,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -154122,7 +156299,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CompatibilitySection_WithKnownOperators",
-      "line": 5269,
+      "line": 5287,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164459,7 +166636,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "ExternalLinkClick_RealPointer_FiresEventAndRunsConfirmDialog",
-      "line": 65,
+      "line": 66,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164473,7 +166650,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "DangerousLinkClick_RealPointer_FiresEventAndRunsRefusal",
-      "line": 99,
+      "line": 100,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164487,7 +166664,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "FormAuthoringDrag_RealPointer_FiresFormFieldRectDrawnWithFlippedRect",
-      "line": 134,
+      "line": 135,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164514,7 +166691,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "FreehandDrag_RealPointer_LandsInInkListAtTheDrawnContentPoints",
-      "line": 199,
+      "line": 200,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164528,7 +166705,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "FreehandClickWithoutDragging_AddsNothingAndDoesNotThrow",
-      "line": 270,
+      "line": 271,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164542,7 +166719,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "SegmentDrag_RealPointer_ProducesALineAtTheDraggedEndpoints",
-      "line": 317,
+      "line": 318,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -164556,7 +166733,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "SwitchingPathKindWhileDrawing_KeepsDrawingAndRetargetsTheGesture",
-      "line": 398,
+      "line": 399,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164607,7 +166784,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "VertexClicks_FinishedWithEnter_LandAtTheClickedPoints",
-      "line": 458,
+      "line": 459,
       "xunitKind": "theory",
       "kind": "test-method",
       "facets": [
@@ -164621,7 +166798,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "VertexPath_EscapeAbandonsIt_AndBackspaceDropsTheLastVertex",
-      "line": 519,
+      "line": 520,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164672,7 +166849,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "VertexPath_DoubleClickFinishes_WithoutDuplicatingTheLastVertex",
-      "line": 579,
+      "line": 580,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164723,7 +166900,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "FormFieldCheckbox_RealToggle_CommitsValueAndMarksDirty",
-      "line": 646,
+      "line": 647,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164750,7 +166927,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "ThumbnailDragReorder_RealPointer_ReordersPagesAndNoOpsOnSelfDrop",
-      "line": 704,
+      "line": 705,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164764,7 +166941,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "ThumbnailClick_RealPointer_NavigatesToThatPage",
-      "line": 746,
+      "line": 747,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164778,7 +166955,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "ThumbnailBatchCheckbox_RealClick_AddsPageToSelectionSet",
-      "line": 777,
+      "line": 778,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -164792,7 +166969,7 @@
       "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
       "class": "shows",
       "method": "SearchResultRow_RealPointer_JumpsToMatchPage",
-      "line": 807,
+      "line": 808,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -165455,7 +167632,7 @@
       "path": "Excise.App.Tests/UI/SearchHighlightIndexTests.cs",
       "class": "SearchHighlightIndexTests",
       "method": "PerPageIndex_MatchesLinearScan_ForEveryPage",
-      "line": 24,
+      "line": 25,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -165469,7 +167646,7 @@
       "path": "Excise.App.Tests/UI/SearchHighlightIndexTests.cs",
       "class": "SearchHighlightIndexTests",
       "method": "ClearingSearch_EmptiesPerPageIndex",
-      "line": 66,
+      "line": 67,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -193873,75 +196050,77 @@
     }
   ],
   "summary": {
-    "records": 5970,
+    "records": 6031,
     "facets": {
-      "annotations": 329,
-      "content-and-graphics": 711,
-      "document-structure": 850,
-      "fonts": 645,
-      "forms": 170,
-      "images": 352,
-      "product-integration-general": 2554,
-      "redaction": 597,
-      "safe-save-and-metadata": 475,
-      "security-and-encryption": 348,
-      "transparency": 42
+      "annotations": 342,
+      "content-and-graphics": 717,
+      "document-structure": 858,
+      "fonts": 646,
+      "forms": 172,
+      "images": 369,
+      "product-integration-general": 2564,
+      "redaction": 598,
+      "safe-save-and-metadata": 481,
+      "security-and-encryption": 350,
+      "transparency": 43
     },
     "parentCapabilityModes": {
-      "pdf.17.content.streams:mutate": 711,
-      "pdf.17.content.streams:parse": 711,
-      "pdf.17.content.streams:render": 714,
-      "pdf.17.content.streams:write": 711,
-      "pdf.17.document.catalog-pages:parse": 850,
-      "pdf.17.document.catalog-pages:preserve": 850,
-      "pdf.17.document.catalog-pages:write": 850,
-      "pdf.17.document.metadata:mutate": 475,
-      "pdf.17.document.metadata:preserve": 475,
-      "pdf.17.document.metadata:write": 475,
+      "pdf.17.content.streams:mutate": 717,
+      "pdf.17.content.streams:parse": 717,
+      "pdf.17.content.streams:render": 720,
+      "pdf.17.content.streams:write": 717,
+      "pdf.17.document.catalog-pages:parse": 858,
+      "pdf.17.document.catalog-pages:preserve": 858,
+      "pdf.17.document.catalog-pages:write": 858,
+      "pdf.17.document.metadata:mutate": 481,
+      "pdf.17.document.metadata:preserve": 481,
+      "pdf.17.document.metadata:write": 481,
       "pdf.17.graphics.color:render": 2,
-      "pdf.17.graphics.fonts:extract": 645,
-      "pdf.17.graphics.fonts:parse": 645,
-      "pdf.17.graphics.fonts:render": 646,
-      "pdf.17.graphics.images:extract": 352,
-      "pdf.17.graphics.images:parse": 352,
-      "pdf.17.graphics.images:render": 353,
-      "pdf.17.graphics.paths-painting:mutate": 711,
-      "pdf.17.graphics.paths-painting:parse": 711,
-      "pdf.17.graphics.paths-painting:render": 712,
-      "pdf.17.graphics.paths-painting:write": 711,
-      "pdf.17.graphics.state:mutate": 711,
-      "pdf.17.graphics.state:parse": 711,
-      "pdf.17.graphics.state:render": 713,
-      "pdf.17.graphics.state:write": 711,
-      "pdf.17.interactive.annotations:mutate": 329,
-      "pdf.17.interactive.annotations:parse": 329,
-      "pdf.17.interactive.annotations:preserve": 329,
-      "pdf.17.interactive.annotations:render": 329,
-      "pdf.17.interactive.forms:mutate": 170,
-      "pdf.17.interactive.forms:parse": 170,
-      "pdf.17.interactive.forms:render": 170,
-      "pdf.17.interactive.forms:write": 170,
-      "pdf.17.interactive.redaction-annotations:mutate": 329,
-      "pdf.17.interactive.redaction-annotations:parse": 329,
-      "pdf.17.interactive.redaction-annotations:preserve": 329,
-      "pdf.17.interactive.redaction-annotations:render": 329,
-      "pdf.17.security.redaction-content-removal:extract": 597,
-      "pdf.17.security.redaction-content-removal:mutate": 597,
-      "pdf.17.security.redaction-content-removal:render": 597,
-      "pdf.17.security.redaction-content-removal:write": 597,
-      "pdf.17.syntax.encryption:mutate": 348,
-      "pdf.17.syntax.encryption:parse": 348,
-      "pdf.17.syntax.encryption:preserve": 348,
-      "pdf.17.syntax.encryption:write": 348,
-      "pdf.17.syntax.file:parse": 850,
-      "pdf.17.syntax.file:preserve": 850,
-      "pdf.17.syntax.file:write": 850,
-      "pdf.17.syntax.objects:mutate": 475,
-      "pdf.17.syntax.objects:parse": 850,
-      "pdf.17.syntax.objects:preserve": 1202,
-      "pdf.17.syntax.objects:write": 1202,
-      "pdf.17.transparency.model:parse": 42,
-      "pdf.17.transparency.model:render": 43,
+      "pdf.17.graphics.fonts:extract": 646,
+      "pdf.17.graphics.fonts:parse": 646,
+      "pdf.17.graphics.fonts:render": 647,
+      "pdf.17.graphics.images:extract": 369,
+      "pdf.17.graphics.images:parse": 369,
+      "pdf.17.graphics.images:render": 370,
+      "pdf.17.graphics.paths-painting:mutate": 717,
+      "pdf.17.graphics.paths-painting:parse": 717,
+      "pdf.17.graphics.paths-painting:render": 718,
+      "pdf.17.graphics.paths-painting:write": 717,
+      "pdf.17.graphics.state:mutate": 717,
+      "pdf.17.graphics.state:parse": 717,
+      "pdf.17.graphics.state:render": 719,
+      "pdf.17.graphics.state:write": 717,
+      "pdf.17.interactive.annotations:mutate": 342,
+      "pdf.17.interactive.annotations:parse": 342,
+      "pdf.17.interactive.annotations:preserve": 342,
+      "pdf.17.interactive.annotations:render": 342,
+      "pdf.17.interactive.forms:mutate": 172,
+      "pdf.17.interactive.forms:parse": 172,
+      "pdf.17.interactive.forms:render": 172,
+      "pdf.17.interactive.forms:write": 172,
+      "pdf.17.interactive.redaction-annotations:mutate": 342,
+      "pdf.17.interactive.redaction-annotations:parse": 342,
+      "pdf.17.interactive.redaction-annotations:preserve": 342,
+      "pdf.17.interactive.redaction-annotations:render": 342,
+      "pdf.17.interactive.redaction-annotations:write": 1,
+      "pdf.17.security.redaction-content-removal:extract": 598,
+      "pdf.17.security.redaction-content-removal:mutate": 598,
+      "pdf.17.security.redaction-content-removal:preserve": 3,
+      "pdf.17.security.redaction-content-removal:render": 598,
+      "pdf.17.security.redaction-content-removal:write": 598,
+      "pdf.17.syntax.encryption:mutate": 350,
+      "pdf.17.syntax.encryption:parse": 350,
+      "pdf.17.syntax.encryption:preserve": 350,
+      "pdf.17.syntax.encryption:write": 350,
+      "pdf.17.syntax.file:parse": 858,
+      "pdf.17.syntax.file:preserve": 858,
+      "pdf.17.syntax.file:write": 858,
+      "pdf.17.syntax.objects:mutate": 481,
+      "pdf.17.syntax.objects:parse": 858,
+      "pdf.17.syntax.objects:preserve": 1213,
+      "pdf.17.syntax.objects:write": 1213,
+      "pdf.17.transparency.model:parse": 43,
+      "pdf.17.transparency.model:render": 44,
       "pdf.20.content.operator-001:parse": 1,
       "pdf.20.content.operator-001:preserve": 1,
       "pdf.20.content.operator-002:parse": 1,
@@ -194088,15 +196267,15 @@
       "pdf.20.content.operator-072:preserve": 1,
       "pdf.20.content.operator-073:parse": 1,
       "pdf.20.content.operator-073:preserve": 1,
-      "pdfe.product.security.privacy-clean-copy:mutate": 475,
-      "pdfe.product.security.privacy-clean-copy:preserve": 475,
-      "pdfe.product.security.privacy-clean-copy:write": 475,
-      "pdfe.product.security.signature-and-permission-warning:mutate": 348,
-      "pdfe.product.security.signature-and-permission-warning:parse": 348,
-      "pdfe.product.security.signature-and-permission-warning:preserve": 348,
-      "pdfe.product.security.signature-and-permission-warning:write": 348
+      "pdfe.product.security.privacy-clean-copy:mutate": 481,
+      "pdfe.product.security.privacy-clean-copy:preserve": 481,
+      "pdfe.product.security.privacy-clean-copy:write": 481,
+      "pdfe.product.security.signature-and-permission-warning:mutate": 350,
+      "pdfe.product.security.signature-and-permission-warning:parse": 350,
+      "pdfe.product.security.signature-and-permission-warning:preserve": 350,
+      "pdfe.product.security.signature-and-permission-warning:write": 350
     },
-    "fallbackRecords": 2554,
+    "fallbackRecords": 2564,
     "allRecordsMapped": true
   }
 }

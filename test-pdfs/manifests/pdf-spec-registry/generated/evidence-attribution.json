@@ -4654,6 +4654,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::TaggedPdfTests.Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.AllCommands_HaveStableUniqueIdsAndAccessibleMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -5653,13 +5660,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NameWithBrackets_HexEncoded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -5676,6 +5676,13 @@
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.SaveToBytes_RoundTripsThroughOpen",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::TaggedPdfTests.Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -6319,6 +6326,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Actions_RoundTrip_SurviveSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -6571,6 +6585,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.Sanitizer_AfterAttachmentCacheIsMaterialized_RebuildsFilteredView",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubMetadata_WithScrubAttachments_RemovesAttachments",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -6772,27 +6793,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.RoundTripFileWithObjectStreams_LoadSaveLoad_PreservesCatalogAndPages",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/StreamDecompressorTests.cs::StreamDecompressorTests.ApplyFilter_FlateDecode_WithPngPredictorAverage_AppliesAverageFilter",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -6914,6 +6914,13 @@
         },
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.WrapText_WrapsWhenExceedingWidth",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::TaggedPdfTests.Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -7919,13 +7926,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NameWithBrackets_HexEncoded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -8104,6 +8104,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -8713,6 +8720,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs::PdfDocumentWriterEncryptionTests.Write_WithEncryptionOptions_EmitsEncryptDictionaryInTrailer",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -9071,20 +9085,6 @@
         },
         {
           "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_IncludesCurrentVerificationScope",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_UsesUnknownForMissingSignatureMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -9235,6 +9235,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -9844,6 +9851,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs::PdfDocumentWriterEncryptionTests.Write_WithEncryptionOptions_EmitsEncryptDictionaryInTrailer",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -10202,20 +10216,6 @@
         },
         {
           "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_IncludesCurrentVerificationScope",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_UsesUnknownForMissingSignatureMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -10366,6 +10366,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -10975,6 +10982,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs::PdfDocumentWriterEncryptionTests.Write_WithEncryptionOptions_EmitsEncryptDictionaryInTrailer",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11333,20 +11347,6 @@
         },
         {
           "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_IncludesCurrentVerificationScope",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_UsesUnknownForMissingSignatureMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -11497,6 +11497,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12106,6 +12113,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs::PdfDocumentWriterEncryptionTests.Write_WithEncryptionOptions_EmitsEncryptDictionaryInTrailer",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12464,20 +12478,6 @@
         },
         {
           "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_IncludesCurrentVerificationScope",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_UsesUnknownForMissingSignatureMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -15997,6 +15997,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::TaggedPdfTests.Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.AllCommands_HaveStableUniqueIdsAndAccessibleMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -16634,6 +16641,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Actions_RoundTrip_SurviveSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -16886,6 +16900,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.Sanitizer_AfterAttachmentCacheIsMaterialized_RebuildsFilteredView",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubMetadata_WithScrubAttachments_RemovesAttachments",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -17083,27 +17104,6 @@
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.StructureTreeCycle_SurvivesRedactAndSave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.RoundTripFileWithObjectStreams_LoadSaveLoad_PreservesCatalogAndPages",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/StreamDecompressorTests.cs::StreamDecompressorTests.ApplyFilter_FlateDecode_WithPngPredictorAverage_AppliesAverageFilter",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -17142,6 +17142,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::TaggedPdfTests.Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.AllCommands_HaveStableUniqueIdsAndAccessibleMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -17779,6 +17786,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Actions_RoundTrip_SurviveSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -18031,6 +18045,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.Sanitizer_AfterAttachmentCacheIsMaterialized_RebuildsFilteredView",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubMetadata_WithScrubAttachments_RemovesAttachments",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -18228,27 +18249,6 @@
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.StructureTreeCycle_SurvivesRedactAndSave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.RoundTripFileWithObjectStreams_LoadSaveLoad_PreservesCatalogAndPages",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/StreamDecompressorTests.cs::StreamDecompressorTests.ApplyFilter_FlateDecode_WithPngPredictorAverage_AppliesAverageFilter",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -18275,6 +18275,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::TaggedPdfTests.Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.AllCommands_HaveStableUniqueIdsAndAccessibleMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -18912,6 +18919,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Actions_RoundTrip_SurviveSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -19164,6 +19178,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.Sanitizer_AfterAttachmentCacheIsMaterialized_RebuildsFilteredView",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubMetadata_WithScrubAttachments_RemovesAttachments",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -19361,27 +19382,6 @@
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.StructureTreeCycle_SurvivesRedactAndSave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.RoundTripFileWithObjectStreams_LoadSaveLoad_PreservesCatalogAndPages",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/StreamDecompressorTests.cs::StreamDecompressorTests.ApplyFilter_FlateDecode_WithPngPredictorAverage_AppliesAverageFilter",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -33782,6 +33782,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::StructElementMcidTextTests.ResolveStructElementText_AfterPageMove_UsesCurrentPageOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::StructElementMcidTextTests.ResolveStructElementText_UntaggedElement_ReturnsEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -34567,13 +34574,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_WithSize_CreatesNewFontWithDifferentSize",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_WithName_CreatesNewFontWithDifferentName",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -34927,6 +34927,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::StructElementMcidTextTests.ResolveStructElementText_AfterPageMove_UsesCurrentPageOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::StructElementMcidTextTests.ResolveStructElementText_UntaggedElement_ReturnsEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -35712,13 +35719,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_WithSize_CreatesNewFontWithDifferentSize",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_WithName_CreatesNewFontWithDifferentName",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -36082,6 +36082,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::StructElementMcidTextTests.ResolveStructElementText_AfterPageMove_UsesCurrentPageOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::StructElementMcidTextTests.ResolveStructElementText_UntaggedElement_ReturnsEmpty",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -36867,13 +36874,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_WithSize_CreatesNewFontWithDifferentSize",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_WithName_CreatesNewFontWithDifferentName",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -55704,6 +55704,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.BlendMask_IsGrowOnlyAndDisposedWithOwner",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.LowerCA_DrawsLighter",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -56159,6 +56166,13 @@
         },
         {
           "test": "Excise.Rendering.Tests/Corpus/SmokeCorpusTests.cs::SmokeCorpusTests.SmokeCorpus_FirstPage_RendersWithoutCrashing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.BlendMask_IsGrowOnlyAndDisposedWithOwner",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -57145,13 +57159,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs::FreeTextContentSynthesisTests.FreeTextWithoutDa_StaysAPlainFilledRectangle",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -57309,6 +57316,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddCircleAnnotation_WritesInteriorColorAndBezierAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -58446,13 +58460,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -58582,6 +58589,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddCircleAnnotation_WritesInteriorColorAndBezierAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -59719,13 +59733,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -59855,6 +59862,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddCircleAnnotation_WritesInteriorColorAndBezierAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -60992,13 +61006,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -61138,6 +61145,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddCircleAnnotation_WritesInteriorColorAndBezierAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -62275,13 +62289,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -62431,6 +62438,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddCircleAnnotation_WritesInteriorColorAndBezierAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -63569,13 +63583,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -63713,6 +63720,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddCircleAnnotation_WritesInteriorColorAndBezierAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -64851,13 +64865,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -64993,6 +65000,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddCircleAnnotation_WritesInteriorColorAndBezierAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -66131,13 +66145,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -66267,6 +66274,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddSquareAnnotation_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.AddCircleAnnotation_WritesInteriorColorAndBezierAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -67405,13 +67419,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -67904,6 +67911,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentCoverageTests.cs::PdfDocumentCoverageTests.ScrubMetadata_WithDefaultScrubAttachments_ClearsInfoAndMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -68705,13 +68719,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_CompatibilityCharsOutsideTheBlock_AreNotFolded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/GlyphRemoverTests.cs::GlyphRemoverTests.Process_RepeatedSingleGlyphOperators_RedactsOnlyTheSpatiallyMatchingOperator",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -69080,6 +69087,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentCoverageTests.cs::PdfDocumentCoverageTests.ScrubMetadata_WithDefaultScrubAttachments_ClearsInfoAndMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -69881,13 +69895,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_CompatibilityCharsOutsideTheBlock_AreNotFolded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/GlyphRemoverTests.cs::GlyphRemoverTests.Process_RepeatedSingleGlyphOperators_RedactsOnlyTheSpatiallyMatchingOperator",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -70270,6 +70277,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentCoverageTests.cs::PdfDocumentCoverageTests.ScrubMetadata_WithDefaultScrubAttachments_ClearsInfoAndMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -71071,13 +71085,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_CompatibilityCharsOutsideTheBlock_AreNotFolded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/GlyphRemoverTests.cs::GlyphRemoverTests.Process_RepeatedSingleGlyphOperators_RedactsOnlyTheSpatiallyMatchingOperator",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -71486,6 +71493,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentCoverageTests.cs::PdfDocumentCoverageTests.ScrubMetadata_WithDefaultScrubAttachments_ClearsInfoAndMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -72287,13 +72301,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_CompatibilityCharsOutsideTheBlock_AreNotFolded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/GlyphRemoverTests.cs::GlyphRemoverTests.Process_RepeatedSingleGlyphOperators_RedactsOnlyTheSpatiallyMatchingOperator",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -77160,6 +77167,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::TaggedPdfTests.Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.AllCommands_HaveStableUniqueIdsAndAccessibleMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -77797,6 +77811,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Actions_RoundTrip_SurviveSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -78049,6 +78070,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.Sanitizer_AfterAttachmentCacheIsMaterialized_RebuildsFilteredView",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubMetadata_WithScrubAttachments_RemovesAttachments",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -78246,27 +78274,6 @@
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.StructureTreeCycle_SurvivesRedactAndSave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.RoundTripFileWithObjectStreams_LoadSaveLoad_PreservesCatalogAndPages",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/StreamDecompressorTests.cs::StreamDecompressorTests.ApplyFilter_FlateDecode_WithPngPredictorAverage_AppliesAverageFilter",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -78291,6 +78298,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::TaggedPdfTests.Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.AllCommands_HaveStableUniqueIdsAndAccessibleMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -78928,6 +78942,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Sanitizer_AfterActionCachesAreMaterialized_RebuildsScrubbedViews",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfActionTests.cs::PdfActionTests.Actions_RoundTrip_SurviveSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -79180,6 +79201,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.Sanitizer_AfterAttachmentCacheIsMaterialized_RebuildsFilteredView",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubMetadata_WithScrubAttachments_RemovesAttachments",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -79377,27 +79405,6 @@
         },
         {
           "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.StructureTreeCycle_SurvivesRedactAndSave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs::ObjectStreamResolutionTests.RoundTripFileWithObjectStreams_LoadSaveLoad_PreservesCatalogAndPages",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/StreamDecompressorTests.cs::StreamDecompressorTests.ApplyFilter_FlateDecode_WithPngPredictorAverage_AppliesAverageFilter",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -79628,6 +79635,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -80237,6 +80251,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs::PdfDocumentWriterEncryptionTests.Write_WithEncryptionOptions_EmitsEncryptDictionaryInTrailer",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -80595,20 +80616,6 @@
         },
         {
           "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_IncludesCurrentVerificationScope",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_UsesUnknownForMissingSignatureMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -80769,6 +80776,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81378,6 +81392,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs::PdfDocumentWriterEncryptionTests.Write_WithEncryptionOptions_EmitsEncryptDictionaryInTrailer",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81736,20 +81757,6 @@
         },
         {
           "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_IncludesCurrentVerificationScope",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_UsesUnknownForMissingSignatureMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81900,6 +81907,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_UsesCanonicalPdfNumberPrecision",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82509,6 +82523,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs::PdfDocumentWriterEncryptionTests.Write_WithEncryptionOptions_EmitsEncryptDictionaryInTrailer",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82871,20 +82892,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_IncludesCurrentVerificationScope",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.SignatureVerificationSummaryFormatter_UsesUnknownForMissingSignatureMetadata",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -82898,8 +82905,8 @@
     "modesWithExplicitContracts": 666,
     "modesWithPassingExplicitContracts": 7,
     "modesWithRecordedPassingCandidate": 19,
-    "testMethods": 5970,
-    "testMethodsWithCapabilityCandidate": 3743,
+    "testMethods": 6031,
+    "testMethodsWithCapabilityCandidate": 3781,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
