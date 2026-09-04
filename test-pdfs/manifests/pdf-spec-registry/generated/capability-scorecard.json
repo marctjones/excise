@@ -661,7 +661,7 @@
       "measuredModeCoveragePercent": 11.3,
       "implementedModeCoveragePercent": 0.7,
       "promotionReadinessPercent": 13.5,
-      "implementationEvidenceProgressPercent": 28.5,
+      "implementationEvidenceProgressPercent": 28.8,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 151,
         "directTestOrBetter": 8,
@@ -970,7 +970,7 @@
       "measuredModeCoveragePercent": 5.6,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 14.4,
-      "implementationEvidenceProgressPercent": 17.2,
+      "implementationEvidenceProgressPercent": 17.8,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 18,
         "directTestOrBetter": 1,
@@ -1390,7 +1390,7 @@
       "measuredModeCoveragePercent": 43.6,
       "implementedModeCoveragePercent": 2.6,
       "promotionReadinessPercent": 23.5,
-      "implementationEvidenceProgressPercent": 26.4,
+      "implementationEvidenceProgressPercent": 27.4,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 39,
         "directTestOrBetter": 8,
@@ -1582,7 +1582,7 @@
       "measuredModeCoveragePercent": 100.0,
       "implementedModeCoveragePercent": 20.0,
       "promotionReadinessPercent": 84.0,
-      "implementationEvidenceProgressPercent": 88.0,
+      "implementationEvidenceProgressPercent": 96.0,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 5,
         "directTestOrBetter": 5,
@@ -1708,7 +1708,7 @@
       "measuredModeCoveragePercent": 100.0,
       "implementedModeCoveragePercent": 50.0,
       "promotionReadinessPercent": 95.0,
-      "implementationEvidenceProgressPercent": 95.0,
+      "implementationEvidenceProgressPercent": 97.5,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 4,
         "directTestOrBetter": 4,
@@ -1805,10 +1805,10 @@
     "targetModes": 964,
     "modesWithTestCandidates": 213,
     "modesWithExplicitContracts": 666,
-    "modesWithPassingExplicitContracts": 7,
-    "modesWithRecordedPassingCandidate": 19,
-    "testMethods": 6031,
-    "testMethodsWithCapabilityCandidate": 3781,
+    "modesWithPassingExplicitContracts": 13,
+    "modesWithRecordedPassingCandidate": 53,
+    "testMethods": 6084,
+    "testMethodsWithCapabilityCandidate": 3799,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   },

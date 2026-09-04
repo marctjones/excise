@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 973,
-  "indexedContentSha256": "464cfe096d3c3170fbc80a8efb4f20d696c439f934d1bc863b455818d0ff30e9",
+  "indexedFileCount": 988,
+  "indexedContentSha256": "2b14b687e88fea86e30848983d5f2b80eca2219d7f3bb0ad37f133b2798985a0",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -2702,6 +2702,24 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "encryption",
+            "permissions"
+          ]
+        },
+        {
+          "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "encryption",
+            "permissions"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -2719,27 +2737,9 @@
             "filters",
             "permissions"
           ]
-        },
-        {
-          "path": "Excise.Cli.Tests/TestPdfBuilder.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "encryption",
-            "permissions",
-            "xref"
-          ]
-        },
-        {
-          "path": "tests/corpora.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "encryption"
-          ]
         }
       ],
-      "candidateReferenceCount": 89
+      "candidateReferenceCount": 91
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -6856,7 +6856,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 428
+      "candidateReferenceCount": 430
     },
     {
       "id": "pdf.17.graphics.color",
@@ -24931,6 +24931,15 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/RedactCommandTestDriver.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/RedactCommandTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -25015,7 +25024,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 32
+      "candidateReferenceCount": 33
     },
     {
       "id": "pdf.20.image.requirement-018",
@@ -38403,6 +38412,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/PdfViewerHeadlessRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -38502,7 +38520,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 42
+      "candidateReferenceCount": 43
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -44513,6 +44531,7 @@
           "matchedTerms": [
             "opt-in",
             "redaction",
+            "acroform",
             "action",
             "redact"
           ]
@@ -46232,7 +46251,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 121
+      "candidateReferenceCount": 122
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -50823,7 +50842,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 134
+      "candidateReferenceCount": 141
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -51560,7 +51579,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 443
+      "candidateReferenceCount": 448
     },
     {
       "id": "pdf.20.extension.developer",
@@ -52264,7 +52283,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 114
+      "candidateReferenceCount": 113
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -52604,6 +52623,17 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/ValidationHandlerTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "pdfa",
+            "conformance",
+            "pdfa",
+            "pdfua"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-isartor.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -52643,7 +52673,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 35
+      "candidateReferenceCount": 36
     },
     {
       "id": "pdf.20.profile.pdfua",
@@ -52812,6 +52842,17 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/ValidationHandlerTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "pdfua",
+            "conformance",
+            "pdfa",
+            "pdfua"
+          ]
+        },
+        {
           "path": "tests/corpora.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -52859,7 +52900,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 19
+      "candidateReferenceCount": 20
     },
     {
       "id": "pdf.20.profile.pdfx",
@@ -55222,6 +55263,15 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "metadata",
+            "pdfe",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -55278,18 +55328,9 @@
             "attachment",
             "copy"
           ]
-        },
-        {
-          "path": "tests/format-compatibility-suite.json",
-          "kind": "test",
-          "matchedTerms": [
-            "metadata",
-            "pdfe",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 84
+      "candidateReferenceCount": 85
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -55972,6 +56013,16 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "save",
+            "ocr",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/RedactCommandTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -56039,7 +56090,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 61
+      "candidateReferenceCount": 62
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -56310,7 +56361,6 @@
           "matchedTerms": [
             "override",
             "signature",
-            "ocr",
             "security"
           ]
         },
@@ -56791,6 +56841,16 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ocr",
+            "pdfe",
+            "ocr",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -56863,7 +56923,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 51
     },
     {
       "id": "pdfe.product.security.audit-log",
@@ -57612,7 +57672,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 99
+      "candidateReferenceCount": 101
     },
     {
       "id": "pdfe.product.platform.printing",
