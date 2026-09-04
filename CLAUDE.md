@@ -457,9 +457,16 @@ Located in `Excise.App.Tests/`:
 
 **Framework**: xUnit 2.5.3 with FluentAssertions 6.12.0
 
-**Test Count** (2026-07-13): ~7,600 across five suites — Excise.Core ~3,180,
-Excise.Rendering ~3,420, Excise.App ~905, Excise.Cli 86, Excise.Avalonia 10.
-Don't hard-code a number here; it goes stale. Run the suites.
+**Test Count** (measured 2026-09-04): **5,866 `[Fact]`/`[Theory]` attributes** —
+Excise.Core.Tests 3,761, Excise.Rendering.Tests 900, Excise.App.Tests 770,
+Excise.Cli.Tests 266, Excise.Avalonia.Tests 92, Excise.Ocr.Tests 77. Attribute
+count is a LOWER BOUND on cases: a `[Theory]` expands per `InlineData`. The last
+full-suite run (2026-08-31) reported **12,164 results, 10,332 passed, 6 failed,
+1,826 not executed** — and that total double-counts App.Tests (chunked plus the
+unchunked evidence step) while omitting checkpointed Core chunks.
+
+Don't hard-code a number here; it goes stale — the figure this replaced was
+seven weeks old and counted a different thing. Run the suites.
 
 ⚠️ **`Excise.App.Tests` is SERIAL BY DESIGN** — `[assembly: CollectionBehavior(
 DisableTestParallelization = true)]` in `AssemblyInfo.cs`. xunit's parallelism
