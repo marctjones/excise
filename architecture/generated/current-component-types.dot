@@ -6,7 +6,7 @@ digraph excise_architecture {
   subgraph cluster_delivery {
     label="delivery";
     color="#cbd5e1";
-    "app" [label="Excise.App project\npartial\n729 retained symbols", fillcolor="#fff3bf"];
+    "app" [label="Excise.App project\npartial\n701 retained symbols", fillcolor="#fff3bf"];
     "cli" [label="Excise.Cli project\npartial\n347 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {
@@ -19,7 +19,7 @@ digraph excise_architecture {
     "core-security" [label="Document conformance and structural validation\npartial\n54 retained symbols", fillcolor="#fff3bf"];
     "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n147 retained symbols", fillcolor="#d8f3dc"];
     "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n61 retained symbols", fillcolor="#d8f3dc"];
-    "rendering" [label="Excise.Rendering project\npartial\n778 retained symbols", fillcolor="#fff3bf"];
+    "rendering" [label="Excise.Rendering project\npartial\n785 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_foundation {
     label="foundation";
@@ -50,7 +50,7 @@ digraph excise_architecture {
   "app" -> "app-main-window" [label="262 refs / 18 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core" [label="33 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-content" [label="9 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "app" -> "core-document" [label="305 refs / 48 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app" -> "core-document" [label="306 refs / 49 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-encryption" [label="6 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-primitives" [label="54 refs / 19 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-redaction" [label="8 refs / 5 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
