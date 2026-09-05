@@ -202,6 +202,32 @@ public class PdfDocumentRedactionExtensionsTests
     }
 
     [Fact]
+    public void FindTextMatches_DoesNotJoinAHyphenWithinALine()
+    {
+        // #1372: excise does NOT rejoin a word wrapped across a line by a
+        // hyphen, which is a known redaction gap — the wrapped occurrence
+        // survives and is readable by poppler. This test pins the half that
+        // must stay true whatever fixes that: a hyphen INSIDE a line is
+        // content, so "well-known" must never match "wellknown". A naive
+        // rejoin that ignores this, or that lets a match span two lines,
+        // reintroduces #942 — measured: it destroyed remote content on 7
+        // corpus fixtures and failed RedactingATerm_DestroysNothingRemote.
+        var letters = new[]
+        {
+            new Letter("w", new PdfRectangle(100, 700, 107, 712), 12, "F1", 100, 700, 7, 'w'),
+            new Letter("e", new PdfRectangle(107, 700, 114, 712), 12, "F1", 107, 700, 7, 'e'),
+            new Letter("l", new PdfRectangle(114, 700, 118, 712), 12, "F1", 114, 700, 4, 'l'),
+            new Letter("l", new PdfRectangle(118, 700, 122, 712), 12, "F1", 118, 700, 4, 'l'),
+            new Letter("-", new PdfRectangle(122, 700, 126, 712), 12, "F1", 122, 700, 4, '-'),
+            new Letter("k", new PdfRectangle(126, 700, 133, 712), 12, "F1", 126, 700, 7, 'k'),
+            new Letter("n", new PdfRectangle(133, 700, 140, 712), 12, "F1", 133, 700, 7, 'n'),
+        };
+
+        PdfDocumentRedactionExtensions.FindTextMatches(letters, "wellkn", caseSensitive: false)
+            .Should().BeEmpty("a same-line hyphen is content and must keep its meaning");
+    }
+
+    [Fact]
     public void FindTextMatches_DoesNotIncludeLeadingWhitespaceFromAnotherPageBand()
     {
         var letters = new[]
