@@ -93,7 +93,12 @@ def projects_from_solution(solution: Path) -> list[Path]:
     for line in solution.read_text(encoding="utf-8", errors="replace").splitlines():
         match = pattern.search(line)
         if match:
-            projects.append((solution.parent / match.group(1)).resolve())
+            # .sln files write project paths with backslashes on every platform;
+            # resolving the raw text on macOS/Linux looks for a file literally named
+            # "Excise.Core\Excise.Core.csproj", and the guard crashes instead of
+            # checking anything. The redaction suites (target excise.sln) did not run
+            # in the first manifest-driven full run because of this (#1367).
+            projects.append((solution.parent / match.group(1).replace("\\", "/")).resolve())
     return projects
 
 
