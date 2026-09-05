@@ -16,6 +16,16 @@
 # nothing. Three shipped redaction leaks (#636, #608, #637) passed a green
 # suite; this is one of the mechanisms that lets that happen.
 #
+# CHOOSING THE NUMBER
+#
+# Measured on this machine 2026-09-04, all corpora and tools present:
+# rendering Differential+Corpus 3,701 passed / 1 failed / 919 skipped;
+# App.Tests oracle subset 13/13; Core.Tests _WhenAvailable 14/14.
+# Floors sit well under the measured value so they do not flap, but far enough
+# above zero to catch a mass-skip. The rendering floor is 3000, NOT 60 — the
+# Linux job used 60 because a corpus-less runner could only reach that, and
+# carrying it over would have let 3,600 tests vanish silently.
+#
 # A FLOOR, not an exact match: a legitimately-added oracle test should not
 # require bumping this in lockstep. But a drop to a handful (tools not
 # resolving) or to zero (the filter no longer matches anything after a rename)
