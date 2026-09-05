@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -42,10 +43,62 @@ public static class PdfiumNativeReferenceRenderer
     private const int FPDF_ANNOT = 0x01;
 
     private static readonly object InitLock = new();
+
+    /// <summary>
+    /// EVERY FPDF_* call is serialised on this. pdfium's public API is not
+    /// thread-safe — one global allocator, font cache and colour-space cache,
+    /// with no internal locking — so two threads inside FPDF_LoadPage corrupt
+    /// each other's state and the process dies with SIGSEGV somewhere
+    /// unrelated to the caller.
+    ///
+    /// That is not hypothetical. Until #1369 only <see cref="InitLock"/>
+    /// existed, guarding one-time init and nothing else. The redaction bench
+    /// measured its four tools through Parallel.ForEach (f08b1503, 2026-08-29)
+    /// and each branch renders through here, so four threads entered pdfium at
+    /// once; on 2026-09-05 the test host took a SIGSEGV in
+    /// CPDF_Color::GetColorRef() under FPDF_LoadPage, 13 minutes into the run,
+    /// killing every result. The bench had been green with pdfium since
+    /// 2026-08-25 — single-threaded. The library did not change; the number of
+    /// threads did.
+    ///
+    /// Serialising costs concurrency on this oracle only. A crash costs the
+    /// whole run, and a native crash cannot be caught in managed code: there is
+    /// no try/catch that saves the process. Do NOT replace this with per-call
+    /// or per-document locking — the shared state pdfium corrupts is global,
+    /// not per-document. ConcurrentRenders_DoNotCorruptPdfiumsGlobalState
+    /// (PdfiumOracleSmokeTests) fails without it.
+    /// </summary>
+    private static readonly object NativeLock = new();
     private static bool _initialised;
     private static readonly Lazy<string?> LibraryPath = new(ResolveLibraryPath);
 
-    public static bool IsAvailable => LibraryPath.Value != null;
+    /// <summary>
+    /// TRUE only inside the RenderTools <c>pdfium-render</c> host, which sets
+    /// this for itself. Everywhere else the renderer spawns that host instead of
+    /// loading pdfium, so a pdfium crash costs a child process rather than the
+    /// caller (#1369). Nothing but the host should ever set this.
+    /// </summary>
+    private static bool InProcess =>
+        Environment.GetEnvironmentVariable("EXCISE_PDFIUM_INPROC") == "1";
+
+    private static readonly Lazy<string?> HostPath = new(ResolveHostPath);
+
+    /// <summary>
+    /// The library must be present AND, out of process, the host must be
+    /// resolvable. A missing host is reported as a distinct status rather than
+    /// silently reading as "pdfium unavailable" — an oracle that vanishes
+    /// quietly is how a suite loses coverage without anyone noticing.
+    /// </summary>
+    public static bool IsAvailable => LibraryPath.Value != null && (InProcess || HostPath.Value != null);
+
+    /// <summary>Why the oracle is unusable, for a caller that wants to say so.</summary>
+    public static string? UnavailableReason =>
+        LibraryPath.Value == null
+            ? "PDFium library not found; run scripts/download-pdfium.sh or set EXCISE_PDFIUM_LIB"
+            : (InProcess || HostPath.Value != null)
+                ? null
+                : "PDFium present but the out-of-process host is not built; build tools/Excise.RenderTools "
+                  + "or set EXCISE_RENDERTOOLS_DLL";
 
 
     public static SKBitmap? RenderPage(
@@ -83,7 +136,16 @@ public static class PdfiumNativeReferenceRenderer
                 sw.ElapsedMilliseconds);
         }
 
+        // Out of process by default (#1369): pdfium is the only oracle we could
+        // load into the caller, and a native crash cannot be caught in managed
+        // code. The in-process body below runs only inside the host.
+        if (!InProcess)
+            return RenderViaHost(pdfPath, pageNumber, dpi, userPassword, renderAnnotations, sw);
+
         IntPtr doc = IntPtr.Zero, page = IntPtr.Zero, bitmap = IntPtr.Zero;
+        // The whole native span, not just init: load, page load, render and
+        // teardown all touch pdfium's global caches (#1369).
+        lock (NativeLock)
         try
         {
             EnsureInitialised();
@@ -159,6 +221,107 @@ public static class PdfiumNativeReferenceRenderer
                                   rowBytes, Math.Min(rowBytes, stride));
         }
         return result;
+    }
+
+    /// <summary>
+    /// Spawn the RenderTools host for one page. A crash in pdfium shows up here
+    /// as a non-zero exit with no PNG, which becomes a CRASHED status the caller
+    /// can record — the whole point of the isolation.
+    /// </summary>
+    private static ReferenceRenderResult RenderViaHost(
+        string pdfPath, int pageNumber, int dpi, string? userPassword,
+        bool renderAnnotations, Stopwatch sw)
+    {
+        var host = HostPath.Value;
+        if (host == null)
+        {
+            return new ReferenceRenderResult(null, "HOST_MISSING", UnavailableReason, sw.ElapsedMilliseconds);
+        }
+
+        var png = Path.Combine(Path.GetTempPath(), $"excise-pdfium-{Guid.NewGuid():N}.png");
+        try
+        {
+            var psi = new ProcessStartInfo("dotnet")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            psi.ArgumentList.Add(host);
+            psi.ArgumentList.Add("pdfium-render");
+            psi.ArgumentList.Add("--pdf"); psi.ArgumentList.Add(pdfPath);
+            psi.ArgumentList.Add("--page"); psi.ArgumentList.Add(pageNumber.ToString(CultureInfo.InvariantCulture));
+            psi.ArgumentList.Add("--dpi"); psi.ArgumentList.Add(dpi.ToString(CultureInfo.InvariantCulture));
+            if (renderAnnotations) psi.ArgumentList.Add("--annots");
+            if (!string.IsNullOrEmpty(userPassword)) { psi.ArgumentList.Add("--password"); psi.ArgumentList.Add(userPassword); }
+            psi.ArgumentList.Add("--output"); psi.ArgumentList.Add(png);
+            // The host renders in process; keep its own serialisation honest.
+            psi.Environment["EXCISE_PDFIUM_INPROC"] = "1";
+
+            using var p = Process.Start(psi);
+            if (p == null) return new ReferenceRenderResult(null, "HOST_START_FAILED", null, sw.ElapsedMilliseconds);
+            var stderr = p.StandardError.ReadToEnd();
+            if (!p.WaitForExit(HostTimeoutMs))
+            {
+                try { p.Kill(entireProcessTree: true); } catch { }
+                return new ReferenceRenderResult(null, "TIMEOUT",
+                    $"pdfium host exceeded {HostTimeoutMs} ms", sw.ElapsedMilliseconds);
+            }
+
+            if (!File.Exists(png))
+            {
+                // 3 is the host's own "pdfium refused" exit; anything else with no
+                // PNG is the child dying, which is what isolation exists to survive.
+                var status = p.ExitCode == 3 ? "LOAD_FAILED" : "CRASHED";
+                return new ReferenceRenderResult(null, status,
+                    $"pdfium host exit {p.ExitCode}: {stderr.Trim()}", sw.ElapsedMilliseconds);
+            }
+
+            var bitmap = SKBitmap.Decode(png);
+            return bitmap == null
+                ? new ReferenceRenderResult(null, "DECODE_FAILED", stderr.Trim(), sw.ElapsedMilliseconds)
+                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds);
+        }
+        catch (Exception ex)
+        {
+            return new ReferenceRenderResult(null, "ERROR", ex.Message, sw.ElapsedMilliseconds);
+        }
+        finally
+        {
+            try { File.Delete(png); } catch { }
+        }
+    }
+
+    private const int HostTimeoutMs = 120_000;
+
+    /// <summary>
+    /// The RenderTools assembly that hosts pdfium. EXCISE_RENDERTOOLS_DLL wins;
+    /// otherwise walk up to the repo root and take the build matching our own
+    /// configuration, then either configuration.
+    /// </summary>
+    private static string? ResolveHostPath()
+    {
+        var explicitPath = Environment.GetEnvironmentVariable("EXCISE_RENDERTOOLS_DLL");
+        if (!string.IsNullOrWhiteSpace(explicitPath) && File.Exists(explicitPath)) return explicitPath;
+
+        var ours = AppContext.BaseDirectory;
+        var configs = ours.Contains("/Release/", StringComparison.Ordinal)
+            ? new[] { "Release", "Debug" }
+            : new[] { "Debug", "Release" };
+
+        var dir = new DirectoryInfo(ours);
+        while (dir != null)
+        {
+            foreach (var cfg in configs)
+            {
+                var candidate = Path.Combine(dir.FullName, "tools", "Excise.RenderTools",
+                                             "bin", cfg, "net10.0", "Excise.RenderTools.dll");
+                if (File.Exists(candidate)) return candidate;
+            }
+            dir = dir.Parent;
+        }
+        return null;
     }
 
     private static void EnsureInitialised()

@@ -41,11 +41,70 @@ partial class Program
             CreateReferencePerformanceCommand(),
             CreateProfileWorkflowsCommand(),
             CreateAnnotationBenchCommand(),
+            CreatePdfiumRenderCommand(),
         };
 
         var parserExitCode = rootCommand.Parse(args).Invoke();
         var handlerExitCode = Environment.ExitCode;
         return Task.FromResult(parserExitCode != 0 ? parserExitCode : handlerExitCode);
+    }
+
+    /// <summary>
+    /// <c>Excise.RenderTools pdfium-render --pdf X --page N --dpi D --output out.png</c>
+    ///
+    /// <para>The out-of-process host for PDFium. PDFium is distributed as a
+    /// library only — pdfium_test is not in the binary release — so the only way
+    /// to run Chrome's renderer without linking it into the caller is to host it
+    /// ourselves. PdfiumNativeReferenceRenderer spawns this verb; a pdfium crash
+    /// then costs one child process and a render, instead of the whole test host
+    /// and every result of a four-hour run (#1369).</para>
+    ///
+    /// <para>This process sets EXCISE_PDFIUM_INPROC for itself, which is the
+    /// only way to reach the P/Invoke path. Nothing else should set it.</para>
+    /// </summary>
+    static Command CreatePdfiumRenderCommand()
+    {
+        var pdfOption = new Option<FileInfo>("--pdf") { Description = "PDF to render", Required = true };
+        var pageOption = new Option<int>("--page") { Description = "1-based page number", DefaultValueFactory = _ => 1 };
+        var dpiOption = new Option<int>("--dpi") { Description = "Render resolution", DefaultValueFactory = _ => 150 };
+        var annotsOption = new Option<bool>("--annots") { Description = "Pass FPDF_ANNOT so annotations are drawn" };
+        var passwordOption = new Option<string?>("--password") { Description = "User password" };
+        var outputOption = new Option<FileInfo>("--output", "-o") { Description = "PNG to write", Required = true };
+
+        var command = new Command("pdfium-render", "Render one page with PDFium, out of process (#1369)")
+        {
+            pdfOption, pageOption, dpiOption, annotsOption, passwordOption, outputOption,
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var pdf = parseResult.GetValue(pdfOption)!;
+            var page = parseResult.GetValue(pageOption);
+            var dpi = parseResult.GetValue(dpiOption);
+            var annots = parseResult.GetValue(annotsOption);
+            var password = parseResult.GetValue(passwordOption);
+            var output = parseResult.GetValue(outputOption)!;
+
+            // The switch that unlocks the P/Invoke path in the renderer.
+            Environment.SetEnvironmentVariable("EXCISE_PDFIUM_INPROC", "1");
+
+            var result = Excise.Rendering.Differential.PdfiumNativeReferenceRenderer
+                .TryRenderPage(pdf.FullName, page, dpi, password, annots);
+            if (result.Bitmap == null)
+            {
+                Console.Error.WriteLine($"pdfium-render: {result.Status} {result.ErrorMessage}");
+                Environment.ExitCode = 3;
+                return;
+            }
+
+            using var bitmap = result.Bitmap;
+            using var image = SkiaSharp.SKImage.FromBitmap(bitmap);
+            using var data = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+            using var stream = File.Create(output.FullName);
+            data.SaveTo(stream);
+        });
+
+        return command;
     }
 
     /// <summary>
