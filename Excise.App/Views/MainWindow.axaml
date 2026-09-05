@@ -46,6 +46,8 @@
                           access:CommandAccessibility.CommandId="app.saveAs"/>
                 <MenuItem Header="Save Flattened _Form Copy..." Command="{Binding SaveFlattenedFormCopyCommand}"
                           access:CommandAccessibility.CommandId="form.saveFlattenedCopy"/>
+                <MenuItem Header="Sign _Document..." Command="{Binding SignDocumentCommand}"
+                          access:CommandAccessibility.CommandId="app.signDocument"/>
                 <Separator/>
                 <MenuItem Header="_Recent Files" Name="RecentFilesMenu" ItemsSource="{Binding RecentFileMenuItems}">
                     <!-- Placeholder shown when menu has no items (ensures submenu arrow appears) -->
