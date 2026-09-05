@@ -79,7 +79,13 @@ public class CertainChannelReferenceComparisonTests
 
             bool exciseGot;
             using (var doc = PdfDocument.Open(File.ReadAllBytes(path)))
-                exciseGot = HiddenTextDetector.Scan(doc)
+                // #1361: the CERTAIN channel is what the unredact/audit commands
+                // run, and both pass includeVisibleFailedRedactions:true — that
+                // flag is what turns on Pairing C, the white-text-on-a-black-box
+                // case #1180 added. Scanning with the default left Pairing C off,
+                // so this test measured a channel no user ever runs and reported
+                // inverted-box 0/8 against a detector that implements it.
+                exciseGot = HiddenTextDetector.Scan(doc, includeVisibleFailedRedactions: true)
                     .Any(h => h.Text.Contains(c.Answer, StringComparison.OrdinalIgnoreCase));
             if (exciseGot) excise[cls] = excise.GetValueOrDefault(cls) + 1;
 
