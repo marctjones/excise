@@ -6,7 +6,7 @@ semantic versioning.
 
 ## [Unreleased]
 
-Nothing user-facing has shipped since 3.9.1. The 114 commits on `develop` are
+Nothing user-facing has shipped since 3.9.1. The 131 commits on `develop` are
 tooling, architecture registries, and CLI refactors — with three exceptions
 noted under Fixed.
 
@@ -15,6 +15,28 @@ noted under Fixed.
   (`LOCAL_GATES.md`); `CI_GATES.md` is gone and `tests/coverage-floors.tsv`
   keeps only the `full` profile. Releases are locally-built unsigned macOS
   apps until GitHub is reinstated for Linux/Windows packaging only (#1355).
+- **Every gate is one row of `tests/gates.tsv`** (#1358).
+  `scripts/test-tier.sh {t0|t1|full|t2|t3}` is the one front door;
+  `run-full-suite.sh` and `release-smoke.sh` derive their plans from the same
+  manifest, so no runner carries a step list that can drift (#1362 was one
+  such drift). `--list <tier>` prints a tier's rows without running them;
+  `LOCAL_GATES.md` documents the columns and how to add or accept a gate.
+- **The report decides every runner's exit** (`scripts/report-gates.sh`): a
+  NEW red blocks, a KNOWN one (an OPEN issue cited in the row's `knownIssue`
+  cell) does not, and a cited issue that has CLOSED reads STALE and blocks
+  until the acceptance is deleted. NOT RUN and SKIPPED rows are counted and
+  never read as green. The same report prints the conformance grades — the
+  four corpus scans, extraction parity, the redaction bench and render
+  performance against the reference tools — with a delta against the prior
+  run of the same tier.
+- **Silent skips are closed.** A gate that cannot run exits 77 and is
+  reported SKIPPED or FAIL according to its `prereqPolicy`; five scripts
+  that exited 0 on a missing prerequisite (accessibility, visual, perf
+  budgets, copy-whitespace parity, bench tiers) no longer do.
+- **Removed** the eight legacy runners (`run-all-tests`, `run-atomic-tests`,
+  `run-passing-tests`, `run-avalonia-tests-linux`, `run-coverage`,
+  `run-long-tests`, `run-corpus-tests`, `run-automation-tests`); what they
+  ran is now manifest rows.
 - **The macOS NativeAOT publish builds again.** Homebrew keeps OpenSSL and
   brotli keg-only, so the ilcompiler link line could not resolve `-lssl` or
   `-lbrotlienc`; the AOT release gate had been red on this since the toolchain
@@ -40,6 +62,10 @@ noted under Fixed.
   (#1345). Tracked under milestone RC22.
 - Rendering is 3.5-7x slower than mutool on heavy pages; 72% of the Altona
   render is per-pixel colour conversion (#1350).
+- The registry's test evidence is regenerated from trx files found under
+  `logs/`, so the first `full` run leaves the next `t0` NEW-red on the
+  `pdf-capability-registry` row until the regenerated evidence is committed
+  (#1366).
 
 ## [3.9.1] - 2026-08-29
 
