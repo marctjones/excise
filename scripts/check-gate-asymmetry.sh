@@ -61,13 +61,18 @@ if ! git rev-parse --verify --quiet "$BASE" >/dev/null; then
   echo "  pretend to pass. Fetch the ref (git fetch origin develop) or pass an"
   echo "  existing base: scripts/check-gate-asymmetry.sh <base-ref>"
   if [ "${GATE_ASYMMETRY_ALLOW_NO_BASE:-0}" = "1" ]; then
-    echo "  GATE_ASYMMETRY_ALLOW_NO_BASE=1 — continuing WITHOUT this gate."
-    exit 0
+    # Exit 77 is the runner's "prerequisite missing" protocol (LOCAL_GATES.md):
+    # never 0, so a run without a base shows a SKIPPED row, not a green.
+    echo "  GATE_ASYMMETRY_ALLOW_NO_BASE=1 — continuing WITHOUT this gate (SKIPPED)."
+    exit 77
   fi
   exit 1
 fi
 
 RANGE="$BASE...HEAD"
+# The base is printed resolved so an acceptance in tests/gates.tsv can be SCOPED
+# to one range ("#1358/base=<sha>"): the same red against any other base is NEW.
+echo "==> range $RANGE base=$(git rev-parse "$BASE")"
 
 # (a) Performance-sensitive paths: the render/scroll/tile hot paths and anything
 #     under a benchmarks/hotspot tree.

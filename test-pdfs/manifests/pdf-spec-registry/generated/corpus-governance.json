@@ -32,8 +32,8 @@
         "scripts/demo-excise-cli.sh",
         "scripts/rescan-all-corpora.sh",
         "scripts/rescan-all-pages.sh",
-        "scripts/run-full-suite.sh",
         "tests/corpora.tsv",
+        "tests/gates.tsv",
         "tests/redaction-hard-cases.tsv"
       ],
       "identity": "acquisition identity; use --hash-files before release baselines"
@@ -60,8 +60,8 @@
         "scripts/cluster-corpus-defects.sh",
         "scripts/rescan-all-corpora.sh",
         "scripts/rescan-all-pages.sh",
-        "scripts/run-full-suite.sh",
-        "tests/corpora.tsv"
+        "tests/corpora.tsv",
+        "tests/gates.tsv"
       ],
       "identity": "acquisition identity; use --hash-files before release baselines"
     },
@@ -121,8 +121,8 @@
         "scripts/rescan-all-pages.sh",
         "scripts/run-annotation-bench.sh",
         "scripts/run-exploratory-corpus.sh",
-        "scripts/run-full-suite.sh",
         "tests/corpora.tsv",
+        "tests/gates.tsv",
         "tests/redaction-hard-cases.tsv",
         "tools/Excise.RenderTools/AnnotationBench.cs"
       ],
@@ -159,8 +159,8 @@
         "scripts/rescan-all-corpora.sh",
         "scripts/rescan-all-pages.sh",
         "scripts/run-annotation-bench.sh",
-        "scripts/run-full-suite.sh",
         "tests/corpora.tsv",
+        "tests/gates.tsv",
         "tests/redaction-hard-cases.tsv"
       ],
       "identity": "acquisition identity; use --hash-files before release baselines"
@@ -386,10 +386,11 @@
         "scripts/download-pdfbox.sh",
         "scripts/download-pdfium.sh",
         "scripts/download-xray.sh",
+        "scripts/lib-runner.sh",
         "scripts/setup-dev.sh",
-        "scripts/test-tier.sh",
         "tests/annotation-synthesis-policy.json",
-        "tests/corpora.tsv"
+        "tests/corpora.tsv",
+        "tests/gates.tsv"
       ],
       "identity": "acquisition identity; use --hash-files before release baselines"
     },
@@ -423,10 +424,11 @@
         "scripts/download-pdfbox.sh",
         "scripts/download-pdfium.sh",
         "scripts/download-xray.sh",
+        "scripts/lib-runner.sh",
         "scripts/setup-dev.sh",
-        "scripts/test-tier.sh",
         "tests/annotation-synthesis-policy.json",
-        "tests/corpora.tsv"
+        "tests/corpora.tsv",
+        "tests/gates.tsv"
       ],
       "identity": "acquisition identity; use --hash-files before release baselines"
     },
@@ -483,9 +485,7 @@
         "architecture/generated/code-topology.json",
         "scripts/corpus.sh",
         "scripts/download-tessdata.sh",
-        "scripts/run-full-suite.sh",
         "scripts/test-corpus.sh",
-        "scripts/test-tier.sh",
         "scripts/verify-lazy-startup.sh",
         "tests/corpora.tsv"
       ],

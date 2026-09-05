@@ -17,7 +17,10 @@ RESULTS="${1:-logs/redaction-benchmark/results.jsonl}"
 CORPUS="${2:-redaction-hard}"
 [ -s "$RESULTS" ] || { echo "no results at $RESULTS" >&2; exit 1; }
 
-HISTORY="tests/redaction-bench-history.jsonl"
+# REDACTION_BENCH_HISTORY redirects the history line (the full-suite redaction-bench
+# row writes it into its own log directory, so a GRADE run never dirties the tree;
+# committing a history point stays a deliberate, manual invocation).
+HISTORY="${REDACTION_BENCH_HISTORY:-tests/redaction-bench-history.jsonl}"
 ARCHIVE_DIR="logs/redaction-benchmark/history"
 mkdir -p "$ARCHIVE_DIR"
 

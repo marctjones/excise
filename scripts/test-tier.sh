@@ -1,23 +1,29 @@
 #!/usr/bin/env bash
 # Test tiers (#646): a single, defined answer to "what do I run before X?"
 #
-# The choice used to be "nothing" or "the full ~28-minute release smoke."
-# Both are wrong most of the time. Tier is selected by BLAST RADIUS — who
-# gets hurt if this is wrong — not by convenience:
+# The FRONT DOOR for every local gate. The gates themselves are declared in
+# ONE place — tests/gates.tsv (LOCAL_GATES.md) — and this script holds no step
+# list of its own: run_tier derives the plan from the manifest through
+# runner_manifest_plan <tier> (scripts/lib-runner.sh), which validates it and
+# refuses to run a defective plan. The same file is what a future GitHub
+# Action will consume; nothing is built for Actions here.
 #
-#   t0  ~30s   "did I break it"      pre-push, no excuse not to run it
-#   t1  ~10m*  correctness gate      what CI blocks a PR on; nothing merges red
-#   t2  ~30m   release candidate     today's release-smoke.sh
-#   t3         third-party distribution  t2 on all three platforms + package
+# Tier is selected by BLAST RADIUS — who gets hurt if this is wrong — not by
+# convenience (measured 2026-09-04; the first manifest-driven runs write the
+# ledger that settles t1 and full):
 #
-#   * t1's skip-budget checks (#655) run Excise.Rendering.Tests and
-#     Excise.App.Tests standalone, with no corpus/tool-run to reuse locally
-#     the way ci.yml's equivalent steps do. On a bare machine (no test-pdfs
-#     corpus, no mutool/ghostscript/pdftocairo/tesseract) every skip site
-#     gates fast and ~10m holds. On a machine with the corpus downloaded and
-#     the reference tools installed, Rendering does real corpus/mutool work
-#     and Excise.App.Tests' serial ~17-minute suite runs in full — t1 is
-#     meaningfully longer there. See the comment on those two run_step calls.
+#   t0    ~5 min    "did I break it"        pre-push, no excuse not to run it
+#                   (2–4 min measured over eight warm runs; ~5 with a cold build)
+#   t1    ~20–25m   merge gate              before anything lands on develop
+#   full  ≈3 h      everything, chunked and resumable — scripts/run-full-suite.sh
+#   t2    ~30 min   release candidate       scripts/release-smoke.sh --release-tests
+#   t3    —         t2, then the macOS-only note (LOCAL_GATES.md)
+#
+# Chain semantics: t0 ⊂ t1 ⊂ full. t2 is a curated Release-config set, not a
+# superset. Every run ends with scripts/report-gates.sh, whose exit code IS
+# this script's exit code: it separates a NEW red (blocks) from a KNOWN one
+# (an open issue named in the manifest), surfaces SKIPPED prerequisites, and
+# prints the GRADES against the reference tools.
 #
 # excise-specific rule: YOU ARE YOUR OWN THIRD PARTY. A local build you redact
 # a real document with is a binary whose failure hurts someone, silently — no
@@ -25,10 +31,13 @@
 # therefore non-negotiable at every tier that produces a binary anyone will
 # redact with, including a purely local build. t0 includes the static
 # redaction-architecture guard (verify-true-redaction.sh, near-free); t1
-# includes the full redaction test suites (the ~361s the issue costs out) and
-# does not accept a flag to skip them.
+# includes the full redaction test suites and accepts no flag to skip them —
+# their rows are checkpoint=never in the manifest, so --resume re-runs them.
 #
-# Usage: scripts/test-tier.sh {t0|t1|t2|t3} [--install-hook]
+# Usage: scripts/test-tier.sh {t0|t1|full|t2|t3} [--resume] [full options]
+#        scripts/test-tier.sh --list [tier]
+#        scripts/test-tier.sh --report [LOG_DIR|--latest] [--full] [--no-gh]
+#        scripts/test-tier.sh --install-hook
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -44,37 +53,69 @@ say() { echo -e "$1"; }
 
 source "$ROOT/scripts/lib-runner.sh"
 
-TIER="${1:-}"
+TIER=""
 INSTALL_HOOK=0
-# Opt-in crash-resumable mode. Default 0 keeps this script's behaviour
-# unchanged for the pre-push hook and CI, which should never skip anything.
+# Opt-in crash-resumable mode. Default 0 keeps the pre-push hook skipping
+# nothing. run-full-suite.sh (tier full) checkpoints on its own.
 RESUME=0
-for arg in "$@"; do
-    [ "$arg" = "--install-hook" ] && INSTALL_HOOK=1
-    [ "$arg" = "--resume" ] && RESUME=1
+LIST=0
+REPORT=0
+REPORT_DIR=""
+REPORT_FULL=""
+REPORT_GH=""
+PASS_ARGS=()
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        t0|t1|t2|t3|full) TIER="$1" ;;
+        --install-hook) INSTALL_HOOK=1 ;;
+        --resume) RESUME=1; PASS_ARGS+=("$1") ;;
+        --list) LIST=1 ;;
+        --report) REPORT=1 ;;
+        --latest) REPORT_DIR="--latest" ;;
+        --full) REPORT_FULL="--full" ;;
+        --no-gh) REPORT_GH="--no-gh" ;;
+        # run-full-suite.sh options pass through untouched.
+        --fresh|--everything|--allow-missing-corpora|--skip-chunking|--status) PASS_ARGS+=("$1") ;;
+        --only) PASS_ARGS+=("$1" "${2:-}"); shift ;;
+        -h|--help) TIER=""; break ;;
+        -*) echo "unknown option: $1" >&2; TIER=""; break ;;
+        *) REPORT_DIR="$1" ;;
+    esac
+    shift
 done
 
 usage() {
     cat <<'EOF'
-Usage: scripts/test-tier.sh {t0|t1|t2|t3} [--install-hook]
+Usage: scripts/test-tier.sh {t0|t1|full|t2|t3} [--resume]
+       scripts/test-tier.sh --list [tier]
+       scripts/test-tier.sh --report [LOG_DIR|--latest] [--full] [--no-gh]
+       scripts/test-tier.sh --install-hook
 
-  t0  ~30s   build + Core/Cli/Avalonia tests + doc-claim-freshness + gate-asymmetry
-             + redaction-architecture guard. Pre-push, no excuse not to run it.
-  t1  ~10m   t0 + full redaction test suites + Rendering (deterministic) +
-             skip-budget for Core/Rendering/Excise.App (#655). What CI blocks
-             a PR on; can run longer on a machine with the full test-pdfs
-             corpus and mutool/ghostscript/pdftocairo/tesseract installed.
-  t2  ~30m   release candidate — runs scripts/release-smoke.sh --release-tests.
-  t3         t2, then prints the CI checks that must also be green on
-             macOS/Windows before tagging (this script runs on one machine;
-             it cannot itself execute another platform's job).
+  t0     ~5 min   build + Core/Cli/Avalonia tests + the static gates (doc
+                  freshness, gate-asymmetry, redaction architecture, registries,
+                  selftests). Pre-push: the installed hook runs exactly this.
+  t1     ~20–25m  t0 + the redaction suites + Rendering (deterministic AND the
+                  independent-oracle subsets with their floors) + parity ratchets
+                  + skip budgets + the full Excise.App.Tests run. Merge gate.
+  full   ≈3 h     t1 + every project chunked + the corpus scans + the release
+                  smoke rows + the GRADE benches. exec's scripts/run-full-suite.sh
+                  under caffeinate; resumable there (--fresh restarts; --only <re>
+                  narrows; --allow-missing-corpora runs without a corpus).
+  t2     ~30 min  release candidate — exec's scripts/release-smoke.sh --release-tests.
+  t3              t2 on this machine, then the macOS-only note. Linux/Windows
+                  packaging is a separate issue (LOCAL_GATES.md).
 
-  --install-hook   install t0 as .git/hooks/pre-push and exit.
-  --resume         skip steps that already passed for this exact commit, so an
-                   interrupted long run (crash, Ctrl-C, panic) picks up where it
-                   stopped instead of restarting. Redaction steps always re-run.
-                   For the whole suite chunked and memory-bounded, prefer
-                   scripts/run-full-suite.sh.
+  --list [tier]   print the tier's rows from tests/gates.tsv and run nothing.
+  --report        print the report for a run directory (default: the latest run)
+                  without running anything: NEW vs KNOWN reds, SKIPPED
+                  prerequisites, IMPROVE ratchets, GRADES vs the reference tools.
+                  --full lists every row. --no-gh skips the open-issue check.
+  --install-hook  install t0 as .git/hooks/pre-push and exit. Re-run once after
+                  updating this script: the hook reads the push range on stdin.
+  --resume        skip t0/t1 steps that already passed for this exact command
+                  and tree (redaction rows never skip). full resumes by default.
+
+Every gate is a row in tests/gates.tsv; LOCAL_GATES.md explains the columns.
 EOF
 }
 
@@ -107,6 +148,19 @@ if [ "$INSTALL_HOOK" = "1" ]; then
 #
 # scripts/tag-release.sh has since been deleted outright, along with the
 # Release-Evidence trailers it wrote. Tag by hand: `git tag -a vX.Y.Z`.
+#
+# THE PUSH RANGE. git feeds "<local ref> <local sha> <remote ref> <remote sha>"
+# per pushed ref on stdin. The remote sha is the base the gate-asymmetry gate
+# is defined over ("two pushes, not two commits", #618) — so it is exported
+# as GATE_ASYMMETRY_BASE. An all-zero sha (a new remote branch) falls through
+# to the runner's own base selection (LOCAL_GATES.md).
+base=""
+if [ ! -t 0 ]; then
+    while read -r _lref _lsha _rref rsha; do
+        case "$rsha" in *[!0]*) base="$rsha" ;; esac
+    done
+fi
+[ -n "$base" ] && export GATE_ASYMMETRY_BASE="$base"
 exec "$(git rev-parse --show-toplevel)/scripts/test-tier.sh" t0
 HOOKEOF
     chmod +x "$HOOK"
@@ -114,340 +168,34 @@ HOOKEOF
     [ -z "$TIER" ] && exit 0
 fi
 
-case "$TIER" in
-    t0|t1|t2|t3) ;;
-    *) usage; exit 2 ;;
-esac
+# --list: the tier's rows, straight from the manifest. Runs nothing.
+list_gates() {
+    local tier="$1" rows
+    rows="$(runner_manifest_plan "$tier")" || return 2
+    printf '%-32s %-8s %-15s %-6s %-5s %-28s %s\n' NAME CLASS KIND POLICY CKPT KNOWN-ISSUE PREREQ
+    printf '%s\n' "$rows" | awk -F'\t' '{ printf "%-32s %-8s %-15s %-6s %-5s %-28s %s\n", $1, $5, $2, $8, $9, $6, $7 }'
+    echo
+    echo "$(printf '%s\n' "$rows" | grep -c .) rows in tier $tier — tests/gates.tsv $(runner_manifest_fingerprint)"
+}
 
-TS="$(date +%Y%m%d_%H%M%S)"
-LOG_DIR="$ROOT/logs/test-tier_${TIER}_$TS"
-mkdir -p "$LOG_DIR"
-
-OVERALL=0
-RESULTS=()
-
-if [ "$RESUME" = "1" ]; then
-    runner_state_init "test-tier-$TIER" "Debug"
-    runner_export_lean_env
+if [ "$LIST" = "1" ]; then
+    list_gates "${TIER:-t0}"
+    exit $?
+fi
+if [ "$REPORT" = "1" ]; then
+    # shellcheck disable=SC2086
+    exec scripts/report-gates.sh "${REPORT_DIR:---latest}" $REPORT_FULL $REPORT_GH
 fi
 
-run_step() {
-    local name="$1"
-    shift
-    local log="$LOG_DIR/$name.log"
-
-    # --resume: skip steps that already passed for this exact commit. The
-    # redaction steps are never checkpointed (lib-runner.sh), so they re-run
-    # even on a resume — t1 accepts no flag that skips them.
-    if [ "$RESUME" = "1" ] && ! runner_step_should_run "$name"; then
-        say "${B}[$name]${N} ${G}SKIP${N} - already passed for $(git rev-parse --short HEAD)"
-        RESULTS+=("$name|SKIP|checkpointed")
-        say ""
-        return
-    fi
-    [ "$RESUME" = "1" ] && runner_mem_guard "$name"
-
-    say "${B}[$name]${N} $*"
-    local start
-    start="$(date +%s)"
-    runner_guard_no_build_command "$@" > "$log.freshness" 2>&1
-    local freshness_rc=$?
-    if [ "$freshness_rc" != "0" ]; then
-        local dur=$(( $(date +%s) - start ))
-        say "  ${R}FAIL${N} stale --no-build guard rc=$freshness_rc (${dur}s) -> $log.freshness"
-        cat "$log.freshness" | sed 's/^/    /'
-        RESULTS+=("$name|FAIL|stale --no-build rc=$freshness_rc ${dur}s")
-        OVERALL=1
-        say ""
-        return
-    fi
-    "$@" > "$log" 2>&1
-    local rc=$?
-    local dur=$(( $(date +%s) - start ))
-
-    if [ "$rc" = "0" ]; then
-        [ "$RESUME" = "1" ] && runner_step_mark "$name" "$rc" "$dur"
-        say "  ${G}PASS${N} (${dur}s) -> $log"
-        RESULTS+=("$name|PASS|${dur}s")
-    else
-        say "  ${R}FAIL${N} rc=$rc (${dur}s) -> $log"
-        tail -40 "$log" | sed 's/^/    /'
-        RESULTS+=("$name|FAIL|rc=$rc ${dur}s")
-        OVERALL=1
-    fi
-    say ""
-}
-
-run_t0() {
-    run_step "build" dotnet build excise.sln -c Debug
-    # The trx loggers are here so the #894 count gates below can reuse THIS run
-    # instead of executing each suite a second time. Paths are absolute because
-    # `dotnet test` resolves a relative LogFileName against the project's
-    # TestResults directory, not the working directory.
-    run_step "core-tests" dotnet test Excise.Core.Tests --no-build -c Debug \
-        --logger "console;verbosity=normal" --logger "trx;LogFileName=$LOG_DIR/core-tests.trx"
-    run_step "cli-tests" dotnet test Excise.Cli.Tests --no-build -c Debug \
-        --logger "console;verbosity=normal" --logger "trx;LogFileName=$LOG_DIR/cli-tests.trx"
-    run_step "avalonia-tests" dotnet test Excise.Avalonia.Tests --no-build -c Debug \
-        --logger "console;verbosity=normal" --logger "trx;LogFileName=$LOG_DIR/avalonia-tests.trx"
-    # #894: every discovered test must produce a result. `dotnet test` loses one
-    # roughly half the time on Excise.Core.Tests — a different test each run, and
-    # not xunit parallelism (forcing serial changes the wall clock by 4s and
-    # still loses one). A vanished test reads exactly like a passing one, and it
-    # defeats mutation testing: reverting a fix cannot redden a case that never
-    # reports. The gate re-runs whatever went missing, so a transient loss is
-    # reported and a genuine coverage hole is fatal.
-    run_step "test-count-core" scripts/check-test-count.sh \
-        Excise.Core.Tests/Excise.Core.Tests.csproj --trx "$LOG_DIR/core-tests.trx"
-    run_step "test-count-cli" scripts/check-test-count.sh \
-        Excise.Cli.Tests/Excise.Cli.Tests.csproj --trx "$LOG_DIR/cli-tests.trx"
-    run_step "test-count-avalonia" scripts/check-test-count.sh \
-        Excise.Avalonia.Tests/Excise.Avalonia.Tests.csproj --trx "$LOG_DIR/avalonia-tests.trx"
-    # #936: this derives whether a NUMBER is still TRUE — reference-oracle
-    # usage counts and milestone references are re-measured against the live
-    # source, and numbers that can't be cheaply re-measured must carry a dated
-    # marker. (verify-doc-claims.sh, which pinned that a STRING exists, was
-    # deleted 2026-08-16.)
-    # Self-test first so a broken checker can't report a false "passed".
-    run_step "doc-claim-freshness-selftest" scripts/check-doc-claim-freshness.sh --self-test
-    # A source file that .gitignore swallows is work that never reaches the
-    # remote — silently, and in the direction of losing it. Pure git metadata,
-    # no build, milliseconds.
-    run_step "no-ignored-sources" scripts/check-no-ignored-sources.sh
-    # Licence compliance (#1068). A STATIC file check, so it lives here rather
-    # than in Excise.App.Tests — where it once wedged the host and left 1,310
-    # correctness tests with no verdict. A compliance check must never be able
-    # to stop correctness tests from reporting.
-    run_step "license-compliance" scripts/check-license-compliance.sh
-    # #1077's mutation self-test comes first: a file-level mutool call must
-    # not bless a separate self-oracle-only assertion in the same file.
-    run_step "redaction-oracles-selftest" scripts/test-check-redaction-oracles.sh
-    # No redaction leak test method may rest solely on excise reading its own
-    # output (#1029, #1077). Pure lexical check over the test sources;
-    # milliseconds.
-    run_step "redaction-oracles" scripts/check-redaction-oracles.sh
-    run_step "doc-claim-freshness" scripts/check-doc-claim-freshness.sh
-    # origin/develop, not origin/main: this repo's git-flow lands feature
-    # work on develop (release.yml/PR merges to main happen separately), so
-    # that's the correct local diff base — matches ci.yml's own
-    # github.base_ref-driven choice in a real PR targeting develop.
-    run_step "gate-asymmetry" scripts/check-gate-asymmetry.sh "origin/develop"
-    run_step "redaction-architecture" scripts/verify-true-redaction.sh
-    # #678: project-authored test data (manifests) references source paths that
-    # aren't compile-checked; catch drift (e.g. a rename) before it rots.
-    run_step "testdata-sync" scripts/check-testdata-sync.sh
-    # #663/#665/#668: the skip-budget --update self-test (justification,
-    # inner-'#' reasons, and hand-written comment-block preservation).
-    run_step "assert-fresh-selftest" scripts/test-assert-fresh.sh
-    run_step "skip-budget-selftest" scripts/test-check-skip-budget.sh
-    run_step "coverage-floor-selftest" scripts/test-check-coverage-floor.sh
-    # Near-free, and the thing it guards is easy to get wrong silently: every
-    # corpus destination must be gitignored. It caught one on its first run.
-    run_step "corpus-registry" scripts/corpus.sh verify
-    run_step "corpus-selftest" scripts/test-corpus.sh
-    run_step "bench-tiers-verify" scripts/verify-bench-tiers.sh
-    run_step "font-width-sync" scripts/check-font-width-sync.sh
-    # #940: prove the Roslyn reachability pass reports a dead root and its
-    # dead leaf in one closure, without paying the whole-solution cost in t0.
-    run_step "reachability-selftest" scripts/check-reachability.sh --self-test
-    run_step "architecture-artifacts-selftest" scripts/check-architecture-artifacts.sh --self-test
-    # The machine-readable current/target architecture is only useful if its
-    # references and derived diagrams fail on drift. Mutation-prove the checker
-    # before trusting the real registry, then compare project references and
-    # generated DOT views against the checked-in source of truth.
-    run_step "architecture-registry-selftest" scripts/check_architecture_registry.py --self-test
-    run_step "architecture-registry" scripts/check-architecture-registry.sh
-    run_step "pdf-capability-registry" scripts/check-pdf-capability-registry.sh
-    run_step "architecture-docs-selftest" scripts/check_architecture_docs.py --self-test
-    run_step "architecture-docs" scripts/check-architecture-docs.sh
-    # #1012: every gate must be falsifiable — breaking the property it guards
-    # must make it fail. Each of these feeds its gate known-bad input and
-    # requires a non-zero exit; each was watched going red against a gate whose
-    # failure branch had been neutralized. They are hermetic (temp roots, fake
-    # tools, synthetic reports) and run in milliseconds, except the
-    # contract-manifest one which pays ~6s for four `dotnet run` invocations.
-    #
-    # An UNWIRED selftest is the very defect RC2 is about, so these live here
-    # and not in a document that recommends running them.
-    # #908: public API that nothing calls. The skip budget and test-count gates
-    # catch a TEST that stopped running; this catches PRODUCTION CODE that never
-    # started. ~10s (a text index over .cs/.axaml), ratcheted against
-    # tests/unwired-api-baseline.tsv so only NEW entries fail.
-    run_step "unwired-api-selftest" scripts/check-unwired-api.sh --self-test
-    run_step "unwired-api" scripts/check-unwired-api.sh --quiet
-    # #957: tests/format-compatibility-suite.json is a schema'd design tracker
-    # (PDF versions, storage formats, feature workflows, oracles, known gaps).
-    # Nothing referenced it before this gate, so a row could be hand-edited to
-    # "implemented" without any real test existing. Static/textual (no tools,
-    # seconds): every implemented/partial row's "evidence" entries must exist
-    # and contain a runnable [Fact]/[Theory]-family test. Already runs as part
-    # of "core-tests" above; this step gives it its own named, always-run
-    # signal in t0 output, matching how the other self-contained gates here
-    # are surfaced individually.
-    run_step "format-compat-drift-gate" dotnet test Excise.Core.Tests --no-build -c Debug \
-        --filter "FullyQualifiedName~FormatCompatibilitySuiteEvidenceGateTests" --logger "console;verbosity=normal"
-}
-
-run_t1() {
-    run_t0
-    # Full Roslyn topology is intentionally t1: it pays whole-solution MSBuild
-    # cost. #1302 makes topology, inventory-derived change coupling,
-    # conformance, diagrams, schemas, and their hash manifest one coherent
-    # gate, so no partial or independently stale graph can pass.
-    run_step "architecture-artifacts" scripts/check-architecture-artifacts.sh
-    # #341: the shipped Release package must not drag heavy optional
-    # subsystems into startup — no Roslyn scripting assemblies, no bundled
-    # tessdata, and toggling hidden text must not load Excise.Ocr.
-    #
-    # Wired here 2026-08-17 after being found running NOWHERE. It had already
-    # been fixed once for the same reason (d5687a1b, "verify-lazy-startup.sh
-    # was wired into nothing") and had come unwired again. t1 rather than t0
-    # because it publishes a Release build; 16s, so it is cheap enough to run
-    # on anything CI blocks a PR on.
-    #
-    # It is one of the few gates here that checks something a USER would
-    # notice, and it was the only one that could not fire.
-    run_step "lazy-startup" scripts/verify-lazy-startup.sh
-    # The PDF 2.0 renderer conformance gate (ISO 32000-2:2020 + EC3): 95
-    # requirements traced to the spec, audited against actual evidence.
-    #
-    # t1 rather than t2-only, added 2026-08-18. It ran ONLY in release-smoke, so
-    # a PR could not fail it — and it takes 35 SECONDS. The 7 schema tests
-    # inside Core.Tests already run at t0; what was missing here is the audit
-    # that decides whether a requirement's claimed evidence actually exists.
-    #
-    # It earns the slot: asked to graduate the annotation rows to hard-gate
-    # status, it refused two of them (MISSING_CORPUS) because they claimed
-    # corpus evidence that was not registered. A gate that rejects an
-    # unsupported claim from the person editing it is the kind worth running
-    # early.
-    run_step "pdf20-conformance" scripts/run-pdf20-renderer-conformance.sh
-    run_step "redaction-suites" dotnet test --no-build -c Debug --filter "FullyQualifiedName~Redaction" --logger "console;verbosity=normal"
-    # #644: the encryption interop gate. Neither of t1's other rendering
-    # steps reaches it — the redaction filter doesn't match it and
-    # rendering-deterministic excludes Differential — so it gets its own
-    # step. It runs in seconds: tiny generated fixtures, and on a machine
-    # without mutool/qpdf/ghostscript/pdftoppm every test skips loudly
-    # (release evidence instead sets EXCISE_REQUIRE_ENCRYPTION_INTEROP_TOOLS=1
-    # so a tool-less run cannot green the gate vacuously — see
-    # docs/RELEASE_CHECKLIST.md "Encryption Evidence").
-    run_step "encryption-interop-gate" dotnet test Excise.Rendering.Tests --no-build -c Debug \
-        --filter "FullyQualifiedName~EncryptionInteropGateTests" --logger "console;verbosity=normal"
-    run_step "rendering-deterministic" dotnet test Excise.Rendering.Tests --no-build -c Debug \
-        --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
-        --logger "console;verbosity=normal"
-
-    # ── Independent-oracle subsets, ported from .github/workflows/rendering-
-    # linux.yml when GitHub Actions was removed (#1360, #1355).
-    #
-    # NOTE the step above deliberately EXCLUDES Corpus and Differential — so
-    # before this block, t1 ran the exact INVERSE of the oracle job, and the
-    # tests that check excise against a tool that is not excise ran in no tier
-    # at all. Nothing here is Linux-specific; it needed reference tools and
-    # corpora, which this machine has (check-oracle-tools.sh proves it first).
-    #
-    # The floors are what make a silent environment regression LOUD. A
-    # differential test with a missing tool SKIPS, and dotnet test cannot tell
-    # green-because-skipped from green-because-passed. lib-runner.sh's
-    # "matched zero tests" guard covers the filter-typo case; these floors
-    # cover the tools-vanished case.
-    run_step "oracle-tools" scripts/check-oracle-tools.sh
-
-    # PDFBox is gated on an env var, not on the jar being present — so a
-    # checked-out jar sitting right there buys NOTHING unless this is
-    # exported. CLAUDE.md documents this trap (#935): the docs claimed for
-    # months that setting it "changes nothing for the test suite", and anyone
-    # who believed that got less corroboration than was available. Export it
-    # here so the oracle engages by default rather than by shell hygiene.
-    if [ -z "${EXCISE_PDFBOX_JAR:-}" ]; then
-        _jar="$(ls "$ROOT"/tools/vendor/pdfbox-app-*.jar 2>/dev/null | sort | tail -1)"
-        [ -n "$_jar" ] && export EXCISE_PDFBOX_JAR="$_jar"
-    fi
-
-    run_step "rendering-oracles" dotnet test Excise.Rendering.Tests --no-build -c Debug \
-        --filter "FullyQualifiedName~Differential|FullyQualifiedName~Corpus" \
-        --logger "trx;LogFileName=rendering-oracles.trx" \
-        --logger "console;verbosity=normal" --results-directory "$LOG_DIR"
-    run_step "rendering-oracles-floor" scripts/check-oracle-floor.sh "$LOG_DIR/rendering-oracles.trx" 3000 "rendering Differential+Corpus"
-
-    # #929: the GUI and writer oracle families. These exist so excise's
-    # redaction/save output is checked against a tool that is not excise.
-    # Named by exact method/suffix rather than a [Trait] because none of them
-    # share one — enumerating what actually runs keeps the filter honest, and
-    # the floor makes a future rename fail loud instead of narrowing silently.
-    # No xvfb: that was the one genuinely Linux-specific line, and Avalonia
-    # headless needs no display server here.
-    run_step "app-oracles" dotnet test Excise.App.Tests --no-build -c Debug \
-        --filter "FullyQualifiedName~IndependentExtractor|FullyQualifiedName~IndependentRenderer|FullyQualifiedName~IndependentTools|FullyQualifiedName~IndependentPdftotextOracle|FullyQualifiedName~PdfsigReportsValidUntrustedSignature|FullyQualifiedName~RevealRasterizedHidden_FindsTextHiddenByOverlayInsideImage|FullyQualifiedName~RunMakeSearchable_ThenOnCompleted_MakesScanSearchable|FullyQualifiedName~RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact" \
-        --logger "trx;LogFileName=app-oracles.trx" \
-        --logger "console;verbosity=normal" --results-directory "$LOG_DIR" \
-        --blame-hang-timeout 120000
-    run_step "app-oracles-floor" scripts/check-oracle-floor.sh "$LOG_DIR/app-oracles.trx" 13 "App.Tests independent-oracle"
-
-    # PdfDocumentWriterTests' "_WhenAvailable" family re-reads the compressed
-    # writer's output with qpdf/mutool/pdfinfo/gs/pdfcpu. The Linux runner had
-    # no pdfcpu and used a floor of 13; this machine has it, so 14.
-    run_step "core-oracles" dotnet test Excise.Core.Tests --no-build -c Debug \
-        --filter "FullyQualifiedName~_WhenAvailable" \
-        --logger "trx;LogFileName=core-oracles.trx" \
-        --logger "console;verbosity=normal" --results-directory "$LOG_DIR"
-    run_step "core-oracles-floor" scripts/check-oracle-floor.sh "$LOG_DIR/core-oracles.trx" 14 "Core.Tests tool-gated"
-
-    # #645: extraction coverage vs mutool. Redaction completeness is bounded
-    # by extraction coverage — excise cannot redact what excise cannot read,
-    # and it reports success anyway. This ran only on the Linux oracle job and
-    # in run-full-suite.sh, i.e. never in the tier people actually run.
-    run_step "extraction-parity" scripts/check-extraction-parity.sh
-    # Copy-whitespace parity ratchet (#837): fails if copied-text word/line
-    # agreement vs poppler pdftotext drops below tests/copy-whitespace/floors.json.
-    # Skips loudly (exit 0) when pdftotext or the corpus is absent, like the
-    # extraction-parity gate.
-    run_step "copy-whitespace-parity" scripts/check-copy-whitespace-parity.sh
-    # #1104: per-glyph advance parity vs mutool -- the ruler for the font
-    # cluster (catches metric drift a character-count gate cannot see).
-    run_step "advance-parity" scripts/check-advance-parity.sh
-    run_step "skip-budget-core" scripts/check-skip-budget.sh Excise.Core.Tests/Excise.Core.Tests.csproj
-    # #655: Excise.Core.Tests was the only project this gate watched — Excise.
-    # Rendering.Tests (~114 Assert.SkipWhen/SkipUnless call sites) and
-    # Excise.App.Tests (its own allowlist already existed but was never wired
-    # to anything) had zero enumeration. Neither call below passes --trx:
-    # test-tier.sh, unlike ci.yml, has no earlier full run of either project
-    # to reuse (rendering-deterministic above deliberately excludes Corpus/
-    # Differential/Benchmark/Visual, and Excise.App.Tests isn't run in t1 at
-    # all), so each runs its own full `dotnet test`. On a machine without
-    # the gitignored smoke/isartor/local-real-world corpus or mutool/
-    # ghostscript/pdftocairo/tesseract installed, every skip site gates fast
-    # and this is cheap. On a machine that DOES have them (this is common
-    # for a maintainer box that ran scripts/download-test-pdfs.sh), Rendering
-    # genuinely does real corpus/mutool work and Excise.App.Tests' serial
-    # ~17-minute suite genuinely runs in full — t1 stops being "~10m" for
-    # that machine. Accepted deliberately: the coverage guarantee (#619) is
-    # worth more than keeping the estimate accurate everywhere, and #646's
-    # original ~10m figure was already a rough one.
-    run_step "skip-budget-rendering" scripts/check-skip-budget.sh Excise.Rendering.Tests/Excise.Rendering.Tests.csproj
-    # Clear the GUI-coverage artifacts BEFORE the run that produces them. They
-    # are append-only (so a killed run still leaves the partial truth), which
-    # means a stale file would keep reporting an element as covered by a test
-    # that has since been deleted — a green built out of last week's evidence.
-    # Same direction as the runner's checkpoint rule: fail toward re-measuring.
-    rm -f artifacts/gui-coverage/gui-interaction-observed.tsv \
-          artifacts/gui-coverage/gui-interaction-inventory.tsv \
-          artifacts/gui-coverage/gui-command-executed.tsv
-    run_step "skip-budget-app" scripts/check-skip-budget.sh Excise.App.Tests/Excise.App.Tests.csproj
-    # GUI interaction coverage. Reads the artifacts the FULL Excise.App.Tests run
-    # immediately above already produced, so it adds no test time — it only
-    # judges what that run recorded. It must stay AFTER skip-budget-app for that
-    # reason: on its own it has nothing to read and fails loudly rather than
-    # skipping.
-    run_step "gui-interaction-coverage" scripts/check-gui-interaction-coverage.sh
-}
-
 case "$TIER" in
-    t0)
-        run_t0
-        ;;
-    t1)
-        run_t1
+    t0|t1) ;;
+    full)
+        # The whole suite, chunked, memory-bounded and resumable. caffeinate
+        # keeps the machine awake for the ≈3 h it takes.
+        if command -v caffeinate >/dev/null 2>&1; then
+            exec caffeinate -i scripts/run-full-suite.sh ${PASS_ARGS[@]+"${PASS_ARGS[@]}"}
+        fi
+        exec scripts/run-full-suite.sh ${PASS_ARGS[@]+"${PASS_ARGS[@]}"}
         ;;
     t2)
         # Branch explicitly rather than expanding a possibly-empty array: under
@@ -462,35 +210,158 @@ case "$TIER" in
         ;;
     t3)
         say "${B}[t3]${N} running t2 locally (this machine's platform only)"
+        RS_OK=0
         if [ "$RESUME" = "1" ]; then
-            RS_OK=0; scripts/release-smoke.sh --release-tests --resume || RS_OK=1
+            scripts/release-smoke.sh --release-tests --resume || RS_OK=1
         else
-            RS_OK=0; scripts/release-smoke.sh --release-tests || RS_OK=1
-        fi
-        if [ "$RS_OK" != "0" ]; then
-            OVERALL=1
+            scripts/release-smoke.sh --release-tests || RS_OK=1
         fi
         say ""
-        say "${Y}t3 also requires these to be green before tagging:${N}"
-        say "  - CI 'test-linux', 'test-macos', 'test-windows' checks (#647) on this commit"
-        say "  - release.yml's linux-deb / windows-exe / macos-app package builds"
-        say "test-tier.sh runs on one machine and cannot execute another platform's job."
-        exit $OVERALL
+        say "${Y}t3 is macOS only.${N} Linux/Windows packaging is a separate issue"
+        say "(LOCAL_GATES.md); this script runs on one machine and cannot execute"
+        say "another platform's job."
+        exit $RS_OK
         ;;
+    *) usage; exit 2 ;;
 esac
 
-say "========================================="
-say "Summary ($TIER)"
-say "========================================="
-for r in "${RESULTS[@]}"; do
-    IFS='|' read -r name status detail <<< "$r"
-    if [ "$status" = "PASS" ]; then
-        say "  ${G}PASS${N}  $name ($detail)"
-    else
-        say "  ${R}FAIL${N}  $name ($detail)"
-    fi
-done
-say ""
-say "Logs: $LOG_DIR"
+TS="$(date +%Y%m%d_%H%M%S)"
+LOG_DIR="$ROOT/logs/test-tier_${TIER}_$TS"
+mkdir -p "$LOG_DIR"
 
-exit $OVERALL
+# The environment every row may reference (tests/gates.tsv "target").
+CONFIG="Debug"
+RUNNER_BUILD_ARGS=""
+RUNNER_OPTS=""
+BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-900000}"
+export CONFIG LOG_DIR RUNNER_BUILD_ARGS RUNNER_OPTS BLAME_HANG_TIMEOUT
+runner_identify_tree "$CONFIG"
+if [ "$RESUME" = "1" ]; then
+    runner_state_init "test-tier-$TIER" "$CONFIG"
+    runner_export_lean_env
+fi
+runner_ledger_init "$LOG_DIR/ledger.jsonl"
+runner_export_oracle_env
+runner_export_release_env
+GATE_ASYMMETRY_BASE="$(runner_gate_asymmetry_base "$TIER")"
+export GATE_ASYMMETRY_BASE
+
+# run_step <name> <kind> <target> <filter> <class> <knownIssue> <prereq> <policy> <ckpt>
+# One row of the plan. The ledger row it writes carries the row's class and
+# knownIssue, so the report can tell a NEW red from a KNOWN one without
+# re-reading the manifest.
+run_step() {
+    local name="$1" kind="$2" target="$3" filter="$4" class="$5" known="$6" prereq="$7" policy="$8"
+    local log="$LOG_DIR/$name.log" cmdline hash rc=0 dur start reason="" status frc=0
+
+    cmdline="$(runner_step_cmdline "$name" "$kind" "$target" "$filter")"
+    hash="$(runner_target_hash "$kind" "$target" "$filter")"
+
+    # --resume: skip a row that already passed for this exact command and
+    # tree. Rows declared checkpoint=never (the redaction family, build) are
+    # never skipped — t1 accepts no flag that skips them.
+    if [ "$RESUME" = "1" ] && ! runner_step_should_run "$name" "$hash"; then
+        say "${B}[$name]${N} ${G}SKIP${N} - checkpointed"
+        runner_ledger_record "$name" SKIP_CHECKPOINTED 0 0 "kind=$kind" "target=$target" "filter=$filter" \
+            "class=$class" "knownIssue=$known" "prereq=$prereq" \
+            "evidenceFrom=$(runner_marker_path "$name")" "evidenceFinished=$(runner_marker_value "$name" finished)" \
+            "evidenceLog=$(runner_marker_value "$name" log)" "evidenceSha=$(runner_marker_value "$name" sha)"
+        say ""
+        return
+    fi
+    [ "$RESUME" = "1" ] && runner_mem_guard "$name"
+
+    say "${B}[$name]${N} $cmdline"
+    start="$(date +%s)"
+
+    if reason="$(runner_prereq_missing "$prereq")"; then
+        # The same verdict the exit-77 protocol gives, without paying for the run.
+        rc="$RUNNER_EXIT_SKIP"
+        printf 'SKIPPED: prerequisite missing: %s\n' "$reason" > "$log"
+    else
+        # Freshness: never eval a cell. Project/test rows are checked directly;
+        # a script row is word-split (leading `env K=V` dropped, placeholders
+        # expanded without a shell) so a `dotnet test --no-build` inside it is
+        # still guarded.
+        case "$kind" in
+            test|project|project-chunked)
+                case "$target" in
+                    *.sln) runner_assert_fresh_build "$CONFIG" > "$log.freshness" 2>&1; frc=$? ;;
+                    *)     runner_assert_fresh_build "$CONFIG" "$target" > "$log.freshness" 2>&1; frc=$? ;;
+                esac ;;
+            *)
+                local _w=()
+                read -r -a _w <<< "$(runner_expand_placeholders "$target")"
+                while [ "${#_w[@]}" -gt 0 ] && { [ "${_w[0]}" = env ] || case "${_w[0]}" in *=*) true ;; *) false ;; esac; }; do
+                    _w=("${_w[@]:1}")
+                done
+                runner_guard_no_build_command ${_w[@]+"${_w[@]}"} > "$log.freshness" 2>&1; frc=$? ;;
+        esac
+        if [ "$frc" != 0 ]; then
+            dur=$(( $(date +%s) - start ))
+            say "  ${R}FAIL${N} stale --no-build guard rc=$frc -> $log.freshness"
+            sed 's/^/    /' "$log.freshness"
+            runner_ledger_record "$name" FAIL "$frc" "$dur" "kind=$kind" "target=$target" "filter=$filter" \
+                "log=$log.freshness" "class=$class" "knownIssue=$known" "prereq=$prereq" "reason=stale-no-build"
+            say ""
+            return
+        fi
+        sh -c "$cmdline" > "$log" 2>&1
+        rc=$?
+    fi
+    dur=$(( $(date +%s) - start ))
+
+    status="$(runner_step_status "$kind" "$class" "$policy" "$rc" "$log" "$cmdline")"
+    case "$status" in
+        PASS)
+            [ "$RESUME" = "1" ] && runner_step_mark "$name" "$rc" "$dur" "$hash" "$log"
+            say "  ${G}PASS${N} (${dur}s) -> $log" ;;
+        SKIPPED)
+            reason="$(grep -E '^SKIP' "$log" | tail -1)"
+            say "  ${Y}SKIPPED${N} (${dur}s) — $reason" ;;
+        NO_RESULT)
+            say "  ${Y}NO RESULT${N} (GRADE, rc=$rc) -> $log" ;;
+        FAIL_ZERO_TESTS)
+            say "  ${R}FAIL${N} (${dur}s) — ZERO tests executed; a vacuous pass is a failure"
+            say "       filter: $filter" ;;
+        *)
+            say "  ${R}$status${N} rc=$rc (${dur}s) -> $log"
+            tail -40 "$log" | sed 's/^/    /' ;;
+    esac
+    local trx=""
+    [ -f "$LOG_DIR/$name.trx" ] && trx="$LOG_DIR/$name.trx"
+    runner_ledger_record "$name" "$status" "$rc" "$dur" "kind=$kind" "target=$target" "filter=$filter" "log=$log" \
+        "trx=$trx" "testsExecuted=${RUNNER_TESTS_EXECUTED:-}" "class=$class" "knownIssue=$known" "prereq=$prereq" "reason=$reason"
+    say ""
+}
+
+# run_tier <t0|t1> — derive the plan from the manifest, expand the trx
+# references, run every row in file order.
+run_tier() {
+    local plan="$LOG_DIR/plan.tsv" n
+    runner_manifest_plan "$1" > "$plan.rows" || { echo "test-tier: tests/gates.tsv is defective; nothing ran." >&2; exit 2; }
+    n="$(grep -c . "$plan.rows")"
+    runner_plan_write "$plan" "$1" "$plan.rows" "$n" "$n" "-"
+    rm -f "$plan.rows"
+    runner_plan_expand_trx "$plan" "$LOG_DIR" || exit 2
+    say "${B}[$1]${N} $n rows from tests/gates.tsv ($(runner_manifest_fingerprint)) @${RUNNER_SHA:0:12}$([ "$RUNNER_TREE_DIRTY" = yes ] && echo ' DIRTY') base=$GATE_ASYMMETRY_BASE"
+    say "Logs: $LOG_DIR"
+    say ""
+    local name kind target filter class known prereq policy ckpt ratchet
+    while IFS=$'\t' read -r name kind target filter class known prereq policy ckpt ratchet; do
+        case "$name" in ''|'#'*) continue ;; esac
+        run_step "$name" "$kind" "$target" "$filter" "$class" "$known" "$prereq" "$policy" "$ckpt"
+    done < "$plan"
+}
+
+run_tier "$TIER"
+
+# The report is the summary, and its exit code is this script's exit code:
+# 0 clean (possibly with SKIPPED rows), 1 a NEW red or a STALE acceptance,
+# 3 a row that never ran, 2 nothing to report.
+scripts/report-gates.sh "$LOG_DIR"
+rc=$?
+if [ "$rc" = 0 ]; then
+    runner_tier_base_record_chain "$TIER"
+fi
+exit $rc
