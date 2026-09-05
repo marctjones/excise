@@ -12,6 +12,7 @@ public static class PdfCommandRegistry
         App(PdfCommandIds.Open, "Open PDF", "Open a PDF document.", "Ctrl+O"),
         App(PdfCommandIds.Save, "Save Document", "Save the current PDF document.", "Ctrl+S", requiresDocument: true),
         App(PdfCommandIds.SaveAs, "Save As", "Save the current document to a new PDF file.", "Ctrl+Shift+S", requiresDocument: true),
+        App(PdfCommandIds.SignDocument, "Sign Document", "Apply a digital signature to the saved file using a PKCS#12 certificate (#1308). Signs the file on disk and refuses while edits are unsaved, because a full rewrite invalidates a signature.", requiresDocument: true),
         App(PdfCommandIds.CloseDocument, "Close Document", "Close the current document.", "Ctrl+W", requiresDocument: true),
         App(PdfCommandIds.Preferences, "Preferences", "Open application preferences.", "Ctrl+,"),
         App(PdfCommandIds.KeyboardShortcuts, "Keyboard Shortcuts", "Show keyboard shortcuts.", "F1"),
