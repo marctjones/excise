@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 990,
-  "indexedContentSha256": "abb5daf5e1d55b66bec25a875862876f8356fca9a08186d5e102289f5f8eb4da",
+  "indexedFileCount": 991,
+  "indexedContentSha256": "f388363ee17386af95b3bb966e1c3f90f95f4774d013f9627a3f6c180d4837d8",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -825,6 +825,14 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "incremental",
+            "update"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Content/ContentStreamFixture.cs",
           "kind": "test",
           "matchedTerms": [
@@ -1238,17 +1246,9 @@
             "trailer",
             "xref"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/RtlRedactionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "streams",
-            "trailer"
-          ]
         }
       ],
-      "candidateReferenceCount": 130
+      "candidateReferenceCount": 131
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -2739,7 +2739,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 91
+      "candidateReferenceCount": 90
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -4797,6 +4797,14 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "dates",
+            "information"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -5185,7 +5193,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 71
+      "candidateReferenceCount": 72
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -6856,7 +6864,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 431
+      "candidateReferenceCount": 430
     },
     {
       "id": "pdf.17.graphics.color",
@@ -24996,16 +25004,6 @@
           ]
         },
         {
-          "path": "tests/reachability-baseline.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "image",
-            "image",
-            "jbig2"
-          ]
-        },
-        {
           "path": "tests/redaction-bench-design.json",
           "kind": "test",
           "matchedTerms": [
@@ -25033,7 +25031,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 33
+      "candidateReferenceCount": 32
     },
     {
       "id": "pdf.20.image.requirement-018",
@@ -41163,6 +41161,14 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "model",
+            "soft"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Typewriter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -41430,17 +41436,9 @@
             "alpha",
             "blend"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Integration/MakeSearchableWiringTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "model",
-            "soft"
-          ]
         }
       ],
-      "candidateReferenceCount": 127
+      "candidateReferenceCount": 128
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -50199,6 +50197,14 @@
       "registeredVerification": null,
       "candidateReferences": [
         {
+          "path": "Excise.Core/Automation/PdfCommandIds.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "digital",
+            "signatures"
+          ]
+        },
+        {
           "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
           "kind": "source",
           "matchedTerms": [
@@ -50640,11 +50646,27 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "digital",
+            "signatures"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Scripting.cs",
           "kind": "source",
           "matchedTerms": [
             "byte",
             "permissions"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "byte",
+            "digital"
           ]
         },
         {
@@ -50862,33 +50884,9 @@
             "byte",
             "ranges"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/OcgMembershipExtractionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "dictionaries"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "ranges"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/RegisteredCMapTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "ranges"
-          ]
         }
       ],
-      "candidateReferenceCount": 141
+      "candidateReferenceCount": 144
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -52062,6 +52060,14 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Typewriter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -52319,17 +52325,9 @@
             "extensions",
             "pdfa"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/AppPathsTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions"
-          ]
         }
       ],
-      "candidateReferenceCount": 113
+      "candidateReferenceCount": 114
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -56402,15 +56400,6 @@
           ]
         },
         {
-          "path": "tests/reachability-baseline.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "override",
-            "signature",
-            "security"
-          ]
-        },
-        {
           "path": "tests/unwired-api-baseline.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -56444,7 +56433,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 29
+      "candidateReferenceCount": 28
     },
     {
       "id": "pdfe.product.ocr.scanned-documents",
@@ -57331,6 +57320,14 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "local",
+            "log"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -57707,18 +57704,9 @@
             "audit",
             "log"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/GuiWorkflowCoverageMatrixTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "audit",
-            "log",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 101
+      "candidateReferenceCount": 102
     },
     {
       "id": "pdfe.product.platform.printing",

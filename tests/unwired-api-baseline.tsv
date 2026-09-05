@@ -41,7 +41,6 @@ Excise.App	tests-only	GetPageWidth	triage:test-covered app service/helper surfac
 Excise.App	tests-only	HasRecentFiles	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	PreferencesPath	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ShowInfo	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	SignFile	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	SuggestPageSubsetFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	SuggestSafeRedactedFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	TogglePin	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
@@ -80,7 +79,6 @@ Excise.Core	tests-only	HasEmbeddedFiles	triage:public library/domain API; tests 
 Excise.Core	tests-only	HasOverflow	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	HorizontalRule	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	InvokeXObject	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	IsDecrypting	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsIndirect	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsNumber	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsPartialOverlap	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -101,10 +99,7 @@ Excise.Core	tests-only	SetAnnotationContents	triage:public library/domain API; t
 Excise.Core	tests-only	SetAnnotationOpacity	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	SetFillBlack	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	SetFillWhite	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	SetLineWidth	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	SetReplyTo	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	SetStrokeGray	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	SetStrokeRgb	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	SetTabOrder	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	SourceOperation	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	TextPosition	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -128,6 +123,7 @@ Excise.Rendering	tests-only	BBoxHeight	triage:#933 qpdf reference-oracle surface
 Excise.Rendering	tests-only	BBoxWidth	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
 Excise.Rendering	tests-only	EncryptR4	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	EndLineEnding	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	ExtractAll	#1372 the page-range surface of the PdftotextTextExtractor oracle (row below). Test-only by design and must stay that way: production reading a PDF through Poppler would make an external tool part of excise's behaviour, which is the opposite of an independent oracle.
 Excise.Rendering	tests-only	FallbackTolerancePt	#1146 residue CLI wires these
 Excise.Rendering	tests-only	InkStrokeCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	LayoutGapPreserved	#1146 residue CLI wires these
@@ -135,6 +131,7 @@ Excise.Rendering	tests-only	ListAnnotations	triage:public rendering/tooling API 
 Excise.Rendering	tests-only	NormalAppearance	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
 Excise.Rendering	tests-only	PdfBoxReferenceRedactor	reference redactor (#1042) — tests-only BY DESIGN, like the other Differential reference tools; production must never redact via PDFBox (two agreeing references are signal, one is an opinion)
 Excise.Rendering	tests-only	PdftoppmReferenceRenderer	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	PdftotextTextExtractor	#1372 a reference ORACLE, like MutoolTextExtractor: test-only by design. Production must never read a PDF through Poppler — that would make an external tool part of excise's behaviour. It exists so the redaction bench has a second text engine, because mutool is MuPDF and PyMuPDF (a measured redactor) is the same engine.
 Excise.Rendering	tests-only	ShowEncryption	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	TryRenderPageWithOverprintSimulation	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	VeraPdfReferenceValidator	triage:external validator oracle (#1056) — tests-only BY DESIGN, like the other Differential reference tools; production must never depend on veraPDF being installed

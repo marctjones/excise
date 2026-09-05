@@ -92,10 +92,6 @@ public static class PdftotextTextExtractor
         return pages;
     }
 
-    /// <summary>Whole document as one string. Null when pdftotext isn't available or refuses.</summary>
-    public static string? ExtractAll(string pdfPath, int timeoutMs = 120_000)
-        => ExtractRange(pdfPath, firstPage: 0, lastPage: 0, timeoutMs, password: null);
-
     private static string? ExtractRange(string pdfPath, int firstPage, int lastPage, int timeoutMs, string? password)
     {
         if (!IsAvailable) return null;

@@ -10491,6 +10491,14 @@
             ]
           },
           {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "dates",
+              "information"
+            ]
+          },
+          {
             "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
             "kind": "source",
             "matchedTerms": [
@@ -11242,6 +11250,14 @@
           },
           {
             "path": "Excise.App/ViewModels/MainWindowViewModel.Search.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "dates",
+              "information"
+            ]
+          },
+          {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
             "kind": "source",
             "matchedTerms": [
               "dates",
@@ -20232,14 +20248,6 @@
               "alpha",
               "blend"
             ]
-          },
-          {
-            "path": "Excise.App.Tests/Integration/MakeSearchableWiringTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "model",
-              "soft"
-            ]
           }
         ],
         "architecture": []
@@ -20888,14 +20896,6 @@
             "matchedTerms": [
               "alpha",
               "blend"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/Integration/MakeSearchableWiringTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "model",
-              "soft"
             ]
           }
         ],
@@ -23646,6 +23646,14 @@
             ]
           },
           {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "dates",
+              "information"
+            ]
+          },
+          {
             "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
             "kind": "source",
             "matchedTerms": [
@@ -24500,6 +24508,14 @@
             ]
           },
           {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "dates",
+              "information"
+            ]
+          },
+          {
             "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
             "kind": "source",
             "matchedTerms": [
@@ -25347,6 +25363,14 @@
           },
           {
             "path": "Excise.App/ViewModels/MainWindowViewModel.Search.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "dates",
+              "information"
+            ]
+          },
+          {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
             "kind": "source",
             "matchedTerms": [
               "dates",
@@ -32911,6 +32935,14 @@
               "incremental",
               "update"
             ]
+          },
+          {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "incremental",
+              "update"
+            ]
           }
         ],
         "test": [
@@ -33327,14 +33359,6 @@
               "indirect",
               "trailer",
               "xref"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/Segmentation/RtlRedactionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "streams",
-              "trailer"
             ]
           }
         ],
@@ -33808,6 +33832,14 @@
               "incremental",
               "update"
             ]
+          },
+          {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "incremental",
+              "update"
+            ]
           }
         ],
         "test": [
@@ -34224,14 +34256,6 @@
               "indirect",
               "trailer",
               "xref"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/Segmentation/RtlRedactionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "streams",
-              "trailer"
             ]
           }
         ],
@@ -34721,6 +34745,14 @@
               "incremental",
               "update"
             ]
+          },
+          {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "incremental",
+              "update"
+            ]
           }
         ],
         "test": [
@@ -35137,14 +35169,6 @@
               "indirect",
               "trailer",
               "xref"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/Segmentation/RtlRedactionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "streams",
-              "trailer"
             ]
           }
         ],
@@ -35642,6 +35666,14 @@
               "incremental",
               "update"
             ]
+          },
+          {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "incremental",
+              "update"
+            ]
           }
         ],
         "test": [
@@ -36058,14 +36090,6 @@
               "indirect",
               "trailer",
               "xref"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/Segmentation/RtlRedactionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "streams",
-              "trailer"
             ]
           }
         ],
@@ -36835,14 +36859,6 @@
             "matchedTerms": [
               "alpha",
               "blend"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/Integration/MakeSearchableWiringTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "model",
-              "soft"
             ]
           }
         ],
@@ -39948,14 +39964,6 @@
             "matchedTerms": [
               "alpha",
               "blend"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/Integration/MakeSearchableWiringTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "model",
-              "soft"
             ]
           }
         ],
@@ -110774,16 +110782,6 @@
             ]
           },
           {
-            "path": "tests/reachability-baseline.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "crypt",
-              "image",
-              "image",
-              "jbig2"
-            ]
-          },
-          {
             "path": "tests/redaction-bench-design.json",
             "kind": "test",
             "matchedTerms": [
@@ -111118,16 +111116,6 @@
             ]
           },
           {
-            "path": "tests/reachability-baseline.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "crypt",
-              "image",
-              "image",
-              "jbig2"
-            ]
-          },
-          {
             "path": "tests/redaction-bench-design.json",
             "kind": "test",
             "matchedTerms": [
@@ -111459,16 +111447,6 @@
               "crypt",
               "image",
               "image"
-            ]
-          },
-          {
-            "path": "tests/reachability-baseline.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "crypt",
-              "image",
-              "image",
-              "jbig2"
             ]
           },
           {
@@ -164300,15 +164278,6 @@
             ]
           },
           {
-            "path": "tests/reachability-baseline.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "override",
-              "signature",
-              "security"
-            ]
-          },
-          {
             "path": "tests/unwired-api-baseline.tsv",
             "kind": "test",
             "matchedTerms": [
@@ -164613,15 +164582,6 @@
             ]
           },
           {
-            "path": "tests/reachability-baseline.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "override",
-              "signature",
-              "security"
-            ]
-          },
-          {
             "path": "tests/unwired-api-baseline.tsv",
             "kind": "test",
             "matchedTerms": [
@@ -165027,15 +164987,6 @@
             ]
           },
           {
-            "path": "tests/reachability-baseline.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "override",
-              "signature",
-              "security"
-            ]
-          },
-          {
             "path": "tests/unwired-api-baseline.tsv",
             "kind": "test",
             "matchedTerms": [
@@ -165437,15 +165388,6 @@
               "pdfe",
               "signature",
               "redaction",
-              "security"
-            ]
-          },
-          {
-            "path": "tests/reachability-baseline.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "override",
-              "signature",
               "security"
             ]
           },
@@ -182945,6 +182887,14 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandIds.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "digital",
+              "signatures"
+            ]
+          },
+          {
             "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
             "kind": "source",
             "matchedTerms": [
@@ -183286,14 +183236,6 @@
               "dictionaries",
               "metadata"
             ]
-          },
-          {
-            "path": "Excise.Rendering/RawSampleImageDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
           }
         ],
         "test": [
@@ -183489,30 +183431,6 @@
           },
           {
             "path": "Excise.Core.Tests/Text/CidCMapParserTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/OcgMembershipExtractionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "dictionaries"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/RegisteredCMapTests.cs",
             "kind": "test",
             "matchedTerms": [
               "byte",
@@ -183548,6 +183466,14 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandIds.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "digital",
+              "signatures"
+            ]
+          },
+          {
             "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
             "kind": "source",
             "matchedTerms": [
@@ -183889,14 +183815,6 @@
               "dictionaries",
               "metadata"
             ]
-          },
-          {
-            "path": "Excise.Rendering/RawSampleImageDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
           }
         ],
         "test": [
@@ -184092,30 +184010,6 @@
           },
           {
             "path": "Excise.Core.Tests/Text/CidCMapParserTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/OcgMembershipExtractionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "dictionaries"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/RegisteredCMapTests.cs",
             "kind": "test",
             "matchedTerms": [
               "byte",
@@ -184151,6 +184045,14 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandIds.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "digital",
+              "signatures"
+            ]
+          },
+          {
             "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
             "kind": "source",
             "matchedTerms": [
@@ -184492,14 +184394,6 @@
               "dictionaries",
               "metadata"
             ]
-          },
-          {
-            "path": "Excise.Rendering/RawSampleImageDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
           }
         ],
         "test": [
@@ -184695,30 +184589,6 @@
           },
           {
             "path": "Excise.Core.Tests/Text/CidCMapParserTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/OcgMembershipExtractionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "dictionaries"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/RegisteredCMapTests.cs",
             "kind": "test",
             "matchedTerms": [
               "byte",
@@ -184754,6 +184624,14 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandIds.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "digital",
+              "signatures"
+            ]
+          },
+          {
             "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
             "kind": "source",
             "matchedTerms": [
@@ -185095,14 +184973,6 @@
               "dictionaries",
               "metadata"
             ]
-          },
-          {
-            "path": "Excise.Rendering/RawSampleImageDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
           }
         ],
         "test": [
@@ -185298,30 +185168,6 @@
           },
           {
             "path": "Excise.Core.Tests/Text/CidCMapParserTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/OcgMembershipExtractionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "dictionaries"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/RegisteredCMapTests.cs",
             "kind": "test",
             "matchedTerms": [
               "byte",
@@ -185357,6 +185203,14 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandIds.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "digital",
+              "signatures"
+            ]
+          },
+          {
             "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
             "kind": "source",
             "matchedTerms": [
@@ -185698,14 +185552,6 @@
               "dictionaries",
               "metadata"
             ]
-          },
-          {
-            "path": "Excise.Rendering/RawSampleImageDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
           }
         ],
         "test": [
@@ -185901,30 +185747,6 @@
           },
           {
             "path": "Excise.Core.Tests/Text/CidCMapParserTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/OcgMembershipExtractionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "dictionaries"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/RegisteredCMapTests.cs",
             "kind": "test",
             "matchedTerms": [
               "byte",
@@ -185960,6 +185782,14 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandIds.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "digital",
+              "signatures"
+            ]
+          },
+          {
             "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
             "kind": "source",
             "matchedTerms": [
@@ -186301,14 +186131,6 @@
               "dictionaries",
               "metadata"
             ]
-          },
-          {
-            "path": "Excise.Rendering/RawSampleImageDecoder.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
           }
         ],
         "test": [
@@ -186504,30 +186326,6 @@
           },
           {
             "path": "Excise.Core.Tests/Text/CidCMapParserTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/OcgMembershipExtractionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "dictionaries"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "byte",
-              "ranges"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Text/RegisteredCMapTests.cs",
             "kind": "test",
             "matchedTerms": [
               "byte",

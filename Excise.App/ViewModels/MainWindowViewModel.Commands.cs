@@ -91,6 +91,8 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> SecurityCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, int> AutoDetectFieldsCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> SaveFlattenedFormCopyCommand { get; private set; } = null!;
+    /// <summary>#1308 — apply a digital signature to the saved file.</summary>
+    public ReactiveCommand<Unit, Unit> SignDocumentCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> CopyTextCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ZoomInCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ZoomOutCommand { get; private set; } = null!;
@@ -263,6 +265,7 @@ public partial class MainWindowViewModel
             _logger.LogError(ex, "SecurityCommand threw exception"));
         AutoDetectFieldsCommand = ReactiveCommand.Create(() => AutoDetectAndApplyFormFields());
         SaveFlattenedFormCopyCommand = ReactiveCommand.CreateFromTask(SaveFlattenedFormCopyAsync);
+        SignDocumentCommand = ReactiveCommand.CreateFromTask(SignDocumentAsync);
 
         SaveAsCommand = ReactiveCommand.CreateFromTask(SaveAsAsync);
         CloseDocumentCommand = ReactiveCommand.Create(CloseDocument);

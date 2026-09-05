@@ -120,6 +120,9 @@ public static class PdfCommandIds
     public const string FillForm = "form.fillForm";
     public const string AddFormField = "form.addField";
 
+    /// <summary>#1308 — apply a digital signature to the saved file.</summary>
+    public const string SignDocument = "app.signDocument";
+
     public const string RenderPage = "render.page";
     public const string ExtractText = "text.extract";
     public const string ShowLetters = "text.letters";
