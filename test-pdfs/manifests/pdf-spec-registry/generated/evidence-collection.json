@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 991,
-  "indexedContentSha256": "58c4c75a8ac70375d472884ac68429a878e7b285e589776653675ee8fc4d5787",
+  "indexedFileCount": 992,
+  "indexedContentSha256": "ac2abfdec0af4ad54e18ffbc4efa509cf4bb615144775527b779b4f5387bdca7",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4434,7 +4434,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 86
+      "candidateReferenceCount": 87
     },
     {
       "id": "pdf.17.document.metadata",
@@ -6865,7 +6865,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 430
+      "candidateReferenceCount": 431
     },
     {
       "id": "pdf.17.graphics.color",
@@ -7674,7 +7674,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 204
+      "candidateReferenceCount": 205
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -8531,7 +8531,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 142
+      "candidateReferenceCount": 143
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -29643,6 +29643,15 @@
           ]
         },
         {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "tests/redaction-bench-design.json",
           "kind": "test",
           "matchedTerms": [
@@ -29668,18 +29677,9 @@
             "lab",
             "image"
           ]
-        },
-        {
-          "path": "docs/architecture/system-design.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 80
+      "candidateReferenceCount": 81
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -31937,6 +31937,16 @@
           ]
         },
         {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "link",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/redaction-collateral/baseline.json",
           "kind": "test",
           "matchedTerms": [
@@ -31975,7 +31985,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 79
+      "candidateReferenceCount": 80
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -32530,6 +32540,16 @@
           ]
         },
         {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "freetext",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/redaction-collateral/baseline.json",
           "kind": "test",
           "matchedTerms": [
@@ -32549,7 +32569,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 48
+      "candidateReferenceCount": 49
     },
     {
       "id": "pdf.20.annotation.subtype-005",
@@ -33184,6 +33204,16 @@
           ]
         },
         {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "highlight",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/redaction-collateral/baseline.json",
           "kind": "test",
           "matchedTerms": [
@@ -33203,7 +33233,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 60
+      "candidateReferenceCount": 61
     },
     {
       "id": "pdf.20.annotation.subtype-006",
@@ -33556,6 +33586,16 @@
           ]
         },
         {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "underline",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/skia-rasterisation-register.json",
           "kind": "test",
           "matchedTerms": [
@@ -33565,7 +33605,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 31
+      "candidateReferenceCount": 32
     },
     {
       "id": "pdf.20.annotation.subtype-007",
@@ -33906,9 +33946,19 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "strikeout",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 29
+      "candidateReferenceCount": 30
     },
     {
       "id": "pdf.20.annotation.subtype-008",
@@ -34249,9 +34299,19 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "squiggly",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 29
+      "candidateReferenceCount": 30
     },
     {
       "id": "pdf.20.annotation.subtype-009",
@@ -34777,9 +34837,19 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "square",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 48
+      "candidateReferenceCount": 49
     },
     {
       "id": "pdf.20.annotation.subtype-010",
@@ -35197,9 +35267,19 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "circle",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 37
+      "candidateReferenceCount": 38
     },
     {
       "id": "pdf.20.annotation.subtype-011",
@@ -36035,7 +36115,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 150
+      "candidateReferenceCount": 151
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -36425,6 +36505,16 @@
           ]
         },
         {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "polygon",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -36435,7 +36525,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 35
+      "candidateReferenceCount": 36
     },
     {
       "id": "pdf.20.annotation.subtype-013",
@@ -36812,9 +36902,19 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "polyline",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 33
+      "candidateReferenceCount": 34
     },
     {
       "id": "pdf.20.annotation.subtype-014",
@@ -37649,7 +37749,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 119
+      "candidateReferenceCount": 120
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -38511,6 +38611,16 @@
           ]
         },
         {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/redaction-collateral/baseline.json",
           "kind": "test",
           "matchedTerms": [
@@ -38530,7 +38640,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 43
+      "candidateReferenceCount": 44
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -39599,7 +39709,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 115
+      "candidateReferenceCount": 116
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -43027,7 +43137,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 148
+      "candidateReferenceCount": 149
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -43771,6 +43881,17 @@
           ]
         },
         {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/milestones-baseline.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -43839,7 +43960,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 66
+      "candidateReferenceCount": 67
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -44613,6 +44734,17 @@
           ]
         },
         {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "redaction",
+            "review",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/milestones-baseline.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -44691,7 +44823,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 77
+      "candidateReferenceCount": 78
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -47196,7 +47328,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 106
+      "candidateReferenceCount": 107
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -50887,7 +51019,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 144
+      "candidateReferenceCount": 145
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -54599,7 +54731,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 106
+      "candidateReferenceCount": 107
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -56938,6 +57070,17 @@
           ]
         },
         {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "documents",
+            "ocr",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "tests/redaction-visual-gold-set.json",
           "kind": "test",
           "matchedTerms": [
@@ -56959,7 +57102,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 51
+      "candidateReferenceCount": 52
     },
     {
       "id": "pdfe.product.security.audit-log",
@@ -57707,7 +57850,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 102
+      "candidateReferenceCount": 103
     },
     {
       "id": "pdfe.product.platform.printing",

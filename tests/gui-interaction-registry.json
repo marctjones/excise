@@ -1,0 +1,1530 @@
+{
+  "schemaVersion": 1,
+  "issue": "#1374",
+  "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
+  "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
+  "generatedBy": "scripts/build-gui-interaction-registry.py",
+  "sourceRevision": "40fa5ab80aa408a7791295daba6d24b82d8d2df6",
+  "summary": {
+    "interactions": 147,
+    "menuItems": 93,
+    "buttons": 45,
+    "mouseGestures": 9,
+    "keyboardShortcuts": 28,
+    "declaredCommandIds": 91,
+    "commandIdsReachableFromTheGui": 82,
+    "commandIdsWithNoGuiPath": 0,
+    "cliOnlyCommandIds": 9,
+    "controlsWithNoCommandId": 29,
+    "duplicateShortcuts": 0
+  },
+  "interactions": [
+    {
+      "kind": "button",
+      "path": "",
+      "label": "",
+      "command": "OpenFileCommand",
+      "shortcut": null,
+      "commandId": "app.open"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "",
+      "command": "{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).JumpToSearchMatchCommand}",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "",
+      "command": "{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).GoToPageCommand}",
+      "shortcut": null,
+      "commandId": "view.goToPage"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Add highlight from selected text",
+      "command": "AddHighlightAnnotationFromSelectionCommand",
+      "shortcut": null,
+      "commandId": "annotation.addHighlight"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Add sticky note",
+      "command": "AddStickyNoteAnnotationCommand",
+      "shortcut": null,
+      "commandId": "annotation.addStickyNote"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Apply All",
+      "command": "ApplyAllRedactionsCommand",
+      "shortcut": null,
+      "commandId": "redaction.applyAll"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Apply Redaction (Enter)",
+      "command": "ApplyRedactionCommand",
+      "shortcut": null,
+      "commandId": "redaction.apply"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Black",
+      "command": "SetTypewriterColorCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Blue",
+      "command": "SetTypewriterColorCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Clear All",
+      "command": "ClearAllRedactionsCommand",
+      "shortcut": null,
+      "commandId": "redaction.clearAll"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Clear page selection",
+      "command": "ClearSelectedPagesCommand",
+      "shortcut": null,
+      "commandId": "document.clearPageSelection"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Extract selected pages",
+      "command": "ExtractSelectedPagesCommand",
+      "shortcut": null,
+      "commandId": "document.extractSelectedPages"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Find",
+      "command": "FindCommand",
+      "shortcut": null,
+      "commandId": "search.find"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Find Text (Ctrl+F)",
+      "command": "ToggleSearchCommand",
+      "shortcut": null,
+      "commandId": "search.open"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Fit Width (Ctrl+1)",
+      "command": "ZoomFitWidthCommand",
+      "shortcut": null,
+      "commandId": "view.zoomFitWidth"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Form Authoring Mode — drag to define a new field",
+      "command": "ToggleFormAuthoringModeCommand",
+      "shortcut": null,
+      "commandId": "form.toggleAuthoring"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Gray",
+      "command": "SetTypewriterColorCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Green",
+      "command": "SetTypewriterColorCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Heuristically add form fields where the page has underline placeholders or empty squares",
+      "command": "AutoDetectFieldsCommand",
+      "shortcut": null,
+      "commandId": "form.autoDetectFields"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Move selected pages earlier",
+      "command": "MoveSelectedPagesEarlierCommand",
+      "shortcut": null,
+      "commandId": "document.moveSelectedPagesEarlier"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Move selected pages later",
+      "command": "MoveSelectedPagesLaterCommand",
+      "shortcut": null,
+      "commandId": "document.moveSelectedPagesLater"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Open PDF (Ctrl+O)",
+      "command": "OpenFileCommand",
+      "shortcut": null,
+      "commandId": "app.open"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Orange",
+      "command": "SetTypewriterColorCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Purple",
+      "command": "SetTypewriterColorCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Red",
+      "command": "SetTypewriterColorCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Redaction Mode (R)",
+      "command": "ToggleRedactionModeCommand",
+      "shortcut": null,
+      "commandId": "redaction.toggleMode"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Remove selected pages",
+      "command": "RemoveSelectedPagesCommand",
+      "shortcut": null,
+      "commandId": "document.removeSelectedPages"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Rotate Left (Ctrl+L)",
+      "command": "RotatePageLeftCommand",
+      "shortcut": null,
+      "commandId": "document.rotateLeft"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Rotate Right (Ctrl+R)",
+      "command": "RotatePageRightCommand",
+      "shortcut": null,
+      "commandId": "document.rotateRight"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Save (Ctrl+S)",
+      "command": "SaveFileCommand",
+      "shortcut": null,
+      "commandId": "app.save"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Save a flattened copy of filled form values",
+      "command": "SaveFlattenedFormCopyCommand",
+      "shortcut": null,
+      "commandId": "form.saveFlattenedCopy"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Text Selection Mode (T)",
+      "command": "ToggleTextSelectionModeCommand",
+      "shortcut": null,
+      "commandId": "edit.selectTextMode"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Typewriter Mode",
+      "command": "ToggleTypewriterModeCommand",
+      "shortcut": null,
+      "commandId": "edit.typewriterMode"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "White",
+      "command": "SetTypewriterColorCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Zoom In (Ctrl++)",
+      "command": "ZoomInCommand",
+      "shortcut": null,
+      "commandId": "view.zoomIn"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Zoom Out (Ctrl+-)",
+      "command": "ZoomOutCommand",
+      "shortcut": null,
+      "commandId": "view.zoomOut"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "×",
+      "command": "{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemovePendingRedactionCommand}",
+      "shortcut": null,
+      "commandId": "redaction.removePending"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "▶",
+      "command": "FindNextCommand",
+      "shortcut": null,
+      "commandId": "search.next"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "▶",
+      "command": "NextPageCommand",
+      "shortcut": null,
+      "commandId": "view.nextPage"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "◀",
+      "command": "FindPreviousCommand",
+      "shortcut": null,
+      "commandId": "search.previous"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "◀",
+      "command": "PreviousPageCommand",
+      "shortcut": null,
+      "commandId": "view.previousPage"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "✕",
+      "command": "CloseSearchCommand",
+      "shortcut": null,
+      "commandId": "search.close"
+    },
+    {
+      "kind": "button",
+      "path": "ToolbarContinuousButton",
+      "label": "Continuous scroll view (Ctrl+Shift+C)",
+      "command": "ToggleContinuousViewCommand",
+      "shortcut": null,
+      "commandId": "view.toggleContinuous"
+    },
+    {
+      "kind": "button",
+      "path": "ToolbarOutlineButton",
+      "label": "Show/hide Outline (Ctrl+Shift+O)",
+      "command": "ToggleOutlineCommand",
+      "shortcut": null,
+      "commandId": "view.toggleOutline"
+    },
+    {
+      "kind": "button",
+      "path": "ToolbarThumbnailsButton",
+      "label": "Show/hide Page Previews (Ctrl+Shift+T)",
+      "command": "ToggleThumbnailsCommand",
+      "shortcut": null,
+      "commandId": "view.toggleThumbnails"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Circle From Drag",
+      "label": "Add Circle From Drag",
+      "command": "AddCircleAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": "annotation.addCircle"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Highlight From Selection",
+      "label": "Add Highlight From Selection",
+      "command": "AddHighlightAnnotationFromSelectionCommand",
+      "shortcut": null,
+      "commandId": "annotation.addHighlight"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Image Stamp From Drag...",
+      "label": "Add Image Stamp From Drag...",
+      "command": "AddImageStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": "annotation.addImageStamp"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Square From Drag",
+      "label": "Add Square From Drag",
+      "command": "AddSquareAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": "annotation.addSquare"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Squiggly From Selection",
+      "label": "Add Squiggly From Selection",
+      "command": "AddSquigglyAnnotationFromSelectionCommand",
+      "shortcut": null,
+      "commandId": "annotation.addSquiggly"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag",
+      "label": "Add Stamp From Drag",
+      "command": null,
+      "shortcut": null,
+      "commandId": "annotation.addStamp"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Approved",
+      "label": "Approved",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > As Is",
+      "label": "As Is",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Confidential",
+      "label": "Confidential",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Departmental",
+      "label": "Departmental",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Draft",
+      "label": "Draft",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Experimental",
+      "label": "Experimental",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Expired",
+      "label": "Expired",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Final",
+      "label": "Final",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > For Comment",
+      "label": "For Comment",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > For Public Release",
+      "label": "For Public Release",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Information Only",
+      "label": "Information Only",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Not Approved",
+      "label": "Not Approved",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Not For Public Release",
+      "label": "Not For Public Release",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Sold",
+      "label": "Sold",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Top Secret",
+      "label": "Top Secret",
+      "command": "AddStampAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Sticky Note...",
+      "label": "Add Sticky Note...",
+      "command": "AddStickyNoteAnnotationCommand",
+      "shortcut": null,
+      "commandId": "annotation.addStickyNote"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Strikeout From Selection",
+      "label": "Add Strikeout From Selection",
+      "command": "AddStrikeOutAnnotationFromSelectionCommand",
+      "shortcut": null,
+      "commandId": "annotation.addStrikeOut"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Text Box From Drag...",
+      "label": "Add Text Box From Drag...",
+      "command": "AddFreeTextAnnotationFromDragCommand",
+      "shortcut": null,
+      "commandId": "annotation.addFreeText"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Underline From Selection",
+      "label": "Add Underline From Selection",
+      "command": "AddUnderlineAnnotationFromSelectionCommand",
+      "shortcut": null,
+      "commandId": "annotation.addUnderline"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw (Ink)",
+      "label": "Draw (Ink)",
+      "command": "ToggleFreehandModeCommand",
+      "shortcut": null,
+      "commandId": "annotation.toggleDrawMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Arrow",
+      "label": "Draw Arrow",
+      "command": "ToggleArrowModeCommand",
+      "shortcut": null,
+      "commandId": "annotation.toggleArrowMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Line",
+      "label": "Draw Line",
+      "command": "ToggleLineModeCommand",
+      "shortcut": null,
+      "commandId": "annotation.toggleLineMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw PolyLine",
+      "label": "Draw PolyLine",
+      "command": "TogglePolyLineModeCommand",
+      "shortcut": null,
+      "commandId": "annotation.togglePolyLineMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Draw Polygon",
+      "label": "Draw Polygon",
+      "command": "TogglePolygonModeCommand",
+      "shortcut": null,
+      "commandId": "annotation.togglePolygonMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Add Pages...",
+      "label": "Add Pages...",
+      "command": "AddPagesCommand",
+      "shortcut": null,
+      "commandId": "document.addPages"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Clear Page Selection",
+      "label": "Clear Page Selection",
+      "command": "ClearSelectedPagesCommand",
+      "shortcut": null,
+      "commandId": "document.clearPageSelection"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Combine Documents...",
+      "label": "Combine Documents...",
+      "command": "CombineDocumentsCommand",
+      "shortcut": null,
+      "commandId": "document.combine"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Export All Pages as Images...",
+      "label": "Export All Pages as Images...",
+      "command": "ExportPagesCommand",
+      "shortcut": null,
+      "commandId": "document.exportAllPages"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Export Current Page...",
+      "label": "Export Current Page...",
+      "command": "ExportCurrentPageCommand",
+      "shortcut": "Ctrl+E",
+      "commandId": "document.exportCurrentPage"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Extract Current Page...",
+      "label": "Extract Current Page...",
+      "command": "ExtractCurrentPageCommand",
+      "shortcut": null,
+      "commandId": "document.extractCurrentPage"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Extract Selected Pages...",
+      "label": "Extract Selected Pages...",
+      "command": "ExtractSelectedPagesCommand",
+      "shortcut": null,
+      "commandId": "document.extractSelectedPages"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Insert Pages After Current...",
+      "label": "Insert Pages After Current...",
+      "command": "InsertPagesAfterCurrentCommand",
+      "shortcut": null,
+      "commandId": "document.insertPagesAfter"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Insert Pages Before Current...",
+      "label": "Insert Pages Before Current...",
+      "command": "InsertPagesBeforeCurrentCommand",
+      "shortcut": null,
+      "commandId": "document.insertPagesBefore"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Move Page Earlier",
+      "label": "Move Page Earlier",
+      "command": "MoveCurrentPageEarlierCommand",
+      "shortcut": null,
+      "commandId": "document.moveCurrentPageEarlier"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Move Page Later",
+      "label": "Move Page Later",
+      "command": "MoveCurrentPageLaterCommand",
+      "shortcut": null,
+      "commandId": "document.moveCurrentPageLater"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Move Selected Pages Earlier",
+      "label": "Move Selected Pages Earlier",
+      "command": "MoveSelectedPagesEarlierCommand",
+      "shortcut": null,
+      "commandId": "document.moveSelectedPagesEarlier"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Move Selected Pages Later",
+      "label": "Move Selected Pages Later",
+      "command": "MoveSelectedPagesLaterCommand",
+      "shortcut": null,
+      "commandId": "document.moveSelectedPagesLater"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Print...",
+      "label": "Print...",
+      "command": "PrintCommand",
+      "shortcut": "Ctrl+P",
+      "commandId": "document.print"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Remove Current Page",
+      "label": "Remove Current Page",
+      "command": "RemoveCurrentPageCommand",
+      "shortcut": null,
+      "commandId": "document.removeCurrentPage"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Remove Selected Pages",
+      "label": "Remove Selected Pages",
+      "command": "RemoveSelectedPagesCommand",
+      "shortcut": null,
+      "commandId": "document.removeSelectedPages"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Rotate 180°",
+      "label": "Rotate 180°",
+      "command": "RotatePage180Command",
+      "shortcut": null,
+      "commandId": "document.rotate180"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Rotate Left 90°",
+      "label": "Rotate Left 90°",
+      "command": "RotatePageLeftCommand",
+      "shortcut": "Ctrl+L",
+      "commandId": "document.rotateLeft"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Rotate Right 90°",
+      "label": "Rotate Right 90°",
+      "command": "RotatePageRightCommand",
+      "shortcut": "Ctrl+R",
+      "commandId": "document.rotateRight"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Security...",
+      "label": "Security...",
+      "command": "SecurityCommand",
+      "shortcut": null,
+      "commandId": "document.security"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Split Document...",
+      "label": "Split Document...",
+      "command": "SplitDocumentCommand",
+      "shortcut": null,
+      "commandId": "document.split"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > <bound:RedoMenuHeader>",
+      "label": "<bound:RedoMenuHeader>",
+      "command": "RedoCommand",
+      "shortcut": "Ctrl+Y",
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > <bound:UndoMenuHeader>",
+      "label": "<bound:UndoMenuHeader>",
+      "command": "UndoCommand",
+      "shortcut": "Ctrl+Z",
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Copy Selected Text",
+      "label": "Copy Selected Text",
+      "command": "CopyTextCommand",
+      "shortcut": "Ctrl+C",
+      "commandId": "edit.copyText"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Discard Pending Type-over Edits",
+      "label": "Discard Pending Type-over Edits",
+      "command": "DiscardPendingTypewriterEditsCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Find Next",
+      "label": "Find Next",
+      "command": "FindNextCommand",
+      "shortcut": "F3",
+      "commandId": "search.next"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Find Previous",
+      "label": "Find Previous",
+      "command": "FindPreviousCommand",
+      "shortcut": "Shift+F3",
+      "commandId": "search.previous"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Find...",
+      "label": "Find...",
+      "command": "ToggleSearchCommand",
+      "shortcut": "Ctrl+F",
+      "commandId": "search.open"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Go to Next Pending Type-over Edit",
+      "label": "Go to Next Pending Type-over Edit",
+      "command": "GoToNextPendingTypewriterEditCommand",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Select Text Mode",
+      "label": "Select Text Mode",
+      "command": "ToggleTextSelectionModeCommand",
+      "shortcut": "T",
+      "commandId": "edit.selectTextMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Typewriter Mode",
+      "label": "Typewriter Mode",
+      "command": "ToggleTypewriterModeCommand",
+      "shortcut": null,
+      "commandId": "edit.typewriterMode"
+    },
+    {
+      "kind": "menu",
+      "path": "File > <bound:SaveButtonText>",
+      "label": "<bound:SaveButtonText>",
+      "command": "SaveFileCommand",
+      "shortcut": "Ctrl+S",
+      "commandId": "app.save"
+    },
+    {
+      "kind": "menu",
+      "path": "File > Close Document",
+      "label": "Close Document",
+      "command": "CloseDocumentCommand",
+      "shortcut": "Ctrl+W",
+      "commandId": "app.closeDocument"
+    },
+    {
+      "kind": "menu",
+      "path": "File > Exit",
+      "label": "Exit",
+      "command": "ExitCommand",
+      "shortcut": "Alt+F4",
+      "commandId": null
+    },
+    {
+      "kind": "menu",
+      "path": "File > Open...",
+      "label": "Open...",
+      "command": "OpenFileCommand",
+      "shortcut": "Ctrl+O",
+      "commandId": "app.open"
+    },
+    {
+      "kind": "menu",
+      "path": "File > Save As...",
+      "label": "Save As...",
+      "command": "SaveAsCommand",
+      "shortcut": "Ctrl+Shift+S",
+      "commandId": "app.saveAs"
+    },
+    {
+      "kind": "menu",
+      "path": "File > Save Flattened Form Copy...",
+      "label": "Save Flattened Form Copy...",
+      "command": "SaveFlattenedFormCopyCommand",
+      "shortcut": null,
+      "commandId": "form.saveFlattenedCopy"
+    },
+    {
+      "kind": "menu",
+      "path": "File > Sign Document...",
+      "label": "Sign Document...",
+      "command": "SignDocumentCommand",
+      "shortcut": null,
+      "commandId": "app.signDocument"
+    },
+    {
+      "kind": "menu",
+      "path": "Help > About Excise",
+      "label": "About Excise",
+      "command": "AboutCommand",
+      "shortcut": null,
+      "commandId": "app.about"
+    },
+    {
+      "kind": "menu",
+      "path": "Help > Documentation",
+      "label": "Documentation",
+      "command": "ShowDocumentationCommand",
+      "shortcut": null,
+      "commandId": "app.documentation"
+    },
+    {
+      "kind": "menu",
+      "path": "Help > Keyboard Shortcuts",
+      "label": "Keyboard Shortcuts",
+      "command": "ShowShortcutsCommand",
+      "shortcut": "F1",
+      "commandId": "app.keyboardShortcuts"
+    },
+    {
+      "kind": "menu",
+      "path": "Redaction > Apply Redaction",
+      "label": "Apply Redaction",
+      "command": "ApplyRedactionCommand",
+      "shortcut": "Enter",
+      "commandId": "redaction.apply"
+    },
+    {
+      "kind": "menu",
+      "path": "Redaction > Enable Redaction Mode",
+      "label": "Enable Redaction Mode",
+      "command": "ToggleRedactionModeCommand",
+      "shortcut": "R",
+      "commandId": "redaction.toggleMode"
+    },
+    {
+      "kind": "menu",
+      "path": "Redaction > View Clipboard History",
+      "label": "View Clipboard History",
+      "command": "ToggleClipboardSidebarCommand",
+      "shortcut": null,
+      "commandId": "view.toggleClipboardHistory"
+    },
+    {
+      "kind": "menu",
+      "path": "Tools > Make Searchable...",
+      "label": "Make Searchable...",
+      "command": "MakeSearchableCommand",
+      "shortcut": null,
+      "commandId": "tools.makeSearchable"
+    },
+    {
+      "kind": "menu",
+      "path": "Tools > Preferences...",
+      "label": "Preferences...",
+      "command": "ShowPreferencesCommand",
+      "shortcut": "Ctrl+,",
+      "commandId": "app.preferences"
+    },
+    {
+      "kind": "menu",
+      "path": "Tools > Reveal Hidden Text (audit overlay)",
+      "label": "Reveal Hidden Text (audit overlay)",
+      "command": "ToggleRevealHiddenTextCommand",
+      "shortcut": null,
+      "commandId": "tools.revealHiddenText"
+    },
+    {
+      "kind": "menu",
+      "path": "Tools > Reveal Rasterized Hidden Text (deep / OCR)",
+      "label": "Reveal Rasterized Hidden Text (deep / OCR)",
+      "command": "ToggleRevealRasterizedHiddenCommand",
+      "shortcut": null,
+      "commandId": "tools.revealRasterizedHiddenText"
+    },
+    {
+      "kind": "menu",
+      "path": "Tools > Verify Digital Signatures...",
+      "label": "Verify Digital Signatures...",
+      "command": "VerifySignaturesCommand",
+      "shortcut": null,
+      "commandId": "tools.verifySignatures"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Actual Size",
+      "label": "Actual Size",
+      "command": "ZoomActualSizeCommand",
+      "shortcut": "Ctrl+D0",
+      "commandId": "view.zoomActualSize"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Continuous Scroll",
+      "label": "Continuous Scroll",
+      "command": "ToggleContinuousViewCommand",
+      "shortcut": "Ctrl+Shift+C",
+      "commandId": "view.toggleContinuous"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Fit Page",
+      "label": "Fit Page",
+      "command": "ZoomFitPageCommand",
+      "shortcut": "Ctrl+D2",
+      "commandId": "view.zoomFitPage"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Fit Width",
+      "label": "Fit Width",
+      "command": "ZoomFitWidthCommand",
+      "shortcut": "Ctrl+D1",
+      "commandId": "view.zoomFitWidth"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Highlight Form Fields",
+      "label": "Highlight Form Fields",
+      "command": "ToggleFormFieldHighlightingCommand",
+      "shortcut": null,
+      "commandId": "view.toggleFormFieldHighlighting"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Reveal Hidden Annotations (Audit)",
+      "label": "Reveal Hidden Annotations (Audit)",
+      "command": "ToggleAnnotationAuditModeCommand",
+      "shortcut": null,
+      "commandId": "view.toggleAnnotationAuditMode"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Show Annotations",
+      "label": "Show Annotations",
+      "command": "ToggleAnnotationsCommand",
+      "shortcut": null,
+      "commandId": "view.toggleAnnotations"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Show Clipboard History",
+      "label": "Show Clipboard History",
+      "command": "ToggleClipboardSidebarCommand",
+      "shortcut": null,
+      "commandId": "view.toggleClipboardHistory"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Show Comments",
+      "label": "Show Comments",
+      "command": "ToggleCommentAnnotationsCommand",
+      "shortcut": null,
+      "commandId": "view.toggleCommentAnnotations"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Show Form Fields and Links",
+      "label": "Show Form Fields and Links",
+      "command": "ToggleFieldAndLinkAnnotationsCommand",
+      "shortcut": null,
+      "commandId": "view.toggleFieldAndLinkAnnotations"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Show Outline",
+      "label": "Show Outline",
+      "command": "ToggleOutlineCommand",
+      "shortcut": "Ctrl+Shift+O",
+      "commandId": "view.toggleOutline"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Show Thumbnails",
+      "label": "Show Thumbnails",
+      "command": "ToggleThumbnailsCommand",
+      "shortcut": "Ctrl+Shift+T",
+      "commandId": "view.toggleThumbnails"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Zoom In",
+      "label": "Zoom In",
+      "command": "ZoomInCommand",
+      "shortcut": "Ctrl++",
+      "commandId": "view.zoomIn"
+    },
+    {
+      "kind": "menu",
+      "path": "View > Zoom Out",
+      "label": "Zoom Out",
+      "command": "ZoomOutCommand",
+      "shortcut": "Ctrl+-",
+      "commandId": "view.zoomOut"
+    },
+    {
+      "kind": "mouse",
+      "path": "PdfViewerControl.axaml.cs:KeyDownEvent",
+      "label": "KeyDown",
+      "command": "OnViewerKeyDown",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "mouse",
+      "path": "PdfViewerControl.axaml.cs:PointerExitedEvent",
+      "label": "PointerExited",
+      "command": "OnViewerPointerExited",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "mouse",
+      "path": "PdfViewerControl.axaml.cs:PointerMovedEvent",
+      "label": "PointerMoved",
+      "command": "OnInteractionLayerPointerMoved",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "mouse",
+      "path": "PdfViewerControl.axaml.cs:PointerMovedEvent",
+      "label": "PointerMoved",
+      "command": "OnPanPointerMoved",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "mouse",
+      "path": "PdfViewerControl.axaml.cs:PointerPressedEvent",
+      "label": "PointerPressed",
+      "command": "OnInteractionLayerPointerPressed",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "mouse",
+      "path": "PdfViewerControl.axaml.cs:PointerPressedEvent",
+      "label": "PointerPressed",
+      "command": "OnPanPointerPressed",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "mouse",
+      "path": "PdfViewerControl.axaml.cs:PointerReleasedEvent",
+      "label": "PointerReleased",
+      "command": "OnInteractionLayerPointerReleased",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "mouse",
+      "path": "PdfViewerControl.axaml.cs:PointerReleasedEvent",
+      "label": "PointerReleased",
+      "command": "OnPanPointerReleased",
+      "shortcut": null,
+      "commandId": null
+    },
+    {
+      "kind": "mouse",
+      "path": "PdfViewerControl.axaml.cs:PointerWheelChangedEvent",
+      "label": "PointerWheelChanged",
+      "command": "OnViewerPointerWheelChanged",
+      "shortcut": null,
+      "commandId": null
+    }
+  ],
+  "keyboardShortcuts": [
+    {
+      "shortcut": "Alt+F4",
+      "path": "File > Exit",
+      "commandId": null
+    },
+    {
+      "shortcut": "Ctrl++",
+      "path": "View > Zoom In",
+      "commandId": "view.zoomIn"
+    },
+    {
+      "shortcut": "Ctrl+,",
+      "path": "Tools > Preferences...",
+      "commandId": "app.preferences"
+    },
+    {
+      "shortcut": "Ctrl+-",
+      "path": "View > Zoom Out",
+      "commandId": "view.zoomOut"
+    },
+    {
+      "shortcut": "Ctrl+C",
+      "path": "Edit > Copy Selected Text",
+      "commandId": "edit.copyText"
+    },
+    {
+      "shortcut": "Ctrl+D0",
+      "path": "View > Actual Size",
+      "commandId": "view.zoomActualSize"
+    },
+    {
+      "shortcut": "Ctrl+D1",
+      "path": "View > Fit Width",
+      "commandId": "view.zoomFitWidth"
+    },
+    {
+      "shortcut": "Ctrl+D2",
+      "path": "View > Fit Page",
+      "commandId": "view.zoomFitPage"
+    },
+    {
+      "shortcut": "Ctrl+E",
+      "path": "Document > Export Current Page...",
+      "commandId": "document.exportCurrentPage"
+    },
+    {
+      "shortcut": "Ctrl+F",
+      "path": "Edit > Find...",
+      "commandId": "search.open"
+    },
+    {
+      "shortcut": "Ctrl+L",
+      "path": "Document > Rotate Left 90°",
+      "commandId": "document.rotateLeft"
+    },
+    {
+      "shortcut": "Ctrl+O",
+      "path": "File > Open...",
+      "commandId": "app.open"
+    },
+    {
+      "shortcut": "Ctrl+P",
+      "path": "Document > Print...",
+      "commandId": "document.print"
+    },
+    {
+      "shortcut": "Ctrl+R",
+      "path": "Document > Rotate Right 90°",
+      "commandId": "document.rotateRight"
+    },
+    {
+      "shortcut": "Ctrl+S",
+      "path": "File > <bound:SaveButtonText>",
+      "commandId": "app.save"
+    },
+    {
+      "shortcut": "Ctrl+Shift+C",
+      "path": "View > Continuous Scroll",
+      "commandId": "view.toggleContinuous"
+    },
+    {
+      "shortcut": "Ctrl+Shift+O",
+      "path": "View > Show Outline",
+      "commandId": "view.toggleOutline"
+    },
+    {
+      "shortcut": "Ctrl+Shift+S",
+      "path": "File > Save As...",
+      "commandId": "app.saveAs"
+    },
+    {
+      "shortcut": "Ctrl+Shift+T",
+      "path": "View > Show Thumbnails",
+      "commandId": "view.toggleThumbnails"
+    },
+    {
+      "shortcut": "Ctrl+W",
+      "path": "File > Close Document",
+      "commandId": "app.closeDocument"
+    },
+    {
+      "shortcut": "Ctrl+Y",
+      "path": "Edit > <bound:RedoMenuHeader>",
+      "commandId": null
+    },
+    {
+      "shortcut": "Ctrl+Z",
+      "path": "Edit > <bound:UndoMenuHeader>",
+      "commandId": null
+    },
+    {
+      "shortcut": "Enter",
+      "path": "Redaction > Apply Redaction",
+      "commandId": "redaction.apply"
+    },
+    {
+      "shortcut": "F1",
+      "path": "Help > Keyboard Shortcuts",
+      "commandId": "app.keyboardShortcuts"
+    },
+    {
+      "shortcut": "F3",
+      "path": "Edit > Find Next",
+      "commandId": "search.next"
+    },
+    {
+      "shortcut": "R",
+      "path": "Redaction > Enable Redaction Mode",
+      "commandId": "redaction.toggleMode"
+    },
+    {
+      "shortcut": "Shift+F3",
+      "path": "Edit > Find Previous",
+      "commandId": "search.previous"
+    },
+    {
+      "shortcut": "T",
+      "path": "Edit > Select Text Mode",
+      "commandId": "edit.selectTextMode"
+    }
+  ],
+  "duplicateShortcuts": {},
+  "commandIdsWithNoGuiPath": [],
+  "cliOnlyCommandIds": [
+    "audit.hiddenText",
+    "automation.batch",
+    "document.info",
+    "form.addField",
+    "form.fillForm",
+    "ocr.page",
+    "render.page",
+    "text.extract",
+    "text.letters"
+  ],
+  "controlsWithNoCommandId": [
+    {
+      "kind": "button",
+      "path": "",
+      "label": "",
+      "command": "{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).JumpToSearchMatchCommand}"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Black",
+      "command": "SetTypewriterColorCommand"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Blue",
+      "command": "SetTypewriterColorCommand"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Gray",
+      "command": "SetTypewriterColorCommand"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Green",
+      "command": "SetTypewriterColorCommand"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Orange",
+      "command": "SetTypewriterColorCommand"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Purple",
+      "command": "SetTypewriterColorCommand"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "Red",
+      "command": "SetTypewriterColorCommand"
+    },
+    {
+      "kind": "button",
+      "path": "",
+      "label": "White",
+      "command": "SetTypewriterColorCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Approved",
+      "label": "Approved",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > As Is",
+      "label": "As Is",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Confidential",
+      "label": "Confidential",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Departmental",
+      "label": "Departmental",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Draft",
+      "label": "Draft",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Experimental",
+      "label": "Experimental",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Expired",
+      "label": "Expired",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Final",
+      "label": "Final",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > For Comment",
+      "label": "For Comment",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > For Public Release",
+      "label": "For Public Release",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Information Only",
+      "label": "Information Only",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Not Approved",
+      "label": "Not Approved",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Not For Public Release",
+      "label": "Not For Public Release",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Sold",
+      "label": "Sold",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Annotate > Add Stamp From Drag > Top Secret",
+      "label": "Top Secret",
+      "command": "AddStampAnnotationFromDragCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > <bound:RedoMenuHeader>",
+      "label": "<bound:RedoMenuHeader>",
+      "command": "RedoCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > <bound:UndoMenuHeader>",
+      "label": "<bound:UndoMenuHeader>",
+      "command": "UndoCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Discard Pending Type-over Edits",
+      "label": "Discard Pending Type-over Edits",
+      "command": "DiscardPendingTypewriterEditsCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "Edit > Go to Next Pending Type-over Edit",
+      "label": "Go to Next Pending Type-over Edit",
+      "command": "GoToNextPendingTypewriterEditCommand"
+    },
+    {
+      "kind": "menu",
+      "path": "File > Exit",
+      "label": "Exit",
+      "command": "ExitCommand"
+    }
+  ]
+}
