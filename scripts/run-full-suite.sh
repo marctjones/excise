@@ -31,7 +31,8 @@
 #
 # HOW TO RUN IT (in your own terminal, not through an agent — CLAUDE.md)
 #
-#   caffeinate -i scripts/run-full-suite.sh --resume 2>&1 | tee -a logs/full-suite.log
+#   scripts/test-tier.sh full 2>&1 | tee -a logs/full-suite.log
+#   (= caffeinate -i scripts/run-full-suite.sh; resuming is the default)
 #
 # Crashed? Re-run the exact same command. Passed steps are skipped, the
 # interrupted one re-runs.
@@ -40,6 +41,15 @@
 #   scripts/run-full-suite.sh --status        # what's done / what's left
 #   scripts/run-full-suite.sh --fresh         # discard checkpoints, start over
 #   scripts/run-full-suite.sh --only core     # steps matching a pattern
+#
+# WHERE THE PLAN COMES FROM
+# -------------------------
+# tests/gates.tsv (LOCAL_GATES.md). This script holds no step list: the rows
+# selected for tier "full" (chain: every t0 and t1 row plus the full-only
+# ones — the corpus scans, the release-smoke rows and the GRADE benches) are
+# read through runner_manifest_plan, project-chunked rows are expanded through
+# build_chunk_plan below, and {TRXARGS:…} references become the chunk union.
+# The run ends with scripts/report-gates.sh, whose exit code is this script's.
 #
 # WHAT IS NOT RESUMABLE, BY DESIGN
 # --------------------------------
@@ -82,12 +92,10 @@ Usage: scripts/run-full-suite.sh [options]
   --status           Print per-step done/pending state and exit.
   --release          Build and test in Release (default: Debug).
   --only <pattern>   Only steps whose name matches this grep -E pattern.
-  --everything       Also run the release-only gates (accessibility, automation,
-                     ux, benchmark, perf-budget, aot, pdf20) by delegating to
-                     release-smoke.sh. Without this, run-full-suite covers every
-                     TEST PROJECT but not those script gates. Also runs the
-                     four-corpus rendering scan (#862) — REQUIRES all four
-                     corpora to be downloaded, or see --allow-missing-corpora.
+  --everything       Accepted as a no-op: full IS everything. The release-smoke
+                     rows, the four-corpus rendering scan (#862) and the GRADE
+                     benches are in tier "full" of tests/gates.tsv. The scans
+                     REQUIRE all four corpora, or see --allow-missing-corpora.
   --allow-missing-corpora
                      Don't ABORT the run at preflight when a corpus is missing
                      or empty — run the rest of the suite and let those scans
@@ -124,6 +132,9 @@ done
 
 TS="$(date +%Y%m%d_%H%M%S)"
 LOG_DIR="$ROOT/logs/full-suite_${CONFIG}_$TS"
+# --list / --status derive the same plan but must leave no run directory (an
+# empty ledger under logs/ used to read as a run that happened).
+[ "$MODE" = "run" ] || LOG_DIR="$(mktemp -d)"
 mkdir -p "$LOG_DIR"
 
 # BSD (macOS) time uses -l; GNU time uses -v.  Do not capability-probe
@@ -136,12 +147,22 @@ RUSAGE_TSV="$LOG_DIR/resources.tsv"
 
 runner_state_init "full-suite" "$CONFIG"
 # One JSON object per step, including steps skipped as already-checkpointed
-# (#994). Write-only: no gate reads it yet, and summary.tsv / resources.tsv /
-# resources.tsv are untouched. It is the reviewable record of what this
-# invocation actually ran; the sha-keyed markers remain the enforcement channel.
-runner_ledger_init "$LOG_DIR/ledger.jsonl"
+# (#994). Every row carries the manifest's class and knownIssue, so the report
+# (scripts/report-gates.sh) can separate a NEW red from a KNOWN one; the
+# markers remain the enforcement channel for resume.
+[ "$MODE" = "run" ] && runner_ledger_init "$LOG_DIR/ledger.jsonl"
 [ "$FRESH" = "1" ] && runner_state_reset
 runner_export_lean_env
+
+# The environment every row may reference (tests/gates.tsv "target").
+RUNNER_BUILD_ARGS="-m:1"          # #861: one MSBuild node
+RUNNER_OPTS="aot"                 # opt:aot rows run in full
+BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-900000}"
+export CONFIG LOG_DIR RUNNER_BUILD_ARGS RUNNER_OPTS BLAME_HANG_TIMEOUT
+runner_export_oracle_env
+runner_export_release_env
+GATE_ASYMMETRY_BASE="$(runner_gate_asymmetry_base full)"
+export GATE_ASYMMETRY_BASE
 
 CHUNK_DIR="$(runner_state_dir)/chunks"
 mkdir -p "$CHUNK_DIR"
@@ -162,22 +183,14 @@ trap on_signal INT TERM
 # ---------------------------------------------------------------------------
 # Plan
 # ---------------------------------------------------------------------------
-# The step list is DATA, not control flow. Four tab-separated columns:
-#   name <TAB> kind <TAB> target <TAB> filter
-# kind=script  target = command line,  filter = "-"
-# kind=test    target = csproj/sln,    filter = --filter expression or "-"
-#
-# The literal "-" for "no filter" is not cosmetic: an EMPTY trailing field is
-# stripped by `read` (tab is IFS whitespace), which previously made an absent
-# filter indistinguishable from a present one and caused `cut -f2` to echo the
-# whole line — passing the csproj path as --filter, matching zero tests, and
-# exiting 0. A vacuous green. Always emit an explicit placeholder.
+# The step list is DATA, not control flow, and it lives in tests/gates.tsv.
+# The plan written here has one header line and ten tab-separated columns:
+#   name kind target filter class knownIssue prereq prereqPolicy checkpoint ratchet
+# The literal "-" for an empty cell is not cosmetic: an EMPTY trailing field is
+# stripped by `read` (tab is IFS whitespace), which once made an absent filter
+# indistinguishable from a present one — the csproj path became the --filter,
+# matched zero tests, and exited 0. A vacuous green.
 PLAN_FILE="$LOG_DIR/plan.tsv"
-
-PROJECTS_SMALL="Excise.Avalonia.Tests Excise.Cli.Tests Excise.Ocr.Tests"
-PROJECTS_BIG="Excise.Core.Tests Excise.Rendering.Tests Excise.App.Tests"
-
-emit() { printf '%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "${4:--}" >> "$PLAN_FILE"; }
 
 # Fingerprint of the built test assembly. If this has not changed, the set of
 # test names cannot have changed either, so a cached chunk plan is still valid.
@@ -304,308 +317,126 @@ print(f"  chunk coverage verified: {len(tests)} test names, {len(terms)} classes
 PY
 }
 
-: > "$PLAN_FILE"
-
-# Per-corpus "pages present / pages expected" (#958). Populated by the
-# preflight check in Phase 5b, printed in the final Summary — declared here
-# (unconditionally, empty) so the Summary section can check its length
-# without caring whether --everything was passed.
+# ---------------------------------------------------------------------------
+# Plan — derived from tests/gates.tsv
+# ---------------------------------------------------------------------------
 CORPUS_COVERAGE_ROWS=()
+row10() { printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$@"; }
 
-# --- Phase 1: build once, then never again -------------------------------
-emit "build" script "dotnet build excise.sln -c $CONFIG -m:1" "-"
-
-# --- Phase 2: static / cheap gates ---------------------------------------
-emit "gate-asymmetry"       script "scripts/check-gate-asymmetry.sh origin/develop" "-"
-emit "redaction-architecture" script "scripts/verify-true-redaction.sh" "-"
-emit "testdata-sync"        script "scripts/check-testdata-sync.sh" "-"
-emit "skip-budget-selftest" script "scripts/test-check-skip-budget.sh" "-"
-# #1012: a gate you never saw fail is not a gate. Each selftest feeds its gate
-# known-bad input and requires a non-zero exit, so the gates above cannot go
-# green having stopped checking. Milliseconds each (hermetic temp roots, fake
-# tools, synthetic reports), except contract-manifest (~6s of `dotnet run`).
-# Unwired public API (#908). The skip budget and test count catch a TEST that
-# stops running; this catches PRODUCTION CODE that never started. Both bugs it
-# guards against were written, tested, and then not called: #908 (CffSubsetter —
-# 25 test references, zero production callers, so CFF fonts ship unsubsetted)
-# and #896 (RedactWithOptions, same shape, and the CLI leaked redacted terms
-# into /Info and XMP for as long as nothing called the safe path).
-#
-# Ratchets against tests/unwired-api-baseline.tsv: accepted entries fail only
-# on anything NEW. Cheap (~10s, a text index), so it sits with the static gates
-# rather than the suites.
-emit "unwired-api"          script "scripts/check-unwired-api.sh --quiet" "-"
-# #341: the shipped Release package must not drag Roslyn scripting, bundled
-# tessdata or Excise.Ocr into the normal startup path. Wired 2026-08-17 after
-# being found running nowhere for the second time (d5687a1b was the first).
-emit "lazy-startup"        script "scripts/verify-lazy-startup.sh" "-"
-# Whole-solution private/internal reachability (#940). This is intentionally
-# Roslyn-backed rather than grep: XAML bindings, command string IDs, overrides,
-# interface implementations, and the public package surface are seeded before
-# computing the unreachable closure.
-emit "reachability"         script "scripts/check-reachability.sh --quiet" "-"
-
-# --- Phase 3: the redaction gates (NEVER checkpointed — always re-run) ----
-emit "redaction-suites" test "excise.sln" "FullyQualifiedName~Redaction"
-
-# --- Phase 4: every test project ------------------------------------------
-for proj in $PROJECTS_SMALL; do
-    emit "$proj" test "$proj/$proj.csproj" "-"
-done
-
-# NOT an associative array: macOS ships bash 3.2, where `declare -A` is an
-# invalid option and the lookup silently reads empty — which is exactly how
-# the first draft of the gate below emitted nothing while looking correct.
-RENDERING_CHUNK_TRX=""
-for proj in $PROJECTS_BIG; do
-    if [ "$SKIP_CHUNKING" = "1" ]; then
-        emit "$proj" test "$proj/$proj.csproj" "-"
-        continue
-    fi
-    # Do NOT swallow stderr here: the coverage guard and the --list-tests
-    # fallback both report there, and a silent degrade to unchunked (or a
-    # silent coverage hole) is the thing this script exists to avoid.
-    chunks="$(build_chunk_plan "$proj" || true)"
-    if [ -n "$chunks" ] && [ -s "$chunks" ]; then
-        while IFS=$'\t' read -r cname cfilter; do
-            emit "$proj.$cname" test "$proj/$proj.csproj" "$cfilter"
-            # Remember every chunk's trx so the #894 discovered-vs-reported
-            # gate can consume their UNION below: chunks partition the project
-            # by test class, so the union is exactly an unfiltered run, and the
-            # gate refuses any single filtered trx by construction.
-            if [ "$proj" = "Excise.Rendering.Tests" ]; then
-                RENDERING_CHUNK_TRX="$RENDERING_CHUNK_TRX --trx $LOG_DIR/$proj.$cname.trx"
-            fi
-        done < "$chunks"
-    else
-        emit "$proj" test "$proj/$proj.csproj" "-"
-    fi
-done
-
-# --- Phase 5: gates that need a FULL-project pass to be meaningful --------
-# check-skip-budget.sh counts skip sites across a whole project. Feeding it a
-# chunked run would give it wrong numbers, so it keeps its own unchunked run.
-emit "skip-budget-core"      script "scripts/check-skip-budget.sh Excise.Core.Tests/Excise.Core.Tests.csproj" "-"
-emit "skip-budget-rendering" script "scripts/check-skip-budget.sh Excise.Rendering.Tests/Excise.Rendering.Tests.csproj" "-"
-emit "skip-budget-app"       script "scripts/check-skip-budget.sh Excise.App.Tests/Excise.App.Tests.csproj" "-"
-emit "extraction-parity"     script "scripts/check-extraction-parity.sh" "-"
-emit "copy-whitespace-parity" script "scripts/check-copy-whitespace-parity.sh" "-"
-
-# --- Phase 5b: release-only gates (--everything) --------------------------
-# Delegated to release-smoke.sh rather than re-listed here, so the gate set
-# cannot drift from the canonical definition. --quick skips its own full test
-# pass (every project already ran above) and --no-build reuses this run's build.
-#
-# Deliberately NOT included even under --everything: `package`, `packaged-gui`
-# and `visual`. Those need built platform artifacts, a real app bundle, and (on
-# macOS) an Accessibility permission grant for the focus-taking input smoke —
-# they cannot run unattended from one command. docs/RELEASE_CHECKLIST.md owns
-# them.
-if [ "$EVERYTHING" = "1" ]; then
-    emit "release-gates" script "scripts/release-smoke.sh --no-build --quick --resume --only=accessibility,automation,ux,benchmark,perf-budget,aot,pdf20" "-"
-    # Deep fuzz sweep (#984): StructureAwareFuzzTests is checked in at 250
-    # iterations/seed for t0's ~30s push budget, and every escape it has
-    # actually found needed thousands (#975 at 5432, others at 5632/7132/
-    # ~10955). There is no nightly runner to schedule a deeper pass against
-    # (nightly-corpus is status: planned, primaryCommand: null), so this is
-    # the cheapest place depth is reached at least once per release: git-
-    # tracked fixtures only (no corpus dependency), ~20000 iterations/seed
-    # across six rows in well under a minute of test-body time. A failure
-    # names its seed/iteration/fixture in the assertion message, which
-    # reproduces exactly by restoring EXCISE_FUZZ_ITERATIONS and the seed.
-    emit "deep-fuzz-sweep" script "scripts/run-deep-fuzz-sweep.sh" "-"
-    # Corpus rendering scans (#862). Each page is classified PASS / PASS_ONE /
-    # DIFF / MALFORMED_PDF / ... and the run fails when a status departs from
-    # that corpus's expectation manifest. The checked-in password manifest
-    # (#864) is used by default, so encrypted fixtures are actually decrypted
-    # rather than written off as unsupported.
-    #
-    # FOUR CORPORA, not one — 3,915 pages. Each is adversarial in a different
-    # way, and the spread is the point:
-    #
-    #   pdf.js   685 pages, 96.1% PASS  Mozilla's regression history
-    #   veraPDF 2694 pages, 99.7% PASS  PDF Association PDF/A + PDF/UA suite
-    #   Isartor  205 pages,  100% PASS  PDF Association PDF/A-1 violations
-    #   PDFium   331 pages,  74.6% PASS Chrome's regression history
-    #
-    # PDFium's set is by far the harshest, which is exactly why it earns its
-    # place: it is the only corpus here assembled from crashes in the most
-    # widely deployed PDF renderer there is.
-    #
-    # --extra-oracles all adds PDFBox and PDFium to the default Ghostscript
-    # escalation. This is close to free: extra oracles only run on pages where
-    # mutool and pdftocairo have ALREADY disagreed, so the cost lands only
-    # where a tie-break is actually needed — which is also where a single
-    # oracle is least trustworthy.
-    #
-    # Under --everything rather than the default run: these take tens of
-    # minutes together.
-    # name : corpus-relative dir : expectation manifest. Single source of
-    # truth for both the preflight check below and the emit loop that
-    # follows it — a corpus added to one and not the other is exactly the
-    # kind of drift #958 exists to catch elsewhere.
-    _CORPUS_SPECS=(
-        "corpus-scan-pdfjs:test-pdfs/pdfjs:tests/corpus-expectations.tsv"
-        "corpus-scan-verapdf:test-pdfs/verapdf-corpus:tests/corpus-expectations-verapdf.tsv"
-        "corpus-scan-isartor:test-pdfs/isartor:tests/corpus-expectations-isartor.tsv"
-        "corpus-scan-pdfium:test-pdfs/pdfium:tests/corpus-expectations-pdfium.tsv"
-    )
-
-    # --- Preflight: refuse a silently partial corpus sweep (#958) ---------
-    # Until now, a missing/empty corpus directory was skipped a few lines
-    # below with no failure and no mention in the summary — "--everything"
-    # could read as the full 3,915-page / four-corpus sweep while actually
-    # covering a fraction of it (e.g. 971 of 3,915 pages, 25%, observed
-    # 2026-08-10 with only pdf.js and PDFium present). "Pages expected" is
-    # read from each checked-in expectation manifest (non-comment line
-    # count) rather than hard-coded, so it can never drift from the manifest
-    # the scan actually grades against. "Pages present" counts *.pdf files in
-    # the corpus dir, which is the exact quantity --page-mode first (used
-    # below) turns into pages scanned: one page per file.
-    _missing_corpora=""
-    for _corpus_spec in "${_CORPUS_SPECS[@]}"; do
-        _cs_name="${_corpus_spec%%:*}"; _cs_rest="${_corpus_spec#*:}"
-        _cs_dir="${_cs_rest%%:*}"; _cs_manifest="${_cs_rest#*:}"
-
-        _cs_present=0
-        if [ -d "$ROOT/$_cs_dir" ]; then
-            _cs_present="$(find "$ROOT/$_cs_dir" -name '*.pdf' 2>/dev/null | wc -l | tr -d ' ')"
-        fi
-        _cs_expected=0
-        if [ -f "$ROOT/$_cs_manifest" ]; then
-            _cs_expected="$(grep -vc '^#' "$ROOT/$_cs_manifest" 2>/dev/null | tr -d ' ')"
-        fi
-        CORPUS_COVERAGE_ROWS+=("$_cs_dir	${_cs_present:-0}	${_cs_expected:-0}")
-
-        if [ "${_cs_present:-0}" = "0" ]; then
-            _dl_cmd="scripts/download-test-pdfs.sh"
-            case "$_cs_name" in
-                corpus-scan-pdfjs)  _dl_cmd="scripts/download-pdfjs-corpus.sh" ;;
-                corpus-scan-pdfium) _dl_cmd="scripts/download-pdfium-corpus.sh" ;;
-            esac
-            _missing_corpora="${_missing_corpora}  $(printf '%-24s' "$_cs_dir") (0/${_cs_expected:-0} pages)  ->  $_dl_cmd\n"
-        fi
-    done
-
-    CORPUS_RAN_WITH_ALLOW_MISSING=0
-    if [ -n "$_missing_corpora" ]; then
-        if [ "$ALLOW_MISSING_CORPORA" = "1" ]; then
-            CORPUS_RAN_WITH_ALLOW_MISSING=1
-            say "${Y}WARNING: --everything corpus sweep is PARTIAL (#958) — missing/empty corpora:${N}"
-            printf "%b" "$_missing_corpora"
-            say "${Y}Continuing because --allow-missing-corpora was passed. The scans are${N}"
-            say "${Y}still in the plan and will FAIL — the flag lets the rest of the suite${N}"
-            say "${Y}run, it does not remove them from the evidence.${N}"
-            say ""
-        else
-            say "${R}ABORT: --everything corpus sweep would be silently partial (#958).${N}"
-            say "The following corpora are empty or missing:"
-            printf "%b" "$_missing_corpora"
-            say ""
-            say "  Download the missing corpora above, then re-run. Or pass"
-            say "  ${B}--allow-missing-corpora${N} to run the rest of the suite anyway; the"
-            say "  missing scans then fail as steps, so the run cannot report green."
-            exit 1
+runner_manifest_plan full > "$PLAN_FILE.manifest" || { say "${R}tests/gates.tsv is defective; nothing ran.${N}"; exit 2; }
+: > "$PLAN_FILE.rows"
+while IFS=$'\t' read -r name kind target filter class known prereq policy ckpt ratchet; do
+    [ -n "$name" ] || continue
+    if [ "$kind" = "project-chunked" ] && [ "$SKIP_CHUNKING" != "1" ]; then
+        proj="$(basename "$target" .csproj)"
+        # Do NOT swallow stderr here: the coverage guard and the --list-tests
+        # fallback both report there, and a silent degrade to unchunked (or a
+        # silent coverage hole) is the thing this script exists to avoid.
+        chunks="$(build_chunk_plan "$proj" || true)"
+        if [ -n "$chunks" ] && [ -s "$chunks" ]; then
+            # Chunk rows inherit every column; {TRXARGS:name} consumers get the
+            # union of their trx files (runner_plan_expand_trx).
+            while IFS=$'\t' read -r cname cfilter; do
+                row10 "$name.$cname" test "$target" "$cfilter" "$class" "$known" "$prereq" "$policy" "$ckpt" "$ratchet"
+            done < "$chunks" >> "$PLAN_FILE.rows"
+            continue
         fi
     fi
+    row10 "$name" "$kind" "$target" "$filter" "$class" "$known" "$prereq" "$policy" "$ckpt" "$ratchet" >> "$PLAN_FILE.rows"
+done < "$PLAN_FILE.manifest"
 
-    # EVERY corpus is emitted, present or not. A missing one must be a RED step,
-    # never an absent one.
-    #
-    # It used to be skipped here, on the reasoning that the preflight above had
-    # already been loud about it. But the preflight is console output, and the
-    # plan is the evidence: --assert-green re-derives this same plan in a later
-    # invocation and asks only "does every step in it have a marker?". With the
-    # step skipped, the plan shrank on both sides and the answer was yes.
-    # Measured 2026-08-16 by hiding test-pdfs/pdfjs: total went 66 -> 65 steps
-    # and 4 -> 3 corpus scans, so a release could be tagged "65/65 green" on a
-    # build where the pdf.js corpus was never scanned at all.
-    #
-    # Emitting unconditionally means a missing corpus fails its step (the scan
-    # script exits 1 on an absent OR empty directory), the run ends non-zero,
-    # no marker is written, and --assert-green reports it missing — with no
-    # changes to --assert-green, because the plan can no longer shrink.
-    # --allow-missing-corpora now means "don't abort the whole run at preflight,
-    # let the rest of the suite run and report these red", not "pretend the plan
-    # is smaller".
-    for _corpus_spec in "${_CORPUS_SPECS[@]}"; do
-        _cs_name="${_corpus_spec%%:*}"; _cs_rest="${_corpus_spec#*:}"
-        _cs_dir="${_cs_rest%%:*}"; _cs_manifest="${_cs_rest#*:}"
-        # pdf.js is the ONLY corpus where all-pages is real extra coverage
-        # rather than repetition, so it is the only one that gets it (#1037).
-        # Measured page counts: veraPDF 2694 files / 2719 pages (avg 1.0),
-        # PDFium 331/357 (1.1), pdf.js 685/1269 (1.9), Isartor 205/10223 —
-        # and Isartor's 10k pages are TWO enormous documents that would
-        # dominate an all-pages run while testing almost nothing new.
-        # pdf.js and PDFium both scan every page; the others stay on page 1.
-        # PDFium costs only ~48 extra pages (331 files / 405 page rows) and it
-        # is where the last 3 documents carrying annotations beyond page 1 live
-        # (linearized.pdf, linearized_bug_1055.pdf, annots.pdf) — #1037.
-        _cs_mode="first"
-        case "$_cs_dir" in *"/pdfjs"|*"/pdfium") _cs_mode="all" ;; esac
-        emit "$_cs_name" script \
-            "scripts/run-exploratory-corpus.sh --corpus $_cs_dir --page-mode $_cs_mode --extra-oracles all --expectation-manifest $_cs_manifest" "-"
-    done
-fi
-
-# --- Phase 6: unchunked App.Tests as the release evidence -----------------
-# Chunking changes which tests share a process. That can hide OR manufacture
-# cross-test contamination (a real one was found before: a shared window.json
-# view-mode preference leaking between continuous-view tests, which only
-# reproduced in a full-suite run). Chunks above give fast, resumable feedback;
-# this single serial pass is what actually counts as evidence. CLAUDE.md:
-# Excise.App.Tests is serial by design and must run alone.
-# #894 for Excise.Rendering.Tests — the project where a DETERMINISTIC
-# discovered-but-never-executed case is known to live, and the one project no
-# unfiltered run covers: CI filters its step by design and this plan chunks it.
-# Rather than duplicating a ~10-minute suite just to count, feed the gate the
-# union of the chunk trx files it already produced.
-if [ -n "$RENDERING_CHUNK_TRX" ]; then
-    emit "test-count-rendering" script \
-        "scripts/check-test-count.sh Excise.Rendering.Tests/Excise.Rendering.Tests.csproj$RENDERING_CHUNK_TRX" "-"
-fi
-emit "app-tests-unchunked-evidence" test "Excise.App.Tests/Excise.App.Tests.csproj" "-"
-# #894: the App suite is the largest unfiltered run in the plan, and until now
-# nothing checked that every test it DISCOVERED actually reported a result.
-# t0 covers Core/Cli/Avalonia; this closes App. The gate re-runs whatever went
-# missing, so a transient vstest reporting loss is reported and a genuine
-# coverage hole is fatal.
-emit "test-count-app" script "scripts/check-test-count.sh Excise.App.Tests/Excise.App.Tests.csproj --trx $LOG_DIR/app-tests-unchunked-evidence.trx" "-"
+# "of" counts the rows AFTER chunk expansion and BEFORE --only, so
+# planned<of in the plan header means exactly one thing: a partial run.
+OF="$(grep -c . "$PLAN_FILE.rows")"
 
 # ---------------------------------------------------------------------------
 # Filter to --only
 # ---------------------------------------------------------------------------
 if [ -n "$ONLY" ]; then
-    grep -E "^[^	]*$ONLY" "$PLAN_FILE" > "$PLAN_FILE.filtered" || true
-    mv "$PLAN_FILE.filtered" "$PLAN_FILE"
+    grep -E "^[^	]*$ONLY" "$PLAN_FILE.rows" > "$PLAN_FILE.only" || true
+    mv "$PLAN_FILE.only" "$PLAN_FILE.rows"
 fi
+PLANNED="$(grep -c . "$PLAN_FILE.rows")"
+runner_plan_write "$PLAN_FILE" full "$PLAN_FILE.rows" "$PLANNED" "$OF" "${ONLY:--}"
+rm -f "$PLAN_FILE.rows" "$PLAN_FILE.manifest"
+# LAST: after --only and chunking, so {TRXARGS?:x} can see that x was filtered out.
+runner_plan_expand_trx "$PLAN_FILE" "$LOG_DIR" || exit 2
+TOTAL="$PLANNED"
 
-TOTAL="$(wc -l < "$PLAN_FILE" | tr -d ' ')"
+# --- Preflight: refuse a silently partial corpus sweep (#958) -------------
+# Derived from the PLANNED corpus-scan-* rows (their target names the corpus
+# dir and the expectation manifest), so a scan added to tests/gates.tsv is
+# preflighted without a second list. "Pages expected" is the manifest's
+# non-comment line count; "pages present" counts *.pdf files in the corpus
+# dir, which is what --page-mode first turns into pages scanned.
+_missing_corpora=""
+while IFS=$'\t' read -r name kind target _rest; do
+    case "$name" in corpus-scan-*) ;; *) continue ;; esac
+    _cs_dir="$(printf '%s' "$target" | sed -n 's/.*--corpus \([^ ]*\).*/\1/p')"
+    _cs_manifest="$(printf '%s' "$target" | sed -n 's/.*--expectation-manifest \([^ ]*\).*/\1/p')"
+    [ -n "$_cs_dir" ] || continue
+    _cs_present=0
+    [ -d "$ROOT/$_cs_dir" ] && _cs_present="$(find "$ROOT/$_cs_dir" -name '*.pdf' 2>/dev/null | wc -l | tr -d ' ')"
+    _cs_expected=0
+    [ -f "$ROOT/$_cs_manifest" ] && _cs_expected="$(grep -vc '^#' "$ROOT/$_cs_manifest" 2>/dev/null | tr -d ' ')"
+    CORPUS_COVERAGE_ROWS+=("$_cs_dir	${_cs_present:-0}	${_cs_expected:-0}")
+    if [ "${_cs_present:-0}" = "0" ]; then
+        _dl_cmd="scripts/download-test-pdfs.sh"
+        case "$name" in
+            corpus-scan-pdfjs)  _dl_cmd="scripts/download-pdfjs-corpus.sh" ;;
+            corpus-scan-pdfium) _dl_cmd="scripts/download-pdfium-corpus.sh" ;;
+        esac
+        _missing_corpora="${_missing_corpora}  $(printf '%-24s' "$_cs_dir") (0/${_cs_expected:-0} pages)  ->  $_dl_cmd\n"
+    fi
+done < "$PLAN_FILE"
+
+CORPUS_RAN_WITH_ALLOW_MISSING=0
+if [ -n "$_missing_corpora" ] && [ "$MODE" = "run" ]; then
+    if [ "$ALLOW_MISSING_CORPORA" = "1" ]; then
+        CORPUS_RAN_WITH_ALLOW_MISSING=1
+        say "${Y}WARNING: the corpus sweep is PARTIAL (#958) — missing/empty corpora:${N}"
+        printf "%b" "$_missing_corpora"
+        say "${Y}Continuing because --allow-missing-corpora was passed. The scans stay${N}"
+        say "${Y}in the plan and will FAIL — the flag lets the rest of the suite run,${N}"
+        say "${Y}it does not remove them from the evidence.${N}"
+        say ""
+    else
+        say "${R}ABORT: the corpus sweep would be silently partial (#958).${N}"
+        say "The following corpora are empty or missing:"
+        printf "%b" "$_missing_corpora"
+        say ""
+        say "  Download the missing corpora above, then re-run. Or pass"
+        say "  ${B}--allow-missing-corpora${N} to run the rest of the suite anyway; the"
+        say "  missing scans then fail as steps, so the run cannot report green."
+        exit 1
+    fi
+fi
 
 # ---------------------------------------------------------------------------
 # list / status modes
 # ---------------------------------------------------------------------------
 if [ "$MODE" = "list" ] || [ "$MODE" = "status" ]; then
-    say "${B}Plan${N} ($TOTAL steps, config=$CONFIG)"
+    say "${B}Plan${N} ($TOTAL of $OF rows, config=$CONFIG, tests/gates.tsv $(runner_manifest_fingerprint))"
     say "State: $(runner_state_dir)"
     say ""
     ndone=0; npend=0
-    while IFS=$'\t' read -r name kind target filter; do
-        [ -n "$name" ] || continue
+    while IFS=$'\t' read -r name kind target filter class known prereq policy ckpt ratchet; do
+        case "$name" in ''|'#'*) continue ;; esac
         if runner_is_never_checkpointed "$name"; then
-            say "  ${Y}ALWAYS${N}  $name ${D}(never checkpointed)${N}"
+            say "  ${Y}ALWAYS${N}  $(printf '%-8s' "$class") $name ${D}(never checkpointed)${N}"
             npend=$(( npend + 1 ))
-        elif runner_step_should_run "$name"; then
-            say "  ${D}pending${N} $name"
+        elif runner_step_should_run "$name" "$(runner_target_hash "$kind" "$target" "$filter")"; then
+            say "  ${D}pending${N} $(printf '%-8s' "$class") $name"
             npend=$(( npend + 1 ))
         else
-            say "  ${G}done${N}    $name"
+            say "  ${G}done${N}    $(printf '%-8s' "$class") $name"
             ndone=$(( ndone + 1 ))
         fi
     done < "$PLAN_FILE"
     say ""
     say "done=$ndone pending=$npend total=$TOTAL"
     say "Resources: $(runner_resource_report)"
+    rm -rf "$LOG_DIR"
     exit 0
 fi
 
@@ -617,7 +448,8 @@ say "${B} excise full suite — restartable${N}"
 say "${B}=================================================${N}"
 say "Started  : $(date)"
 say "Config   : $CONFIG"
-say "Steps    : $TOTAL"
+say "Steps    : $TOTAL of $OF (tests/gates.tsv $(runner_manifest_fingerprint))"
+say "Tree     : @${RUNNER_SHA:0:12}$([ "$RUNNER_TREE_DIRTY" = yes ] && echo ' DIRTY')  gate-asymmetry base=$GATE_ASYMMETRY_BASE"
 say "Logs     : $LOG_DIR"
 say "State    : $(runner_state_dir)"
 say "Memory   : serial (1 testhost at a time) chunkSize=$CHUNK_CLASSES tuneGC=${RUNNER_TUNE_GC} heapCap=${RUNNER_HEAP_CAP_GIB}GiB"
@@ -625,7 +457,6 @@ say "Resources: $(runner_resource_report)"
 say ""
 
 OVERALL=0
-RESULTS=()
 IDX=0
 
 # ---------------------------------------------------------------------------
@@ -684,106 +515,103 @@ measure_step() {
     return $rc
 }
 
+# run_one <name> <kind> <target> <filter> <class> <knownIssue> <prereq> <policy>
+# One row of the plan, through the helpers every runner shares
+# (runner_step_cmdline, runner_prereq_missing, runner_step_status in
+# lib-runner.sh). Checkpoints are always on here; a marker records the target
+# hash so a row whose command changed re-runs (#1362 applied to markers).
 run_one() {
-    local name="$1" kind="$2" target="$3" filter="${4:--}"
+    local name="$1" kind="$2" target="$3" filter="${4:--}" class="$5" known="$6" prereq="$7" policy="$8"
     IDX=$(( IDX + 1 ))
+    local log="$LOG_DIR/$name.log" cmdline hash rc=0 dur start reason="" status frc=0
+    cmdline="$(runner_step_cmdline "$name" "$kind" "$target" "$filter")"
+    hash="$(runner_target_hash "$kind" "$target" "$filter")"
 
-    if ! runner_step_should_run "$name"; then
+    if ! runner_step_should_run "$name" "$hash"; then
         say "${D}[$IDX/$TOTAL] $name — SKIP (checkpointed)${N}"
-        RESULTS+=("$name|SKIP|checkpointed")
         # Record WHERE the evidence came from. "PASS" in a resumed run's summary
         # can mean "passed twenty minutes ago on this same commit", and until now
         # nothing wrote down which. The marker is the provenance, so quote it.
         runner_ledger_record "$name" "SKIP_CHECKPOINTED" 0 0 \
             "kind=$kind" "target=$target" "filter=$filter" \
+            "class=$class" "knownIssue=$known" "prereq=$prereq" \
             "evidenceFrom=$(runner_marker_path "$name")" \
-            "evidenceFinished=$(grep -h '^finished=' "$(runner_marker_path "$name")" 2>/dev/null | head -1 | cut -d= -f2-)"
+            "evidenceFinished=$(runner_marker_value "$name" finished)" \
+            "evidenceLog=$(runner_marker_value "$name" log)" \
+            "evidenceSha=$(runner_marker_value "$name" sha)"
         return 0
     fi
 
     # Never start a step when the machine is already in trouble.
     runner_mem_guard "$name"
-
-    local log="$LOG_DIR/$name.log"
-    local start rc dur
     start="$(date +%s)"
-
     say "${B}[$IDX/$TOTAL] $name${N}"
 
-    # Build the step's command line, then run it under measure_step so every
-    # step reports peak RSS and CPU. excise is meant to be lean; a suite run we
-    # are doing anyway is free telemetry for spotting bloat.
-    local cmdline
-    local BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-900000}"
-    if [ "$kind" = "script" ]; then
-        cmdline="$target"
-    elif [ "$filter" = "-" ]; then
-        # Unfiltered runs also emit a trx: it is what scripts/check-test-count.sh
-        # needs to catch a test that was DISCOVERED and then produced no result
-        # (#894), and that gate only accepts an unfiltered trx by construction.
-        # Filtered/chunked steps deliberately do not get one — feeding the gate
-        # a filtered trx would report everything the filter excluded as a hole.
-        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --blame-hang-timeout $BLAME_HANG_TIMEOUT --logger \"console;verbosity=minimal\" --logger \"trx;LogFileName=$LOG_DIR/$name.trx\""
+    if reason="$(runner_prereq_missing "$prereq")"; then
+        # The same verdict the exit-77 protocol gives, without paying for the run.
+        rc="$RUNNER_EXIT_SKIP"
+        printf 'SKIPPED: prerequisite missing: %s\n' "$reason" > "$log"
+        printf '%s\t\t\n' "$name" >> "$RUSAGE_TSV"
     else
-        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --filter \"$filter\" --blame-hang-timeout $BLAME_HANG_TIMEOUT --logger \"console;verbosity=minimal\" --logger \"trx;LogFileName=$LOG_DIR/$name.trx\""
-    fi
-    measure_step "$name" "$log" "$cmdline"
-    rc=$?
-
-    dur=$(( $(date +%s) - start ))
-
-    # A test step that matched NOTHING exits 0. Checkpointing that is exactly
-    # the failure mode this repo is built to prevent: a green that proves
-    # nothing, then permanently skipped on every resume.
-    #
-    # The signal is ZERO EXECUTED TESTS, *not* the presence of "No test matches
-    # the given testcase filter". A solution-wide filter (the redaction gate
-    # runs against excise.sln) legitimately prints that line for every assembly
-    # holding none of the targeted tests, while the others run thousands. The
-    # first version of this guard grepped for the string and so reported the
-    # redaction gate as FAIL on a run where it had actually passed 393 tests
-    # across 5 assemblies — with only Excise.Avalonia.Tests, which contains no
-    # Redaction tests, producing the line. Fail-safe direction, but it cried
-    # wolf on the one gate that must never be ignored.
-    if [ "$kind" = "test" ] && [ "$rc" = "0" ]; then
-        local executed
-        executed="$(grep -oE 'Total: *[0-9]+' "$log" 2>/dev/null | grep -oE '[0-9]+' \
-                    | awk '{s+=$1} END {print s+0}')"
-        if [ "${executed:-0}" = "0" ]; then
-            executed="$(grep -oE 'Total tests: *[0-9]+' "$log" 2>/dev/null | grep -oE '[0-9]+' \
-                        | awk '{s+=$1} END {print s+0}')"
-        fi
-        if [ "${executed:-0}" = "0" ]; then
-            say "  ${R}FAIL${N} (${dur}s) — ZERO tests executed; refusing to checkpoint a vacuous pass"
-            say "       filter: $filter"
-            RESULTS+=("$name|FAIL|zero-tests-matched")
-            runner_ledger_record "$name" "FAIL_ZERO_TESTS" "$rc" "$dur" \
-                "kind=$kind" "target=$target" "filter=$filter" \
-                "log=$log" "testsExecuted=0"
+        # Freshness: never eval a cell (see test-tier.sh run_step for the same
+        # guard). build is checkpoint=never in the manifest, so a stale --no-build
+        # can only come from an external change; the guard still refuses it.
+        case "$kind" in
+            test|project|project-chunked)
+                case "$target" in
+                    *.sln) runner_assert_fresh_build "$CONFIG" > "$log.freshness" 2>&1; frc=$? ;;
+                    *)     runner_assert_fresh_build "$CONFIG" "$target" > "$log.freshness" 2>&1; frc=$? ;;
+                esac ;;
+            *)
+                local _w=()
+                read -r -a _w <<< "$(runner_expand_placeholders "$target")"
+                while [ "${#_w[@]}" -gt 0 ] && { [ "${_w[0]}" = env ] || case "${_w[0]}" in *=*) true ;; *) false ;; esac; }; do
+                    _w=("${_w[@]:1}")
+                done
+                runner_guard_no_build_command ${_w[@]+"${_w[@]}"} > "$log.freshness" 2>&1; frc=$? ;;
+        esac
+        if [ "$frc" != 0 ]; then
+            dur=$(( $(date +%s) - start ))
+            say "  ${R}FAIL${N} stale --no-build guard rc=$frc -> $log.freshness"
+            sed 's/^/    /' "$log.freshness"
+            runner_ledger_record "$name" FAIL "$frc" "$dur" "kind=$kind" "target=$target" "filter=$filter" \
+                "log=$log.freshness" "class=$class" "knownIssue=$known" "prereq=$prereq" "reason=stale-no-build"
             OVERALL=1
             return 0
         fi
+        # Run under measure_step so every step reports peak RSS and CPU. excise
+        # is meant to be lean; a suite run we are doing anyway is free telemetry.
+        measure_step "$name" "$log" "$cmdline"
+        rc=$?
     fi
+    dur=$(( $(date +%s) - start ))
 
-    local ledger_trx=""
-    [ -f "$LOG_DIR/$name.trx" ] && ledger_trx="$LOG_DIR/$name.trx"
-
-    if [ "$rc" = "0" ]; then
-        runner_step_mark "$name" "$rc" "$dur"
-        say "  ${G}PASS${N} (${dur}s)"
-        RESULTS+=("$name|PASS|${dur}s")
-        runner_ledger_record "$name" "PASS" "$rc" "$dur" \
-            "kind=$kind" "target=$target" "filter=$filter" \
-            "log=$log" "trx=$ledger_trx" "testsExecuted=${executed:-}"
-    else
-        say "  ${R}FAIL${N} rc=$rc (${dur}s) -> $log"
-        tail -30 "$log" | sed 's/^/    /'
-        RESULTS+=("$name|FAIL|rc=$rc ${dur}s")
-        runner_ledger_record "$name" "FAIL" "$rc" "$dur" \
-            "kind=$kind" "target=$target" "filter=$filter" \
-            "log=$log" "trx=$ledger_trx" "testsExecuted=${executed:-}"
-        OVERALL=1
-    fi
+    status="$(runner_step_status "$kind" "$class" "$policy" "$rc" "$log" "$cmdline")"
+    case "$status" in
+        PASS)
+            runner_step_mark "$name" "$rc" "$dur" "$hash" "$log"
+            say "  ${G}PASS${N} (${dur}s)" ;;
+        SKIPPED)
+            reason="$(grep -E '^SKIP' "$log" | tail -1)"
+            say "  ${Y}SKIPPED${N} (${dur}s) — $reason" ;;
+        NO_RESULT)
+            say "  ${Y}NO RESULT${N} (GRADE, rc=$rc) -> $log" ;;
+        FAIL_ZERO_TESTS)
+            # A test step that matched NOTHING exits 0. Checkpointing that is
+            # exactly the failure mode this repo is built to prevent: a green
+            # that proves nothing, then permanently skipped on every resume.
+            say "  ${R}FAIL${N} (${dur}s) — ZERO tests executed; refusing to checkpoint a vacuous pass"
+            say "       filter: $filter"
+            OVERALL=1 ;;
+        *)
+            say "  ${R}$status${N} rc=$rc (${dur}s) -> $log"
+            tail -30 "$log" | sed 's/^/    /'
+            OVERALL=1 ;;
+    esac
+    local trx=""
+    [ -f "$LOG_DIR/$name.trx" ] && trx="$LOG_DIR/$name.trx"
+    runner_ledger_record "$name" "$status" "$rc" "$dur" "kind=$kind" "target=$target" "filter=$filter" "log=$log" \
+        "trx=$trx" "testsExecuted=${RUNNER_TESTS_EXECUTED:-}" "class=$class" "knownIssue=$known" "prereq=$prereq" "reason=$reason"
 
     # Release the build-server processes ONCE, right after the only step that
     # uses them. Every later step is --no-build, and MSBUILDDISABLENODEREUSE=1
@@ -793,37 +621,35 @@ run_one() {
     return 0
 }
 
-while IFS=$'\t' read -r name kind target filter; do
-    [ -n "$name" ] || continue
-    run_one "$name" "$kind" "$target" "$filter"
+while IFS=$'\t' read -r name kind target filter class known prereq policy ckpt ratchet; do
+    case "$name" in ''|'#'*) continue ;; esac
+    run_one "$name" "$kind" "$target" "$filter" "$class" "$known" "$prereq" "$policy"
 done < "$PLAN_FILE"
 
 # ---------------------------------------------------------------------------
-# Summary
+# Summary — the report below is the verdict; this is the telemetry
 # ---------------------------------------------------------------------------
 SUMMARY="$LOG_DIR/summary.tsv"
-: > "$SUMMARY"
+# name status detail, derived from the ledger so the two can never disagree.
+awk -F'"' '/"name"/ {
+    n = ""; s = ""; rc = ""; d = ""
+    for (i = 1; i < NF; i++) {
+        if ($i == "name") n = $(i+2)
+        if ($i == "status") s = $(i+2)
+    }
+    match($0, /"rc":[0-9-]+/); rc = substr($0, RSTART + 5, RLENGTH - 5)
+    match($0, /"durationSeconds":[0-9.]+/); d = substr($0, RSTART + 18, RLENGTH - 18)
+    printf "%s\t%s\t%s\n", n, s, (s == "SKIP_CHECKPOINTED" ? "checkpointed" : "rc=" rc " " d "s")
+}' "$LOG_DIR/ledger.jsonl" > "$SUMMARY"
 say ""
 say "${B}=================================================${N}"
-say "${B} Summary${N}"
+say "${B} Telemetry${N}"
 say "${B}=================================================${N}"
-npass=0; nfail=0; nskip=0
-for r in "${RESULTS[@]:-}"; do
-    [ -n "$r" ] || continue
-    IFS='|' read -r nm st detail <<< "$r"
-    printf '%s\t%s\t%s\n' "$nm" "$st" "$detail" >> "$SUMMARY"
-    case "$st" in
-        PASS) npass=$(( npass + 1 )); say "  ${G}PASS${N}  $nm ($detail)" ;;
-        FAIL) nfail=$(( nfail + 1 )); say "  ${R}FAIL${N}  $nm ($detail)" ;;
-        SKIP) nskip=$(( nskip + 1 )) ;;
-    esac
-done
 # --- resource hotspots ---------------------------------------------------
 # Ranked, not gated. A step at the top of this list is a question ("why does
 # that need 2GB?"), not a failure. Real enforcement lives in
 # tests/perf-budgets/workflow-budgets.json (allocation-anchored).
 if [ -s "$RUSAGE_TSV" ]; then
-    say ""
     say "${B}Resource hotspots${N} ${D}(observation only — the gate is check-perf-budgets.sh)${N}"
     say "  top peak RSS:"
     sort -t"$(printf '\t')" -k2,2nr "$RUSAGE_TSV" 2>/dev/null | head -5 \
@@ -839,18 +665,13 @@ if [ -s "$RUSAGE_TSV" ]; then
 fi
 
 # --- corpus coverage (#958) -----------------------------------------------
-# Populated only under --everything. Printed unconditionally when present —
-# not just on the missing/partial branch — so a FULL run states that too,
-# and "pages covered" never has to be taken on faith.
+# Printed unconditionally when present — not just on the missing/partial
+# branch — so a FULL run states that too, and "pages covered" never has to be
+# taken on faith.
 if [ "${#CORPUS_COVERAGE_ROWS[@]}" -gt 0 ]; then
     say ""
     say "${B}Corpus coverage${N} ${D}(pages present / pages in the expectation manifest)${N}"
     _corpus_partial=0
-    # bash 3.2 (macOS default) treats expanding an EMPTY array under `set -u`
-    # as an unbound-variable error, not zero iterations — the same reason
-    # RESULTS is expanded as "${RESULTS[@]:-}" below. The length check above
-    # already guarantees this array is non-empty when we get here, but the
-    # `:-` + empty-guard keeps the same safe shape as the rest of the file.
     for _row in "${CORPUS_COVERAGE_ROWS[@]:-}"; do
         [ -n "$_row" ] || continue
         IFS=$'\t' read -r _row_dir _row_present _row_expected <<< "$_row"
@@ -874,13 +695,11 @@ if [ "${#CORPUS_COVERAGE_ROWS[@]}" -gt 0 ]; then
 fi
 
 say ""
-say "pass=$npass fail=$nfail skipped-as-checkpointed=$nskip total=$TOTAL"
 say "Resources: $(runner_resource_report)"
 say "Logs    : $LOG_DIR"
 say "Summary : $SUMMARY"
 say "Ledger  : $LOG_DIR/ledger.jsonl"
 if [ "$OVERALL" != "0" ]; then
-    say ""
     say "${Y}Re-run the same command to retry only the failed/pending steps.${N}"
 fi
 
@@ -893,4 +712,15 @@ if [ "${EXCISE_NO_ARTIFACT_PRUNE:-0}" != "1" ] && [ -x scripts/clean-test-artifa
     scripts/clean-test-artifacts.sh --keep 5 2>/dev/null | tail -2
 fi
 
-exit $OVERALL
+# The report is the verdict, and its exit code is this script's: 0 clean
+# (possibly with SKIPPED rows), 1 a NEW red or a STALE acceptance, 3 a row
+# that never ran, 2 nothing to report. A full pass of the whole plan records
+# the tier-pass base for full, t1 and t0 (LOCAL_GATES.md "Base selection");
+# a --only run is partial and records nothing.
+say ""
+scripts/report-gates.sh "$LOG_DIR"
+rc=$?
+if [ "$rc" = 0 ] && [ "$PLANNED" = "$OF" ]; then
+    runner_tier_base_record_chain full
+fi
+exit $rc
