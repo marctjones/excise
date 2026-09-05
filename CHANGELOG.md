@@ -6,7 +6,7 @@ semantic versioning.
 
 ## [Unreleased]
 
-Nothing user-facing has shipped since 3.9.1. The 131 commits on `develop` are
+Nothing user-facing has shipped since 3.9.1. The 137 commits on `develop` are
 tooling, architecture registries, and CLI refactors — with three exceptions
 noted under Fixed.
 
@@ -29,6 +29,29 @@ noted under Fixed.
   four corpus scans, extraction parity, the redaction bench and render
   performance against the reference tools — with a delta against the prior
   run of the same tier.
+- **The registry gate reads its test evidence instead of regenerating it**
+  (#1366): the t0 `pdf-capability-registry` row regenerates from committed
+  inputs and reads the test-outcomes snapshot, so a run's own trx files can
+  no longer redden it; a full-tier GRADE row, `pdf-registry-outcomes`,
+  imports the run's trx from its ledger, prints the report's `test evidence`
+  line and stashes the regenerated snapshot for `--adopt` and commit.
+- **The `--no-build` freshness guard reads solution files** (#1367): it
+  crashed on `excise.sln`'s backslash project paths, and the runner read the
+  crash as "stale", so the redaction suites did not run in the first
+  manifest-driven full run. Fixed and covered by its selftest.
+- **Check-gates leave mtimes alone.** `verify-license-manifest.sh` restored
+  the reviewed licence file with a fresh mtime on every pass, and the guard
+  then refused every later `--no-build` row that reaches `Excise.App` — all
+  sixteen App rows of the first full run failed on a file whose bytes had
+  not changed. The gate now preserves the mtime (`cp -p`).
+- **What the first full run (2026-09-05, 4h01m) accepted or re-tuned:** the
+  #1361 acceptance now also covers the chunked `Excise.Rendering.Tests` row
+  (one defect must not read KNOWN on one row and NEW on another); the
+  Rendering skip allowlist is re-tuned to this machine (two entries added
+  with their reasons, one deleted because the test runs again, one count
+  corrected); two PDFium corpus pages moved PASS_ONE → PASS and are
+  accepted; `render-quality-scan` cites #1370 for its 47 contract
+  departures and records its 2h28m cost.
 - **Silent skips are closed.** A gate that cannot run exits 77 and is
   reported SKIPPED or FAIL according to its `prereqPolicy`; five scripts
   that exited 0 on a missing prerequisite (accessibility, visual, perf
@@ -56,16 +79,22 @@ noted under Fixed.
 - **Editing-mode cleanup is idempotent** (#1268).
 
 ### Known problems at this point
+- The redaction bench segfaults the test host (exit 139) 13 minutes in under
+  the full tier, so the `redaction` grade restates the 2026-08-27 history
+  (#1369).
+- The t0 registry gate still depends on four inputs that are not committed
+  sources: a gitignored index file, the installed-tool probe, a test that
+  reads `logs/`, and a solution-wide trx that keeps one project's results
+  (#1368).
+- 47 render-quality contract expectations depart under the full tier's
+  five-oracle set; triage decides whether the pins or the oracle set change
+  (#1370).
 - The capability registry measures whether evidence paperwork exists, not what
   is implemented: its `testRefs` cannot join to real test names at all
   (#1344), and 929 of 964 modes read `unknown` because nobody filled a form
   (#1345). Tracked under milestone RC22.
 - Rendering is 3.5-7x slower than mutool on heavy pages; 72% of the Altona
   render is per-pixel colour conversion (#1350).
-- The registry's test evidence is regenerated from trx files found under
-  `logs/`, so the first `full` run leaves the next `t0` NEW-red on the
-  `pdf-capability-registry` row until the regenerated evidence is committed
-  (#1366).
 
 ## [3.9.1] - 2026-08-29
 

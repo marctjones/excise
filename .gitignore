@@ -138,3 +138,6 @@ __pycache__/
 
 # Downloaded build inputs (scripts/download-pdfbox.sh) — not source.
 tools/vendor/
+
+# check-test-count.sh keeps its loss-streak ledger here between runs; local state, not evidence
+tests/test-count-loss-ledger.tsv
