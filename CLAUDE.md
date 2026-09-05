@@ -1445,8 +1445,8 @@ For long-running tests or builds, use the script runner pattern:
 # Run tests with logging (user runs in separate terminal)
 ./scripts/run-tests.sh | tee logs/test_$(date +%Y%m%d_%H%M%S).log
 
-# Run corpus tests with logging
-./scripts/run-corpus-tests.sh 2>&1 | tee logs/corpus_$(date +%Y%m%d_%H%M%S).log
+# Run the merge gate (its rendering-oracles row runs every Corpus/Differential test) with logging
+scripts/test-tier.sh t1 2>&1 | tee logs/t1_$(date +%Y%m%d_%H%M%S).log
 ```
 
 ### Creating Scripts for Long-Running Tasks
@@ -1478,7 +1478,7 @@ dotnet test --logger "console;verbosity=detailed"
 ### Available Test Scripts
 
 - `scripts/test.sh` - Run all unit tests
-- `scripts/run-corpus-tests.sh` - Run veraPDF corpus tests (long-running)
+- `scripts/test-tier.sh t1` - Merge gate; its `rendering-oracles` row runs every `Corpus` and `Differential` test (long-running)
 - `scripts/verify-true-redaction.sh` - Verify redaction removes content
 
 ## Test PDF Corpus

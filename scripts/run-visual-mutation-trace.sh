@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# TOOLING — not a gate (tests/gates-tooling.txt): drives the live app; the verdict is PNGs for a human
 # Live visual-stability trace for page-mutation operations (#846 / #695 Phase 3).
 #
 # Drives a page-mutation (rotate / remove / move / zoom) in the REAL running app

@@ -1,0 +1,125 @@
+# tests/gates-tooling.txt — every script under scripts/ that is deliberately NOT a row in tests/gates.tsv.
+# One per line with the reason. scripts/test-report-gates.sh fails when a script is in neither place,
+# so a new script must either become a gate or be justified here (skip-allowlist shape, #854).
+
+scripts/.run-full-conformance.sh   # tracked despite the dot; manual conformance dispatcher
+scripts/analyze-corpus-results.sh   # analysis helper over scan output
+scripts/analyze-pdf-corpus-duplicates.py   # corpus analysis helper
+scripts/architecture_artifacts.py   # body of check-architecture-artifacts.sh
+scripts/archive-bench-run.sh   # the ONE redaction-bench scorer; appends to tests/redaction-bench-history.jsonl (the report reads the history)
+scripts/assert-fresh.sh   # freshness guard invoked by lib-runner before every --no-build
+scripts/assert_fresh_build.py   # body of assert-fresh.sh
+scripts/audit-image-feature-coverage.py   # registry audit helper
+scripts/audit-pdf20-renderer-coverage.py   # registry audit helper
+scripts/build-bench-tiers.py   # regenerates tests/bench-tiers/*.tsv from corpora
+scripts/build-deb.sh   # Linux packaging; no Linux runner today
+scripts/build-image-feature-inventory.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-macos-app.sh   # packaging (release-smoke package gate)
+scripts/build-pdf-atomic-fixture-map.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-pdf-capability-scorecard.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-pdf-corpus-governance.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-pdf-evidence-attribution.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-pdf-evidence-deficiency-report.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-pdf-evidence-maps.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-pdf-feature-cluster-scorecard.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-pdf-legacy-leaves.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-pdf-operator-leaves.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-pdf-spec-inventory.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-renderer-promotion-queue.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-renderer-test-evidence-map.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/build-windows-installer.ps1   # Windows packaging; no Windows runner today
+scripts/build.sh   # plain build
+scripts/check-arlington-revision.py   # invoked by the registry pipeline
+scripts/check-contract-manifest-agreement.sh   # the same comparison runs in t0 inside Excise.Cli.Tests (Contracts_AgreeWithTheCorpusExpectationManifests, #977); this prints the whole list for humans
+scripts/check-coverage-floor.sh   # coverage is an OBSERVATION not a gate (docs/RELEASE_CHECKLIST.md); the t0 selftest exercises the ratchet mechanism; wiring is #1359
+scripts/check-coverage.sh   # coverage collection helper for check-coverage-floor.sh
+scripts/check-pdf-spec-registry.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/check-test-prereqs.sh   # reports which optional tools/corpora are present; informational, gates carry their own prereq column
+scripts/check_doc_claim_freshness.py   # body of check-doc-claim-freshness.sh
+scripts/check_unwired_api.py   # body of check-unwired-api.sh
+scripts/clean-test-artifacts.sh   # housekeeping invoked at the end of run-full-suite
+scripts/cluster-corpus-defects.sh   # analysis helper over scan output
+scripts/collect-pdf-capability-evidence.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/collect-pdf-reference-tool-evidence.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/collect-pdf-test-outcomes.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/common.sh   # library sourced by scripts
+scripts/copy-whitespace-parity.sh   # body invoked by check-copy-whitespace-parity.sh
+scripts/create-missing-v1.3.0-issues.sh   # historical one-off
+scripts/curate-pdf20-requirements.py   # registry curation
+scripts/demo-excise-cli.sh   # demo
+scripts/diff-behavior.sh   # ad-hoc behavioural diff between two builds
+scripts/download-dlib-slovenia.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-federal-corpus.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-govdocs1.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-itext-corpus.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-itext.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-pdfbox.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-pdfium-corpus.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-pdfium.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-pdfjs-corpus.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-pdfua-matterhorn.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-poppler-corpus.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-safedocs.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-smoke-corpus.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-standards-image-corpora.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-tessdata.ps1   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-tessdata.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-test-pdfs.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/download-xray.sh   # fetches an optional corpus/tool; prerequisites are declared per row
+scripts/enrich-pdf-capability-registry.py   # registry curation
+scripts/extract-pdf20-requirements.py   # registry curation
+scripts/fix-redactarea-calls.sh   # historical one-off refactor script; candidate for deletion
+scripts/fix_all_redactarea_final.py   # historical one-off refactor script; candidate for deletion
+scripts/fix_redactarea_calls.py   # historical one-off refactor script; candidate for deletion
+scripts/fix_redactarea_phase2.py   # historical one-off refactor script; candidate for deletion
+scripts/fix_redactarea_phase3.py   # historical one-off refactor script; candidate for deletion
+scripts/fix_redactarea_phase4.py   # historical one-off refactor script; candidate for deletion
+scripts/fix_remaining_redactarea.sh   # historical one-off refactor script; candidate for deletion
+scripts/gen-adversarial-redaction-corpus.py   # fixture generation (bench)
+scripts/gen-redaction-corpus.py   # fixture generation (bench)
+scripts/generate-encrypted-test-pdfs.sh   # fixture generation
+scripts/generate-hybrid-xrefstm-fixture.py   # fixture generation
+scripts/generate-icons.sh   # asset generation
+scripts/generate-license-manifest.sh   # invoked by verify-license-manifest.sh (row license-manifest)
+scripts/generate-pdf20-image-fixtures.py   # fixture generation
+scripts/generate-rendering-regression-fixtures.py   # fixture generation
+scripts/generate_change_coupling.py   # architecture analysis helper
+scripts/gui.sh   # launches the GUI for manual review
+scripts/import-github-issues.sh   # one-time issue import
+scripts/lib-runner.sh   # library sourced by every runner
+scripts/mine-hard-redaction-cases.py   # bench corpus mining
+scripts/monitor-exploratory-corpus.sh   # progress monitor for a running corpus scan
+scripts/profile-test-rss-by-filter.sh   # measurement helper (#861)
+scripts/release-smoke.sh   # RUNNER: t2
+scripts/report-hotspots.sh   # invoked at the end of run-full-suite
+scripts/report-save-size-ratios.sh   # measurement helper
+scripts/rescan-all-corpora.sh   # manual re-scan helper
+scripts/rescan-all-pages.sh   # manual re-scan helper
+scripts/run-conformance.sh   # dispatcher over conformance suites for humans; the gates it wraps are rows
+scripts/run-copy-unicode-quality-harness.sh   # convenience over tests already run by Excise.Core.Tests / Excise.Avalonia.Tests / app-tests-unchunked-evidence; its --parity lane IS row copy-whitespace-parity
+scripts/run-exploratory-corpus-tmux.sh   # tmux wrapper over the corpus-scan rows for humans
+scripts/run-full-suite.sh   # RUNNER: full
+scripts/run-gui-display-sweep.sh   # manual sharded fallback for the 144-page sweep that every full App.Tests pass already runs (PdfViewerHeadlessRenderTests self-shards); docs/RELEASE_CHECKLIST.md
+scripts/run-local-real-world-gui-display.sh   # restricted local corpus, self-oracle, >=30 min; the property is already a BLOCK gate on 144 pages
+scripts/run-packaged-gui-smoke.sh   # invoked by release-smoke run_packaged_gui_gate (row packaged-gui)
+scripts/run-pdf-capability-benchmarks.py   # registry evidence collector
+scripts/run-tests.sh   # ad-hoc wrapper over dotnet test with logging
+scripts/run-visual-mutation-trace.sh   # drives the live app; verdict is PNGs for a human (docs/PACKAGED_GUI_SMOKE.md)
+scripts/run-visual-regression-local.sh   # invoked by release-smoke run_visual_gate (row visual)
+scripts/setup-dev.sh   # one-time machine setup
+scripts/setup-github-labels.sh   # one-time GitHub setup
+scripts/setup-local-real-world-corpus.sh   # one-time restricted-corpus setup
+scripts/show-bench-history.sh   # prints the bench history for humans
+scripts/split-pdf-spec-v2.py   # one-off spec splitter (registry authoring)
+scripts/split-pdf-spec-v3.py   # one-off spec splitter (registry authoring)
+scripts/split-pdf-spec.py   # one-off spec splitter (registry authoring)
+scripts/split-pdf20-spec-v2.py   # one-off spec splitter (registry authoring)
+scripts/split-pdf20-spec.py   # one-off spec splitter (registry authoring)
+scripts/t.sh   # ad-hoc single-project test runner (#950); replaces the deleted wrappers
+scripts/test-tier.sh   # RUNNER: front door, t0/t1
+scripts/test.sh   # ad-hoc: dotnet test over the solution
+scripts/triage-corpus-nonpass.sh   # triage before pinning a scan result (CLAUDE.md)
+scripts/update-corpus-expectations.sh   # writes the corpus expectation manifests after triage
+scripts/validate-all-categories.sh   # manual validation sweep
+scripts/validate_json_schema.py   # helper invoked by registry scripts
+scripts/.run-full-conformance.sh   # tracked despite the dot; manual conformance dispatcher

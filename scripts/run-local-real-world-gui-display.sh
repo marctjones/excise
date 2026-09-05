@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# TOOLING — not a gate (tests/gates-tooling.txt): restricted local corpus, self-oracle, >=30 min; the property is already a BLOCK gate on 144 pages
 # Run the optional local-real-world book GUI display suite in bounded chunks.
 # This avoids the per-test xUnit timeout that a single 700+ page GUI sweep hits.
 

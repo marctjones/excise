@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# TOOLING — not a gate (tests/gates-tooling.txt): manual sharded fallback; every full App.Tests pass already runs the 144-page sweep (PdfViewerHeadlessRenderTests self-shards)
 #
 # GUI display sweep, sharded (#619).
 #
