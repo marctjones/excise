@@ -35,7 +35,7 @@ miss() { # miss <message>
     exit 1
   fi
   echo "SKIP: $1"
-  exit 0
+  exit 77   # prerequisite missing (LOCAL_GATES.md): the runner shows a SKIPPED row, never a green
 }
 
 if ! command -v pdftotext >/dev/null 2>&1; then
