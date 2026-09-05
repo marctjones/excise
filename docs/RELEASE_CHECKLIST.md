@@ -97,7 +97,12 @@ the decisions no row can make.
    interrupted run), no SKIPPED. A `visual` group that skipped for a missing
    prerequisite exits 77, and because the row is `prereqPolicy=skip` that is a
    visible SKIPPED row, counted as `PASS with N SKIPPED` — not release
-   evidence; the candidate run must show every flag-gated row PASS. A KNOWN
+   evidence; the candidate run must show every flag-gated row PASS. The
+   `accessibility` row (tier full,t2) is SKIPPED by default too: its platform
+   probe runs only with `EXCISE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE=1` set AND
+   macOS Accessibility permission granted to the terminal running it (System
+   Settings → Privacy & Security → Accessibility), so set both for the
+   candidate run. A KNOWN
    row is an accepted, OPEN issue — the current acceptances are the
    KNOWN-ISSUE column of `--list <tier>`; list each in the release notes as a
    known limitation. The run directory (`logs/release-smoke_<stamp>/` with

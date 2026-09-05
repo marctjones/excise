@@ -933,7 +933,7 @@ def grade_extraction(start, end, rows_by):
     values = {"aggregateCoverage": round(cov, 4) if cov is not None else None, "pageCount": pages, "worstFloor": floor}
     text = f"{cov:.4f} of mutool's letters over {pages} pages" if cov is not None else f"? over {pages} pages"
     if floor is not None:
-        text += f", worst floor {floor:.3f}"
+        text += f", worst coverage floor {floor:.3f}"
     if nodata:
         label = f"{label}; {nodata}"
     return {"text": text, "values": {"aggregateCoverage": values["aggregateCoverage"]}, "label": label,

@@ -174,7 +174,7 @@ IMPROVE  held: unwired-api 123 baselined (=)
 GRADES vs reference tools
   conformance   NO DATA — no corpus-scan-* agreement line in this run
                 registry strict 0.5% (929/964 modes unknown) — measures paperwork, not code (milestone RC22)
-  extraction    0.9999 of mutool's letters over 332 pages, worst floor 0.946 (=)   [baseline tests/extraction-parity/baseline.json 2026-08-13 (not from this run)]
+  extraction    0.9999 of mutool's letters over 332 pages, worst coverage floor 0.946 (=)   [baseline tests/extraction-parity/baseline.json 2026-08-13 (not from this run)]
   redaction     secure 0.969 A-  vs iText 0.469 F · PyMuPDF 0.629 C · raster 0.984 A   n=127 (=)   [redaction-bench history 2026-08-27 (not from this run)]
   render perf   wall ×3.5 mutool / ×1.5 pdftocairo / ×2.6 gs / ×0.6 pdfbox (median of 6 fixtures); RSS ×1.7 mutool; regressionGate PASS (=)   [2026-08-29 (not from this run)]
   annotations   NO DATA — no logs/annotation-bench_*/summary.txt from this run
@@ -242,8 +242,9 @@ budgets instead.
 
 This closed five gates that used to exit 0 on a missing prerequisite:
 `run-accessibility-smoke.sh` (platform probe not PASS — policy `skip`, the one
-row that stays SKIPPED until Accessibility permission is granted to the
-terminal), `run-visual-regression-local.sh` (any group skipped — the `visual`
+row that stays SKIPPED until BOTH `EXCISE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE=1`
+is in the environment AND macOS Accessibility permission is granted to the
+terminal running it — the probe does not run under either alone), `run-visual-regression-local.sh` (any group skipped — the `visual`
 row is policy `skip`, so it reads SKIPPED), `check-perf-budgets.sh` (corpus or
 budgets file missing), `check-copy-whitespace-parity.sh` (tool or corpus
 missing, non-strict branch) and `verify-bench-tiers.sh` (zero files verified)
