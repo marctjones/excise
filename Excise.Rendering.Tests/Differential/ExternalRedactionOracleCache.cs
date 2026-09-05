@@ -29,6 +29,17 @@ internal sealed class ExternalRedactionOracleCache
         => Get("mutool-text", pdfPath, pageCount.ToString(),
             () => MutoolTextExtractor.ExtractAllPages(pdfPath, pageCount));
 
+    /// <summary>
+    /// The SECOND text oracle, on a different engine (#1372). mutool is MuPDF,
+    /// and PyMuPDF — one of the redactors this bench measures — is that same
+    /// engine through a Python binding, so a MuPDF-only leak verdict asks MuPDF
+    /// to grade MuPDF's own redaction and inherits its blind spots. Poppler is a
+    /// different codebase with a different text-merge implementation.
+    /// </summary>
+    internal string[]? ExtractAllPagesPoppler(string pdfPath, int pageCount)
+        => Get("pdftotext", pdfPath, pageCount.ToString(),
+            () => PdftotextTextExtractor.ExtractAllPages(pdfPath, pageCount));
+
     internal QpdfCheckResult? CheckWithQpdf(string pdfPath)
         => Get("qpdf-check", pdfPath, "--check", () =>
         {
@@ -48,6 +59,24 @@ internal sealed class ExternalRedactionOracleCache
         var rendered = Get("ghostscript-render", pdfPath, $"page={pageNumber};dpi={dpi}", () =>
         {
             using var bitmap = GhostscriptReferenceRenderer.RenderPage(pdfPath, pageNumber, dpi);
+            if (bitmap == null) return new RenderedPage(null);
+            using var image = SKImage.FromBitmap(bitmap);
+            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            return new RenderedPage(data.ToArray());
+        });
+        return rendered?.PngBytes == null ? null : SKBitmap.Decode(rendered.PngBytes);
+    }
+
+    /// <summary>
+    /// The second RENDER engine (#1372). Ghostscript and Poppler are separate
+    /// codebases, so a page both agree on is evidence and a page they disagree
+    /// on is a finding rather than a silent single-oracle verdict.
+    /// </summary>
+    internal SKBitmap? RenderWithPdftocairo(string pdfPath, int pageNumber, int dpi)
+    {
+        var rendered = Get("pdftocairo-render", pdfPath, $"page={pageNumber};dpi={dpi}", () =>
+        {
+            using var bitmap = PdftocairoReferenceRenderer.RenderPage(pdfPath, pageNumber, dpi);
             if (bitmap == null) return new RenderedPage(null);
             using var image = SKImage.FromBitmap(bitmap);
             using var data = image.Encode(SKEncodedImageFormat.Png, 100);

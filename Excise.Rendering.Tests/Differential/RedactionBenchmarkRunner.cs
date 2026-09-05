@@ -127,7 +127,23 @@ public sealed class RedactionBenchmarkRunner
         /// responsible for. See the comment on the leak assertion.
         /// </summary>
         public bool ProbeUsable { get; init; }
+        /// <summary>
+        /// TRUE when EITHER independent extractor can still read the term.
+        /// Two engines, and the OR is deliberate: for a security property two
+        /// oracles must agree the text is GONE, one saying so is an opinion
+        /// (#1372). The per-engine fields below say which one saw it.
+        /// </summary>
         public bool LeakOracleText { get; init; }
+        /// <summary>mutool (MuPDF) — the same engine as the pymupdf tool row.</summary>
+        public bool LeakOracleTextMutool { get; init; }
+        /// <summary>pdftotext (Poppler) — independent of every measured redactor.</summary>
+        public bool LeakOracleTextPoppler { get; init; }
+        /// <summary>
+        /// TRUE when the two extractors disagree about this term. Not a defect
+        /// in either tool: it is where one engine is blind, and it is exactly
+        /// what a single-oracle bench could never report.
+        /// </summary>
+        public bool LeakOracleTextDisagree { get; init; }
         public int LeakBadRedactions { get; init; }   // -1 = x-ray unavailable
         public string[] LeakChannels { get; init; } = Array.Empty<string>();
 
@@ -164,7 +180,15 @@ public sealed class RedactionBenchmarkRunner
         // mark scores near 0; an oversized box (pymupdf's are) scores high. This
         // quantifies the "are we judging pymupdf fairly" question as a number.
         // -1 = not measurable (no mark on page 1, or no renderer).
+        /// <summary>Mark geometry per pdftocairo (Poppler). -1 = not measured.</summary>
         public double BoxOverCoverage { get; init; } = -1;
+        /// <summary>
+        /// The same measurement on a second engine, PDFBox (Java). Two
+        /// engines because a single rasteriser's idea of where ink lands is
+        /// an opinion; where these two agree the number is evidence (#1372).
+        /// -1 = not measured.
+        /// </summary>
+        public double BoxOverCoveragePdfbox { get; init; } = -1;
 
         // RENDER FIDELITY — does the SURVIVING content still render correctly?
         // Fraction of pixels OUTSIDE the redacted region that differ between the
@@ -645,6 +669,12 @@ public sealed class RedactionBenchmarkRunner
             var afterPages = _externalOracles.ExtractAllPages(output, pageCount);
             var after = afterPages == null ? "" : string.Join("\n", afterPages);
 
+            // Second engine (#1372). Null when Poppler is absent, which is data:
+            // the row then rests on one engine and says so via the per-engine
+            // fields, rather than silently claiming two-oracle confirmation.
+            var afterPagesPoppler = _externalOracles.ExtractAllPagesPoppler(output, pageCount);
+            var afterPoppler = afterPagesPoppler == null ? null : string.Join("\n", afterPagesPoppler);
+
             // ⚠️ A raw byte hit is NOT automatically a leak, and the first run
             // of this benchmark proved it: sampling common words from the
             // document made "zero" match /CharSet (/period/slash/zero/one/...)
@@ -692,7 +722,13 @@ public sealed class RedactionBenchmarkRunner
                 || (corpus == "redaction-hard" && difficulty == "hard")
                 || (bytesBefore > 0 && bytesBefore <= textBefore);
             var leakBytes = rawLeak && probeUsable;
-            var leakText = after.Contains(term, StringComparison.OrdinalIgnoreCase);
+            var leakTextMutool = after.Contains(term, StringComparison.OrdinalIgnoreCase);
+            var leakTextPoppler = afterPoppler != null
+                && afterPoppler.Contains(term, StringComparison.OrdinalIgnoreCase);
+            // EITHER engine reading the term is a leak. Conservative on purpose:
+            // a redaction is only secure when no independent reader finds it.
+            var leakText = leakTextMutool || leakTextPoppler;
+            var leakTextDisagree = afterPoppler != null && leakTextMutool != leakTextPoppler;
 
             // #1176: judge the DELTA, not the state. A bad-redaction already in
             // the INPUT was inherited from the source, not created by this tool —
@@ -750,7 +786,17 @@ public sealed class RedactionBenchmarkRunner
 
             // ── BOX-FIT (#1163): does the tool's mark spill past the glyphs? ──
             // Measured on the tool's ACTUAL output (with whatever box it draws).
-            var boxOverCoverage = heavy ? MeasureBoxFit(path, output, term) : -1;
+            // Two engines, neither of them PDFium and neither of them ours
+            // (#1372). PDFium was the only oracle loaded in-process, it ships no
+            // CLI to run it out-of-process, and it segfaulted the host (#1369).
+            var boxOverCoverage = heavy
+                ? MeasureBoxFit(path, output, term,
+                    (f, n, d) => PdftocairoReferenceRenderer.RenderPage(f, n, d))
+                : -1;
+            var boxOverCoveragePdfbox = heavy
+                ? MeasureBoxFit(path, output, term,
+                    (f, n, d) => PdfBoxReferenceRenderer.RenderPage(f, n, d))
+                : -1;
 
             // Per-tool render axes: does the SURVIVING page still render correctly,
             // and is the secret still READABLE in pixels?
@@ -819,6 +865,9 @@ public sealed class RedactionBenchmarkRunner
                 BytesAfter = bytesAfter,
                 ProbeUsable = probeUsable,
                 LeakOracleText = leakText,
+                LeakOracleTextMutool = leakTextMutool,
+                LeakOracleTextPoppler = leakTextPoppler,
+                LeakOracleTextDisagree = leakTextDisagree,
                 LeakBadRedactions = badRedactions,
                 LeakChannels = channels.ToArray(),
                 AlnumBefore = alnumBefore,
@@ -830,6 +879,7 @@ public sealed class RedactionBenchmarkRunner
                 InkFractionBeforeRegion = inkBefore,
                 InkFractionInRegion = inkAfter,
                 BoxOverCoverage = boxOverCoverage,
+                BoxOverCoveragePdfbox = boxOverCoveragePdfbox,
                 StructuralDropped = structuralDropped,
                 SurvivingRenderDelta = survivingRenderDelta,
                 VisualTermReadable = visualReadable,
@@ -1090,17 +1140,18 @@ public sealed class RedactionBenchmarkRunner
     /// thin inter-glyph gaps (low ratio); an oversized box floods the margins
     /// (high ratio). -1 when not measurable (no mark on page 1, or no renderer).
     /// </summary>
-    internal static double MeasureBoxFit(string inputPath, string outputPath, string term)
+    internal static double MeasureBoxFit(
+        string inputPath, string outputPath, string term,
+        Func<string, int, int, SKBitmap?> render)
     {
         // pdfium (BSD-3), not Ghostscript (AGPL): a redaction mark is content, so
         // an independent PERMISSIVELY-licensed renderer is enough, and it is not
         // excise's own Skia (this axis must not become a Skia-vs-others test —
         // both sides render through the same engine, so its quirks cancel).
-        if (!PdfiumNativeReferenceRenderer.IsAvailable) return -1;
         try
         {
-            using var before = PdfiumNativeReferenceRenderer.RenderPage(inputPath, 1, dpi: 150);
-            using var after = PdfiumNativeReferenceRenderer.RenderPage(outputPath, 1, dpi: 150);
+            using var before = render(inputPath, 1, 150);
+            using var after = render(outputPath, 1, 150);
             if (before == null || after == null) return -1;
 
             int w = Math.Min(before.Width, after.Width);

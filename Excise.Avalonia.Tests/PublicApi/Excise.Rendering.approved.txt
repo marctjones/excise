@@ -141,6 +141,14 @@ namespace Excise.Rendering.Differential
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword, string? ownerPassword = null) { }
     }
+    public static class PdftotextTextExtractor
+    {
+        public static bool IsAvailable { get; }
+        public static string? ExtractAll(string pdfPath, int timeoutMs = 120000) { }
+        public static string[]? ExtractAllPages(string pdfPath, int pageCount, int timeoutMs = 120000) { }
+        public static string? ExtractPage(string pdfPath, int pageNumber, int timeoutMs = 30000) { }
+        public static string? ExtractPage(string pdfPath, int pageNumber, string? password, int timeoutMs = 30000) { }
+    }
     public sealed class QpdfAnnotation : System.IEquatable<Excise.Rendering.Differential.QpdfAnnotation>
     {
         public QpdfAnnotation(string Subtype, double Left, double Bottom, double Right, double Top, int? VertexCount, int? InkStrokeCount, string? EndLineEnding, System.Collections.Generic.IReadOnlyList<double>? QuadPoints, string? Contents, System.Collections.Generic.IReadOnlyList<double>? Vertices, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<double>>? InkStrokes, System.Collections.Generic.IReadOnlyList<double>? LineEndpoints, Excise.Rendering.Differential.QpdfAppearance? NormalAppearance) { }
