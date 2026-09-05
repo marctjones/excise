@@ -1041,13 +1041,14 @@ Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
     ├── MutoolReferenceRenderer.cs        # 182 uses in Differential tests
     ├── GhostscriptReferenceRenderer.cs   #  82
-    ├── PdftocairoReferenceRenderer.cs    #  50
+    ├── PdftocairoReferenceRenderer.cs    #  52
     ├── PdftoppmReferenceRenderer.cs      #  18
-    ├── MutoolTextExtractor.cs            # independent TEXT oracle
+    ├── MutoolTextExtractor.cs            # independent TEXT oracle (MuPDF)
+    ├── PdftotextTextExtractor.cs         # SECOND text oracle (Poppler) — #1372
     ├── QpdfReferenceTool.cs              # structure: --check, --show-npages
     ├── PdfiumReferenceRenderer.cs        # 2 uses — arg-builder unit test only, NOT the oracle below
-    ├── PdfiumNativeReferenceRenderer.cs  # 17 uses — the REAL pdfium oracle (#857), see note below the map
-    └── PdfBoxReferenceRenderer.cs        # 15 uses — see note below the map
+    ├── PdfiumNativeReferenceRenderer.cs  # the REAL pdfium oracle (#857) — runs OUT OF PROCESS, see note below the map
+    └── PdfBoxReferenceRenderer.cs        # 16 uses — see note below the map
 
 Excise.App/                          # the Avalonia GUI (orchestration only)
 ├── Services/
@@ -1087,6 +1088,24 @@ Documentation:
 ├── LICENSES.md                     # Dependency licenses
 └── docs/architecture/              # Canonical design and decisions
 ```
+
+⚠️ **PDFium is never loaded into our process** (#1369). It is the only oracle we
+could link, its API is not thread-safe, and a native crash cannot be caught in
+managed code: four threads in `FPDF_LoadPage` killed a test host 13 minutes into
+a four-hour run and lost every result. Two layers now stand between us and that.
+Every `FPDF_*` call is serialised on one lock, and the renderer spawns
+`Excise.RenderTools pdfium-render` rather than linking the library — PDFium
+ships no CLI of its own (`pdfium_test` is not in the binary release), so we host
+it. The in-process path is reachable only via `EXCISE_PDFIUM_INPROC`, which the
+host sets for itself. Callers and the public API are unchanged.
+
+⚠️ **Two engines per measurement in the redaction bench** (#1372). Leaked text is
+read by mutool (MuPDF) *and* pdftotext (Poppler), and a term counts as leaked
+when EITHER sees it. This is not symmetry for its own sake: PyMuPDF is a redactor
+the bench measures and is the same engine as mutool, so a MuPDF-only verdict had
+MuPDF grading its own work. On the first two-engine run Poppler read 14 terms in
+excise's own output that mutool reported as absent, moving excise from 0.969 A-
+to 0.924 B+. A single extractor cannot report its own blind spot.
 
 **The rendering tools CI job provisions all six renderers (#935, re-checked
 2026-08-15).** It is easy to read "six reference renderers" as "six independent

@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 988,
-  "indexedContentSha256": "a9ec300d924918e0ff5daf511519a402f46aaae57fff5172f648b613d802ed4f",
+  "indexedFileCount": 990,
+  "indexedContentSha256": "abb5daf5e1d55b66bec25a875862876f8356fca9a08186d5e102289f5f8eb4da",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -6856,7 +6856,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 430
+      "candidateReferenceCount": 431
     },
     {
       "id": "pdf.17.graphics.color",
@@ -7359,6 +7359,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "output"
+          ]
+        },
+        {
           "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
           "kind": "source",
           "matchedTerms": [
@@ -7654,18 +7663,9 @@
             "output",
             "values"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "output",
-            "values",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 203
+      "candidateReferenceCount": 204
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9441,6 +9441,7 @@
           "kind": "source",
           "matchedTerms": [
             "color",
+            "colour",
             "scan",
             "renderpage"
           ]
@@ -17115,6 +17116,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "color",
+            "colour"
+          ]
+        },
+        {
           "path": "Excise.Rendering/ImageColorConverter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -17569,7 +17578,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 70
+      "candidateReferenceCount": 71
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -35597,7 +35606,8 @@
           "matchedTerms": [
             "annotation",
             "line",
-            "annotation"
+            "annotation",
+            "redact"
           ]
         },
         {
@@ -37151,7 +37161,8 @@
           "matchedTerms": [
             "annotation",
             "ink",
-            "annotation"
+            "annotation",
+            "redact"
           ]
         },
         {
@@ -39070,6 +39081,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "redact",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
           "kind": "source",
           "matchedTerms": [
@@ -39577,20 +39598,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/StructuralInventory.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "redact",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 114
+      "candidateReferenceCount": 115
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -41284,6 +41294,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "alpha",
+            "soft"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -41420,17 +41438,9 @@
             "model",
             "soft"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/AccessibilityRegressionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "model",
-            "modes"
-          ]
         }
       ],
-      "candidateReferenceCount": 126
+      "candidateReferenceCount": 127
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -42505,7 +42515,9 @@
             "appearances",
             "flags",
             "subtypes",
-            "annotation"
+            "action",
+            "annotation",
+            "redact"
           ]
         },
         {
@@ -43260,6 +43272,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
           "kind": "source",
           "matchedTerms": [
@@ -43817,7 +43840,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 65
+      "candidateReferenceCount": 66
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -43943,6 +43966,17 @@
             "redaction",
             "review",
             "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "opt-in",
+            "redaction",
             "action",
             "annotation",
             "redact"
@@ -44658,7 +44692,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 76
+      "candidateReferenceCount": 77
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -45179,6 +45213,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionCompressedCanaryMutationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -45344,7 +45388,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 53
     },
     {
       "id": "pdf.17.interactive.forms",
@@ -45785,7 +45829,9 @@
           "matchedTerms": [
             "appearances",
             "policy",
-            "annotation"
+            "action",
+            "annotation",
+            "redact"
           ]
         },
         {
@@ -51579,7 +51625,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 448
+      "candidateReferenceCount": 451
     },
     {
       "id": "pdf.20.extension.developer",
