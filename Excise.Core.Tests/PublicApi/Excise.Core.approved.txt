@@ -153,6 +153,7 @@ namespace Excise.Core.Automation
         public const string CopyText = "edit.copyText";
         public const string DocumentInfo = "document.info";
         public const string Documentation = "app.documentation";
+        public const string Exit = "app.exit";
         public const string ExportAllPages = "document.exportAllPages";
         public const string ExportCurrentPage = "document.exportCurrentPage";
         public const string ExtractCurrentPage = "document.extractCurrentPage";
@@ -162,6 +163,7 @@ namespace Excise.Core.Automation
         public const string GoToPage = "view.goToPage";
         public const string InsertPagesAfter = "document.insertPagesAfter";
         public const string InsertPagesBefore = "document.insertPagesBefore";
+        public const string JumpToSearchMatch = "search.jumpToMatch";
         public const string KeyboardShortcuts = "app.keyboardShortcuts";
         public const string MakeSearchable = "tools.makeSearchable";
         public const string MoveCurrentPageEarlier = "document.moveCurrentPageEarlier";
@@ -174,6 +176,7 @@ namespace Excise.Core.Automation
         public const string Preferences = "app.preferences";
         public const string PreviousPage = "view.previousPage";
         public const string Print = "document.print";
+        public const string Redo = "edit.redo";
         public const string RemoveCurrentPage = "document.removeCurrentPage";
         public const string RemovePendingRedaction = "redaction.removePending";
         public const string RemoveSelectedPages = "document.removeSelectedPages";
@@ -212,7 +215,11 @@ namespace Excise.Core.Automation
         public const string TogglePolygonMode = "annotation.togglePolygonMode";
         public const string ToggleRedactionMode = "redaction.toggleMode";
         public const string ToggleThumbnails = "view.toggleThumbnails";
+        public const string TypewriterDiscardPendingEdits = "typewriter.discardPendingEdits";
+        public const string TypewriterGoToNextPendingEdit = "typewriter.goToNextPendingEdit";
         public const string TypewriterMode = "edit.typewriterMode";
+        public const string TypewriterSetColor = "typewriter.setColor";
+        public const string Undo = "edit.undo";
         public const string VerifySignatures = "tools.verifySignatures";
         public const string ZoomActualSize = "view.zoomActualSize";
         public const string ZoomFitPage = "view.zoomFitPage";

@@ -99,6 +99,7 @@ def walk(el, stack, rows):
                 "path": menu_path(here),
                 "label": label,
                 "command": cmd,
+                "commandParameter": el.get("CommandParameter"),
                 "shortcut": gesture,
                 "commandId": cid,
             })
@@ -111,6 +112,7 @@ def walk(el, stack, rows):
                 "path": el.get("{http://schemas.microsoft.com/winfx/2006/xaml}Name") or el.get("Name") or "",
                 "label": (el.get("ToolTip.Tip") or el.get("Content") or "").replace("_", ""),
                 "command": cmd,
+                "commandParameter": el.get("CommandParameter"),
                 "shortcut": None,
                 "commandId": cid,
             })
@@ -130,6 +132,7 @@ def mouse_rows() -> list[dict]:
                 "path": f"{path.name}:{m.group(1)}",
                 "label": m.group(1).replace("Event", ""),
                 "command": m.group(2),
+                "commandParameter": None,
                 "shortcut": None,
                 "commandId": None,
             })
@@ -190,6 +193,12 @@ def main() -> int:
         clashes.setdefault(s["shortcut"], []).append(s["path"])
     duplicate_shortcuts = {k: v for k, v in clashes.items() if len(v) > 1}
 
+    parameterised = {}
+    for r in rows:
+        if r["commandId"] and r.get("commandParameter"):
+            parameterised.setdefault(r["commandId"], []).append(r["commandParameter"])
+    parameterised = {k: sorted(set(v)) for k, v in sorted(parameterised.items())}
+
     doc = {
         "schemaVersion": 1,
         "issue": "#1374",
@@ -222,10 +231,12 @@ def main() -> int:
             "cliOnlyCommandIds": len(cli_only_missing_gui),
             "controlsWithNoCommandId": len(unidentified),
             "duplicateShortcuts": len(duplicate_shortcuts),
+            "parameterisedCommandIds": len(parameterised),
         },
         "interactions": rows,
         "keyboardShortcuts": shortcuts,
         "duplicateShortcuts": duplicate_shortcuts,
+        "parameterisedCommandIds": parameterised,
         "commandIdsWithNoGuiPath": unreachable,
         "cliOnlyCommandIds": cli_only_missing_gui,
         "controlsWithNoCommandId": unidentified,

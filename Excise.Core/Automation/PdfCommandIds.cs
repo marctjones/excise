@@ -123,6 +123,17 @@ public static class PdfCommandIds
     /// <summary>#1308 — apply a digital signature to the saved file.</summary>
     public const string SignDocument = "app.signDocument";
 
+    // #1375 — controls that existed with no automation identity, so no scripting
+    // surface could reach them. The two parameterised ones take their value from
+    // the control's CommandParameter rather than getting one id per swatch.
+    public const string Undo = "edit.undo";
+    public const string Redo = "edit.redo";
+    public const string Exit = "app.exit";
+    public const string TypewriterSetColor = "typewriter.setColor";
+    public const string TypewriterDiscardPendingEdits = "typewriter.discardPendingEdits";
+    public const string TypewriterGoToNextPendingEdit = "typewriter.goToNextPendingEdit";
+    public const string JumpToSearchMatch = "search.jumpToMatch";
+
     public const string RenderPage = "render.page";
     public const string ExtractText = "text.extract";
     public const string ShowLetters = "text.letters";
