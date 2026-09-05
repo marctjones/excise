@@ -146,17 +146,18 @@ Row verdicts, and what to do about each:
 | `PASS` | passed, or passed from a checkpoint (labelled with the evidence date). | none. |
 | `NEW` | a red with no `knownIssue`, or one whose `#N/Substring` qualifier did not match every failure. **Blocks.** | fix it, or file the issue and cite it ("Accepting a red"). |
 | `KNOWN` | a red whose `#N` is OPEN (or could not be verified). Does not block. | keep working on N; nothing to do for this run. |
-| `STALE` | a `#N` cited in the tier's plan whose issue is CLOSED — evaluated for every `#N`, passing rows included. **Fails.** | delete the acceptance from `tests/gates.tsv`. |
+| `STALE` | a `#N` cited by a row of this run's plan whose issue is CLOSED — evaluated for every cited `#N` whatever the row's status (passing, skipped, GRADE, not run). **Fails.** | delete the acceptance from `tests/gates.tsv`. |
+| `INVALID` | a `#N` cited in the plan that names no issue at all (gh: "Could not resolve to an Issue") — a typo or a fabricated acceptance can never expire on its own, so it fails like STALE. | fix or delete the acceptance in `tests/gates.tsv`. |
 | `SKIPPED` | a `prereqPolicy=skip` row whose prerequisite was missing (exit 77). Visible, never green: the verdict reads `PASS with N SKIPPED`, never bare `PASS`. | install the prerequisite (`scripts/check-test-prereqs.sh` names it; the `scripts/download-*.sh` scripts fetch corpora and vendored tools) or leave it visibly skipped — never count it as evidence for a release. |
 | `NOT RUN` | a plan row with no ledger row — an interrupted run. | `full` re-runs resume by default; `t0`/`t1`/`t2` need `--resume`. See "When `full` refuses to start" for the exit-75 case. |
 | `NO DATA` | a GRADE row that produced no number. Appears in the GRADES block only. | verdict unaffected; run `full` for a fresh number. |
 
-Exit codes: **0** clean (possibly `PASS with N SKIPPED`); **1** any NEW red or
-STALE acceptance; **3** any row NOT RUN (an interrupted run can never read
+Exit codes: **0** clean (possibly `PASS with N SKIPPED`); **1** any NEW red, STALE
+or INVALID acceptance; **3** any row NOT RUN (an interrupted run can never read
 green); **2** nothing to report (no or unreadable ledger/plan).
 
 The summary is at most 20 lines: a header, the VERDICT with the per-class tally,
-only the non-PASS rows (NEW first, then KNOWN, STALE, SKIPPED, NOT RUN; capped
+only the non-PASS rows (NEW first, then KNOWN, STALE, INVALID, SKIPPED, NOT RUN; capped
 with `+N more (--full)`), one IMPROVE line, the GRADES block, one footer.
 `--full` appends every row with its status, rc, duration, class, knownIssue,
 log and trx. This is the real report of the `t0` run of 2026-09-05 03:21
@@ -166,7 +167,7 @@ prints, including the one KNOWN line every pre-push run shows until the
 backlog lands on `origin/develop` (a different `base=` token) or #1358 closes:
 
 ```
-excise gates  t0 @7acd63ff (tree DIRTY)  2026-09-05 03:21→03:30 (8m29s)  logs/test-tier_t0_20260905_032147
+excise gates  t0 @7acd63f (tree DIRTY)  2026-09-05 03:21→03:30 (8m29s)  logs/test-tier_t0_20260905_032147
 VERDICT PASS (exit 0)   BLOCK 20/21 pass · IMPROVE 1/1 at-or-above floor · SELFTEST 12/12 · GRADE 0/0 reported   known 1 · skipped 0 · not-run 0 · stale 0 · checkpointed 0
 KNOWN    gate-asymmetry         BLOCK    #1358 OPEN   log matches /base=a87dc32aa8c2: together.
 IMPROVE  held: unwired-api 123 baselined (=)
@@ -174,12 +175,12 @@ GRADES vs reference tools
   conformance   NO DATA — no corpus-scan-* agreement line in this run
                 registry strict 0.5% (929/964 modes unknown) — measures paperwork, not code (milestone RC22)
   extraction    0.9999 of mutool's letters over 332 pages, worst floor 0.946 (=)   [baseline tests/extraction-parity/baseline.json 2026-08-13 (not from this run)]
-  redaction     secure 0.969 A-  vs iText 0.469 F · PyMuPDF 0.629 C · raster 0.984 A   n=127  (=)   [redaction-bench history 2026-08-27 (not from this run)]
+  redaction     secure 0.969 A-  vs iText 0.469 F · PyMuPDF 0.629 C · raster 0.984 A   n=127 (=)   [redaction-bench history 2026-08-27 (not from this run)]
   render perf   wall ×3.5 mutool / ×1.5 pdftocairo / ×2.6 gs / ×0.6 pdfbox (median of 6 fixtures); RSS ×1.7 mutool; regressionGate PASS (=)   [2026-08-29 (not from this run)]
   annotations   NO DATA — no logs/annotation-bench_*/summary.txt from this run
   image codecs  PIXEL_EXACT 445 · MATCHES_ACCEPTED 38 · FAIL 6 · NEEDS_REVIEW 7 · NON_RENDERABLE 3 of 499 pages (=)   [2026-08-19 (not from this run)]
   bench design  NO DATA — no logs/test-tier_t0_20260905_032147/bench-design-coverage.log in this run
-PASS 33 rows (--full lists every row)   knownIssue verification: gh reachable, 1 issue checked
+PASS 33 rows (--full lists every row)   knownIssue verification: gh reachable, 1 checked
 ```
 
 A NEW row looks like this (two lines of the 2026-08-31 full-suite ledger,
