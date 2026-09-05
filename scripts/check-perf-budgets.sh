@@ -60,7 +60,7 @@ Usage: scripts/check-perf-budgets.sh [options]
 Options:
   --runs N            Profiling passes; min per (pdf,step) is compared (default 3).
   --corpus DIR        PDF corpus (default test-pdfs/smoke; get it via
-                      scripts/download-smoke-corpus.sh). Missing dir => SKIP, exit 0.
+                      scripts/download-smoke-corpus.sh). Missing dir => SKIPPED, exit 77 (the runner shows a SKIPPED row).
   --budgets FILE      Budgets file (default tests/perf-budgets/workflow-budgets.json).
   --output-dir DIR    Report/run output (default logs/perf-budgets/latest).
   --mode fail|warn    fail: exit 1 on hard-budget violation (local default).
@@ -103,12 +103,12 @@ case "$TIME_GATE" in fail|warn) ;; *) echo "--time-gate must be fail|warn" >&2; 
 if [ ! -d "$CORPUS" ]; then
     echo "perf-budgets: SKIPPED - corpus not found at $CORPUS"
     echo "perf-budgets: fetch it with scripts/download-smoke-corpus.sh (gitignored)."
-    exit 0
+    exit 77   # prerequisite missing (LOCAL_GATES.md): a SKIPPED row, never a green
 fi
 
 if [ "$UPDATE" != "1" ] && [ ! -f "$BUDGETS" ]; then
     echo "perf-budgets: SKIPPED - budgets file not found at $BUDGETS (run with --update to create it)."
-    exit 0
+    exit 77
 fi
 
 if [ "$CONFIG" != "Release" ]; then

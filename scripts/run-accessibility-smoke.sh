@@ -155,4 +155,12 @@ EOF
 echo "Accessibility smoke report: $REPORT"
 echo "Accessibility test log: $LOG"
 
-[ "$overall" = "PASS" ]
+# Exit 77 is the runners' "prerequisite missing" protocol (LOCAL_GATES.md): the
+# automated groups decide PASS/FAIL, but a platform probe that could not run
+# (no Accessibility grant) means this gate did NOT fully verify, and that must
+# show as a SKIPPED row — never as a green.
+[ "$overall" = "PASS" ] || exit 1
+if [ "$probe_status" != "PASS" ]; then
+    echo "SKIPPED: automated accessibility groups PASS; platform probe $probe_status — ${probe_detail:-}"
+    exit 77
+fi

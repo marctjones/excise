@@ -151,4 +151,10 @@ for r in "${RESULTS[@]}"; do
     esac
 done
 
+# A group that skipped for a missing prerequisite is not a pass: exit 77 so the
+# runner reports a SKIPPED row (LOCAL_GATES.md), never a green.
+if [ "$overall" = 0 ] && printf '%s\n' ${RESULTS[@]+"${RESULTS[@]}"} | grep -q '|SKIP|'; then
+    echo "SKIPPED: a visual group skipped for a missing prerequisite (mutool / test-pdfs/smoke)"
+    exit 77
+fi
 exit "$overall"

@@ -39,3 +39,4 @@ done
 
 echo "bench-tiers: $checked verified, $skipped skipped (corpus absent), $problems problem(s)"
 [ "$problems" -eq 0 ] || { echo "FAIL: a tier manifest no longer matches the bytes it names — rebuild with scripts/build-bench-tiers.py"; exit 1; }
+[ "$checked" -gt 0 ] || { echo "SKIPPED: 0 files verified — every bench corpus is absent (LOCAL_GATES.md: exit 77 is a SKIPPED row, never a green)"; exit 77; }
