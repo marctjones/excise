@@ -5166,6 +5166,18 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "applied",
+              "redaction",
+              "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Core/Content/ContentStream.cs",
             "kind": "source",
             "matchedTerms": [
@@ -5785,6 +5797,18 @@
       "discoveryStatus": "mapped-source-and-test",
       "discoveryCandidates": {
         "source": [
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "applied",
+              "redaction",
+              "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
           {
             "path": "Excise.Core/Content/ContentStream.cs",
             "kind": "source",
@@ -6530,6 +6554,18 @@
       "discoveryStatus": "mapped-source-and-test",
       "discoveryCandidates": {
         "source": [
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "applied",
+              "redaction",
+              "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
           {
             "path": "Excise.Core/Content/ContentStream.cs",
             "kind": "source",
@@ -7307,6 +7343,18 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "applied",
+              "redaction",
+              "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Core/Content/ContentStream.cs",
             "kind": "source",
             "matchedTerms": [
@@ -8037,6 +8085,18 @@
       "discoveryStatus": "mapped-source-and-test",
       "discoveryCandidates": {
         "source": [
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "applied",
+              "redaction",
+              "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
           {
             "path": "Excise.Core/Content/ContentStream.cs",
             "kind": "source",
@@ -48033,6 +48093,16 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "scan",
+              "renderpage"
+            ]
+          },
+          {
             "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
             "kind": "source",
             "matchedTerms": [
@@ -48742,17 +48812,6 @@
             "matchedTerms": [
               "color",
               "colour",
-              "renderpage",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/Integration/MakeSearchableWiringTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "conversion",
-              "scan",
               "renderpage",
               "skiarenderer"
             ]
@@ -48786,6 +48845,16 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "scan",
+              "renderpage"
+            ]
+          },
+          {
             "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
             "kind": "source",
             "matchedTerms": [
@@ -49495,17 +49564,6 @@
             "matchedTerms": [
               "color",
               "colour",
-              "renderpage",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/Integration/MakeSearchableWiringTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "conversion",
-              "scan",
               "renderpage",
               "skiarenderer"
             ]
@@ -49539,6 +49597,16 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour",
+              "scan",
+              "renderpage"
+            ]
+          },
+          {
             "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
             "kind": "source",
             "matchedTerms": [
@@ -50248,17 +50316,6 @@
             "matchedTerms": [
               "color",
               "colour",
-              "renderpage",
-              "skiarenderer"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/Integration/MakeSearchableWiringTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "color",
-              "conversion",
-              "scan",
               "renderpage",
               "skiarenderer"
             ]
@@ -61992,6 +62049,8 @@
             "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
             "kind": "source",
             "matchedTerms": [
+              "color",
+              "colour",
               "output",
               "values"
             ]
@@ -62498,6 +62557,8 @@
             "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
             "kind": "source",
             "matchedTerms": [
+              "color",
+              "colour",
               "output",
               "values"
             ]
@@ -62957,6 +63018,8 @@
             "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
             "kind": "source",
             "matchedTerms": [
+              "color",
+              "colour",
               "output",
               "values"
             ]
@@ -128039,6 +128102,14 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour"
+            ]
+          },
+          {
             "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
             "kind": "source",
             "matchedTerms": [
@@ -128672,6 +128743,14 @@
       "discoveryCandidates": {
         "source": [
           {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour"
+            ]
+          },
+          {
             "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
             "kind": "source",
             "matchedTerms": [
@@ -129304,6 +129383,14 @@
       "discoveryStatus": "source-and-test-candidates",
       "discoveryCandidates": {
         "source": [
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour"
+            ]
+          },
           {
             "path": "Excise.Core/ColorSpaces/PdfColorConverter.cs",
             "kind": "source",
@@ -154362,6 +154449,8 @@
             "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
             "kind": "source",
             "matchedTerms": [
+              "color",
+              "colour",
               "output",
               "values"
             ]

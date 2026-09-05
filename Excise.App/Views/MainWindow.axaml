@@ -60,15 +60,15 @@
                 <Separator/>
                 <MenuItem Header="_Close Document" Command="{Binding CloseDocumentCommand}" InputGesture="Ctrl+W"
                           access:CommandAccessibility.CommandId="app.closeDocument"/>
-                <MenuItem Header="E_xit" Command="{Binding ExitCommand}" InputGesture="Alt+F4"/>
+                <MenuItem Header="E_xit" Command="{Binding ExitCommand}" access:CommandAccessibility.CommandId="app.exit" InputGesture="Alt+F4"/>
             </MenuItem>
 
             <!-- EDIT MENU -->
             <MenuItem Header="_Edit">
-                <MenuItem Header="{Binding UndoMenuHeader}" Command="{Binding UndoCommand}" InputGesture="Ctrl+Z"
+                <MenuItem Header="{Binding UndoMenuHeader}" Command="{Binding UndoCommand}" access:CommandAccessibility.CommandId="edit.undo" InputGesture="Ctrl+Z"
                           IsEnabled="{Binding CanUndo}"
                           AutomationProperties.Name="Undo"/>
-                <MenuItem Header="{Binding RedoMenuHeader}" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y"
+                <MenuItem Header="{Binding RedoMenuHeader}" Command="{Binding RedoCommand}" access:CommandAccessibility.CommandId="edit.redo" InputGesture="Ctrl+Y"
                           IsEnabled="{Binding CanRedo}"
                           AutomationProperties.Name="Redo"/>
                 <Separator/>
@@ -97,11 +97,11 @@
                      typewriter mode. These affordances make them impossible to lose
                      silently: reach every off-page edit, or explicitly discard. -->
                 <MenuItem Header="Go to Next Pending Type-over Edit"
-                          Command="{Binding GoToNextPendingTypewriterEditCommand}"
+                          Command="{Binding GoToNextPendingTypewriterEditCommand}" access:CommandAccessibility.CommandId="typewriter.goToNextPendingEdit"
                           IsEnabled="{Binding HasPendingTypewriterEdits}"
                           AutomationProperties.Name="Go to next pending type-over edit"/>
                 <MenuItem Header="Discard Pending Type-over Edits"
-                          Command="{Binding DiscardPendingTypewriterEditsCommand}"
+                          Command="{Binding DiscardPendingTypewriterEditsCommand}" access:CommandAccessibility.CommandId="typewriter.discardPendingEdits"
                           IsEnabled="{Binding HasPendingTypewriterEdits}"
                           AutomationProperties.Name="Discard pending type-over edits"/>
                 <MenuItem Header="_Copy Selected Text" Command="{Binding CopyTextCommand}" InputGesture="Ctrl+C"
@@ -136,35 +136,35 @@
                 <MenuItem Header="Add Stam_p From Drag"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="annotation.addStamp">
-                    <MenuItem Header="Approved" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Approved" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="Approved"/>
-                    <MenuItem Header="Experimental" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Experimental" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="Experimental"/>
-                    <MenuItem Header="Not Approved" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Not Approved" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="NotApproved"/>
-                    <MenuItem Header="As Is" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="As Is" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="AsIs"/>
-                    <MenuItem Header="Expired" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Expired" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="Expired"/>
-                    <MenuItem Header="Not For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Not For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="NotForPublicRelease"/>
-                    <MenuItem Header="Confidential" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Confidential" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="Confidential"/>
-                    <MenuItem Header="Sold" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Sold" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="Sold"/>
-                    <MenuItem Header="Departmental" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Departmental" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="Departmental"/>
-                    <MenuItem Header="Top Secret" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Top Secret" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="TopSecret"/>
-                    <MenuItem Header="Draft" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Draft" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="Draft"/>
-                    <MenuItem Header="For Comment" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="For Comment" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="ForComment"/>
-                    <MenuItem Header="Final" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Final" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="Final"/>
-                    <MenuItem Header="For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="ForPublicRelease"/>
-                    <MenuItem Header="Information Only" Command="{Binding AddStampAnnotationFromDragCommand}"
+                    <MenuItem Header="Information Only" Command="{Binding AddStampAnnotationFromDragCommand}" access:CommandAccessibility.CommandId="annotation.addStamp"
                               CommandParameter="InformationOnly"/>
                 </MenuItem>
                 <MenuItem Header="Add I_mage Stamp From Drag..." Command="{Binding AddImageStampAnnotationFromDragCommand}"
@@ -606,49 +606,49 @@
                                         <TextBlock Text="Text color" FontWeight="Medium" FontSize="11"/>
                                         <WrapPanel>
                                             <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
                                                     CommandParameter="#000000"
                                                     ToolTip.Tip="Black">
                                                 <Border Background="#000000" CornerRadius="2"/>
                                             </Button>
                                             <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
                                                     CommandParameter="#555555"
                                                     ToolTip.Tip="Gray">
                                                 <Border Background="#555555" CornerRadius="2"/>
                                             </Button>
                                             <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
                                                     CommandParameter="#D0021B"
                                                     ToolTip.Tip="Red">
                                                 <Border Background="#D0021B" CornerRadius="2"/>
                                             </Button>
                                             <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
                                                     CommandParameter="#F5A623"
                                                     ToolTip.Tip="Orange">
                                                 <Border Background="#F5A623" CornerRadius="2"/>
                                             </Button>
                                             <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
                                                     CommandParameter="#2E7D32"
                                                     ToolTip.Tip="Green">
                                                 <Border Background="#2E7D32" CornerRadius="2"/>
                                             </Button>
                                             <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
                                                     CommandParameter="#1565C0"
                                                     ToolTip.Tip="Blue">
                                                 <Border Background="#1565C0" CornerRadius="2"/>
                                             </Button>
                                             <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
                                                     CommandParameter="#6A1B9A"
                                                     ToolTip.Tip="Purple">
                                                 <Border Background="#6A1B9A" CornerRadius="2"/>
                                             </Button>
                                             <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
                                                     CommandParameter="#FFFFFF"
                                                     ToolTip.Tip="White">
                                                 <Border Background="#FFFFFF" CornerRadius="2"/>
@@ -1297,7 +1297,7 @@
                                             BorderThickness="1"
                                             CornerRadius="6"
                                             Cursor="Hand"
-                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).JumpToSearchMatchCommand}"
+                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).JumpToSearchMatchCommand}" access:CommandAccessibility.CommandId="search.jumpToMatch"
                                             CommandParameter="{Binding}">
                                         <StackPanel Spacing="4">
                                             <Grid ColumnDefinitions="*,Auto">
