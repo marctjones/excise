@@ -114,6 +114,7 @@ namespace Excise.Rendering.Differential
     public static class PdfiumNativeReferenceRenderer
     {
         public static bool IsAvailable { get; }
+        public static string? UnavailableReason { get; }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null, bool renderAnnotations = false) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null, bool renderAnnotations = false) { }
     }
@@ -144,7 +145,6 @@ namespace Excise.Rendering.Differential
     public static class PdftotextTextExtractor
     {
         public static bool IsAvailable { get; }
-        public static string? ExtractAll(string pdfPath, int timeoutMs = 120000) { }
         public static string[]? ExtractAllPages(string pdfPath, int pageCount, int timeoutMs = 120000) { }
         public static string? ExtractPage(string pdfPath, int pageNumber, int timeoutMs = 30000) { }
         public static string? ExtractPage(string pdfPath, int pageNumber, string? password, int timeoutMs = 30000) { }
