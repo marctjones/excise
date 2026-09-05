@@ -6,6 +6,28 @@ semantic versioning.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [3.9.2] - 2026-09-05
+
+151 commits since 3.9.1. Nothing user-facing changed in the PDF engine; this
+release is testing infrastructure, one GUI capability that was implemented but
+unreachable, and the measurement work that found several real defects.
+
+### Added
+- **Sign Document** in the File menu (#1308). The signature service existed and
+  was tested but no production code could reach it — deterministic reachability
+  found it callable only from the test project. It signs the file on disk and
+  refuses while edits are unsaved, because excise saves by full rewrite and that
+  invalidates any signature already present.
+- **A registry of every interactive GUI function** (#1374): 93 menu items, 45
+  toolbar buttons, 9 viewer mouse gestures and 28 keyboard shortcuts, each joined
+  to the command it invokes, and gated so a command cannot silently become
+  unreachable.
+- **Every control now carries an automation identity** (#1375), including the
+  parameterised ones — 15 stamp items and 8 colour swatches share a verb and
+  record their parameter values.
+
 Nothing user-facing has shipped since 3.9.1. The 137 commits on `develop` are
 tooling, architecture registries, and CLI refactors — with three exceptions
 noted under Fixed.
