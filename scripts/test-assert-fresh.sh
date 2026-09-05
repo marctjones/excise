@@ -53,6 +53,23 @@ python3 "$ROOT/scripts/assert_fresh_build.py" --repo-root "$WORK" \
     "$WORK/Lib.Tests/Lib.Tests.csproj" >/dev/null 2>&1 \
     || fail "fresh output should pass"
 
+# A .sln target. Solution files write project paths with backslashes on every
+# platform; the guard must normalise them or it crashes before checking anything
+# (the redaction suites target excise.sln and never ran in the first manifest-
+# driven full run, 2026-09-05; #1367).
+cat > "$WORK/Work.sln" <<'EOF'
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib.Tests", "Lib.Tests\Lib.Tests.csproj", "{11111111-1111-1111-1111-111111111111}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib", "Lib\Lib.csproj", "{22222222-2222-2222-2222-222222222222}"
+EndProject
+EOF
+touch -t 202601010101 "$WORK/Work.sln"
+
+python3 "$ROOT/scripts/assert_fresh_build.py" --repo-root "$WORK" \
+    "$WORK/Work.sln" >/dev/null 2>"$WORK/sln.err" \
+    || fail "a solution whose project paths use backslashes must resolve: $(cat "$WORK/sln.err")"
+
 touch -t 202601010103 "$WORK/Lib.Tests/ThingTests.cs"
 
 if python3 "$ROOT/scripts/assert_fresh_build.py" --repo-root "$WORK" \
