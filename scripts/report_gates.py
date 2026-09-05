@@ -137,6 +137,7 @@ GRADE_ROWS = {
     "annotations": "annotation-bench",
     "image codecs": "image-conformance",
     "bench design": "bench-design-coverage",
+    "test evidence": "pdf-registry-outcomes",
 }
 GRADE_ROW_NAMES = {v for v in GRADE_ROWS.values() if v} | {f"corpus-scan-{c}" for c, _ in CORPORA}
 PASSING = ("PASS", "SKIP_CHECKPOINTED")
@@ -1110,6 +1111,39 @@ def grade_image_codecs(start, end, rows_by):
     return {"text": text, "values": values, "label": label, "nodata": False}
 
 
+def grade_test_evidence(log_dir, rows_by):
+    """The capability registry's test-outcomes snapshot (#1366): this run's import when the
+    pdf-registry-outcomes row produced one, else the committed snapshot with its date."""
+    name = "pdf-registry-outcomes"
+    nodata = _grade_row_nodata(rows_by, name)
+    r = rows_by.get(name)
+    base = Path(r["log"]).parent if r and r.get("log") else Path(log_dir)
+    src = read_json(base / "registry-outcomes" / "import-summary.json")
+    if not isinstance(src, dict):
+        src = None
+    if nodata:
+        # A row that did not PASS produced no evidence, whatever it left on disk.
+        return {"text": f"NO DATA — {nodata}", "values": {}, "label": "", "nodata": True}
+    label = name
+    if src is None:
+        snap = read_json(Path(ROOT) / "test-pdfs/manifests/pdf-spec-registry/generated/test-outcomes.json")
+        s = snap.get("summary") if isinstance(snap, dict) else None
+        if not isinstance(s, dict) or s.get("tests") is None:
+            return {"text": "NO DATA — no committed test-outcomes snapshot with a summary", "values": {}, "label": "", "nodata": True}
+        o = s.get("outcomes") if isinstance(s.get("outcomes"), dict) else {}
+        src = {"trxFiles": s.get("trxFiles"), "tests": s.get("tests"), "passed": o.get("Passed", 0),
+               "failed": o.get("Failed", 0), "notExecuted": o.get("NotExecuted", 0)}
+        label = f"committed snapshot {str(snap.get('recordedAt') or '?')[:10]} (not from this run)"
+    if src.get("tests") is None:
+        return {"text": "NO DATA — import-summary.json has no test count", "values": {}, "label": "", "nodata": True}
+    trx, tests = to_int(src.get("trxFiles"), 0), to_int(src.get("tests"), 0)
+    passed, failed, ne = to_int(src.get("passed"), 0), to_int(src.get("failed"), 0), to_int(src.get("notExecuted"), 0)
+    text = f"{trx} trx · {tests} tests: {passed} passed, {failed} failed, {ne} not executed"
+    if isinstance(src.get("committed"), dict):
+        text += f" — committed {to_int(src['committed'].get('tests'), 0)} ({to_int(src.get('deltaTests'), 0):+d})"
+    return {"text": text, "values": {"tests": tests, "failed": failed}, "label": label, "nodata": False}
+
+
 def grade_bench_design(log_dir, rows_by):
     nodata = _grade_row_nodata(rows_by, "bench-design-coverage")
     r = rows_by.get("bench-design-coverage")
@@ -1413,10 +1447,11 @@ def main(argv):
         "annotations": grade_annotations(start, end, rows_by),
         "image codecs": grade_image_codecs(start, end, rows_by),
         "bench design": grade_bench_design(log_dir, rows_by),
+        "test evidence": grade_test_evidence(log_dir, rows_by),
     }
     grades["redaction"] = grade_redaction(log_dir, start, end, rows_by)
     fmts = {"conformance": "{:+.1f}", "extraction": "{:+.4f}", "redaction": "{:+.3f}", "render perf": "{:+.2f}",
-            "image codecs": "{:+d}", "bench design": "{:+d}"}
+            "image codecs": "{:+d}", "bench design": "{:+d}", "test evidence": "{:+d}"}
     grade_lines = ["GRADES vs reference tools"]
     for key in GRADE_ROWS:
         g = grades[key]
@@ -1517,6 +1552,7 @@ _SELF_MANIFEST = [
     ("theta", "BLOCK", "t0", "script", "scripts/theta.sh", "-", "-", "-", "tool:nonesuch", "skip", "policy=skip row"),
     ("kappa", "BLOCK", "full", "script", "scripts/kappa.sh", "-", "-", "#99", "-", "fail", "BLOCK citing an issue that does not exist"),
     ("lam", "GRADE", "full", "script", "scripts/lam.sh", "-", "-", "#1", "-", "skip", "GRADE citing CLOSED #1"),
+    ("pdf-registry-outcomes", "GRADE", "full", "script", "scripts/check-pdf-capability-registry.sh --refresh-outcomes $LOG_DIR", "-", "-", "-", "-", "skip", "GRADE evidence row (#1366)"),
     ("mu", "BLOCK", "full", "script", "scripts/mu.sh", "-", "-", "#1", "tool:nonesuch", "skip", "policy=skip row citing CLOSED #1"),
     ("nu", "BLOCK", "full", "script", "scripts/nu.sh", "-", "-", "#1/broke", "-", "fail", "qualified cite of CLOSED #1 (the real manifest's gate-asymmetry shape)"),
 ]
@@ -1911,6 +1947,36 @@ def _selftest_cases(t):
     t.grep("(15) the torn row is NOT RUN and says torn", r"^NOT RUN +theta +BLOCK +- +ledger row torn")
     rep = read_json(d / "report.json")
     t.expect("(15) report.json records the torn row", isinstance(rep, dict) and rep.get("tornLedgerRows") == ["theta"], str(rep.get("tornLedgerRows") if isinstance(rep, dict) else rep))
+
+    # (16) 'test evidence' grade (#1366). The committed snapshot exists throughout, so the
+    #      NO_RESULT sub-case proves the row's verdict wins over evidence on disk.
+    snap = Path(ROOT) / "test-pdfs" / "manifests" / "pdf-spec-registry" / "generated"; snap.mkdir(parents=True, exist_ok=True)
+    (snap / "test-outcomes.json").write_text(json.dumps({"recordedAt": "2026-09-05T08:00:00+00:00", "summary": {"trxFiles": 50, "tests": 6847, "outcomes": {"Passed": 5925, "Failed": 3, "NotExecuted": 919}}}))
+    imp = {"trxFiles": 74, "tests": 8186, "passed": 7264, "failed": 3, "notExecuted": 919, "committed": {"tests": 6847}, "deltaTests": 1339}
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "pdf-registry-outcomes"]); t.led(d, "alpha", "PASS", 0); t.led(d, "pdf-registry-outcomes", "PASS", 0)
+    (d / "registry-outcomes").mkdir(exist_ok=True)
+    (d / "registry-outcomes" / "import-summary.json").write_text(json.dumps(imp))
+    t.run(d)
+    t.rc_is("(16) a PASS GRADE row with an import summary -> exit 0", 0)
+    t.grep("(16) test evidence reads this run's import", r"^  test evidence 74 trx · 8186 tests: 7264 passed, 3 failed, 919 not executed — committed 6847 \(\+1339\).*\[pdf-registry-outcomes\]")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "pdf-registry-outcomes"]); t.led(d, "alpha", "PASS", 0); t.led(d, "pdf-registry-outcomes", "NO_RESULT", 1)
+    (d / "registry-outcomes").mkdir(exist_ok=True)
+    (d / "registry-outcomes" / "import-summary.json").write_text(json.dumps(imp))
+    t.run(d)
+    t.grep("(16) a NO_RESULT row reads NO DATA even with an import summary on disk", r"^  test evidence NO DATA — pdf-registry-outcomes NO_RESULT")
+    t.nogrep("(16) a NO_RESULT row never falls back to the committed snapshot", r"committed snapshot")
+    t.nogrep("(16) a NO_RESULT row never prints the on-disk import", r"^  test evidence 74 trx")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "pdf-registry-outcomes"]); t.led(d, "alpha", "PASS", 0); t.led(d, "pdf-registry-outcomes", "PASS", 0)
+    (d / "registry-outcomes").mkdir(exist_ok=True)
+    (d / "registry-outcomes" / "import-summary.json").write_text("[1, 2, 3]")
+    t.run(d)
+    t.expect("(16) a malformed import summary does not crash the reporter", t.rc in (0, 1, 3), f"rc={t.rc} {t.err[-200:]}")
+    t.grep("(16) a malformed import summary falls back to the committed snapshot", r"^  test evidence 50 trx · 6847 tests: .*\[committed snapshot 2026-09-05 \(not from this run\)\]")
+    d = t.nd(); t.run_t0(d); t.run(d)
+    t.grep("(16) a t0 run restates the committed snapshot, dated and not from this run", r"^  test evidence 50 trx · 6847 tests: 5925 passed, 3 failed, 919 not executed.*\[committed snapshot 2026-09-05 \(not from this run\)\]")
+    (snap / "test-outcomes.json").write_text(json.dumps({"recordedAt": "2026-09-05T08:00:00+00:00"}))
+    d = t.nd(); t.run_t0(d); t.run(d)
+    t.grep("(16) a snapshot without a summary reads NO DATA, never zero tests", r"^  test evidence NO DATA — no committed test-outcomes snapshot with a summary")
 
 
 if __name__ == "__main__":

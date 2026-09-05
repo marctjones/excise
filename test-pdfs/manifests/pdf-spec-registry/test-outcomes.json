@@ -6,8 +6,6 @@
   ],
   "resultDiscovery": [
     "TestResults/**/*.trx",
-    "logs/full-suite_*/**/*.trx",
-    "logs/release-smoke_*/**/*.trx",
     "**/TestResults/*.trx"
   ],
   "requiredRunMetadata": [
@@ -17,5 +15,5 @@
     "host"
   ],
   "stalenessPolicy": "A result from a different git revision is historical evidence only; it cannot satisfy a current strict-promotion review.",
-  "resultDiscoveryNote": "Discovery MUST cover where the suites actually write. Until 2026-09-04 it listed only TestResults/**/*.trx, which holds the 10 hand-curated registry runs (162 tests) \u2014 while a full-suite run writes 40 TRX files and >12,000 results into logs/full-suite_*/. The registry therefore reported 7 of 964 modes as having a passing recorded contract while the suite was passing 10,332 tests. That was a plumbing defect being read as an evidence deficit."
+  "resultDiscoveryNote": "Discovery here covers only the hand-curated TestResults directories, for a manual run of the collector. Run evidence is imported per run and ONLY per run: the full-tier GRADE row pdf-registry-outcomes calls scripts/check-pdf-capability-registry.sh --refresh-outcomes $LOG_DIR, which passes the trx of every test row in that run's ledger.jsonl (checkpointed rows included) as explicit --trx arguments, so nothing outside the run is unioned in; the snapshot moves only when someone adopts and commits that run's regenerated files (--adopt LOG_DIR). release-smoke (t2) results are deliberately NOT imported: the row is tier full only. Until 2026-09-05 this list also globbed logs/full-suite_*/**/*.trx and logs/release-smoke_*/**/*.trx, so the t0 gate's regeneration depended on whatever a previous run had left under logs/: the first manifest-driven full run reddened its own registry row (trxFiles 50 -> 74) and every t0 after it (#1366). Before 2026-09-04 it listed only TestResults, and the registry reported 7 of 964 modes as having a passing recorded contract while the suite was passing 10,332 tests - a plumbing defect being read as an evidence deficit."
 }

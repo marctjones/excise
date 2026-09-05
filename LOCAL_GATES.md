@@ -183,6 +183,8 @@ GRADES vs reference tools
 PASS 33 rows (--full lists every row)   knownIssue verification: gh reachable, 1 checked
 ```
 
+(The example predates the eighth grade line, `test evidence`, added 2026-09-05 with #1366.)
+
 A NEW row looks like this (two lines of the 2026-08-31 full-suite ledger,
 `logs/full-suite_Debug_20260831_153932`, captured 2026-09-05 before a prior
 `report.json` existed; both were real, un-cited failures at the time):
@@ -197,7 +199,7 @@ prior `report.json` of the same tier: `(=)` unchanged, `(Δ ±x)` moved,
 `(no prior)`. The report writes `<LOG_DIR>/report.json` for the next one to
 diff against and never treats its own file as the prior.
 
-**GRADES.** The block is the same seven lines in every tier, mapped by
+**GRADES.** The block is the same eight lines in every tier, mapped by
 `GRADE_ROWS` in `scripts/report_gates.py` (re-derive from there, not from
 here). Only `full` runs the GRADE rows; `extraction-parity` (a `t1`/`t2`
 IMPROVE row) refreshes the extraction line in those tiers. Every other line in
@@ -213,6 +215,7 @@ a `t0`/`t1` report restates the newest artifact on disk with its own date and
 | `render perf` | `reference-performance` | fresh-process wall/CPU/RSS ratios vs the reference renderers, median of the fixtures; `regressionGate` reported, never enforced | mutool, pdftocairo, Ghostscript, PDFBox |
 | `annotations` | `annotation-bench` | per-annotation rendering agreement, Group A/B separately (#1053) | every independent renderer |
 | `image codecs` | `image-conformance` | PIXEL_EXACT / MATCHES_ACCEPTED / FAIL / NEEDS_REVIEW / NON_RENDERABLE page counts vs the image feature matrix | all oracles |
+| `test evidence` | `pdf-registry-outcomes` | the run's trx — every test row in the run's `ledger.jsonl`, checkpointed rows included — imported into the capability registry's test-outcomes snapshot: trx files, tests, passed / failed / not executed, Δtests vs the committed snapshot (#1366). The regenerated registry files are stashed under `<LOG_DIR>/registry-outcomes/` (pruned with the run dir); `scripts/check-pdf-capability-registry.sh --adopt <LOG_DIR>` moves them into the tree for commit, and t0 reads NEW until that commit lands. The t0 `pdf-capability-registry` row READS the committed snapshot and never regenerates it, so a run's own results cannot redden it; the row is SKIPPED when the generated files are already modified | none — evidence bookkeeping, not a measurement of excise |
 | `bench design` | `bench-design-coverage` | redaction-bench completeness per tier × category (#1185); static | none |
 
 **Known-issue memory.** For each distinct `#N` in the tier's plan the report
@@ -428,6 +431,8 @@ runner they described. Coverage stays an **observation**
 wiring the floors into a tier is #1359.
 
 ## What changed 2026-09-05
+
+- **The registry gate is split** (#1366): the t0 `pdf-capability-registry` row regenerates from committed inputs and READS the test-outcomes snapshot; a full-tier GRADE row `pdf-registry-outcomes` imports the run's trx from its ledger, prints the `test evidence` line, stashes the regenerated files under `<LOG_DIR>/registry-outcomes/` and leaves the tree clean; `--adopt <LOG_DIR>` moves the snapshot. Before this the first full run reddened its own registry row and every t0 after it.
 
 - `tests/gates.tsv` became the single declaration; the runners' own step lists
   are gone, and `scripts/report-gates.sh` decides every exit code.

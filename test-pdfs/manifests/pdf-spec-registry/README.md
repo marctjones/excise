@@ -93,6 +93,15 @@ missing map a traceability deficiency, never proof that the code is absent.
 results with host, Git revision, and .NET version. This closes the distinction
 between a static test reference and a recorded passing/failing execution; stale
 results remain historical rather than silently proving current behavior.
+The import runs once per full run, not in the t0 gate: the `pdf-registry-outcomes`
+GRADE row calls `scripts/check-pdf-capability-registry.sh --refresh-outcomes $LOG_DIR`,
+which passes the trx of every test row in that run's `ledger.jsonl` (checkpointed
+rows included) as explicit `--trx` arguments, reports the delta against the
+committed snapshot and stashes the regenerated files under
+`$LOG_DIR/registry-outcomes/`; `--adopt $LOG_DIR` moves them into the tree for
+commit. release-smoke (t2) results are not imported. The t0
+`pdf-capability-registry` row reads the committed snapshot and never regenerates
+it, so a run's own results cannot redden it (#1366).
 
 `scripts/collect-pdf-reference-tool-evidence.py` probes every registered
 reference tool's executable and version command without giving it a PDF. Its
