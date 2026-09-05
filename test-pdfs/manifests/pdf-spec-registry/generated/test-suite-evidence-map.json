@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "071553390d49a4da0773d48cd428d1233dfb35ee4eb83a6bd25ccfefbf9eb16f",
+  "sourceFingerprint": "dc5276aa0f4fc87fc60764113647b0fdacbb665a1f43f2d82f55461512a5a683",
   "tests": [
     {
       "id": "Excise.Core.Tests/Authoring/AuthoringCoverageTests.cs::AuthoringCoverageTests.TextStyle_WithHelpers_AreImmutableCopies",
@@ -110928,11 +110928,72 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs::PdfDocumentRedactionExtensionsTests.FindTextMatches_DoesNotJoinAHyphenWithinALine",
+      "path": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
+      "class": "PdfDocumentRedactionExtensionsTests",
+      "method": "FindTextMatches_DoesNotJoinAHyphenWithinALine",
+      "line": 205,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "redaction",
+        "document-structure"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.catalog-pages",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.file",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs::PdfDocumentRedactionExtensionsTests.FindTextMatches_DoesNotIncludeLeadingWhitespaceFromAnotherPageBand",
       "path": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
       "class": "PdfDocumentRedactionExtensionsTests",
       "method": "FindTextMatches_DoesNotIncludeLeadingWhitespaceFromAnotherPageBand",
-      "line": 205,
+      "line": 231,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -110993,7 +111054,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
       "class": "PdfDocumentRedactionExtensionsTests",
       "method": "FindTextMatches_RejectsAWordAssembledFromDistantRuns",
-      "line": 223,
+      "line": 249,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -111054,7 +111115,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
       "class": "PdfDocumentRedactionExtensionsTests",
       "method": "FindTextMatches_MapsStringOffsetsPastMultiCharacterGlyphs",
-      "line": 238,
+      "line": 264,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -111127,7 +111188,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
       "class": "PdfDocumentRedactionExtensionsTests",
       "method": "RedactText_RealCanvasFixture_RemovesVisuallyOrderedWord",
-      "line": 260,
+      "line": 286,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -111188,7 +111249,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
       "class": "PdfDocumentRedactionExtensionsTests",
       "method": "FindTextMatches_RealFreecultureFixture_DoesNotInventWordBreakInsideVisibleThat",
-      "line": 290,
+      "line": 316,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -111249,7 +111310,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
       "class": "PdfDocumentRedactionExtensionsTests",
       "method": "RedactText_TightlyLedLines_DoesNotRemoveTheAdjacentLine",
-      "line": 305,
+      "line": 331,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -111310,7 +111371,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
       "class": "PdfDocumentRedactionExtensionsTests",
       "method": "RedactText_DoesNotThrowOnValidInput",
-      "line": 318,
+      "line": 344,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -111371,7 +111432,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
       "class": "PdfDocumentRedactionExtensionsTests",
       "method": "RedactText_ReturnsNonNegativeCount",
-      "line": 328,
+      "line": 354,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -111432,7 +111493,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
       "class": "PdfDocumentRedactionExtensionsTests",
       "method": "RedactText_WithStrategy_AcceptsGlyphRemovalStrategy",
-      "line": 338,
+      "line": 364,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -111505,7 +111566,7 @@
       "path": "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
       "class": "PdfDocumentRedactionExtensionsTests",
       "method": "RedactText_NonExistentText_Returns0",
-      "line": 348,
+      "line": 374,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -197464,16 +197525,16 @@
     }
   ],
   "summary": {
-    "records": 6088,
+    "records": 6089,
     "facets": {
       "annotations": 342,
       "content-and-graphics": 721,
-      "document-structure": 860,
+      "document-structure": 861,
       "fonts": 646,
       "forms": 172,
       "images": 369,
       "product-integration-general": 2602,
-      "redaction": 603,
+      "redaction": 604,
       "safe-save-and-metadata": 486,
       "security-and-encryption": 357,
       "transparency": 43
@@ -197483,9 +197544,9 @@
       "pdf.17.content.streams:parse": 721,
       "pdf.17.content.streams:render": 724,
       "pdf.17.content.streams:write": 721,
-      "pdf.17.document.catalog-pages:parse": 860,
-      "pdf.17.document.catalog-pages:preserve": 860,
-      "pdf.17.document.catalog-pages:write": 860,
+      "pdf.17.document.catalog-pages:parse": 861,
+      "pdf.17.document.catalog-pages:preserve": 861,
+      "pdf.17.document.catalog-pages:write": 861,
       "pdf.17.document.metadata:mutate": 486,
       "pdf.17.document.metadata:preserve": 486,
       "pdf.17.document.metadata:write": 486,
@@ -197517,22 +197578,22 @@
       "pdf.17.interactive.redaction-annotations:preserve": 342,
       "pdf.17.interactive.redaction-annotations:render": 342,
       "pdf.17.interactive.redaction-annotations:write": 1,
-      "pdf.17.security.redaction-content-removal:extract": 603,
-      "pdf.17.security.redaction-content-removal:mutate": 603,
+      "pdf.17.security.redaction-content-removal:extract": 604,
+      "pdf.17.security.redaction-content-removal:mutate": 604,
       "pdf.17.security.redaction-content-removal:preserve": 3,
-      "pdf.17.security.redaction-content-removal:render": 603,
-      "pdf.17.security.redaction-content-removal:write": 603,
+      "pdf.17.security.redaction-content-removal:render": 604,
+      "pdf.17.security.redaction-content-removal:write": 604,
       "pdf.17.syntax.encryption:mutate": 357,
       "pdf.17.syntax.encryption:parse": 357,
       "pdf.17.syntax.encryption:preserve": 357,
       "pdf.17.syntax.encryption:write": 357,
-      "pdf.17.syntax.file:parse": 860,
-      "pdf.17.syntax.file:preserve": 860,
-      "pdf.17.syntax.file:write": 860,
+      "pdf.17.syntax.file:parse": 861,
+      "pdf.17.syntax.file:preserve": 861,
+      "pdf.17.syntax.file:write": 861,
       "pdf.17.syntax.objects:mutate": 486,
-      "pdf.17.syntax.objects:parse": 860,
-      "pdf.17.syntax.objects:preserve": 1219,
-      "pdf.17.syntax.objects:write": 1219,
+      "pdf.17.syntax.objects:parse": 861,
+      "pdf.17.syntax.objects:preserve": 1220,
+      "pdf.17.syntax.objects:write": 1220,
       "pdf.17.transparency.model:parse": 43,
       "pdf.17.transparency.model:render": 44,
       "pdf.20.content.operator-001:parse": 1,
