@@ -707,6 +707,17 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/milestones-baseline.tsv",
             "kind": "test",
             "matchedTerms": [
@@ -1483,6 +1494,17 @@
               "annotations",
               "redaction",
               "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
               "action",
               "annotation",
               "redact"
@@ -2363,6 +2385,17 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/milestones-baseline.tsv",
             "kind": "test",
             "matchedTerms": [
@@ -3230,6 +3263,17 @@
               "annotations",
               "redaction",
               "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
               "action",
               "annotation",
               "redact"
@@ -4117,6 +4161,17 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/milestones-baseline.tsv",
             "kind": "test",
             "matchedTerms": [
@@ -4901,6 +4956,17 @@
               "annotations",
               "redaction",
               "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
               "action",
               "annotation",
               "redact"
@@ -67845,6 +67911,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "link",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -68655,6 +68731,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "link",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -69465,6 +69551,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "link",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -70275,6 +70371,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "link",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -70918,6 +71024,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "freetext",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -71433,6 +71549,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "freetext",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -71948,6 +72074,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "freetext",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -72463,6 +72599,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "freetext",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -73101,6 +73247,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "highlight",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -73739,6 +73895,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "highlight",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -74377,6 +74543,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "highlight",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -75015,6 +75191,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "highlight",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -75371,343 +75557,7 @@
             ]
           },
           {
-            "path": "tests/skia-rasterisation-register.json",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation"
-            ]
-          }
-        ],
-        "architecture": []
-      },
-      "executionStatus": "not-contracted",
-      "recordedChecks": [],
-      "priority": 34,
-      "implementationCandidates": [],
-      "directTestCandidates": [],
-      "atomicFixtures": [],
-      "independentEvidence": [],
-      "nextAction": "review deterministic discovery candidates and accept/reject them"
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-006",
-      "section": "annotation-subtypes",
-      "workflow": "other",
-      "mode": "parse",
-      "currentState": "unknown",
-      "deficiencies": [
-        "no-mapped-implementation-candidate",
-        "no-mapped-direct-test-candidate",
-        "no-accepted-atomic-fixture",
-        "no-accepted-independent-or-corpus-evidence"
-      ],
-      "discoveryStatus": "source-and-test-candidates",
-      "discoveryCandidates": {
-        "source": [
-          {
-            "path": "Excise.Core/Automation/PdfCommandIds.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotation.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/FdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/XfdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering/AnnotationAppearancePolicy.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.App/Services/AnnotationWorkflowService.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "redact"
-            ]
-          }
-        ],
-        "test": [
-          {
-            "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/PdfAnnotationTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/CorpusAppearanceStreamTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/GroupBAnnotationMeaningTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/UI/GuiExpectedEffectTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/UI/TextMarkupAnnotationCommandTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/Unit/AnnotationWorkflowServiceTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "tests/annotation-support-matrix.json",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "tests/annotation-synthesis-policy.json",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "tests/corpus-expectations.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "underline",
-              "annotation"
-            ]
-          },
-          {
-            "path": "tests/gui-interaction-coverage.tsv",
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -75741,6 +75591,362 @@
       "capability": "pdf.20.annotation.subtype-006",
       "section": "annotation-subtypes",
       "workflow": "other",
+      "mode": "parse",
+      "currentState": "unknown",
+      "deficiencies": [
+        "no-mapped-implementation-candidate",
+        "no-mapped-direct-test-candidate",
+        "no-accepted-atomic-fixture",
+        "no-accepted-independent-or-corpus-evidence"
+      ],
+      "discoveryStatus": "source-and-test-candidates",
+      "discoveryCandidates": {
+        "source": [
+          {
+            "path": "Excise.Core/Automation/PdfCommandIds.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotation.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/FdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/XfdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/AnnotationAppearancePolicy.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.App/Services/AnnotationWorkflowService.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "redact"
+            ]
+          }
+        ],
+        "test": [
+          {
+            "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/PdfAnnotationTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/Differential/CorpusAppearanceStreamTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/Differential/GroupBAnnotationMeaningTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation"
+            ]
+          },
+          {
+            "path": "Excise.App.Tests/UI/GuiExpectedEffectTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.App.Tests/UI/TextMarkupAnnotationCommandTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.App.Tests/Unit/AnnotationWorkflowServiceTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "tests/annotation-support-matrix.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/annotation-synthesis-policy.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/corpus-expectations.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/skia-rasterisation-register.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation"
+            ]
+          }
+        ],
+        "architecture": []
+      },
+      "executionStatus": "not-contracted",
+      "recordedChecks": [],
+      "priority": 34,
+      "implementationCandidates": [],
+      "directTestCandidates": [],
+      "atomicFixtures": [],
+      "independentEvidence": [],
+      "nextAction": "review deterministic discovery candidates and accept/reject them"
+    },
+    {
+      "capability": "pdf.20.annotation.subtype-006",
+      "section": "annotation-subtypes",
+      "workflow": "other",
       "mode": "preserve",
       "currentState": "unknown",
       "deficiencies": [
@@ -76054,6 +76260,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -76409,6 +76625,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "underline",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/skia-rasterisation-register.json",
             "kind": "test",
             "matchedTerms": [
@@ -76743,326 +76969,9 @@
               "annotation",
               "redact"
             ]
-          }
-        ],
-        "architecture": []
-      },
-      "executionStatus": "not-contracted",
-      "recordedChecks": [],
-      "priority": 34,
-      "implementationCandidates": [],
-      "directTestCandidates": [],
-      "atomicFixtures": [],
-      "independentEvidence": [],
-      "nextAction": "review deterministic discovery candidates and accept/reject them"
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-007",
-      "section": "annotation-subtypes",
-      "workflow": "other",
-      "mode": "parse",
-      "currentState": "unknown",
-      "deficiencies": [
-        "no-mapped-implementation-candidate",
-        "no-mapped-direct-test-candidate",
-        "no-accepted-atomic-fixture",
-        "no-accepted-independent-or-corpus-evidence"
-      ],
-      "discoveryStatus": "source-and-test-candidates",
-      "discoveryCandidates": {
-        "source": [
-          {
-            "path": "Excise.Core/Automation/PdfCommandIds.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "redact"
-            ]
           },
           {
-            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotation.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/FdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Core/Forms/XfdfSerializer.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering/AnnotationAppearancePolicy.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.App/Services/AnnotationWorkflowService.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "redact"
-            ]
-          }
-        ],
-        "test": [
-          {
-            "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Document/PdfAnnotationTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/CorpusAppearanceStreamTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/GroupBAnnotationMeaningTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/UI/GuiExpectedEffectTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/UI/TextMarkupAnnotationCommandTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "pdfannotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "tests/annotation-support-matrix.json",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "tests/annotation-synthesis-policy.json",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "tests/corpus-expectations.tsv",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "strikeout",
-              "annotation"
-            ]
-          },
-          {
-            "path": "tests/gui-interaction-coverage.tsv",
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -77087,6 +76996,343 @@
       "capability": "pdf.20.annotation.subtype-007",
       "section": "annotation-subtypes",
       "workflow": "other",
+      "mode": "parse",
+      "currentState": "unknown",
+      "deficiencies": [
+        "no-mapped-implementation-candidate",
+        "no-mapped-direct-test-candidate",
+        "no-accepted-atomic-fixture",
+        "no-accepted-independent-or-corpus-evidence"
+      ],
+      "discoveryStatus": "source-and-test-candidates",
+      "discoveryCandidates": {
+        "source": [
+          {
+            "path": "Excise.Core/Automation/PdfCommandIds.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotation.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Core/Document/PdfAnnotationParser.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/FdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core/Forms/XfdfSerializer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/AnnotationAppearancePolicy.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.App/Services/AnnotationWorkflowService.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "redact"
+            ]
+          }
+        ],
+        "test": [
+          {
+            "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Document/PdfAnnotationTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/Differential/CorpusAppearanceStreamTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/Differential/GroupBAnnotationMeaningTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation"
+            ]
+          },
+          {
+            "path": "Excise.App.Tests/UI/GuiExpectedEffectTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.App.Tests/UI/TextMarkupAnnotationCommandTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "pdfannotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/annotation-support-matrix.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/annotation-synthesis-policy.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/corpus-expectations.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "redact"
+            ]
+          }
+        ],
+        "architecture": []
+      },
+      "executionStatus": "not-contracted",
+      "recordedChecks": [],
+      "priority": 34,
+      "implementationCandidates": [],
+      "directTestCandidates": [],
+      "atomicFixtures": [],
+      "independentEvidence": [],
+      "nextAction": "review deterministic discovery candidates and accept/reject them"
+    },
+    {
+      "capability": "pdf.20.annotation.subtype-007",
+      "section": "annotation-subtypes",
+      "workflow": "other",
       "mode": "preserve",
       "currentState": "unknown",
       "deficiencies": [
@@ -77390,6 +77636,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -77724,6 +77980,16 @@
               "annotation",
               "redact"
             ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "strikeout",
+              "annotation",
+              "redact"
+            ]
           }
         ],
         "architecture": []
@@ -78044,6 +78310,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "squiggly",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -78378,6 +78654,16 @@
               "annotation",
               "redact"
             ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "squiggly",
+              "annotation",
+              "redact"
+            ]
           }
         ],
         "architecture": []
@@ -78705,6 +78991,16 @@
               "annotation",
               "redact"
             ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "squiggly",
+              "annotation",
+              "redact"
+            ]
           }
         ],
         "architecture": []
@@ -79025,6 +79321,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "squiggly",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -79544,6 +79850,16 @@
               "annotation",
               "redact"
             ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "square",
+              "annotation",
+              "redact"
+            ]
           }
         ],
         "architecture": []
@@ -80049,6 +80365,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "square",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -80568,6 +80894,16 @@
               "annotation",
               "redact"
             ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "square",
+              "annotation",
+              "redact"
+            ]
           }
         ],
         "architecture": []
@@ -81073,6 +81409,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "square",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -81484,6 +81830,16 @@
               "annotation",
               "redact"
             ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "circle",
+              "annotation",
+              "redact"
+            ]
           }
         ],
         "architecture": []
@@ -81881,6 +82237,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "circle",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -82292,6 +82658,16 @@
               "annotation",
               "redact"
             ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "circle",
+              "annotation",
+              "redact"
+            ]
           }
         ],
         "architecture": []
@@ -82689,6 +83065,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "circle",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -85756,6 +86142,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "polygon",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-hard-cases.tsv",
             "kind": "test",
             "matchedTerms": [
@@ -86131,6 +86527,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "polygon",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -86524,6 +86930,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "polygon",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-hard-cases.tsv",
             "kind": "test",
             "matchedTerms": [
@@ -86899,6 +87315,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "polygon",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -87279,6 +87705,16 @@
               "annotation",
               "redact"
             ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "polyline",
+              "annotation",
+              "redact"
+            ]
           }
         ],
         "architecture": []
@@ -87635,6 +88071,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "polyline",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -88005,6 +88451,16 @@
               "annotation",
               "redact"
             ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "polyline",
+              "annotation",
+              "redact"
+            ]
           }
         ],
         "architecture": []
@@ -88361,6 +88817,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "polyline",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -93421,6 +93887,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "stamp",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -93893,6 +94369,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "stamp",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -94356,6 +94842,16 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "stamp",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/redaction-collateral/baseline.json",
             "kind": "test",
             "matchedTerms": [
@@ -94810,6 +95306,16 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "annotation",
+              "stamp",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "annotation",
@@ -123156,6 +123662,15 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "image",
+              "lab",
+              "image"
+            ]
+          },
+          {
             "path": "tests/redaction-bench-design.json",
             "kind": "test",
             "matchedTerms": [
@@ -123177,15 +123692,6 @@
         "architecture": [
           {
             "path": "docs/architecture/decisions.md",
-            "kind": "architecture",
-            "matchedTerms": [
-              "image",
-              "lab",
-              "image"
-            ]
-          },
-          {
-            "path": "docs/architecture/system-design.md",
             "kind": "architecture",
             "matchedTerms": [
               "image",
@@ -123940,6 +124446,15 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "image",
+              "lab",
+              "image"
+            ]
+          },
+          {
             "path": "tests/redaction-bench-design.json",
             "kind": "test",
             "matchedTerms": [
@@ -123961,15 +124476,6 @@
         "architecture": [
           {
             "path": "docs/architecture/decisions.md",
-            "kind": "architecture",
-            "matchedTerms": [
-              "image",
-              "lab",
-              "image"
-            ]
-          },
-          {
-            "path": "docs/architecture/system-design.md",
             "kind": "architecture",
             "matchedTerms": [
               "image",
@@ -124724,6 +125230,15 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "image",
+              "lab",
+              "image"
+            ]
+          },
+          {
             "path": "tests/redaction-bench-design.json",
             "kind": "test",
             "matchedTerms": [
@@ -124745,15 +125260,6 @@
         "architecture": [
           {
             "path": "docs/architecture/decisions.md",
-            "kind": "architecture",
-            "matchedTerms": [
-              "image",
-              "lab",
-              "image"
-            ]
-          },
-          {
-            "path": "docs/architecture/system-design.md",
             "kind": "architecture",
             "matchedTerms": [
               "image",
@@ -178530,6 +179036,17 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "redaction",
+              "review",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/milestones-baseline.tsv",
             "kind": "test",
             "matchedTerms": [
@@ -179371,6 +179888,17 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "redaction",
+              "review",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "redaction",
@@ -180232,6 +180760,17 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "redaction",
+              "review",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/milestones-baseline.tsv",
             "kind": "test",
             "matchedTerms": [
@@ -181073,6 +181612,17 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "redaction",
+              "review",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "redaction",
@@ -181934,6 +182484,17 @@
             ]
           },
           {
+            "path": "tests/gui-interaction-registry.json",
+            "kind": "test",
+            "matchedTerms": [
+              "redaction",
+              "review",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "tests/milestones-baseline.tsv",
             "kind": "test",
             "matchedTerms": [
@@ -182775,6 +183336,17 @@
           },
           {
             "path": "tests/gui-interaction-coverage.tsv",
+            "kind": "test",
+            "matchedTerms": [
+              "redaction",
+              "review",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "tests/gui-interaction-registry.json",
             "kind": "test",
             "matchedTerms": [
               "redaction",

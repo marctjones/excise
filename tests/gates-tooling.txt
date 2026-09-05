@@ -15,6 +15,7 @@ scripts/build-bench-tiers.py   # regenerates tests/bench-tiers/*.tsv from corpor
 scripts/build-deb.sh   # Linux packaging; no Linux runner today
 scripts/build-image-feature-inventory.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-macos-app.sh   # packaging (release-smoke package gate)
+scripts/build-gui-interaction-registry.py   # invoked by check-gui-interaction-registry.sh (row gui-interaction-registry, #1374)
 scripts/build-pdf-atomic-fixture-map.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-pdf-capability-scorecard.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-pdf-corpus-governance.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
