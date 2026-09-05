@@ -7,6 +7,7 @@ Excise.App.Tests/Unit/RedactionServiceTests.cs::RedactAreas_WithSingleArea_Redac
 Excise.App.Tests/Unit/RedactionWorkflowManagerTests.cs::MarkArea_SetsCorrectProperties  # no independent oracle yet
 Excise.App.Tests/Unit/RedactionWorkflowManagerTests.cs::GetPendingForPage_ReturnsCorrectItems  # no independent oracle yet
 Excise.App.Tests/Unit/RedactionWorkflowManagerTests.cs::MarkArea_EmptyPreviewText_StillAdded  # no independent oracle yet
+Excise.Cli.Tests/AuditInspectionHandlerTests.cs::Execute_DeepAudit_UsesInjectedDifferentialScanner  # handler-wiring test: injects a FakeDifferentialScanner and asserts the audit handler CALLS it; asserts nothing about redaction content. The real scanner is an oracle-backed component tested in Excise.Core.Tests (SavedPdfLeakScanner) — this file exercises plumbing, not removal (#1358)
 Excise.Core.Tests/Content/RedactionBoundsTests.cs::Redaction_AreaPartiallyOverlaps_RemovesIntersecting  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_OptionsOverload_ByteEquivalentToParamOverload  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactArea_OverAcroFormField_RemovesValueAndAppearanceBytes  # no independent oracle yet
@@ -51,8 +52,8 @@ Excise.Core.Tests/Text/Segmentation/LatinLigatureRedactionTests.cs::RedactText_P
 Excise.Core.Tests/Text/Segmentation/LatinLigatureRedactionTests.cs::RedactText_PlainLetterNeedle_RemovesEveryLigature  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/LowContrastHiddenTextTests.cs::BlackTextOnBlackBox_IsFlagged  # DETECTOR unit tests for #1131 low-contrast hiding. Excise.Core.Tests cannot reference Excise.Rendering (x-ray oracle), so the independent check for the audit property lives in Excise.Rendering.Tests/Differential/XRayBadRedactionTests.cs. Unit-level by design, same as HiddenTextDetectorTests.
 Excise.Core.Tests/Text/Segmentation/OverprintedTextRedactionTests.cs::Guard_TheStampsAreWhatMakeTheTextUnsearchable  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs::RedactText_TightlyLedLines_DoesNotRemoveTheAdjacentLine  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs::FindTextMatches_RealFreecultureFixture_DoesNotInventWordBreakInsideVisibleThat  # locator-only positive assertion: verifies that a known visible word split across operators is matched; it neither saves a redacted PDF nor claims that sensitive data is absent
+Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs::RedactText_TightlyLedLines_DoesNotRemoveTheAdjacentLine  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/PdfPageRedactionEndToEndTests.cs::RedactArea_CoveringOneWord_RemovesItFromContentStreamBytes  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/PdfPageRedactionEndToEndTests.cs::RedactArea_AreaHitsNothing_LeavesContentStreamUnchanged  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/PdfPageRedactionEndToEndTests.cs::RedactAreas_MultipleRects_RemovesAllOfThem  # no independent oracle yet

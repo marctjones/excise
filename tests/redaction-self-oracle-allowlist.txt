@@ -5,6 +5,7 @@
 Excise.App.Tests/UI/RedactionMouseWorkflowTests.cs  # no independent oracle yet
 Excise.App.Tests/UI/SecondRedactionSaveScrubTests.cs  # no independent oracle yet
 Excise.App.Tests/Unit/RevealHiddenTextTests.cs  # GUI surface over HiddenTextDetector; same reasoning as the detector's own tests. The property is corroborated by XRayBadRedactionTests, not here.
+Excise.Cli.Tests/AuditInspectionHandlerTests.cs  # handler-wiring test: injects a FakeDifferentialScanner and asserts the audit handler CALLS it; asserts nothing about redaction content. The real scanner is an oracle-backed component tested in Excise.Core.Tests (SavedPdfLeakScanner) — this file exercises plumbing, not removal (#1358)
 Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/HiddenTextDetectorTests.cs  # DETECTOR unit tests. Excise.Core.Tests cannot reference Excise.Rendering (dependency runs the other way), so the independent check for this property lives in Excise.Rendering.Tests/Differential/XRayBadRedactionTests.cs -- x-ray vs excise audit on a deliberately fake redaction, with a positive control (#1122). These tests stay unit-level on purpose.
