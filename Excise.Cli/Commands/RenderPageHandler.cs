@@ -1,6 +1,6 @@
+using System.Buffers.Binary;
 using Excise.Core.Document;
 using Excise.Rendering;
-using SkiaSharp;
 
 namespace Excise.Cli.Commands;
 
@@ -38,26 +38,37 @@ internal static class RenderPageHandler
         if (!string.IsNullOrEmpty(outputDirectory))
             Directory.CreateDirectory(outputDirectory);
 
+        // RenderPageToPng is the library's own render-to-PNG entry point; this
+        // handler used to re-implement its three lines with SKImage/Encode and
+        // was its only production-adjacent caller that did not call it — the
+        // "implemented, tested, zero callers" shape check-unwired-api.sh exists
+        // to catch (#1358).
         var renderer = new SkiaRenderer();
         var options = new RenderOptions { Dpi = request.Dpi };
-        using var bitmap = renderer.RenderPage(
-            document.GetPage(request.PageNumber),
-            options,
-            cancellationToken);
+        using var png = new MemoryStream();
+        renderer.RenderPageToPng(document.GetPage(request.PageNumber), png, options, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var image = SKImage.FromBitmap(bitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        // The bitmap is disposed inside RenderPageToPng; report the dimensions
+        // of what was actually written. PNG IHDR: width then height, big-endian
+        // int32 at byte offsets 16 and 20 (8-byte signature + 4 length + 4 type).
+        if (png.Length < 24)
+            throw new InvalidOperationException("Renderer produced no PNG data.");
+        var header = png.GetBuffer().AsSpan(0, 24);
+        var width = BinaryPrimitives.ReadInt32BigEndian(header.Slice(16, 4));
+        var height = BinaryPrimitives.ReadInt32BigEndian(header.Slice(20, 4));
+
         using var stream = File.Open(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
-        data.SaveTo(stream);
+        png.Position = 0;
+        png.CopyTo(stream);
 
         return new RenderPageResult(
             input.FullName,
             outputPath,
             request.PageNumber,
             request.Dpi,
-            bitmap.Width,
-            bitmap.Height);
+            width,
+            height);
     }
 }
 
