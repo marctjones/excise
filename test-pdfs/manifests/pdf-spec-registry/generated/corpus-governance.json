@@ -205,6 +205,7 @@
         "docs/performance-baselines/2026-07-25-hotpath-baseline/workflow-profile.json",
         "scripts/check-advance-parity.sh",
         "scripts/check-extraction-parity.sh",
+        "scripts/check-oracle-tools.sh",
         "scripts/check-perf-budgets.sh",
         "scripts/diff-behavior.sh",
         "scripts/download-smoke-corpus.sh",
@@ -277,6 +278,7 @@
         "Excise.Rendering.Tests/Differential/RedactionRemoteCollateralTests.cs",
         "Excise.Rendering.Tests/Differential/ReferenceRedactorComparisonTests.cs",
         "scripts/check-copy-whitespace-parity.sh",
+        "scripts/check-oracle-tools.sh",
         "scripts/run-visual-mutation-trace.sh",
         "tests/corpora.tsv",
         "tests/redaction-hard-cases.tsv"
@@ -376,6 +378,7 @@
         "Excise.Rendering/Differential/XRayBadRedactionDetector.cs",
         "scripts/archive-bench-run.sh",
         "scripts/check-no-ignored-sources.sh",
+        "scripts/check-oracle-tools.sh",
         "scripts/check-skip-budget.sh",
         "scripts/check-test-prereqs.sh",
         "scripts/corpus.sh",
@@ -384,6 +387,7 @@
         "scripts/download-pdfium.sh",
         "scripts/download-xray.sh",
         "scripts/setup-dev.sh",
+        "scripts/test-tier.sh",
         "tests/annotation-synthesis-policy.json",
         "tests/corpora.tsv"
       ],
@@ -411,6 +415,7 @@
         "Excise.Rendering/Differential/XRayBadRedactionDetector.cs",
         "scripts/archive-bench-run.sh",
         "scripts/check-no-ignored-sources.sh",
+        "scripts/check-oracle-tools.sh",
         "scripts/check-skip-budget.sh",
         "scripts/check-test-prereqs.sh",
         "scripts/corpus.sh",
@@ -419,6 +424,7 @@
         "scripts/download-pdfium.sh",
         "scripts/download-xray.sh",
         "scripts/setup-dev.sh",
+        "scripts/test-tier.sh",
         "tests/annotation-synthesis-policy.json",
         "tests/corpora.tsv"
       ],
