@@ -9,6 +9,9 @@ from xml.etree import ElementTree as ET
 ROOT=Path(__file__).resolve().parents[1]
 REG=ROOT/'test-pdfs/manifests/pdf-spec-registry'
 OUT=REG/'generated/test-outcomes.json'
+def rel(path):
+ try: return str(path.resolve().relative_to(ROOT))
+ except ValueError: return str(path)
 def command(cmd):
  return subprocess.run(cmd,shell=True,cwd=ROOT,text=True,capture_output=True).stdout.strip() or 'unavailable'
 def main():
@@ -22,9 +25,9 @@ def main():
  result_files=[]
  for file in files:
   root=ET.parse(file).getroot()
-  result_files.append({'path':str(file),'modifiedAt':datetime.fromtimestamp(file.stat().st_mtime, timezone.utc).isoformat(),'sha256':hashlib.sha256(file.read_bytes()).hexdigest()})
+  result_files.append({'path':rel(file),'modifiedAt':datetime.fromtimestamp(file.stat().st_mtime, timezone.utc).isoformat(),'sha256':hashlib.sha256(file.read_bytes()).hexdigest()})
   for item in root.findall('.//{*}UnitTestResult'):
-   outcomes.append({'testName':item.get('testName'),'outcome':item.get('outcome'),'duration':item.get('duration'),'trx':str(file),'resultModifiedAt':result_files[-1]['modifiedAt'],'trxSha256':result_files[-1]['sha256']})
+   outcomes.append({'testName':item.get('testName'),'outcome':item.get('outcome'),'duration':item.get('duration'),'trx':rel(file),'resultModifiedAt':result_files[-1]['modifiedAt'],'trxSha256':result_files[-1]['sha256']})
  # Results directories accumulate runs.  Keep the newest result for each test
  # deterministically instead of counting stale passes alongside a newer failure.
  latest={}

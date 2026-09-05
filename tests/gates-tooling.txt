@@ -41,7 +41,7 @@ scripts/clean-test-artifacts.sh   # housekeeping invoked at the end of run-full-
 scripts/cluster-corpus-defects.sh   # analysis helper over scan output
 scripts/collect-pdf-capability-evidence.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/collect-pdf-reference-tool-evidence.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
-scripts/collect-pdf-test-outcomes.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
+scripts/collect-pdf-test-outcomes.py   # invoked by check-pdf-capability-registry.sh --refresh-outcomes (row pdf-registry-outcomes, #1366); the t0 row reads the committed snapshot
 scripts/common.sh   # library sourced by scripts
 scripts/copy-whitespace-parity.sh   # body invoked by check-copy-whitespace-parity.sh
 scripts/create-missing-v1.3.0-issues.sh   # historical one-off
