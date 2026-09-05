@@ -73,6 +73,38 @@ say() { echo -e "$1"; }
 CONFIG="Debug"
 MODE="run"
 ONLY=""
+
+# --suite <name>: a name for a slice of tier full, expanded to an --only pattern
+# over manifest row names. Deliberately patterns, not step lists: a row added to
+# tests/gates.tsv as redaction-<something> joins the redaction suite with nothing
+# to update here, which is the property the manifest exists to protect. Keep the
+# patterns anchored on the naming convention, never on individual row names.
+suite_pattern() {
+    case "$1" in
+        redaction)  echo 'redaction-|extraction-parity' ;;
+        rendering)  echo 'rendering-|Excise\.Rendering\.Tests|render-quality|image-conformance|annotation-bench|reference-performance|corpus-scan-' ;;
+        benches)    echo 'redaction-bench|reference-performance|annotation-bench|image-conformance|bench-design-coverage' ;;
+        suites)     echo 'redaction-suites|rendering-oracles|Excise\..*\.Tests|app-tests-unchunked-evidence' ;;
+        gates)      echo '' ;;   # everything: tier full unfiltered
+        *)          return 1 ;;
+    esac
+}
+
+list_suites() {
+    cat <<'SUITES'
+--suite names (each is a pattern over tests/gates.tsv row names, expanded at plan time):
+
+  redaction   every redaction gate and bench, plus extraction parity
+              (redaction completeness is bounded by extraction coverage)
+  rendering   every rendering suite, corpus scan, quality scan and rendering bench
+  benches     the GRADE rows only — the numbers vs the reference tools, no gates
+  suites      the test projects and oracle suites only — no benches, no scans
+  gates       everything; identical to tier full with no filter
+
+  scripts/run-full-suite.sh --suite redaction
+  scripts/run-full-suite.sh --list-suites
+SUITES
+}
 FRESH=0
 # Test classes per chunk. Smaller = finer resume granularity and lower peak RSS
 # per testhost, at ~2s of process-start overhead per extra chunk.
@@ -121,6 +153,19 @@ while [ $# -gt 0 ]; do
         --status) MODE="status"; shift ;;
         --release) CONFIG="Release"; shift ;;
         --only) ONLY="${2:-}"; shift 2 ;;
+        --suite)
+            SUITE="${2:-}"
+            if ! ONLY="$(suite_pattern "$SUITE")"; then
+                echo "unknown --suite '$SUITE'" >&2; list_suites >&2; exit 2
+            fi
+            shift 2 ;;
+        --suite=*)
+            SUITE="${1#*=}"
+            if ! ONLY="$(suite_pattern "$SUITE")"; then
+                echo "unknown --suite '$SUITE'" >&2; list_suites >&2; exit 2
+            fi
+            shift ;;
+        --list-suites) list_suites; exit 0 ;;
         --everything) EVERYTHING=1; shift ;;
         --allow-missing-corpora) ALLOW_MISSING_CORPORA=1; shift ;;
         --no-chunking) SKIP_CHUNKING=1; shift ;;
