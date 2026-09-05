@@ -501,16 +501,30 @@ wall-clock timeout and produce a **false red** (observed three times on
 ### Test Tiers — what to run before what (#646)
 
 There is one defined answer to "what do I run before X?" —
-`scripts/test-tier.sh {t0|t1|t2|t3}`. Before this, the choice in practice was
-either *nothing* or the full ~28-minute release smoke, and both are wrong
-most of the time.
+`scripts/test-tier.sh {t0|t1|full|t2|t3}`. Before this, the choice in practice
+was either *nothing* or the ~30-minute release smoke (the 2026-09-04 budget),
+and both are wrong most of the time.
 
-| Tier | Cost | What | When |
+Every gate is one row of `tests/gates.tsv`, and the runners hold no step list
+of their own (`LOCAL_GATES.md` explains the columns). **Do not hand-copy the
+rows here** — `scripts/test-tier.sh --list <tier>` prints them and runs
+nothing; the table below names tiers, not gates. Every run ends with
+`scripts/report-gates.sh`, whose exit code is the runner's: a NEW red blocks,
+a KNOWN one (an OPEN issue cited in the manifest's `knownIssue` cell) does
+not, and a cited issue that has CLOSED reads STALE and fails until the
+acceptance is deleted. `scripts/test-tier.sh --report --latest` re-prints the
+last run's report without running anything.
+
+| Tier | Cost (t0 measured, the others estimated, 2026-09-04 — `LOCAL_GATES.md` "Timings") | What | When |
 |------|------|------|------|
-| `t0` | ~30s | Build + Excise.Core/Cli/Avalonia tests + `check-doc-claim-freshness.sh` + `check-gate-asymmetry.sh` + `verify-true-redaction.sh` | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. |
-| `t1` | ~10m | `t0` + the full redaction test suites + `Excise.Rendering.Tests` (deterministic) + `check-skip-budget.sh` | Before merging anything to `develop`. This is what CI used to block a PR on; there is no CI now (see `LOCAL_GATES.md`), so running it is on you. |
-| `t2` | ~30m | `scripts/release-smoke.sh --release-tests` | Release candidate. |
-| `t3` | — | `t2` plus the same on macOS and Windows (#647) | Before tagging a release. |
+| `t0` | 2–4 min warm, ~5 min cold; 2–3× that under load (8m29s on 2026-09-05) | Build + Excise.Core/Cli/Avalonia tests + the static gates (doc freshness, gate-asymmetry, redaction architecture, registries, selftests) | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. Every clone runs that once; a hook installed before 2026-09-05 must be re-installed (it read no stdin, and the base for gate-asymmetry is the push range on stdin). |
+| `t1` | ~20–25 min | `t0` + the full redaction test suites + `Excise.Rendering.Tests` (deterministic AND the independent-oracle subsets with their floors) + the parity ratchets + the skip budgets + the full `Excise.App.Tests` run | Before merging anything to `develop`. This is what CI used to block a PR on; there is no CI now (see `LOCAL_GATES.md`), so running it is on you. |
+| `full` | ≈3 h | `t1` + every project chunked + the four corpus scans + the release-smoke rows + the GRADE benches; `caffeinate -i scripts/run-full-suite.sh`, resumable | Weekly, and before a release candidate. |
+| `t2` | ~30 min | `scripts/release-smoke.sh --release-tests` — a curated Release-config set, not a superset of `t1` | Release candidate (`docs/RELEASE_CHECKLIST.md`). |
+| `t3` | — | `t2` on this machine, plus a printed reminder that Linux/Windows packaging is untested here — that packaging is a separate issue (`LOCAL_GATES.md`) | Before tagging a release. |
+
+Chain semantics: t0 ⊂ t1 ⊂ full; t2 only when a row lists it. The "~30s"
+this table quoted for `t0` until 2026-09-05 was stale by a factor of 5–10.
 
 **Tier is selected by blast radius — who gets hurt if this is wrong — not by
 convenience.** Pick the tier that matches what the change touches, not the
@@ -523,7 +537,8 @@ The redaction gate is therefore non-negotiable at every tier that produces a
 binary anyone could redact with, including a purely local build: `t0`
 includes the near-free static redaction-architecture guard
 (`verify-true-redaction.sh`); `t1`'s redaction test suites run unconditionally
-and there is no flag to skip them.
+and there is no flag to skip them — their rows are `checkpoint=never` in the
+manifest, so `--resume` re-runs them too.
 
 ### Restartable full runs — `scripts/run-full-suite.sh`
 
@@ -534,32 +549,48 @@ space) killed five concurrent sessions mid-run — the machine went down at
 18:07 and rebooted at 18:12:13.
 
 ```bash
-caffeinate -i scripts/run-full-suite.sh --resume 2>&1 | tee -a logs/full-suite.log
+scripts/test-tier.sh full 2>&1 | tee -a logs/full-suite.log   # = caffeinate -i scripts/run-full-suite.sh; resuming is the default
 scripts/run-full-suite.sh --status    # what's done / what's left
 scripts/run-full-suite.sh --list      # the plan, runs nothing
+scripts/run-full-suite.sh --fresh     # discard the checkpoints, start over
 ```
 
-Re-running after any interruption skips what already passed. `--resume` also
-exists on `test-tier.sh` (all tiers) and `release-smoke.sh`; both default to
-OFF so the pre-push hook keeps skipping nothing.
+Re-running after any interruption skips what already passed. `full` resumes by
+default; `--resume` is opt-in on `test-tier.sh t0/t1/t2` and `release-smoke.sh`
+so the pre-push hook keeps skipping nothing. `--everything` is accepted as a
+no-op — since 2026-09-05 `full` IS everything (the corpus scans, the
+release-smoke rows and the GRADE benches are rows in tier `full` of
+`tests/gates.tsv`); when a corpus is missing, `--allow-missing-corpora` runs
+the rest and lets those scans fail as rows, never dropping them, so such a run
+cannot report green.
 
-Three properties worth not breaking:
+Four properties worth not breaking:
 
 1. **Checkpoints fail toward re-running, never toward skipping.** A panic loses
    buffered writes, so a naive marker file can survive as zero-length metadata
    and read back as "passed" for a step that never ran. Markers are
-   sync-then-atomic-rename and validated on read (non-empty + terminal
-   `--CKPT-OK--` sentinel + recorded commit == HEAD). Anything torn, truncated,
-   or stale re-runs. See `scripts/lib-runner.sh`.
+   sync-then-atomic-rename and validated on read: non-empty, terminal
+   `--CKPT-OK--` sentinel, and a `target=` hash of the row's command (kind,
+   target, filter) that must match — a changed row re-runs, and a marker
+   written before 2026-09-05 has no hash and re-runs once. A marker from a
+   DIFFERENT commit is accepted deliberately (#1027: requiring sha == HEAD
+   made a long run unable to finish by construction) and the span of commits
+   is reported instead. Anything torn or truncated re-runs. See
+   `scripts/lib-runner.sh`.
 2. **The redaction gates are never checkpointed.** They re-run on every
    invocation including resumes — a checkpoint that skipped them would be
-   precisely the flag the rule above says does not exist
-   (`RUNNER_NEVER_CHECKPOINT`).
+   precisely the flag the rule above says does not exist (`checkpoint=never`
+   in the manifest; `RUNNER_NEVER_CHECKPOINT` is the backstop for a step no
+   row declares). `build` is `never` too: on 2026-08-31 a checkpointed build
+   let a stale `Excise.Ocr.dll` through and three skip-budget rows failed at
+   0 s on `assert-fresh`.
 3. **A step matching zero tests is a FAILURE, not a pass.** `dotnet test`
    exits 0 when a `--filter` matches nothing; checkpointing that would bake a
-   vacuous green in permanently. The runner greps for `No test matches the
-   given testcase filter` and fails the step. (This is not hypothetical — the
-   first draft of the runner had exactly this bug.)
+   vacuous green in permanently. The runner counts the tests a `dotnet test`
+   command executed and fails the step at zero — not by grepping for `No test
+   matches the given testcase filter`, which a solution-wide filter prints
+   legitimately for every assembly holding none of the targeted tests. (This
+   is not hypothetical — the first draft of the runner had exactly this bug.)
 4. **A `--no-build` run must prove the binary is fresh.** Shared scripts call
    `scripts/assert-fresh.sh` before `dotnet test --no-build` and refuse when a
    source file is newer than the output DLL. For ad-hoc work, prefer
@@ -1528,7 +1559,10 @@ its checked-in expectation manifest:
     --expectation-manifest tests/corpus-expectations-pdfium.tsv
 ```
 
-All four run under `scripts/run-full-suite.sh --everything`.
+All four are `corpus-scan-*` rows in tier `full` of `tests/gates.tsv`
+(`scripts/test-tier.sh full`; `--everything` is accepted as a no-op). Their
+"excise behaves correctly on N/M" line is the conformance GRADE the report
+prints.
 
 **Do not pin a scan result without triaging it.** The manifests are generated
 by `scripts/update-corpus-expectations.sh`, which writes every status verbatim
