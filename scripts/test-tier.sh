@@ -336,6 +336,68 @@ run_t1() {
     run_step "rendering-deterministic" dotnet test Excise.Rendering.Tests --no-build -c Debug \
         --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
         --logger "console;verbosity=normal"
+
+    # ── Independent-oracle subsets, ported from .github/workflows/rendering-
+    # linux.yml when GitHub Actions was removed (#1360, #1355).
+    #
+    # NOTE the step above deliberately EXCLUDES Corpus and Differential — so
+    # before this block, t1 ran the exact INVERSE of the oracle job, and the
+    # tests that check excise against a tool that is not excise ran in no tier
+    # at all. Nothing here is Linux-specific; it needed reference tools and
+    # corpora, which this machine has (check-oracle-tools.sh proves it first).
+    #
+    # The floors are what make a silent environment regression LOUD. A
+    # differential test with a missing tool SKIPS, and dotnet test cannot tell
+    # green-because-skipped from green-because-passed. lib-runner.sh's
+    # "matched zero tests" guard covers the filter-typo case; these floors
+    # cover the tools-vanished case.
+    run_step "oracle-tools" scripts/check-oracle-tools.sh
+
+    # PDFBox is gated on an env var, not on the jar being present — so a
+    # checked-out jar sitting right there buys NOTHING unless this is
+    # exported. CLAUDE.md documents this trap (#935): the docs claimed for
+    # months that setting it "changes nothing for the test suite", and anyone
+    # who believed that got less corroboration than was available. Export it
+    # here so the oracle engages by default rather than by shell hygiene.
+    if [ -z "${EXCISE_PDFBOX_JAR:-}" ]; then
+        _jar="$(ls "$ROOT"/tools/vendor/pdfbox-app-*.jar 2>/dev/null | sort | tail -1)"
+        [ -n "$_jar" ] && export EXCISE_PDFBOX_JAR="$_jar"
+    fi
+
+    run_step "rendering-oracles" dotnet test Excise.Rendering.Tests --no-build -c Debug \
+        --filter "FullyQualifiedName~Differential|FullyQualifiedName~Corpus" \
+        --logger "trx;LogFileName=rendering-oracles.trx" \
+        --logger "console;verbosity=normal" --results-directory "$LOG_DIR"
+    run_step "rendering-oracles-floor" scripts/check-oracle-floor.sh "$LOG_DIR/rendering-oracles.trx" 60 "rendering Differential+Corpus"
+
+    # #929: the GUI and writer oracle families. These exist so excise's
+    # redaction/save output is checked against a tool that is not excise.
+    # Named by exact method/suffix rather than a [Trait] because none of them
+    # share one — enumerating what actually runs keeps the filter honest, and
+    # the floor makes a future rename fail loud instead of narrowing silently.
+    # No xvfb: that was the one genuinely Linux-specific line, and Avalonia
+    # headless needs no display server here.
+    run_step "app-oracles" dotnet test Excise.App.Tests --no-build -c Debug \
+        --filter "FullyQualifiedName~IndependentExtractor|FullyQualifiedName~IndependentRenderer|FullyQualifiedName~IndependentTools|FullyQualifiedName~IndependentPdftotextOracle|FullyQualifiedName~PdfsigReportsValidUntrustedSignature|FullyQualifiedName~RevealRasterizedHidden_FindsTextHiddenByOverlayInsideImage|FullyQualifiedName~RunMakeSearchable_ThenOnCompleted_MakesScanSearchable|FullyQualifiedName~RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact" \
+        --logger "trx;LogFileName=app-oracles.trx" \
+        --logger "console;verbosity=normal" --results-directory "$LOG_DIR" \
+        --blame-hang-timeout 120000
+    run_step "app-oracles-floor" scripts/check-oracle-floor.sh "$LOG_DIR/app-oracles.trx" 13 "App.Tests independent-oracle"
+
+    # PdfDocumentWriterTests' "_WhenAvailable" family re-reads the compressed
+    # writer's output with qpdf/mutool/pdfinfo/gs/pdfcpu. The Linux runner had
+    # no pdfcpu and used a floor of 13; this machine has it, so 14.
+    run_step "core-oracles" dotnet test Excise.Core.Tests --no-build -c Debug \
+        --filter "FullyQualifiedName~_WhenAvailable" \
+        --logger "trx;LogFileName=core-oracles.trx" \
+        --logger "console;verbosity=normal" --results-directory "$LOG_DIR"
+    run_step "core-oracles-floor" scripts/check-oracle-floor.sh "$LOG_DIR/core-oracles.trx" 14 "Core.Tests tool-gated"
+
+    # #645: extraction coverage vs mutool. Redaction completeness is bounded
+    # by extraction coverage — excise cannot redact what excise cannot read,
+    # and it reports success anyway. This ran only on the Linux oracle job and
+    # in run-full-suite.sh, i.e. never in the tier people actually run.
+    run_step "extraction-parity" scripts/check-extraction-parity.sh
     # Copy-whitespace parity ratchet (#837): fails if copied-text word/line
     # agreement vs poppler pdftotext drops below tests/copy-whitespace/floors.json.
     # Skips loudly (exit 0) when pdftotext or the corpus is absent, like the

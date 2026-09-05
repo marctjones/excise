@@ -21,12 +21,42 @@ Read the script, or run it.
 | Tier | Cost | When |
 |------|------|------|
 | `t0` | ~30s | Before every commit. `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. |
-| `t1` | ~10m | Before merging anything to `develop`. This is what used to block a PR. |
+| `t1` | ~20m | Before merging anything to `develop`. This is what used to block a PR, plus the independent-oracle subsets that used to run only on Linux. |
 | `t2` | ~30m | Release candidate: `scripts/release-smoke.sh --release-tests`. |
 | `t3` | — | Was "t2 on macOS + Linux + Windows". **Currently macOS only.** |
 
 Tier is selected by blast radius — who gets hurt if this is wrong — not by
 convenience.
+
+## The independent-oracle subsets
+
+`rendering-linux.yml` was the only place the Differential + Corpus tests ran —
+the ones that check excise against mutool, Ghostscript, pdftocairo, pdftoppm,
+qpdf, PDFBox and PDFium. Nothing in it was Linux-specific; it needed reference
+tools and corpora, which this machine has. It is now part of `t1`:
+
+| step | what |
+|---|---|
+| `oracle-tools` | every reference tool, the PDFBox jar, the PDFium library and both corpora resolve — or FAIL |
+| `rendering-oracles` | `Differential` + `Corpus`, floor 60 passed |
+| `app-oracles` | the #929 GUI oracle family, floor 13 |
+| `core-oracles` | `_WhenAvailable` writer round-trips, floor 14 |
+| `extraction-parity` | coverage vs mutool (#645) |
+
+⚠️ **`rendering-deterministic` deliberately EXCLUDES `Corpus` and
+`Differential`.** Before this, t1 ran the exact inverse of the oracle job, so
+the tests that exist because excise must not be its own oracle ran in no tier
+at all.
+
+**Why the floors.** `dotnet test` exits 0 when every test skipped and 0 when
+every test passed. These tests are gated on `Assert.SkipUnless(IsAvailable)`,
+so a vanished tool turns the whole subset into skips and the gate goes green
+having verified nothing. The floors make that loud. Do not lower one to make a
+run pass.
+
+`t1` exports `EXCISE_PDFBOX_JAR` itself when the jar is vendored — PDFBox is
+gated on the variable, not on the file, so a jar sitting in `tools/vendor`
+bought nothing until this was wired (#935).
 
 **The redaction gates are unskippable at every tier that produces a binary
 anyone could redact with, including a purely local build.** `t0` runs the
