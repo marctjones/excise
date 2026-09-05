@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# TOOLING — not a gate (tests/gates-tooling.txt): the comparison runs in t0 inside Excise.Cli.Tests (#977); this prints the whole list for humans
 #
 # Do the rendering-quality contracts and the corpus expectation manifests say
 # the same thing about the same page? (#977)
@@ -24,7 +25,9 @@
 #   scripts/check-contract-manifest-agreement.sh [--contracts DIR] [--repo-root DIR]
 #
 # The two options exist so the comparison can be pointed at synthetic inputs —
-# scripts/test-check-contract-manifest-agreement.sh drives a two-page fixture
+# The comparison itself is pinned in t0 by Excise.Cli.Tests
+# (Contracts_AgreeWithTheCorpusExpectationManifests, #977); this script prints
+# the whole list for humans. It drives a two-page fixture
 # through it, one page agreeing and one disagreeing, which is the only way to
 # see this gate fail without editing checked-in expectations. They default to
 # the real trees, so every existing caller is unaffected.

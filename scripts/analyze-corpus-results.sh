@@ -153,7 +153,7 @@ Gradually expand PDF format support:
 
 ```bash
 # Run all corpus tests (long-running)
-./scripts/run-corpus-tests.sh
+scripts/test-tier.sh t1   # row rendering-oracles runs every Corpus test
 
 # Run only redaction verification tests
 dotnet test --filter "FullyQualifiedName~Redaction"
@@ -188,5 +188,5 @@ done
 
 echo ""
 echo "To run corpus tests:"
-echo "  ./scripts/run-corpus-tests.sh"
+echo "  scripts/test-tier.sh t1   # row rendering-oracles runs every Corpus test"
 echo ""

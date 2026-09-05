@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# TOOLING — not a gate (tests/gates-tooling.txt): convenience over tests already run by Excise.Core.Tests / Excise.Avalonia.Tests / app-tests-unchunked-evidence; its --parity lane IS the copy-whitespace-parity row
 # Copy + Unicode quality harness (#1206).
 #
 # This is deliberately a small, local evidence gate — not a replacement for

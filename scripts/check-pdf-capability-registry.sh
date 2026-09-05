@@ -19,20 +19,32 @@ python3 scripts/build-pdf-capability-scorecard.py
 # gate unconditionally red: two consecutive runs on a clean tree both failed,
 # on the timestamp the gate itself had just written. Ignore those lines and
 # compare the evidence, which is what the gate is for.
-git diff --exit-code -I '"recordedAt":' -I '"gitRevision":' -- \
-  test-pdfs/manifests/pdf-spec-registry/generated/summary.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/capability-scorecard.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/capability-scorecard.md \
-  test-pdfs/manifests/pdf-spec-registry/generated/verification-gaps.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/corpus-governance.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/evidence-collection.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/renderer-test-evidence-map.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/renderer-promotion-queue.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/evidence-deficiency-report.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/test-outcomes.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/reference-tool-evidence.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/atomic-fixture-evidence.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/evidence-attribution.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/feature-cluster-scorecard.json \
-  test-pdfs/manifests/pdf-spec-registry/generated/implementation-evidence-map.json \
+#
+# On a PASS the only worktree change is the stamp this gate just wrote, so it
+# is restored: otherwise the next runner_state_init keys the run "-dirty",
+# every ledger row says treeDirty=yes and the clean-tree checkpoints become
+# unreachable. On a FAIL the files stay put for review.
+GENERATED=(
+  test-pdfs/manifests/pdf-spec-registry/generated/summary.json
+  test-pdfs/manifests/pdf-spec-registry/generated/capability-scorecard.json
+  test-pdfs/manifests/pdf-spec-registry/generated/capability-scorecard.md
+  test-pdfs/manifests/pdf-spec-registry/generated/verification-gaps.json
+  test-pdfs/manifests/pdf-spec-registry/generated/corpus-governance.json
+  test-pdfs/manifests/pdf-spec-registry/generated/evidence-collection.json
+  test-pdfs/manifests/pdf-spec-registry/generated/renderer-test-evidence-map.json
+  test-pdfs/manifests/pdf-spec-registry/generated/renderer-promotion-queue.json
+  test-pdfs/manifests/pdf-spec-registry/generated/evidence-deficiency-report.json
+  test-pdfs/manifests/pdf-spec-registry/generated/test-outcomes.json
+  test-pdfs/manifests/pdf-spec-registry/generated/reference-tool-evidence.json
+  test-pdfs/manifests/pdf-spec-registry/generated/atomic-fixture-evidence.json
+  test-pdfs/manifests/pdf-spec-registry/generated/evidence-attribution.json
+  test-pdfs/manifests/pdf-spec-registry/generated/feature-cluster-scorecard.json
+  test-pdfs/manifests/pdf-spec-registry/generated/implementation-evidence-map.json
   test-pdfs/manifests/pdf-spec-registry/generated/test-suite-evidence-map.json
+)
+rc=0
+git diff --exit-code -I '"recordedAt":' -I '"gitRevision":' -- "${GENERATED[@]}" || rc=$?
+if [ "$rc" = 0 ]; then
+  git checkout -- "${GENERATED[@]}"
+fi
+exit "$rc"

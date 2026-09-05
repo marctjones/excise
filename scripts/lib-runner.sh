@@ -536,3 +536,116 @@ runner_export_lean_env() {
 runner_reclaim() {
     dotnet build-server shutdown >/dev/null 2>&1 || true
 }
+
+# ---------------------------------------------------------------------------
+# The gate manifest — tests/gates.tsv (LOCAL_GATES.md)
+# ---------------------------------------------------------------------------
+# Every runner derives its plan from the manifest through runner_manifest_plan
+# <tier>; none holds a step list of its own. The loader VALIDATES before it
+# projects and returns 2 on any defect, so a runner never executes a plan the
+# manifest could not describe. Chain semantics: t0 ⊂ t1 ⊂ full; t2 only when
+# listed. File order is execution order.
+RUNNER_EXIT_SKIP=77          # a gate's "prerequisite missing" — never 0. prereqPolicy decides what it means.
+RUNNER_ROOT="${RUNNER_ROOT:-$PWD}"
+RUNNER_MANIFEST="${RUNNER_MANIFEST:-$RUNNER_ROOT/tests/gates.tsv}"
+RUNNER_MANIFEST_HEADER=$'name\tclass\ttiers\tkind\ttarget\tfilter\tratchet\tknownIssue\tprereq\tprereqPolicy\tcheckpoint\toracle\tnote'
+RUNNER_TESTS_EXECUTED=""
+
+runner_manifest_fingerprint() { shasum -a 256 "$RUNNER_MANIFEST" | cut -c1-16; }
+
+# runner_identify_tree [config] — RUNNER_SHA / RUNNER_TREE_DIRTY / RUNNER_CONFIG
+# without creating a state directory (runner_state_init builds on it).
+runner_identify_tree() {
+    RUNNER_CONFIG="${1:-${RUNNER_CONFIG:-Debug}}"
+    RUNNER_SHA="$(git rev-parse HEAD 2>/dev/null || echo nogit)"
+    if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; then
+        RUNNER_TREE_DIRTY=yes
+    else
+        RUNNER_TREE_DIRTY=no
+    fi
+}
+
+# runner_manifest_plan <tier> — validate the manifest, then print the tier's
+# rows as 10 tab-separated columns:
+#   name kind target filter class knownIssue prereq prereqPolicy checkpoint ratchet
+# Returns 2 on any defect (every defect is printed, file:line, to stderr).
+runner_manifest_plan() {
+    local tier="$1" f="$RUNNER_MANIFEST"
+    [ -s "$f" ] || { echo "runner: manifest missing or empty: $f" >&2; return 2; }
+    case "$tier" in t0|t1|full|t2) ;; *) echo "runner: unknown tier '$tier'" >&2; return 2 ;; esac
+    awk -F'\t' -v tier="$tier" -v root="$RUNNER_ROOT" -v hdr="$RUNNER_MANIFEST_HEADER" \
+        -v never="$(printf '%s' "$RUNNER_NEVER_CHECKPOINT" | tr 'A-Z' 'a-z')" '
+    function bad(m) { printf "%s:%d: %s\n", FILENAME, NR, m > "/dev/stderr"; ok = 0 }
+    function rank(t) { return t == "t0" ? 0 : t == "t1" ? 1 : t == "full" ? 2 : -1 }
+    function selected(tiers, want,    n, i, ts) {
+        n = split(tiers, ts, ",")
+        for (i = 1; i <= n; i++) {
+            if (ts[i] == want) return 1
+            if (rank(want) >= 0 && rank(ts[i]) >= 0 && rank(ts[i]) <= rank(want)) return 1
+        }
+        return 0
+    }
+    function exists(p) { return system("test -e \"" root "/" p "\"") == 0 }
+    BEGIN { ok = 1; n = 0 }
+    /^#/ || /^[ \t]*$/ { next }
+    !seen { seen = 1; if ($0 != hdr) bad("header must be exactly: " hdr); next }
+    {
+        if (NF != 13) { bad("expected 13 columns, got " NF); next }
+        name = $1; class = $2; tiers = $3; kind = $4; target = $5; filter = $6; ratchet = $7
+        known = $8; prereq = $9; policy = $10; ckpt = $11; oracle = $12; note = $13
+        if (name !~ /^[A-Za-z0-9][A-Za-z0-9._-]*$/) bad("name must be a slug: " name)
+        if (name in names) bad("duplicate name " name)
+        names[name] = NR
+        if (class !~ /^(BLOCK|IMPROVE|GRADE|SELFTEST)$/) bad("class " class)
+        if (kind !~ /^(script|test|project|project-chunked|fn)$/) bad("kind " kind)
+        if (tiers !~ /^(t0|t1|full|t2)(,(t0|t1|full|t2))*$/) bad("tiers " tiers)
+        if (known !~ /^(#[0-9]+(\/[^\t]+)?|-)$/) bad("knownIssue " known)
+        if (policy !~ /^(fail|skip)$/) bad("prereqPolicy " policy)
+        if (ckpt !~ /^(ok|never)$/) bad("checkpoint " ckpt)
+        if (oracle !~ /^(independent|spec|self|none|na)$/) bad("oracle " oracle)
+        if (note == "-" || note == "") bad("every row carries a note")
+        if (kind == "fn" && tiers != "t2") bad("fn rows are release-smoke (t2) only")
+        if (kind == "fn" && target !~ /^run_[a-z_]+_gate$/) bad("fn target must be a run_*_gate function")
+        if ((kind == "script" || kind == "fn" || kind == "project" || kind == "project-chunked") && filter != "-") bad("only test rows carry a filter")
+        if (kind == "test" && filter == "-") bad("test rows need a filter (kind=project for a whole csproj)")
+        if (class == "IMPROVE" && ratchet == "-") bad("IMPROVE rows name their ratchet")
+        if (ratchet != "-" && !exists(ratchet)) bad("ratchet missing: " ratchet)
+        if (tolower(name) ~ never && ckpt == "ok" && class != "GRADE") bad("name matches RUNNER_NEVER_CHECKPOINT; only a GRADE row may be checkpoint=ok")
+        if (kind == "script") { split(target, w, " "); if (w[1] ~ /^scripts\// && system("test -x \"" root "/" w[1] "\"") != 0) bad("not executable: " w[1]) }
+        if (kind ~ /^(test|project|project-chunked)$/ && !exists(target)) bad("target missing: " target)
+        s = target
+        while (match(s, /\{TRX(ARGS)?\??:[A-Za-z0-9._-]+\}/)) {
+            ref = substr(s, RSTART, RLENGTH); s = substr(s, RSTART + RLENGTH)
+            p = ref; sub(/^\{TRX(ARGS)?\??:/, "", p); sub(/\}$/, "", p)
+            if (!(p in names)) bad(ref " references " p ", which is not an EARLIER row")
+            else if (ref ~ /^\{TRX:/ && kinds[p] != "test" && kinds[p] != "project") bad(ref " needs one unchunked trx; " p " is " kinds[p])
+            else if (ref !~ /\?:/) { m = split(tiers, tt, ","); for (i = 1; i <= m; i++) if (!selected(rowtiers[p], tt[i])) bad(ref " has no producer in tier " tt[i]) }
+        }
+        kinds[name] = kind; rowtiers[name] = tiers
+        if (selected(tiers, tier)) rows[++n] = name "\t" kind "\t" target "\t" filter "\t" class "\t" known "\t" prereq "\t" policy "\t" ckpt "\t" ratchet
+    }
+    END {
+        if (!seen) { print "manifest has no header" > "/dev/stderr"; exit 2 }
+        if (!ok) exit 2
+        for (i = 1; i <= n; i++) print rows[i]
+    }' "$f"
+}
+
+# runner_manifest_field <name> <column> — one cell. Foo.chunkNN resolves to Foo.
+runner_manifest_field() {
+    local name="$1" col="$2"
+    case "$name" in *.chunk[0-9][0-9]) name="${name%.chunk[0-9][0-9]}" ;; esac
+    awk -F'\t' -v n="$name" -v c="$col" '
+        /^#/ || /^[ \t]*$/ { next }
+        !h { h = 1; for (i = 1; i <= NF; i++) idx[$i] = i; next }
+        $1 == n { print $(idx[c]); exit }' "$RUNNER_MANIFEST"
+}
+
+# runner_plan_write <plan.tsv> <tier> <rows-file> <planned> <of> <only-pattern>
+# Header line FIRST, then the rows (no sed -i; a plan is written once).
+runner_plan_write() {
+    {
+        printf '# tier=%s planned=%s of=%s only=%s manifest=%s\n' "$2" "$4" "$5" "${6:--}" "$(runner_manifest_fingerprint)"
+        cat "$3"
+    } > "$1"
+}

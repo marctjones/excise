@@ -53,7 +53,12 @@ def main() -> None:
         root = ROOT / relative
         if not root.exists():
             continue
+        # excludePaths: files that NAME capabilities without exercising them — the gate
+        # manifest tests/gates.tsv says "redaction" in a note and is not test evidence.
+        excluded = set(config.get("excludePaths", []))
         for path in sorted(candidate for candidate in root.rglob("*") if candidate.is_file() and candidate.suffix in config["extensions"] and "/bin/" not in str(candidate) and "/obj/" not in str(candidate)):
+            if str(path.relative_to(ROOT)) in excluded:
+                continue
             text = path.read_text(encoding="utf-8", errors="ignore").lower()
             repo_path = str(path.relative_to(ROOT))
             digest.update(repo_path.encode()); digest.update(hashlib.sha256(text.encode()).digest())

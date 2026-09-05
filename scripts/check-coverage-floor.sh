@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# TOOLING — not a gate (tests/gates-tooling.txt): coverage is an observation, not a gate (docs/RELEASE_CHECKLIST.md); the t0 selftest exercises the ratchet; wiring it is #1359
 #
 # Enforce a per-assembly coverage floor for a named PROFILE.
 #
