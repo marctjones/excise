@@ -14,7 +14,12 @@ python3 scripts/build-pdf-atomic-fixture-map.py
 python3 scripts/build-pdf-evidence-attribution.py
 python3 scripts/build-pdf-feature-cluster-scorecard.py
 python3 scripts/build-pdf-capability-scorecard.py
-git diff --exit-code -- \
+# recordedAt and gitRevision are provenance stamped at generation time, so
+# they differ on EVERY run by construction (#1357). Diffing them made this
+# gate unconditionally red: two consecutive runs on a clean tree both failed,
+# on the timestamp the gate itself had just written. Ignore those lines and
+# compare the evidence, which is what the gate is for.
+git diff --exit-code -I '"recordedAt":' -I '"gitRevision":' -- \
   test-pdfs/manifests/pdf-spec-registry/generated/summary.json \
   test-pdfs/manifests/pdf-spec-registry/generated/capability-scorecard.json \
   test-pdfs/manifests/pdf-spec-registry/generated/capability-scorecard.md \
