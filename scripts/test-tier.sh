@@ -368,7 +368,7 @@ run_t1() {
         --filter "FullyQualifiedName~Differential|FullyQualifiedName~Corpus" \
         --logger "trx;LogFileName=rendering-oracles.trx" \
         --logger "console;verbosity=normal" --results-directory "$LOG_DIR"
-    run_step "rendering-oracles-floor" scripts/check-oracle-floor.sh "$LOG_DIR/rendering-oracles.trx" 60 "rendering Differential+Corpus"
+    run_step "rendering-oracles-floor" scripts/check-oracle-floor.sh "$LOG_DIR/rendering-oracles.trx" 3000 "rendering Differential+Corpus"
 
     # #929: the GUI and writer oracle families. These exist so excise's
     # redaction/save output is checked against a tool that is not excise.

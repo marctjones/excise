@@ -38,10 +38,19 @@ tools and corpora, which this machine has. It is now part of `t1`:
 | step | what |
 |---|---|
 | `oracle-tools` | every reference tool, the PDFBox jar, the PDFium library and both corpora resolve — or FAIL |
-| `rendering-oracles` | `Differential` + `Corpus`, floor 60 passed |
-| `app-oracles` | the #929 GUI oracle family, floor 13 |
-| `core-oracles` | `_WhenAvailable` writer round-trips, floor 14 |
-| `extraction-parity` | coverage vs mutool (#645) |
+| `rendering-oracles` | `Differential` + `Corpus` — measured **3,701 passed / 1 failed / 919 skipped**, floor 3000 |
+| `app-oracles` | the #929 GUI oracle family — **13/13**, floor 13 |
+| `core-oracles` | `_WhenAvailable` writer round-trips — **14/14**, floor 14 |
+| `extraction-parity` | coverage vs mutool (#645) — 332 pages at/above floor, aggregate 100.0% |
+
+The rendering floor is **3000, not the Linux job's 60**. That 60 was what a
+corpus-less runner could reach; carrying it over would have let 3,600 tests
+vanish in silence. 875 of the 919 skips are `RedactionCollateralHarness`
+fixtures with under 200 characters of text — the pdf.js and PDFium corpora are
+renderer regression suites full of tiny synthetic files, and #1046 documents
+that as intended.
+
+The one failure is #1361.
 
 ⚠️ **`rendering-deterministic` deliberately EXCLUDES `Corpus` and
 `Differential`.** Before this, t1 ran the exact inverse of the oracle job, so
