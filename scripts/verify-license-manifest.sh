@@ -26,10 +26,16 @@ COMMITTED="Excise.App/Assets/third-party-licenses.json"
 [[ -f "$COMMITTED" ]] || { echo "❌ no manifest at $COMMITTED" >&2; exit 1; }
 
 BACKUP="$(mktemp)"
-cp "$COMMITTED" "$BACKUP"
+# -p on both copies: the reviewed file must come back with its ORIGINAL mtime.
+# Plain cp stamped a new one, and assert_fresh_build.py (which treats every
+# .json under a project as a build input) then refused every later --no-build
+# row that reaches Excise.App — all of Excise.App.Tests failed on a file whose
+# bytes had not changed (full run 2026-09-05). A check leaves the tree as it
+# found it, mtimes included.
+cp -p "$COMMITTED" "$BACKUP"
 # Restore the reviewed file no matter how we leave: this script must never be
 # the reason a release ships a regenerated manifest.
-trap 'cp "$BACKUP" "$COMMITTED"; rm -f "$BACKUP"' EXIT
+trap 'cp -p "$BACKUP" "$COMMITTED"; rm -f "$BACKUP"' EXIT
 
 echo "▶ regenerating to compare (the reviewed file is restored on exit)"
 ./scripts/generate-license-manifest.sh >/dev/null
