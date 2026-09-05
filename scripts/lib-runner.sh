@@ -675,12 +675,33 @@ runner_plan_write() {
 # {TRXARGS:x} → "--trx $LOG_DIR/x.trx" or the chunk union; {TRXARGS?:x} →
 # the same, or nothing when x is not in this plan.
 runner_plan_expand_trx() {
-    local plan="$1" L="$2" tmp="$1.expand.$$"
-    awk -F'\t' -v OFS='\t' -v L="$L" '
-    NR == FNR {
+    local plan="$1" L="$2" tmp="$1.expand.$$" map="$1.trxmap.$$"
+    # Where each producer's trx WILL be: this run's LOG_DIR when the row runs;
+    # beside the evidence log in the earlier run directory when --resume takes
+    # the row from a checkpoint. The consumer used to assume LOG_DIR and read
+    # "no trx ... cannot tell which tests reported" on every resume whose
+    # producer was checkpointed (test-count-core/cli/avalonia, 2026-09-05).
+    # Rows whose evidence trx is gone fall back to LOG_DIR and fail loudly.
+    : > "$map"
+    local name kind target filter rest hash evlog evtrx
+    while IFS=$'\t' read -r name kind target filter rest; do
+        [ -n "$name" ] && [ "${name#\#}" = "$name" ] || continue
+        case "$kind" in test|project|project-chunked) ;; *) continue ;; esac
+        evtrx="$L/$name.trx"
+        hash="$(runner_target_hash "$kind" "$target" "$filter")"
+        if ! runner_step_should_run "$name" "$hash"; then
+            evlog="$(runner_marker_value "$name" log)"
+            if [ -n "$evlog" ] && [ -f "${evlog%.log}.trx" ]; then evtrx="${evlog%.log}.trx"; fi
+        fi
+        printf '%s\t%s\n' "$name" "$evtrx" >> "$map"
+    done < "$plan"
+    awk -F'\t' -v OFS='\t' -v L="$L" -v M="$map" '
+    FILENAME == M { trx[$1] = $2; next }
+    FNR == 1 && FILENAME != M { pass++ }
+    pass == 1 {
         if ($0 !~ /^#/ && NF) {
             present[$1] = 1
-            if ($1 ~ /\.chunk[0-9][0-9]$/) { b = $1; sub(/\.chunk[0-9][0-9]$/, "", b); chunks[b] = chunks[b] " --trx " L "/" $1 ".trx" }
+            if ($1 ~ /\.chunk[0-9][0-9]$/) { b = $1; sub(/\.chunk[0-9][0-9]$/, "", b); chunks[b] = chunks[b] " --trx " (($1 in trx) ? trx[$1] : L "/" $1 ".trx") }
         }
         next
     }
@@ -689,8 +710,8 @@ runner_plan_expand_trx() {
         t = $3
         while (match(t, /\{TRX(ARGS)?\??:[A-Za-z0-9._-]+\}/)) {
             ref = substr(t, RSTART, RLENGTH); p = ref; sub(/^\{TRX(ARGS)?\??:/, "", p); sub(/\}$/, "", p)
-            if (ref ~ /^\{TRX:/)  { if (p in present) rep = L "/" p ".trx"; else { printf "plan: %s needs the trx of %s, which is not in this plan (with --only, include it: --only \"%s|%s\")\n", $1, p, p, $1 > "/dev/stderr"; bad = 1; rep = "" } }
-            else if (p in present) rep = "--trx " L "/" p ".trx"
+            if (ref ~ /^\{TRX:/)  { if (p in present) rep = ((p in trx) ? trx[p] : L "/" p ".trx"); else { printf "plan: %s needs the trx of %s, which is not in this plan (with --only, include it: --only \"%s|%s\")\n", $1, p, p, $1 > "/dev/stderr"; bad = 1; rep = "" } }
+            else if (p in present) rep = "--trx " ((p in trx) ? trx[p] : L "/" p ".trx")
             else if (p in chunks)  rep = substr(chunks[p], 2)
             else if (ref ~ /\?:/)  rep = ""
             else { printf "plan: %s needs the trx of %s, which is not in this plan (with --only, include it: --only \"%s|%s\")\n", $1, p, p, $1 > "/dev/stderr"; bad = 1; rep = "" }
@@ -698,7 +719,8 @@ runner_plan_expand_trx() {
         }
         $3 = t; print
     }
-    END { if (bad) exit 2 }' "$plan" "$plan" > "$tmp" || { rm -f "$tmp"; return 2; }
+    END { if (bad) exit 2 }' "$map" "$plan" "$plan" > "$tmp" || { rm -f "$tmp" "$map"; return 2; }
+    rm -f "$map"
     mv -f "$tmp" "$plan"
 }
 

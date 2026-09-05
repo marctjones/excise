@@ -432,6 +432,7 @@ wiring the floors into a tier is #1359.
 
 ## What changed 2026-09-05
 
+- **`--resume` resolves `{TRX:x}` to the evidence.** A consumer of a checkpointed producer's trx now points at the trx beside the producer's evidence log in the earlier run directory, not at this run's `LOG_DIR` (the first resumed full run failed test-count-core/cli/avalonia that way). `scripts/test-runner-plan-expand.sh` pins it.
 - **The registry gate is split** (#1366): the t0 `pdf-capability-registry` row regenerates from committed inputs and READS the test-outcomes snapshot; a full-tier GRADE row `pdf-registry-outcomes` imports the run's trx from its ledger, prints the `test evidence` line, stashes the regenerated files under `<LOG_DIR>/registry-outcomes/` and leaves the tree clean; `--adopt <LOG_DIR>` moves the snapshot. Before this the first full run reddened its own registry row and every t0 after it.
 
 - `tests/gates.tsv` became the single declaration; the runners' own step lists

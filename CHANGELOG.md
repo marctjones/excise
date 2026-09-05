@@ -52,6 +52,12 @@ noted under Fixed.
   corrected); two PDFium corpus pages moved PASS_ONE → PASS and are
   accepted; `render-quality-scan` cites #1370 for its 47 contract
   departures and records its 2h28m cost.
+- **`--resume` keeps trx consumers pointed at the evidence.** A row that reads
+  another row's trx (`{TRX:x}`, `{TRXARGS:x}`: test counts, skip budgets,
+  oracle floors) resolved it under the new run's log directory even when the
+  producer had been taken from a checkpoint, so every such row failed on the
+  first resumed full run. The expansion now follows a checkpointed producer
+  to the trx beside its evidence log; pinned by a t0 selftest.
 - **Silent skips are closed.** A gate that cannot run exits 77 and is
   reported SKIPPED or FAIL according to its `prereqPolicy`; five scripts
   that exited 0 on a missing prerequisite (accessibility, visual, perf
