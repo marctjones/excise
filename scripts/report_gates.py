@@ -2,6 +2,7 @@
 """report_gates.py — the reducer behind scripts/report-gates.sh (LOCAL_GATES.md).
 
     scripts/report-gates.sh [LOG_DIR|--latest] [--full] [--no-gh]
+    python3 scripts/report_gates.py --selftest      (only via scripts/test-report-gates.sh)
 
 A pure reducer over one runner log directory. It runs no test, no script, no
 dotnet; the ONLY subprocess it may spawn is `gh issue view N --json state,title`
@@ -23,6 +24,8 @@ Inputs
                           status in PASS FAIL FAIL_ZERO_TESTS SKIP_CHECKPOINTED SKIPPED NO_RESULT.
   tests/gates.tsv         only to (1) list every '#N' in the tier's plan for the STALE sweep and
                           (2) fill class/knownIssue for legacy rows (Foo.chunkNN resolves to Foo).
+                          The sweep is PLAN-scoped: a #N the manifest cites on a row this plan does
+                          not carry is not verified and cannot fail this report (--only runs).
   the trx/log of failing rows (the '#N/Substring' qualifier), the GRADE artifacts (see the
   grade_* functions, which read exactly the sources in the spec's reportSources), the newest
   prior <other LOG_DIR>/report.json of the SAME tier (delta), logs/runner-state/known-issues/<N>.rec.
@@ -33,26 +36,33 @@ Row verdicts
   unverified; '#N/Sub' -> KNOWN iff the qualifier matches (test/project/project-chunked rows: at
   least one and EVERY outcome="Failed" testName in the row's trx contains Sub; script rows: the
   row's log contains Sub), else NEW naming the unmatched (max 3 shown); N CLOSED (verified now, or
-  remembered CLOSED in the .rec) -> STALE. STALE is evaluated for EVERY '#N' in the tier's plan,
-  passing rows included. SKIPPED -> SKIPPED with reason (never affects exit). NO_RESULT, or any
-  non-PASS on a GRADE row -> 'NO DATA' in the grade block, never affects exit. A plan row with no
-  ledger row -> NOT RUN. Header planned<of -> PARTIAL. A ledger/plan name the manifest does not
-  declare and whose row carries no class -> 'not in manifest' (informational).
+  remembered CLOSED in the .rec) -> STALE. STALE is evaluated for EVERY '#N' in the tier's plan
+  WHATEVER the row's status — PASS, FAIL, SKIPPED, NO_RESULT, GRADE, even NOT RUN — so a closed
+  issue can never sit unnoticed behind another verdict. A #N gh answers does not exist ('Could not
+  resolve to an Issue') -> INVALID (remembered in the .rec as state=INVALID): an acceptance naming
+  no issue can never expire, so it fails like STALE. SKIPPED -> SKIPPED with reason (never affects
+  exit). NO_RESULT, or any non-PASS on a GRADE row -> 'NO DATA' in the grade block (every NO DATA
+  row is printed there, whatever its class), never affects exit. A plan row with no ledger row ->
+  NOT RUN (a torn last ledger line says so in the detail). Header planned<of -> PARTIAL. A planned
+  row the manifest no longer declares is classified by its status like any other (note 'not in
+  manifest'); only a LEDGER row absent from the plan is informational ('not in plan').
 
 Exit codes
-  2 no/unreadable ledger or plan; else 1 if any NEW or STALE; else 3 if any NOT RUN (an
-  interrupted run never reads green); else 0.
+  2 no/unreadable ledger or plan (a '# tier=' header that does not parse is unreadable); else 1
+  if any NEW, STALE or INVALID; else 3 if any NOT RUN (an interrupted run never reads green);
+  else 0.
 
 Known-issue memory
   Every SUCCESSFUL gh answer is written to logs/runner-state/known-issues/<N>.rec as lines
-  issue=N / state=OPEN|CLOSED / title=... / verified=<ISO8601Z> / --CKPT-OK-- (tmp+rename; trusted
-  only when the sentinel is the last line and a state line exists). A .rec remembering CLOSED makes
-  the row STALE even when gh is unreachable.
+  issue=N / state=OPEN|CLOSED|INVALID / title=... / verified=<ISO8601Z> / --CKPT-OK-- (tmp+rename;
+  trusted only when the sentinel is the last non-blank line and a state line exists). A .rec
+  remembering CLOSED (INVALID) makes the row STALE (INVALID) even when gh is unreachable.
 
 Output
   A <=20-line summary (header, VERDICT + class tally, only the non-PASS rows capped with
   '+N more (--full)', one IMPROVE line, the GRADES block, one footer); --full appends every row.
-  Every IMPROVE/GRADE number carries a delta vs the newest prior report.json of the same tier:
+  Every IMPROVE/GRADE number carries a delta vs the newest prior report.json of the same tier
+  that FINISHED BEFORE THIS RUN STARTED (re-reporting an old run never diffs against a later one):
   '(=)' unchanged, '(Δ ±x)' moved, '(no prior)'. GRADE artifacts not produced inside this run's
   window print their own date and '(not from this run)'. The report WRITES <LOG_DIR>/report.json
   {tier,sha,started,finished,verdict,exit,counts,rows,grades,improve} and never treats its own
@@ -63,17 +73,29 @@ Environment
                            then reads <dir>/tests/gates.tsv, <dir>/logs/runner-state and every
                            other repo-relative artifact under <dir>. Default: the parent of scripts/.
 
+--selftest (scripts/test-report-gates.sh is the entry point; see its header for the check list)
+  builds a hermetic temp root — synthetic tests/gates.tsv, plan/ledger/trx/log fixtures, the
+  known-issues dir, a fake `gh` first on PATH — and runs every case IN-PROCESS through main() so
+  the whole thing stays under the 2 s budget (one python start, not one per case). The only
+  subprocess is still gh (the fake). Prints one PASS/FAIL line per check; on FAIL dumps the
+  case's output, stderr, plan and ledger to stderr; exit 1 on any FAIL.
+
 Python 3 stdlib only.
 """
 
 from __future__ import annotations
 
+import contextlib
 import glob
+import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
+import traceback
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -81,9 +103,18 @@ from pathlib import Path
 # Roots and constants
 # ---------------------------------------------------------------------------
 
-ROOT = Path(os.environ.get("EXCISE_GATES_ROOT") or Path(__file__).resolve().parents[1]).resolve()
-MANIFEST = ROOT / "tests" / "gates.tsv"
-STATE_DIR = ROOT / "logs" / "runner-state" / "known-issues"
+ROOT = MANIFEST = STATE_DIR = None  # set by configure_root() below
+
+
+def configure_root(path):
+    """Anchor every repo-relative path on <path> (the repo root, or the selftest's temp root)."""
+    global ROOT, MANIFEST, STATE_DIR
+    ROOT = Path(path).resolve()
+    MANIFEST = ROOT / "tests" / "gates.tsv"
+    STATE_DIR = ROOT / "logs" / "runner-state" / "known-issues"
+
+
+configure_root(os.environ.get("EXCISE_GATES_ROOT") or Path(__file__).resolve().parents[1])
 LOG_DIR_PATTERNS = ("test-tier_*", "full-suite_*", "release-smoke_*")
 MANIFEST_COLS = ["name", "class", "tiers", "kind", "target", "filter", "ratchet", "knownIssue",
                  "prereq", "prereqPolicy", "checkpoint", "oracle", "note"]
@@ -94,6 +125,8 @@ TIER_RANK = {"t0": 0, "t1": 1, "full": 2}
 SUMMARY_LINES = 20
 GH_TIMEOUT_S = 10
 REC_SENTINEL = "--CKPT-OK--"
+REC_STATES = ("OPEN", "CLOSED", "INVALID")  # INVALID: gh answered that no such issue exists
+EXPIRED = {"CLOSED": "STALE", "INVALID": "INVALID"}  # issue state -> the verdict that overrides every status
 CORPORA = [("verapdf", "veraPDF"), ("pdfjs", "pdf.js"), ("pdfium", "PDFium"), ("isartor", "Isartor")]
 # GRADE lines of the summary, in order, and the plan row each one grades from.
 GRADE_ROWS = {
@@ -226,8 +259,14 @@ def base_name(name):
 # Inputs: plan, ledger, manifest
 # ---------------------------------------------------------------------------
 
+_PLAN_HEADER_RE = re.compile(r"^#\s*tier=(\S+)\s+planned=(\d+)\s+of=(\d+)\s+only=(.*?)\s+manifest=(\S*)\s*$")
+
+
 def load_plan(log_dir):
-    """plan.tsv -> {'tier','planned','of','only','manifest','legacy','rows':[dict]}."""
+    """plan.tsv -> {'tier','planned','of','only','manifest','legacy','rows':[dict]}.
+
+    LEGACY = no '# tier=' line at all (tier full, planned=of). A '# tier=' line that fails to
+    parse raises ReportError."""
     path = Path(log_dir) / "plan.tsv"
     text = read_text(path)
     if text is None:
@@ -236,8 +275,13 @@ def load_plan(log_dir):
     rows = []
     for line in text.splitlines():
         if line.startswith("#"):
-            m = re.match(r"#\s*tier=(\S+)\s+planned=(\d+)\s+of=(\d+)\s+only=(\S+)\s+manifest=(\S+)", line)
-            if m and header is None:
+            if re.match(r"^#\s*tier=", line):
+                # The runner writes only=<pattern> verbatim (a regex, spaces included), so the
+                # pattern runs up to ' manifest='. A '# tier=' line that does not parse is an
+                # unreadable plan (exit 2), never a silent fall-back to a legacy full-tier read.
+                m = _PLAN_HEADER_RE.match(line)
+                if not m or header is not None:
+                    raise ReportError(f"unparseable plan header: {shorten(line, 100)!r} in {path}")
                 header = {"tier": m.group(1), "planned": int(m.group(2)), "of": int(m.group(3)),
                           "only": m.group(4), "manifest": m.group(5), "legacy": False}
             continue
@@ -265,7 +309,11 @@ def load_plan(log_dir):
 
 
 def load_ledger(log_dir):
-    """ledger.jsonl -> list of row dicts (last row per name wins, first-seen order)."""
+    """ledger.jsonl -> (rows: last row per name wins, first-seen order; torn: names of a torn LAST line).
+
+    A torn last line is what a crash mid-record leaves behind; its row reads NOT RUN with the
+    tear named in the detail (the status it was about to record is unknown). Any other bad line
+    is an unreadable ledger (exit 2)."""
     path = Path(log_dir) / "ledger.jsonl"
     text = read_text(path)
     if text is None:
@@ -274,18 +322,22 @@ def load_ledger(log_dir):
     if not lines:
         raise ReportError(f"ledger is empty: {path}")
     by_name = {}
+    torn = set()
     for i, ln in enumerate(lines):
         try:
             obj = json.loads(ln)
         except ValueError:
             if i == len(lines) - 1:
-                print(f"report-gates: warning: torn last ledger line ignored: {path}", file=sys.stderr)
+                nm = re.search(r'"name"\s*:\s*"([^"]*)"', ln)
+                torn.add(nm.group(1) if nm else "?")
+                print(f"report-gates: warning: torn last ledger line ({nm.group(1) if nm else 'name unreadable'}) "
+                      f"— that row reads NOT RUN: {path}", file=sys.stderr)
                 continue
             raise ReportError(f"unreadable ledger line {i + 1}: {path}")
         if not isinstance(obj, dict) or "name" not in obj or "status" not in obj:
             raise ReportError(f"ledger line {i + 1} lacks name/status: {path}")
         by_name[obj["name"]] = obj
-    return list(by_name.values())
+    return list(by_name.values()), torn
 
 
 def load_manifest(path=None):
@@ -334,7 +386,7 @@ def read_rec(n):
     text = read_text(path)
     if text is None:
         return None
-    lines = text.splitlines()
+    lines = [ln for ln in text.splitlines() if ln.strip()]  # the sentinel rule is about torn writes, not whitespace
     if not lines or lines[-1].strip() != REC_SENTINEL:
         return None
     rec = {}
@@ -342,7 +394,7 @@ def read_rec(n):
         if "=" in ln:
             k, v = ln.split("=", 1)
             rec[k.strip()] = v.strip()
-    if rec.get("state") not in ("OPEN", "CLOSED"):
+    if rec.get("state") not in REC_STATES:
         return None
     return rec
 
@@ -395,9 +447,11 @@ class IssueVerifier:
     def _ask_gh(self, n):
         env = dict(os.environ, GH_PROMPT_DISABLED="1", GH_NO_UPDATE_NOTIFIER="1", GH_PAGER="cat")
         try:
+            # close_fds=False: nothing sensitive is open here, and it lets CPython take the
+            # posix_spawn fast path (measured 3x cheaper than fork+exec per call).
             proc = subprocess.run(["gh", "issue", "view", str(n), "--json", "state,title"],
                                   capture_output=True, text=True, timeout=GH_TIMEOUT_S,
-                                  stdin=subprocess.DEVNULL, env=env,
+                                  stdin=subprocess.DEVNULL, env=env, close_fds=False,
                                   cwd=str(ROOT) if ROOT.is_dir() else None)
         except (OSError, subprocess.TimeoutExpired) as exc:
             self.gh_failed = True
@@ -405,8 +459,11 @@ class IssueVerifier:
             return None
         if proc.returncode != 0:
             err = (proc.stderr or "").strip()
-            if re.search(r"could not resolve|not found|no issue", err, re.I):
-                return None  # this issue only; gh itself is fine
+            # gh's definitive "no such issue" is an ANSWER, not an outage: the acceptance names
+            # nothing that can ever close. Matched on the issue-specific phrase only — a broken
+            # remote says "Could not resolve to a Repository", which must stay an outage.
+            if re.search(r"could not resolve to an issue", err, re.I):
+                return {"state": "INVALID", "title": ""}
             self.gh_failed = True
             self.gh_failure = shorten(err, 80) or f"rc={proc.returncode}"
             return None
@@ -425,18 +482,19 @@ class IssueVerifier:
         r = self.cache.get(n) or self.verify_issue(n)
         if r["state"] is None:
             return "unverified"
+        state = "no such issue" if r["state"] == "INVALID" else r["state"]
         if r["source"] == "rec":
             when = (r.get("verified") or "")[:10]
-            return f"{r['state']} (remembered {when})" if when else f"{r['state']} (remembered)"
-        return r["state"]
+            return f"{state} (remembered {when})" if when else f"{state} (remembered)"
+        return state
 
     def footer(self):
+        """The contract's literals: 'gh reachable, k checked' | 'gh unreachable, unverified' | '--no-gh'."""
         if not self.use_gh:
             return "--no-gh"
         if self.gh_failed:
-            return f"gh unreachable, unverified ({self.gh_failure})" if self.gh_failure else "gh unreachable, unverified"
-        n = self.checked
-        return f"gh reachable, {n} issue{'s' if n != 1 else ''} checked"
+            return "gh unreachable, unverified"
+        return f"gh reachable, {self.checked} checked"
 
 
 # ---------------------------------------------------------------------------
@@ -528,32 +586,18 @@ def row_paths(log_dir, led):
     return (log or str(Path(log_dir) / f"{name}.log")), (trx or str(Path(log_dir) / f"{name}.trx"))
 
 
-def classify_rows(plan, ledger, manifest, verifier, log_dir):
-    """-> (rows in plan order + informational extras, counts dict, issue sweep info)."""
-    tier = plan["tier"]
+def classify_rows(plan, ledger, manifest, verifier, log_dir, torn=()):
+    """-> (rows in plan order + informational extras, counts dict, {issue N: first citing row})."""
     led_by = {r["name"]: r for r in ledger}
     plan_names = [r["name"] for r in plan["rows"]]
-    rows = []
+    torn = set(torn or ())
 
-    # The STALE sweep covers every #N the tier's plan cites: plan rows, ledger rows,
-    # and the current manifest's rows for this tier (passing rows included).
+    # Pass 1 — resolve class/knownIssue/kind per planned row (ledger row, then plan row, then
+    # the manifest for legacy rows) and collect every #N this PLAN cites. The sweep is plan-scoped
+    # on purpose: a #N the manifest cites on a row this plan never carried is not this run's
+    # business (a --only run must not fail on it, and gh is not asked about it).
+    resolved = []
     issues = {}
-    for pr in plan["rows"]:
-        n, _ = parse_known(pr.get("knownIssue"))
-        if n:
-            issues[n] = pr["name"]
-    for lr in ledger:
-        n, _ = parse_known(lr.get("knownIssue"))
-        if n:
-            issues.setdefault(n, lr["name"])
-    for mr in manifest.values():
-        if tier_selects(mr.get("tiers"), tier):
-            n, _ = parse_known(mr.get("knownIssue"))
-            if n:
-                issues.setdefault(n, mr["name"])
-    for n in sorted(issues, key=int):
-        verifier.verify_issue(n)
-
     for pr in plan["rows"]:
         name = pr["name"]
         led = led_by.get(name)
@@ -561,6 +605,23 @@ def classify_rows(plan, ledger, manifest, verifier, log_dir):
         cls = (led or {}).get("class") or pr.get("class") or (mrow or {}).get("class")
         known = (led or {}).get("knownIssue") or pr.get("knownIssue") or (mrow or {}).get("knownIssue") or "-"
         kind = (led or {}).get("kind") or pr.get("kind") or (mrow or {}).get("kind") or "script"
+        resolved.append((pr, led, mrow, cls, known, kind))
+        n, _ = parse_known(known)
+        if n:
+            issues.setdefault(n, name)
+    for lr in ledger:
+        n, _ = parse_known(lr.get("knownIssue"))
+        if n:
+            issues.setdefault(n, lr["name"])
+    for n in sorted(issues, key=int):
+        verifier.verify_issue(n)
+
+    # Pass 2 — classify by status, then let a CLOSED/INVALID cite override WHATEVER the status
+    # said (PASS, FAIL, SKIPPED, NO_RESULT, GRADE, NOT RUN): the acceptance has expired, and no
+    # other verdict may hide that.
+    rows = []
+    for pr, led, mrow, cls, known, kind in resolved:
+        name = pr["name"]
         in_manifest = mrow is not None
         row = {"name": name, "class": cls or "-", "knownIssue": known, "kind": kind,
                "status": led.get("status") if led else None,
@@ -569,14 +630,9 @@ def classify_rows(plan, ledger, manifest, verifier, log_dir):
                "detail": "", "inManifest": in_manifest, "led": led, "notes": []}
         if led:
             row["log"], row["trx"] = row_paths(log_dir, led)
-        if not in_manifest and cls is None:
-            row["class"] = "-"
-            row["verdict"] = "INFO"
-            st = led.get("status") if led else "NOT RUN"
-            row["detail"] = f"not in manifest (status {st}) — the current tests/gates.tsv declares no such row"
-            rows.append(row)
-            continue
         if not in_manifest:
+            # A PLANNED row is never informational: it ran (or was meant to), so its status is
+            # judged like any other. The note says the current manifest no longer declares it.
             row["notes"].append("not in manifest")
         n, sub = parse_known(known)
         issue = verifier.cache.get(n) if n else None
@@ -586,15 +642,14 @@ def classify_rows(plan, ledger, manifest, verifier, log_dir):
         status = row["status"]
         if led is None:
             row["verdict"] = "NOT RUN"
-            row["detail"] = "no ledger row — the run stopped before this step (resume it)"
+            if name in torn:
+                row["detail"] = "ledger row torn — status unknown (the run died mid-record); re-run the step"
+            else:
+                row["detail"] = "no ledger row — the run stopped before this step (resume it)"
         elif status in PASSING:
             row["verdict"] = "PASS"
             if status == "SKIP_CHECKPOINTED":
                 row["detail"] = f"from checkpoint {led.get('evidenceFinished') or '?'}"
-            if n and issue and issue["state"] == "CLOSED":
-                row["verdict"] = "STALE"
-                row["detail"] = (f"cites {known} but #{n} is CLOSED — a passing row carrying a closed issue: "
-                                 f"drop the knownIssue in tests/gates.tsv")
         elif status == "SKIPPED":
             row["verdict"] = "SKIPPED"
             row["detail"] = led.get("reason") or "prerequisite missing (policy=skip)"
@@ -602,60 +657,66 @@ def classify_rows(plan, ledger, manifest, verifier, log_dir):
             row["verdict"] = "NO DATA"
             row["detail"] = f"{status} rc={row['rc']} (GRADE never blocks; {rel(row['log']) if row['log'] else 'no log'})"
         elif status in FAILING:
-            _classify_failure(row, n, sub, issue, verifier, known)
+            _classify_failure(row, n, sub, known)
         else:
             row["verdict"] = "NEW"
             row["detail"] = f"unknown status {status!r}"
+        if issue and issue["state"] in EXPIRED:
+            _expire(row, n, issue["state"], known)
         rows.append(row)
 
     # Ledger rows the plan never listed (informational).
     for lr in ledger:
         if lr["name"] in plan_names:
             continue
+        in_manifest = manifest_lookup(manifest, lr["name"]) is not None
+        detail = f"not in plan (status {lr.get('status')}) — recorded but never planned"
+        if not in_manifest:
+            detail += "; not in manifest"
         rows.append({"name": lr["name"], "class": lr.get("class") or "-", "knownIssue": lr.get("knownIssue") or "-",
                      "kind": lr.get("kind") or "?", "status": lr.get("status"), "rc": to_int(lr.get("rc")),
                      "duration": to_float(lr.get("durationSeconds"), 0.0), "log": lr.get("log"), "trx": lr.get("trx"),
-                     "verdict": "INFO", "issue": None, "issueLabel": None,
-                     "detail": f"not in plan (status {lr.get('status')}) — recorded but never planned",
-                     "inManifest": manifest_lookup(manifest, lr["name"]) is not None, "led": lr, "notes": []})
+                     "verdict": "INFO", "issue": None, "issueLabel": None, "detail": detail,
+                     "inManifest": in_manifest, "led": lr, "notes": []})
 
-    # STALE for #N cited only by the manifest/tier (no plan row carries it) — surface once.
+    # A CLOSED/INVALID #N cited only by a row that carries no verdict of its own (an informational
+    # ledger-only row) is still an expired acceptance in this run — surface it once.
     cited = {r["issue"] for r in rows if r.get("issue")}
     for n, src in issues.items():
         r = verifier.cache.get(n)
-        if r and r["state"] == "CLOSED" and n not in cited:
+        if r and r["state"] in EXPIRED and n not in cited:
+            why = "CLOSED" if r["state"] == "CLOSED" else "not an issue that exists"
             rows.append({"name": src, "class": "-", "knownIssue": f"#{n}", "kind": "?", "status": None,
-                         "rc": None, "duration": 0.0, "log": None, "trx": None, "verdict": "STALE",
+                         "rc": None, "duration": 0.0, "log": None, "trx": None, "verdict": EXPIRED[r["state"]],
                          "issue": n, "issueLabel": verifier.label(n),
-                         "detail": f"tests/gates.tsv cites #{n} on {src} but it is CLOSED — drop or replace the knownIssue",
+                         "detail": f"#{n} is cited on {src} but is {why} — delete or replace the acceptance",
                          "inManifest": True, "led": None, "notes": []})
 
-    counts = {k: 0 for k in ("new", "known", "stale", "skipped", "notRun", "checkpointed", "pass", "noData", "info")}
+    counts = {k: 0 for k in ("new", "known", "stale", "invalid", "skipped", "notRun", "checkpointed", "pass", "noData", "info")}
+    tally_key = {"NEW": "new", "KNOWN": "known", "STALE": "stale", "INVALID": "invalid", "SKIPPED": "skipped",
+                 "NOT RUN": "notRun", "PASS": "pass", "NO DATA": "noData", "INFO": "info"}
     for r in rows:
-        v = r["verdict"]
-        if v == "NEW":
-            counts["new"] += 1
-        elif v == "KNOWN":
-            counts["known"] += 1
-        elif v == "STALE":
-            counts["stale"] += 1
-        elif v == "SKIPPED":
-            counts["skipped"] += 1
-        elif v == "NOT RUN":
-            counts["notRun"] += 1
-        elif v == "PASS":
-            counts["pass"] += 1
-        elif v == "NO DATA":
-            counts["noData"] += 1
-        elif v == "INFO":
-            counts["info"] += 1
+        counts[tally_key[r["verdict"]]] += 1
         if r["status"] == "SKIP_CHECKPOINTED":
             counts["checkpointed"] += 1
     return rows, counts, issues
 
 
-def _classify_failure(row, n, sub, issue, verifier, known):
-    led = row["led"]
+def _expire(row, n, state, known):
+    """CLOSED -> STALE, INVALID -> INVALID, on top of whatever the status said (kept in the detail)."""
+    was = "PASS from checkpoint" if row["status"] == "SKIP_CHECKPOINTED" else row["verdict"]
+    prefix = f"{was}: {row['detail']}" if row["detail"] and row["status"] != "SKIP_CHECKPOINTED" else was
+    row["verdict"] = EXPIRED[state]
+    if state == "CLOSED":
+        row["detail"] = (f"{prefix} — cites {known} but #{n} is CLOSED: the acceptance has expired, "
+                         f"delete it in tests/gates.tsv")
+    else:
+        row["detail"] = (f"{prefix} — cites {known} but no issue #{n} exists: the acceptance names nothing "
+                         f"that can ever close; file the issue or drop the cite in tests/gates.tsv")
+
+
+def _classify_failure(row, n, sub, known):
+    """FAIL / FAIL_ZERO_TESTS on a non-GRADE row -> NEW or KNOWN (a CLOSED/INVALID cite is applied after)."""
     kind = row["kind"]
     evidence = ""
     if kind in ("test", "project", "project-chunked"):
@@ -675,10 +736,6 @@ def _classify_failure(row, n, sub, issue, verifier, known):
     if n is None:
         row["verdict"] = "NEW"
         row["detail"] = f"{evidence}  ← no knownIssue: fix it, or file the issue and cite it in tests/gates.tsv"
-        return
-    if issue and issue["state"] == "CLOSED":
-        row["verdict"] = "STALE"
-        row["detail"] = f"{evidence} — cites #{n}, which is CLOSED: the acceptance has expired"
         return
     if sub is None:
         row["verdict"] = "KNOWN"
@@ -711,8 +768,14 @@ def run_window(ledger):
     return min(starts), max(ends)
 
 
-def find_prior_report(tier, log_dir):
-    """Newest report.json of the same tier under ROOT/logs, excluding this LOG_DIR's own."""
+def find_prior_report(tier, log_dir, started):
+    """Newest report.json of the same tier under ROOT/logs that FINISHED before this run started.
+
+    Excludes this LOG_DIR's own file, and every report of a run that finished at or after this
+    run's start — re-reporting an old run must not diff against a later one with the sign
+    reversed. No start stamp (or no such report) -> None -> '(no prior)'."""
+    if started is None:
+        return None
     own = (Path(log_dir) / "report.json").resolve()
     best, best_key = None, None
     for pat in LOG_DIR_PATTERNS:
@@ -723,7 +786,10 @@ def find_prior_report(tier, log_dir):
             obj = read_json(p)
             if not isinstance(obj, dict) or obj.get("tier") != tier:
                 continue
-            key = (obj.get("finished") or "", str(p))
+            fin = parse_ts(obj.get("finished"))
+            if fin is None or fin >= started:
+                continue
+            key = (fin, str(p))
             if best_key is None or key > best_key:
                 best, best_key = obj, key
     return best
@@ -781,9 +847,9 @@ def _grade_row_nodata(rows_by, name):
     r = rows_by.get(name)
     if r is None:
         return None
-    if r["verdict"] in ("PASS",):
-        return None
-    if r["verdict"] == "NOT RUN":
+    if r["verdict"] == "PASS" or r["status"] in PASSING:
+        return None  # the artifact stands even when the row's cite expired (that is reported in the row list)
+    if r["verdict"] == "NOT RUN" or r["status"] is None:
         return f"{name} NOT RUN"
     if r["verdict"] == "SKIPPED":
         return f"{name} SKIPPED: {shorten(r['detail'], 80)}"
@@ -889,14 +955,14 @@ def _last_json_lines(path, n=2):
     return out
 
 
-def grade_redaction(log_dir, start, end, rows_by, prior_values):
+def grade_redaction(log_dir, start, end, rows_by):
     nodata = _grade_row_nodata(rows_by, "redaction-bench")
     local = artifact_dir(rows_by, "redaction-bench", log_dir) / "redaction-bench-history.jsonl"
     history = ROOT / "tests" / "redaction-bench-history.jsonl"
     if local.is_file():
-        entries, src_label, from_run = _last_json_lines(local, 2), "redaction-bench, this run", True
+        entries, src_label, from_run = _last_json_lines(local, 1), "redaction-bench, this run", True
     else:
-        entries = _last_json_lines(history, 2)
+        entries = _last_json_lines(history, 1)
         src_label, from_run = None, False
     if not entries:
         why = nodata or f"no {rel(local)} and no {rel(history)}"
@@ -923,20 +989,11 @@ def grade_redaction(log_dir, start, end, rows_by, prior_values):
         label = f"redaction-bench history {ts.strftime('%Y-%m-%d') if ts else 'undated'} (not from this run)"
     text = f"secure {ex_s:.3f} {ex_g}  vs {peer_txt}   n={n}" if ex_s is not None else f"secure ? {ex_g}  vs {peer_txt}   n={n}"
     values = {"exciseSecure": round(ex_s, 3) if ex_s is not None else None}
-    # Δ: the prior report.json when it exists, else the previous history entry.
-    dtxt = ""
-    if prior_values is not None:
-        dtxt = delta(values, prior_values, "{:+.3f}")
-    elif len(entries) > 1 and ex_s is not None:
-        prev = to_float((((entries[1].get("metrics") or {}).get("securityFidelity") or {}).get("excise") or {}).get("secure"))
-        pts = parse_ts(entries[1].get("timestamp"))
-        if prev is not None:
-            dtxt = f"(Δ {ex_s - prev:+.3f} vs {pts.strftime('%Y-%m-%d') if pts else 'previous entry'})"
-    if not dtxt:
-        dtxt = "(no prior)"
+    # Δ is vs the prior report.json only (the generic path), never vs the previous history
+    # entry: one prior for every number, so a report cannot say (=) and (no prior) about one run.
     if nodata:
         label = f"{label}; {nodata}"
-    return {"text": f"{text}  {dtxt}", "values": values, "label": label, "nodata": False, "delta_done": True}
+    return {"text": text, "values": values, "label": label, "nodata": False}
 
 
 def grade_render_perf(log_dir, start, end, rows_by):
@@ -1146,11 +1203,11 @@ def render_improve(imp, prior_improve):
 # Rendering
 # ---------------------------------------------------------------------------
 
-VERDICT_ORDER = {"NEW": 0, "KNOWN": 1, "STALE": 2, "SKIPPED": 3, "NOT RUN": 4, "INFO": 5}
+VERDICT_ORDER = {"NEW": 0, "KNOWN": 1, "STALE": 2, "INVALID": 3, "SKIPPED": 4, "NOT RUN": 5, "INFO": 6}
 
 
 def row_line(r, name_w=22):
-    if r["verdict"] in ("KNOWN", "STALE") and r["issue"]:
+    if r["verdict"] in ("KNOWN", "STALE", "INVALID") and r["issue"]:
         mid = f"#{r['issue']} {r['issueLabel']}"
     elif r["verdict"] == "SKIPPED":
         mid = "policy=skip"
@@ -1170,6 +1227,8 @@ def verdict_text(counts, exit_code):
             parts.append(f"{counts['new']} NEW")
         if counts["staleIssues"]:
             parts.append("STALE " + ", ".join(f"#{n}" for n in counts["staleIssues"]))
+        if counts["invalidIssues"]:
+            parts.append("INVALID " + ", ".join(f"#{n}" for n in counts["invalidIssues"]))
         return "FAIL — " + ", ".join(parts)
     if exit_code == 3:
         return f"INCOMPLETE — {counts['notRun']} NOT RUN"
@@ -1206,7 +1265,7 @@ def render_summary(ctx):
     if start and end:
         same_day = start.astimezone().date() == end.astimezone().date()
         when = f"{fmt_local(start)}→{fmt_local(end, with_date=not same_day)} ({fmt_dur((end - start).total_seconds())})"
-    head = f"excise gates  {plan['tier']} @{sha[:8]} (tree {'DIRTY' if dirty else 'clean'})  {when}  {rel(ctx['log_dir'])}"
+    head = f"excise gates  {plan['tier']} @{sha[:7]} (tree {'DIRTY' if dirty else 'clean'})  {when}  {rel(ctx['log_dir'])}"
     if plan["planned"] < plan["of"]:
         head += f" PARTIAL planned {plan['planned']}/{plan['of']}"
     lines.append(head)
@@ -1215,9 +1274,10 @@ def render_summary(ctx):
         shas = {r["sha"] for r in ledger if r.get("sha")} | {r["evidenceSha"] for r in ledger if r.get("evidenceSha")}
         if any(r.get("evidenceSha") for r in ledger) and len(shas) > 1:
             span = f" (span {len(shas)} commits)"
+    invalid = f" · invalid {counts['invalid']}" if counts["invalid"] else ""
     lines.append(f"VERDICT {ctx['verdict']} (exit {ctx['exit']})   {class_tally(rows)}   "
                  f"known {counts['known']} · skipped {counts['skipped']} · not-run {counts['notRun']} · "
-                 f"stale {counts['stale']} · checkpointed {counts['checkpointed']}{span}")
+                 f"stale {counts['stale']}{invalid} · checkpointed {counts['checkpointed']}{span}")
     grade_lines = ctx["grade_lines"]
     improve_line = ctx["improve_line"]
     footer = (f"PASS {counts['pass']} rows (--full lists every row)   knownIssue verification: {ctx['verifier'].footer()}")
@@ -1285,6 +1345,8 @@ def usage(code):
 
 
 def main(argv):
+    if argv == ["--selftest"]:
+        return selftest()
     full = "--full" in argv
     use_gh = "--no-gh" not in argv
     latest = "--latest" in argv
@@ -1309,7 +1371,7 @@ def main(argv):
 
     try:
         plan = load_plan(log_dir)
-        ledger = load_ledger(log_dir)
+        ledger, torn = load_ledger(log_dir)
     except ReportError as exc:
         print(f"report-gates: {exc}", file=sys.stderr)
         return 2
@@ -1318,11 +1380,16 @@ def main(argv):
     if not manifest:
         print(f"report-gates: warning: manifest missing or empty: {rel(MANIFEST)}", file=sys.stderr)
     verifier = IssueVerifier(use_gh)
-    rows, counts, issues = classify_rows(plan, ledger, manifest, verifier, log_dir)
+    rows, counts, issues = classify_rows(plan, ledger, manifest, verifier, log_dir, torn)
+    if verifier.gh_failed and verifier.gh_failure:
+        print(f"report-gates: warning: gh unreachable ({verifier.gh_failure}); cited issues left unverified",
+              file=sys.stderr)
 
     stale_issues = sorted({r["issue"] for r in rows if r["verdict"] == "STALE" and r["issue"]}, key=int)
+    invalid_issues = sorted({r["issue"] for r in rows if r["verdict"] == "INVALID" and r["issue"]}, key=int)
     counts["staleIssues"] = stale_issues
-    if counts["new"] or counts["stale"]:
+    counts["invalidIssues"] = invalid_issues
+    if counts["new"] or counts["stale"] or counts["invalid"]:
         exit_code = 1
     elif counts["notRun"]:
         exit_code = 3
@@ -1333,7 +1400,7 @@ def main(argv):
     start, end = run_window(ledger)
     sha = next((r.get("sha") for r in reversed(ledger) if r.get("sha")), "") or "nogit"
     dirty = any(r.get("treeDirty") == "yes" for r in ledger)
-    prior = find_prior_report(plan["tier"], log_dir)
+    prior = find_prior_report(plan["tier"], log_dir, start)
     prior_grades = (prior or {}).get("grades") or {}
     prior_improve = (prior or {}).get("improve") or {}
     rows_by = _row_map(rows)
@@ -1347,15 +1414,14 @@ def main(argv):
         "image codecs": grade_image_codecs(start, end, rows_by),
         "bench design": grade_bench_design(log_dir, rows_by),
     }
-    pr = prior_grades.get("redaction")
-    grades["redaction"] = grade_redaction(log_dir, start, end, rows_by, (pr or {}).get("values") if pr else None)
-    fmts = {"conformance": "{:+.1f}", "extraction": "{:+.4f}", "render perf": "{:+.2f}",
+    grades["redaction"] = grade_redaction(log_dir, start, end, rows_by)
+    fmts = {"conformance": "{:+.1f}", "extraction": "{:+.4f}", "redaction": "{:+.3f}", "render perf": "{:+.2f}",
             "image codecs": "{:+d}", "bench design": "{:+d}"}
     grade_lines = ["GRADES vs reference tools"]
     for key in GRADE_ROWS:
         g = grades[key]
         text = g["text"]
-        if not g.get("nodata") and not g.get("delta_done") and g.get("values"):
+        if not g.get("nodata") and g.get("values"):
             pv = (prior_grades.get(key) or {}).get("values") if prior_grades.get(key) else None
             fmt = fmts.get(key, "{:+.4g}")
             d = delta(g["values"], pv, fmt)
@@ -1365,12 +1431,20 @@ def main(argv):
         grade_lines.append(f"  {key:<13} {text}")
         if key == "conformance":
             grade_lines.append(f"  {'':<13} {grade_registry()}")
-    # GRADE rows the plan carries that none of the named grades reads (informational, NO DATA).
+    # Every NO DATA row none of the named grades reads — a GRADE row of another name, or a
+    # NO_RESULT on any class — prints here, so no row silently disappears from the summary.
     for r in rows:
-        if r["class"] == "GRADE" and r["name"] not in GRADE_ROW_NAMES and r["verdict"] != "PASS":
+        if r["verdict"] == "NO DATA" and r["name"] not in GRADE_ROW_NAMES:
             grade_lines.append(f"  {shorten(r['name'], 13):<13} NO DATA — {r['detail']}")
 
     imp = improve_values(rows, log_dir, grades["extraction"])
+    # extraction-parity's IMPROVE number IS the extraction grade's number: when the prior run
+    # carried the grade but not the row, diff against the grade so the two lines cannot disagree
+    # ('(=)' on one, '(no prior)' on the other) about one value.
+    if "extraction-parity" not in prior_improve:
+        pg = ((prior_grades.get("extraction") or {}).get("values") or {}).get("aggregateCoverage")
+        if isinstance(pg, (int, float)):
+            prior_improve = dict(prior_improve, **{"extraction-parity": {"number": pg}})
     improve_line = render_improve(imp, prior_improve)
 
     ctx = {"rows": rows, "counts": counts, "plan": plan, "ledger": ledger, "start": start, "end": end,
@@ -1389,8 +1463,10 @@ def main(argv):
         "verdict": verdict, "exit": exit_code, "partial": plan["planned"] < plan["of"],
         "planned": plan["planned"], "of": plan["of"], "logDir": str(log_dir),
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "counts": {k: v for k, v in counts.items() if k != "staleIssues"},
+        "counts": {k: v for k, v in counts.items() if k not in ("staleIssues", "invalidIssues")},
         "staleIssues": stale_issues,
+        "invalidIssues": invalid_issues,
+        "tornLedgerRows": sorted(torn),
         "issues": {n: {"state": v["state"], "source": v["source"], "title": v.get("title")} for n, v in verifier.cache.items()},
         "rows": [{"name": r["name"], "status": r["status"], "verdict": r["verdict"], "rc": r["rc"],
                   "durationSeconds": r["duration"], "class": r["class"], "knownIssue": r["knownIssue"],
@@ -1409,6 +1485,432 @@ def main(argv):
     except OSError as exc:
         print(f"report-gates: warning: could not write report.json: {exc}", file=sys.stderr)
     return exit_code
+
+
+# ---------------------------------------------------------------------------
+# --selftest — hermetic, IN-PROCESS (entry point: scripts/test-report-gates.sh,
+# which adds the two checks that need the real repo and the real wrapper).
+# One python start for every case: 27+ reducer starts could not fit the 2 s
+# budget, and the flake a bash harness cannot diagnose from its own output
+# (a check failing once in 34 runs) gets a full dump here instead.
+# ---------------------------------------------------------------------------
+
+_SELF_SHA = "0123456789abcdef0123456789abcdef01234567"
+_FAKE_GH = """#!/bin/sh
+printf '%s\\n' "$*" >> "${GH_FAKE_LOG:-/dev/null}"
+if [ "${GH_FAKE_OFFLINE:-0}" = 1 ]; then echo "gh: dial tcp: network is unreachable" >&2; exit 1; fi
+case "$3" in
+  1) echo '{"state":"CLOSED","title":"closed one"}' ;;
+  2) echo '{"state":"OPEN","title":"open two"}' ;;
+  *) echo "GraphQL: Could not resolve to an Issue with the number of $3. (repository.issue)" >&2; exit 1 ;;
+esac
+"""
+# name -> class tiers kind target filter ratchet knownIssue prereq prereqPolicy note (checkpoint=ok, oracle=self)
+_SELF_MANIFEST = [
+    ("alpha", "BLOCK", "t0", "script", "scripts/alpha.sh", "-", "-", "-", "-", "fail", "BLOCK with no knownIssue"),
+    ("beta", "BLOCK", "t0", "script", "scripts/beta.sh", "-", "-", "#2", "-", "fail", "BLOCK citing OPEN #2"),
+    ("gamma", "BLOCK", "full", "script", "scripts/gamma.sh", "-", "-", "#1", "-", "fail", "BLOCK citing CLOSED #1"),
+    ("delta", "BLOCK", "t0", "test", "Some.Tests/Some.Tests.csproj", "FullyQualifiedName~SomeClass", "-", "#2/SomeClass", "-", "fail", "qualified knownIssue"),
+    ("epsilon", "IMPROVE", "t0", "script", "scripts/epsilon.sh", "-", "tests/epsilon-baseline.tsv", "-", "-", "fail", "IMPROVE with a number in its log"),
+    ("zeta", "GRADE", "t0", "script", "scripts/zeta.sh", "-", "-", "-", "-", "skip", "GRADE never blocks"),
+    ("eta", "SELFTEST", "t0", "script", "scripts/test-eta.sh", "-", "-", "-", "-", "fail", "SELFTEST row"),
+    ("theta", "BLOCK", "t0", "script", "scripts/theta.sh", "-", "-", "-", "tool:nonesuch", "skip", "policy=skip row"),
+    ("kappa", "BLOCK", "full", "script", "scripts/kappa.sh", "-", "-", "#99", "-", "fail", "BLOCK citing an issue that does not exist"),
+    ("lam", "GRADE", "full", "script", "scripts/lam.sh", "-", "-", "#1", "-", "skip", "GRADE citing CLOSED #1"),
+    ("mu", "BLOCK", "full", "script", "scripts/mu.sh", "-", "-", "#1", "tool:nonesuch", "skip", "policy=skip row citing CLOSED #1"),
+    ("nu", "BLOCK", "full", "script", "scripts/nu.sh", "-", "-", "#1/broke", "-", "fail", "qualified cite of CLOSED #1 (the real manifest's gate-asymmetry shape)"),
+]
+_T0_ROWS = ["alpha", "beta", "delta", "epsilon", "zeta", "eta", "theta"]
+
+
+class _SelfTest:
+    def __init__(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="report-gates-selftest."))
+        self.root = self.tmp / "root"
+        self.logs = self.root / "logs"
+        self.recs = self.logs / "runner-state" / "known-issues"
+        for d in (self.root / "tests", self.recs, self.tmp / "bin"):
+            d.mkdir(parents=True)
+        gh = self.tmp / "bin" / "gh"
+        gh.write_text(_FAKE_GH, encoding="utf-8")
+        gh.chmod(0o755)
+        self.manifest = {r[0]: r for r in _SELF_MANIFEST}
+        with open(self.root / "tests" / "gates.tsv", "w", encoding="utf-8") as fh:
+            fh.write("# synthetic manifest for scripts/test-report-gates.sh\n")
+            fh.write("\t".join(MANIFEST_COLS) + "\n")
+            for name, cls, tiers, kind, target, filt, ratchet, known, prereq, policy, note in _SELF_MANIFEST:
+                fh.write("\t".join([name, cls, tiers, kind, target, filt, ratchet, known, prereq, policy, "ok", "self", note]) + "\n")
+        configure_root(self.root)
+        os.environ["PATH"] = f"{self.tmp / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}"
+        self.fails = 0
+        self.n = 0
+        self.seq = 0
+        self.d = None
+        self.keep = False
+        self.out, self.err, self.rc = "", "", None
+
+    # --- fixtures -----------------------------------------------------------
+    def mrow(self, name):
+        r = self.manifest.get(name)
+        if r is None:
+            return "BLOCK", "-", "script", "-", "fail"
+        return r[1], r[7], r[3], r[8], r[9]
+
+    def nd(self, keep=False):
+        """A fresh LOG_DIR. The previous case's report.json is dropped unless it asked to keep it
+        (only the Δ cases need siblings): every report scans every sibling's report.json for the
+        prior, and forty of them would cost a quarter of the budget for nothing."""
+        if self.d is not None and not self.keep:
+            try:
+                (self.d / "report.json").unlink()
+            except OSError:
+                pass
+        self.keep = keep
+        self.n += 1
+        self.d = self.logs / f"test-tier_t0_2026090501{self.n:02d}00"
+        return self.d
+
+    def mkplan(self, d, tier, planned, of, names, only="-", header=True):
+        d.mkdir(parents=True, exist_ok=True)
+        with open(d / "plan.tsv", "w", encoding="utf-8") as fh:
+            if header:
+                fh.write(f"# tier={tier} planned={planned} of={of} only={only} manifest=0123456789abcdef\n")
+            for name in names:
+                r = self.manifest.get(name)
+                if r is None:
+                    fh.write(f"{name}\tscript\tscripts/{name}.sh\t-\tBLOCK\t-\t-\tfail\tok\t-\n")
+                else:
+                    _, cls, _, kind, target, filt, ratchet, known, prereq, policy, _ = r
+                    fh.write("\t".join([name, kind, target, filt, cls, known, prereq, policy, "ok", ratchet]) + "\n")
+        (d / "ledger.jsonl").write_text("", encoding="utf-8")
+        self.seq = 0
+
+    def led(self, d, name, status, rc, reason=None, rec_hm="01:00", epsilon_n=123, dirty="no"):
+        cls, known, kind, _, _ = self.mrow(name)
+        row = {"name": name, "status": status, "rc": rc, "durationSeconds": 3, "sha": _SELF_SHA, "treeDirty": dirty,
+               "config": "Debug", "recorded": f"2026-09-05T{rec_hm}:0{self.seq % 10}Z", "kind": kind, "class": cls,
+               "knownIssue": known, "log": str(d / f"{name}.log")}
+        if kind == "test":
+            row["trx"] = str(d / f"{name}.trx")
+        if reason:
+            row["reason"] = reason
+        with open(d / "ledger.jsonl", "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row) + "\n")
+        self.seq += 1
+        text = "ok\n" if status == "PASS" else f"something happened\nFAIL: {name} broke\n"
+        if name == "epsilon":
+            text = f"==> no NEW unwired API ({epsilon_n} baselined, all triaged)\n"
+        (d / f"{name}.log").write_text(text, encoding="utf-8")
+
+    def run_t0(self, d, rec_hm="01:00", epsilon_n=123, **over):
+        """The standard t0 plan; every row PASS unless over[name] = (status, rc[, reason]) or 'ABSENT'."""
+        self.mkplan(d, "t0", 7, 7, _T0_ROWS)
+        for name in _T0_ROWS:
+            o = over.get(name)
+            if o == "ABSENT":
+                continue
+            status, rc, reason = (o + (None,))[:3] if o else ("PASS", 0, None)
+            self.led(d, name, status, rc, reason, rec_hm=rec_hm, epsilon_n=epsilon_n)
+
+    def trx(self, d, name, *failed):
+        with open(d / f"{name}.trx", "w", encoding="utf-8") as fh:
+            fh.write('<?xml version="1.0" encoding="utf-8"?>\n<TestRun>\n<Results>\n')
+            fh.write('<UnitTestResult executionId="e" testId="t" testName="Some.Tests.SomeClass.Passing" outcome="Passed" />\n')
+            for t in failed:
+                fh.write(f'<UnitTestResult executionId="e" testId="t" testName="{t}" outcome="Failed" />\n')
+            fh.write(f'</Results>\n<ResultSummary><Counters total="{len(failed) + 1}" passed="1" failed="{len(failed)}" /></ResultSummary>\n</TestRun>\n')
+
+    def legacy(self, d, rows, ledger):
+        """A LEGACY plan (no header, 4 columns) + hand-written ledger rows."""
+        d.mkdir(parents=True, exist_ok=True)
+        with open(d / "plan.tsv", "w", encoding="utf-8") as fh:
+            for name, kind, target, filt in rows:
+                fh.write(f"{name}\t{kind}\t{target}\t{filt}\n")
+        with open(d / "ledger.jsonl", "w", encoding="utf-8") as fh:
+            for i, (name, status, rc, kind) in enumerate(ledger):
+                fh.write(json.dumps({"name": name, "status": status, "rc": rc, "durationSeconds": 1, "sha": _SELF_SHA,
+                                     "treeDirty": "yes", "config": "Debug", "recorded": f"2026-09-05T01:00:0{i}Z",
+                                     "kind": kind, "log": str(d / f"{name}.log")}) + "\n")
+                (d / f"{name}.log").write_text("ok\n" if status == "PASS" else f"FAIL: {name} broke\n", encoding="utf-8")
+
+    # --- running the reducer in-process --------------------------------------
+    def run(self, d, *args, offline=False, gh_log=None):
+        for k, v in (("GH_FAKE_OFFLINE", "1" if offline else None), ("GH_FAKE_LOG", gh_log)):
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = str(v)
+        self.d = d
+        out, err = io.StringIO(), io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                self.rc = main([str(d), *args])
+        except Exception:  # noqa: BLE001 — a crash is a failed case, reported with its traceback
+            self.rc = "EXC"
+            err.write(traceback.format_exc())
+        self.out, self.err = out.getvalue(), err.getvalue()
+
+    # --- assertions ------------------------------------------------------------
+    def ok(self, desc):
+        print(f"PASS  {desc}")
+
+    def bad(self, desc, why):
+        print(f"FAIL  {desc} — {why}")
+        self.fails += 1
+        self.dump()
+
+    def dump(self):
+        w = sys.stderr
+        print(f"---- selftest case dump: {self.d}  rc={self.rc!r}", file=w)
+        for label, text in (("stdout", self.out), ("stderr", self.err)):
+            print(f"---- {label}:", file=w)
+            print(text.rstrip("\n"), file=w)
+        for fn in ("plan.tsv", "ledger.jsonl"):
+            t = read_text(Path(self.d) / fn) if self.d else None
+            print(f"---- {fn}:", file=w)
+            print((t or "<missing>").rstrip("\n"), file=w)
+        print("---- end dump", file=w)
+
+    def expect(self, desc, cond, why=""):
+        if cond:
+            self.ok(desc)
+        else:
+            self.bad(desc, why)
+
+    def rc_is(self, desc, want):
+        self.expect(desc, self.rc == want, f"exit {self.rc!r}, wanted {want}")
+
+    def grep(self, desc, regex):
+        self.expect(desc, re.search(regex, self.out, re.M) is not None, f"no line matches /{regex}/")
+
+    def nogrep(self, desc, regex):
+        self.expect(desc, re.search(regex, self.out, re.M) is None, f"a line matches /{regex}/")
+
+    def lines(self):
+        return len(self.out.splitlines())
+
+
+def selftest():
+    t = _SelfTest()
+    try:
+        _selftest_cases(t)
+    finally:
+        shutil.rmtree(t.tmp, ignore_errors=True)
+    return 1 if t.fails else 0
+
+
+def _selftest_cases(t):
+    recs = t.recs
+
+    # (1) NEW on a bare FAIL; bare PASS on an all-green run
+    d = t.nd(); t.run_t0(d, alpha=("FAIL", 1)); t.run(d)
+    t.rc_is("(1) bare FAIL -> exit 1", 1)
+    t.grep("(1) bare FAIL -> NEW row", r"^NEW +alpha +BLOCK +rc=1")
+    t.grep("(1) VERDICT names the NEW count", r"^VERDICT FAIL — 1 NEW \(exit 1\)")
+    d = t.nd(); t.run_t0(d); t.run(d)
+    t.rc_is("(1) all-PASS run -> exit 0", 0)
+    t.grep("(1) all-PASS run reads bare 'VERDICT PASS (exit 0)'", r"^VERDICT PASS \(exit 0\)")
+    t.nogrep("(1) all-PASS run lists no NEW", r"^NEW ")
+    t.grep("(1) header prints exactly sha7", r"^excise gates  t0 @0123456 \(tree clean\)")
+
+    # (2) KNOWN while the cited issue is OPEN; gh asked once per distinct issue; footer literal
+    d = t.nd(); t.run_t0(d, beta=("FAIL", 1)); t.run(d, gh_log=t.tmp / "gh.2")
+    t.rc_is("(2) FAIL citing OPEN #2 -> exit 0", 0)
+    t.grep("(2) row is KNOWN #2 OPEN", r"^KNOWN +beta +BLOCK +#2 OPEN")
+    t.grep("(2) footer reads 'gh reachable, 1 checked'", r"knownIssue verification: gh reachable, 1 checked$")
+    calls = (read_text(t.tmp / "gh.2") or "").count("issue view 2 ")
+    t.expect("(2) gh asked exactly once for #2", calls == 1, f"{calls} calls")
+    rec = read_text(recs / "2.rec") or ""
+    t.expect("(2) .rec written for #2 with sentinel", rec.rstrip("\n").endswith(REC_SENTINEL) and "state=OPEN" in rec, rec)
+
+    # (3) STALE: CLOSED #1 on a passing row, on a failing row (never KNOWN); INVALID: a #N that does not exist
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "gamma"]); t.led(d, "alpha", "PASS", 0); t.led(d, "gamma", "PASS", 0); t.run(d)
+    t.rc_is("(3) CLOSED #1 on a PASSING row -> exit 1", 1)
+    t.grep("(3) passing row is STALE #1 CLOSED", r"^STALE +gamma +BLOCK +#1 CLOSED")
+    t.grep("(3) VERDICT reads FAIL — STALE #1", r"^VERDICT FAIL — STALE #1 \(exit 1\)")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "gamma"]); t.led(d, "alpha", "PASS", 0); t.led(d, "gamma", "FAIL", 1); t.run(d)
+    t.rc_is("(3) CLOSED #1 on a FAILING row -> exit 1, not KNOWN", 1)
+    t.grep("(3) failing row is STALE, not KNOWN", r"^STALE +gamma ")
+    t.nogrep("(3) failing row is not KNOWN", r"^KNOWN +gamma ")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "nu"]); t.led(d, "alpha", "PASS", 0); t.led(d, "nu", "FAIL", 1); t.run(d)
+    t.rc_is("(3) a MATCHING qualifier '#1/broke' whose #1 is CLOSED -> STALE, exit 1 (the match does not save it)", 1)
+    t.grep("(3) qualified failing row is STALE", r"^STALE +nu +BLOCK +#1 CLOSED +KNOWN: log matches /broke")
+    t.nogrep("(3) qualified failing row is not KNOWN", r"^KNOWN +nu ")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "kappa"]); t.led(d, "alpha", "PASS", 0); t.led(d, "kappa", "PASS", 0); t.run(d)
+    t.rc_is("(3) '#99' (gh: no such issue) on a passing row -> exit 1, never KNOWN", 1)
+    t.grep("(3) row is INVALID #99 (no such issue)", r"^INVALID +kappa +BLOCK +#99 no such issue")
+    t.grep("(3) VERDICT reads FAIL — INVALID #99", r"^VERDICT FAIL — INVALID #99 \(exit 1\)")
+    t.grep("(3) a definitive gh answer counts as reachable", r"gh reachable, 1 checked$")
+    rec = read_text(recs / "99.rec") or ""
+    t.expect("(3) 99.rec remembers state=INVALID", "state=INVALID" in rec and rec.rstrip("\n").endswith(REC_SENTINEL), rec)
+    t.run(d, offline=True)
+    t.rc_is("(3) offline, the remembered INVALID still fails -> exit 1", 1)
+    t.grep("(3) offline INVALID row says remembered", r"^INVALID +kappa +BLOCK +#99 no such issue \(remembered 20")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "kappa"]); t.led(d, "alpha", "PASS", 0); t.led(d, "kappa", "FAIL", 1); t.run(d)
+    t.rc_is("(3) '#99' on a FAILING row -> exit 1 (INVALID, not KNOWN)", 1)
+    t.grep("(3) failing row citing #99 is INVALID", r"^INVALID +kappa ")
+    t.nogrep("(3) failing row citing #99 is not KNOWN", r"^KNOWN +kappa ")
+
+    # (4) qualifier '#2/SomeClass'
+    d = t.nd(); t.run_t0(d, delta=("FAIL", 1)); t.trx(d, "delta", "Some.Tests.SomeClass.A", "Some.Tests.SomeClass.B"); t.run(d)
+    t.rc_is("(4) every failed test inside SomeClass -> exit 0", 0)
+    t.grep("(4) row is KNOWN, all match", r"^KNOWN +delta +BLOCK +#2 OPEN +2 failed, all match /SomeClass")
+    d = t.nd(); t.run_t0(d, delta=("FAIL", 1)); t.trx(d, "delta", "Some.Tests.SomeClass.A", "Some.Tests.OtherClass.Escapee"); t.run(d)
+    t.rc_is("(4) one failed test outside SomeClass -> exit 1", 1)
+    t.grep("(4) row is NEW naming the unmatched test", r"^NEW +delta +BLOCK .*OtherClass\.Escapee")
+    d = t.nd(); t.run_t0(d, delta=("FAIL", 1)); t.trx(d, "delta"); t.run(d)
+    t.rc_is("(4) a trx with zero failed tests cannot launder the FAIL -> exit 1", 1)
+    t.grep("(4) zero-failed trx -> NEW (qualifier unverifiable)", r"^NEW +delta .*unverifiable")
+    d = t.nd(); t.run_t0(d, delta=("FAIL", 1)); t.run(d)
+    t.rc_is("(4) no trx at all -> exit 1", 1)
+    t.grep("(4) missing trx -> NEW", r"^NEW +delta .*no trx")
+
+    # (5) NOT RUN and PARTIAL; a NOT RUN row citing CLOSED #1 is STALE (exit 1 beats exit 3)
+    d = t.nd(); t.run_t0(d, theta="ABSENT"); t.run(d)
+    t.rc_is("(5) plan row without a ledger row -> exit 3", 3)
+    t.grep("(5) row is NOT RUN", r"^NOT RUN +theta ")
+    t.grep("(5) VERDICT reads INCOMPLETE — 1 NOT RUN", r"^VERDICT INCOMPLETE — 1 NOT RUN \(exit 3\)")
+    d = t.nd(); t.mkplan(d, "t0", 6, 7, _T0_ROWS)
+    for name in _T0_ROWS:
+        t.led(d, name, "PASS", 0)
+    t.run(d)
+    t.grep("(5) planned<of prints PARTIAL in the header", r"^excise gates .* PARTIAL planned 6/7")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "gamma"]); t.led(d, "alpha", "PASS", 0); t.run(d)
+    t.rc_is("(5) NOT RUN row citing CLOSED #1 -> STALE, exit 1 not 3", 1)
+    t.grep("(5) the STALE row keeps NOT RUN in its detail", r"^STALE +gamma +BLOCK +#1 CLOSED +NOT RUN: ")
+    t.grep("(5) VERDICT reads FAIL — STALE #1", r"^VERDICT FAIL — STALE #1")
+
+    # (6) SKIPPED; a SKIPPED row citing CLOSED #1 is STALE
+    d = t.nd(); t.run_t0(d, theta=("SKIPPED", 77, "SKIPPED tool nonesuch missing")); t.run(d)
+    t.rc_is("(6) SKIPPED row -> exit 0", 0)
+    t.grep("(6) VERDICT reads 'PASS with 1 SKIPPED'", r"^VERDICT PASS with 1 SKIPPED \(exit 0\)")
+    t.grep("(6) SKIPPED row carries its reason", r"^SKIPPED +theta +BLOCK +policy=skip +SKIPPED tool nonesuch missing")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "mu"]); t.led(d, "alpha", "PASS", 0); t.led(d, "mu", "SKIPPED", 77, "tool nonesuch missing"); t.run(d)
+    t.rc_is("(6) SKIPPED row citing CLOSED #1 -> STALE, exit 1", 1)
+    t.grep("(6) the STALE row keeps SKIPPED in its detail", r"^STALE +mu +BLOCK +#1 CLOSED +SKIPPED: tool nonesuch missing")
+    t.nogrep("(6) a STALE skip is not reported as SKIPPED", r"^SKIPPED +mu ")
+
+    # (7) GRADE never blocks; NO DATA is printed for EVERY class; an expired cite still fails a GRADE row
+    d = t.nd(); t.run_t0(d, zeta=("FAIL", 1)); t.run(d)
+    t.rc_is("(7) GRADE row FAIL -> exit 0", 0)
+    t.grep("(7) GRADE FAIL reads NO DATA in the grade block", r"^  zeta +NO DATA — FAIL rc=1")
+    t.grep("(7) GRADE tally reports 0/1", r"GRADE 0/1 reported")
+    d = t.nd(); t.run_t0(d, zeta=("NO_RESULT", 1)); t.run(d)
+    t.rc_is("(7) GRADE row NO_RESULT -> exit 0", 0)
+    t.grep("(7) NO_RESULT reads NO DATA", r"^  zeta +NO DATA — NO_RESULT")
+    d = t.nd(); t.run_t0(d, theta=("NO_RESULT", 0)); t.run(d)
+    t.rc_is("(7) NO_RESULT on a BLOCK row -> exit 0 (never affects exit)", 0)
+    t.grep("(7) a BLOCK row's NO_RESULT is visible in the grade block, not silently dropped", r"^  theta +NO DATA — NO_RESULT rc=0")
+    t.grep("(7) VERDICT stays PASS", r"^VERDICT PASS \(exit 0\)")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "lam"]); t.led(d, "alpha", "PASS", 0); t.led(d, "lam", "FAIL", 1); t.run(d)
+    t.rc_is("(7) GRADE row citing CLOSED #1 -> STALE, exit 1", 1)
+    t.grep("(7) the GRADE row reads STALE with NO DATA in its detail", r"^STALE +lam +GRADE +#1 CLOSED +NO DATA: FAIL rc=1")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "gamma"]); t.led(d, "alpha", "PASS", 0); t.led(d, "gamma", "NO_RESULT", 0); t.run(d)
+    t.rc_is("(7) NO_RESULT on a BLOCK row citing CLOSED #1 -> STALE, exit 1", 1)
+    t.grep("(7) NO_RESULT + closed cite reads STALE", r"^STALE +gamma +BLOCK +#1 CLOSED +NO DATA: NO_RESULT")
+
+    # (8) offline: the .rec memory
+    for f in recs.glob("*.rec"):
+        f.unlink()
+    d = t.nd(); t.run_t0(d, beta=("FAIL", 1)); t.run(d, offline=True)
+    t.rc_is("(8) offline, no .rec: KNOWN unverified -> exit 0", 0)
+    t.grep("(8) offline row reads unverified", r"^KNOWN +beta +BLOCK +#2 unverified")
+    t.grep("(8) footer reads 'gh unreachable, unverified'", r"knownIssue verification: gh unreachable, unverified$")
+    (recs / "1.rec").write_text("issue=1\nstate=CLOSED\ntitle=closed one\nverified=2026-09-04T10:00:00Z\n--CKPT-OK--\n", encoding="utf-8")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "gamma"]); t.led(d, "alpha", "PASS", 0); t.led(d, "gamma", "PASS", 0); t.run(d, offline=True)
+    t.rc_is("(8) offline with a remembered CLOSED .rec -> STALE, exit 1", 1)
+    t.grep("(8) STALE row shows the remembered verdict", r"^STALE +gamma +BLOCK +#1 CLOSED \(remembered 2026-09-04\)")
+    t.run(d, "--no-gh", gh_log=t.tmp / "gh.8")
+    t.rc_is("(8) --no-gh still honours the .rec -> exit 1", 1)
+    t.expect("(8) --no-gh never calls gh", not (t.tmp / "gh.8").exists(), "gh was called")
+    t.grep("(8) --no-gh footer", r"knownIssue verification: --no-gh$")
+    (recs / "1.rec").write_text("issue=1\nstate=CLOSED\ntitle=torn\n", encoding="utf-8")
+    t.run(d, offline=True)
+    t.rc_is("(8) a torn .rec (no sentinel) is not trusted -> exit 0", 0)
+    t.grep("(8) torn .rec -> unverified KNOWN on the cite (passing row stays PASS)", r"^VERDICT PASS \(exit 0\)")
+    (recs / "1.rec").write_text("issue=1\nstate=CLOSED\ntitle=closed one\nverified=2026-09-04T10:00:00Z\n--CKPT-OK--\n\n", encoding="utf-8")
+    t.run(d, offline=True)
+    t.rc_is("(8) a .rec with a blank line after the sentinel is still trusted -> exit 1", 1)
+    for f in recs.glob("*.rec"):
+        f.unlink()
+
+    # (9) the summary never exceeds 20 lines
+    d = t.nd(); names = [f"fail{i:02d}" for i in range(1, 31)]; t.mkplan(d, "t0", 30, 30, names)
+    for name in names:
+        t.led(d, name, "FAIL", 1)
+    t.run(d)
+    t.rc_is("(9) 30 failing rows -> exit 1", 1)
+    t.expect("(9) summary is <= 20 lines", t.lines() <= 20, f"{t.lines()} lines")
+    t.grep("(9) summary says +N more (--full)", r"^\+[0-9]+ more \(--full\)")
+    t.grep("(9) VERDICT counts all 30", r"^VERDICT FAIL — 30 NEW")
+    t.run(d, "--full")
+    t.expect("(9) --full prints more than 20 lines", t.lines() > 20, f"{t.lines()} lines")
+    t.grep("(9) --full lists the last row", r"^FAIL +NEW +fail30 ")
+
+    # (10) report.json and Δ vs the newest prior report of the same tier that finished before this run
+    dA = t.nd(keep=True); t.run_t0(dA, rec_hm="02:00"); t.run(dA)
+    rep = read_json(dA / "report.json")
+    t.expect("(10) report.json written", isinstance(rep, dict), "missing or unreadable")
+    keys = ("tier", "sha", "started", "finished", "verdict", "exit", "counts", "rows", "grades", "improve")
+    t.expect("(10) report.json carries tier/verdict/exit/rows/grades/improve",
+             isinstance(rep, dict) and all(k in rep for k in keys) and rep.get("tier") == "t0" and rep.get("exit") == 0,
+             str(sorted(rep.keys()) if isinstance(rep, dict) else rep))
+    t.grep("(10) first run: IMPROVE number has no prior", r"IMPROVE +held: epsilon 123 baselined \(no prior\)")
+    dB = t.nd(keep=True); t.run_t0(dB, rec_hm="02:01"); t.run(dB)
+    t.grep("(10) sibling run, unchanged number -> (=)", r"IMPROVE +held: epsilon 123 baselined \(=\)")
+    dC = t.nd(keep=True); t.run_t0(dC, rec_hm="02:02", epsilon_n=124); t.run(dC)
+    t.grep("(10) sibling run, moved number -> (Δ +1)", r"IMPROVE +held: epsilon 124 baselined \(Δ \+1\)")
+    dD = t.logs / "test-tier_t1_20260905019900"; t.mkplan(dD, "t1", 1, 1, ["epsilon"]); t.led(dD, "epsilon", "PASS", 0); t.run(dD)
+    t.grep("(10) another tier has no prior", r"epsilon 123 baselined \(no prior\)")
+    t.run(dA)
+    t.grep("(10) re-reporting the OLDEST run: the later siblings are never its prior", r"IMPROVE +held: epsilon 123 baselined \(no prior\)")
+    t.run(dC)
+    t.grep("(10) the newest run still diffs against the one before it", r"IMPROVE +held: epsilon 124 baselined \(Δ \+1\)")
+
+    # (12) legacy plan (no header, 4 columns): tier=full, manifest fills class/knownIssue, chunk names resolve,
+    #      the STALE sweep is PLAN-scoped, and a planned row the manifest no longer declares is judged by status
+    d = t.logs / "full-suite_Debug_20260905_019800"
+    t.legacy(d, [("alpha", "script", "scripts/alpha.sh", "-"), ("beta.chunk01", "test", "Some.Tests/Some.Tests.csproj", "FullyQualifiedName~X")],
+             [("alpha", "PASS", 0, "script"), ("beta.chunk01", "FAIL", 1, "test")])
+    t.run(d, gh_log=t.tmp / "gh.12")
+    t.rc_is("(12) legacy plan: KNOWN #2 only, exit 0 (gamma's CLOSED #1 is not in this plan)", 0)
+    t.grep("(12) legacy header reads tier=full", r"^excise gates +full @0123456 ")
+    t.grep("(12) beta.chunk01 resolves to beta and is KNOWN #2", r"^KNOWN +beta\.chunk01 +BLOCK +#2 OPEN")
+    t.nogrep("(12) a manifest-only #N (gamma, not planned) is NOT swept", r"^STALE +gamma")
+    t.expect("(12) gh is not asked about an issue no planned row cites", "issue view 1 " not in (read_text(t.tmp / "gh.12") or ""), "gh asked about #1")
+    t.grep("(12) legacy tree flag", r"\(tree DIRTY\)")
+    d = t.logs / "full-suite_Debug_20260905_019700"
+    t.legacy(d, [("alpha", "script", "scripts/alpha.sh", "-"), ("gamma", "script", "scripts/gamma.sh", "-")],
+             [("alpha", "PASS", 0, "script"), ("gamma", "PASS", 0, "script")])
+    t.run(d)
+    t.rc_is("(12) legacy plan carrying gamma: its manifest knownIssue #1 (CLOSED) is swept -> exit 1", 1)
+    t.grep("(12) legacy row's knownIssue comes from the manifest", r"^STALE +gamma +BLOCK +#1 CLOSED")
+    d = t.logs / "full-suite_Debug_20260905_019600"
+    t.legacy(d, [("alpha", "script", "scripts/alpha.sh", "-"), ("release-gates", "script", "scripts/rg.sh", "-")],
+             [("alpha", "PASS", 0, "script"), ("release-gates", "FAIL", 1, "script")])
+    t.run(d)
+    t.rc_is("(12) a planned row the manifest no longer declares FAILs -> NEW, exit 1 (never informational)", 1)
+    t.grep("(12) the undeclared row reads NEW with the note", r"^NEW +release-gates +- +rc=1 .*\[not in manifest\]")
+
+    # (13) the plan header: only= may hold spaces; a '# tier=' line that does not parse is unreadable (exit 2)
+    d = t.nd(); t.mkplan(d, "t0", 1, 7, ["alpha"], only="alpha beta"); t.led(d, "alpha", "PASS", 0); t.run(d)
+    t.rc_is("(13) header with only='alpha beta' -> exit 0", 0)
+    t.grep("(13) header parsed: tier t0, PARTIAL planned 1/7 (not a legacy full read)", r"^excise gates  t0 @0123456 .* PARTIAL planned 1/7$")
+    d = t.nd(); t.mkplan(d, "t0", 1, 1, ["alpha"]); t.led(d, "alpha", "PASS", 0)
+    (d / "plan.tsv").write_text("# tier=t0 planned=x\nalpha\tscript\tscripts/alpha.sh\t-\tBLOCK\t-\t-\tfail\tok\t-\n", encoding="utf-8")
+    t.run(d)
+    t.rc_is("(13) a '# tier=' header that does not parse -> exit 2", 2)
+    t.expect("(13) stderr names the unparseable header", "unparseable plan header" in t.err, t.err)
+
+    # (15) a torn last ledger line reads NOT RUN and says so
+    d = t.nd(); t.mkplan(d, "t0", 2, 2, ["alpha", "theta"]); t.led(d, "alpha", "PASS", 0)
+    with open(d / "ledger.jsonl", "a", encoding="utf-8") as fh:
+        fh.write('{"name":"theta","status":"FAIL","rc":1,"durationSec')
+    t.run(d)
+    t.rc_is("(15) torn last ledger line -> exit 3", 3)
+    t.grep("(15) the torn row is NOT RUN and says torn", r"^NOT RUN +theta +BLOCK +- +ledger row torn")
+    rep = read_json(d / "report.json")
+    t.expect("(15) report.json records the torn row", isinstance(rep, dict) and rep.get("tornLedgerRows") == ["theta"], str(rep.get("tornLedgerRows") if isinstance(rep, dict) else rep))
 
 
 if __name__ == "__main__":
