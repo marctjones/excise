@@ -36,6 +36,8 @@ trap 'rm -rf "$WORK"' EXIT
 # to keep this test from touching the real tests/skip-allowlist/*.txt.
 mkdir -p "$WORK/scripts" "$WORK/tests/skip-allowlist"
 cp "$HERE/check-skip-budget.sh" "$WORK/scripts/check-skip-budget.sh"
+# The gate sources lib-runner.sh (prerequisite resolver); the temp root needs it too.
+cp "$HERE/lib-runner.sh" "$WORK/scripts/lib-runner.sh"
 chmod +x "$WORK/scripts/check-skip-budget.sh"
 
 PROJECT="$WORK/Demo.Tests.csproj"

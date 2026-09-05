@@ -47,15 +47,30 @@
 #                                          (used by test-check-skip-budget.sh)
 set -euo pipefail
 
-PROJECT="${1:?usage: check-skip-budget.sh <project.csproj> [--update] [--trx <file>]}"
-UPDATE="${2:-}"
-# --trx lets CI reuse a trx from a run that already happened (the coverage run),
-# instead of executing the whole suite a second time just to count skips.
-EXISTING_TRX=""
-if [[ "${2:-}" == "--trx" ]]; then EXISTING_TRX="${3:-}"; UPDATE=""; fi
-if [[ "${3:-}" == "--trx" ]]; then EXISTING_TRX="${4:-}"; fi
+PROJECT="${1:?usage: check-skip-budget.sh <project.csproj> [--update] [--trx <file>]...}"
+shift
+UPDATE=""
+# --trx reuses a trx from a run that already happened instead of executing the
+# whole suite a second time just to count skips. It may be REPEATED: the
+# full-suite runner chunks the big projects by test class, and the union of
+# the chunk trx files is exactly one unfiltered run ({TRXARGS:…} in
+# tests/gates.tsv). NotExecuted names are unioned across the files.
+EXISTING_TRX=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --update) UPDATE="--update" ;;
+    --trx) EXISTING_TRX+=("${2:?--trx needs a file}"); shift ;;
+    *) echo "check-skip-budget: unknown argument: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Prerequisite specs ([requires: …]) resolve through lib-runner's
+# runner_prereq_present, the same resolver every runner uses for the
+# manifest's prereq column — one vocabulary, one implementation.
+RUNNER_ROOT="$ROOT"
+source "$ROOT/scripts/lib-runner.sh"
 NAME="$(basename "$PROJECT" .csproj)"
 ALLOWLIST="$ROOT/tests/skip-allowlist/$NAME.txt"
 TMP="$(mktemp -d)"
@@ -63,37 +78,43 @@ trap 'rm -rf "$TMP"' EXIT
 
 mkdir -p "$(dirname "$ALLOWLIST")"
 
-if [[ -n "$EXISTING_TRX" ]]; then
-  echo "==> reading skips from $EXISTING_TRX (no second test run)"
-  cp "$EXISTING_TRX" "$TMP/r.trx" 2>/dev/null || true
+if [[ ${#EXISTING_TRX[@]} -gt 0 ]]; then
+  echo "==> reading skips from ${#EXISTING_TRX[@]} trx file(s) (no second test run)"
+  _i=0
+  for _t in "${EXISTING_TRX[@]}"; do
+    _i=$(( _i + 1 ))
+    echo "    $_t"
+    cp "$_t" "$TMP/r$_i.trx" 2>/dev/null || true
+  done
 else
   echo "==> running $NAME to enumerate skips"
   # #1144: this re-runs the WHOLE suite (slow -- minutes). If a trx already
   # exists from a prior run (the coverage run, or a --logger trx you kept),
   # skip it:  scripts/check-skip-budget.sh <proj> --update --trx <that.trx>
   "$ROOT/scripts/assert-fresh.sh" --configuration Debug "$PROJECT"
-  dotnet test "$PROJECT" --nologo --logger "trx;LogFileName=$TMP/r.trx" >"$TMP/out.log" 2>&1 || true
+  dotnet test "$PROJECT" --nologo --logger "trx;LogFileName=$TMP/r1.trx" >"$TMP/out.log" 2>&1 || true
 fi
 
-if [[ ! -f "$TMP/r.trx" ]]; then
+if ! ls "$TMP"/r*.trx >/dev/null 2>&1; then
   echo "FAIL: no trx produced — the run did not complete. Not treating that as 'no skips'."
-  tail -20 "$TMP/out.log"
+  tail -20 "$TMP/out.log" 2>/dev/null || true
   exit 1
 fi
 
-# Skipped tests in a trx carry outcome="NotExecuted".
-python3 - "$TMP/r.trx" "$TMP/actual-counts.tsv" >"$TMP/actual.txt" <<'PY'
+# Skipped tests in a trx carry outcome="NotExecuted". Several trx files are
+# the chunks of one project: their union is the project.
+python3 - "$TMP/actual-counts.tsv" "$TMP"/r*.trx >"$TMP/actual.txt" <<'PY'
 import sys, xml.etree.ElementTree as ET
 from collections import Counter
-ns = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
-root = ET.parse(sys.argv[1]).getroot()
 counts = Counter()
-for r in root.iter():
-    if r.tag.endswith("UnitTestResult") and r.get("outcome") == "NotExecuted":
-        name = r.get("testName", "").split("(")[0]   # strip Theory args
-        if name:
-            counts[name] += 1
-with open(sys.argv[2], "w", encoding="utf-8") as f:
+for path in sys.argv[2:]:
+    root = ET.parse(path).getroot()
+    for r in root.iter():
+        if r.tag.endswith("UnitTestResult") and r.get("outcome") == "NotExecuted":
+            name = r.get("testName", "").split("(")[0]   # strip Theory args
+            if name:
+                counts[name] += 1
+with open(sys.argv[1], "w", encoding="utf-8") as f:
     for n in sorted(counts):
         f.write(f"{n}\t{counts[n]}\n")
 for n in sorted(counts):
@@ -198,41 +219,11 @@ grep -vE '^\s*(#|$)' "$ALLOWLIST" \
 SPEC_CACHE_DIR="$TMP/spec-cache"
 mkdir -p "$SPEC_CACHE_DIR"
 
-spec_present() {
-  local spec="$1"
-  case ",${SKIP_BUDGET_FORCE_ABSENT:-}," in *",$spec,"*) return 1 ;; esac
-
-  # No forks on the cache-hit path: bash-native slug (specs are ~20 chars, far
-  # short of where 3.2's substitution gets slow) and `read < file`, a builtin.
-  # This runs once per allow-listed entry — 200+ times on Rendering — so
-  # $(printf|tr) plus $(cat) per call was ~1700 needless processes.
-  local key="$SPEC_CACHE_DIR/${spec//[^A-Za-z0-9._-]/_}"
-  if [[ -f "$key" ]]; then
-    local cached
-    read -r cached < "$key"
-    [[ "$cached" == "1" ]]
-    return
-  fi
-
-  local kind="${spec%%:*}" val="${spec#*:}" ok=1
-  case "$kind" in
-    tool)   command -v "$val" >/dev/null 2>&1 || ok=0 ;;
-    # -print -quit stops at the FIRST entry instead of listing the directory.
-    corpus) if [[ -d "$ROOT/test-pdfs/$val" ]] &&
-                 [[ -n "$(find "$ROOT/test-pdfs/$val" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]
-            then ok=1; else ok=0; fi ;;
-    env)    [[ -n "${!val:-}" ]] || ok=0 ;;
-    # Glob, so a version-pinned filename does not have to be restated here
-    # every time the vendored dependency is bumped.
-    file)   compgen -G "$ROOT/$val" >/dev/null 2>&1 || ok=0 ;;
-    # Unknown spec kind resolves ABSENT on purpose: a typo must not silently
-    # disable the reverse check for that entry.
-    *)      ok=0 ;;
-  esac
-
-  printf '%s' "$ok" > "$key"
-  [[ "$ok" == "1" ]]
-}
+# spec_present <spec> — kept as the name this file's callers use; the
+# resolver is lib-runner's (tool/corpus/env/file/opt, cached per spec,
+# SKIP_BUDGET_FORCE_ABSENT honoured for the selftest).
+RUNNER_PREREQ_CACHE="$SPEC_CACHE_DIR"
+spec_present() { runner_prereq_present "$1"; }
 
 # 0 (true) only if the entry declares prerequisites AND every one is present.
 entry_prereqs_present() {
