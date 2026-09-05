@@ -79,7 +79,7 @@ bug_1327884.pdf	1	MALFORMED_PDF
 bug_1328389.pdf	1	PASS
 bug_1333298.pdf	1	PASS
 bug_1388_2.pdf	1	PASS
-bug_1396264.pdf	1	PASS_ONE
+bug_1396264.pdf	1	PASS
 bug_1399.pdf	1	PASS
 bug_1477093.pdf	1	PASS
 bug_1506.pdf	1	PASS
@@ -272,7 +272,7 @@ javascript/xfa_specific/resolve_nodes_2.pdf	1	PASS
 jpeg_reduced_size.pdf	1	PASS
 jpeg_reduced_size_with_smask.pdf	1	PASS
 jpeg_unaligned_no_reduce.pdf	1	PASS
-jpx_lzw.pdf	1	PASS_ONE
+jpx_lzw.pdf	1	PASS
 js.pdf	1	PASS
 latin_extended.pdf	1	PASS
 launch_action.pdf	1	PASS
