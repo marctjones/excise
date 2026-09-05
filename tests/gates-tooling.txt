@@ -123,3 +123,5 @@ scripts/update-corpus-expectations.sh   # writes the corpus expectation manifest
 scripts/validate-all-categories.sh   # manual validation sweep
 scripts/validate_json_schema.py   # helper invoked by registry scripts
 scripts/.run-full-conformance.sh   # tracked despite the dot; manual conformance dispatcher
+scripts/report-gates.sh   # the report reducer (every runner ends with it; it never runs a test)
+scripts/report_gates.py   # body of report-gates.sh

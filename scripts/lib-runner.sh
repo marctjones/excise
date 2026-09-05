@@ -207,15 +207,11 @@ runner_state_init() {
     RUNNER_LABEL="$1"
     RUNNER_CONFIG="${2:-Debug}"
 
-    RUNNER_SHA="$(git rev-parse HEAD 2>/dev/null || echo nogit)"
-    local dirty=""
-    if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; then
-        dirty="-dirty"
-    fi
-
     # Exported so the ledger can state it: a sha alone reads as "this commit"
     # when the run may have measured uncommitted changes on top of it (#994).
-    RUNNER_TREE_DIRTY="$([ -n "$dirty" ] && echo yes || echo no)"
+    runner_identify_tree "$RUNNER_CONFIG"
+    local dirty=""
+    [ "$RUNNER_TREE_DIRTY" = yes ] && dirty="-dirty"
 
     # #1027: the key is label + config + BRANCH + dirtiness — deliberately NOT
     # the commit. It used to include ${RUNNER_SHA:0:12}, which meant a commit
@@ -263,7 +259,13 @@ runner_marker_path() {
     echo "$RUNNER_STATE_DIR/$slug.ckpt"
 }
 
+# The manifest's checkpoint column decides (tests/gates.tsv); the name regex
+# stays only as a backstop for a step no manifest declares. A row is read
+# through runner_manifest_field so Foo.chunkNN inherits Foo's answer.
 runner_is_never_checkpointed() {
+    local col=""
+    [ -s "${RUNNER_MANIFEST:-}" ] && col="$(runner_manifest_field "$1" checkpoint 2>/dev/null)"
+    case "$col" in never) return 0 ;; ok) return 1 ;; esac
     printf '%s' "$1" | grep -qiE "$RUNNER_NEVER_CHECKPOINT"
 }
 
@@ -271,11 +273,13 @@ runner_is_never_checkpointed() {
 # Checkpoint read/write
 # ---------------------------------------------------------------------------
 
-# runner_step_mark <name> <rc> <duration_seconds>
+# runner_step_mark <name> <rc> <duration_seconds> [target-hash] [log]
 # Writes a marker ONLY for a passing step. A failure leaves no marker, so the
-# step re-runs next time.
+# step re-runs next time. The target hash says WHAT ran (kind|target|filter,
+# runner_target_hash) so a row whose command changed re-runs (#1362 applied to
+# markers); the log path lets a resumed run's report read the evidence.
 runner_step_mark() {
-    local name="$1" rc="$2" dur="${3:-0}"
+    local name="$1" rc="$2" dur="${3:-0}" target="${4:-}" log="${5:-}"
     [ -n "$RUNNER_STATE_DIR" ] || return 0
     [ "$rc" = "0" ] || return 0
 
@@ -290,6 +294,8 @@ runner_step_mark() {
         echo "rc=$rc"
         echo "duration=$dur"
         echo "finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "target=$target"
+        echo "log=$log"
         echo "$RUNNER_SENTINEL"
     } > "$tmp"
 
@@ -302,7 +308,7 @@ runner_step_mark() {
     sync
 }
 
-# runner_step_should_run <name> — 0 (true) if the step must run.
+# runner_step_should_run <name> [target-hash] — 0 (true) if the step must run.
 runner_step_should_run() {
     local name="$1"
     [ -n "$RUNNER_STATE_DIR" ] || return 0
@@ -317,6 +323,14 @@ runner_step_should_run() {
     # Every one of these checks failing means RE-RUN.
     [ -s "$f" ] || return 0                                    # missing or zero-length
     [ "$(tail -n 1 "$f" 2>/dev/null)" = "$RUNNER_SENTINEL" ] || return 0   # torn write
+
+    # The marker says WHAT ran. A changed row re-runs; a marker without the
+    # line (written before the manifest existed) re-runs once.
+    if [ -n "${2:-}" ]; then
+        local have
+        have="$(sed -n 's/^target=//p' "$f" 2>/dev/null | head -1)"
+        [ "$have" = "$2" ] || return 0
+    fi
 
     # A marker from a DIFFERENT commit is still accepted, and this is a
     # deliberate reversal (#1027).
@@ -648,4 +662,221 @@ runner_plan_write() {
         printf '# tier=%s planned=%s of=%s only=%s manifest=%s\n' "$2" "$4" "$5" "${6:--}" "$(runner_manifest_fingerprint)"
         cat "$3"
     } > "$1"
+}
+
+# ---------------------------------------------------------------------------
+# Plan-time trx expansion, the one command-line builder, the zero-tests
+# guard, content-keyed markers (moved here from run-full-suite.sh run_one so
+# all three runners share ONE implementation)
+# ---------------------------------------------------------------------------
+
+# runner_plan_expand_trx <plan.tsv> <log_dir> — call LAST, after --only
+# filtering and chunk expansion. {TRX:x} → $LOG_DIR/x.trx (x unchunked);
+# {TRXARGS:x} → "--trx $LOG_DIR/x.trx" or the chunk union; {TRXARGS?:x} →
+# the same, or nothing when x is not in this plan.
+runner_plan_expand_trx() {
+    local plan="$1" L="$2" tmp="$1.expand.$$"
+    awk -F'\t' -v OFS='\t' -v L="$L" '
+    NR == FNR {
+        if ($0 !~ /^#/ && NF) {
+            present[$1] = 1
+            if ($1 ~ /\.chunk[0-9][0-9]$/) { b = $1; sub(/\.chunk[0-9][0-9]$/, "", b); chunks[b] = chunks[b] " --trx " L "/" $1 ".trx" }
+        }
+        next
+    }
+    /^#/ || !NF { print; next }
+    {
+        t = $3
+        while (match(t, /\{TRX(ARGS)?\??:[A-Za-z0-9._-]+\}/)) {
+            ref = substr(t, RSTART, RLENGTH); p = ref; sub(/^\{TRX(ARGS)?\??:/, "", p); sub(/\}$/, "", p)
+            if (ref ~ /^\{TRX:/)  { if (p in present) rep = L "/" p ".trx"; else { printf "plan: %s needs the trx of %s, which is not in this plan (with --only, include it: --only \"%s|%s\")\n", $1, p, p, $1 > "/dev/stderr"; bad = 1; rep = "" } }
+            else if (p in present) rep = "--trx " L "/" p ".trx"
+            else if (p in chunks)  rep = substr(chunks[p], 2)
+            else if (ref ~ /\?:/)  rep = ""
+            else { printf "plan: %s needs the trx of %s, which is not in this plan (with --only, include it: --only \"%s|%s\")\n", $1, p, p, $1 > "/dev/stderr"; bad = 1; rep = "" }
+            t = substr(t, 1, RSTART - 1) rep substr(t, RSTART + RLENGTH)
+        }
+        $3 = t; print
+    }
+    END { if (bad) exit 2 }' "$plan" "$plan" > "$tmp" || { rm -f "$tmp"; return 2; }
+    mv -f "$tmp" "$plan"
+}
+
+# runner_step_cmdline <name> <kind> <target> <filter> — the ONE place a row
+# becomes a command. Unfiltered project rows emit a trx: check-test-count.sh
+# (#894) only accepts an unfiltered trx by construction.
+runner_step_cmdline() {
+    local name="$1" kind="$2" target="$3" filter="${4:--}" hang="${BLAME_HANG_TIMEOUT:-900000}"
+    case "$kind" in
+        script|fn) printf '%s\n' "$target" ;;
+        project|project-chunked)
+            printf 'dotnet test "%s" --no-build -c "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
+                "$target" "$CONFIG" "$hang" "$LOG_DIR" "$name" ;;
+        test)
+            printf 'dotnet test "%s" --no-build -c "%s" --filter "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
+                "$target" "$CONFIG" "$filter" "$hang" "$LOG_DIR" "$name" ;;
+    esac
+}
+
+# runner_expand_placeholders <text> — the six documented environment
+# placeholders, expanded WITHOUT eval (used only to inspect a command line;
+# the run itself goes through sh -c, which expands from the environment).
+runner_expand_placeholders() {
+    local t="$1"
+    t="${t//\$CONFIG/${CONFIG:-}}"; t="${t//\$LOG_DIR/${LOG_DIR:-}}"
+    t="${t//\$GATE_ASYMMETRY_BASE/${GATE_ASYMMETRY_BASE:-}}"; t="${t//\$RELEASE_VERSION/${RELEASE_VERSION:-}}"
+    t="${t//\$AOT_EXTRA_ARGS/${AOT_EXTRA_ARGS:-}}"; t="${t//\$RUNNER_BUILD_ARGS/${RUNNER_BUILD_ARGS:-}}"
+    printf '%s\n' "$t"
+}
+
+# runner_zero_tests_executed <log> — true when a dotnet-test command executed
+# ZERO tests (#941). The signal is the executed count, NOT the presence of "No
+# test matches": a solution-wide filter legitimately prints that line for every
+# assembly holding none of the targeted tests. Sets RUNNER_TESTS_EXECUTED.
+runner_zero_tests_executed() {
+    local executed
+    executed="$(grep -oE 'Total: *[0-9]+' "$1" 2>/dev/null | grep -oE '[0-9]+' | awk '{s+=$1} END {print s+0}')"
+    [ "${executed:-0}" = "0" ] && executed="$(grep -oE 'Total tests: *[0-9]+' "$1" 2>/dev/null | grep -oE '[0-9]+' | awk '{s+=$1} END {print s+0}')"
+    RUNNER_TESTS_EXECUTED="${executed:-0}"
+    [ "${executed:-0}" = "0" ]
+}
+
+# runner_target_hash <kind> <target> <filter>
+runner_target_hash() { printf '%s|%s|%s' "$1" "$2" "$3" | shasum -a 256 | cut -c1-16; }
+
+# runner_marker_value <name> <key> — one line of a step's marker, or nothing.
+runner_marker_value() {
+    [ -n "${RUNNER_STATE_DIR:-}" ] || return 0
+    sed -n "s/^$2=//p" "$(runner_marker_path "$1")" 2>/dev/null | head -1
+}
+
+# ---------------------------------------------------------------------------
+# Prerequisites — the [requires:] vocabulary check-skip-budget.sh introduced
+# (#854), lifted here so every runner and gate resolves a spec the same way.
+#   tool:NAME    on PATH          corpus:NAME  test-pdfs/NAME non-empty
+#   env:NAME     variable set     file:GLOB    a repo-relative glob matches
+#   opt:NAME     the runner was invoked with --NAME (RUNNER_OPTS)
+# A typo resolves ABSENT on purpose. RUNNER_FORCE_ABSENT (or the older
+# SKIP_BUDGET_FORCE_ABSENT) forces a spec absent for selftests.
+# ---------------------------------------------------------------------------
+RUNNER_PREREQ_CACHE=""
+runner_prereq_present() {
+    local spec="$1"
+    case ",${RUNNER_FORCE_ABSENT:-}${SKIP_BUDGET_FORCE_ABSENT:+,$SKIP_BUDGET_FORCE_ABSENT}," in *",$spec,"*) return 1 ;; esac
+    [ -n "$RUNNER_PREREQ_CACHE" ] || RUNNER_PREREQ_CACHE="$(mktemp -d)"
+    local key="$RUNNER_PREREQ_CACHE/${spec//[^A-Za-z0-9._-]/_}" cached
+    if [ -f "$key" ]; then read -r cached < "$key"; [ "$cached" = "1" ]; return; fi
+    local kind="${spec%%:*}" val="${spec#*:}" ok=1
+    case "$kind" in
+        tool)   command -v "$val" >/dev/null 2>&1 || ok=0 ;;
+        corpus) if [ -d "$RUNNER_ROOT/test-pdfs/$val" ] && [ -n "$(find "$RUNNER_ROOT/test-pdfs/$val" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]; then ok=1; else ok=0; fi ;;
+        env)    [ -n "${!val:-}" ] || ok=0 ;;
+        file)   compgen -G "$RUNNER_ROOT/$val" >/dev/null 2>&1 || ok=0 ;;
+        opt)    case ",${RUNNER_OPTS:-}," in *",$val,"*) ok=1 ;; *) ok=0 ;; esac ;;
+        *)      ok=0 ;;
+    esac
+    printf '%s' "$ok" > "$key"
+    [ "$ok" = "1" ]
+}
+
+# runner_prereq_missing "<specs>" — prints the first absent spec and returns
+# 0; returns 1 when every spec is present (or the column is "-").
+runner_prereq_missing() {
+    local spec
+    for spec in $1; do
+        [ "$spec" = "-" ] && continue
+        runner_prereq_present "$spec" || { printf '%s\n' "$spec"; return 0; }
+    done
+    return 1
+}
+
+# runner_step_status <kind> <class> <policy> <rc> <log> <cmdline>
+#   → PASS | FAIL | FAIL_ZERO_TESTS | SKIPPED | NO_RESULT
+# Exit 77 is a gate saying "prerequisite missing"; prereqPolicy decides what
+# that means. A GRADE row's failure is NO_RESULT: it never sets a verdict.
+runner_step_status() {
+    local kind="$1" class="$2" policy="$3" rc="$4" log="$5" cmdline="$6"
+    if [ "$rc" = "$RUNNER_EXIT_SKIP" ]; then
+        [ "$policy" = skip ] && echo SKIPPED || echo FAIL
+        return
+    fi
+    if [ "$rc" = "0" ]; then
+        case "$cmdline" in *"dotnet test"*) runner_zero_tests_executed "$log" && { echo FAIL_ZERO_TESTS; return; } ;; esac
+        echo PASS
+        return
+    fi
+    [ "$class" = GRADE ] && echo NO_RESULT || echo FAIL
+}
+
+# ---------------------------------------------------------------------------
+# Tier-pass records — the base a manual gate-asymmetry run compares against
+# (LOCAL_GATES.md "Base selection"). Content-validated: the recorded sha must
+# be a commit that is an ancestor of HEAD, and the manifest must be the same.
+# ---------------------------------------------------------------------------
+runner_tier_pass_path() { echo "${RUNNER_STATE_ROOT:-$RUNNER_ROOT/logs/runner-state}/tier-pass/$1.rec"; }
+
+runner_tier_base_read() {   # <tier> — prints the sha, or returns 1
+    local rec sha mf
+    rec="$(runner_tier_pass_path "$1")"
+    [ -s "$rec" ] && [ "$(tail -n 1 "$rec" 2>/dev/null)" = "$RUNNER_SENTINEL" ] || return 1
+    sha="$(sed -n 's/^sha=//p' "$rec" | head -1)"
+    mf="$(sed -n 's/^manifest=//p' "$rec" | head -1)"
+    [ -n "$sha" ] && git cat-file -e "$sha^{commit}" 2>/dev/null && git merge-base --is-ancestor "$sha" HEAD 2>/dev/null || return 1
+    [ "$mf" = "$(runner_manifest_fingerprint)" ] || return 1
+    printf '%s\n' "$sha"
+}
+
+runner_tier_base_record() {   # <tier> — HEAD is the pass point; marker discipline
+    local rec tmp
+    rec="$(runner_tier_pass_path "$1")"; tmp="$rec.tmp.$$"
+    mkdir -p "$(dirname "$rec")"
+    {
+        echo "tier=$1"
+        echo "sha=$(git rev-parse HEAD)"
+        echo "manifest=$(runner_manifest_fingerprint)"
+        echo "treeDirty=${RUNNER_TREE_DIRTY:-unknown}"
+        echo "finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "$RUNNER_SENTINEL"
+    } > "$tmp"
+    sync; mv -f "$tmp" "$rec"; sync
+}
+
+# A pass of a wider tier is a pass of every narrower tier it contains.
+runner_tier_base_record_chain() {
+    case "$1" in
+        full) runner_tier_base_record full; runner_tier_base_record t1; runner_tier_base_record t0 ;;
+        t1)   runner_tier_base_record t1; runner_tier_base_record t0 ;;
+        *)    runner_tier_base_record "$1" ;;
+    esac
+}
+
+# runner_gate_asymmetry_base <tier>: 1. an explicit GATE_ASYMMETRY_BASE (the
+# pre-push hook sets it from the push range on stdin); 2. the last sha this
+# tier passed at; 3. merge-base with origin/develop (first run on a machine).
+runner_gate_asymmetry_base() {
+    if [ -n "${GATE_ASYMMETRY_BASE:-}" ]; then printf '%s\n' "$GATE_ASYMMETRY_BASE"; return 0; fi
+    local r
+    if r="$(runner_tier_base_read "$1")" && [ -n "$r" ]; then printf '%s\n' "$r"; return 0; fi
+    git merge-base origin/develop HEAD 2>/dev/null || echo origin/develop
+}
+
+# ---------------------------------------------------------------------------
+# Environment every runner exports before its loop
+# ---------------------------------------------------------------------------
+# PDFBox is gated on the variable, not the jar (#935): a checked-out jar buys
+# nothing unless this is exported. Moved here from test-tier.sh so full and
+# t2 get it too.
+runner_export_oracle_env() {
+    if [ -z "${EXCISE_PDFBOX_JAR:-}" ]; then
+        local jar
+        jar="$(ls "$RUNNER_ROOT"/tools/vendor/pdfbox-app-*.jar 2>/dev/null | sort | tail -1)"
+        [ -n "$jar" ] && export EXCISE_PDFBOX_JAR="$jar"
+    fi
+    return 0
+}
+
+runner_export_release_env() {   # [version]
+    RELEASE_VERSION="${1:-${RELEASE_VERSION:-$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')}}"
+    [ -n "$RELEASE_VERSION" ] || RELEASE_VERSION="0.0.0-local"
+    export RELEASE_VERSION AOT_EXTRA_ARGS="${AOT_EXTRA_ARGS:-}"
 }
