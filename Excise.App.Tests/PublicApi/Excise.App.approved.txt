@@ -743,6 +743,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ShowPreferencesCommand { get; }
         public bool ShowSearchResultsPanel { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ShowShortcutsCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SignDocumentCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SplitDocumentCommand { get; }
         public string StatusBarText { get; }
         public Avalonia.Platform.Storage.IStorageProvider? StorageProviderOverride { get; set; }
@@ -843,6 +844,8 @@ namespace Excise.App.ViewModels
         public void SetHoveredLinkTarget(string? target) { }
         public System.Threading.Tasks.Task SetSelectedTextAndCopyAsync(string text) { }
         public void SetTypewriterColor(string? hex) { }
+        public System.Threading.Tasks.Task SignDocumentAsAsync(string certificatePath, string? password, string outputPath) { }
+        public System.Threading.Tasks.Task SignDocumentAsync() { }
         public void ToggleAnnotationAuditMode() { }
         public void ToggleAnnotationsVisible() { }
         public void ToggleClipboardSidebar() { }
