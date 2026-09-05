@@ -205,6 +205,17 @@
             ]
           },
           {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
             "kind": "source",
             "matchedTerms": [
@@ -970,6 +981,17 @@
               "annotations",
               "redaction",
               "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
               "action",
               "annotation",
               "redact"
@@ -1839,6 +1861,17 @@
             ]
           },
           {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
             "kind": "source",
             "matchedTerms": [
@@ -2695,6 +2728,17 @@
               "annotations",
               "redaction",
               "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
               "action",
               "annotation",
               "redact"
@@ -3571,6 +3615,17 @@
             ]
           },
           {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
             "kind": "source",
             "matchedTerms": [
@@ -4344,6 +4399,17 @@
               "annotations",
               "redaction",
               "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotations",
+              "redaction",
               "action",
               "annotation",
               "redact"
@@ -5419,6 +5485,16 @@
             ]
           },
           {
+            "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "applied",
+              "redaction",
+              "action",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering.Tests/Differential/RedactionCompressedCanaryMutationTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -6020,6 +6096,16 @@
           },
           {
             "path": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "applied",
+              "redaction",
+              "action",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
             "kind": "test",
             "matchedTerms": [
               "applied",
@@ -6755,6 +6841,16 @@
           },
           {
             "path": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "applied",
+              "redaction",
+              "action",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
             "kind": "test",
             "matchedTerms": [
               "applied",
@@ -7530,6 +7626,16 @@
             ]
           },
           {
+            "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "applied",
+              "redaction",
+              "action",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering.Tests/Differential/RedactionCompressedCanaryMutationTests.cs",
             "kind": "test",
             "matchedTerms": [
@@ -8242,6 +8348,16 @@
           },
           {
             "path": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "applied",
+              "redaction",
+              "action",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
             "kind": "test",
             "matchedTerms": [
               "applied",
@@ -16660,7 +16776,9 @@
             "matchedTerms": [
               "appearances",
               "policy",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -17471,7 +17589,9 @@
             "matchedTerms": [
               "appearances",
               "policy",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -18282,7 +18402,9 @@
             "matchedTerms": [
               "appearances",
               "policy",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -19093,7 +19215,9 @@
             "matchedTerms": [
               "appearances",
               "policy",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -19972,6 +20096,14 @@
             ]
           },
           {
+            "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "alpha",
+              "soft"
+            ]
+          },
+          {
             "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
             "kind": "test",
             "matchedTerms": [
@@ -20107,14 +20239,6 @@
             "matchedTerms": [
               "model",
               "soft"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/UI/AccessibilityRegressionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "model",
-              "modes"
             ]
           }
         ],
@@ -20629,6 +20753,14 @@
             ]
           },
           {
+            "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "alpha",
+              "soft"
+            ]
+          },
+          {
             "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
             "kind": "test",
             "matchedTerms": [
@@ -20764,14 +20896,6 @@
             "matchedTerms": [
               "model",
               "soft"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/UI/AccessibilityRegressionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "model",
-              "modes"
             ]
           }
         ],
@@ -29252,7 +29376,9 @@
             "matchedTerms": [
               "appearances",
               "policy",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -30151,7 +30277,9 @@
             "matchedTerms": [
               "appearances",
               "policy",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -31050,7 +31178,9 @@
             "matchedTerms": [
               "appearances",
               "policy",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -31949,7 +32079,9 @@
             "matchedTerms": [
               "appearances",
               "policy",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -36568,6 +36700,14 @@
             ]
           },
           {
+            "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "alpha",
+              "soft"
+            ]
+          },
+          {
             "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
             "kind": "test",
             "matchedTerms": [
@@ -36703,14 +36843,6 @@
             "matchedTerms": [
               "model",
               "soft"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/UI/AccessibilityRegressionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "model",
-              "modes"
             ]
           }
         ],
@@ -39681,6 +39813,14 @@
             ]
           },
           {
+            "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
+            "kind": "test",
+            "matchedTerms": [
+              "alpha",
+              "soft"
+            ]
+          },
+          {
             "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
             "kind": "test",
             "matchedTerms": [
@@ -39816,14 +39956,6 @@
             "matchedTerms": [
               "model",
               "soft"
-            ]
-          },
-          {
-            "path": "Excise.App.Tests/UI/AccessibilityRegressionTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "model",
-              "modes"
             ]
           }
         ],
@@ -47952,6 +48084,7 @@
             "kind": "source",
             "matchedTerms": [
               "color",
+              "colour",
               "scan",
               "renderpage"
             ]
@@ -48704,6 +48837,7 @@
             "kind": "source",
             "matchedTerms": [
               "color",
+              "colour",
               "scan",
               "renderpage"
             ]
@@ -49456,6 +49590,7 @@
             "kind": "source",
             "matchedTerms": [
               "color",
+              "colour",
               "scan",
               "renderpage"
             ]
@@ -62185,15 +62320,6 @@
               "output",
               "values"
             ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values",
-              "skiarenderer"
-            ]
           }
         ],
         "architecture": []
@@ -62700,15 +62826,6 @@
               "output",
               "values"
             ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values",
-              "skiarenderer"
-            ]
           }
         ],
         "architecture": []
@@ -63167,15 +63284,6 @@
               "colour",
               "output",
               "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values",
-              "skiarenderer"
             ]
           }
         ],
@@ -82965,7 +83073,8 @@
             "matchedTerms": [
               "annotation",
               "line",
-              "annotation"
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -83635,7 +83744,8 @@
             "matchedTerms": [
               "annotation",
               "line",
-              "annotation"
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -84305,7 +84415,8 @@
             "matchedTerms": [
               "annotation",
               "line",
-              "annotation"
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -84975,7 +85086,8 @@
             "matchedTerms": [
               "annotation",
               "line",
-              "annotation"
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -88573,7 +88685,8 @@
             "matchedTerms": [
               "annotation",
               "ink",
-              "annotation"
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -89351,7 +89464,8 @@
             "matchedTerms": [
               "annotation",
               "ink",
-              "annotation"
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -90129,7 +90243,8 @@
             "matchedTerms": [
               "annotation",
               "ink",
-              "annotation"
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -90907,7 +91022,8 @@
             "matchedTerms": [
               "annotation",
               "ink",
-              "annotation"
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -95804,6 +95920,16 @@
             ]
           },
           {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "redact",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
             "kind": "source",
             "matchedTerms": [
@@ -95898,16 +96024,6 @@
           },
           {
             "path": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "redact",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.App/ViewModels/MainWindowViewModel.Permissions.cs",
             "kind": "source",
             "matchedTerms": [
               "annotation",
@@ -96280,17 +96396,6 @@
               "annotation",
               "redact",
               "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/StructuralInventory.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "redact",
-              "annotation",
-              "pdfannotation",
               "redact"
             ]
           }
@@ -96618,6 +96723,16 @@
             ]
           },
           {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "redact",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
             "kind": "source",
             "matchedTerms": [
@@ -96712,16 +96827,6 @@
           },
           {
             "path": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "redact",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.App/ViewModels/MainWindowViewModel.Permissions.cs",
             "kind": "source",
             "matchedTerms": [
               "annotation",
@@ -97094,17 +97199,6 @@
               "annotation",
               "redact",
               "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/StructuralInventory.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "redact",
-              "annotation",
-              "pdfannotation",
               "redact"
             ]
           }
@@ -97432,6 +97526,16 @@
             ]
           },
           {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "redact",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
             "kind": "source",
             "matchedTerms": [
@@ -97526,16 +97630,6 @@
           },
           {
             "path": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "redact",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.App/ViewModels/MainWindowViewModel.Permissions.cs",
             "kind": "source",
             "matchedTerms": [
               "annotation",
@@ -97908,17 +98002,6 @@
               "annotation",
               "redact",
               "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/StructuralInventory.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "redact",
-              "annotation",
-              "pdfannotation",
               "redact"
             ]
           }
@@ -98246,6 +98329,16 @@
             ]
           },
           {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "annotation",
+              "redact",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
             "kind": "source",
             "matchedTerms": [
@@ -98340,16 +98433,6 @@
           },
           {
             "path": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
-            "kind": "source",
-            "matchedTerms": [
-              "annotation",
-              "redact",
-              "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.App/ViewModels/MainWindowViewModel.Permissions.cs",
             "kind": "source",
             "matchedTerms": [
               "annotation",
@@ -98722,17 +98805,6 @@
               "annotation",
               "redact",
               "annotation",
-              "redact"
-            ]
-          },
-          {
-            "path": "Excise.Rendering.Tests/Differential/StructuralInventory.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "annotation",
-              "redact",
-              "annotation",
-              "pdfannotation",
               "redact"
             ]
           }
@@ -127616,6 +127688,14 @@
             "matchedTerms": [
               "color",
               "spaces"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour"
             ]
           },
           {
@@ -128244,6 +128324,14 @@
             ]
           },
           {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour"
+            ]
+          },
+          {
             "path": "Excise.Rendering/ImageColorConverter.cs",
             "kind": "source",
             "matchedTerms": [
@@ -128866,6 +128954,14 @@
             "matchedTerms": [
               "color",
               "spaces"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "color",
+              "colour"
             ]
           },
           {
@@ -154183,15 +154279,6 @@
               "colour",
               "output",
               "values"
-            ]
-          },
-          {
-            "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
-            "kind": "test",
-            "matchedTerms": [
-              "output",
-              "values",
-              "skiarenderer"
             ]
           }
         ],
@@ -175141,7 +175228,9 @@
               "appearances",
               "flags",
               "subtypes",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -175930,7 +176019,9 @@
               "appearances",
               "flags",
               "subtypes",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -176719,7 +176810,9 @@
               "appearances",
               "flags",
               "subtypes",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -177846,6 +177939,17 @@
             ]
           },
           {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "opt-in",
+              "redaction",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering/Differential/ResidueRecoveryEngine.cs",
             "kind": "source",
             "matchedTerms": [
@@ -178680,6 +178784,17 @@
               "redaction",
               "review",
               "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "opt-in",
+              "redaction",
               "action",
               "annotation",
               "redact"
@@ -179526,6 +179641,17 @@
             ]
           },
           {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "opt-in",
+              "redaction",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering/Differential/ResidueRecoveryEngine.cs",
             "kind": "source",
             "matchedTerms": [
@@ -180360,6 +180486,17 @@
               "redaction",
               "review",
               "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "opt-in",
+              "redaction",
               "action",
               "annotation",
               "redact"
@@ -181206,6 +181343,17 @@
             ]
           },
           {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "opt-in",
+              "redaction",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
             "path": "Excise.Rendering/Differential/ResidueRecoveryEngine.cs",
             "kind": "source",
             "matchedTerms": [
@@ -182040,6 +182188,17 @@
               "redaction",
               "review",
               "acroform",
+              "action",
+              "annotation",
+              "redact"
+            ]
+          },
+          {
+            "path": "Excise.Rendering/Differential/PdfiumNativeReferenceRenderer.cs",
+            "kind": "source",
+            "matchedTerms": [
+              "opt-in",
+              "redaction",
               "action",
               "annotation",
               "redact"
@@ -186808,7 +186967,9 @@
               "appearances",
               "flags",
               "subtypes",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -187687,7 +187848,9 @@
               "appearances",
               "flags",
               "subtypes",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -188566,7 +188729,9 @@
               "appearances",
               "flags",
               "subtypes",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {
@@ -189445,7 +189610,9 @@
               "appearances",
               "flags",
               "subtypes",
-              "annotation"
+              "action",
+              "annotation",
+              "redact"
             ]
           },
           {

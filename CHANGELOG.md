@@ -58,6 +58,22 @@ noted under Fixed.
   producer had been taken from a checkpoint, so every such row failed on the
   first resumed full run. The expansion now follows a checkpointed producer
   to the trx beside its evidence log; pinned by a t0 selftest.
+- **PDFium never runs inside our process** (#1369). Its API is not
+  thread-safe and it was the only reference oracle we linked, so four
+  concurrent renders killed a test host and lost a four-hour run. Every
+  call is now serialised, and the renderer spawns a host process rather
+  than loading the library, so a crash costs one child instead of the run.
+- **The redaction bench measures with two engines on every axis** (#1372):
+  leaked text by mutool and pdftotext, mark geometry by pdftocairo and
+  PDFBox, visual survival by Ghostscript and pdftocairo. A term counts as
+  leaked when either extractor reads it. The second engine immediately
+  found 14 terms surviving in excise's own output that the previous single
+  oracle could not see, moving the security grade from 0.969 A- to
+  0.924 B+ — a measurement that was previously impossible, not a
+  regression.
+- **`--suite` presets** name a slice of tier full (`redaction`,
+  `rendering`, `benches`, `suites`, `gates`) as patterns over manifest row
+  names, so a new row joins its suite automatically.
 - **Silent skips are closed.** A gate that cannot run exits 77 and is
   reported SKIPPED or FAIL according to its `prereqPolicy`; five scripts
   that exited 0 on a missing prerequisite (accessibility, visual, perf

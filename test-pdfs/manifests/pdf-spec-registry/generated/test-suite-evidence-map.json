@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "00fd03558161e651eda7afcd71465a72e32f92959c8ca1815caf58ae254776ce",
+  "sourceFingerprint": "d1bb3fd0e323a1754efdcb25eed76dbf591d38d6054d7cd7609a7ac40de0ac40",
   "tests": [
     {
       "id": "Excise.Core.Tests/Authoring/AuthoringCoverageTests.cs::AuthoringCoverageTests.TextStyle_WithHelpers_AreImmutableCopies",
@@ -141125,6 +141125,20 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs::PdfiumOracleSmokeTests.ConcurrentRenders_DoNotCorruptPdfiumsGlobalState",
+      "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
+      "class": "PdfiumOracleSmokeTests",
+      "method": "ConcurrentRenders_DoNotCorruptPdfiumsGlobalState",
+      "line": 116,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/Differential/PdfiumReferenceRendererTests.cs::PdfiumReferenceRendererTests.BuildPdfiumTestArguments_WithUserPassword_PassesPasswordBeforePdfPath",
       "path": "Excise.Rendering.Tests/Differential/PdfiumReferenceRendererTests.cs",
       "class": "PdfiumReferenceRendererTests",
@@ -141577,7 +141591,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
       "class": "RedactionBenchmarkRunner",
       "method": "RunBenchmark",
-      "line": 359,
+      "line": 383,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -143447,6 +143461,61 @@
       "class": "ScannedRasterRedactionLeakTests",
       "method": "SearchableScan_LosesBothTheRasterInkAndTheInvisibleTextLayer",
       "line": 82,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/SecondTextOracleTests.cs::SecondTextOracleTests.PdftotextIsPresent_SoTheBenchHasTwoEngines",
+      "path": "Excise.Rendering.Tests/Differential/SecondTextOracleTests.cs",
+      "class": "SecondTextOracleTests",
+      "method": "PdftotextIsPresent_SoTheBenchHasTwoEngines",
+      "line": 28,
+      "xunitKind": "fact",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/SecondTextOracleTests.cs::SecondTextOracleTests.BothEnginesReadTheSameWords",
+      "path": "Excise.Rendering.Tests/Differential/SecondTextOracleTests.cs",
+      "class": "SecondTextOracleTests",
+      "method": "BothEnginesReadTheSameWords",
+      "line": 40,
+      "xunitKind": "theory",
+      "kind": "test-method",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/SecondTextOracleTests.cs::SecondTextOracleTests.PopplerAnswersTheLeakQuestionItIsAskedInTheBench",
+      "path": "Excise.Rendering.Tests/Differential/SecondTextOracleTests.cs",
+      "class": "SecondTextOracleTests",
+      "method": "PopplerAnswersTheLeakQuestionItIsAskedInTheBench",
+      "line": 71,
       "xunitKind": "fact",
       "kind": "test-method",
       "facets": [
@@ -197395,7 +197464,7 @@
     }
   ],
   "summary": {
-    "records": 6084,
+    "records": 6088,
     "facets": {
       "annotations": 342,
       "content-and-graphics": 721,
@@ -197403,8 +197472,8 @@
       "fonts": 646,
       "forms": 172,
       "images": 369,
-      "product-integration-general": 2599,
-      "redaction": 602,
+      "product-integration-general": 2602,
+      "redaction": 603,
       "safe-save-and-metadata": 486,
       "security-and-encryption": 357,
       "transparency": 43
@@ -197448,11 +197517,11 @@
       "pdf.17.interactive.redaction-annotations:preserve": 342,
       "pdf.17.interactive.redaction-annotations:render": 342,
       "pdf.17.interactive.redaction-annotations:write": 1,
-      "pdf.17.security.redaction-content-removal:extract": 602,
-      "pdf.17.security.redaction-content-removal:mutate": 602,
+      "pdf.17.security.redaction-content-removal:extract": 603,
+      "pdf.17.security.redaction-content-removal:mutate": 603,
       "pdf.17.security.redaction-content-removal:preserve": 3,
-      "pdf.17.security.redaction-content-removal:render": 602,
-      "pdf.17.security.redaction-content-removal:write": 602,
+      "pdf.17.security.redaction-content-removal:render": 603,
+      "pdf.17.security.redaction-content-removal:write": 603,
       "pdf.17.syntax.encryption:mutate": 357,
       "pdf.17.syntax.encryption:parse": 357,
       "pdf.17.syntax.encryption:preserve": 357,
@@ -197620,7 +197689,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 357,
       "pdfe.product.security.signature-and-permission-warning:write": 357
     },
-    "fallbackRecords": 2599,
+    "fallbackRecords": 2602,
     "allRecordsMapped": true
   }
 }
