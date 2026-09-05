@@ -179,16 +179,55 @@ PROJECTS_BIG="Excise.Core.Tests Excise.Rendering.Tests Excise.App.Tests"
 
 emit() { printf '%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "${4:--}" >> "$PLAN_FILE"; }
 
+# Fingerprint of the built test assembly. If this has not changed, the set of
+# test names cannot have changed either, so a cached chunk plan is still valid.
+# Cheaper than re-running --list-tests, and unlike a bare file-exists check it
+# cannot go stale.
+chunk_plan_fingerprint() {
+    local proj="$1"
+    local dll="$proj/bin/$CONFIG/net10.0/$proj.dll"
+    [ -f "$dll" ] || { echo "no-dll"; return 0; }
+    # size+mtime is enough and costs nothing on a large assembly.
+    stat -f '%z:%m' "$dll" 2>/dev/null || stat -c '%s:%Y' "$dll" 2>/dev/null || echo "no-stat"
+}
+
 # Enumerate test classes for a project and write a chunk plan. The enumeration
-# is itself cached in the state dir — it costs a process start per project and
+# is cached in the state dir — it costs a process start per project and
 # survives a crash like everything else.
+#
+# ⚠️ THE CACHE IS KEYED ON THE TEST ASSEMBLY, NOT ON THE STATE DIR EXISTING.
+#
+# It used to short-circuit on `[ -s "$out" ]` alone. The state dir is keyed by
+# LABEL_CONFIG_BRANCH (see runner_state_dir), NOT by commit — so
+# full-suite_Debug_develop_-dirty is reused across every commit on the branch,
+# and a plan built once was reused forever. Worse, the early return skipped
+# verify_chunk_coverage, the one thing that would have noticed.
+#
+# Measured cost of that (#1362): the 2026-08-31 run reused a plan built
+# 2026-08-16. Three classes added in between — RawSampleImageDecoderTests,
+# ReferenceProcessResourcesTests, RenderResourceScopeTests — appeared in ZERO
+# chunk. 289 of 2,357 discovered tests never ran, and every chunk still exited
+# 0, because a class no filter names is not skipped or reported, it simply is
+# not addressed. Only the downstream test-count check noticed.
 build_chunk_plan() {
     local proj="$1"
     local out="$CHUNK_DIR/$proj.chunks"
+    local fp_file="$out.fingerprint"
+    local fp
+    fp="$(chunk_plan_fingerprint "$proj")"
 
-    if [ -s "$out" ]; then
-        echo "$out"; return 0
+    if [ -s "$out" ] && [ -f "$fp_file" ] && [ "$(cat "$fp_file")" = "$fp" ]; then
+        # Re-verify even on a cache hit. The fingerprint should make this
+        # redundant; it is cheap, and this is the check whose absence cost 289
+        # tests. Belt and braces on the gate that failed silently.
+        if verify_chunk_coverage "$proj" "$CHUNK_DIR/$proj.tests.txt" "$out"; then
+            echo "$out"; return 0
+        fi
+        say "  ${Y}cached chunk plan for $proj failed re-verification; rebuilding${N}" >&2
+    elif [ -s "$out" ]; then
+        say "  ${Y}$proj test assembly changed since its chunk plan; rebuilding${N}" >&2
     fi
+    rm -f "$out" "$fp_file"
 
     local listing="$CHUNK_DIR/$proj.tests.txt"
     if ! dotnet test "$proj/$proj.csproj" --no-build -c "$CONFIG" --list-tests \
@@ -230,6 +269,7 @@ build_chunk_plan() {
     fi
 
     verify_chunk_coverage "$proj" "$listing" "$out" || return 1
+    printf '%s' "$fp" > "$fp_file"
 
     echo "$out"
 }
