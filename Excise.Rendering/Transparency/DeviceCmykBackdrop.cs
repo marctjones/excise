@@ -81,6 +81,34 @@ internal sealed class DeviceCmykBackdrop
         return clone;
     }
 
+    /// <summary>
+    /// Copies a <c>width</c>x<c>height</c> region of <paramref name="source"/>,
+    /// anchored at (<paramref name="srcLeft"/>, <paramref name="srcTop"/>), into
+    /// this backdrop's origin. Row-wise <see cref="Array.Copy(Array,int,Array,int,int)"/>
+    /// over the raw byte planes — byte-identical to looping
+    /// <c>Set(x, y, source.Get(srcLeft + x, srcTop + y), source.GetAlpha(srcLeft + x, srcTop + y))</c>,
+    /// because <see cref="Get"/>'s <c>byte / 255.0</c> and <see cref="Set"/>'s
+    /// <c>round(clamp(value) * 255)</c> round-trip every byte 0..255 back to
+    /// itself (verified exhaustively by
+    /// <c>DeviceCmykBackdropCopyRegionTests.CopyRegionFrom_IsByteIdenticalToGetSetRoundTrip</c>).
+    /// Performance-only replacement for #1402's O(width*height) per-pixel
+    /// double/byte conversion loop — this is the "SeedBackdrop" hot path used
+    /// to enter every non-isolated DeviceCMYK transparency group.
+    /// </summary>
+    public void CopyRegionFrom(DeviceCmykBackdrop source, int srcLeft, int srcTop, int width, int height)
+    {
+        for (var y = 0; y < height; y++)
+        {
+            var srcOffset = source.Index(srcLeft, srcTop + y);
+            var dstOffset = Index(0, y);
+            Array.Copy(source._cyan, srcOffset, _cyan, dstOffset, width);
+            Array.Copy(source._magenta, srcOffset, _magenta, dstOffset, width);
+            Array.Copy(source._yellow, srcOffset, _yellow, dstOffset, width);
+            Array.Copy(source._black, srcOffset, _black, dstOffset, width);
+            Array.Copy(source._alpha, srcOffset, _alpha, dstOffset, width);
+        }
+    }
+
     private int Index(int x, int y) => y * Width + x;
 
     private static byte BlendByte(

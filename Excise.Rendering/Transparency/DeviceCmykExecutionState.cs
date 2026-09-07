@@ -131,19 +131,9 @@ internal sealed class DeviceCmykExecutionState : IDisposable
         int width,
         int height)
     {
-        for (var y = 0; y < height; y++)
-        {
-            var parentY = parentTop + y;
-            for (var x = 0; x < width; x++)
-            {
-                var parentX = parentLeft + x;
-                Backdrop!.Set(
-                    x,
-                    y,
-                    sourceBackdrop.Get(parentX, parentY),
-                    sourceBackdrop.GetAlpha(parentX, parentY));
-            }
-        }
+        // Row-wise byte copy — see DeviceCmykBackdrop.CopyRegionFrom for why
+        // this is byte-identical to the per-pixel Get/Set loop it replaces.
+        Backdrop!.CopyRegionFrom(sourceBackdrop, parentLeft, parentTop, width, height);
     }
 }
 

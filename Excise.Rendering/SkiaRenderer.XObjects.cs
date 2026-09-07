@@ -308,23 +308,49 @@ internal partial class RenderContext
                 PdfSeparableBlendMode.Screen or
                 PdfSeparableBlendMode.ColorDodge;
 
-        for (var y = 0; y < groupBitmap.Height; y++)
+        // #1402: this used to be groupBitmap.GetPixel/_rootBitmap.GetPixel/SetPixel
+        // per pixel — each call marshals through SKBitmap.Info — over a region that
+        // is routinely the FULL PAGE (measured: 57 group compositions at
+        // 1275x1650 = ~120M pixel visits on the #1402 fixture, none of them from
+        // the mesh shading the issue named). Reading/writing the raw premultiplied
+        // byte planes directly is byte-identical: GetPixel's .Alpha is unaffected
+        // by premultiplication (raw alpha byte == straight alpha byte), and
+        // WritePremulRgba is pinned exhaustively equal to SetPixel by
+        // DeviceCmykBlendPixelContractTests.
+        var clampedInvocationAlpha = Math.Clamp(invocationAlpha, 0, 1);
+        var groupWidth = groupBitmap.Width;
+        var groupHeight = groupBitmap.Height;
+        var groupRowBytes = groupBitmap.RowBytes;
+        var groupPixels = groupBitmap.GetPixelSpan();
+        var rootWidth = _rootBitmap.Width;
+        var rootHeight = _rootBitmap.Height;
+        var rootRowBytes = _rootBitmap.RowBytes;
+
+        _canvas.Flush();
+        var rootPixels = GetRootPixelSpan();
+        var wroteRoot = false;
+
+        for (var y = 0; y < groupHeight; y++)
         {
             var parentY = top + y;
-            if (parentY < 0 || parentY >= _rootBitmap.Height)
+            if (parentY < 0 || parentY >= rootHeight)
                 continue;
 
-            for (var x = 0; x < groupBitmap.Width; x++)
+            var groupRowStart = y * groupRowBytes;
+            var rootRowStart = parentY * rootRowBytes;
+
+            for (var x = 0; x < groupWidth; x++)
             {
-                var alpha = (groupBitmap.GetPixel(x, y).Alpha / 255.0) * Math.Clamp(invocationAlpha, 0, 1);
+                var alpha = (groupPixels[groupRowStart + (x * 4) + 3] / 255.0) * clampedInvocationAlpha;
                 if (alpha <= 0)
                     continue;
 
                 var parentX = left + x;
-                if (parentX < 0 || parentX >= _rootBitmap.Width)
+                if (parentX < 0 || parentX >= rootWidth)
                     continue;
 
-                var dst = _rootBitmap.GetPixel(parentX, parentY);
+                var rootOffset = rootRowStart + (parentX * 4);
+                var dstAlphaByte = rootPixels[rootOffset + 3];
                 if (_deviceCmyk.IsInKnockoutGroup)
                 {
                     var initialBackdrop = _deviceCmyk.KnockoutInitialBackdrop?.Get(parentX, parentY)
@@ -332,12 +358,15 @@ internal partial class RenderContext
                     var initialAlpha = _deviceCmyk.KnockoutInitialBackdrop?.GetAlpha(parentX, parentY) ?? 0;
                     _deviceCmyk.Backdrop.Set(parentX, parentY, initialBackdrop, initialAlpha);
                     var (initialR, initialG, initialB) = DeviceCmykToRgb(initialBackdrop);
-                    dst = new SKColor(
+                    WritePremulRgba(
+                        rootPixels,
+                        rootOffset,
                         ToByte(initialR),
                         ToByte(initialG),
                         ToByte(initialB),
                         0);
-                    _rootBitmap.SetPixel(parentX, parentY, dst);
+                    dstAlphaByte = 0;
+                    wroteRoot = true;
                 }
 
                 var source = groupBackdrop.Get(x, y);
@@ -353,15 +382,21 @@ internal partial class RenderContext
                 _deviceCmyk.Backdrop.CompositeSourceOver(parentX, parentY, blended, alpha);
                 var output = _deviceCmyk.Backdrop.Get(parentX, parentY);
                 var (r, g, b) = DeviceCmykToRgb(output);
-                var dstAlpha = dst.Alpha / 255.0;
+                var dstAlpha = dstAlphaByte / 255.0;
                 var outAlpha = alpha + (dstAlpha * (1 - alpha));
-                _rootBitmap.SetPixel(parentX, parentY, new SKColor(
+                WritePremulRgba(
+                    rootPixels,
+                    rootOffset,
                     ToByte(r),
                     ToByte(g),
                     ToByte(b),
-                    ToByte(outAlpha)));
+                    ToByte(outAlpha));
+                wroteRoot = true;
             }
         }
+
+        if (wroteRoot)
+            _rootBitmap.NotifyPixelsChanged();
     }
 
     private void RenderFormXObject(Excise.Core.Primitives.PdfStream formStream)
