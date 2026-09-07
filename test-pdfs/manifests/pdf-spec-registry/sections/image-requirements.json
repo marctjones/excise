@@ -20,7 +20,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -37,7 +37,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::ASCIIHexDecode_Works",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "PDF stream filter support",
       "documentation": [
@@ -93,7 +101,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -110,7 +118,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_ASCII85_FullName_DecodesValidData",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "PDF stream filter support",
       "documentation": [
@@ -166,7 +182,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -183,7 +199,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_RoundTrips",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "PDF stream and raw image support",
       "documentation": [
@@ -239,7 +263,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -256,7 +280,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_WithTiffPredictor_RoundTrips",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "FlateDecode predictor DecodeParms",
       "documentation": [
@@ -312,7 +344,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -329,7 +361,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_WithPngPredictor_RoundTrips",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "FlateDecode predictor DecodeParms",
       "documentation": [
@@ -385,7 +425,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -402,7 +442,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_LZW_SingleByteSequence",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "PDF stream and legacy raw image support",
       "documentation": [
@@ -531,7 +579,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -548,7 +596,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_LZW_WithPredictor",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_LZW_WithTiffPredictor",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "LZWDecode predictor DecodeParms",
       "documentation": [
@@ -604,7 +667,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -621,7 +684,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::RunLengthDecode_Works",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "PDF stream and legacy raw image support",
       "documentation": [
@@ -677,7 +748,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -694,7 +765,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_CCITTFax_Group4_PopplerImageRetrieveFixture_DecodesFullImage",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Bi-level fax image XObject support",
       "documentation": [
@@ -750,7 +829,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -767,7 +846,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_CCITTFax_NullParms_UsesDefaults",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_CCITTFax_WithBlackIs1_InvertsPixels",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "CCITTFaxDecode DecodeParms",
       "documentation": [
@@ -823,7 +917,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -840,7 +934,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Filters/FilterSupportMapTests.cs::DctDecode_IsNotDecodedByExcise",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "JPEG image XObject support",
       "documentation": [
@@ -969,7 +1071,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -986,7 +1088,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Filters/FilterSupportMapTests.cs::JpxDecode_DelegatesPixelsToAThirdPartyCodec",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "JPEG 2000 / JPX image XObject support",
       "documentation": [
@@ -1042,7 +1152,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -1059,7 +1169,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_JBIG2Decode_ReturnsDataUnchanged",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "JBIG2 bi-level image XObject support",
       "documentation": [
@@ -1188,7 +1306,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -1205,7 +1323,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_Crypt_ReturnsDataUnchanged",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Encrypted stream filter handling",
       "documentation": [
@@ -1261,7 +1387,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -1278,7 +1404,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::MultipleFilters_ChainInOrder",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::MultipleFilters_UsesDecodeParmsForMatchingFilter",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "PDF stream filter arrays",
       "documentation": [

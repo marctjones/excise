@@ -1626,9 +1626,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1643,7 +1643,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator q for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -1699,9 +1708,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1716,7 +1725,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator Q for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -1772,9 +1790,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1789,7 +1807,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator cm for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -1845,9 +1872,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1862,7 +1889,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator w for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -1918,9 +1954,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1935,7 +1971,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator J for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -1991,9 +2036,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2008,7 +2053,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator j for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2064,9 +2118,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2081,7 +2135,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator M for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2137,9 +2200,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2154,7 +2217,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator d for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2210,9 +2282,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2227,7 +2299,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator ri for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2283,9 +2364,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2300,7 +2381,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator i for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2356,9 +2446,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2373,7 +2463,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator gs for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2429,9 +2528,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2446,7 +2545,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator m for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2502,9 +2610,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2519,7 +2627,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator l for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2575,9 +2692,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2592,7 +2709,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator c for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2648,9 +2774,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2665,7 +2791,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator v for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2721,9 +2856,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2738,7 +2873,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator y for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2794,9 +2938,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2811,7 +2955,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator h for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2867,9 +3020,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2884,7 +3037,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator re for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2940,9 +3102,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2957,7 +3119,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator S for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3013,9 +3184,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3030,7 +3201,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator s for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3086,9 +3266,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3103,7 +3283,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator f for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3159,9 +3348,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3176,7 +3365,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator F for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3232,9 +3430,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3249,7 +3447,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator f* for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3305,9 +3512,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3322,7 +3529,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator B for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3378,9 +3594,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3395,7 +3611,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator B* for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3451,9 +3676,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3468,7 +3693,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator b for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3524,9 +3758,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3541,7 +3775,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator b* for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3597,9 +3840,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3614,7 +3857,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator n for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3670,9 +3922,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3687,7 +3939,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator W for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3743,9 +4004,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3760,7 +4021,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator W* for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3816,9 +4086,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3833,7 +4103,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator CS for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3889,9 +4168,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3906,7 +4185,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator cs for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3962,9 +4250,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -3979,7 +4267,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator SC for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4035,9 +4332,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4052,7 +4349,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator SCN for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4108,9 +4414,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4125,7 +4431,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator sc for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4181,9 +4496,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4198,7 +4513,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator scn for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4254,9 +4578,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4271,7 +4595,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator G for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4327,9 +4660,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4344,7 +4677,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator g for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4400,9 +4742,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4417,7 +4759,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator RG for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4473,9 +4824,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4490,7 +4841,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator rg for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4546,9 +4906,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4563,7 +4923,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator K for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4619,9 +4988,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4636,7 +5005,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator k for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4692,9 +5070,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4709,7 +5087,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator sh for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4765,9 +5152,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4782,7 +5169,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Parse_InlineImage_ProducesBI_Operator",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Write_InlineImage_RoundTripsBinaryDataLosslessly",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator BI for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4838,9 +5240,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4855,7 +5257,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Parse_InlineImage_ProducesBI_Operator",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Write_InlineImage_RoundTripsBinaryDataLosslessly",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator ID for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4911,9 +5328,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -4928,7 +5345,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Parse_InlineImage_ProducesBI_Operator",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Write_InlineImage_RoundTripsBinaryDataLosslessly",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator EI for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4984,9 +5416,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5001,7 +5433,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator Do for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5057,9 +5498,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5074,7 +5515,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator BT for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5130,9 +5580,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5147,7 +5597,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator ET for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5203,9 +5662,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5220,7 +5679,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator Tc for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5276,9 +5744,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5293,7 +5761,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator Tw for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5349,9 +5826,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5366,7 +5843,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator Tz for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5422,9 +5908,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5439,7 +5925,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator TL for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5495,9 +5990,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5512,7 +6007,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator Tf for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5568,9 +6072,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5585,7 +6089,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator Tr for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5641,9 +6154,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5658,7 +6171,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator Ts for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5714,9 +6236,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5731,7 +6253,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator Td for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5787,9 +6318,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5804,7 +6335,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator TD for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5860,9 +6400,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5877,7 +6417,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator Tm for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5933,9 +6482,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -5950,7 +6499,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator T* for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6006,9 +6564,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6023,7 +6581,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator Tj for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6079,9 +6646,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6096,7 +6663,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator TJ for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6152,9 +6728,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6169,7 +6745,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator ' for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6225,9 +6810,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6242,7 +6827,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator \" for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6298,9 +6892,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6315,7 +6909,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator d0 for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6371,9 +6974,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6388,7 +6991,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator d1 for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6444,9 +7056,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6461,7 +7073,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator BMC for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6517,9 +7138,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6534,7 +7155,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator BDC for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6590,9 +7220,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6607,7 +7237,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator EMC for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6663,9 +7302,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6680,7 +7319,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator MP for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6736,9 +7384,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6753,7 +7401,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator DP for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6809,9 +7466,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6826,7 +7483,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator BX for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6882,9 +7548,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -6899,7 +7565,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Implement content-stream operator EX for renderer-visible behavior or required no-op semantics.",
       "documentation": [

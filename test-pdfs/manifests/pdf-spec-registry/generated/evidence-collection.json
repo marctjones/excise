@@ -18567,7 +18567,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18598,7 +18607,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18629,7 +18647,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18660,7 +18687,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18691,7 +18727,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18722,7 +18767,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18753,7 +18807,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18784,7 +18847,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18815,7 +18887,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18846,7 +18927,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18877,7 +18967,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18908,7 +19007,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18939,7 +19047,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18970,7 +19087,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19001,7 +19127,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19032,7 +19167,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19063,7 +19207,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19094,7 +19247,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19125,7 +19287,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19156,7 +19327,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19187,7 +19367,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19218,7 +19407,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19250,7 +19448,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19281,7 +19488,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19313,7 +19529,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19344,7 +19569,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19376,7 +19610,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19407,7 +19650,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19438,7 +19690,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19470,7 +19731,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19501,7 +19771,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19532,7 +19811,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19563,7 +19851,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19595,7 +19892,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19626,7 +19932,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19658,7 +19973,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19689,7 +20013,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19720,7 +20053,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19751,7 +20093,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19782,7 +20133,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19813,7 +20173,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19844,7 +20213,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19875,7 +20253,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19906,7 +20293,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Parse_InlineImage_ProducesBI_Operator",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Write_InlineImage_RoundTripsBinaryDataLosslessly",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19937,7 +20339,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Parse_InlineImage_ProducesBI_Operator",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Write_InlineImage_RoundTripsBinaryDataLosslessly",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19968,7 +20385,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Parse_InlineImage_ProducesBI_Operator",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/Operators/InlineImageTests.cs::Write_InlineImage_RoundTripsBinaryDataLosslessly",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19999,7 +20431,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20030,7 +20471,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20061,7 +20511,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20092,7 +20551,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20123,7 +20591,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20154,7 +20631,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20185,7 +20671,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20216,7 +20711,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20247,7 +20751,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20278,7 +20791,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20309,7 +20831,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20340,7 +20871,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20371,7 +20911,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20403,7 +20952,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20434,7 +20992,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20465,7 +21032,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20497,7 +21073,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20529,7 +21114,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20560,7 +21154,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20591,7 +21194,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20623,7 +21235,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20655,7 +21276,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20687,7 +21317,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20718,7 +21357,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20749,7 +21397,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20780,7 +21437,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20811,7 +21477,16 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20845,7 +21520,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::ASCIIHexDecode_Works",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -20973,7 +21656,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_ASCII85_FullName_DecodesValidData",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -21071,7 +21762,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_RoundTrips",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -21293,7 +21992,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_WithTiffPredictor_RoundTrips",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -21515,7 +22222,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_WithPngPredictor_RoundTrips",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -21756,7 +22471,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_LZW_SingleByteSequence",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -21992,7 +22715,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_LZW_WithPredictor",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_LZW_WithTiffPredictor",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -22111,7 +22849,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::RunLengthDecode_Works",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -22232,7 +22978,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_CCITTFax_Group4_PopplerImageRetrieveFixture_DecodesFullImage",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -22371,7 +23125,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_CCITTFax_NullParms_UsesDefaults",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_CCITTFax_WithBlackIs1_InvertsPixels",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -22624,7 +23393,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Filters/FilterSupportMapTests.cs::DctDecode_IsNotDecodedByExcise",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -22961,7 +23738,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Filters/FilterSupportMapTests.cs::JpxDecode_DelegatesPixelsToAThirdPartyCodec",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -23142,7 +23927,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_JBIG2Decode_ReturnsDataUnchanged",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -23703,7 +24496,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_Crypt_ReturnsDataUnchanged",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -24041,7 +24842,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::MultipleFilters_ChainInOrder",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::MultipleFilters_UsesDecodeParmsForMatchingFilter",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
