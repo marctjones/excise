@@ -331,6 +331,7 @@
       "consumerReferences": [
         "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs",
         "Excise.Core.Tests/Filters/Jpx/AltonaJpxTests.cs",
+        "Excise.Rendering.Tests/ImageColorConverterTests.cs",
         "Excise.Rendering.Tests/SkiaRendererTests.cs",
         "tests/corpora.tsv",
         "tests/redaction-hard-cases.tsv",
