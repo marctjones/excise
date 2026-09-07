@@ -35,15 +35,34 @@ namespace Excise.Rendering.Tests.Differential;
 ///   is the one that is RIGHT — agreeing with three renderers that also fail is
 ///   not corroboration. Tracked as #874/#656; pinned here by its root cause.
 ///
-/// • bug1552113.pdf — excise CORRECT, pdftocairo the outlier. excise sits with
-///   mutool (0.025), Ghostscript (0.046) and PDFium (0.058); only pdftocairo
-///   departs (0.838). Three independent agreements beat one disagreement.
+/// • bug1552113.pdf — excise CORRECT, pdftocairo the outlier. Re-verified
+///   2026-09-07 with a full pairwise matrix (not just each-vs-excise):
+///   excise/mutool/gs form a tight cluster (0.098-0.109 apart from each
+///   other) while cairo disagrees with ALL THREE by ~0.85. Still solid.
 ///
-/// • freeculture.pdf — excise CORRECT. mutool 0.038, PDFBox 0.018, PDFium
-///   0.032 all agree with excise; pdftocairo (0.510) and Ghostscript (0.509)
-///   are the outliers, and they are outliers TOGETHER — both are text-heavy
-///   full-page renders where the two share font-rasterisation behaviour excise
-///   and the others do not.
+/// • freeculture.pdf — VERDICT CHANGED, 2026-09-07. This entry originally
+///   read "excise CORRECT" from the 2026-08-03 scan (mutool 0.038, PDFBox
+///   0.018, PDFium 0.032 close to excise; cairo 0.510, gs 0.509 far). A fresh
+///   pairwise matrix no longer supports that:
+///
+///     excise-mutool 0.197   excise-cairo 0.142   excise-gs 0.185
+///     mutool-cairo  0.167   mutool-gs    0.271   cairo-gs   0.211
+///
+///   excise (mean distance 0.175) and cairo (0.174) are now the two most
+///   CENTRAL renderers; mutool (0.212) and gs (0.222) are further from the
+///   group, and mutool-gs (0.271) is the single largest distance in the
+///   whole matrix — the two "reference" renderers disagree with each other
+///   more than either disagrees with excise. Visual inspection (pixel-diff
+///   heatmap of excise vs mutool) shows the difference is a full-page
+///   cascade of thin edge-outlines on every stripe boundary and every glyph
+///   in a fine repeating horizontal-line pattern rendered with AntiAlias
+///   off — consistent with a benign sub-pixel rasterisation difference, not
+///   missing/wrong content. Root cause of WHY excise's numbers moved this
+///   much since 2026-08-03 was not chased (would need a git-history bisect
+///   across ~5 weeks); what's certain is that "excise agrees with mutool,
+///   cairo is the outlier" is no longer what the data says. Reclassified to
+///   NO RELIABLE GROUND TRUTH, same posture as the next entry — removed from
+///   the pinned theory below rather than asserting a stale direction.
 ///
 /// • issue2177.pdf, issue16316.pdf — NO RELIABLE GROUND TRUTH. The oracles
 ///   spread out with no majority (issue2177: mutool 0.074 and PDFium 0.024
@@ -52,7 +71,9 @@ namespace Excise.Rendering.Tests.Differential;
 ///   set, but "most central" is not "correct" and there is nothing here to
 ///   prove either way. Same posture as #875.
 ///
-/// Only one of the five is an excise defect, and it was already tracked.
+/// Only one of the five is a confirmed excise defect, and it was already
+/// tracked. freeculture.pdf moved from "confirmed correct" to "unprovable
+/// either way" — not a regression finding, a measurement-honesty one.
 /// </summary>
 public class PdftocairoOutlierClassificationTests
 {
@@ -86,10 +107,17 @@ public class PdftocairoOutlierClassificationTests
     /// excise CORRECT, pdftocairo the outlier. Stated as a RELATIVE claim —
     /// excise is closer to mutool than pdftocairo is — because that is what the
     /// data supports and it needs no absolute threshold to be meaningful.
+    ///
+    /// freeculture.pdf is deliberately NOT here any more (was, until
+    /// 2026-09-07) — a fresh pairwise oracle matrix no longer supports the
+    /// directional claim this test makes; see the class-level doc comment.
+    /// Do not re-add it without re-measuring, and don't add a fixture here
+    /// from the class comment's "no reliable ground truth" entries either —
+    /// that classification means this assertion is exactly the wrong shape
+    /// for them.
     /// </summary>
     [Theory]
     [InlineData("bug1552113.pdf")]
-    [InlineData("freeculture.pdf")]
     public void ExciseAgreesWithMutool_WherePdftocairoIsTheOutlier(string fixture)
     {
         var path = FindCorpusFile("pdfjs", fixture);
