@@ -22,7 +22,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | operators | 292 | 0.0% | 22.8% | 27.5% | 0.0% | 292 |
 | optional-profiles | 0 | — | — | — | — | 0 |
 | product-capabilities | 21 | 0.0% | 10.0% | 10.0% | 42.9% | 12 |
-| renderer-requirements | 285 | 0.0% | 21.5% | 10.0% | 0.0% | 285 |
+| renderer-requirements | 285 | 0.0% | 21.6% | 10.0% | 0.0% | 285 |
 | rendering | 10 | 0.0% | 10.0% | 10.0% | 10.0% | 9 |
 | syntax | 14 | 0.0% | 12.5% | 10.0% | 0.0% | 14 |
 | transparency | 4 | 0.0% | 31.2% | 30.0% | 25.0% | 3 |

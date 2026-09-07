@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 996,
-  "indexedContentSha256": "8e8b67f252624fad63e98bf02b2fa5a417f57ff0afff0042d5ce2feea9c5feed",
+  "indexedContentSha256": "fe5448f58f1f4c6ba1fa0ecb634ecca159315fae03e04920ce5bb9f58af763e6",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -17555,6 +17555,14 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "pdf20"
+          ]
+        },
+        {
           "path": "tests/annotation-synthesis-policy.json",
           "kind": "test",
           "matchedTerms": [
@@ -17613,7 +17621,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 73
+      "candidateReferenceCount": 74
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -17759,6 +17767,14 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "forms",
+            "pdf20"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -17767,7 +17783,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 2
+      "candidateReferenceCount": 3
     },
     {
       "id": "pdf.20.renderer.requirement-010",
@@ -17876,8 +17892,17 @@
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "transparency"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-012",
@@ -18590,6 +18615,14 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "structure"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -18598,7 +18631,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 9
+      "candidateReferenceCount": 10
     },
     {
       "id": "pdf.20.renderer.requirement-020",
@@ -22671,6 +22704,16 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "predictor-png",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "tests/format-compatibility-suite.json",
           "kind": "test",
           "matchedTerms": [
@@ -22680,7 +22723,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 20
+      "candidateReferenceCount": 21
     },
     {
       "id": "pdf.20.image.requirement-006",
@@ -56635,6 +56678,14 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "override",
+            "pdfe"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -56688,7 +56739,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 28
+      "candidateReferenceCount": 29
     },
     {
       "id": "pdfe.product.ocr.scanned-documents",

@@ -1107,7 +1107,7 @@
       "measuredModeCoveragePercent": 0.0,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 10.0,
-      "implementationEvidenceProgressPercent": 21.5,
+      "implementationEvidenceProgressPercent": 21.6,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 285,
         "directTestOrBetter": 0,
