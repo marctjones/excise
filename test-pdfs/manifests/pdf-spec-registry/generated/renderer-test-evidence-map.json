@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "f02c7991c2c9ed842984cb2cb7d9e53d7dbdabcaa365753253e69a82a4759062",
+  "sourceFingerprint": "aa6438cf17f258d258bdf64aa18e29ad1022836bc823332d9405422fe3ebb02f",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -9173,7 +9173,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdftocairoOutlierClassificationTests.cs",
       "class": "PdftocairoOutlierClassificationTests",
       "method": "BitmapSymbolContextReuse_IsAJbig2ShortDecode_NotADisagreement",
-      "line": 69,
+      "line": 90,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9213,11 +9213,11 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.Rendering.Tests/Differential/PdftocairoOutlierClassificationTests.cs::PdftocairoOutlierClassificationTests.ExciseAgreesWithMutool_WherePdftocairoIsTheOutlier",
+      "id": "Excise.Rendering.Tests/Differential/PdftocairoOutlierClassificationTests.cs::comment.ExciseAgreesWithMutool_WherePdftocairoIsTheOutlier",
       "path": "Excise.Rendering.Tests/Differential/PdftocairoOutlierClassificationTests.cs",
-      "class": "PdftocairoOutlierClassificationTests",
+      "class": "comment",
       "method": "ExciseAgreesWithMutool_WherePdftocairoIsTheOutlier",
-      "line": 93,
+      "line": 121,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
