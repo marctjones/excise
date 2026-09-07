@@ -79,9 +79,21 @@ def summary(rows, collected, attribution=None, mode_filter=None):
     attribution = attribution or {}
     implementation_progress = [implementation_evidence_progress(row, mode, collected, attribution) for row in target for mode, state in row["modes"].items()
                                if state != "not-applicable" and (mode_filter is None or mode in mode_filter)]
+    # Grade (#1346/#1347): a headline built from evidence, not from a human
+    # having hand-set modes[mode]=="implemented" (the "strict" measure below,
+    # kept as a column -- it is still the right bar for the redaction-security
+    # gate). implemented/verified come only from a passing EXPLICIT contract
+    # (never a testCandidate keyword match); verified additionally requires an
+    # independent-oracle (differential) check among those passing.
+    grades = [attribution.get((cap_id, mode), {}).get("grade", "unknown") for cap_id, mode, state in modes]
+    grade_states = Counter(grades)
     return {
         "capabilities": len(rows), "targetCapabilities": len(target),
         "targetModes": len(modes), "modeStates": dict(sorted(states.items())),
+        "gradeStates": dict(sorted(grade_states.items())),
+        "gradedImplementedOrBetterPercent": percent(grade_states["implemented"] + grade_states["verified"], len(modes)),
+        "gradedVerifiedPercent": percent(grade_states["verified"], len(modes)),
+        "gradedUnknownCount": grade_states["unknown"],
         "measuredModeCoveragePercent": percent(len(modes) - states["unknown"], len(modes)),
         "implementedModeCoveragePercent": percent(states["implemented"], len(modes)),
         "promotionReadinessPercent": percent(sum(readiness), len(readiness) * 100),
@@ -154,11 +166,11 @@ def main():
     output = args.output or args.root / "generated/capability-scorecard.json"
     output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     markdown = args.markdown or args.root / "generated/capability-scorecard.md"
-    lines = ["# PDF capability scorecard", "", "Unknown modes receive no credit. Security gates are non-compensating.", "", "Implementation evidence progress gives capped credit for reviewed state, contracts, passing runs, fixtures, independent evidence, and performance harnesses; it is never a conformance claim.", "", "Workflow scores include only the processor roles that workflow needs; section and category scores retain every required/supported role.", "", f"Critical-path benchmark readiness: {result['benchmarks']['readyPercent']}% ({result['benchmarks']['status']}).", "", "| Area | Target modes | Strict | Evidence progress | Promotion readiness | Measured | Unknown |", "| --- | ---: | ---: | ---: | ---: | ---: | ---: |"]
+    lines = ["# PDF capability scorecard", "", "Implemented/Verified/Unknown (#1346/#1347) are graded from evidence: implemented requires a passing explicit test contract, verified additionally requires an independent-oracle (differential) check among those passing, unknown is everything else — a discovered testCandidate keyword match never earns credit on its own. Strict, evidence progress, and promotion readiness are the review-gated columns the redaction-security work still uses; they are not the headline.", "", "Implementation evidence progress gives capped credit for reviewed state, contracts, passing runs, fixtures, independent evidence, and performance harnesses; it is never a conformance claim.", "", "Workflow scores include only the processor roles that workflow needs; section and category scores retain every required/supported role.", "", f"Critical-path benchmark readiness: {result['benchmarks']['readyPercent']}% ({result['benchmarks']['status']}).", "", "| Area | Target modes | Implemented | Verified | Unknown | Strict | Evidence progress | Promotion readiness | Measured | Strict unknown |", "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
     for name, item in [("overall", result["overall"]), *sorted(result["sections"].items())]:
         def display(value):
             return "—" if value is None else f"{value}%"
-        lines.append(f"| {name} | {item['targetModes']} | {display(item['implementedModeCoveragePercent'])} | {display(item['implementationEvidenceProgressPercent'])} | {display(item['promotionReadinessPercent'])} | {display(item['measuredModeCoveragePercent'])} | {item['unknownModeCount']} |")
+        lines.append(f"| {name} | {item['targetModes']} | {display(item['gradedImplementedOrBetterPercent'])} | {display(item['gradedVerifiedPercent'])} | {item['gradedUnknownCount']} | {display(item['implementedModeCoveragePercent'])} | {display(item['implementationEvidenceProgressPercent'])} | {display(item['promotionReadinessPercent'])} | {display(item['measuredModeCoveragePercent'])} | {item['unknownModeCount']} |")
     lines.extend(["", "## Major categories", "", "| Category | Target modes | Strict | Evidence progress | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |", "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"])
     for name, item in result["majorCategories"].items():
         lines.append(f"| {item['name']} | {item['targetModes']} | {display(item['implementedModeCoveragePercent'])} | {display(item['implementationEvidenceProgressPercent'])} | {display(item['promotionReadinessPercent'])} | {display(item['measuredModeCoveragePercent'])} | {display(item['verificationPlanCoveragePercent'])} | {display(item['executableVerificationCoveragePercent'])} | {item['unknownModeCount']} |")

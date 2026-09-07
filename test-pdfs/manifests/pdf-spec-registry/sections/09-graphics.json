@@ -28,11 +28,11 @@
         "rationale": "Shared semantics underpin every visible page operation."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
+        "parse": "partial",
+        "preserve": "partial",
         "render": "implemented",
-        "mutate": "unknown",
-        "write": "unknown"
+        "mutate": "partial",
+        "write": "partial"
       },
       "evidence": [
         {
@@ -131,6 +131,12 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ],
+        "seededFrom": [
+          "#1345: registry-implementation-owner source mapping for parse (Excise.Rendering/SkiaRenderer.cs)",
+          "#1345: registry-implementation-owner source mapping for preserve (Excise.Rendering/SkiaRenderer.cs)",
+          "#1345: registry-implementation-owner source mapping for mutate (Excise.Rendering/SkiaRenderer.cs)",
+          "#1345: registry-implementation-owner source mapping for write (Excise.Rendering/SkiaRenderer.cs)"
         ]
       }
     },
@@ -157,12 +163,12 @@
         "rationale": "Fundamental page appearance and redaction obstruction analysis."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
+        "parse": "partial",
+        "preserve": "partial",
         "render": "implemented",
-        "mutate": "unknown",
-        "write": "unknown",
-        "author": "unknown"
+        "mutate": "partial",
+        "write": "partial",
+        "author": "partial"
       },
       "evidence": [
         {
@@ -261,6 +267,13 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ],
+        "seededFrom": [
+          "#1345: registry-implementation-owner source mapping for parse (Excise.Core/Content/ContentStreamParser.cs, Excise.Rendering/SkiaRenderer.Paths.cs)",
+          "#1345: registry-implementation-owner source mapping for preserve (Excise.Core/Content/ContentStreamParser.cs, Excise.Rendering/SkiaRenderer.Paths.cs)",
+          "#1345: registry-implementation-owner source mapping for mutate (Excise.Core/Content/ContentStreamParser.cs, Excise.Rendering/SkiaRenderer.Paths.cs)",
+          "#1345: registry-implementation-owner source mapping for write (Excise.Core/Content/ContentStreamParser.cs, Excise.Rendering/SkiaRenderer.Paths.cs)",
+          "#1345: registry-implementation-owner source mapping for author (Excise.Core/Content/ContentStreamParser.cs, Excise.Rendering/SkiaRenderer.Paths.cs)"
         ]
       }
     },
@@ -289,10 +302,10 @@
         "rationale": "Practical office-document rendering needs basic color-managed appearance, not artist or prepress fidelity."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
+        "parse": "partial",
+        "preserve": "partial",
         "render": "partial",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -389,6 +402,11 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ],
+        "seededFrom": [
+          "#1345: registry-implementation-owner source mapping for parse (Excise.Rendering/SkiaRenderer.cs)",
+          "#1345: registry-implementation-owner source mapping for preserve (Excise.Rendering/SkiaRenderer.cs)",
+          "#1345: registry-implementation-owner source mapping for write (Excise.Rendering/SkiaRenderer.cs)"
         ]
       }
     },
@@ -471,7 +489,8 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
-        ]
+        ],
+        "seededFrom": []
       }
     },
     {
@@ -609,7 +628,8 @@
         "negativeOrConservationTestRefs": [
           "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
         ],
-        "explicitEvidenceGaps": []
+        "explicitEvidenceGaps": [],
+        "seededFrom": []
       }
     },
     {
@@ -745,7 +765,8 @@
         "negativeOrConservationTestRefs": [
           "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
         ],
-        "explicitEvidenceGaps": []
+        "explicitEvidenceGaps": [],
+        "seededFrom": []
       }
     }
   ]

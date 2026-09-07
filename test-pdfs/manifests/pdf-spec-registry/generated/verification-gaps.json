@@ -221,73 +221,73 @@
     {
       "capability": "pdf.17.graphics.state",
       "mode": "parse",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.state",
       "mode": "preserve",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.state",
       "mode": "mutate",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.state",
       "mode": "write",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.paths-painting",
       "mode": "parse",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.paths-painting",
       "mode": "preserve",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.paths-painting",
       "mode": "mutate",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.paths-painting",
       "mode": "write",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.paths-painting",
       "mode": "author",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.color",
       "mode": "parse",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.color",
       "mode": "preserve",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.color",
       "mode": "write",
-      "implementationState": "unknown",
+      "implementationState": "partial",
       "reason": "no verification contract"
     },
     {

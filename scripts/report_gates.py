@@ -899,10 +899,15 @@ def grade_registry():
     if not header or not overall:
         return f"registry NO DATA — no '| overall |' row in {rel(path)} — measures paperwork, not code (milestone RC22)"
     cells = dict(zip(header, overall))
-    strict = cells.get("Strict", "?")
-    unknown = cells.get("Unknown", "?")
     target = cells.get("Target modes", "?")
-    return f"registry strict {strict} ({unknown}/{target} modes unknown) — measures paperwork, not code (milestone RC22)"
+    # #1346/#1347: graded from evidence -- a passing explicit test contract,
+    # not a human-reviewed "strict" state or a keyword testCandidate match.
+    # Strict stays a column for the redaction-security work that still needs
+    # it (capability-scorecard.md); it is not the headline any more.
+    implemented = cells.get("Implemented", "?")
+    verified = cells.get("Verified", "?")
+    unknown = cells.get("Unknown", "?")
+    return f"registry implemented {implemented} verified {verified} ({unknown}/{target} modes unknown, graded #1346/#1347)"
 
 
 def grade_extraction(start, end, rows_by):

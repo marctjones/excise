@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-attribution.py",
-  "policy": "Candidate attribution measures discoverable test/benchmark relevance. Only explicit reviewed contracts affect strict support; test outcomes are recorded-run evidence only.",
+  "policy": "Candidate attribution measures discoverable test/benchmark relevance. Only explicit reviewed contracts affect strict support; test outcomes are recorded-run evidence only. grade (#1346): implemented requires a passing explicit contract, verified additionally requires one of kind differential (an independent oracle) -- a testCandidate match never grades on its own.",
   "modes": [
     {
       "capability": "pdf.17.syntax.file",
@@ -1202,6 +1202,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "open"
       ]
@@ -2405,6 +2406,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "open"
       ]
@@ -3608,6 +3610,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "open"
       ]
@@ -4811,6 +4814,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "save"
       ]
@@ -5944,6 +5948,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "save"
       ]
@@ -7257,6 +7262,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "save"
       ]
@@ -8390,6 +8396,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "save"
       ]
@@ -8402,6 +8409,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -8412,6 +8420,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -8422,6 +8431,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -9857,6 +9867,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -11292,6 +11303,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -12727,6 +12739,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -14162,6 +14175,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -15363,6 +15377,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "open"
       ]
@@ -16566,6 +16581,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "open"
       ]
@@ -16578,6 +16594,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "open"
       ]
@@ -16590,6 +16607,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "open"
       ]
@@ -17793,6 +17811,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "open"
       ]
@@ -17805,6 +17824,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -17815,6 +17835,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -17825,6 +17846,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -17835,6 +17857,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -17845,6 +17868,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -17855,6 +17879,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -17865,6 +17890,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "save"
       ]
@@ -19178,6 +19204,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "save"
       ]
@@ -19190,6 +19217,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "save"
       ]
@@ -20503,6 +20531,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "save"
       ]
@@ -21816,6 +21845,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "save"
       ]
@@ -21828,6 +21858,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -21838,6 +21869,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -21848,6 +21880,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -21858,6 +21891,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -21868,6 +21902,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -21878,13 +21913,14 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.state",
       "section": "graphics",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Custom_GivesDirectGraphicsAccess",
@@ -23009,16 +23045,18 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.state",
       "section": "graphics",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -24172,13 +24210,14 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.state",
       "section": "graphics",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Custom_GivesDirectGraphicsAccess",
@@ -25303,13 +25342,14 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.state",
       "section": "graphics",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Custom_GivesDirectGraphicsAccess",
@@ -26434,13 +26474,14 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.paths-painting",
       "section": "graphics",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Custom_GivesDirectGraphicsAccess",
@@ -27565,16 +27606,18 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.paths-painting",
       "section": "graphics",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -28728,13 +28771,14 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.paths-painting",
       "section": "graphics",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Custom_GivesDirectGraphicsAccess",
@@ -29859,13 +29903,14 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.paths-painting",
       "section": "graphics",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Custom_GivesDirectGraphicsAccess",
@@ -30990,23 +31035,25 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.paths-painting",
       "section": "graphics",
       "mode": "author",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.color",
       "section": "graphics",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
@@ -31425,16 +31472,18 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.color",
       "section": "graphics",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -31882,16 +31931,18 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.graphics.color",
       "section": "graphics",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -32317,6 +32368,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -32327,6 +32379,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -32752,6 +32805,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -32762,6 +32816,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -32772,6 +32827,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -34181,6 +34237,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -34193,6 +34250,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -35626,6 +35684,7 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -37037,6 +37096,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -37049,6 +37109,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -37061,6 +37122,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -38408,6 +38470,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -38420,6 +38483,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -39789,6 +39853,7 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -41136,6 +41201,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -41148,6 +41214,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -41160,6 +41227,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -41172,6 +41240,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -41184,6 +41253,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -41194,6 +41264,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -41204,6 +41275,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -41214,6 +41286,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -41224,6 +41297,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -41234,6 +41308,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -41244,6 +41319,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -41254,6 +41330,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -41264,6 +41341,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -41274,6 +41352,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -42405,6 +42484,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -42417,6 +42497,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -43579,6 +43660,7 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -43637,6 +43719,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -44770,6 +44853,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -45903,6 +45987,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "render"
       ]
@@ -45915,6 +46000,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -45925,6 +46011,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -45935,6 +46022,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -45945,6 +46033,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -45955,6 +46044,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -45965,6 +46055,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46021,6 +46112,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "search"
       ]
@@ -46033,6 +46125,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "search"
       ]
@@ -46091,6 +46184,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "search"
       ]
@@ -46149,6 +46243,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "search"
       ]
@@ -46161,6 +46256,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "search"
       ]
@@ -46173,6 +46269,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "search"
       ]
@@ -46204,6 +46301,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46233,6 +46331,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46243,6 +46342,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46253,6 +46353,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46282,6 +46383,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46311,6 +46413,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46321,6 +46424,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46331,6 +46435,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46360,6 +46465,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46389,6 +46495,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46399,6 +46506,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46409,6 +46517,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46438,6 +46547,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46467,6 +46577,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46477,6 +46588,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46487,6 +46599,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46516,6 +46629,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46545,6 +46659,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46555,6 +46670,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46565,6 +46681,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46594,6 +46711,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46623,6 +46741,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46633,6 +46752,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46643,6 +46763,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46672,6 +46793,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46701,6 +46823,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46711,6 +46834,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46721,6 +46845,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46750,6 +46875,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46779,6 +46905,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46789,6 +46916,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46799,6 +46927,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46828,6 +46957,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46857,6 +46987,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46867,6 +46998,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46877,6 +47009,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46906,6 +47039,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46935,6 +47069,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46945,6 +47080,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46955,6 +47091,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -46984,6 +47121,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47013,6 +47151,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47023,6 +47162,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47033,6 +47173,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47062,6 +47203,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47091,6 +47233,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47101,6 +47244,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47111,6 +47255,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47140,6 +47285,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47169,6 +47315,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47179,6 +47326,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47189,6 +47337,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47218,6 +47367,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47247,6 +47397,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47257,6 +47408,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47267,6 +47419,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47296,6 +47449,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47325,6 +47479,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47335,6 +47490,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47345,6 +47501,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47374,6 +47531,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47403,6 +47561,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47413,6 +47572,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47423,6 +47583,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47452,6 +47613,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47481,6 +47643,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47491,6 +47654,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47501,6 +47665,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47530,6 +47695,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47559,6 +47725,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47569,6 +47736,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47579,6 +47747,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47608,6 +47777,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47637,6 +47807,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47647,6 +47818,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47657,6 +47829,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47686,6 +47859,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47715,6 +47889,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47725,6 +47900,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47735,6 +47911,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47764,6 +47941,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47793,6 +47971,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47803,6 +47982,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47813,6 +47993,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47842,6 +48023,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47871,6 +48053,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47881,6 +48064,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47891,6 +48075,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47920,6 +48105,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47949,6 +48135,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47959,6 +48146,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47969,6 +48157,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -47998,6 +48187,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48027,6 +48217,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48037,6 +48228,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48047,6 +48239,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48076,6 +48269,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48105,6 +48299,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48115,6 +48310,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48125,6 +48321,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48154,6 +48351,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48183,6 +48381,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48193,6 +48392,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48203,6 +48403,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48232,6 +48433,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48261,6 +48463,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48271,6 +48474,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48281,6 +48485,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48310,6 +48515,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48339,6 +48545,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48349,6 +48556,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48359,6 +48567,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48388,6 +48597,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48417,6 +48627,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48427,6 +48638,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48437,6 +48649,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48466,6 +48679,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48495,6 +48709,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48505,6 +48720,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48515,6 +48731,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48544,6 +48761,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48573,6 +48791,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48583,6 +48802,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48593,6 +48813,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48622,6 +48843,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48651,6 +48873,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48661,6 +48884,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48671,6 +48895,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48700,6 +48925,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48729,6 +48955,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48739,6 +48966,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48749,6 +48977,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48778,6 +49007,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48807,6 +49037,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48817,6 +49048,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48827,6 +49059,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48856,6 +49089,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48885,6 +49119,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48895,6 +49130,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48905,6 +49141,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48934,6 +49171,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48963,6 +49201,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48973,6 +49212,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -48983,6 +49223,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49012,6 +49253,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49041,6 +49283,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49051,6 +49294,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49061,6 +49305,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49090,6 +49335,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49119,6 +49365,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49129,6 +49376,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49139,6 +49387,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49168,6 +49417,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49197,6 +49447,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49207,6 +49458,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49217,6 +49469,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49246,6 +49499,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49275,6 +49529,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49285,6 +49540,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49295,6 +49551,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49324,6 +49581,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49353,6 +49611,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49363,6 +49622,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49373,6 +49633,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49402,6 +49663,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49431,6 +49693,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49441,6 +49704,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49451,6 +49715,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49480,6 +49745,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49509,6 +49775,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49519,6 +49786,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49529,6 +49797,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49558,6 +49827,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49587,6 +49857,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49597,6 +49868,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49607,6 +49879,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49636,6 +49909,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49665,6 +49939,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49675,6 +49950,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49685,6 +49961,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49714,6 +49991,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49743,6 +50021,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49753,6 +50032,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49763,6 +50043,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49792,6 +50073,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49821,6 +50103,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49831,6 +50114,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49841,6 +50125,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49870,6 +50155,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49899,6 +50185,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49909,6 +50196,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49919,6 +50207,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49948,6 +50237,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49977,6 +50267,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49987,6 +50278,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -49997,6 +50289,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50026,6 +50319,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50055,6 +50349,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50065,6 +50360,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50075,6 +50371,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50104,6 +50401,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50133,6 +50431,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50143,6 +50442,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50153,6 +50453,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50182,6 +50483,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50211,6 +50513,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50221,6 +50524,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50231,6 +50535,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50260,6 +50565,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50289,6 +50595,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50299,6 +50606,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50309,6 +50617,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50338,6 +50647,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50367,6 +50677,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50377,6 +50688,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50387,6 +50699,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50416,6 +50729,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50445,6 +50759,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50455,6 +50770,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50465,6 +50781,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50494,6 +50811,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50523,6 +50841,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50533,6 +50852,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50543,6 +50863,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50572,6 +50893,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50601,6 +50923,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50611,6 +50934,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50621,6 +50945,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50650,6 +50975,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50679,6 +51005,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50689,6 +51016,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50699,6 +51027,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50728,6 +51057,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50757,6 +51087,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50767,6 +51098,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50777,6 +51109,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50806,6 +51139,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50835,6 +51169,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50845,6 +51180,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50855,6 +51191,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50884,6 +51221,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50913,6 +51251,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50923,6 +51262,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50933,6 +51273,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50962,6 +51303,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -50991,6 +51333,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51001,6 +51344,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51011,6 +51355,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51040,6 +51385,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51069,6 +51415,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51079,6 +51426,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51089,6 +51437,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51118,6 +51467,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51147,6 +51497,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51157,6 +51508,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51167,6 +51519,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51196,6 +51549,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51225,6 +51579,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51235,6 +51590,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51245,6 +51601,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51274,6 +51631,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51303,6 +51661,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51313,6 +51672,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51323,6 +51683,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51352,6 +51713,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51381,6 +51743,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51391,6 +51754,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51401,6 +51765,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51430,6 +51795,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51459,6 +51825,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51469,6 +51836,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51479,6 +51847,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51508,6 +51877,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51537,6 +51907,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51547,6 +51918,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51557,6 +51929,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51586,6 +51959,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51615,6 +51989,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51625,6 +52000,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51635,6 +52011,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51664,6 +52041,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51693,6 +52071,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51703,6 +52082,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51713,6 +52093,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51742,6 +52123,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51771,6 +52153,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51781,6 +52164,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51791,6 +52175,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51820,6 +52205,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51849,6 +52235,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51859,6 +52246,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51869,6 +52257,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51879,6 +52268,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51889,6 +52279,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51899,6 +52290,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51909,6 +52301,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51919,6 +52312,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51929,6 +52323,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51939,6 +52334,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51949,6 +52345,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51959,6 +52356,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51969,6 +52367,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51979,6 +52378,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51989,6 +52389,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -51999,6 +52400,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52009,6 +52411,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52019,6 +52422,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52029,6 +52433,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52039,6 +52444,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52049,6 +52455,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52059,6 +52466,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52069,6 +52477,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52079,6 +52488,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52089,6 +52499,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52099,6 +52510,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52109,6 +52521,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52119,6 +52532,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52129,6 +52543,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52139,6 +52554,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52149,6 +52565,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52159,6 +52576,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52169,6 +52587,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52179,6 +52598,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52189,6 +52609,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52199,6 +52620,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52209,6 +52631,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52219,6 +52642,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52229,6 +52653,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52239,6 +52664,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52249,6 +52675,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52259,6 +52686,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52269,6 +52697,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52279,6 +52708,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52289,6 +52719,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52299,6 +52730,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52309,6 +52741,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52319,6 +52752,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52329,6 +52763,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52339,6 +52774,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52349,6 +52785,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52359,6 +52796,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52369,6 +52807,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52379,6 +52818,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52389,6 +52829,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52399,6 +52840,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52409,6 +52851,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52419,6 +52862,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52429,6 +52873,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52439,6 +52884,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52449,6 +52895,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52459,6 +52906,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52469,6 +52917,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52479,6 +52928,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52489,6 +52939,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52499,6 +52950,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52509,6 +52961,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52519,6 +52972,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52529,6 +52983,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52539,6 +52994,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52549,6 +53005,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52559,6 +53016,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52569,6 +53027,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52579,6 +53038,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52589,6 +53049,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52599,6 +53060,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52609,6 +53071,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52619,6 +53082,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52629,6 +53093,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52639,6 +53104,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52649,6 +53115,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52659,6 +53126,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52669,6 +53137,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52679,6 +53148,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52689,6 +53159,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52699,6 +53170,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52709,6 +53181,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52719,6 +53192,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52729,6 +53203,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52739,6 +53214,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52749,6 +53225,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52759,6 +53236,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52769,6 +53247,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52779,6 +53258,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52789,6 +53269,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52799,6 +53280,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52809,6 +53291,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52819,6 +53302,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52829,6 +53313,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52839,6 +53324,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52849,6 +53335,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52859,6 +53346,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52869,6 +53357,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52879,6 +53368,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52889,6 +53379,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52899,6 +53390,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52909,6 +53401,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52919,6 +53412,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52929,6 +53423,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52939,6 +53434,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52949,6 +53445,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52959,6 +53456,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52969,6 +53467,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52979,6 +53478,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52989,6 +53489,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -52999,6 +53500,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53009,6 +53511,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53019,6 +53522,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53029,6 +53533,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53039,6 +53544,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53049,6 +53555,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53059,6 +53566,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53069,6 +53577,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53079,6 +53588,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53089,6 +53599,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53099,6 +53610,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53109,6 +53621,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53119,6 +53632,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53129,6 +53643,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53139,6 +53654,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53149,6 +53665,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53159,6 +53676,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53169,6 +53687,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53179,6 +53698,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53189,6 +53709,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53199,6 +53720,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53209,6 +53731,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53219,6 +53742,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53229,6 +53753,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53239,6 +53764,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53249,6 +53775,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53259,6 +53786,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53269,6 +53797,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53279,6 +53808,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53289,6 +53819,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53299,6 +53830,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53309,6 +53841,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53319,6 +53852,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53329,6 +53863,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53339,6 +53874,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53349,6 +53885,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53359,6 +53896,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53369,6 +53907,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53379,6 +53918,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53389,6 +53929,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53399,6 +53940,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53409,6 +53951,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53419,6 +53962,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53429,6 +53973,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53439,6 +53984,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53449,6 +53995,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53459,6 +54006,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53469,6 +54017,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53479,6 +54028,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53489,6 +54039,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53499,6 +54050,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53509,6 +54061,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53519,6 +54072,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53529,6 +54083,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53539,6 +54094,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53549,6 +54105,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53559,6 +54116,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53569,6 +54127,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53579,6 +54138,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53589,6 +54149,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53599,6 +54160,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53609,6 +54171,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53619,6 +54182,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53629,6 +54193,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53639,6 +54204,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53649,6 +54215,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53659,6 +54226,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53669,6 +54237,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53679,6 +54248,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53689,6 +54259,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53699,6 +54270,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53709,6 +54281,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53719,6 +54292,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53729,6 +54303,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53739,6 +54314,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53749,6 +54325,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53759,6 +54336,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53769,6 +54347,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53779,6 +54358,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53789,6 +54369,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53799,6 +54380,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53809,6 +54391,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53819,6 +54402,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53829,6 +54413,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53839,6 +54424,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53849,6 +54435,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53859,6 +54446,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53869,6 +54457,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53879,6 +54468,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53889,6 +54479,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53899,6 +54490,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53909,6 +54501,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53919,6 +54512,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53929,6 +54523,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53939,6 +54534,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53949,6 +54545,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53959,6 +54556,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53969,6 +54567,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53979,6 +54578,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53989,6 +54589,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -53999,6 +54600,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54009,6 +54611,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54019,6 +54622,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54029,6 +54633,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54039,6 +54644,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54049,6 +54655,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54059,6 +54666,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54069,6 +54677,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54079,6 +54688,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54089,6 +54699,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54099,6 +54710,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54109,6 +54721,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54119,6 +54732,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54129,6 +54743,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54139,6 +54754,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54149,6 +54765,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54159,6 +54776,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54169,6 +54787,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54179,6 +54798,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54189,6 +54809,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54199,6 +54820,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54209,6 +54831,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54219,6 +54842,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54229,6 +54853,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54239,6 +54864,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54249,6 +54875,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54259,6 +54886,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54269,6 +54897,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54279,6 +54908,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54289,6 +54919,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54299,6 +54930,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54309,6 +54941,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54319,6 +54952,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54329,6 +54963,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54339,6 +54974,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54349,6 +54985,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54359,6 +54996,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54369,6 +55007,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54379,6 +55018,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54389,6 +55029,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54399,6 +55040,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54409,6 +55051,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54419,6 +55062,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54429,6 +55073,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54439,6 +55084,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54449,6 +55095,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54459,6 +55106,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54469,6 +55117,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54479,6 +55128,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54489,6 +55139,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54499,6 +55150,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54509,6 +55161,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54519,6 +55172,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54529,6 +55183,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54539,6 +55194,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54549,6 +55205,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54559,6 +55216,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54569,6 +55227,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54579,6 +55238,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54589,6 +55249,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54599,6 +55260,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54609,6 +55271,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54619,6 +55282,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54629,6 +55293,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54639,6 +55304,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54649,6 +55315,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54659,6 +55326,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54669,6 +55337,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54679,6 +55348,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54689,6 +55359,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54699,6 +55370,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54709,6 +55381,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54719,6 +55392,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54729,6 +55403,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54739,6 +55414,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54749,6 +55425,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54759,6 +55436,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54769,6 +55447,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54779,6 +55458,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54789,6 +55469,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54799,6 +55480,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54809,6 +55491,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54819,6 +55502,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54829,6 +55513,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54839,6 +55524,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54849,6 +55535,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54859,6 +55546,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54869,6 +55557,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54879,6 +55568,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54889,6 +55579,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54899,6 +55590,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54909,6 +55601,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54919,6 +55612,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54929,6 +55623,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54939,6 +55634,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54949,6 +55645,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54959,6 +55656,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54969,6 +55667,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54979,6 +55678,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54989,6 +55689,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -54999,6 +55700,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55009,6 +55711,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55019,6 +55722,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55029,6 +55733,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55039,6 +55744,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55049,6 +55755,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55059,6 +55766,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55069,6 +55777,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55079,6 +55788,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55089,6 +55799,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55099,6 +55810,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55109,6 +55821,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55119,6 +55832,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55129,6 +55843,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55139,6 +55854,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55149,6 +55865,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55159,6 +55876,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55169,6 +55887,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55179,6 +55898,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55189,6 +55909,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55199,6 +55920,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55209,6 +55931,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55219,6 +55942,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55229,6 +55953,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55239,6 +55964,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55249,6 +55975,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55259,6 +55986,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55269,6 +55997,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55279,6 +56008,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55289,6 +56019,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55299,6 +56030,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55309,6 +56041,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55319,6 +56052,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55329,6 +56063,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55339,6 +56074,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55349,6 +56085,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55359,6 +56096,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55369,6 +56107,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55379,6 +56118,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55389,6 +56129,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55399,6 +56140,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55409,6 +56151,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55419,6 +56162,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55429,6 +56173,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55439,6 +56184,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55449,6 +56195,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55459,6 +56206,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55469,6 +56217,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55479,6 +56228,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55489,6 +56239,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55499,6 +56250,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55509,6 +56261,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55519,6 +56272,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55529,6 +56283,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55539,6 +56294,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55549,6 +56305,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55559,6 +56316,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55569,6 +56327,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55579,6 +56338,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55589,6 +56349,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55599,6 +56360,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55609,6 +56371,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55619,6 +56382,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55629,6 +56393,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55639,6 +56404,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55649,6 +56415,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55659,6 +56426,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55669,6 +56437,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55679,6 +56448,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55689,6 +56459,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55699,6 +56470,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55709,6 +56481,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55719,6 +56492,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55729,6 +56503,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55739,6 +56514,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55749,6 +56525,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55759,6 +56536,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55769,6 +56547,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55779,6 +56558,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55789,6 +56569,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55799,6 +56580,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55809,6 +56591,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55819,6 +56602,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55829,6 +56613,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55839,6 +56624,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55849,6 +56635,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55859,6 +56646,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55869,6 +56657,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55879,6 +56668,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55889,6 +56679,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55899,6 +56690,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55909,6 +56701,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55919,6 +56712,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55929,6 +56723,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55939,6 +56734,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55949,6 +56745,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55959,6 +56756,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55969,6 +56767,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55979,6 +56778,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55989,6 +56789,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -55999,6 +56800,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56009,6 +56811,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56019,6 +56822,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56029,6 +56833,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56039,6 +56844,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56049,6 +56855,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56059,6 +56866,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56069,6 +56877,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56079,6 +56888,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56089,6 +56899,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56099,6 +56910,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56109,6 +56921,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56119,6 +56932,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56129,6 +56943,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56139,6 +56954,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56149,6 +56965,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56159,6 +56976,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56169,6 +56987,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56179,6 +56998,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56189,6 +57009,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56199,6 +57020,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56209,6 +57031,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56219,6 +57042,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56229,6 +57053,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56239,6 +57064,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56249,6 +57075,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56259,6 +57086,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56269,6 +57097,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56279,6 +57108,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56289,6 +57119,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56299,6 +57130,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56309,6 +57141,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56319,6 +57152,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56329,6 +57163,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56339,6 +57174,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56349,6 +57185,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56359,6 +57196,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56369,6 +57207,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56379,6 +57218,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56389,6 +57229,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56399,6 +57240,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56409,6 +57251,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56419,6 +57262,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56429,6 +57273,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56439,6 +57284,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56449,6 +57295,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56459,6 +57306,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56469,6 +57317,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56479,6 +57328,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56489,6 +57339,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56499,6 +57350,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56509,6 +57361,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56519,6 +57372,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56529,6 +57383,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56539,6 +57394,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56549,6 +57405,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56559,6 +57416,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56569,6 +57427,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56579,6 +57438,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56589,6 +57449,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56599,6 +57460,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56609,6 +57471,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56619,6 +57482,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56629,6 +57493,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56639,6 +57504,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56649,6 +57515,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56659,6 +57526,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56669,6 +57537,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56679,6 +57548,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56689,6 +57559,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56699,6 +57570,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56709,6 +57581,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56719,6 +57592,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56729,6 +57603,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56739,6 +57614,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56749,6 +57625,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56759,6 +57636,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56769,6 +57647,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56779,6 +57658,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56789,6 +57669,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56799,6 +57680,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56809,6 +57691,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56819,6 +57702,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56829,6 +57713,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56839,6 +57724,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56849,6 +57735,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56859,6 +57746,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56869,6 +57757,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56879,6 +57768,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56889,6 +57779,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56899,6 +57790,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56909,6 +57801,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -56919,6 +57812,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -57364,6 +58258,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -57374,6 +58269,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -58795,6 +59691,7 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58805,6 +59702,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -60254,6 +61152,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -61703,6 +62602,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -63152,6 +64052,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -63162,6 +64063,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -64611,6 +65513,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -64621,6 +65524,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -64631,6 +65535,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -66089,6 +66994,7 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -67545,6 +68451,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -68995,6 +69902,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -70445,6 +71353,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -70461,6 +71370,7 @@
         }
       ],
       "explicitContractStatus": "not-run",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -70471,6 +71381,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -70481,6 +71392,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -70491,6 +71403,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -70501,6 +71414,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -70511,6 +71425,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -70521,6 +71436,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -70531,6 +71447,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -70591,6 +71508,7 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "redact"
       ]
@@ -71973,6 +72891,7 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": [
         "redact"
       ]
@@ -73369,6 +74288,7 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": [
         "redact"
       ]
@@ -74793,6 +75713,7 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": [
         "redact"
       ]
@@ -76217,6 +77138,7 @@
         }
       ],
       "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": [
         "redact"
       ]
@@ -77586,6 +78508,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -77598,6 +78521,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -78967,6 +79891,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -78979,6 +79904,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -80348,6 +81274,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -81717,6 +82644,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -81729,6 +82657,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -81741,6 +82670,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -81753,6 +82683,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81763,6 +82694,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81773,6 +82705,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81783,6 +82716,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81793,6 +82727,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81803,6 +82738,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81813,6 +82749,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81823,6 +82760,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81833,6 +82771,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81843,6 +82782,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81853,6 +82793,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81863,6 +82804,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81873,6 +82815,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81883,6 +82826,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81893,6 +82837,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81903,6 +82848,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81913,6 +82859,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81923,6 +82870,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81933,6 +82881,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -81943,6 +82892,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -83254,6 +84204,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -84565,6 +85516,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -84575,6 +85527,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -84585,6 +85538,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -84595,6 +85549,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -84605,6 +85560,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -84615,6 +85571,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -84625,6 +85582,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -84635,6 +85593,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -84645,6 +85604,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -86080,6 +87040,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -86090,6 +87051,7 @@
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -87525,6 +88487,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -88960,6 +89923,7 @@
       ],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
+      "grade": "unknown",
       "benchmarkScenarios": []
     }
   ],
@@ -88969,6 +89933,9 @@
     "modesWithExplicitContracts": 161,
     "modesWithPassingExplicitContracts": 13,
     "modesWithRecordedPassingCandidate": 53,
+    "gradeImplemented": 2,
+    "gradeVerified": 11,
+    "gradeUnknown": 951,
     "testMethods": 6108,
     "testMethodsWithCapabilityCandidate": 3813,
     "benchmarkScenarios": 6,
