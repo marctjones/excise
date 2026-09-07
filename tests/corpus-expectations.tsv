@@ -1187,8 +1187,8 @@ issue19474.pdf	1	PASS
 issue19474.pdf	2	PASS
 issue19474.pdf	3	PASS
 issue19474.pdf	4	PASS
-issue19484_1.pdf	1	EXCISE_ONLY
-issue19484_2.pdf	1	EXCISE_ONLY
+issue19484_1.pdf	1	EXCISE_ONLY		#867/#977 NOT an excise defect — excise is the only implementation that reads these files. pdf.js #19484 exercises Acrobat's undocumented short-key V4/R4: /V 4 /R 4 with a 40-bit (this file) RC4 key, zero-padded to 16 bytes before Algorithm 1 (PdfStandardSecurityHandler.cs:157,164-170). mutool fails with a zlib error, pdftocairo fails, Ghostscript and PDFBox both RUN and refuse ("requires a password"), PDFium fails. Escalation DOES run here (Program.cs:2157-2162 -> :3767-3773), so no comparison is hidden. Keep EXCISE_ONLY. Test quality tracked by #1399.
+issue19484_2.pdf	1	EXCISE_ONLY		#867/#977 NOT an excise defect — excise is the only implementation that reads these files. pdf.js #19484 exercises Acrobat's undocumented short-key V4/R4: /V 4 /R 4 with a 48-bit (this file) RC4 key, zero-padded to 16 bytes before Algorithm 1 (PdfStandardSecurityHandler.cs:157,164-170). mutool fails with a zlib error, pdftocairo fails, Ghostscript and PDFBox both RUN and refuse ("requires a password"), PDFium fails. Escalation DOES run here (Program.cs:2157-2162 -> :3767-3773), so no comparison is hidden. Keep EXCISE_ONLY. Test quality tracked by #1399.
 issue19505.pdf	1	PASS
 issue19517.pdf	1	*		Reference renderer timeouts make PASS/PASS_ONE load-dependent.
 issue19532.pdf	1	PASS
