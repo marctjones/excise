@@ -88,6 +88,22 @@ public static class PdftocairoReferenceRenderer
             };
             psi.ArgumentList.Add("-png");
             psi.ArgumentList.Add("-singlefile");
+            // #1380 — render the CropBox, not the MediaBox.
+            //
+            // pdftocairo defaults to the MediaBox; excise, mutool, PDFium and PDFBox all
+            // display the CropBox, which is what §7.7.3.3 requires ("the region to which
+            // the contents of the page shall be clipped when displayed or printed").
+            // Without this flag every page whose CropBox differs from its MediaBox is
+            // rasterised at a different size over a different region, and the harness
+            // scores the mismatch as excise disagreeing with the reference.
+            //
+            // Measured at the scan's own 150 dpi, excise-vs-pdftocairo diffFraction:
+            //   bug1802506 0.1328 -> 0.0041   issue2884_reduced 0.1988 -> 0.0246
+            //   bug1922766 0.1625 -> 0.0367   copy_paste_ligatures 0.2482 -> 0.0474
+            //   issue4402  0.3106 -> 0.0799   issue16316 0.4784 -> 0.1420
+            //   issue2177  0.5912 -> 0.1653
+            // Page dimensions match excise exactly once it is passed.
+            psi.ArgumentList.Add("-cropbox");
             psi.ArgumentList.Add("-r");
             psi.ArgumentList.Add(dpi.ToString(System.Globalization.CultureInfo.InvariantCulture));
             psi.ArgumentList.Add("-f");

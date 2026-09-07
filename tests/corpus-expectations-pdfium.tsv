@@ -27,7 +27,7 @@
 # subdirectories and duplicate filenames.
 # Baseline: PASS=345, MALFORMED_PDF=26, PASS_ONE=15, AGREED_REFUSAL=7, EMPTY_DOC=6, MISSING_CONTENT=2, DIFF=2, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
 344775293.pdf	1	PASS
-363015187.pdf	1	MISSING_CONTENT
+363015187.pdf	1	MISSING_CONTENT		#1382 text operators outside BT/ET in the Widget /AP stream (no BT, no ET); non-conformant input, excise draws nothing while mutool and pdftocairo recover. Pinned WITH a citation per #1363's rule; unpin when #1382 lands.
 about_blank.pdf	1	PASS
 actual_text_rtl.pdf	1	PASS
 annot_javascript.pdf	1	PASS
@@ -158,7 +158,7 @@ bug_572871.pdf	2	PASS
 bug_572871.pdf	3	PASS
 bug_583.pdf	1	PASS
 bug_601362.pdf	1	PASS
-bug_602650.pdf	1	MISSING_CONTENT
+bug_602650.pdf	1	MISSING_CONTENT		#1382 content stream has Td/Tf/Tj and no BT/ET at all (§9.4.1); non-conformant input, excise draws nothing while mutool and pdftocairo recover. Pinned WITH a citation per #1363's rule; unpin when #1382 lands.
 bug_620428.pdf	1	PASS
 bug_631912.pdf	1	PASS
 bug_634394.pdf	1	PASS
@@ -328,8 +328,8 @@ pixel/bug_345274934.pdf	1	PASS
 pixel/bug_349972030.pdf	1	PASS
 pixel/bug_42271010.pdf	1	PASS_ONE
 pixel/bug_440028542.pdf	1	PASS
-pixel/bug_512557.pdf	1	DIFF
-pixel/bug_603518.pdf	1	DIFF
+pixel/bug_512557.pdf	1	DIFF		#1384 not an excise defect: the RunLengthDecode stream decodes to exactly 512 bytes (64 rows x 8) and every renderer gets identical data; the 1-bit stripe pattern is resampled differently by all five oracles (10/10 pairs disagree). Skia-origin, /Interpolate absent and no kernel prescribed (§8.9.5.3).
+pixel/bug_603518.pdf	1	DIFF		#1383 memory-safety fixture (chromium:603518, pdfium 7cf5552027): JPEG SOF says 640x63760/3-comp, dictionary says 999x999/DeviceCMYK. excise's DecodeCmyk component guard is CORRECT; only the EncodedImageDecoder fallback paints a misleading grey field.
 pixel/bug_828206.pdf	1	MALFORMED_PDF
 pixel/bug_830221.pdf	1	MALFORMED_PDF
 pixel/bug_867501.pdf	1	PASS_ONE

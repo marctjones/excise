@@ -126,6 +126,10 @@ public static class GhostscriptReferenceRenderer
             psi.ArgumentList.Add("-dSAFER");
             psi.ArgumentList.Add("-dQUIET");
             psi.ArgumentList.Add("-sDEVICE=png16m");
+            // #1380 — render the CropBox, not the MediaBox. Ghostscript, like
+            // pdftocairo, defaults to the MediaBox; see the note in
+            // PdftocairoReferenceRenderer for the measurement and the §7.7.3.3 basis.
+            psi.ArgumentList.Add("-dUseCropBox");
             psi.ArgumentList.Add("-dTextAlphaBits=4");
             psi.ArgumentList.Add("-dGraphicsAlphaBits=4");
             if (overprintSimulate)
