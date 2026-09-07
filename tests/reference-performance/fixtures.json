@@ -1,11 +1,120 @@
 {
   "schemaVersion": 1,
   "fixtures": [
-    { "id": "acc-compensation-cover", "path": "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf", "page": 1, "dpi": 150, "heavy": false },
-    { "id": "multilingual-cjk", "path": "test-pdfs/sample-pdfs/multilingual-noto-cjk.pdf", "page": 1, "dpi": 150, "heavy": false },
-    { "id": "irs-w9-form", "path": "test-pdfs/smoke/irs-w9.pdf", "page": 1, "dpi": 150, "heavy": false },
-    { "id": "altona-technical2-p1", "path": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_x4.pdf", "page": 1, "dpi": 72, "heavy": true },
-    { "id": "altona-technical2-p5", "path": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf", "page": 5, "dpi": 72, "heavy": true },
-    { "id": "altona-technical2-p7", "path": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf", "page": 7, "dpi": 72, "heavy": true }
-  ]
+    {
+      "id": "acc-compensation-cover",
+      "path": "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf",
+      "page": 1,
+      "dpi": 150,
+      "heavy": false,
+      "cohort": "typical",
+      "why": "real-world corporate report cover; the common case"
+    },
+    {
+      "id": "multilingual-cjk",
+      "path": "test-pdfs/sample-pdfs/multilingual-noto-cjk.pdf",
+      "page": 1,
+      "dpi": 150,
+      "heavy": false,
+      "cohort": "typical",
+      "why": "CJK/Noto text; the common case for non-Latin documents"
+    },
+    {
+      "id": "irs-w9-form",
+      "path": "test-pdfs/smoke/irs-w9.pdf",
+      "page": 1,
+      "dpi": 150,
+      "heavy": false,
+      "cohort": "typical",
+      "why": "real-world government form, 161 ms; the common case"
+    },
+    {
+      "id": "altona-technical2-p1",
+      "path": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_x4.pdf",
+      "page": 1,
+      "dpi": 72,
+      "heavy": true,
+      "cohort": "tail-colour",
+      "why": "ICC/CMYK colour conversion — the known per-pixel PdfColorSpace.ToRgb hotspot"
+    },
+    {
+      "id": "altona-technical2-p5",
+      "path": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf",
+      "page": 5,
+      "dpi": 72,
+      "heavy": true,
+      "cohort": "tail-colour",
+      "why": "ICC/CMYK colour conversion, one patch per page"
+    },
+    {
+      "id": "altona-technical2-p7",
+      "path": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf",
+      "page": 7,
+      "dpi": 72,
+      "heavy": true,
+      "cohort": "tail-colour",
+      "why": "ICC/CMYK colour conversion, one patch per page"
+    },
+    {
+      "id": "scotus-opinion-p1",
+      "path": "test-pdfs/smoke/scotus-trump-v-anderson.pdf",
+      "page": 1,
+      "dpi": 150,
+      "heavy": false,
+      "cohort": "typical",
+      "why": "real-world court opinion, 142 ms, at oracle parity; regression canary for the common case"
+    },
+    {
+      "id": "irs-1040-p1",
+      "path": "test-pdfs/smoke/irs-1040.pdf",
+      "page": 1,
+      "dpi": 150,
+      "heavy": false,
+      "cohort": "typical",
+      "why": "dense government form; the document class excise exists for"
+    },
+    {
+      "id": "indexed-4bit-33mp-image",
+      "path": "test-pdfs/pdfium/bug_2034.pdf",
+      "page": 1,
+      "dpi": 150,
+      "heavy": true,
+      "cohort": "tail-flat",
+      "why": "5100x6600 4-bit /Indexed + PNG Predictor 10; 2.1 s at 36 AND 150 dpi (1.02x), 14x median oracle. Cost tracks source pixels, not output"
+    },
+    {
+      "id": "fifty-transparency-groups",
+      "path": "test-pdfs/pdfjs/bug1721218_reduced.pdf",
+      "page": 1,
+      "dpi": 150,
+      "heavy": true,
+      "cohort": "tail-flat",
+      "why": "50 Form XObjects each with /Group /S /Transparency; 3.2 s flat across dpi (1.03x), 33x median oracle"
+    },
+    {
+      "id": "mesh-shading-type7",
+      "path": "test-pdfs/pdfjs/bug1703683_page2_reduced.pdf",
+      "page": 1,
+      "dpi": 150,
+      "heavy": true,
+      "cohort": "tail-scaling",
+      "why": "3x /ShadingType 7 tensor-product mesh; 1.3 s -> 9.6 s from 36 to 150 dpi (7.4x); 135x median oracle — the slowest page in the corpus"
+    },
+    {
+      "id": "nested-forms-dct",
+      "path": "test-pdfs/pdfjs/bug1755507.pdf",
+      "page": 1,
+      "dpi": 150,
+      "heavy": true,
+      "cohort": "tail-scaling",
+      "why": "18 Form XObjects + 5 DCTDecode images; 0.4 s -> 3.4 s from 36 to 150 dpi (9.2x); 83x median oracle"
+    }
+  ],
+  "cohorts": {
+    "typical": "Real-world pages at or near oracle parity. The median corpus page is AT parity, so a regression in the common case is invisible to the tail fixtures — these exist to catch it.",
+    "tail-colour": "Per-pixel colour conversion (PdfColorSpace.ToRgb), the previously known hotspot.",
+    "tail-flat": "Cost proportional to the INPUT, measured flat across 36/72/150 dpi. Work is being done in proportion to source data rather than to what the output needs.",
+    "tail-scaling": "Cost proportional to OUTPUT pixels — the normal shape with a bad constant."
+  },
+  "provenance": "Tail fixtures selected 2026-09-06 by mining renderMs against per-oracle timings in the corpus-scan reports, using *CachedRenderMs where an oracle hit the render cache and the MEDIAN oracle rather than the fastest. 55 of 4059 comparable pages (1.4%) are >=3x the median oracle and >=300 ms, and they account for 58.4% of excise's total render time. Do not compare against the fastest oracle or against an uncorrected cache hit: bug_2034 reads as 2462x that way and 14x fairly."
 }

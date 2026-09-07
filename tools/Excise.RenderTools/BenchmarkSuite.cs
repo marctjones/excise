@@ -333,6 +333,11 @@ partial class Program
             dpi.ToString(CultureInfo.InvariantCulture),
             "--output",
             outputPath,
+            // #1387 — --json makes the CLI report openMs/renderMs/writeMs. Process wall
+            // clock alone could not separate rendering from .NET startup, and startup is
+            // ~71 ms here against mutool's 3 ms; on a typical 150 ms page that is 40% of
+            // the number, so a real raster-path win read as noise.
+            "--json",
         };
 
         var sw = Stopwatch.StartNew();
@@ -369,12 +374,20 @@ partial class Program
 
             using var normalized = DifferentialMetrics.ResizeMatch(cliBitmap, exciseBitmap.Width, exciseBitmap.Height);
             var diff = DifferentialMetrics.Compare(exciseBitmap, normalized);
+            var phases = TryReadCliPhaseTimings(result.StandardOutput);
             return new BenchmarkCliRenderResult
             {
                 name = "excise-cli",
                 kind = "external-subprocess",
                 status = "OK",
                 elapsedMs = sw.ElapsedMilliseconds,
+                openMs = phases.open,
+                renderMs = phases.render,
+                writeMs = phases.write,
+                runtimeMode = phases.runtimeMode,
+                startupOverheadMs = phases.render is null
+                    ? null
+                    : Math.Max(0, sw.Elapsed.TotalMilliseconds - (phases.open ?? 0) - phases.render.Value - (phases.write ?? 0)),
                 peakWorkingSetBytes = result.PeakWorkingSetBytes,
                 cpuMs = result.CpuMs,
                 width = cliBitmap.Width,
@@ -1389,6 +1402,35 @@ partial class Program
         public bool? pass { get; set; }
     }
 
+    /// <summary>
+    /// Pull openMs/renderMs/writeMs out of the CLI's --json report. Returns nulls when the
+    /// CLI predates #1387 or printed something else, so an older binary degrades to the
+    /// wall-clock-only behaviour rather than failing the run.
+    /// </summary>
+    private static (double? open, double? render, double? write, string? runtimeMode) TryReadCliPhaseTimings(string? stdout)
+    {
+        if (string.IsNullOrWhiteSpace(stdout)) return (null, null, null, null);
+        try
+        {
+            var start = stdout.IndexOf('{');
+            if (start < 0) return (null, null, null, null);
+            using var doc = System.Text.Json.JsonDocument.Parse(stdout[start..]);
+            double? Get(string name) =>
+                doc.RootElement.TryGetProperty(name, out var v) && v.TryGetDouble(out var d) ? d : null;
+            // The CLI reports its own codegen mode (#1389). Null means an older binary that
+            // predates the field — recorded as null rather than assumed, so the gate can tell
+            // "unknown" apart from "known to differ".
+            var mode = doc.RootElement.TryGetProperty("runtimeMode", out var m) && m.ValueKind == System.Text.Json.JsonValueKind.String
+                ? m.GetString()
+                : null;
+            return (Get("openMs"), Get("renderMs"), Get("writeMs"), mode);
+        }
+        catch
+        {
+            return (null, null, null, null);
+        }
+    }
+
     internal sealed class BenchmarkCliRenderResult
     {
         public string name { get; set; } = "";
@@ -1398,6 +1440,21 @@ partial class Program
         public long? elapsedMs { get; set; }
         public long? peakWorkingSetBytes { get; set; }
         public long? cpuMs { get; set; }
+        /// <summary>In-process document open, from the CLI's own --json report (#1387).</summary>
+        public double? openMs { get; set; }
+        /// <summary>In-process raster time. THIS is what a renderer optimisation moves (#1387).</summary>
+        public double? renderMs { get; set; }
+        /// <summary>In-process PNG write (#1387).</summary>
+        public double? writeMs { get; set; }
+        /// <summary>Wall clock minus the three phases: .NET startup, JIT and process teardown (#1387).</summary>
+        public double? startupOverheadMs { get; set; }
+        /// <summary>
+        /// "aot" or "jit", self-reported by the CLI (#1389). Native AOT and the JIT generate
+        /// different code — no tiering, no dynamic PGO under AOT — so a renderMs recorded by
+        /// one is not comparable to a baseline recorded by the other. Null means the binary
+        /// predates the field.
+        /// </summary>
+        public string? runtimeMode { get; set; }
         public int? width { get; set; }
         public int? height { get; set; }
         public double? diffFraction { get; set; }
