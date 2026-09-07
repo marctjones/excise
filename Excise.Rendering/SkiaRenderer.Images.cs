@@ -537,10 +537,26 @@ internal partial class RenderContext
         string colorSpace)
     {
         var filters = imageStream.Filters;
-        var (targetWidth, targetHeight) = filters.Contains("JPXDecode") || ContainsDctFilter(filters)
-            ? EstimateImageDecodeSize(width, height)
-            : (width, height);
         var isImageMask = imageStream.GetBool("ImageMask");
+        var usesSoftMaskBudgetCappedEstimate = IsTerminalDctFilter(filters) || filters.Contains("JPXDecode");
+        // #1403: the raw-sample path is now target-size-aware too (not just
+        // DCT/JPX), so its cache key must vary with target size the same
+        // way — otherwise a bitmap decoded small for a thumbnail draw would
+        // be wrongly reused for a later full-resolution draw of the same
+        // XObject. ImageMask stencils are excluded: they never reach
+        // RawSampleImageDecoder (CreateImageMaskBitmapFromPackedBits always
+        // decodes at full source resolution), so folding a target size into
+        // their key would only manufacture cache misses without changing
+        // what gets decoded. The DCT/JPX branch keeps using the
+        // budget-capped EstimateImageDecodeSize (matches DecodeImageBitmap's
+        // routing exactly); the raw-sample branch uses the uncapped
+        // EstimateDeviceTargetSize, matching what CreateBitmapFromRawData
+        // actually asks RawSampleImageDecoder to decode.
+        var (targetWidth, targetHeight) = isImageMask
+            ? (width, height)
+            : usesSoftMaskBudgetCappedEstimate
+                ? EstimateImageDecodeSize(width, height)
+                : EstimateDeviceTargetSize(width, height);
         var fillAlpha = isImageMask
             ? (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255)
             : (byte)0;
@@ -1005,6 +1021,27 @@ internal partial class RenderContext
 
     private (int Width, int Height) EstimateImageDecodeSize(int sourceWidth, int sourceHeight)
     {
+        var (targetWidth, targetHeight) = EstimateDeviceTargetSize(sourceWidth, sourceHeight);
+        return ClampImageTargetSize(sourceWidth, sourceHeight, targetWidth, targetHeight);
+    }
+
+    /// <summary>
+    /// The device-space size (from the current CTM and the render DPI) that
+    /// an image occupies, clamped only to the SOURCE grid — never larger
+    /// (upscaling must still see full source detail) and never smaller than
+    /// 1px. Deliberately NOT run through <see cref="ClampImageTargetSize"/>'s
+    /// <see cref="MaxExpandedSoftMaskPixels"/> budget: that cap exists to
+    /// bound how far a declared SOFT-MASK size is allowed to expand
+    /// (DCT/JPX callers only, #1403 left it as-is there). Applying it here
+    /// too made a plain 5100x6600 (~33.7 MP) image at its own native 600
+    /// DPI get silently shrunk to fit the 32 Mi-pixel budget and then
+    /// upscaled back by Skia's own bitmap draw — i.e. a "no downsampling
+    /// requested" render that quietly resampled anyway. #1403's raw-sample
+    /// decode path (RawSampleImageDecoder) uses this size directly instead
+    /// of <see cref="EstimateImageDecodeSize"/> for exactly that reason.
+    /// </summary>
+    private (int Width, int Height) EstimateDeviceTargetSize(int sourceWidth, int sourceHeight)
+    {
         var userWidth = Math.Sqrt(
             (_state.CurrentTransform.ScaleX * _state.CurrentTransform.ScaleX)
             + (_state.CurrentTransform.SkewY * _state.CurrentTransform.SkewY));
@@ -1020,7 +1057,7 @@ internal partial class RenderContext
             ? Math.Clamp((int)Math.Round(userHeight * scale), 1, sourceHeight)
             : sourceHeight;
 
-        return ClampImageTargetSize(sourceWidth, sourceHeight, targetWidth, targetHeight);
+        return (targetWidth, targetHeight);
     }
 
     private static (int Width, int Height) ClampImageTargetSize(
@@ -1266,9 +1303,6 @@ internal partial class RenderContext
 
     private static bool IsTerminalDctFilter(IReadOnlyList<string> filters)
         => filters.Count > 0 && IsDctFilter(filters[^1]);
-
-    private static bool ContainsDctFilter(IReadOnlyList<string> filters)
-        => filters.Any(IsDctFilter);
 
     private static bool IsDctFilter(string filter)
         => string.Equals(filter, "DCTDecode", StringComparison.Ordinal)
@@ -1548,6 +1582,18 @@ internal partial class RenderContext
         }
 
         var colorKeyMask = TryGetColorKeyMask(stream, componentsPerPixel);
+
+        // #1403: decoding every source sample costs the same whether the
+        // image ends up covering a 33-megapixel page or a 96x96 thumbnail.
+        // EstimateDeviceTargetSize answers "how many device pixels will this
+        // image actually occupy", clamped to source size so upscaling is
+        // never affected (see RawSampleImageDecodeRequest). Deliberately NOT
+        // EstimateImageDecodeSize: that helper also applies the
+        // MaxExpandedSoftMaskPixels budget meant for DCT/JPX soft-mask
+        // expansion, which would silently downsample a plain image that is
+        // merely bigger than 32 Mi pixels even when the DPI calls for full
+        // source resolution (see EstimateDeviceTargetSize's doc comment).
+        var (targetWidth, targetHeight) = EstimateDeviceTargetSize(width, height);
         return RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
             data,
             width,
@@ -1557,7 +1603,9 @@ internal partial class RenderContext
             componentsPerPixel,
             GetImageDecodeArray(stream),
             colorKeyMask,
-            _cancellationToken));
+            _cancellationToken,
+            targetWidth,
+            targetHeight));
     }
 
     private PdfColorSpace ResolveSampleColorSpace(

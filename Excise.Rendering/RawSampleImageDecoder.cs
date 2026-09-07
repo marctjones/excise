@@ -19,16 +19,29 @@ internal static class RawSampleImageDecoder
             return null;
         }
 
+        // #1403: decode cost is otherwise proportional to the SOURCE pixel
+        // grid, not to what the target device space can actually show. A
+        // caller (SkiaRenderer.Images.cs) that knows the device-space draw
+        // size passes it as TargetWidth/TargetHeight; when that is smaller
+        // than the source grid, DecodeGeneral samples the source on a
+        // nearest-neighbor grid instead of decoding every source pixel. The
+        // request-side clamp (EstimateImageDecodeSize) never asks for a
+        // target larger than the source, so upscaling always sees full
+        // source detail via the unclamped `subsample = false` path below.
+        var targetWidth = request.TargetWidth is > 0 ? Math.Min(request.TargetWidth.Value, request.Width) : request.Width;
+        var targetHeight = request.TargetHeight is > 0 ? Math.Min(request.TargetHeight.Value, request.Height) : request.Height;
+        var subsample = targetWidth < request.Width || targetHeight < request.Height;
+
         try
         {
-            if (request.DecodeArray == null && request.ColorKeyMask == null)
+            if (!subsample && request.DecodeArray == null && request.ColorKeyMask == null)
             {
                 var fastBitmap = TryDecodeFast(request);
                 if (fastBitmap != null)
                     return fastBitmap;
             }
 
-            return DecodeGeneral(request);
+            return DecodeGeneral(request, targetWidth, targetHeight, subsample);
         }
         catch (OperationCanceledException)
         {
@@ -62,7 +75,25 @@ internal static class RawSampleImageDecoder
         };
     }
 
-    private static SKBitmap? DecodeGeneral(RawSampleImageDecodeRequest request)
+    /// <summary>
+    /// Decodes into a <paramref name="targetWidth"/> x <paramref name="targetHeight"/>
+    /// bitmap. When <paramref name="subsample"/> is true, that target is smaller
+    /// than the source sample grid (<see cref="RawSampleImageDecodeRequest.Width"/> x
+    /// <see cref="RawSampleImageDecodeRequest.Height"/>): each destination pixel reads
+    /// exactly one nearest-neighbor SOURCE pixel rather than every source pixel
+    /// (#1403). Nearest-neighbor is deliberate, not just cheap: for an Indexed
+    /// color space a sample is a PALETTE INDEX, and indices are not perceptually
+    /// ordered, so averaging them (a box filter) would blend unrelated palette
+    /// entries into a bogus index / an out-of-range value. Picking one real
+    /// source sample and decoding it through the normal Decode-array /
+    /// color-space / color-key path keeps every downsampled pixel a value that
+    /// genuinely occurred in the source, for every color space uniformly.
+    /// </summary>
+    private static SKBitmap? DecodeGeneral(
+        RawSampleImageDecodeRequest request,
+        int targetWidth,
+        int targetHeight,
+        bool subsample)
     {
         var colorSpace = request.ColorSpace!;
         var componentsPerPixel = request.ComponentsPerPixel;
@@ -70,8 +101,8 @@ internal static class RawSampleImageDecoder
             return null;
 
         var bitmap = new SKBitmap(
-            request.Width,
-            request.Height,
+            targetWidth,
+            targetHeight,
             SKColorType.Rgba8888,
             SKAlphaType.Premul);
         var pixels = SkiaBitmapPixelBuffer.GetWritableSpan(bitmap);
@@ -83,7 +114,6 @@ internal static class RawSampleImageDecoder
 
         try
         {
-            var sourceIndex = 0;
             var destinationIndex = 0;
             var pixelValues = new double[componentsPerPixel];
             var maxSample = Math.Pow(2, request.BitsPerComponent) - 1;
@@ -94,56 +124,80 @@ internal static class RawSampleImageDecoder
                 ? new int[componentsPerPixel]
                 : null;
 
-            for (var y = 0; y < request.Height; y++)
+            // Row stride of the SOURCE sample grid (not the target). Every
+            // branch below addresses a source pixel by formula (row stride *
+            // source row + source column), so a downsampled pass can jump
+            // straight to the one source pixel it needs instead of walking
+            // every sample in between.
+            var sourceRowStrideBits = AlignBitsToByte(
+                checked(request.Width * componentsPerPixel * request.BitsPerComponent));
+
+            // The dedicated 1 bpc branch below has always read exactly ONE
+            // sample per pixel regardless of ComponentsPerPixel (pre-#1403
+            // behaviour, preserved as-is here) — so its row stride is per
+            // PIXEL, not per component, and must not reuse the stride above.
+            var singleBitRowStrideBits = AlignBitsToByte(request.Width);
+
+            for (var ty = 0; ty < targetHeight; ty++)
             {
                 request.CancellationToken.ThrowIfCancellationRequested();
-                for (var x = 0; x < request.Width; x++)
+                var sy = subsample ? MapTargetToSource(ty, targetHeight, request.Height) : ty;
+
+                for (var tx = 0; tx < targetWidth; tx++)
                 {
+                    var sx = subsample ? MapTargetToSource(tx, targetWidth, request.Width) : tx;
+
                     byte red = 0, green = 0, blue = 0, alpha = 255;
                     var samplesRead = false;
 
                     if (request.BitsPerComponent > 1)
                     {
-                        if (request.BitsPerComponent == 8 &&
-                            sourceIndex + componentsPerPixel <= request.Samples.Length)
+                        if (request.BitsPerComponent == 8)
                         {
-                            for (var component = 0; component < componentsPerPixel; component++)
+                            // Rows are always byte-aligned at 8 bpc, so this is a
+                            // direct formula, not an accumulated scan position.
+                            var byteOffset = checked(
+                                ((long)sy * request.Width * componentsPerPixel) +
+                                ((long)sx * componentsPerPixel));
+                            if (byteOffset + componentsPerPixel <= request.Samples.LongLength)
                             {
-                                var sample = request.Samples[sourceIndex + component];
-                                if (rawSamples != null)
-                                    rawSamples[component] = sample;
-                                pixelValues[component] = DecodeImageSample(
-                                    request.DecodeArray,
+                                var baseOffset = (int)byteOffset;
+                                for (var component = 0; component < componentsPerPixel; component++)
+                                {
+                                    var sample = request.Samples[baseOffset + component];
+                                    if (rawSamples != null)
+                                        rawSamples[component] = sample;
+                                    pixelValues[component] = DecodeImageSample(
+                                        request.DecodeArray,
+                                        colorSpace,
+                                        component,
+                                        sample,
+                                        maxSample);
+                                }
+
+                                samplesRead = true;
+                                ConvertPixel(
                                     colorSpace,
-                                    component,
-                                    sample,
-                                    maxSample);
+                                    imageColorConverter,
+                                    pixelValues,
+                                    out red,
+                                    out green,
+                                    out blue);
                             }
-                            sourceIndex += componentsPerPixel;
-                            samplesRead = true;
-                            ConvertPixel(
-                                colorSpace,
-                                imageColorConverter,
-                                pixelValues,
-                                out red,
-                                out green,
-                                out blue);
                         }
-                        else if (request.BitsPerComponent != 8)
+                        else
                         {
-                            var rowBits = checked(request.Width * componentsPerPixel * request.BitsPerComponent);
-                            var rowStrideBits = AlignBitsToByte(rowBits);
                             var bitOffset = checked(
-                                (y * rowStrideBits) +
-                                (x * componentsPerPixel * request.BitsPerComponent));
+                                ((long)sy * sourceRowStrideBits) +
+                                ((long)sx * componentsPerPixel * request.BitsPerComponent));
                             if (bitOffset + (componentsPerPixel * request.BitsPerComponent) <=
-                                request.Samples.Length * 8)
+                                (long)request.Samples.Length * 8)
                             {
                                 for (var component = 0; component < componentsPerPixel; component++)
                                 {
                                     var sample = ReadPackedImageSample(
                                         request.Samples,
-                                        bitOffset + (component * request.BitsPerComponent),
+                                        (int)(bitOffset + (component * request.BitsPerComponent)),
                                         request.BitsPerComponent);
                                     if (rawSamples != null)
                                         rawSamples[component] = sample;
@@ -168,9 +222,14 @@ internal static class RawSampleImageDecoder
                     }
                     else if (request.BitsPerComponent == 1)
                     {
-                        var byteIndex = sourceIndex / 8;
-                        var bitIndex = 7 - (sourceIndex % 8);
-                        var sample = byteIndex < request.Samples.Length
+                        // Same row-stride formula as the packed-bit branch above,
+                        // specialized to the single-component case (matches the
+                        // pre-#1403 behaviour: a 1 bpc pixel here is always read
+                        // as one sample, regardless of ComponentsPerPixel).
+                        var bitOffset = checked(((long)sy * singleBitRowStrideBits) + sx);
+                        var byteIndex = bitOffset / 8;
+                        var bitIndex = 7 - (int)(bitOffset % 8);
+                        var sample = byteIndex < request.Samples.LongLength
                             ? (request.Samples[byteIndex] >> bitIndex) & 1
                             : 0;
                         pixelValues[0] = DecodeImageSample(
@@ -189,7 +248,6 @@ internal static class RawSampleImageDecoder
                         if (rawSamples != null)
                             rawSamples[0] = sample;
                         samplesRead = true;
-                        sourceIndex++;
                     }
 
                     if (samplesRead &&
@@ -204,9 +262,6 @@ internal static class RawSampleImageDecoder
                     pixels[destinationIndex++] = blue;
                     pixels[destinationIndex++] = alpha;
                 }
-
-                if (request.BitsPerComponent == 1)
-                    sourceIndex = AlignBitsToByte(sourceIndex);
             }
         }
         catch (OperationCanceledException)
@@ -248,6 +303,15 @@ internal static class RawSampleImageDecoder
 
     private static int AlignBitsToByte(int bitCount)
         => ((bitCount + 7) / 8) * 8;
+
+    /// <summary>
+    /// Nearest-neighbor source coordinate for a target coordinate, same
+    /// formula as the sibling copies in SkiaRenderer.Images.cs and
+    /// JpxImageDecoder.cs (there is no shared home for it across the three
+    /// decode paths; keep this in sync if the mapping ever changes there).
+    /// </summary>
+    private static int MapTargetToSource(int targetPosition, int targetSize, int sourceSize)
+        => Math.Clamp((int)(((targetPosition + 0.5) * sourceSize) / targetSize), 0, sourceSize - 1);
 
     private static int ReadPackedImageSample(byte[] data, int bitOffset, int bitsPerComponent)
     {
@@ -409,7 +473,15 @@ internal readonly record struct RawSampleImageDecodeRequest(
     int ComponentsPerPixel,
     double[]? DecodeArray,
     int[]? ColorKeyMask,
-    CancellationToken CancellationToken = default);
+    CancellationToken CancellationToken = default,
+    // #1403: device-space draw size, when the caller knows it. Null (or >=
+    // Width/Height) means "decode at full source resolution" — the default,
+    // and always what an unclamped/unknown target gets. A caller passing a
+    // smaller value is asking for a downsampled decode; RawSampleImageDecoder
+    // still clamps it to the source size itself, so passing a too-large value
+    // by mistake can never upscale past source detail.
+    int? TargetWidth = null,
+    int? TargetHeight = null);
 
 internal static class SkiaBitmapPixelBuffer
 {
