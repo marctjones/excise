@@ -734,8 +734,21 @@ had". An entry with no marker keeps the original unconditional behaviour, so
 ### Build Failures
 
 - Run `dotnet restore` first
-- Ensure .NET 10.0 SDK installed: `dotnet --version`
+- Ensure .NET 10.0 SDK installed: `dotnet --version` (must satisfy `global.json`: 10.0.400+)
 - Clear build artifacts: `dotnet clean`
+
+⚠️ **Use Microsoft's official SDK, not Homebrew's `dotnet` formula** (#1389/#1390). Homebrew
+builds .NET from source against system libraries, so its NativeAOT runtime pack is flagged
+`nonportable`: it omits `libz.a`/`libbrotli*.a` and forces `-lssl -lcrypto`. Measured
+2026-09-06, the consequences are not cosmetic — a Native AOT publish fails outright without
+`LIBRARY_PATH`, and when forced through it produces a binary that dynamically links Homebrew
+dylibs (so it will not run elsewhere) and links Apple's system zlib instead of the vendored
+zlib-ng, making it write **different PDF bytes** than the JIT build. With the official SDK the
+AOT and JIT binaries are byte-identical. `global.json` pins 10.0.400 so a wrong SDK fails
+loudly instead of silently changing output. Install via
+[dot.net](https://dot.net) or `curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0`.
+Nothing in excise uses OpenSSL — zero symbols bind to it; macOS TLS goes through
+Network.framework.
 
 ### Build Warnings
 

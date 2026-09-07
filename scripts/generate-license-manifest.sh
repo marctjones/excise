@@ -80,6 +80,7 @@ for n,v in sorted(seen, key=lambda x: x[0].lower()):
 EXCLUDE_PATTERNS=(
     'Avalonia.Diagnostics'
     'Microsoft.CodeAnalysis.Analyzers'   # build-time analyzer
+    'Microsoft.NET.ILLink.Tasks'          # build-time trimmer/AOT analyzer task (#1389)
     'Avalonia.BuildServices'              # build-time
     'Fody'                                # build-time weaver
     'Microsoft.NETCore.Platforms'         # reference-only: ships runtime.json, no runtime DLL
@@ -100,6 +101,10 @@ exclude = set([
     "Avalonia.Diagnostics",
     "Microsoft.CodeAnalysis.Analyzers",
     "Avalonia.BuildServices",
+    # The MSBuild task that runs the IL trimmer and the AOT analyzers. Pulled in by
+    # <IsAotCompatible>true</IsAotCompatible> on Excise.Cli and Excise.App (#1389); it is a
+    # build-time task and ships no runtime DLL, so it is not redistributed.
+    "Microsoft.NET.ILLink.Tasks",
     "Fody",
     # Reference-only packages that carry no runtime DLL and are therefore
     # not redistributed in the app. NETStandard.Library is a meta-package;

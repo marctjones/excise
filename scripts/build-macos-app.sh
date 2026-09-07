@@ -215,6 +215,45 @@ else
     echo "::warning::codesign not found; excise.app will not have a stable identity across rebuilds (#635)"
 fi
 
+# PORTABILITY GATE (#1389/#1390) — a "distributable" that only runs on THIS machine is
+# the failure this closes, and it shipped silently. Built with Homebrew's dotnet formula,
+# the bundle's own libSystem.IO.Compression.Native.dylib genuinely depended on
+# /opt/homebrew/opt/brotli/lib/libbrotli{dec,enc}.1.dylib (brotli is a real PDF 2.0 stream
+# filter excise decodes, so that shim is load-bearing, not dead weight). It launched fine
+# here because Homebrew brotli was installed, and would have failed on any other Mac. The
+# official Microsoft SDK statically links brotli and zlib-ng into that shim; a nonportable
+# SDK does not. Nothing checked, for a day.
+#
+# Exclude a library's OWN install name (LC_ID_DYLIB) rather than trying to skip lines by
+# position. A fat binary prints one header AND one self-id line PER ARCHITECTURE, so a
+# positional skip drops only the first and reports the second as a dependency — that
+# false-positived on libAvaloniaNative.dylib, whose install name is
+# /usr/local/lib/libAvalonia.Native.OSX.dylib. `otool -D` states the install names outright.
+echo "▶ Verifying the bundle has no dependencies outside the system"
+EXTERNAL=""
+while IFS= read -r lib; do
+    selfids="$(otool -D "$lib" 2>/dev/null | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
+        | grep -E '^/' | sort -u)"
+    deps="$(otool -L "$lib" 2>/dev/null \
+        | grep -E '^[[:space:]]+/' \
+        | awk '{print $1}' \
+        | sort -u \
+        | grep -vE '^(/usr/lib/|/System/|@rpath|@executable_path|@loader_path)' || true)"
+    for d in $deps; do
+        echo "$selfids" | grep -qx "$d" && continue
+        EXTERNAL="$EXTERNAL
+      $(basename "$lib") -> $d"
+    done
+done < <(find "$BUNDLE/Contents/MacOS" -type f \( -name '*.dylib' -o -perm -u+x \) 2>/dev/null)
+
+if [ -n "$EXTERNAL" ]; then
+    echo "::error::excise.app depends on libraries outside /usr/lib and /System — it will NOT run on another Mac:$EXTERNAL" >&2
+    echo "    Most likely cause: a nonportable .NET SDK (Homebrew's 'dotnet' formula). Use the" >&2
+    echo "    official Microsoft SDK; see the global.json pin and CLAUDE.md 'Build Failures'." >&2
+    exit 1
+fi
+echo "  ✔ self-contained: nothing outside /usr/lib and Apple frameworks"
+
 ZIP="${APP_NAME}-${VERSION}-macos-${ARCH}.zip"
 echo "▶ Zipping $OUT/$ZIP"
 rm -f "$OUT/$ZIP"
