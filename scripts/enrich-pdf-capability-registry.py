@@ -47,11 +47,14 @@ def main() -> None:
                 support_level = "unknown"
             positive = refs(cap, "unit") + refs(cap, "atomic-fixture") + refs(cap, "corpus")
             conservation = refs(cap, "security") + refs(cap, "differential")
+            # tracking.testRefs (dropped #1344) duplicated evidence[] in three
+            # incompatible shapes (path::method, semicolon lists, bare class
+            # names) and fed no join -- only verification.checks[].ref does
+            # (build-pdf-evidence-attribution.py::method).
             tracking.update({
                 "owner": "PDF capability registry",
                 "reviewState": "migration-pending" if cap["decision"]["state"] in {"required", "supported"} else "policy-reviewed",
                 "implementationRefs": refs(cap, "implementation"),
-                "testRefs": refs(cap, "unit") + refs(cap, "security"),
                 "fixtureRefs": refs(cap, "atomic-fixture"),
                 "corpusRefs": refs(cap, "corpus"),
                 "referenceToolRefs": ["reference-tools.json"] if refs(cap, "differential") else [],

@@ -61,6 +61,7 @@ build_derived() {
   python3 scripts/collect-pdf-capability-evidence.py
   python3 scripts/build-renderer-test-evidence-map.py
   python3 scripts/build-pdf-evidence-maps.py
+  python3 scripts/check-pdf-registry-test-refs.py
   python3 scripts/build-renderer-promotion-queue.py
   python3 scripts/build-pdf-evidence-deficiency-report.py
   python3 scripts/collect-pdf-reference-tool-evidence.py

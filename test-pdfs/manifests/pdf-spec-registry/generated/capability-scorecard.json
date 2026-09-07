@@ -17,7 +17,7 @@
     "measuredModeCoveragePercent": 3.6,
     "implementedModeCoveragePercent": 0.5,
     "promotionReadinessPercent": 16.5,
-    "implementationEvidenceProgressPercent": 23.2,
+    "implementationEvidenceProgressPercent": 12.8,
     "promotionReadinessMilestones": {
       "discoveredOrBetter": 964,
       "directTestOrBetter": 15,
@@ -401,7 +401,7 @@
       "measuredModeCoveragePercent": 1.1,
       "implementedModeCoveragePercent": 0.5,
       "promotionReadinessPercent": 17.6,
-      "implementationEvidenceProgressPercent": 23.1,
+      "implementationEvidenceProgressPercent": 12.6,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 750,
         "directTestOrBetter": 7,
@@ -661,7 +661,7 @@
       "measuredModeCoveragePercent": 11.3,
       "implementedModeCoveragePercent": 0.7,
       "promotionReadinessPercent": 13.5,
-      "implementationEvidenceProgressPercent": 28.8,
+      "implementationEvidenceProgressPercent": 14.0,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 151,
         "directTestOrBetter": 8,
@@ -1107,7 +1107,7 @@
       "measuredModeCoveragePercent": 0.0,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 10.0,
-      "implementationEvidenceProgressPercent": 21.6,
+      "implementationEvidenceProgressPercent": 1.6,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 285,
         "directTestOrBetter": 0,
@@ -1231,7 +1231,7 @@
       "measuredModeCoveragePercent": 0.0,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 10.0,
-      "implementationEvidenceProgressPercent": 29.2,
+      "implementationEvidenceProgressPercent": 9.2,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 108,
         "directTestOrBetter": 0,
@@ -1296,7 +1296,7 @@
       "measuredModeCoveragePercent": 0.0,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 10.0,
-      "implementationEvidenceProgressPercent": 29.3,
+      "implementationEvidenceProgressPercent": 9.3,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 112,
         "directTestOrBetter": 0,
@@ -1804,7 +1804,7 @@
   "testAttribution": {
     "targetModes": 964,
     "modesWithTestCandidates": 213,
-    "modesWithExplicitContracts": 666,
+    "modesWithExplicitContracts": 161,
     "modesWithPassingExplicitContracts": 13,
     "modesWithRecordedPassingCandidate": 53,
     "testMethods": 6108,

@@ -37,17 +37,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:ASCIIHexDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "PDF stream filter support",
       "documentation": [
@@ -57,7 +47,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -121,17 +110,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:ASCII85Decode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "PDF stream filter support",
       "documentation": [
@@ -141,7 +120,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -205,17 +183,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:FlateDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "PDF stream and raw image support",
       "documentation": [
@@ -225,7 +193,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -289,17 +256,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:FlateDecode.predictor-tiff",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "FlateDecode predictor DecodeParms",
       "documentation": [
@@ -309,7 +266,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -373,17 +329,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:FlateDecode.predictor-png",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "FlateDecode predictor DecodeParms",
       "documentation": [
@@ -393,7 +339,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -457,17 +402,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:LZWDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "PDF stream and legacy raw image support",
       "documentation": [
@@ -477,7 +412,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -541,17 +475,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:LZWDecode.early-change",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "LZWDecode DecodeParms",
       "documentation": [
@@ -561,7 +485,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -625,17 +548,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:LZWDecode.predictors",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "LZWDecode predictor DecodeParms",
       "documentation": [
@@ -645,7 +558,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -709,17 +621,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:RunLengthDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "PDF stream and legacy raw image support",
       "documentation": [
@@ -729,7 +631,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -793,17 +694,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:CCITTFaxDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Bi-level fax image XObject support",
       "documentation": [
@@ -813,7 +704,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -877,17 +767,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:CCITTFaxDecode.decodeparms",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "CCITTFaxDecode DecodeParms",
       "documentation": [
@@ -897,7 +777,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -961,17 +840,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:DCTDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "JPEG image XObject support",
       "documentation": [
@@ -981,7 +850,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1045,17 +913,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:DCTDecode.color-transform",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "JPEG color interpretation in PDF",
       "documentation": [
@@ -1065,7 +923,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1129,17 +986,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:JPXDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "JPEG 2000 / JPX image XObject support",
       "documentation": [
@@ -1149,7 +996,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1213,17 +1059,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:JBIG2Decode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "JBIG2 bi-level image XObject support",
       "documentation": [
@@ -1233,7 +1069,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1297,17 +1132,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:JBIG2Decode.globals",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "JBIG2Decode DecodeParms",
       "documentation": [
@@ -1317,7 +1142,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1381,17 +1205,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:Crypt",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Encrypted stream filter handling",
       "documentation": [
@@ -1401,7 +1215,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1465,17 +1278,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter-arrays",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "PDF stream filter arrays",
       "documentation": [
@@ -1485,7 +1288,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1549,17 +1351,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:ImageMask",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Stencil image rendering",
       "documentation": [
@@ -1569,7 +1361,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1633,17 +1424,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:SMask",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Soft-mask image compositing",
       "documentation": [
@@ -1653,7 +1434,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1717,17 +1497,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:Mask.image",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Explicit image mask compositing",
       "documentation": [
@@ -1737,7 +1507,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1801,17 +1570,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:Mask.color-key",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Color-key mask compositing",
       "documentation": [
@@ -1821,7 +1580,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1885,17 +1643,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:Decode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "PDF image sample remapping",
       "documentation": [
@@ -1905,7 +1653,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1969,17 +1716,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:BitsPerComponent",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Image sample unpacking",
       "documentation": [
@@ -1989,7 +1726,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2053,17 +1789,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:Interpolate",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Image interpolation hint handling",
       "documentation": [
@@ -2073,7 +1799,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2137,17 +1862,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:DeviceGray",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Device color space image rendering",
       "documentation": [
@@ -2157,7 +1872,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2221,17 +1935,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:DeviceRGB",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Device color space image rendering",
       "documentation": [
@@ -2241,7 +1945,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2305,17 +2008,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:DeviceCMYK",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Device color space image rendering",
       "documentation": [
@@ -2325,7 +2018,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2389,17 +2081,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:ICCBased",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Calibrated image color management",
       "documentation": [
@@ -2409,7 +2091,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2473,17 +2154,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:Indexed",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Indexed image color table handling",
       "documentation": [
@@ -2493,7 +2164,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2557,17 +2227,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:Lab",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "CIE-based Lab image color conversion",
       "documentation": [
@@ -2577,7 +2237,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2641,17 +2300,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:Separation",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Spot-color image handling",
       "documentation": [
@@ -2661,7 +2310,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2725,17 +2373,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:DeviceN",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Multi-ink image handling",
       "documentation": [
@@ -2745,7 +2383,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2809,17 +2446,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-placement:CTM",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Image placement through graphics state CTM",
       "documentation": [
@@ -2829,7 +2456,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2893,17 +2519,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-compositing:BlendTransparency",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Transparent image compositing",
       "documentation": [
@@ -2913,7 +2529,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2977,17 +2592,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for resource-policy:image-limits",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Bounded rendering of malformed or adversarial image streams",
       "documentation": [
@@ -2997,7 +2602,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],

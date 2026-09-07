@@ -68,9 +68,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -171,9 +168,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -274,9 +268,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -377,9 +368,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -480,9 +468,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -583,9 +568,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -686,9 +668,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -789,9 +768,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -892,9 +868,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -995,9 +968,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -1098,9 +1068,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -1201,9 +1168,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -1304,9 +1268,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -1407,9 +1368,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -1510,9 +1468,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -1613,9 +1568,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -1716,9 +1668,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -1819,9 +1768,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -1922,9 +1868,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -2025,9 +1968,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -2128,9 +2068,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -2231,9 +2168,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -2334,9 +2268,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -2437,9 +2368,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -2540,9 +2468,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -2643,9 +2568,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -2746,9 +2668,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -2849,9 +2768,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -2952,9 +2868,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -3055,9 +2968,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -3158,9 +3068,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -3261,9 +3168,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -3364,9 +3268,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -3467,9 +3368,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -3570,9 +3468,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -3673,9 +3568,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -3776,9 +3668,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -3879,9 +3768,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -3982,9 +3868,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -4085,9 +3968,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -4188,9 +4068,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -4291,9 +4168,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -4394,9 +4268,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -4497,9 +4368,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -4600,9 +4468,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -4703,9 +4568,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -4806,9 +4668,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -4909,9 +4768,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -5012,9 +4868,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -5115,9 +4968,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -5218,9 +5068,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -5321,9 +5168,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -5424,9 +5268,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -5527,9 +5368,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -5630,9 +5468,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -5733,9 +5568,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -5836,9 +5668,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -5939,9 +5768,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -6042,9 +5868,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -6145,9 +5968,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -6248,9 +6068,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -6351,9 +6168,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -6454,9 +6268,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -6557,9 +6368,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -6660,9 +6468,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -6763,9 +6568,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -6866,9 +6668,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -6969,9 +6768,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -7072,9 +6868,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -7175,9 +6968,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -7278,9 +7068,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -7381,9 +7168,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],
@@ -7484,9 +7268,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [
-          "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
-        ],
         "fixtureRefs": [
           "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip"
         ],

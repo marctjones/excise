@@ -92,9 +92,6 @@
         "implementationRefs": [
           "Excise.Rendering/SkiaRenderer.Paths.cs; Excise.Rendering/SkiaRenderer.State.cs; Excise.Rendering/Transparency/"
         ],
-        "testRefs": [
-          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied; Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SoftMaskedImage_ComposesStraightAlphaSamples"
-        ],
         "fixtureRefs": [
           "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Transparency_OverlappingRectangles_BlendingApplied"
         ],
@@ -171,7 +168,6 @@
         "owner": "PDF capability registry",
         "reviewState": "policy-reviewed",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],

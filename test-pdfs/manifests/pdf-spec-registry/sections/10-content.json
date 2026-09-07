@@ -107,9 +107,6 @@
         "implementationRefs": [
           "Excise.Rendering/SkiaRenderer.cs; Excise.Rendering/SkiaRenderer.XObjects.cs; Excise.Rendering/SkiaRenderer.Text.cs"
         ],
-        "testRefs": [
-          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont; Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_PdfjsIssue16742_FormXObjectClipsToBBox"
-        ],
         "fixtureRefs": [
           "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont"
         ],
@@ -203,7 +200,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -290,7 +286,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -373,7 +368,6 @@
         "owner": "PDF capability registry",
         "reviewState": "policy-reviewed",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],

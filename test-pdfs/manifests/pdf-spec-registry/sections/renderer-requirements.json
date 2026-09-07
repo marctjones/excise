@@ -37,17 +37,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.syntax.objects",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Parse direct and indirect objects needed to resolve pages, resources, streams, and content operands.",
       "documentation": [
@@ -57,7 +47,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -121,17 +110,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.syntax.streams",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Decode streams and filter arrays used by page content and resources.",
       "documentation": [
@@ -141,7 +120,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -205,17 +183,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.page.tree",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Resolve page tree inheritance for boxes, rotation, resources, and contents before rendering.",
       "documentation": [
@@ -225,7 +193,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -289,17 +256,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.page.boxes",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Apply media, crop, bleed, trim, and art box selection according to the active render contract.",
       "documentation": [
@@ -309,7 +266,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -373,17 +329,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.graphics.extgstate",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Apply ExtGState dictionaries that affect visible rendering, including alpha, blend mode, line settings, and soft masks.",
       "documentation": [
@@ -393,7 +339,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -457,17 +402,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.color.spaces",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Resolve color spaces and color-setting operators for visible fills, strokes, images, patterns, and shadings.",
       "documentation": [
@@ -477,7 +412,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -541,17 +475,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.patterns",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Render tiling and shading patterns with correct resource lookup, phase, matrix, and paint type behavior.",
       "documentation": [
@@ -561,7 +485,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -625,17 +548,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.images",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Render image XObjects and inline images with masks, decode arrays, interpolation, color spaces, and filters.",
       "documentation": [
@@ -645,7 +558,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -709,17 +621,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.forms",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Render Form XObjects with their own resources, matrix, bounding box, transparency group, and nested content.",
       "documentation": [
@@ -729,7 +631,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -793,17 +694,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.fonts",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Resolve fonts, encodings, CMaps, glyph metrics, and text rendering modes needed for visual text output.",
       "documentation": [
@@ -813,7 +704,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -877,17 +767,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.transparency",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Composite transparency groups, blend modes, alpha constants, and soft masks in rendering order.",
       "documentation": [
@@ -897,7 +777,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -961,17 +840,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.optional-content",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Apply optional content default visibility when rendering page content.",
       "documentation": [
@@ -981,7 +850,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1045,17 +913,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.resource-limits.streams",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Bound decompression, malformed streams, and repeated filter work so rendering fails deterministically instead of hanging or exhausting memory.",
       "documentation": [
@@ -1065,7 +923,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1129,17 +986,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.resource-limits.images",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Bound huge image dimensions, masks, and decode buffers during rendering.",
       "documentation": [
@@ -1149,7 +996,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1213,17 +1059,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.resource-limits.recursion",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Detect recursive or cyclic XObject/resource references before stack overflow or unbounded work.",
       "documentation": [
@@ -1233,7 +1069,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1297,17 +1132,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.interactive.annotations.appearance-stream",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "When an annotation supplies a normal appearance stream, render that stream; its /BBox shall be mapped to /Rect through /Matrix per the appearance algorithm.",
       "documentation": [
@@ -1317,7 +1142,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1381,17 +1205,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.interactive.annotations.preservation",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Annotation dictionaries shall survive an open-save round trip unchanged in count, including subtypes the processor does not interpret.",
       "documentation": [
@@ -1401,7 +1215,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1465,17 +1278,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.interactive.annotations.synthesis",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Where no appearance stream is present a processor MAY synthesize one; judge the annotation's meaning (text, presence, containment, stated colours) rather than pixel agreement.",
       "documentation": [
@@ -1485,7 +1288,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1549,17 +1351,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.tagged-pdf.structure",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Track logical structure and marked-content semantics without blocking renderer conformance.",
       "documentation": [
@@ -1569,7 +1361,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1633,17 +1424,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.signatures",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Track signature dictionaries, byte ranges, and validation policy outside the renderer gate.",
       "documentation": [
@@ -1653,7 +1434,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1717,17 +1497,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.multimedia-3d",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Track multimedia, rich media, and 3D annotations as unsupported or preserve-only until claimed.",
       "documentation": [
@@ -1737,7 +1507,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1801,17 +1570,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.geospatial",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Track geospatial dictionaries and measure properties without blocking page rendering.",
       "documentation": [
@@ -1821,7 +1580,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1885,17 +1643,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.q",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator q for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -1905,7 +1653,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -1969,17 +1716,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Q",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator Q for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -1989,7 +1726,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2053,17 +1789,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.cm",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator cm for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2073,7 +1799,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2137,17 +1862,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.w",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator w for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2157,7 +1872,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2221,17 +1935,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.J",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator J for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2241,7 +1945,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2305,17 +2008,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.j",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator j for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2325,7 +2018,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2389,17 +2081,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.M",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator M for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2409,7 +2091,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2473,17 +2154,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.d",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator d for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2493,7 +2164,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2557,17 +2227,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.ri",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator ri for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2577,7 +2237,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2641,17 +2300,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.i",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator i for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2661,7 +2310,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2725,17 +2373,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.gs",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator gs for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2745,7 +2383,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2809,17 +2446,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.m",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator m for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2829,7 +2456,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2893,17 +2519,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.l",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator l for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2913,7 +2529,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -2977,17 +2592,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.c",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator c for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -2997,7 +2602,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3061,17 +2665,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.v",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator v for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3081,7 +2675,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3145,17 +2738,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.y",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator y for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3165,7 +2748,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3229,17 +2811,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.h",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator h for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3249,7 +2821,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3313,17 +2884,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.re",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator re for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3333,7 +2894,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3397,17 +2957,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.S",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator S for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3417,7 +2967,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3481,17 +3030,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.s",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator s for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3501,7 +3040,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3565,17 +3103,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.f",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator f for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3585,7 +3113,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3649,17 +3176,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.F",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator F for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3669,7 +3186,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3733,17 +3249,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.fstar",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator f* for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3753,7 +3259,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3817,17 +3322,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.B",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator B for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3837,7 +3332,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3901,17 +3395,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Bstar",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator B* for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -3921,7 +3405,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -3985,17 +3468,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.b",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator b for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4005,7 +3478,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4069,17 +3541,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.bstar",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator b* for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4089,7 +3551,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4153,17 +3614,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.n",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator n for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4173,7 +3624,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4237,17 +3687,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.W",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator W for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4257,7 +3697,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4321,17 +3760,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Wstar",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator W* for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4341,7 +3770,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4405,17 +3833,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.CS",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator CS for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4425,7 +3843,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4489,17 +3906,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.cs",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator cs for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4509,7 +3916,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4573,17 +3979,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.SC",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator SC for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4593,7 +3989,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4657,17 +4052,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.SCN",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator SCN for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4677,7 +4062,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4741,17 +4125,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.sc",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator sc for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4761,7 +4135,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4825,17 +4198,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.scn",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator scn for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4845,7 +4208,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4909,17 +4271,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.G",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator G for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -4929,7 +4281,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -4993,17 +4344,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.g",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator g for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5013,7 +4354,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -5077,17 +4417,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.RG",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator RG for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5097,7 +4427,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -5161,17 +4490,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.rg",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator rg for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5181,7 +4500,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -5245,17 +4563,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.K",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator K for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5265,7 +4573,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -5329,17 +4636,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.k",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator k for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5349,7 +4646,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -5413,17 +4709,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.sh",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator sh for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5433,7 +4719,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -5497,17 +4782,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.BI",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator BI for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5517,7 +4792,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -5581,17 +4855,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.ID",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator ID for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5601,7 +4865,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -5665,17 +4928,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.EI",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator EI for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5685,7 +4938,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -5749,17 +5001,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Do",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator Do for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5769,7 +5011,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -5833,17 +5074,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.BT",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator BT for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5853,7 +5084,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -5917,17 +5147,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.ET",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator ET for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -5937,7 +5157,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6001,17 +5220,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tc",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator Tc for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6021,7 +5230,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6085,17 +5293,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tw",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator Tw for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6105,7 +5303,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6169,17 +5366,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tz",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator Tz for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6189,7 +5376,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6253,17 +5439,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.TL",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator TL for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6273,7 +5449,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6337,17 +5512,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tf",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator Tf for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6357,7 +5522,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6421,17 +5585,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tr",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator Tr for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6441,7 +5595,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6505,17 +5658,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Ts",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator Ts for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6525,7 +5668,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6589,17 +5731,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Td",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator Td for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6609,7 +5741,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6673,17 +5804,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.TD",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator TD for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6693,7 +5814,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6757,17 +5877,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tm",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator Tm for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6777,7 +5887,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6841,17 +5950,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tstar",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator T* for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6861,7 +5960,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -6925,17 +6023,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tj",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator Tj for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -6945,7 +6033,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7009,17 +6096,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.TJ",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator TJ for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7029,7 +6106,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7093,17 +6169,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.apostrophe",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator ' for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7113,7 +6179,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7177,17 +6242,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.quote",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator \" for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7197,7 +6252,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7261,17 +6315,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.d0",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator d0 for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7281,7 +6325,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7345,17 +6388,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.d1",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator d1 for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7365,7 +6398,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7429,17 +6461,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.BMC",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator BMC for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7449,7 +6471,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7513,17 +6534,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.BDC",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator BDC for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7533,7 +6544,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7597,17 +6607,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.EMC",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator EMC for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7617,7 +6617,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7681,17 +6680,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.MP",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator MP for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7701,7 +6690,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7765,17 +6753,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.DP",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator DP for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7785,7 +6763,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7849,17 +6826,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.BX",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator BX for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7869,7 +6836,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -7933,17 +6899,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.EX",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "notes": "Implement content-stream operator EX for renderer-visible behavior or required no-op semantics.",
       "documentation": [
@@ -7953,7 +6909,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],

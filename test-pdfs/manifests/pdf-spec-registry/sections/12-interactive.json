@@ -49,7 +49,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -135,17 +134,26 @@
       ],
       "verification": {
         "status": "executable",
-        "requiredModes": ["parse", "preserve", "write"],
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "write"
+        ],
         "checks": [
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
-            "modes": ["parse"]
+            "modes": [
+              "parse"
+            ]
           },
           {
             "kind": "corpus",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
-            "modes": ["preserve", "write"]
+            "modes": [
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -158,9 +166,6 @@
         "reviewState": "migration-pending",
         "implementationRefs": [
           "Excise.Core/Document/PdfAnnotationParser.cs; Excise.App/ViewModels/MainWindowViewModel.cs"
-        ],
-        "testRefs": [
-          "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs"
         ],
         "fixtureRefs": [],
         "corpusRefs": [
@@ -253,7 +258,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [
           "test-pdfs/pdfium/redact_annot.pdf; veraPDF annotation conformance fixtures"
@@ -456,9 +460,6 @@
         "implementationRefs": [
           "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs; Excise.Core/Text/Segmentation/GlyphRemover.cs"
         ],
-        "testRefs": [
-          "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerTests.cs; Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs"
-        ],
         "fixtureRefs": [],
         "corpusRefs": [
           "Excise.Rendering.Tests/Corpus/RedactionRegressionTests.cs; Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs"
@@ -545,7 +546,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -628,7 +628,6 @@
         "owner": "PDF capability registry",
         "reviewState": "policy-reviewed",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -711,7 +710,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],

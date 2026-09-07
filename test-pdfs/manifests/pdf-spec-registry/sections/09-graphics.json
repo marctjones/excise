@@ -58,11 +58,31 @@
       ],
       "verification": {
         "status": "executable",
-        "requiredModes": ["render"],
+        "requiredModes": [
+          "render"
+        ],
         "checks": [
-          {"kind": "unit", "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore", "modes": ["render"]},
-          {"kind": "atomic-fixture", "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore", "modes": ["render"]},
-          {"kind": "differential", "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool", "modes": ["render"]}
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "atomic-fixture",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
+            "modes": [
+              "render"
+            ]
+          }
         ]
       },
       "notes": "Track each ExtGState entry, save/restore balancing, resource resolution, and limits as separate child capabilities.",
@@ -72,9 +92,12 @@
       "tracking": {
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
-        "implementationRefs": ["Excise.Rendering/SkiaRenderer.cs"],
-        "testRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore"],
-        "fixtureRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore"],
+        "implementationRefs": [
+          "Excise.Rendering/SkiaRenderer.cs"
+        ],
+        "fixtureRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore"
+        ],
         "corpusRefs": [],
         "referenceToolRefs": [],
         "architectureRefs": [
@@ -165,11 +188,31 @@
       ],
       "verification": {
         "status": "executable",
-        "requiredModes": ["render"],
+        "requiredModes": [
+          "render"
+        ],
         "checks": [
-          {"kind": "unit", "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding", "modes": ["render"]},
-          {"kind": "atomic-fixture", "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding", "modes": ["render"]},
-          {"kind": "differential", "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool", "modes": ["render"]}
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "atomic-fixture",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
+            "modes": [
+              "render"
+            ]
+          }
         ]
       },
       "notes": "Operator-level claims migrate from the Annex A evidence source; this feature adds rendering and mutation proof.",
@@ -179,9 +222,13 @@
       "tracking": {
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
-        "implementationRefs": ["Excise.Rendering/SkiaRenderer.Paths.cs", "Excise.Core/Content/ContentStreamParser.cs"],
-        "testRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding"],
-        "fixtureRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding"],
+        "implementationRefs": [
+          "Excise.Rendering/SkiaRenderer.Paths.cs",
+          "Excise.Core/Content/ContentStreamParser.cs"
+        ],
+        "fixtureRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding"
+        ],
         "corpusRefs": [],
         "referenceToolRefs": [],
         "architectureRefs": [],
@@ -269,11 +316,35 @@
           "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool"
         }
       ],
-      "verification": {"status":"executable","requiredModes":["render"],"checks":[
-        {"kind":"unit","ref":"Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue","modes":["render"]},
-        {"kind":"atomic-fixture","ref":"Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue","modes":["render"]},
-        {"kind":"differential","ref":"Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool","modes":["render"]}
-      ]},
+      "verification": {
+        "status": "executable",
+        "requiredModes": [
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "atomic-fixture",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
+      },
       "notes": "Track device, calibrated, ICC, indexed, separation, DeviceN, spot-color and tint-transform support independently. Advanced color controls and print-production authoring remain deferred.",
       "documentation": [
         "CI_GATES.md",
@@ -282,9 +353,12 @@
       "tracking": {
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
-        "implementationRefs": ["Excise.Rendering/SkiaRenderer.cs"],
-        "testRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue"],
-        "fixtureRefs": ["Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue"],
+        "implementationRefs": [
+          "Excise.Rendering/SkiaRenderer.cs"
+        ],
+        "fixtureRefs": [
+          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue"
+        ],
         "corpusRefs": [],
         "referenceToolRefs": [],
         "architectureRefs": [],
@@ -365,7 +439,6 @@
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
         "implementationRefs": [],
-        "testRefs": [],
         "fixtureRefs": [],
         "corpusRefs": [],
         "referenceToolRefs": [],
@@ -495,9 +568,6 @@
         "reviewState": "migration-pending",
         "implementationRefs": [
           "Excise.Rendering/SkiaRenderer.Images.cs; Excise.Rendering/SkiaRenderer.XObjects.cs"
-        ],
-        "testRefs": [
-          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency; Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha"
         ],
         "fixtureRefs": [
           "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha"
@@ -633,9 +703,6 @@
         "reviewState": "migration-pending",
         "implementationRefs": [
           "Excise.Rendering/SkiaRenderer.Text.cs; Excise.Rendering/Fonts/"
-        ],
-        "testRefs": [
-          "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont; Excise.Rendering.Tests/Fonts/EmbeddedCffWidthAuthorityTests.cs::RenderPage_EmbeddedCffSimpleFont_OutOfRangeCodeAdvancesByMissingWidthNotHmtxStub"
         ],
         "fixtureRefs": [
           "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont"

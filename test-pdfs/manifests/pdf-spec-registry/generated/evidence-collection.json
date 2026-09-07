@@ -16667,17 +16667,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.syntax.objects",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -16719,17 +16709,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.syntax.streams",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -16835,17 +16815,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.page.tree",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -16895,17 +16865,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.page.boxes",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -16937,17 +16897,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.graphics.extgstate",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -16981,17 +16931,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.color.spaces",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -17652,17 +17592,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.patterns",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -17694,17 +17624,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.images",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -17746,17 +17666,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.forms",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -17814,17 +17724,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.fonts",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -17882,17 +17782,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.transparency",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -17933,17 +17823,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.optional-content",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -17976,17 +17856,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.resource-limits.streams",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -18044,17 +17914,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.resource-limits.images",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -18097,17 +17957,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.resource-limits.recursion",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -18149,17 +17999,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.interactive.annotations.appearance-stream",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -18234,17 +18074,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.interactive.annotations.preservation",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -18327,17 +18157,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.interactive.annotations.synthesis",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -18539,17 +18359,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.tagged-pdf.structure",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -18662,17 +18472,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.signatures",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18704,17 +18504,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.multimedia-3d",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18746,17 +18536,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.geospatial",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18787,17 +18567,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.q",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18828,17 +18598,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Q",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18869,17 +18629,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.cm",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18910,17 +18660,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.w",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18951,17 +18691,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.J",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -18992,17 +18722,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.j",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19033,17 +18753,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.M",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19074,17 +18784,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.d",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19115,17 +18815,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.ri",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19156,17 +18846,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.i",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19197,17 +18877,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.gs",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19238,17 +18908,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.m",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19279,17 +18939,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.l",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19320,17 +18970,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.c",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19361,17 +19001,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.v",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19402,17 +19032,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.y",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19443,17 +19063,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.h",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19484,17 +19094,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.re",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19525,17 +19125,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.S",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19566,17 +19156,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.s",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19607,17 +19187,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.f",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19648,17 +19218,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.F",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19690,17 +19250,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.fstar",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19731,17 +19281,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.B",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19773,17 +19313,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Bstar",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19814,17 +19344,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.b",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19856,17 +19376,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.bstar",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19897,17 +19407,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.n",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19938,17 +19438,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.W",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -19980,17 +19470,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Wstar",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20021,17 +19501,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.CS",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20062,17 +19532,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.cs",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20103,17 +19563,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.SC",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20145,17 +19595,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.SCN",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20186,17 +19626,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.sc",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20228,17 +19658,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.scn",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20269,17 +19689,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.G",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20310,17 +19720,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.g",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20351,17 +19751,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.RG",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20392,17 +19782,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.rg",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20433,17 +19813,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.K",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20474,17 +19844,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.k",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20515,17 +19875,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.sh",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20556,17 +19906,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.BI",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20597,17 +19937,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.ID",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20638,17 +19968,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.EI",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20679,17 +19999,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Do",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20720,17 +20030,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.BT",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20761,17 +20061,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.ET",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20802,17 +20092,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tc",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20843,17 +20123,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tw",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20884,17 +20154,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tz",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20925,17 +20185,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.TL",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -20966,17 +20216,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tf",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21007,17 +20247,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tr",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21048,17 +20278,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Ts",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21089,17 +20309,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Td",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21130,17 +20340,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.TD",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21171,17 +20371,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tm",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21213,17 +20403,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tstar",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21254,17 +20434,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.Tj",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21295,17 +20465,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.TJ",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21337,17 +20497,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.apostrophe",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21379,17 +20529,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.quote",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21420,17 +20560,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.d0",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21461,17 +20591,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.d1",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21503,17 +20623,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.BMC",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21545,17 +20655,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.BDC",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21587,17 +20687,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.EMC",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21628,17 +20718,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.MP",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21669,17 +20749,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.DP",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21710,17 +20780,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.BX",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21751,17 +20811,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for pdf20.op.EX",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -21795,17 +20845,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:ASCIIHexDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -21933,17 +20973,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:ASCII85Decode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -22041,17 +21071,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:FlateDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -22273,17 +21293,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:FlateDecode.predictor-tiff",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -22505,17 +21515,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:FlateDecode.predictor-png",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -22756,17 +21756,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:LZWDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -22884,17 +21874,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:LZWDecode.early-change",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -23012,17 +21992,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:LZWDecode.predictors",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -23141,17 +22111,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:RunLengthDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -23272,17 +22232,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:CCITTFaxDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -23421,17 +22371,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:CCITTFaxDecode.decodeparms",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -23684,17 +22624,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:DCTDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -23863,17 +22793,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:DCTDecode.color-transform",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -24041,17 +22961,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:JPXDecode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -24232,17 +23142,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:JBIG2Decode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -24495,17 +23395,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-filter:JBIG2Decode.globals",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -24813,17 +23703,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter:Crypt",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -25161,17 +24041,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for stream-filter-arrays",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -25205,17 +24075,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:ImageMask",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -25367,17 +24227,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:SMask",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -25512,17 +24362,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:Mask.image",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -25968,17 +24808,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:Mask.color-key",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -26424,17 +25254,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:Decode",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -27234,17 +26054,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:BitsPerComponent",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -27657,17 +26467,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-dictionary:Interpolate",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -27760,17 +26560,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:DeviceGray",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -28083,17 +26873,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:DeviceRGB",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -28449,17 +27229,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:DeviceCMYK",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -28688,17 +27458,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:ICCBased",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -28826,17 +27586,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:Indexed",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -29066,17 +27816,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:Lab",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -29865,17 +28605,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:Separation",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -30000,17 +28730,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-color:DeviceN",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -30136,17 +28856,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-placement:CTM",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -30536,17 +29246,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for image-compositing:BlendTransparency",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -30580,17 +29280,7 @@
           "render",
           "preserve"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for resource-policy:image-limits",
-            "modes": [
-              "parse",
-              "render",
-              "preserve"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -30623,18 +29313,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Widget",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -31335,18 +30014,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Link",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -32169,18 +30837,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Text",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -32213,18 +30870,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for FreeText",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -32763,18 +31409,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Highlight",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -33427,18 +32062,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Underline",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -33799,18 +32423,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for StrikeOut",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -34152,18 +32765,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Squiggly",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -34505,18 +33107,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Square",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -35043,18 +33634,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Circle",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -35473,18 +34053,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Line",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -36309,18 +34878,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Polygon",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -36719,18 +35277,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for PolyLine",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -37108,18 +35655,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Ink",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -37938,18 +36474,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Popup",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -38146,18 +36671,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for FileAttachment",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -38345,18 +36859,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Stamp",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -38834,18 +37337,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Caret",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -39043,18 +37535,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Redact",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -39903,18 +38384,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Sound",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -40044,18 +38514,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Movie",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -40164,18 +38623,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Screen",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -40465,18 +38913,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Watermark",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -40595,18 +39032,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for PrinterMark",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -40669,18 +39095,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for TrapNet",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -40733,18 +39148,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for 3D",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -40777,18 +39181,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for RichMedia",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {
@@ -40842,18 +39235,7 @@
           "render",
           "extract"
         ],
-        "checks": [
-          {
-            "kind": "unit",
-            "ref": "legacy matrix evidence for Projection",
-            "modes": [
-              "parse",
-              "preserve",
-              "render",
-              "extract"
-            ]
-          }
-        ]
+        "checks": []
       },
       "candidateReferences": [
         {

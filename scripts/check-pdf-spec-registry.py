@@ -67,7 +67,7 @@ def main() -> int:
             if absent:
                 errors.append(f"{cap_id or path}: missing {sorted(absent)}")
             tracking = cap.get("tracking", {})
-            required_tracking = {"owner", "reviewState", "implementationRefs", "testRefs", "fixtureRefs", "corpusRefs", "referenceToolRefs", "architectureRefs", "issueRefs", "knownLimitations", "processorRoles", "supportLevel", "normativeSourcePins", "errataStatus", "lastReviewedCommit", "positiveTestRefs", "negativeOrConservationTestRefs", "explicitEvidenceGaps"}
+            required_tracking = {"owner", "reviewState", "implementationRefs", "fixtureRefs", "corpusRefs", "referenceToolRefs", "architectureRefs", "issueRefs", "knownLimitations", "processorRoles", "supportLevel", "normativeSourcePins", "errataStatus", "lastReviewedCommit", "positiveTestRefs", "negativeOrConservationTestRefs", "explicitEvidenceGaps"}
             missing_tracking = required_tracking - tracking.keys()
             if missing_tracking:
                 errors.append(f"{cap_id}: tracking missing {sorted(missing_tracking)}")
