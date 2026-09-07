@@ -161,6 +161,14 @@ if [ ! -t 0 ]; then
     done
 fi
 [ -n "$base" ] && export GATE_ASYMMETRY_BASE="$base"
+
+# git spawns hooks with the invoking process's environment, not a login shell, so a PATH
+# fixup living only in ~/.zprofile/~/.zshrc is invisible here. Prepend the official SDK
+# explicitly (global.json pins it; CLAUDE.md "Build Failures" explains why the Homebrew
+# formula must not be picked up instead) so this hook is correct regardless of what shell
+# or tool invoked `git push`.
+[ -d "$HOME/.dotnet" ] && export PATH="$HOME/.dotnet:$PATH"
+
 exec "$(git rev-parse --show-toplevel)/scripts/test-tier.sh" t0
 HOOKEOF
     chmod +x "$HOOK"
