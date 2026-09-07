@@ -1,6 +1,8 @@
 using System.CommandLine;
 using Excise.Core.Authoring;
 
+using Excise.Cli;
+
 namespace Excise.Cli.Commands;
 
 internal static class ValidateCommand
@@ -97,7 +99,7 @@ internal static class ValidateCommand
             File: result.FilePath,
             Note: ScopeNote,
             Reports: reports);
-        Console.WriteLine(CliJson.Serialize(json));
+        Console.WriteLine(CliJson.Serialize(json, CliJsonContext.Default.ValidationJsonReport));
     }
 
     private static void WriteHuman(ValidationResult result)
@@ -122,7 +124,7 @@ internal static class ValidateCommand
         }
     }
 
-    private sealed record ValidationJsonReport(
+    internal sealed record ValidationJsonReport(
         int SchemaVersion,
         string Command,
         string Status,
@@ -130,13 +132,13 @@ internal static class ValidateCommand
         string Note,
         IReadOnlyList<ValidationReportJson> Reports);
 
-    private sealed record ValidationReportJson(
+    internal sealed record ValidationReportJson(
         string Standard,
         bool CheckedSubsetConformant,
         IReadOnlyList<string> UncoveredCheckpoints,
         IReadOnlyList<ValidationItemJson> Results);
 
-    private sealed record ValidationItemJson(
+    internal sealed record ValidationItemJson(
         string RuleId,
         string Status,
         string Severity,

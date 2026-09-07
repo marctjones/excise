@@ -1,6 +1,8 @@
 using System.CommandLine;
 using Excise.Core.Automation;
 
+using Excise.Cli;
+
 namespace Excise.Cli.Commands;
 
 internal static class TextCommand
@@ -82,7 +84,7 @@ internal static class TextCommand
             File: result.FilePath,
             PageCount: result.PageCount,
             Pages: result.Pages);
-        Console.WriteLine(CliJson.Serialize(report));
+        Console.WriteLine(CliJson.Serialize(report, CliJsonContext.Default.TextInspectionJsonReport));
     }
 
     private static void WriteHuman(TextInspectionResult result)
@@ -98,7 +100,7 @@ internal static class TextCommand
         }
     }
 
-    private sealed record TextInspectionJsonReport(
+    internal sealed record TextInspectionJsonReport(
         int SchemaVersion,
         string Command,
         string Status,

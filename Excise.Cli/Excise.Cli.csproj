@@ -12,8 +12,18 @@
     <PublishReadyToRunComposite>true</PublishReadyToRunComposite>
     <!-- Tiered compilation: helps R2R by deferring optimization to runtime for hot paths -->
     <TieredCompilation>true</TieredCompilation>
-    <!-- Native AOT: EXPERIMENTAL - uncomment below to test (builds successfully) -->
-    <!-- <PublishAot>true</PublishAot> -->
+    <!-- #1389 - run the trim and AOT analyzers on every ordinary build, not only on an
+         AOT publish. This is the gate for the source-generated JSON in CliJsonContexts.cs:
+         reflection-based JsonSerializer calls are invisible to the trimmer, so under Native
+         AOT they emit an empty object at RUNTIME with no build-time complaint. With this on,
+         reintroducing one is IL2026 + IL3050 at compile time (verified by adding a reflection
+         call back: 2x IL2026, 2x IL3050; silent otherwise). Warning-clean under it today.
+         Native AOT itself stays opt-in per publish and is NOT gated for this project - the
+         `aot` row (scripts/run-aot-smoke.sh) publishes Excise.App only. #1390 holds the
+         publish recipe, including the LIBRARY_PATH the link needs on macOS, and proposes
+         moving it into the script. Do not point this at docs/RELEASE_CHECKLIST.md: that
+         documents the GUI's row, not the CLI. -->
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>

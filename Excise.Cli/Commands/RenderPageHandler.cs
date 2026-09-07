@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Diagnostics;
 using Excise.Core.Document;
 using Excise.Rendering;
 
@@ -18,9 +19,18 @@ internal static class RenderPageHandler
         if (!input.Exists)
             throw new FileNotFoundException("The PDF input file does not exist.", input.FullName);
 
+        // #1387 — phase timings. The reference-performance bench could previously
+        // only see whole-process wall clock, and ~71 ms of that is .NET startup and JIT
+        // on this machine against mutool's 3 ms. On a typical 150 ms page that is 40% of
+        // the measurement, so a real 30 ms win in the raster path moved the bench by
+        // under 20% and read as noise. Splitting open/render/write lets the bench compare
+        // engines rather than runtimes; process wall clock is still reported beside it,
+        // because a user running the CLI genuinely pays the startup.
+        var openWatch = Stopwatch.StartNew();
         using var document = string.IsNullOrEmpty(request.Password)
             ? PdfDocument.Open(input.FullName)
             : PdfDocument.Open(input.FullName, request.Password);
+        openWatch.Stop();
         cancellationToken.ThrowIfCancellationRequested();
 
         DocumentPermissionGuard.Require(
@@ -46,7 +56,9 @@ internal static class RenderPageHandler
         var renderer = new SkiaRenderer();
         var options = new RenderOptions { Dpi = request.Dpi };
         using var png = new MemoryStream();
+        var renderWatch = Stopwatch.StartNew();
         renderer.RenderPageToPng(document.GetPage(request.PageNumber), png, options, cancellationToken);
+        renderWatch.Stop();
         cancellationToken.ThrowIfCancellationRequested();
 
         // The bitmap is disposed inside RenderPageToPng; report the dimensions
@@ -58,9 +70,13 @@ internal static class RenderPageHandler
         var width = BinaryPrimitives.ReadInt32BigEndian(header.Slice(16, 4));
         var height = BinaryPrimitives.ReadInt32BigEndian(header.Slice(20, 4));
 
-        using var stream = File.Open(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
-        png.Position = 0;
-        png.CopyTo(stream);
+        var writeWatch = Stopwatch.StartNew();
+        using (var stream = File.Open(outputPath, FileMode.Create, FileAccess.Write, FileShare.None))
+        {
+            png.Position = 0;
+            png.CopyTo(stream);
+        }
+        writeWatch.Stop();
 
         return new RenderPageResult(
             input.FullName,
@@ -68,7 +84,10 @@ internal static class RenderPageHandler
             request.PageNumber,
             request.Dpi,
             width,
-            height);
+            height,
+            openWatch.Elapsed.TotalMilliseconds,
+            renderWatch.Elapsed.TotalMilliseconds,
+            writeWatch.Elapsed.TotalMilliseconds);
     }
 }
 
@@ -81,10 +100,18 @@ internal readonly record struct RenderPageRequest(
     bool IgnorePermissions,
     string OverrideHint = "--ignore-permissions");
 
+/// <summary>
+/// <paramref name="OpenMs"/>, <paramref name="RenderMs"/> and <paramref name="WriteMs"/>
+/// are the in-process phase timings (#1387). They deliberately exclude process startup
+/// and JIT, which the caller can obtain by subtracting their sum from the wall clock.
+/// </summary>
 internal sealed record RenderPageResult(
     string InputPath,
     string OutputPath,
     int PageNumber,
     int Dpi,
     int Width,
-    int Height);
+    int Height,
+    double OpenMs = 0,
+    double RenderMs = 0,
+    double WriteMs = 0);

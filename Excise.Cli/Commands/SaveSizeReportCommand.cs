@@ -47,11 +47,7 @@ internal static class SaveSizeReportCommand
             try
             {
                 var report = BuildReport(files, maxRatio);
-                var json = JsonSerializer.Serialize(report, new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    WriteIndented = true,
-                });
+                var json = JsonSerializer.Serialize(report, CliPlainJsonContext.Default.SaveSizeReport);
 
                 if (output is not null)
                 {
@@ -126,7 +122,7 @@ internal static class SaveSizeReportCommand
             entries);
     }
 
-    private sealed record SaveSizeReport(
+    internal sealed record SaveSizeReport(
         int SchemaVersion,
         string Command,
         DateTimeOffset GeneratedAtUtc,
@@ -134,7 +130,7 @@ internal static class SaveSizeReportCommand
         string OverallStatus,
         IReadOnlyList<SaveSizeReportEntry> Files);
 
-    private sealed record SaveSizeReportEntry(
+    internal sealed record SaveSizeReportEntry(
         string File,
         string Status,
         string? Error,

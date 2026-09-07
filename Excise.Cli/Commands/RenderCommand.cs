@@ -1,6 +1,8 @@
 using System.CommandLine;
 using Excise.Core.Automation;
 
+using Excise.Cli;
+
 namespace Excise.Cli.Commands;
 
 internal static class RenderCommand
@@ -104,8 +106,14 @@ internal static class RenderCommand
             PageNumber: result.PageNumber,
             Dpi: result.Dpi,
             Width: result.Width,
-            Height: result.Height);
-        Console.WriteLine(CliJson.Serialize(report));
+            Height: result.Height,
+            OpenMs: Math.Round(result.OpenMs, 2),
+            RenderMs: Math.Round(result.RenderMs, 2),
+            WriteMs: Math.Round(result.WriteMs, 2),
+            // IsDynamicCodeSupported is the runtime's own answer, not a guess from the file
+            // layout: it is false in a Native AOT image and true under JIT/ReadyToRun.
+            RuntimeMode: System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ? "jit" : "aot");
+        Console.WriteLine(CliJson.Serialize(report, CliJsonContext.Default.RenderPageJsonReport));
     }
 
     private static void WriteHuman(RenderPageResult result)
@@ -114,7 +122,7 @@ internal static class RenderCommand
         Console.WriteLine($"Saved to: {result.OutputPath}");
     }
 
-    private sealed record RenderPageJsonReport(
+    internal sealed record RenderPageJsonReport(
         int SchemaVersion,
         string Command,
         string Status,
@@ -123,5 +131,16 @@ internal static class RenderCommand
         int PageNumber,
         int Dpi,
         int Width,
-        int Height);
+        int Height,
+        double OpenMs,
+        double RenderMs,
+        double WriteMs,
+        /// <summary>
+        /// "aot" or "jit" (#1389/#1387). The reference-performance bench compares renderMs
+        /// across runs, and Native AOT and the JIT generate different code for the same
+        /// source — no tiered recompilation or dynamic PGO under AOT. Comparing a number
+        /// from one against a baseline recorded with the other is a hidden variable, so the
+        /// binary states which it is rather than the bench guessing from the publish layout.
+        /// </summary>
+        string RuntimeMode);
 }

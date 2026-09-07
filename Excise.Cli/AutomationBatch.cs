@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Excise.Cli.Commands;
 using Excise.Core.Automation;
 using Excise.Core.Document;
@@ -14,20 +15,6 @@ partial class Program
     private const int AutomationExitSuccess = 0;
     private const int AutomationExitOperationFailed = 1;
     private const int AutomationExitContractError = 2;
-
-    private static readonly JsonSerializerOptions AutomationJsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
-    private static readonly JsonSerializerOptions AutomationProgressJsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
 
     private static Command CreateBatchCommand()
     {
@@ -75,9 +62,9 @@ partial class Program
         AutomationBatchWorkflow? workflow;
         try
         {
-            workflow = JsonSerializer.Deserialize<AutomationBatchWorkflow>(
+            workflow = JsonSerializer.Deserialize(
                 File.ReadAllText(workflowFile.FullName),
-                AutomationJsonOptions);
+                CliJsonContext.Default.AutomationBatchWorkflow);
         }
         catch (JsonException ex)
         {
@@ -91,7 +78,7 @@ partial class Program
         if (outputFile != null)
         {
             EnsureOutputParent(outputFile.FullName);
-            File.WriteAllText(outputFile.FullName, JsonSerializer.Serialize(report, AutomationJsonOptions));
+            File.WriteAllText(outputFile.FullName, JsonSerializer.Serialize(report, CliJsonContext.Default.AutomationBatchReport));
         }
 
         if (json)
@@ -139,7 +126,7 @@ partial class Program
         if (outputFile != null)
         {
             EnsureOutputParent(outputFile.FullName);
-            File.WriteAllText(outputFile.FullName, JsonSerializer.Serialize(report, AutomationJsonOptions));
+            File.WriteAllText(outputFile.FullName, JsonSerializer.Serialize(report, CliJsonContext.Default.AutomationBatchReport));
         }
 
         if (json)
@@ -166,15 +153,8 @@ partial class Program
             var command = NormalizeAutomationCommand(step.Command);
             var stopwatch = Stopwatch.StartNew();
 
-            WriteProgress(progress, new
-            {
-                type = "step-start",
-                timestampUtc = DateTimeOffset.UtcNow,
-                ordinal = i + 1,
-                total,
-                id,
-                command,
-            });
+            WriteProgress(progress, new AutomationProgressEvent(
+                "step-start", DateTimeOffset.UtcNow, i + 1, total, id, command));
 
             AutomationBatchStepReport stepReport;
             try
@@ -223,18 +203,9 @@ partial class Program
 
             reports.Add(stepReport);
 
-            WriteProgress(progress, new
-            {
-                type = "step-complete",
-                timestampUtc = DateTimeOffset.UtcNow,
-                ordinal = i + 1,
-                total,
-                id,
-                command = stepReport.Command,
-                status = stepReport.Status,
-                elapsedMs = stepReport.ElapsedMs,
-                errorCode = stepReport.Error?.Code,
-            });
+            WriteProgress(progress, new AutomationProgressEvent(
+                "step-complete", DateTimeOffset.UtcNow, i + 1, total, id, stepReport.Command,
+                stepReport.Status, stepReport.ElapsedMs, stepReport.Error?.Code));
 
             if (stepReport.Status != "PASS" && stopOnError)
                 break;
@@ -250,7 +221,7 @@ partial class Program
             reports);
     }
 
-    private static object ExecuteAutomationStep(
+    private static JsonElement ExecuteAutomationStep(
         string command,
         AutomationBatchStep step,
         string baseDirectory)
@@ -277,39 +248,38 @@ partial class Program
         }
     }
 
-    private static object ExecuteAutomationStepCore(
+    private static JsonElement ExecuteAutomationStepCore(
         string command,
         AutomationBatchStep step,
         string baseDirectory)
     {
+        // Each step's result has its OWN key order (document.info emits pageCount third,
+        // text.extract second), so a single union record cannot reproduce the output. Serialising
+        // each typed result to a JsonElement here keeps the shapes distinct AND keeps the report
+        // AOT-safe: the declared type at every call is concrete, never `object`.
+        var context = CliJsonContext.Default;
         return command switch
         {
-            PdfCommandIds.DocumentInfo => ExecuteInfoStep(step, baseDirectory),
-            PdfCommandIds.ExtractText => ExecuteTextStep(step, baseDirectory),
-            PdfCommandIds.RenderPage => ExecuteRenderStep(step, baseDirectory),
-            PdfCommandIds.FillForm => ExecuteFillFormStep(step, baseDirectory),
-            PdfCommandIds.AddFormField => ExecuteAddFieldStep(step, baseDirectory),
-            PdfCommandIds.ApplyRedaction => ExecuteRedactionStep(step, baseDirectory),
-            PdfCommandIds.AuditHiddenText => ExecuteAuditStep(step, baseDirectory),
+            PdfCommandIds.DocumentInfo => Element(ExecuteInfoStep(step, baseDirectory), context.InfoStepResult),
+            PdfCommandIds.ExtractText => Element(ExecuteTextStep(step, baseDirectory), context.TextStepResult),
+            PdfCommandIds.RenderPage => Element(ExecuteRenderStep(step, baseDirectory), context.RenderStepResult),
+            PdfCommandIds.FillForm => Element(ExecuteFillFormStep(step, baseDirectory), context.FillFormStepResult),
+            PdfCommandIds.AddFormField => Element(ExecuteAddFieldStep(step, baseDirectory), context.AddFieldStepResult),
+            PdfCommandIds.ApplyRedaction => Element(ExecuteRedactionStep(step, baseDirectory), context.RedactionStepResult),
+            PdfCommandIds.AuditHiddenText => Element(ExecuteAuditStep(step, baseDirectory), context.AuditStepResult),
             _ => throw new AutomationContractException("UNKNOWN_COMMAND", $"Unsupported automation command '{command}'."),
         };
     }
 
-    private static object ExecuteInfoStep(AutomationBatchStep step, string baseDirectory)
+    private static InfoStepResult ExecuteInfoStep(AutomationBatchStep step, string baseDirectory)
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
         var result = InfoCommandHandler.Execute(new DocumentInfoRequest(input, step.Password));
-        return new
-        {
-            inputPath = result.FilePath,
-            result.Version,
-            result.PageCount,
-            result.Encrypted,
-            result.Metadata,
-        };
+        return new InfoStepResult(
+            result.FilePath, result.Version, result.PageCount, result.Encrypted, result.Metadata);
     }
 
-    private static object ExecuteTextStep(AutomationBatchStep step, string baseDirectory)
+    private static TextStepResult ExecuteTextStep(AutomationBatchStep step, string baseDirectory)
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
         var result = TextInspectionHandler.Execute(new TextInspectionRequest(
@@ -320,15 +290,10 @@ partial class Program
             step.ForAccessibility ?? false,
             AccessibilityHint: "forAccessibility: true",
             OverrideHint: "ignorePermissions: true on this step"));
-        return new
-        {
-            inputPath = result.FilePath,
-            result.PageCount,
-            result.Pages,
-        };
+        return new TextStepResult(result.FilePath, result.PageCount, result.Pages);
     }
 
-    private static object ExecuteRenderStep(AutomationBatchStep step, string baseDirectory)
+    private static RenderStepResult ExecuteRenderStep(AutomationBatchStep step, string baseDirectory)
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
         var output = ResolveRequiredOutputPath(step.Output, baseDirectory);
@@ -342,18 +307,12 @@ partial class Program
             dpi,
             step.IgnorePermissions ?? false,
             OverrideHint: "ignorePermissions: true on this step"));
-        return new
-        {
-            inputPath = rendered.InputPath,
-            outputPath = rendered.OutputPath,
-            rendered.PageNumber,
-            rendered.Dpi,
-            rendered.Width,
-            rendered.Height,
-        };
+        return new RenderStepResult(
+            rendered.InputPath, rendered.OutputPath,
+            rendered.PageNumber, rendered.Dpi, rendered.Width, rendered.Height);
     }
 
-    private static object ExecuteFillFormStep(AutomationBatchStep step, string baseDirectory)
+    private static FillFormStepResult ExecuteFillFormStep(AutomationBatchStep step, string baseDirectory)
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
         var output = ResolveRequiredOutputPath(step.Output, baseDirectory);
@@ -369,16 +328,11 @@ partial class Program
             fields,
             step.Flatten ?? false,
             step.IgnorePermissions ?? false));
-        return new
-        {
-            inputPath = result.InputPath,
-            outputPath = result.OutputPath,
-            updatedFieldCount = result.UpdatedFieldCount,
-            flattened = result.Flattened,
-        };
+        return new FillFormStepResult(
+            result.InputPath, result.OutputPath, result.UpdatedFieldCount, result.Flattened);
     }
 
-    private static object ExecuteAddFieldStep(AutomationBatchStep step, string baseDirectory)
+    private static AddFieldStepResult ExecuteAddFieldStep(AutomationBatchStep step, string baseDirectory)
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
         var output = ResolveRequiredOutputPath(step.Output, baseDirectory);
@@ -400,17 +354,12 @@ partial class Program
             step.Option ?? Array.Empty<string>(),
             step.IgnorePermissions ?? false));
 
-        return new
-        {
-            inputPath = result.InputPath,
-            outputPath = result.OutputPath,
-            fieldName = result.FieldName,
-            fieldType = result.FieldType,
-            pageNumber = result.PageNumber,
-        };
+        return new AddFieldStepResult(
+            result.InputPath, result.OutputPath,
+            result.FieldName, result.FieldType, result.PageNumber);
     }
 
-    private static object ExecuteRedactionStep(AutomationBatchStep step, string baseDirectory)
+    private static RedactionStepResult ExecuteRedactionStep(AutomationBatchStep step, string baseDirectory)
     {
         if (step.ConfirmDestructive != true)
             throw new AutomationContractException(
@@ -439,21 +388,19 @@ partial class Program
             Password: step.Password));
         foreach (var diagnostic in result.Diagnostics)
             Console.Error.WriteLine(diagnostic);
-        return new
-        {
-            inputPath = input,
-            outputPath = output,
-            redactedOccurrenceCount = result.Count,
-            caseSensitive = step.CaseSensitive ?? false,
+        return new RedactionStepResult(
+            input,
+            output,
+            result.Count,
+            step.CaseSensitive ?? false,
             // #916/#905 — carriers the redaction could not examine (bookmark
             // titles, annotations away from the box, terms under the scrub
             // floor). A batch run is unattended, so reporting this in the step
             // result is the only way it reaches anyone.
-            carrierNotes = result.CarrierNotes,
-        };
+            result.CarrierNotes);
     }
 
-    private static object ExecuteAuditStep(AutomationBatchStep step, string baseDirectory)
+    private static AuditStepResult ExecuteAuditStep(AutomationBatchStep step, string baseDirectory)
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
         var result = AuditInspectionHandler.Execute(new AuditInspectionRequest(
@@ -471,28 +418,19 @@ partial class Program
                     hitCount = hits.Count,
                 });
 
-        return new
-        {
-            inputPath = result.FilePath,
-            hitCount = hits.Count,
-            hits = hits.Select(hit => new
-            {
+        return new AuditStepResult(
+            result.FilePath,
+            hits.Count,
+            hits.Select(hit => new AuditStepHit(
                 hit.PageNumber,
                 hit.Text,
                 hit.HiddenBy,
-                bbox = new[]
-                {
-                    hit.BoundingBox.Left,
-                    hit.BoundingBox.Bottom,
-                    hit.BoundingBox.Right,
-                    hit.BoundingBox.Top,
-                },
-            }).ToArray(),
-        };
+                [hit.BoundingBox.Left, hit.BoundingBox.Bottom,
+                 hit.BoundingBox.Right, hit.BoundingBox.Top])).ToArray());
     }
 
-    private static void WriteJson(object value)
-        => Console.WriteLine(JsonSerializer.Serialize(value, AutomationJsonOptions));
+    private static void WriteJson(AutomationBatchReport value)
+        => Console.WriteLine(JsonSerializer.Serialize(value, CliJsonContext.Default.AutomationBatchReport));
 
     private static string? NormalizeAutomationCommand(string? command)
     {
@@ -580,13 +518,17 @@ partial class Program
         return new AutomationStepError("OPERATION_FAILED", "RUNTIME", ex.Message);
     }
 
-    private static void WriteProgress(bool enabled, object progressEvent)
+    private static void WriteProgress(bool enabled, AutomationProgressEvent progressEvent)
     {
         if (!enabled)
             return;
 
-        Console.Error.WriteLine(JsonSerializer.Serialize(progressEvent, AutomationProgressJsonOptions));
+        Console.Error.WriteLine(JsonSerializer.Serialize(
+            progressEvent, CliProgressJsonContext.Default.AutomationProgressEvent));
     }
+
+    private static JsonElement Element<T>(T value, JsonTypeInfo<T> typeInfo)
+        => JsonSerializer.SerializeToElement(value, typeInfo);
 
     private sealed class AutomationContractException(string code, string message, string category = "SCHEMA")
         : Exception(message)
@@ -604,12 +546,12 @@ partial class Program
 
 
 
-    private sealed record AutomationBatchWorkflow(
+    internal sealed record AutomationBatchWorkflow(
         int? SchemaVersion,
         bool? StopOnError,
         AutomationBatchStep[] Steps);
 
-    private sealed record AutomationBatchStep(
+    internal sealed record AutomationBatchStep(
         string? Id,
         string? Command,
         string? Input,
@@ -633,7 +575,7 @@ partial class Program
         bool? IgnorePermissions,
         bool? ForAccessibility);
 
-    private sealed record AutomationBatchReport(
+    internal sealed record AutomationBatchReport(
         int SchemaVersion,
         DateTimeOffset GeneratedUtc,
         string OverallStatus,
@@ -641,14 +583,59 @@ partial class Program
         int CompletedCount,
         IReadOnlyList<AutomationBatchStepReport> Steps);
 
-    private sealed record AutomationBatchStepReport(
+    internal sealed record AutomationBatchStepReport(
         string Id,
         string Command,
         string Status,
         int ExitCode,
         long ElapsedMs,
-        object? Result,
+        JsonElement? Result,
         AutomationStepError? Error);
 
-    private sealed record AutomationStepError(string Code, string Category, string Message);
+    internal sealed record AutomationStepError(string Code, string Category, string Message);
+
+    /// <summary>
+    /// One line of the <c>--progress</c> stream. Both events share this shape; the members a
+    /// <c>step-start</c> has no value for stay null and are dropped by
+    /// <c>WhenWritingNull</c>, so the emitted bytes are unchanged from the two anonymous types
+    /// this replaced. <b>Order is the wire format</b> — reorder these and every consumer's
+    /// golden output moves.
+    /// </summary>
+    internal sealed record AutomationProgressEvent(
+        string Type,
+        DateTimeOffset TimestampUtc,
+        int Ordinal,
+        int Total,
+        string Id,
+        string? Command,
+        string? Status = null,
+        long? ElapsedMs = null,
+        string? ErrorCode = null);
+
+    // The per-step result shapes. Each was an anonymous type; the declaration order below IS
+    // the key order each step emits, and is what the golden batch reports pin.
+    internal sealed record InfoStepResult(
+        string InputPath, string Version, int PageCount, bool Encrypted, DocumentMetadataInfo Metadata);
+
+    internal sealed record TextStepResult(
+        string InputPath, int PageCount, IReadOnlyList<TextPageResult> Pages);
+
+    internal sealed record RenderStepResult(
+        string InputPath, string OutputPath, int PageNumber, int Dpi, int Width, int Height);
+
+    internal sealed record FillFormStepResult(
+        string InputPath, string OutputPath, int UpdatedFieldCount, bool Flattened);
+
+    internal sealed record AddFieldStepResult(
+        string InputPath, string OutputPath, string FieldName, string FieldType, int PageNumber);
+
+    internal sealed record RedactionStepResult(
+        string InputPath, string OutputPath, int RedactedOccurrenceCount, bool CaseSensitive,
+        IReadOnlyList<string> CarrierNotes);
+
+    internal sealed record AuditStepResult(
+        string InputPath, int HitCount, AuditStepHit[] Hits);
+
+    internal sealed record AuditStepHit(
+        int PageNumber, string Text, string HiddenBy, double[] Bbox);
 }

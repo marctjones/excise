@@ -16,6 +16,15 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Application Icon -->
     <ApplicationIcon>Assets\excise_logo.ico</ApplicationIcon>
+    <!-- #1389 - the GUI already routes every JSON call through ExciseJsonContext; this keeps
+         it that way. The trim/AOT analyzers flag a reflection-based JsonSerializer call as
+         IL2026 + IL3050 at compile time instead of letting it emit an empty object at
+         runtime. Excise.App is warning-clean under it. This matters here because the GUI IS
+         Native-AOT published and packaged (scripts/run-aot-smoke.sh, the `aot` row in tiers
+         full and t2), so its JSON contexts are load-bearing in a shipped artifact - the
+         analyzer moves the failure from a silent empty object to a compile-time warning. -->
+    <IsAotCompatible>true</IsAotCompatible>
+
   </PropertyGroup>
 
   <!-- Roslyn scripting is a developer/test automation surface, not required

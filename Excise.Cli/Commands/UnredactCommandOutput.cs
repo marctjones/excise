@@ -6,13 +6,6 @@ namespace Excise.Cli.Commands;
 /// <summary>CLI JSON and human presentation for a typed unredact report.</summary>
 internal static class UnredactCommandOutput
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
     public static void Write(
         UnredactCommandOutcome outcome,
         bool json,
@@ -27,7 +20,7 @@ internal static class UnredactCommandOutput
 
         var report = outcome.Report!;
         if (json)
-            output.WriteLine(JsonSerializer.Serialize(report, JsonOptions));
+            output.WriteLine(JsonSerializer.Serialize(report, CliJsonContext.Default.UnredactReport));
         else
             WriteHuman(report, output);
     }

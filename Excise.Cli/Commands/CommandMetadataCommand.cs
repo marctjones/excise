@@ -53,11 +53,8 @@ internal static class CommandMetadataCommand
 
             if (json)
             {
-                Console.WriteLine(JsonSerializer.Serialize(commands, new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    WriteIndented = true,
-                }));
+                Console.WriteLine(JsonSerializer.Serialize(
+                    commands, CliPlainJsonContext.Default.IReadOnlyListPdfCommandMetadata));
                 return 0;
             }
 

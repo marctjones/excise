@@ -2,6 +2,8 @@ using System.CommandLine;
 using System.Text.Json.Serialization;
 using Excise.Core.Document;
 
+using Excise.Cli;
+
 namespace Excise.Cli.Commands;
 
 internal static class AuditCommand
@@ -120,24 +122,24 @@ internal static class AuditCommand
                 Text: hit.Text,
                 BoundingBox: Box(hit.BoundingBox),
                 Confidence: hit.Confidence)).ToArray());
-        Console.WriteLine(CliJson.Serialize(report));
+        Console.WriteLine(CliJson.Serialize(report, CliJsonContext.Default.AuditJsonReport));
     }
 
     private static double[] Box(PdfRectangle rectangle)
         => [rectangle.Left, rectangle.Bottom, rectangle.Right, rectangle.Top];
 
-    private sealed record AuditJsonReport(
+    internal sealed record AuditJsonReport(
         IReadOnlyList<StructuralHitJson> Structural,
         [property: JsonPropertyName("differential_ocr")]
         IReadOnlyList<DifferentialHitJson> DifferentialOcr);
 
-    private sealed record StructuralHitJson(
+    internal sealed record StructuralHitJson(
         int Page,
         string Text,
         [property: JsonPropertyName("bbox")] double[] BoundingBox,
         [property: JsonPropertyName("hidden_by")] string HiddenBy);
 
-    private sealed record DifferentialHitJson(
+    internal sealed record DifferentialHitJson(
         int Page,
         string Text,
         [property: JsonPropertyName("bbox")] double[] BoundingBox,

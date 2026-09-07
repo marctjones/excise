@@ -1,6 +1,8 @@
 using System.CommandLine;
 using Excise.Core.Automation;
 
+using Excise.Cli;
+
 namespace Excise.Cli.Commands;
 
 internal static class InfoCommand
@@ -70,7 +72,7 @@ internal static class InfoCommand
             Encrypted: result.Encrypted,
             Metadata: result.Metadata,
             Pages: result.Pages);
-        Console.WriteLine(CliJson.Serialize(report));
+        Console.WriteLine(CliJson.Serialize(report, CliJsonContext.Default.DocumentInfoJsonReport));
     }
 
     private static void WriteHuman(DocumentInfoResult result)
@@ -102,7 +104,7 @@ internal static class InfoCommand
             Console.WriteLine($"  ... and {result.PageCount - result.Pages.Count} more pages");
     }
 
-    private sealed record DocumentInfoJsonReport(
+    internal sealed record DocumentInfoJsonReport(
         int SchemaVersion,
         string Command,
         string Status,
