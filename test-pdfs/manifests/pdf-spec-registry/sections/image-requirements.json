@@ -1476,7 +1476,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -1492,7 +1492,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Stencil image rendering",
       "documentation": [
@@ -1549,7 +1557,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -1565,7 +1573,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ExtGState_SMask_AppliesForFilledRect",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Soft-mask image compositing",
       "documentation": [
@@ -1622,7 +1638,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -1638,7 +1654,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Explicit image mask compositing",
       "documentation": [
@@ -1695,7 +1719,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -1711,7 +1735,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::ColorKeyMaskUsesRawSamplesBeforeColorConversion",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Color-key mask compositing",
       "documentation": [
@@ -1768,7 +1800,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -1784,7 +1816,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_OneBitImage_UsesDecodeArrayPolarity",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "PDF image sample remapping",
       "documentation": [
@@ -1841,7 +1881,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -1857,7 +1897,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::PackedFourBitSamplesAreUnpackedPerRow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::OneBitRowsHonorBytePadding",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Image sample unpacking",
       "documentation": [
@@ -1987,7 +2042,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -2003,7 +2058,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/ImageColorConverterTests.cs::GetImageColorConverter_DeviceGray_UsesExactByteTable",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Device color space image rendering",
       "documentation": [
@@ -2060,7 +2123,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -2076,7 +2139,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_DeviceRGB_SetsRGBColor",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Device color space image rendering",
       "documentation": [
@@ -2133,7 +2204,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -2149,7 +2220,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_DeviceCMYK_SetsCMYKColor",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Device color space image rendering",
       "documentation": [
@@ -2206,7 +2285,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -2222,7 +2301,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs::ICCBased_N4_CMYK_ReturnsCMYKColorSpace",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Calibrated image color management",
       "documentation": [
@@ -2279,7 +2366,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -2295,7 +2382,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageXObject_ResolvesNamedIndexedColorSpaceResource",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Indexed image color table handling",
       "documentation": [
@@ -2352,7 +2447,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -2368,7 +2463,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs::Lab_ToRgb_Mid_GrayValue",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "CIE-based Lab image color conversion",
       "documentation": [
@@ -2425,7 +2528,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -2441,7 +2544,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs::Separation_ToRgb_ApproximatesAsGrayscaleTint",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Spot-color image handling",
       "documentation": [
@@ -2498,7 +2609,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -2514,7 +2625,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_PdfjsIssue13520_DeviceNShadingTintTransformDoesNotCollapseToBlack",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Multi-ink image handling",
       "documentation": [
@@ -2571,7 +2690,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -2587,7 +2706,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ScaledImageXObject_AppliesCTM",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Image placement through graphics state CTM",
       "documentation": [
@@ -2717,7 +2844,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "unknown"
       },
       "evidence": [
@@ -2733,7 +2860,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ExceedsPixelLimit_ThrowsResourceLimit",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Bounded rendering of malformed or adversarial image streams",
       "documentation": [

@@ -3,24 +3,6 @@
   "generatedBy": "scripts/check-pdf-spec-registry.py",
   "gaps": [
     {
-      "capability": "pdf.17.syntax.file",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.syntax.file",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.syntax.file",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.17.syntax.objects",
       "mode": "parse",
       "implementationState": "unknown",
@@ -58,30 +40,6 @@
     },
     {
       "capability": "pdf.17.syntax.filters",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.syntax.encryption",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.syntax.encryption",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.syntax.encryption",
-      "mode": "mutate",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.syntax.encryption",
       "mode": "write",
       "implementationState": "unknown",
       "reason": "no verification contract"
@@ -472,78 +430,6 @@
     },
     {
       "capability": "pdf.17.content.streams",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operators",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operators",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operators",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operators",
-      "mode": "extract",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operators",
-      "mode": "mutate",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operators",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.content.text-state",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.content.text-state",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.content.text-state",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.content.text-state",
-      "mode": "extract",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.content.text-state",
-      "mode": "mutate",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.content.text-state",
       "mode": "write",
       "implementationState": "unknown",
       "reason": "no verification contract"

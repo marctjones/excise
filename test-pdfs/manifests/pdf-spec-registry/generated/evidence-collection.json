@@ -22,7 +22,23 @@
         "xref"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::PdfDocument_Open_HeaderWithinFirstKilobyte_Succeeds",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Authoring/PdfA.cs",
@@ -1998,7 +2014,24 @@
         "xref"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Security/EncryptionPreservationTests.cs::SaveWithReEncryptionOptions_RoundTripsProtectionAndPermissions",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Document/PdfDocument.cs",
@@ -11157,7 +11190,26 @@
           "ref": "pdf20-operator-evidence"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
@@ -11942,7 +11994,26 @@
           "ref": "pdf20-operator-evidence"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CombinedTextState_AppliesAllSettings",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Content/ContentOperator.cs",
@@ -12285,7 +12356,25 @@
           "ref": "pdf20.tagged-pdf.structure"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "extract",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/ContentStreamParserTests.cs::Parse_BMCOperator_BeginMarkedContent_ParsesCorrectly",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Document/OptionalContentVisibility.cs",
@@ -24891,7 +24980,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -25043,7 +25140,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ExtGState_SMask_AppliesForFilledRect",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -25178,7 +25283,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -25624,7 +25737,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::ColorKeyMaskUsesRawSamplesBeforeColorConversion",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -26070,7 +26191,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_OneBitImage_UsesDecodeArrayPolarity",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -26870,7 +26999,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::PackedFourBitSamplesAreUnpackedPerRow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::OneBitRowsHonorBytePadding",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -27376,7 +27520,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/ImageColorConverterTests.cs::GetImageColorConverter_DeviceGray_UsesExactByteTable",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -27689,7 +27841,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_DeviceRGB_SetsRGBColor",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -28045,7 +28205,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_DeviceCMYK_SetsCMYKColor",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -28274,7 +28442,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs::ICCBased_N4_CMYK_ReturnsCMYKColorSpace",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -28402,7 +28578,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageXObject_ResolvesNamedIndexedColorSpaceResource",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -28632,7 +28816,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs::Lab_ToRgb_Mid_GrayValue",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -29421,7 +29613,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs::Separation_ToRgb_ApproximatesAsGrayscaleTint",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -29546,7 +29746,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_PdfjsIssue13520_DeviceNShadingTintTransformDoesNotCollapseToBlack",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -29672,7 +29880,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ScaledImageXObject_AppliesCTM",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -30096,7 +30312,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ExceedsPixelLimit_ThrowsResourceLimit",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -48396,7 +48620,26 @@
           "ref": "pdf20.tagged-pdf.structure"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "extract",
+          "mutate",
+          "write",
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Authoring/PdfA.cs",

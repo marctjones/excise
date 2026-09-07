@@ -178,7 +178,7 @@
         "rationale": "Every standard operator must have an explicit parse/preserve decision; semantic execution is mode-specific."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown",
@@ -234,6 +234,26 @@
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
         ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       }
     },
     {
@@ -267,7 +287,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "extract": "unknown",
         "mutate": "unknown",
         "write": "unknown"
@@ -320,6 +340,26 @@
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
         ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CombinedTextState_AppliesAllSettings",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       }
     },
     {
@@ -347,7 +387,7 @@
         "rationale": "Semantics must not be destroyed even where full accessibility interpretation is deferred."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "not-applicable",
         "extract": "unknown",
@@ -401,6 +441,25 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "extract",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/ContentStreamParserTests.cs::Parse_BMCOperator_BeginMarkedContent_ParsesCorrectly",
+            "modes": [
+              "parse"
+            ]
+          }
         ]
       }
     }

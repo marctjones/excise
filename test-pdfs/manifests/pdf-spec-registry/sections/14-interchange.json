@@ -26,7 +26,7 @@
         "rationale": "Structure can carry accessibility and redactable text even before complete semantic editing exists."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "extract": "unknown",
         "mutate": "unknown",
@@ -80,6 +80,26 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "extract",
+          "mutate",
+          "write",
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
+            "modes": [
+              "parse"
+            ]
+          }
         ]
       }
     },

@@ -10,36 +10,36 @@
     "targetModes": 944,
     "modeStates": {
       "implemented": 5,
-      "partial": 208,
+      "partial": 228,
       "unimplemented": 18,
-      "unknown": 713
+      "unknown": 693
     },
     "gradeStates": {
-      "implemented": 40,
-      "unknown": 893,
+      "implemented": 54,
+      "unknown": 879,
       "verified": 11
     },
-    "gradedImplementedOrBetterPercent": 5.4,
+    "gradedImplementedOrBetterPercent": 6.9,
     "gradedVerifiedPercent": 1.2,
-    "gradedUnknownCount": 893,
-    "measuredModeCoveragePercent": 24.5,
+    "gradedUnknownCount": 879,
+    "measuredModeCoveragePercent": 26.6,
     "implementedModeCoveragePercent": 0.5,
     "promotionReadinessPercent": 16.6,
-    "implementationEvidenceProgressPercent": 23.3,
+    "implementationEvidenceProgressPercent": 24.4,
     "promotionReadinessMilestones": {
       "discoveredOrBetter": 944,
       "directTestOrBetter": 15,
       "independentEvidenceOrBetter": 10,
       "strictImplemented": 5
     },
-    "verificationPlanCoveragePercent": 90.4,
+    "verificationPlanCoveragePercent": 92.0,
     "executableVerificationCoveragePercent": 31.4,
     "securityGate": {
       "target": 1,
       "ready": 1,
       "pass": true
     },
-    "unknownModeCount": 713,
+    "unknownModeCount": 693,
     "capabilityIds": [
       "pdf.17.syntax.file",
       "pdf.17.syntax.objects",
@@ -359,32 +359,34 @@
       "targetCapabilities": 8,
       "targetModes": 36,
       "modeStates": {
-        "unknown": 36
+        "partial": 2,
+        "unknown": 34
       },
       "gradeStates": {
-        "unknown": 36
+        "implemented": 2,
+        "unknown": 34
       },
-      "gradedImplementedOrBetterPercent": 0.0,
+      "gradedImplementedOrBetterPercent": 5.6,
       "gradedVerifiedPercent": 0.0,
-      "gradedUnknownCount": 36,
-      "measuredModeCoveragePercent": 0.0,
+      "gradedUnknownCount": 34,
+      "measuredModeCoveragePercent": 5.6,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 10.0,
-      "implementationEvidenceProgressPercent": 12.4,
+      "implementationEvidenceProgressPercent": 15.7,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 36,
         "directTestOrBetter": 0,
         "independentEvidenceOrBetter": 0,
         "strictImplemented": 0
       },
-      "verificationPlanCoveragePercent": 0.0,
+      "verificationPlanCoveragePercent": 25.0,
       "executableVerificationCoveragePercent": 0.0,
       "securityGate": {
         "target": 0,
         "ready": 0,
         "pass": true
       },
-      "unknownModeCount": 36,
+      "unknownModeCount": 34,
       "capabilityIds": [
         "pdf.17.syntax.file",
         "pdf.17.syntax.objects",
@@ -413,36 +415,36 @@
       "targetModes": 750,
       "modeStates": {
         "implemented": 4,
-        "partial": 176,
+        "partial": 194,
         "unimplemented": 1,
-        "unknown": 569
+        "unknown": 551
       },
       "gradeStates": {
-        "implemented": 15,
-        "unknown": 728,
+        "implemented": 27,
+        "unknown": 716,
         "verified": 7
       },
-      "gradedImplementedOrBetterPercent": 2.9,
+      "gradedImplementedOrBetterPercent": 4.5,
       "gradedVerifiedPercent": 0.9,
-      "gradedUnknownCount": 728,
-      "measuredModeCoveragePercent": 24.1,
+      "gradedUnknownCount": 716,
+      "measuredModeCoveragePercent": 26.5,
       "implementedModeCoveragePercent": 0.5,
       "promotionReadinessPercent": 17.6,
-      "implementationEvidenceProgressPercent": 23.9,
+      "implementationEvidenceProgressPercent": 25.2,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 750,
         "directTestOrBetter": 7,
         "independentEvidenceOrBetter": 7,
         "strictImplemented": 4
       },
-      "verificationPlanCoveragePercent": 97.2,
+      "verificationPlanCoveragePercent": 98.2,
       "executableVerificationCoveragePercent": 36.9,
       "securityGate": {
         "target": 0,
         "ready": 0,
         "pass": true
       },
-      "unknownModeCount": 569,
+      "unknownModeCount": 551,
       "capabilityIds": [
         "pdf.17.graphics.state",
         "pdf.17.graphics.paths-painting",
@@ -880,32 +882,34 @@
       "targetCapabilities": 4,
       "targetModes": 14,
       "modeStates": {
-        "unknown": 14
+        "partial": 2,
+        "unknown": 12
       },
       "gradeStates": {
-        "unknown": 14
+        "implemented": 2,
+        "unknown": 12
       },
-      "gradedImplementedOrBetterPercent": 0.0,
+      "gradedImplementedOrBetterPercent": 14.3,
       "gradedVerifiedPercent": 0.0,
-      "gradedUnknownCount": 14,
-      "measuredModeCoveragePercent": 0.0,
+      "gradedUnknownCount": 12,
+      "measuredModeCoveragePercent": 14.3,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 10.0,
-      "implementationEvidenceProgressPercent": 12.5,
+      "implementationEvidenceProgressPercent": 21.1,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 14,
         "directTestOrBetter": 0,
         "independentEvidenceOrBetter": 0,
         "strictImplemented": 0
       },
-      "verificationPlanCoveragePercent": 0.0,
+      "verificationPlanCoveragePercent": 50.0,
       "executableVerificationCoveragePercent": 0.0,
       "securityGate": {
         "target": 0,
         "ready": 0,
         "pass": true
       },
-      "unknownModeCount": 14,
+      "unknownModeCount": 12,
       "capabilityIds": [
         "pdf.17.syntax.file",
         "pdf.17.syntax.objects",
@@ -1041,34 +1045,35 @@
       "targetCapabilities": 3,
       "targetModes": 18,
       "modeStates": {
-        "partial": 1,
-        "unknown": 17
+        "partial": 3,
+        "unknown": 15
       },
       "gradeStates": {
-        "unknown": 17,
+        "implemented": 1,
+        "unknown": 16,
         "verified": 1
       },
-      "gradedImplementedOrBetterPercent": 5.6,
+      "gradedImplementedOrBetterPercent": 11.1,
       "gradedVerifiedPercent": 5.6,
-      "gradedUnknownCount": 17,
-      "measuredModeCoveragePercent": 5.6,
+      "gradedUnknownCount": 16,
+      "measuredModeCoveragePercent": 16.7,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 14.4,
-      "implementationEvidenceProgressPercent": 17.8,
+      "implementationEvidenceProgressPercent": 23.3,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 18,
         "directTestOrBetter": 1,
         "independentEvidenceOrBetter": 1,
         "strictImplemented": 0
       },
-      "verificationPlanCoveragePercent": 33.3,
+      "verificationPlanCoveragePercent": 100.0,
       "executableVerificationCoveragePercent": 33.3,
       "securityGate": {
         "target": 0,
         "ready": 0,
         "pass": true
       },
-      "unknownModeCount": 17,
+      "unknownModeCount": 15,
       "capabilityIds": [
         "pdf.17.content.streams",
         "pdf.20.content.operators",
@@ -1323,20 +1328,20 @@
       "targetCapabilities": 36,
       "targetModes": 108,
       "modeStates": {
-        "partial": 15,
-        "unknown": 93
+        "partial": 31,
+        "unknown": 77
       },
       "gradeStates": {
-        "implemented": 15,
-        "unknown": 93
+        "implemented": 26,
+        "unknown": 82
       },
-      "gradedImplementedOrBetterPercent": 13.9,
+      "gradedImplementedOrBetterPercent": 24.1,
       "gradedVerifiedPercent": 0.0,
-      "gradedUnknownCount": 93,
-      "measuredModeCoveragePercent": 13.9,
+      "gradedUnknownCount": 82,
+      "measuredModeCoveragePercent": 28.7,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 10.0,
-      "implementationEvidenceProgressPercent": 17.6,
+      "implementationEvidenceProgressPercent": 25.6,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 108,
         "directTestOrBetter": 0,
@@ -1350,7 +1355,7 @@
         "ready": 0,
         "pass": true
       },
-      "unknownModeCount": 93,
+      "unknownModeCount": 77,
       "capabilityIds": [
         "pdf.20.image.requirement-001",
         "pdf.20.image.requirement-002",
@@ -1989,30 +1994,26 @@
   },
   "testAttribution": {
     "targetModes": 944,
-    "modesWithTestCandidates": 391,
-    "modesWithExplicitContracts": 345,
-    "modesWithPassingExplicitContracts": 51,
+    "modesWithTestCandidates": 395,
+    "modesWithExplicitContracts": 365,
+    "modesWithPassingExplicitContracts": 65,
     "modesWithRecordedPassingCandidate": 85,
-    "gradeImplemented": 40,
+    "gradeImplemented": 54,
     "gradeVerified": 11,
-    "gradeUnknown": 893,
+    "gradeUnknown": 879,
     "testMethods": 6108,
-    "testMethodsWithCapabilityCandidate": 3821,
+    "testMethodsWithCapabilityCandidate": 3824,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   },
   "unplannedRequiredCapabilities": [
-    "pdf.17.syntax.file",
     "pdf.17.syntax.objects",
     "pdf.17.syntax.filters",
-    "pdf.17.syntax.encryption",
     "pdf.17.document.catalog-pages",
     "pdf.17.document.metadata",
     "pdf.17.rendering.colour-conversion",
     "pdf.17.compatibility.versions",
     "pdf.20.compatibility.deprecated",
-    "pdf.20.content.operators",
-    "pdf.17.content.text-state",
     "pdf.17.interactive.forms",
     "pdfe.product.safety.limited-editing",
     "pdfe.product.redaction.review-panel",

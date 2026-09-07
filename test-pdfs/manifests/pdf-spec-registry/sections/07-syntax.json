@@ -28,7 +28,7 @@
         "rationale": "Every workflow starts with safe interpretation of untrusted bytes."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "write": "unknown"
       },
@@ -73,6 +73,23 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::PdfDocument_Open_HeaderWithinFirstKilobyte_Succeeds",
+            "modes": [
+              "parse"
+            ]
+          }
         ]
       }
     },
@@ -260,7 +277,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "preserve": "unknown",
+        "preserve": "partial",
         "mutate": "unknown",
         "write": "unknown"
       },
@@ -307,6 +324,24 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Security/EncryptionPreservationTests.cs::SaveWithReEncryptionOptions_RoundTripsProtectionAndPermissions",
+            "modes": [
+              "preserve"
+            ]
+          }
         ]
       }
     }
