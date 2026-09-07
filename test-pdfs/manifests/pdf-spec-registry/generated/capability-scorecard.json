@@ -1807,8 +1807,8 @@
     "modesWithExplicitContracts": 666,
     "modesWithPassingExplicitContracts": 13,
     "modesWithRecordedPassingCandidate": 53,
-    "testMethods": 6089,
-    "testMethodsWithCapabilityCandidate": 3804,
+    "testMethods": 6101,
+    "testMethodsWithCapabilityCandidate": 3809,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   },

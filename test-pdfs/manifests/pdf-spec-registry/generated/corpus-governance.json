@@ -124,6 +124,8 @@
         "tests/corpora.tsv",
         "tests/gates.tsv",
         "tests/redaction-hard-cases.tsv",
+        "tests/reference-performance/baseline.json",
+        "tests/reference-performance/fixtures.json",
         "tools/Excise.RenderTools/AnnotationBench.cs"
       ],
       "identity": "acquisition identity; use --hash-files before release baselines"
@@ -161,7 +163,9 @@
         "scripts/run-annotation-bench.sh",
         "tests/corpora.tsv",
         "tests/gates.tsv",
-        "tests/redaction-hard-cases.tsv"
+        "tests/redaction-hard-cases.tsv",
+        "tests/reference-performance/baseline.json",
+        "tests/reference-performance/fixtures.json"
       ],
       "identity": "acquisition identity; use --hash-files before release baselines"
     },
@@ -219,6 +223,7 @@
         "tests/corpora.tsv",
         "tests/extraction-parity/baseline.json",
         "tests/redaction-hard-cases.tsv",
+        "tests/reference-performance/baseline.json",
         "tests/reference-performance/fixtures.json"
       ],
       "identity": "acquisition identity; use --hash-files before release baselines"
@@ -329,6 +334,7 @@
         "Excise.Rendering.Tests/SkiaRendererTests.cs",
         "tests/corpora.tsv",
         "tests/redaction-hard-cases.tsv",
+        "tests/reference-performance/baseline.json",
         "tests/reference-performance/fixtures.json"
       ],
       "identity": "acquisition identity; use --hash-files before release baselines"
