@@ -730,25 +730,58 @@ public class CorpusScanClassificationTests
                 oracleComparisonPairs = 6,
                 oracleDisagreeingPairs = 4,
             },
+            // #1397: excise draws NONE of the reference's ink (missingInkTiles ==
+            // referenceInkedTiles, a 100% miss), but the min-over-oracles headline elected
+            // a blank oracle as "closest", so visualHumanImpact reads "none" -- the same
+            // shape as pdf20/filter-array-image.pdf, flate-predictor-png-image.pdf and
+            // huge-image-dimensions.pdf, which ranked dead last (below EMPTY_DOC) before the
+            // fix. The tile-locality vote (missingInkTiles/referenceInkedTiles) must override
+            // a "none" visualHumanImpact that was computed against a possibly-blank oracle.
+            new RenderProgram.CorpusScanEntry
+            {
+                path = "all-ink-missing.pdf",
+                pageNumber = 1,
+                status = "MISSING_CONTENT",
+                visualHumanImpact = "none",
+                visualCategory = "mixed",
+                bestOracle = "pdftocairo",
+                diffFraction = 0.0,
+                mae = 0.0,
+                missingInkTiles = 36,
+                referenceInkedTiles = 36,
+                oracleComparisonPairs = 3,
+                oracleDisagreeingPairs = 0,
+            },
         };
 
         var summary = RenderProgram.BuildCorpusScanSummary(entries);
 
         summary.statusCounts.Should().ContainKey("PASS").WhoseValue.Should().Be(1);
         summary.statusCounts.Should().ContainKey("DIFF").WhoseValue.Should().Be(2);
-        summary.nonPassCount.Should().Be(3);
+        summary.statusCounts.Should().ContainKey("MISSING_CONTENT").WhoseValue.Should().Be(1);
+        summary.nonPassCount.Should().Be(4);
         summary.trueDiffCount.Should().Be(2);
         summary.passOneCount.Should().Be(1);
         summary.nonPassVisualHumanImpactCounts.Should().ContainKey("high").WhoseValue.Should().Be(1);
         summary.nonPassVisualHumanImpactCounts.Should().ContainKey("medium").WhoseValue.Should().Be(1);
         summary.nonPassVisualHumanImpactCounts.Should().ContainKey("low").WhoseValue.Should().Be(1);
+        // "none" now appears too (all-ink-missing.pdf) -- itself evidence of the bug this
+        // fixes: a page missing 100% of the reference's ink reported visualHumanImpact "none".
+        summary.nonPassVisualHumanImpactCounts.Should().ContainKey("none").WhoseValue.Should().Be(1);
         summary.nonPassVisualCategoryCounts.Should().ContainKey("color-tone-or-texture").WhoseValue.Should().Be(1);
-        summary.oracleDisagreementBuckets.Should().ContainKey("none").WhoseValue.Should().Be(2);
+        summary.oracleDisagreementBuckets.Should().ContainKey("none").WhoseValue.Should().Be(3);
         summary.oracleDisagreementBuckets.Should().ContainKey("some").WhoseValue.Should().Be(1);
         summary.oracleDisagreementBuckets.Should().ContainKey("all").WhoseValue.Should().Be(1);
+        // MISSING_CONTENT with a 100% tile miss now ranks FIRST, tied with the other
+        // unambiguous excise-defect status (EXCISE_SIDE_GAP) -- ahead of "high-missing.pdf",
+        // whose visualHumanImpact is genuinely "high" but whose tile miss is not total.
         summary.topNonPass.Select(entry => entry.path)
-            .Should().Equal("high-missing.pdf", "partial.pdf", "low-color.pdf");
-        summary.topNonPass[0].oracleDisagreementBucket.Should().Be("all");
+            .Should().Equal("all-ink-missing.pdf", "high-missing.pdf", "partial.pdf", "low-color.pdf");
+        // all-ink-missing.pdf's three oracles AGREE it is blank (that agreement is exactly
+        // why the old code trusted the bestOracle diff and scored it "none" impact); the
+        // disagreement signal moves to the second-ranked entry.
+        summary.topNonPass[0].oracleDisagreementBucket.Should().Be("none");
+        summary.topNonPass[1].oracleDisagreementBucket.Should().Be("all");
     }
 
     [Fact]
