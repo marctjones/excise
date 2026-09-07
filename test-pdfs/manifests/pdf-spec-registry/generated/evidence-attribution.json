@@ -14202,7 +14202,7 @@
       "capability": "pdf.17.document.catalog-pages",
       "section": "document",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
@@ -15188,6 +15188,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::PageCollectionNestedTreeTests.Flattening_MaterializesInheritedAttributesOntoLeaves",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PageTreeWithSelfReferencingKids_DoesNotStackOverflow",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15384,20 +15393,19 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
+        }
+      ],
+      "explicitContracts": [
         {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_WidgetRect_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::Flattening_MaterializesInheritedAttributesOntoLeaves",
           "recordedOutcomes": [
             "Passed"
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "open"
       ]
@@ -17840,11 +17848,29 @@
       "capability": "pdf.17.document.navigation",
       "section": "document",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/NamedDestinationTests.cs::NamedDestinationTests.GetNamedDestinations_OldFormDests_ParsesCorrectly",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/NamedDestinationTests.cs::GetNamedDestinations_OldFormDests_ParsesCorrectly",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -17906,11 +17932,30 @@
       "capability": "pdf.17.document.metadata",
       "section": "document",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.GetXmpMetadata_ReturnsDecodedXmpBody",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/MetadataScrubTests.cs::GetXmpMetadata_ReturnsDecodedXmpBody",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "save"
       ]
@@ -18504,7 +18549,8 @@
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_DropsXmpMetadataStream",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -18522,7 +18568,8 @@
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.GetXmpMetadata_ReturnsDecodedXmpBody",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -19246,7 +19293,7 @@
       "capability": "pdf.17.document.metadata",
       "section": "document",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.SaveToBytes_RoundTripsThroughOpen",
@@ -19831,7 +19878,8 @@
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_DropsXmpMetadataStream",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -19849,7 +19897,8 @@
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.GetXmpMetadata_ReturnsDecodedXmpBody",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -20549,9 +20598,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/MetadataScrubTests.cs::ScrubMetadata_DropsXmpMetadataStream",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "save"
       ]
@@ -21145,7 +21202,8 @@
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_DropsXmpMetadataStream",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -21163,7 +21221,8 @@
         {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.GetXmpMetadata_ReturnsDecodedXmpBody",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -21874,11 +21933,29 @@
       "capability": "pdf.17.document.embedded-files",
       "section": "document",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.GetEmbeddedFiles_SingleFileViaNameTree_ReturnsFileWithName",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::GetEmbeddedFiles_SingleFileViaNameTree_ReturnsFileWithName",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -92596,15 +92673,15 @@
   ],
   "summary": {
     "targetModes": 944,
-    "modesWithTestCandidates": 395,
-    "modesWithExplicitContracts": 365,
-    "modesWithPassingExplicitContracts": 65,
-    "modesWithRecordedPassingCandidate": 85,
-    "gradeImplemented": 54,
+    "modesWithTestCandidates": 398,
+    "modesWithExplicitContracts": 370,
+    "modesWithPassingExplicitContracts": 70,
+    "modesWithRecordedPassingCandidate": 88,
+    "gradeImplemented": 59,
     "gradeVerified": 11,
-    "gradeUnknown": 879,
+    "gradeUnknown": 874,
     "testMethods": 6108,
-    "testMethodsWithCapabilityCandidate": 3824,
+    "testMethodsWithCapabilityCandidate": 3827,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

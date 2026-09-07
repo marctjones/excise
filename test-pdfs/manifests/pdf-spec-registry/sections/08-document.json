@@ -30,7 +30,7 @@
         "rationale": "Core viewing and editing model."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "mutate": "unknown",
@@ -89,6 +89,25 @@
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
         ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::Flattening_MaterializesInheritedAttributesOntoLeaves",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       }
     },
     {
@@ -118,7 +137,7 @@
         "rationale": "Useful navigation must survive editing even where UI is limited."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "extract": "unknown",
         "mutate": "unknown",
@@ -168,6 +187,26 @@
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
         ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "extract",
+          "mutate",
+          "write",
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/NamedDestinationTests.cs::GetNamedDestinations_OldFormDests_ParsesCorrectly",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       }
     },
     {
@@ -195,10 +234,10 @@
         "rationale": "Preservation and redaction both depend on tracking non-page text carriers."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "extract": "unknown",
-        "mutate": "unknown",
+        "mutate": "partial",
         "write": "unknown"
       },
       "evidence": [],
@@ -243,6 +282,32 @@
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
         ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "extract",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/MetadataScrubTests.cs::GetXmpMetadata_ReturnsDecodedXmpBody",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/MetadataScrubTests.cs::ScrubMetadata_DropsXmpMetadataStream",
+            "modes": [
+              "mutate"
+            ]
+          }
+        ]
       }
     },
     {
@@ -270,7 +335,7 @@
         "rationale": "Attachments are high-value preservation and redaction carriers."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "extract": "unknown",
         "mutate": "unknown",
@@ -319,6 +384,26 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "extract",
+          "mutate",
+          "write",
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::GetEmbeddedFiles_SingleFileViaNameTree_ReturnsFileWithName",
+            "modes": [
+              "parse"
+            ]
+          }
         ]
       }
     }

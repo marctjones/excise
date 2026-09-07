@@ -2802,7 +2802,25 @@
           "ref": "pdf20.page.boxes"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::Flattening_MaterializesInheritedAttributesOntoLeaves",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
@@ -3662,7 +3680,26 @@
         "pdfdocument"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "extract",
+          "mutate",
+          "write",
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/NamedDestinationTests.cs::GetNamedDestinations_OldFormDests_ParsesCorrectly",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
@@ -4489,7 +4526,32 @@
         "pdfdocument"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "extract",
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/MetadataScrubTests.cs::GetXmpMetadata_ReturnsDecodedXmpBody",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/MetadataScrubTests.cs::ScrubMetadata_DropsXmpMetadataStream",
+            "modes": [
+              "mutate"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Authoring/PdfA.cs",
@@ -5248,7 +5310,26 @@
         "pdfdocument"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "extract",
+          "mutate",
+          "write",
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::GetEmbeddedFiles_SingleFileViaNameTree_ReturnsFileWithName",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Document/PdfAnnotationParser.cs",

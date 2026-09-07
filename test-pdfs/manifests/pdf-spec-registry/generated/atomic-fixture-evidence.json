@@ -119,7 +119,7 @@
       "capability": "pdf.17.document.catalog-pages",
       "section": "document",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -159,7 +159,7 @@
       "capability": "pdf.17.document.navigation",
       "section": "document",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -207,7 +207,7 @@
       "capability": "pdf.17.document.metadata",
       "section": "document",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -231,7 +231,7 @@
       "capability": "pdf.17.document.metadata",
       "section": "document",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -247,7 +247,7 @@
       "capability": "pdf.17.document.embedded-files",
       "section": "document",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
