@@ -50,6 +50,15 @@ public readonly record struct ReferenceProcessResources(long? PeakWorkingSetByte
     {
         try
         {
+            // #1406 — Process caches WorkingSet64/PeakWorkingSet64/TotalProcessorTime
+            // internally and never re-queries the OS unless Refresh() is called first.
+            // WaitForExitAndCapture polls this method every ~100ms across a render that
+            // takes seconds, and without Refresh() every sample after the first returned
+            // the SAME near-process-start snapshot — so a fixture that actually peaked at
+            // 2.53 GiB was reported as 84 MiB, a >30x undercount. Measured directly: an
+            // isolated repro process that grows from 2MB to 520MB read a flat 2.5MB on
+            // every sample without Refresh() and tracked the real growth with it.
+            process.Refresh();
             var workingSet = process.WorkingSet64;
             if (workingSet <= 0 && !OperatingSystem.IsWindows())
                 workingSet = TryReadUnixRssBytes(process.Id) ?? 0;
