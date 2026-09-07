@@ -86,6 +86,62 @@ public sealed class ImageColorConverterTests
         second.Should().BeSameAs(first);
     }
 
+    // Regression coverage for the lattice interpolation itself (#1350's perf fix).
+    // Lattice3DToRgb/Lattice4DToRgb are fixed-arity specializations of LatticeGenericToRgb —
+    // same weight products, same corner traversal order, just unrolled against a
+    // compile-time-constant arity instead of a runtime one. This asserts they stay exactly
+    // (bit-for-bit) equal to the untouched generic algorithm, which is the invariant a future
+    // refactor must preserve: don't change the corner traversal order or the per-corner
+    // weight multiplication order without also re-deriving this test.
+    //
+    // ⚠️ This test is WEAKER than it looks and must not be trusted as sufficient on its own.
+    // A prior draft of this perf fix shared partial products across a differently-nested
+    // loop, which reversed which axis varied fastest in the corner summation, and it
+    // rendered 30 of ~1,000,000 pixels of the real Altona fixture one level off from the
+    // pre-change baseline. That broken code was checked against this exact test — both with
+    // an uncorrelated random-noise lattice AND with a lattice built from the real
+    // BuildContinuousLattice(DeviceCMYK) transform, 200k trials each — and PASSED both times.
+    // Floating-point summation reordering only became visible on the real fixture's actual
+    // ICC-CLUT-backed color lattice (piecewise, quantized — not the smooth analytic DeviceCMYK
+    // fallback this test can reach). The only thing that actually caught the bug was
+    // rendering test-pdfs/altona/eci_altona-test-suite-v2_technical2_x4.pdf and diffing the
+    // resulting PNG bytes against a pre-change baseline. If you touch the corner order or
+    // weight order again, re-run that render and re-diff — this test passing is not evidence
+    // that the output is unchanged.
+    [Theory]
+    [InlineData(3)]
+    [InlineData(4)]
+    public void LatticeSpecialization_MatchesGenericAlgorithmExactly(int components)
+    {
+        var colorSpace = components == 3 ? PdfColorSpace.DeviceRGB : PdfColorSpace.DeviceCMYK;
+        var lattice = ImageColorConverter.BuildContinuousLattice(colorSpace, components);
+        var rnd = new Random(20260907 + components);
+
+        for (var trial = 0; trial < 200_000; trial++)
+        {
+            // Mix uniform-random points with exact grid points / slightly out-of-range values,
+            // since those hit the boundary-clamp branch in LatticeAxis differently.
+            double Pick() => rnd.Next(5) switch
+            {
+                0 => 0.0,
+                1 => 1.0,
+                2 => (rnd.NextDouble() * 2) - 0.5,
+                _ => rnd.NextDouble()
+            };
+
+            var values = new double[components];
+            for (var i = 0; i < components; i++)
+                values[i] = Pick();
+
+            var expected = ImageColorConverter.LatticeGenericToRgb(lattice, components, values);
+            var actual = components == 3
+                ? ImageColorConverter.Lattice3DToRgb(lattice, values)
+                : ImageColorConverter.Lattice4DToRgb(lattice, values);
+
+            actual.Should().Be(expected, $"trial {trial} values=[{string.Join(",", values)}]");
+        }
+    }
+
     private static byte[] CreateMinimalPdf()
     {
         var sb = new System.Text.StringBuilder();

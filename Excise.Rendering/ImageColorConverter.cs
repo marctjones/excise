@@ -153,7 +153,7 @@ internal sealed class ImageColorConverter
         return table;
     }
 
-    private static float[] BuildContinuousLattice(PdfColorSpace colorSpace, int components)
+    internal static float[] BuildContinuousLattice(PdfColorSpace colorSpace, int components)
     {
         var count = 1;
         for (var i = 0; i < components; i++)
@@ -180,25 +180,129 @@ internal sealed class ImageColorConverter
         return lattice;
     }
 
+    // Dispatches to a fixed-arity specialization for the two shapes Create() ever builds
+    // (RGB-like 3-component and CMYK-like 4-component lattices) so the corner loop below is
+    // unrolled by the JIT against a compile-time-constant trip count instead of the runtime
+    // `components` value. This is the per-pixel image color-conversion hot path (#1350):
+    // profiled at 38% of the Altona render's wall time. The specializations compute the exact
+    // same weight products and lattice offsets, in the exact same order, as the generic
+    // fallback below — only the arity is fixed, not the arithmetic.
     private static (byte R, byte G, byte B) LatticeToRgb(
         float[] lattice,
         int components,
         ReadOnlySpan<double> values)
+        => components switch
+        {
+            3 => Lattice3DToRgb(lattice, values),
+            4 => Lattice4DToRgb(lattice, values),
+            _ => LatticeGenericToRgb(lattice, components, values)
+        };
+
+    private static (int Lower, double Fraction) LatticeAxis(double raw)
     {
-        Span<int> index = stackalloc int[4];
-        Span<double> fractions = stackalloc double[4];
+        var value = Math.Clamp(raw, 0, 1);
+        var scaled = value * (LatticeSize - 1);
+        var lower = (int)scaled;
+        var fraction = scaled - lower;
+        if (lower >= LatticeSize - 1)
+        {
+            lower = LatticeSize - 2;
+            fraction = 1;
+        }
+
+        return (lower, fraction);
+    }
+
+    // Visits corners in the same mask-ascending order (component 0 = bit 0, fastest-varying)
+    // and computes each corner's weight as the same left-to-right product axis0*axis1*...
+    // that the original flat loop produced via `weight *= term` in component order. Both of
+    // those orderings are load-bearing for floating-point reproducibility, NOT just style:
+    // an earlier draft of this method shared partial products/corner traversal across a
+    // differently-nested loop (axis0 outermost for the weight chain, but that made axis0 the
+    // slowest-varying corner instead of the fastest, reversing the summation order for r/g/b)
+    // and it rendered 30 pixels of the Altona fixture one level off from the original — found
+    // only by diffing actual PNG output, not by a synthetic random-lattice equivalence test.
+    // Do not restructure this into nested per-axis loops without re-proving pixel equality
+    // against the original on a real fixture, not just a fuzzed harness.
+    internal static (byte R, byte G, byte B) Lattice3DToRgb(float[] lattice, ReadOnlySpan<double> values)
+    {
+        var (i0, f0) = LatticeAxis(values.Length > 0 ? values[0] : 0);
+        var (i1, f1) = LatticeAxis(values.Length > 1 ? values[1] : 0);
+        var (i2, f2) = LatticeAxis(values.Length > 2 ? values[2] : 0);
+
+        Span<double> w0 = [1 - f0, f0];
+        Span<double> w1 = [1 - f1, f1];
+        Span<double> w2 = [1 - f2, f2];
+
+        double r = 0, g = 0, b = 0;
+        for (var mask = 0; mask < 8; mask++)
+        {
+            var c0 = mask & 1;
+            var c1 = (mask >> 1) & 1;
+            var c2 = (mask >> 2) & 1;
+
+            var weight = w0[c0] * w1[c1] * w2[c2];
+            if (weight == 0)
+                continue;
+
+            var offset = (((i0 + c0) * LatticeSize + i1 + c1) * LatticeSize + i2 + c2) * 3;
+            r += weight * lattice[offset];
+            g += weight * lattice[offset + 1];
+            b += weight * lattice[offset + 2];
+        }
+
+        return ToByteRgb(r, g, b);
+    }
+
+    internal static (byte R, byte G, byte B) Lattice4DToRgb(float[] lattice, ReadOnlySpan<double> values)
+    {
+        var (i0, f0) = LatticeAxis(values.Length > 0 ? values[0] : 0);
+        var (i1, f1) = LatticeAxis(values.Length > 1 ? values[1] : 0);
+        var (i2, f2) = LatticeAxis(values.Length > 2 ? values[2] : 0);
+        var (i3, f3) = LatticeAxis(values.Length > 3 ? values[3] : 0);
+
+        Span<double> w0 = [1 - f0, f0];
+        Span<double> w1 = [1 - f1, f1];
+        Span<double> w2 = [1 - f2, f2];
+        Span<double> w3 = [1 - f3, f3];
+
+        double r = 0, g = 0, b = 0;
+        for (var mask = 0; mask < 16; mask++)
+        {
+            var c0 = mask & 1;
+            var c1 = (mask >> 1) & 1;
+            var c2 = (mask >> 2) & 1;
+            var c3 = (mask >> 3) & 1;
+
+            var weight = w0[c0] * w1[c1] * w2[c2] * w3[c3];
+            if (weight == 0)
+                continue;
+
+            var offset = ((((i0 + c0) * LatticeSize + i1 + c1) * LatticeSize
+                + i2 + c2) * LatticeSize
+                + i3 + c3) * 3;
+            r += weight * lattice[offset];
+            g += weight * lattice[offset + 1];
+            b += weight * lattice[offset + 2];
+        }
+
+        return ToByteRgb(r, g, b);
+    }
+
+    // Generic N-dimensional fallback. Create() only ever builds 3- and 4-component lattices
+    // today, so this path is not currently reachable from production code, but ToRgb's
+    // `components` is a runtime value and this keeps arbitrary arities correct rather than
+    // throwing.
+    internal static (byte R, byte G, byte B) LatticeGenericToRgb(
+        float[] lattice,
+        int components,
+        ReadOnlySpan<double> values)
+    {
+        Span<int> index = stackalloc int[components];
+        Span<double> fractions = stackalloc double[components];
         for (var component = 0; component < components; component++)
         {
-            var value = component < values.Length ? Math.Clamp(values[component], 0, 1) : 0;
-            var scaled = value * (LatticeSize - 1);
-            var lower = (int)scaled;
-            var fraction = scaled - lower;
-            if (lower >= LatticeSize - 1)
-            {
-                lower = LatticeSize - 2;
-                fraction = 1;
-            }
-
+            var (lower, fraction) = LatticeAxis(component < values.Length ? values[component] : 0);
             index[component] = lower;
             fractions[component] = fraction;
         }
