@@ -45,6 +45,13 @@ TESS="$(tesseract --version 2>&1 | head -1 | awk '{print $2}' || echo '')"
 GS="$(gs --version 2>/dev/null || echo '')"
 MUTOOL="$(mutool -v 2>&1 | head -1 | awk '{print $NF}' || echo '')"
 QPDF="$(qpdf --version 2>/dev/null | head -1 | awk '{print $NF}' || echo '')"
+# #1372 made leak detection TWO-ENGINE (mutool AND pdftotext; a term counts as leaked when
+# EITHER reads it). The history stamped mutool's version and not poppler's, so a history point
+# could not say whether one engine or two produced its verdict -- and the committed 0.969 A-
+# from 2026-08-27 was silently a mutool-ONLY number. On the first two-engine run Poppler read
+# 14 terms in excise's own output that mutool called clean, and mutool found ZERO the other
+# way: same corpus, same code, 0.969 -> ~0.93.
+POPPLER="$(pdftotext -v 2>&1 | head -1 | awk '{print $NF}' || echo '')"
 
 ARCHIVE="$ARCHIVE_DIR/${STAMP}-${COMMIT:0:8}.jsonl"
 cp "$RESULTS" "$ARCHIVE"
@@ -52,14 +59,42 @@ cp "$RESULTS" "$ARCHIVE"
 # --- compute metrics + emit the history line (python does the JSON) ---
 python3 - "$RESULTS" "$TS" "$COMMIT" "$DESCRIBE" "$DIRTY" "$MANIFEST_SHA" \
          "$DESIGN_VERSION" "$REAL_CASES" "$SYNTH_FIXTURES" "$CORPUS" \
-         "$PYMUPDF" "$TESS" "$GS" "$MUTOOL" "$QPDF" "$ARCHIVE" "$HISTORY" <<'PY'
+         "$PYMUPDF" "$TESS" "$GS" "$MUTOOL" "$QPDF" "$POPPLER" "$ARCHIVE" "$HISTORY" <<'PY'
 import json, sys, collections
 (results, ts, commit, describe, dirty, manifest_sha, design_version, real_cases,
- synth, corpus, pymupdf, tess, gs, mutool, qpdf, archive, history) = sys.argv[1:]
+ synth, corpus, pymupdf, tess, gs, mutool, qpdf, poppler, archive, history) = sys.argv[1:]
 
 rows = [json.loads(l) for l in open(results) if l.strip()]
 ok = [r for r in rows if not r.get("error")]
 tools = sorted({r["tool"] for r in rows})
+
+# WHICH ENGINES PRODUCED THE VERDICT.
+#
+# `leakOracleTextMutool`/`Poppler` are non-nullable C# bools (RedactionBenchmarkRunner.cs:
+# 138,140), so they serialise as JSON `true`/`false` -- NEVER `null` -- whether or not Poppler
+# actually ran that row. `.get(...) is not None` on either field is therefore true on every
+# run ever produced, single-engine or not; it is not a bug that missed one case, it cannot
+# ever fire the other way. Caught only because a run with Poppler removed still reported
+# "mutool, pdftotext".
+#
+# The Row type carries no per-row signal of whether Poppler was reachable (checked: no
+# PopplerRan/PopplerAvailable field exists). The only trustworthy signal LEFT is whether
+# pdftotext is on PATH in THIS invocation's environment -- true as long as archiving happens
+# in the same environment as the run, which is the documented usage (see the header comment).
+# It is imprecise for a results.jsonl copied in from a different machine or a different
+# session; TODO(#1372-followup): have the runner stamp a run-level `_meta` line with the
+# engines it actually reached, so this stops being an environment guess. Track that as its own
+# fix rather than widening this script further.
+leak_engines = ["mutool"] if any(r.get("tool") for r in ok) else []
+if poppler:
+    leak_engines.append("pdftotext")
+
+# Per-tool count of cases where the two engines disagreed. A rising number means one engine is
+# going blind on a carrier the other still sees -- the signal that a THIRD engine is due. Only
+# meaningful when both engines actually ran; recorded regardless so a later run can see the
+# trend once they do.
+disagreements = {t: sum(1 for r in ok if r["tool"] == t and r.get("leakOracleTextDisagree"))
+                 for t in tools}
 
 def leaked(r):
     return bool(r.get("leakSavedBytes") or r.get("leakOracleText")
@@ -108,6 +143,49 @@ for t in tools:
         tier_grades[tier] = letter(sum(1 for r in sub if not leaked(r))/len(sub)) if sub else None
     grades[t] = {"overall": letter(overall), "byTier": tier_grades}
 
+# REFUSE TO SILENTLY NARROW THE COMPARISON.
+#
+# The bench discovers its peer tools from the environment: PyMuPDF and the raster anchor
+# appear only if tools/vendor/xray-venv/bin/python exists, iText only if its jars and a java
+# do (RedactionBenchmarkRunner.cs:256-266). That is the right behaviour for a bench nobody can
+# fully provision everywhere -- but it means a broken or missing dependency produces a
+# SMALLER run that still looks complete, and archiving it would replace a five-tool grade with
+# a three-tool one while the headline number moved for reasons nothing recorded.
+#
+# This is not hypothetical: it happened on 2026-09-07. A recursive purge of directories named
+# `bin` removed tools/vendor/xray-venv/bin, so the next run silently dropped pymupdf AND the
+# raster anchor -- and the raster anchor is the fidelity counterweight the whole
+# security-vs-fidelity reading depends on. Nothing said a word.
+#
+# So: compare the peer set against the last history point and stop, unless the caller says
+# they mean it. Same principle as the reference-performance bench refusing to compare a jit
+# baseline against an aot run -- a narrower measurement is not a worse score, it is a
+# DIFFERENT measurement, and conflating the two is how a bench starts lying.
+import os
+prev_peers = set()
+if os.path.exists(history):
+    try:
+        prev = [json.loads(l) for l in open(history) if l.strip()]
+        if prev:
+            prev_peers = set(prev[-1].get("peerTools") or
+                             [t for t in (prev[-1].get("metrics", {}).get("securityFidelity") or {})
+                              if t != "excise"])
+    except Exception:
+        prev_peers = set()
+now_peers = {t for t in tools if t != "excise"}
+lost = sorted(prev_peers - now_peers)
+if lost and os.environ.get("BENCH_ALLOW_NARROWER") != "1":
+    sys.stderr.write(
+        "\nREFUSING TO ARCHIVE: this run lost peer tool(s) the last history point had: "
+        + ", ".join(lost) + "\n"
+        "  had:  " + ", ".join(sorted(prev_peers)) + "\n"
+        "  now:  " + ", ".join(sorted(now_peers)) + "\n"
+        "A narrower run is a DIFFERENT measurement, not a worse score. Provision the missing\n"
+        "tool (scripts/download-xray.sh for pymupdf + raster, scripts/download-itext.sh for\n"
+        "itext) and re-run, or set BENCH_ALLOW_NARROWER=1 if you genuinely mean to record a\n"
+        "narrower comparison.\n")
+    raise SystemExit(3)
+
 entry = {
     "timestamp": ts,
     "excise": {"commit": commit, "describe": describe, "dirty": dirty == "true"},
@@ -115,7 +193,10 @@ entry = {
               "corpus": corpus, "realCases": int(real_cases), "syntheticFixtures": int(synth)},
     "tools": {k: v for k, v in {
         "pymupdf": pymupdf, "tesseract": tess, "ghostscript": gs,
-        "mutool": mutool, "qpdf": qpdf}.items() if v},
+        "mutool": mutool, "qpdf": qpdf, "poppler": poppler}.items() if v},
+    "leakEngines": leak_engines,
+    "leakEngineDisagreements": disagreements,
+    "peerTools": [t for t in tools if t != "excise"],
     "metrics": {"measured": len(ok), "errored": len(rows) - len(ok),
                 "leakByTierTool": by_tier, "securityFidelity": sf,
                 "securityGrade": grades},

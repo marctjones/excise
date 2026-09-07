@@ -987,9 +987,40 @@ def grade_redaction(log_dir, start, end, rows_by):
     if from_run:
         label = src_label
     else:
+        age = (datetime.now(timezone.utc) - ts).days if ts else None
         label = f"redaction-bench history {ts.strftime('%Y-%m-%d') if ts else 'undated'} (not from this run)"
+        # A security grade that nobody has re-measured in a fortnight is a claim, not a
+        # measurement. archive-bench-run.sh writes into the run's log dir by design so a GRADE
+        # row never dirties the tree, which means committing a history point is a deliberate
+        # act -- and a deliberate act nobody performs is how this one went eleven days stale.
+        if age is not None and age > 14:
+            label += f"; STALE by {age} days -- re-run the bench and commit a history point"
+    # STATE THE MEASUREMENT BASIS ON THE FACE OF THE GRADE, and never print a bare score for
+    # a basis we cannot identify. #1372 made leak detection two-engine (mutool AND pdftotext,
+    # leaked when EITHER reads the term). The committed 0.969 A- from 2026-08-27 was measured
+    # with mutool ALONE and nothing said so, so it read as current for eleven days while the
+    # two-engine number on the same corpus and the same code was 0.924 B+ -- a grade band
+    # lower, driven entirely by 14 terms Poppler reads in excise's output that mutool calls
+    # clean. A score whose basis is unstated is worse than no score: it invites someone to
+    # stop looking. Same principle as the reference-performance bench refusing to compare a
+    # jit baseline against an aot run.
+    engines = cur.get("leakEngines") or []
+    if engines:
+        basis = "+".join(engines)
+    else:
+        basis = "UNSTATED (pre-#1372 archive; assume single-engine and re-run)"
+    disagree = (cur.get("leakEngineDisagreements") or {}).get("excise")
+
     text = f"secure {ex_s:.3f} {ex_g}  vs {peer_txt}   n={n}" if ex_s is not None else f"secure ? {ex_g}  vs {peer_txt}   n={n}"
-    values = {"exciseSecure": round(ex_s, 3) if ex_s is not None else None}
+    text += f"   leak-engines: {basis}"
+    # Engine disagreement is the bench telling you its own blind spot is moving. Every one of
+    # excise's disagreements is a term ONE engine cannot see; a rising count is the signal that
+    # a third extractor is due, and a count equal to the leak count means the whole score rests
+    # on a single engine's sight.
+    if disagree:
+        text += f" ({disagree} case(s) where the two engines disagreed)"
+    values = {"exciseSecure": round(ex_s, 3) if ex_s is not None else None,
+              "leakEngineCount": len(engines) or None}
     # Δ is vs the prior report.json only (the generic path), never vs the previous history
     # entry: one prior for every number, so a report cannot say (=) and (no prior) about one run.
     if nodata:
