@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-reference-tool-evidence.py",
   "policy": "This records executable/version availability only. It does not run PDFs, establish conformance, or turn a reference renderer into an oracle without a named fixture/test contract.",
-  "recordedAt": "2026-09-07T22:26:59.671985+00:00",
+  "recordedAt": "2026-09-07T22:29:27.649522+00:00",
   "tools": [
     {
       "id": "mupdf-mutool",
@@ -45,7 +45,7 @@
       "output": "qpdf version 12.3.2\nRun qpdf --copyright to see copyright and license information."
     },
     {
-      "id": "poppler",
+      "id": "pdftoppm",
       "declaredAvailability": "available-local",
       "command": "pdftoppm",
       "versionCommand": "pdftoppm -v",
@@ -62,46 +62,137 @@
       "output": "pdftoppm version 26.06.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
     },
     {
-      "id": "evince",
-      "declaredAvailability": "not-installed-local",
-      "command": "evince",
-      "versionCommand": "evince --version",
-      "resolvedExecutable": null,
+      "id": "pdftocairo",
+      "declaredAvailability": "available-local",
+      "command": "pdftocairo",
+      "versionCommand": "pdftocairo -v",
+      "resolvedExecutable": "/opt/homebrew/bin/pdftocairo",
       "observations": [
-        "human visual-review availability"
+        "raster page appearance"
       ],
       "limitations": [
-        "no stable headless page-rendering contract",
-        "not an automated conformance or redaction oracle"
+        "renders the MediaBox on some builds where excise/mutool/pdfium render the CropBox; excluded from majority MISSING_CONTENT voting when boxes disagree (#970/#972)"
       ],
-      "status": "not-installed",
-      "version": null,
-      "output": null
+      "status": "available",
+      "exitCode": 0,
+      "version": "pdftocairo version 26.06.0",
+      "output": "pdftocairo version 26.06.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+    },
+    {
+      "id": "pdftotext",
+      "declaredAvailability": "available-local",
+      "command": "pdftotext",
+      "versionCommand": "pdftotext -v",
+      "resolvedExecutable": "/opt/homebrew/bin/pdftotext",
+      "observations": [
+        "text extraction",
+        "redaction leak scanning"
+      ],
+      "limitations": [
+        "a single extractor cannot report its own blind spot (#1372); always paired with mutool, never used alone as the sole leak oracle"
+      ],
+      "status": "available",
+      "exitCode": 0,
+      "version": "pdftotext version 26.06.0",
+      "output": "pdftotext version 26.06.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+    },
+    {
+      "id": "ghostscript",
+      "declaredAvailability": "available-local",
+      "command": "gs",
+      "versionCommand": "gs --version",
+      "resolvedExecutable": "/opt/homebrew/bin/gs",
+      "observations": [
+        "raster page appearance"
+      ],
+      "limitations": [
+        "not a text extractor",
+        "not a conformance validator"
+      ],
+      "status": "available",
+      "exitCode": 0,
+      "version": "10.07.1",
+      "output": "10.07.1"
+    },
+    {
+      "id": "pdfbox",
+      "declaredAvailability": "available-local",
+      "command": "java -jar tools/vendor/pdfbox-app-3.0.3.jar",
+      "versionCommand": "unzip -p tools/vendor/pdfbox-app-3.0.3.jar META-INF/MANIFEST.MF",
+      "resolvedExecutable": "/usr/bin/unzip",
+      "observations": [
+        "page rendering",
+        "redaction result rendering",
+        "independent redaction competitor"
+      ],
+      "limitations": [
+        "needs a real JRE; the macOS system java stub reports 'Unable to locate a Java Runtime' even though `which java` resolves"
+      ],
+      "status": "available",
+      "exitCode": 0,
+      "version": "Manifest-Version: 1.0",
+      "output": "Manifest-Version: 1.0\nBuild-Jdk-Spec: 1.8\nBundle-Description: The Apache Software Foundation provides support fo\n r the Apache community of open-source software projects.    The Apach\n e projects are characterized by a collaborative, consensus based deve\n lopment process, an open and    pragmatic software license, and a des\n ire to create high quality software that leads the way in its field. \n    We consider ourselves not simply a group of projects sharing a ser\n ver, but rather a community of developers    and users.\nBundle-DocURL: https://www.apache.org/pdfbox-parent/pdfbox-app/\nBundle-License: https://www.apache.org/licenses/LICENSE-2.0.txt\nBundle-ManifestVersion: 2\nBundle-Name: Apache PDFBox application\nBundle-SymbolicName: org.apache.pdfbox.app\nBundle-Vendor: The Apache Software Foundation\nBundle-Version: 3.0.3\nCreated-By: Apache Maven Bundle Plugin 5.1.9\nEmbed-Dependency: *;scope=provided;inline=org/apache/**|org/bouncycast\n le/**|picocli/**|META-INF/services/**\nEmbed-Transitive: true\nExport-Package: org.apache.pdfbox;version=\"3.0.3\";uses:=\"org.apache.pd\n fbox.io,org.apache.pdfbox.pdmodel,org.apache.pdfbox.pdmodel.fdf\",org.\n apache.pdfbox.contentstream;version=\"3.0.3\";uses:=\"org.apache.pdfbox.\n contentstream.operator,org.apache.pdfbox.cos,org.apache.pdfbox.io,org\n .apache.pdfbox.pdmodel,org.apache.pdfbox.pdmodel.common,org.apache.pd\n fbox.pdmodel.font,org.apache.pdfbox.pdmodel.graphics.color,org.apache\n .pdfbox.pdmodel.graphics.form,org.apache.pdfbox.pdmodel.graphics.imag\n e,org.apache.pdfbox.pdmodel.graphics.pattern,org.apache.pdfbox.pdmode\n l.graphics.state,org.apache.pdfbox.pdmodel.interactive.annotation,org\n .apache.pdfbox.util\",org.apache.pdfbox.contentstream.operator;version\n =\"3.0.3\";uses:=\"org.apache.pdfbox.contentstream,org.apache.pdfbox.cos\n \",org.apache.pdfbox.contentstream.operator.color;version=\"3.0.3\";uses\n :=\"org.apache.pdfbox.contentstream,org.apache.pdfbox.contentstream.op\n erator,org.apache.pdfbox.cos,org.apache.pdfbox.pdmodel.graphics.color"
+    },
+    {
+      "id": "pdfium",
+      "declaredAvailability": "available-local",
+      "command": "tools/vendor/pdfium/lib/libpdfium.dylib",
+      "versionCommand": "cat tools/vendor/pdfium/VERSION",
+      "resolvedExecutable": "/bin/cat",
+      "observations": [
+        "page rendering"
+      ],
+      "limitations": [
+        "never loaded in-process outside the host it is spawned in",
+        "API is not thread-safe; every call is serialised on one lock"
+      ],
+      "status": "available",
+      "exitCode": 0,
+      "version": "MAJOR=153",
+      "output": "MAJOR=153\nMINOR=0\nBUILD=7999\nPATCH=0"
+    },
+    {
+      "id": "verapdf",
+      "declaredAvailability": "available-local",
+      "command": "verapdf",
+      "versionCommand": "verapdf --version",
+      "resolvedExecutable": "/opt/homebrew/bin/verapdf",
+      "observations": [
+        "PDF/A-1b and PDF/A-2b conformance validation of excise-written output"
+      ],
+      "limitations": [
+        "validates PDF/A profile conformance only, not general PDF correctness",
+        "not a renderer or text-extraction oracle"
+      ],
+      "status": "available",
+      "exitCode": 0,
+      "version": "veraPDF 1.30.0",
+      "output": "veraPDF 1.30.0\nBuilt: Wed Jun 03 13:47:00 EDT 2026\nDeveloped and released by the veraPDF Consortium.\nFunded by the PREFORMA project.\nReleased under the GNU General Public License v3\nand the Mozilla Public License v2 or later.\n\nWARNING: Final field flavour in class org.verapdf.pdfa.validation.profiles.ValidationProfileImpl has been mutated reflectively by class com.sun.xml.bind.v2.runtime.reflect.Accessor$FieldReflection in unnamed module @2b80d80f (file:/opt/homebrew/Cellar/verapdf/1.30.2/libexec/bin/gui-1.30.0.jar)\nWARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning\nWARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled"
     },
     {
       "id": "pymupdf",
-      "declaredAvailability": "not-installed-local",
-      "command": "python3 -m fitz",
-      "versionCommand": "python3 -c 'import fitz; print(fitz.VersionBind)'",
-      "resolvedExecutable": "/opt/homebrew/bin/python3",
+      "declaredAvailability": "available-local",
+      "command": "tools/vendor/xray-venv/bin/python",
+      "versionCommand": "tools/vendor/xray-venv/bin/python -c \"import pymupdf; print(pymupdf.VersionBind)\"",
+      "resolvedExecutable": "tools/vendor/xray-venv/bin/python",
       "observations": [
         "independent rendering",
-        "redaction API behavior"
+        "redaction API behavior",
+        "independent redaction competitor"
       ],
       "limitations": [
-        "not installed in this validation environment",
-        "no result may cite this tool until its exact version is recorded"
+        "a competitor being graded by the redaction bench, not a corroborating oracle for excise's own correctness"
       ],
-      "status": "not-installed",
-      "exitCode": 1,
-      "version": "Traceback (most recent call last):",
-      "output": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n    import fitz; print(fitz.VersionBind)\n    ^^^^^^^^^^^\nModuleNotFoundError: No module named 'fitz'"
+      "status": "available",
+      "exitCode": 0,
+      "version": "1.24.14",
+      "output": "1.24.14"
     }
   ],
   "summary": {
-    "registered": 5,
-    "available": 3,
-    "notInstalled": 2,
+    "registered": 10,
+    "available": 10,
+    "notInstalled": 0,
     "unhealthy": 0
   }
 }
