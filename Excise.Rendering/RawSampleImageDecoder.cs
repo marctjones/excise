@@ -197,7 +197,7 @@ internal static class RawSampleImageDecoder
                                 {
                                     var sample = ReadPackedImageSample(
                                         request.Samples,
-                                        (int)(bitOffset + (component * request.BitsPerComponent)),
+                                        checked((int)(bitOffset + (component * request.BitsPerComponent))),
                                         request.BitsPerComponent);
                                     if (rawSamples != null)
                                         rawSamples[component] = sample;
