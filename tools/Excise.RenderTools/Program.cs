@@ -5060,14 +5060,38 @@ partial class Program
 
     private static int GetCorpusScanPriorityRank(CorpusScanEntry entry)
     {
-        var impactRank = entry.visualHumanImpact switch
+        // #1397 fix-next ranking bug: three pdf20 pages where excise draws NONE of the
+        // reference's ink (missingInkTiles == referenceInkedTiles, a 100% miss) ranked
+        // dead last, below EMPTY_DOC and PASSWORD_REQUIRED, because their visualHumanImpact
+        // was computed against a BLANK oracle (the min-over-oracles headline elected the
+        // one reference that also rendered nothing, #1397 item (a)) and MISSING_CONTENT had
+        // no entry in statusRank so it fell to the generic `_ => 4`. A sibling status with
+        // the identical shape, EXCISE_SIDE_GAP, already carries the comment "the one class
+        // that is unambiguously an excise defect" -- MISSING_CONTENT deserves the same rank,
+        // for the same reason.
+        //
+        // When the tile-locality vote actually ran (referenceInkedTiles > 0), derive
+        // impact from the FRACTION OF THE REFERENCE'S OWN INK excise is missing rather than
+        // from visualHumanImpact's page-wide diff against a possibly-blank bestOracle. This
+        // is the majority-vote number the classifier already computed (#932/#976); it does
+        // not depend on which single oracle diffFraction happened to pick.
+        static int MissingFractionRank(double frac) => frac switch
         {
-            "high" => 0,
-            "medium" => 1,
-            "low" => 2,
-            "none" => 3,
-            _ => StatusFallbackPriorityRank(entry.status),
+            >= 0.5 => 0,
+            >= 0.2 => 1,
+            > 0 => 2,
+            _ => 3,
         };
+        var impactRank = (entry.referenceInkedTiles is > 0 && entry.missingInkTiles is not null)
+            ? MissingFractionRank((double)entry.missingInkTiles.Value / entry.referenceInkedTiles.Value)
+            : entry.visualHumanImpact switch
+              {
+                  "high" => 0,
+                  "medium" => 1,
+                  "low" => 2,
+                  "none" => 3,
+                  _ => StatusFallbackPriorityRank(entry.status),
+              };
 
         var statusRank = entry.status switch
         {
@@ -5075,6 +5099,9 @@ partial class Program
             // An oracle rendered a page excise refused — the one class that is
             // unambiguously an excise defect (#907).
             "EXCISE_SIDE_GAP" => 0,
+            // excise rendered nothing where the reference majority has ink — the same
+            // unambiguous shape as EXCISE_SIDE_GAP, just discovered the other direction.
+            "MISSING_CONTENT" => 0,
             "TIMEOUT" => 1,
             "RESOURCE_LIMIT" => 1,
             "INVALID_PAGE_GEOMETRY" => 1,
