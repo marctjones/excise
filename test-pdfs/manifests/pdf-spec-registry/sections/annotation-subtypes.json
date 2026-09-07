@@ -20,7 +20,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -39,7 +39,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Form fields. The largest non-visual use of annotations in the format \u2014 every AcroForm field's on-page presence is a Widget. Field VALUES are text, so this is a redaction carrier. Page-raster oracle APIs legitimately draw nothing here (pdfium's form-fill layer is a separate pass), which is why Widget rows are judged over 3 engines, not 5.",
       "documentation": [
@@ -98,7 +106,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -117,7 +125,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Navigation only: GoTo and URI. A /URI is user-visible text and travels with the file, so it is a carrier. \u00a712.5.6.5 default 1pt border implemented in #987; the absurd-width case refuses per #1015.",
       "documentation": [
@@ -176,7 +192,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -195,7 +211,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "The sticky-note icon. /Contents is the note body \u2014 real human text outside the content stream.",
       "documentation": [
@@ -254,7 +278,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -273,7 +297,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Text drawn directly on the page. Among the most important carriers: it LOOKS like page content but is not in the content stream.",
       "documentation": [
@@ -332,7 +364,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -351,7 +383,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Quad-based text markup. Magnitude divergence tracked as #1004.",
       "documentation": [
@@ -410,7 +450,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -429,7 +469,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": null,
       "documentation": [
@@ -486,7 +534,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -505,7 +553,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": null,
       "documentation": [
@@ -562,7 +618,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -581,7 +637,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": null,
       "documentation": [
@@ -638,7 +702,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -657,7 +721,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": null,
       "documentation": [
@@ -714,7 +786,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -733,7 +805,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": null,
       "documentation": [
@@ -790,7 +870,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -809,7 +889,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Line endings are distinguishable and preserved in order across a save (#933).",
       "documentation": [
@@ -868,7 +956,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -887,7 +975,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": null,
       "documentation": [
@@ -944,7 +1040,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -963,7 +1059,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": null,
       "documentation": [
@@ -1020,7 +1124,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -1039,7 +1143,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Every point preserved in order across a save (#933).",
       "documentation": [
@@ -1098,7 +1210,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -1112,7 +1224,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Deliberately never drawn inline \u2014 it is the note window for its parent markup annotation, and its text belongs to that parent. Recognised precisely so it is NOT rendered onto the page.",
       "documentation": [
@@ -1169,7 +1289,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -1188,7 +1308,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Embeds an ENTIRE arbitrary file. The most consequential data carrier in the format \u2014 scrubbed by default in the GUI redaction-copy flow (#467). No synthesis: the oracles disagree on the icon and there is nothing to copy.",
       "documentation": [
@@ -1247,7 +1375,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -1266,7 +1394,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "No synthesis, by decision #1015: 3 of 5 engines draw and disagree 4.7x on quantity and 3.6x on bbox height. A stamp's picture is viewer-specific art \u2014 there is nothing to copy, only an invitation to invent some.",
       "documentation": [
@@ -1325,7 +1461,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -1344,7 +1480,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "No synthesis. #972's first fix drew a caret where a tick belonged, with identical pixel count and identical bbox \u2014 the case that proved an ink count and a bbox cannot discriminate shape.",
       "documentation": [
@@ -1403,7 +1547,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -1422,7 +1566,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "\u00a712.5.6.23. Marks a region INTENDED for redaction \u2014 an instruction to a processor, not a picture. excise recognises and preserves it; whether excise should ACT on it is an open product question, not a rendering one.",
       "documentation": [
@@ -1481,7 +1633,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -1500,7 +1652,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Preserved, never played. Embedded audio is a data carrier.",
       "documentation": [
@@ -1559,7 +1719,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -1578,7 +1738,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Preserved, never played.",
       "documentation": [
@@ -1637,7 +1805,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -1656,7 +1824,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Media playback surface. Preserved, never played, its action never executed.",
       "documentation": [
@@ -1715,7 +1891,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "unknown",
         "extract": "unknown"
@@ -1734,7 +1910,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Drawn from its /AP only.",
       "documentation": [
@@ -1789,8 +1973,8 @@
       ],
       "classification": "core",
       "decision": {
-        "state": "required",
-        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+        "state": "preserve-only",
+        "rationale": "tests/annotation-support-matrix.json marks this subtype's read dimension itself \"preserve-only\": no subtype-critical API surface is required, byte preservation is (#1342). Confirmed independently -- it is one of the 5 of 28 subtypes NOT covered by Parse_AllAnnotationSubtypes's per-subtype InlineData rows."
       },
       "modes": {
         "parse": "unknown",
@@ -1867,8 +2051,8 @@
       ],
       "classification": "core",
       "decision": {
-        "state": "required",
-        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+        "state": "preserve-only",
+        "rationale": "tests/annotation-support-matrix.json marks this subtype's read dimension itself \"preserve-only\": no subtype-critical API surface is required, byte preservation is (#1342). Confirmed independently -- it is one of the 5 of 28 subtypes NOT covered by Parse_AllAnnotationSubtypes's per-subtype InlineData rows."
       },
       "modes": {
         "parse": "unknown",
@@ -1945,8 +2129,8 @@
       ],
       "classification": "core",
       "decision": {
-        "state": "required",
-        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+        "state": "preserve-only",
+        "rationale": "tests/annotation-support-matrix.json marks this subtype's read dimension itself \"preserve-only\": no subtype-critical API surface is required, byte preservation is (#1342). Confirmed independently -- it is one of the 5 of 28 subtypes NOT covered by Parse_AllAnnotationSubtypes's per-subtype InlineData rows."
       },
       "modes": {
         "parse": "unknown",
@@ -2023,8 +2207,8 @@
       ],
       "classification": "core",
       "decision": {
-        "state": "required",
-        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+        "state": "preserve-only",
+        "rationale": "tests/annotation-support-matrix.json marks this subtype's read dimension itself \"preserve-only\": no subtype-critical API surface is required, byte preservation is (#1342). Confirmed independently -- it is one of the 5 of 28 subtypes NOT covered by Parse_AllAnnotationSubtypes's per-subtype InlineData rows."
       },
       "modes": {
         "parse": "unknown",
@@ -2101,8 +2285,8 @@
       ],
       "classification": "core",
       "decision": {
-        "state": "required",
-        "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
+        "state": "preserve-only",
+        "rationale": "tests/annotation-support-matrix.json marks this subtype's read dimension itself \"preserve-only\": no subtype-critical API surface is required, byte preservation is (#1342). Confirmed independently -- it is one of the 5 of 28 subtypes NOT covered by Parse_AllAnnotationSubtypes's per-subtype InlineData rows."
       },
       "modes": {
         "parse": "unknown",

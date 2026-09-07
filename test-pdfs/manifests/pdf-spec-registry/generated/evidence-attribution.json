@@ -56587,11 +56587,29 @@
       "capability": "pdf.20.annotation.subtype-001",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56631,11 +56649,29 @@
       "capability": "pdf.20.annotation.subtype-002",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56675,11 +56711,29 @@
       "capability": "pdf.20.annotation.subtype-003",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56719,11 +56773,29 @@
       "capability": "pdf.20.annotation.subtype-004",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56763,11 +56835,29 @@
       "capability": "pdf.20.annotation.subtype-005",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56807,11 +56897,29 @@
       "capability": "pdf.20.annotation.subtype-006",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56851,11 +56959,29 @@
       "capability": "pdf.20.annotation.subtype-007",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56895,11 +57021,29 @@
       "capability": "pdf.20.annotation.subtype-008",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56939,11 +57083,29 @@
       "capability": "pdf.20.annotation.subtype-009",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56983,11 +57145,29 @@
       "capability": "pdf.20.annotation.subtype-010",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57027,11 +57207,29 @@
       "capability": "pdf.20.annotation.subtype-011",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57071,11 +57269,29 @@
       "capability": "pdf.20.annotation.subtype-012",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57115,11 +57331,29 @@
       "capability": "pdf.20.annotation.subtype-013",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57159,11 +57393,29 @@
       "capability": "pdf.20.annotation.subtype-014",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57203,11 +57455,29 @@
       "capability": "pdf.20.annotation.subtype-015",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57247,11 +57517,29 @@
       "capability": "pdf.20.annotation.subtype-016",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57291,11 +57579,29 @@
       "capability": "pdf.20.annotation.subtype-017",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57335,11 +57641,29 @@
       "capability": "pdf.20.annotation.subtype-018",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57379,11 +57703,29 @@
       "capability": "pdf.20.annotation.subtype-019",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57423,11 +57765,29 @@
       "capability": "pdf.20.annotation.subtype-020",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57467,11 +57827,29 @@
       "capability": "pdf.20.annotation.subtype-021",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57511,11 +57889,29 @@
       "capability": "pdf.20.annotation.subtype-022",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57555,11 +57951,29 @@
       "capability": "pdf.20.annotation.subtype-023",
       "section": "annotation-subtypes",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -57586,226 +58000,6 @@
     },
     {
       "capability": "pdf.20.annotation.subtype-023",
-      "section": "annotation-subtypes",
-      "mode": "extract",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-024",
-      "section": "annotation-subtypes",
-      "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-024",
-      "section": "annotation-subtypes",
-      "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-024",
-      "section": "annotation-subtypes",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-024",
-      "section": "annotation-subtypes",
-      "mode": "extract",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-025",
-      "section": "annotation-subtypes",
-      "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-025",
-      "section": "annotation-subtypes",
-      "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-025",
-      "section": "annotation-subtypes",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-025",
-      "section": "annotation-subtypes",
-      "mode": "extract",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-026",
-      "section": "annotation-subtypes",
-      "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-026",
-      "section": "annotation-subtypes",
-      "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-026",
-      "section": "annotation-subtypes",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-026",
-      "section": "annotation-subtypes",
-      "mode": "extract",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-027",
-      "section": "annotation-subtypes",
-      "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-027",
-      "section": "annotation-subtypes",
-      "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-027",
-      "section": "annotation-subtypes",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-027",
-      "section": "annotation-subtypes",
-      "mode": "extract",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-028",
-      "section": "annotation-subtypes",
-      "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-028",
-      "section": "annotation-subtypes",
-      "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-028",
-      "section": "annotation-subtypes",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-028",
       "section": "annotation-subtypes",
       "mode": "extract",
       "currentState": "unknown",
@@ -89928,14 +90122,14 @@
     }
   ],
   "summary": {
-    "targetModes": 964,
-    "modesWithTestCandidates": 213,
-    "modesWithExplicitContracts": 161,
-    "modesWithPassingExplicitContracts": 13,
-    "modesWithRecordedPassingCandidate": 53,
-    "gradeImplemented": 2,
+    "targetModes": 944,
+    "modesWithTestCandidates": 236,
+    "modesWithExplicitContracts": 184,
+    "modesWithPassingExplicitContracts": 36,
+    "modesWithRecordedPassingCandidate": 76,
+    "gradeImplemented": 25,
     "gradeVerified": 11,
-    "gradeUnknown": 951,
+    "gradeUnknown": 908,
     "testMethods": 6108,
     "testMethodsWithCapabilityCandidate": 3813,
     "benchmarkScenarios": 6,

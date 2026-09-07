@@ -6,40 +6,40 @@
   "workflowScopePolicy": "A workflow score includes only the processor roles required by that user workflow. For example, rendering measures render modes, while separate capability/section scores retain parse, preserve, mutate, write, and authoring gaps.",
   "overall": {
     "capabilities": 282,
-    "targetCapabilities": 266,
-    "targetModes": 964,
+    "targetCapabilities": 261,
+    "targetModes": 944,
     "modeStates": {
       "implemented": 5,
-      "partial": 24,
+      "partial": 47,
       "unimplemented": 18,
-      "unknown": 917
+      "unknown": 874
     },
     "gradeStates": {
-      "implemented": 2,
-      "unknown": 951,
+      "implemented": 25,
+      "unknown": 908,
       "verified": 11
     },
-    "gradedImplementedOrBetterPercent": 1.3,
-    "gradedVerifiedPercent": 1.1,
-    "gradedUnknownCount": 951,
-    "measuredModeCoveragePercent": 4.9,
+    "gradedImplementedOrBetterPercent": 3.8,
+    "gradedVerifiedPercent": 1.2,
+    "gradedUnknownCount": 908,
+    "measuredModeCoveragePercent": 7.4,
     "implementedModeCoveragePercent": 0.5,
-    "promotionReadinessPercent": 16.5,
-    "implementationEvidenceProgressPercent": 13.0,
+    "promotionReadinessPercent": 16.6,
+    "implementationEvidenceProgressPercent": 14.6,
     "promotionReadinessMilestones": {
-      "discoveredOrBetter": 964,
+      "discoveredOrBetter": 944,
       "directTestOrBetter": 15,
       "independentEvidenceOrBetter": 10,
       "strictImplemented": 5
     },
-    "verificationPlanCoveragePercent": 90.6,
-    "executableVerificationCoveragePercent": 30.8,
+    "verificationPlanCoveragePercent": 90.4,
+    "executableVerificationCoveragePercent": 31.4,
     "securityGate": {
       "target": 1,
       "ready": 1,
       "pass": true
     },
-    "unknownModeCount": 917,
+    "unknownModeCount": 874,
     "capabilityIds": [
       "pdf.17.syntax.file",
       "pdf.17.syntax.objects",
@@ -326,6 +326,11 @@
     ],
     "excludedCapabilityIds": [
       "pdf.17.content.marked",
+      "pdf.20.annotation.subtype-024",
+      "pdf.20.annotation.subtype-025",
+      "pdf.20.annotation.subtype-026",
+      "pdf.20.annotation.subtype-027",
+      "pdf.20.annotation.subtype-028",
       "pdf.17.transparency.output-preview",
       "pdf.17.interactive.actions",
       "pdf.17.multimedia.media",
@@ -671,40 +676,40 @@
         "multimedia"
       ],
       "capabilities": 37,
-      "targetCapabilities": 34,
-      "targetModes": 151,
+      "targetCapabilities": 29,
+      "targetModes": 131,
       "modeStates": {
         "implemented": 1,
-        "partial": 9,
+        "partial": 32,
         "unimplemented": 7,
-        "unknown": 134
+        "unknown": 91
       },
       "gradeStates": {
-        "implemented": 2,
-        "unknown": 145,
+        "implemented": 25,
+        "unknown": 102,
         "verified": 4
       },
-      "gradedImplementedOrBetterPercent": 4.0,
-      "gradedVerifiedPercent": 2.6,
-      "gradedUnknownCount": 145,
-      "measuredModeCoveragePercent": 11.3,
-      "implementedModeCoveragePercent": 0.7,
-      "promotionReadinessPercent": 13.5,
-      "implementationEvidenceProgressPercent": 14.0,
+      "gradedImplementedOrBetterPercent": 22.1,
+      "gradedVerifiedPercent": 3.1,
+      "gradedUnknownCount": 102,
+      "measuredModeCoveragePercent": 30.5,
+      "implementedModeCoveragePercent": 0.8,
+      "promotionReadinessPercent": 14.0,
+      "implementationEvidenceProgressPercent": 25.5,
       "promotionReadinessMilestones": {
-        "discoveredOrBetter": 151,
+        "discoveredOrBetter": 131,
         "directTestOrBetter": 8,
         "independentEvidenceOrBetter": 3,
         "strictImplemented": 1
       },
-      "verificationPlanCoveragePercent": 88.2,
-      "executableVerificationCoveragePercent": 5.9,
+      "verificationPlanCoveragePercent": 86.2,
+      "executableVerificationCoveragePercent": 6.9,
       "securityGate": {
         "target": 1,
         "ready": 1,
         "pass": true
       },
-      "unknownModeCount": 134,
+      "unknownModeCount": 91,
       "capabilityIds": [
         "pdf.20.annotation.subtype-001",
         "pdf.20.annotation.subtype-002",
@@ -745,6 +750,11 @@
         "pdf.17.multimedia.richmedia-3d"
       ],
       "excludedCapabilityIds": [
+        "pdf.20.annotation.subtype-024",
+        "pdf.20.annotation.subtype-025",
+        "pdf.20.annotation.subtype-026",
+        "pdf.20.annotation.subtype-027",
+        "pdf.20.annotation.subtype-028",
         "pdf.17.interactive.actions",
         "pdf.17.multimedia.media",
         "pdf.17.multimedia.richmedia-3d"
@@ -1379,23 +1389,25 @@
     },
     "annotation-subtypes": {
       "capabilities": 28,
-      "targetCapabilities": 28,
-      "targetModes": 112,
+      "targetCapabilities": 23,
+      "targetModes": 92,
       "modeStates": {
-        "unknown": 112
+        "partial": 23,
+        "unknown": 69
       },
       "gradeStates": {
-        "unknown": 112
+        "implemented": 23,
+        "unknown": 69
       },
-      "gradedImplementedOrBetterPercent": 0.0,
+      "gradedImplementedOrBetterPercent": 25.0,
       "gradedVerifiedPercent": 0.0,
-      "gradedUnknownCount": 112,
-      "measuredModeCoveragePercent": 0.0,
+      "gradedUnknownCount": 69,
+      "measuredModeCoveragePercent": 25.0,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 10.0,
-      "implementationEvidenceProgressPercent": 9.3,
+      "implementationEvidenceProgressPercent": 24.7,
       "promotionReadinessMilestones": {
-        "discoveredOrBetter": 112,
+        "discoveredOrBetter": 92,
         "directTestOrBetter": 0,
         "independentEvidenceOrBetter": 0,
         "strictImplemented": 0
@@ -1407,7 +1419,7 @@
         "ready": 0,
         "pass": true
       },
-      "unknownModeCount": 112,
+      "unknownModeCount": 69,
       "capabilityIds": [
         "pdf.20.annotation.subtype-001",
         "pdf.20.annotation.subtype-002",
@@ -1438,7 +1450,13 @@
         "pdf.20.annotation.subtype-027",
         "pdf.20.annotation.subtype-028"
       ],
-      "excludedCapabilityIds": []
+      "excludedCapabilityIds": [
+        "pdf.20.annotation.subtype-024",
+        "pdf.20.annotation.subtype-025",
+        "pdf.20.annotation.subtype-026",
+        "pdf.20.annotation.subtype-027",
+        "pdf.20.annotation.subtype-028"
+      ]
     },
     "transparency": {
       "capabilities": 2,
@@ -1966,14 +1984,14 @@
     }
   },
   "testAttribution": {
-    "targetModes": 964,
-    "modesWithTestCandidates": 213,
-    "modesWithExplicitContracts": 161,
-    "modesWithPassingExplicitContracts": 13,
-    "modesWithRecordedPassingCandidate": 53,
-    "gradeImplemented": 2,
+    "targetModes": 944,
+    "modesWithTestCandidates": 236,
+    "modesWithExplicitContracts": 184,
+    "modesWithPassingExplicitContracts": 36,
+    "modesWithRecordedPassingCandidate": 76,
+    "gradeImplemented": 25,
     "gradeVerified": 11,
-    "gradeUnknown": 951,
+    "gradeUnknown": 908,
     "testMethods": 6108,
     "testMethodsWithCapabilityCandidate": 3813,
     "benchmarkScenarios": 6,

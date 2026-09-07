@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-reference-tool-evidence.py",
   "policy": "This records executable/version availability only. It does not run PDFs, establish conformance, or turn a reference renderer into an oracle without a named fixture/test contract.",
-  "recordedAt": "2026-09-07T22:43:58.665387+00:00",
+  "recordedAt": "2026-09-07T23:10:57.590376+00:00",
   "tools": [
     {
       "id": "mupdf-mutool",

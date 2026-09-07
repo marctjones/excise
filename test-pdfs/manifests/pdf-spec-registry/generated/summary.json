@@ -23,8 +23,8 @@
   "decisionStates": {
     "blocked": 1,
     "deferred": 9,
-    "preserve-only": 6,
-    "required": 253,
+    "preserve-only": 11,
+    "required": 248,
     "supported": 13
   },
   "modeCoverage": {

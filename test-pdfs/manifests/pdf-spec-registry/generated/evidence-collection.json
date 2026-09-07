@@ -29313,7 +29313,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -30014,7 +30022,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -30837,7 +30853,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -30870,7 +30894,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -31409,7 +31441,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -32062,7 +32102,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -32423,7 +32471,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -32765,7 +32821,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -33107,7 +33171,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -33634,7 +33706,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -34053,7 +34133,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -34878,7 +34966,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -35277,7 +35373,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -35655,7 +35759,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -36474,7 +36586,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -36671,7 +36791,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -36859,7 +36987,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -37337,7 +37473,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -37535,7 +37679,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -38384,7 +38536,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -38514,7 +38674,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -38623,7 +38791,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -38913,7 +39089,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {

@@ -5,36 +5,19 @@
   "clusters": [
     {
       "section": "annotation-subtypes",
-      "cluster": "3D",
-      "capabilityIds": [
-        "pdf.20.annotation.subtype-026"
-      ],
-      "targetModes": 4,
-      "modeStates": {
-        "unknown": 4
-      },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
-      "reviewBatchIssues": [
-        "#1342"
-      ]
-    },
-    {
-      "section": "annotation-subtypes",
       "cluster": "Caret",
       "capabilityIds": [
         "pdf.20.annotation.subtype-018"
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -47,12 +30,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -65,12 +49,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -83,12 +68,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -101,12 +87,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -119,12 +106,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -137,12 +125,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -155,12 +144,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -173,12 +163,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -191,12 +182,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -209,12 +201,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -227,48 +220,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
-      "reviewBatchIssues": [
-        "#1342"
-      ]
-    },
-    {
-      "section": "annotation-subtypes",
-      "cluster": "PrinterMark",
-      "capabilityIds": [
-        "pdf.20.annotation.subtype-024"
-      ],
-      "targetModes": 4,
-      "modeStates": {
-        "unknown": 4
-      },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
-      "reviewBatchIssues": [
-        "#1342"
-      ]
-    },
-    {
-      "section": "annotation-subtypes",
-      "cluster": "Projection",
-      "capabilityIds": [
-        "pdf.20.annotation.subtype-028"
-      ],
-      "targetModes": 4,
-      "modeStates": {
-        "unknown": 4
-      },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -281,30 +239,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
-      "reviewBatchIssues": [
-        "#1342"
-      ]
-    },
-    {
-      "section": "annotation-subtypes",
-      "cluster": "RichMedia",
-      "capabilityIds": [
-        "pdf.20.annotation.subtype-027"
-      ],
-      "targetModes": 4,
-      "modeStates": {
-        "unknown": 4
-      },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -317,12 +258,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -335,12 +277,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -353,12 +296,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -371,12 +315,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -389,12 +334,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -407,12 +353,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -425,30 +372,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
-      "reviewBatchIssues": [
-        "#1342"
-      ]
-    },
-    {
-      "section": "annotation-subtypes",
-      "cluster": "TrapNet",
-      "capabilityIds": [
-        "pdf.20.annotation.subtype-025"
-      ],
-      "targetModes": 4,
-      "modeStates": {
-        "unknown": 4
-      },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -461,12 +391,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -479,12 +410,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -497,12 +429,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 1,
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 3,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": [
         "#1342"
       ]
@@ -3184,8 +3117,8 @@
     }
   ],
   "summary": {
-    "clusters": 186,
-    "targetModes": 964,
-    "unknownModeCount": 917
+    "clusters": 181,
+    "targetModes": 944,
+    "unknownModeCount": 874
   }
 }
