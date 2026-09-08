@@ -70048,11 +70048,19 @@
       "capability": "pdf.20.image.requirement-002",
       "section": "image-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::Ascii85EncodedRedImage_RendersSolidRed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70194,11 +70202,19 @@
       "capability": "pdf.20.image.requirement-004",
       "section": "image-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::TiffPredictorFlateImage_RendersTheGradient",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70263,11 +70279,19 @@
       "capability": "pdf.20.image.requirement-005",
       "section": "image-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::PngPredictorFlateImage_RendersTheGradient",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70399,11 +70423,19 @@
       "capability": "pdf.20.image.requirement-007",
       "section": "image-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::LzwEarlyChangeImage_RendersNotBlank",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70465,11 +70497,19 @@
       "capability": "pdf.20.image.requirement-008",
       "section": "image-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::LzwWithTiffPredictorImage_RendersTheGradient",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70685,11 +70725,19 @@
       "capability": "pdf.20.image.requirement-011",
       "section": "image-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_PdfjsIssue14999_Type3CcittDecodeParmsRenderReadableGlyphMasks",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -70828,11 +70876,19 @@
       "capability": "pdf.20.image.requirement-013",
       "section": "image-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_PopplerJpeg_ExplicitDctColorTransformColumnsRender",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -71080,11 +71136,19 @@
       "capability": "pdf.20.image.requirement-016",
       "section": "image-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::Jbig2WithGlobalsReference_RendersWithinCalibratedInkBounds",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71139,11 +71203,19 @@
       "capability": "pdf.20.image.requirement-017",
       "section": "image-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::CryptIdentityFilteredImage_RendersTheRawPixels",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -107106,14 +107178,14 @@
   "summary": {
     "targetModes": 905,
     "modesWithTestCandidates": 567,
-    "modesWithExplicitContracts": 746,
-    "modesWithPassingExplicitContracts": 746,
+    "modesWithExplicitContracts": 755,
+    "modesWithPassingExplicitContracts": 755,
     "modesWithRecordedPassingCandidate": 567,
-    "gradeImplemented": 728,
-    "gradeVerified": 18,
-    "gradeUnknown": 159,
-    "testMethods": 6125,
-    "testMethodsWithCapabilityCandidate": 3848,
+    "gradeImplemented": 736,
+    "gradeVerified": 19,
+    "gradeUnknown": 150,
+    "testMethods": 6132,
+    "testMethodsWithCapabilityCandidate": 3855,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

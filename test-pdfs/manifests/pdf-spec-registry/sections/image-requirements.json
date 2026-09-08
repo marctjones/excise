@@ -116,7 +116,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -145,6 +145,13 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::Ascii85EncodedRedImage_RendersSolidRed",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -299,7 +306,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -328,6 +335,13 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::TiffPredictorFlateImage_RendersTheGradient",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -387,7 +401,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -416,6 +430,13 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::PngPredictorFlateImage_RendersTheGradient",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -570,7 +591,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -599,6 +620,13 @@
             "ref": "Excise.Core.Tests/Filters/LzwEarlyChangeTests.cs::RealLzwImageStream_DecodesCompletely",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::LzwEarlyChangeImage_RendersNotBlank",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -658,7 +686,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -694,6 +722,13 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::LzwWithTiffPredictorImage_RendersTheGradient",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -943,7 +978,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -979,6 +1014,13 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_PdfjsIssue14999_Type3CcittDecodeParmsRenderReadableGlyphMasks",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1133,7 +1175,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -1169,6 +1211,13 @@
             "ref": "Excise.Rendering.Tests/DctImageDecoderTests.cs::TransformPolicyUsesDeclaredValueAndCmykFallback",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_PopplerJpeg_ExplicitDctColorTransformColumnsRender",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1425,7 +1474,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -1468,6 +1517,13 @@
             "ref": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Bug1087_JbigImageWithGlobals_DecodesFullImage",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::Jbig2WithGlobalsReference_RendersWithinCalibratedInkBounds",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1527,7 +1583,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -1556,6 +1612,13 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::CryptIdentityFilteredImage_RendersTheRawPixels",
+            "modes": [
+              "render"
             ]
           }
         ]

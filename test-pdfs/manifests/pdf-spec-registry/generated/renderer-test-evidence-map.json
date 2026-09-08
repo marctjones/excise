@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "d9b14c6f59f866eabec91603934b365e6bbca02a4ec037eb75b1ae179191058d",
+  "sourceFingerprint": "0076cfedb06eb44415fe416460e7575322f87ab4394841deedadc0c61bafc7c0",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -17693,6 +17693,186 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::ImageFilterRenderTests.Ascii85EncodedRedImage_RendersSolidRed",
+      "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
+      "class": "ImageFilterRenderTests",
+      "method": "Ascii85EncodedRedImage_RendersSolidRed",
+      "line": 76,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::ImageFilterRenderTests.PngPredictorFlateImage_RendersTheGradient",
+      "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
+      "class": "ImageFilterRenderTests",
+      "method": "PngPredictorFlateImage_RendersTheGradient",
+      "line": 97,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::ImageFilterRenderTests.TiffPredictorFlateImage_RendersTheGradient",
+      "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
+      "class": "ImageFilterRenderTests",
+      "method": "TiffPredictorFlateImage_RendersTheGradient",
+      "line": 121,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::ImageFilterRenderTests.LzwWithTiffPredictorImage_RendersTheGradient",
+      "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
+      "class": "ImageFilterRenderTests",
+      "method": "LzwWithTiffPredictorImage_RendersTheGradient",
+      "line": 144,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::ImageFilterRenderTests.CryptIdentityFilteredImage_RendersTheRawPixels",
+      "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
+      "class": "ImageFilterRenderTests",
+      "method": "CryptIdentityFilteredImage_RendersTheRawPixels",
+      "line": 166,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::ImageFilterRenderTests.Jbig2WithGlobalsReference_RendersWithinCalibratedInkBounds",
+      "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
+      "class": "ImageFilterRenderTests",
+      "method": "Jbig2WithGlobalsReference_RendersWithinCalibratedInkBounds",
+      "line": 190,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "images",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::ImageFilterRenderTests.LzwEarlyChangeImage_RendersNotBlank",
+      "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
+      "class": "ImageFilterRenderTests",
+      "method": "LzwEarlyChangeImage_RendersNotBlank",
+      "line": 218,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/InlineImageCrLfSeparatorTests.cs::InlineImageCrLfSeparatorTests.InlineImage_DecodesRegardlessOfIdSeparator",
       "path": "Excise.Rendering.Tests/InlineImageCrLfSeparatorTests.cs",
       "class": "InlineImageCrLfSeparatorTests",
@@ -32967,15 +33147,15 @@
     }
   ],
   "summary": {
-    "testMethods": 920,
+    "testMethods": 927,
     "facets": {
       "content-streams": 266,
       "content-strings-and-text": 5,
-      "differential-rendering": 434,
+      "differential-rendering": 435,
       "fonts": 179,
       "functions-and-shadings": 46,
       "graphics-state-and-paths": 308,
-      "images": 119,
+      "images": 126,
       "page-group-backdrop": 3,
       "renderer-integration-general": 22,
       "renderer-performance-and-lifetime": 12,
@@ -32984,7 +33164,7 @@
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 5,
       "pdf.17.content.streams:parse": 271,
-      "pdf.17.content.streams:render": 573,
+      "pdf.17.content.streams:render": 574,
       "pdf.17.content.text-state:extract": 5,
       "pdf.17.content.text-state:parse": 5,
       "pdf.17.content.text-state:render": 5,
@@ -32992,10 +33172,10 @@
       "pdf.17.graphics.color:render": 46,
       "pdf.17.graphics.fonts:extract": 179,
       "pdf.17.graphics.fonts:parse": 179,
-      "pdf.17.graphics.fonts:render": 563,
-      "pdf.17.graphics.images:extract": 119,
-      "pdf.17.graphics.images:parse": 119,
-      "pdf.17.graphics.images:render": 526,
+      "pdf.17.graphics.fonts:render": 564,
+      "pdf.17.graphics.images:extract": 126,
+      "pdf.17.graphics.images:parse": 126,
+      "pdf.17.graphics.images:render": 533,
       "pdf.17.graphics.paths-painting:parse": 308,
       "pdf.17.graphics.paths-painting:render": 308,
       "pdf.17.graphics.patterns-shadings:parse": 46,
@@ -33003,7 +33183,7 @@
       "pdf.17.graphics.state:parse": 308,
       "pdf.17.graphics.state:render": 308,
       "pdf.17.transparency.model:parse": 47,
-      "pdf.17.transparency.model:render": 464
+      "pdf.17.transparency.model:render": 465
     },
     "unclassified": 22,
     "allTestsMapped": true

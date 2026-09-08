@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T03:12:22.323123+00:00",
-  "gitRevision": "6dc070f4b20165c0a5b475f7e2028e1aca55cfc4",
+  "recordedAt": "2026-09-08T03:35:35.759859+00:00",
+  "gitRevision": "0db1c44e50c9f453f964101457adad3aeb355943",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -301,6 +301,11 @@
       "path": "/tmp/new3-trx/rendering.trx",
       "modifiedAt": "2026-09-08T03:12:18.833915+00:00",
       "sha256": "6861c6234457062b4e26e72887a4a55eef603b07c527c6356776bcc900402c2f"
+    },
+    {
+      "path": "/tmp/new4-trx/rendering.trx",
+      "modifiedAt": "2026-09-08T03:35:31.949550+00:00",
+      "sha256": "e1f41a7cfbc7f77305b4888180db6933dc5cb69520cfed15e0bbe1223e4d7741"
     }
   ],
   "outcomes": [
@@ -64153,6 +64158,62 @@
       "trxSha256": "3a38f38270d8342af11be4b994fadd916985bcff123ac8e197d3ba6c282e3700"
     },
     {
+      "testName": "Excise.Rendering.Tests.ImageFilterRenderTests.Ascii85EncodedRedImage_RendersSolidRed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010564",
+      "trx": "/tmp/new4-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:35:31.949550+00:00",
+      "trxSha256": "e1f41a7cfbc7f77305b4888180db6933dc5cb69520cfed15e0bbe1223e4d7741"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.ImageFilterRenderTests.CryptIdentityFilteredImage_RendersTheRawPixels",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006483",
+      "trx": "/tmp/new4-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:35:31.949550+00:00",
+      "trxSha256": "e1f41a7cfbc7f77305b4888180db6933dc5cb69520cfed15e0bbe1223e4d7741"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.ImageFilterRenderTests.Jbig2WithGlobalsReference_RendersWithinCalibratedInkBounds(fixtureName: \"bug_631912.pdf\", subdir: null, minDark: 0.0001, maxDark: 0.01)",
+      "outcome": "Passed",
+      "duration": "00:00:00.1512046",
+      "trx": "/tmp/new4-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:35:31.949550+00:00",
+      "trxSha256": "e1f41a7cfbc7f77305b4888180db6933dc5cb69520cfed15e0bbe1223e4d7741"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.ImageFilterRenderTests.LzwEarlyChangeImage_RendersNotBlank",
+      "outcome": "Passed",
+      "duration": "00:00:00.0304681",
+      "trx": "/tmp/new4-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:35:31.949550+00:00",
+      "trxSha256": "e1f41a7cfbc7f77305b4888180db6933dc5cb69520cfed15e0bbe1223e4d7741"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.ImageFilterRenderTests.LzwWithTiffPredictorImage_RendersTheGradient",
+      "outcome": "Passed",
+      "duration": "00:00:00.0009892",
+      "trx": "/tmp/new4-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:35:31.949550+00:00",
+      "trxSha256": "e1f41a7cfbc7f77305b4888180db6933dc5cb69520cfed15e0bbe1223e4d7741"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.ImageFilterRenderTests.PngPredictorFlateImage_RendersTheGradient",
+      "outcome": "Passed",
+      "duration": "00:00:00.0042568",
+      "trx": "/tmp/new4-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:35:31.949550+00:00",
+      "trxSha256": "e1f41a7cfbc7f77305b4888180db6933dc5cb69520cfed15e0bbe1223e4d7741"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.ImageFilterRenderTests.TiffPredictorFlateImage_RendersTheGradient",
+      "outcome": "Passed",
+      "duration": "00:00:00.0008890",
+      "trx": "/tmp/new4-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:35:31.949550+00:00",
+      "trxSha256": "e1f41a7cfbc7f77305b4888180db6933dc5cb69520cfed15e0bbe1223e4d7741"
+    },
+    {
       "testName": "Excise.Rendering.Tests.InlineImageCrLfSeparatorTests.InlineImage_DecodesRegardlessOfIdSeparator(separator: \" \", expectDrawn: True)",
       "outcome": "Passed",
       "duration": "00:00:00.0021128",
@@ -68066,12 +68127,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 59,
-    "tests": 8470,
+    "trxFiles": 60,
+    "tests": 8477,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7543
+      "Passed": 7550
     },
     "status": "recorded"
   }
