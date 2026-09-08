@@ -879,9 +879,18 @@
       "capability": "pdf.20.content.operator-001",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-002",
@@ -929,9 +938,18 @@
       "capability": "pdf.20.content.operator-002",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-003",
@@ -979,9 +997,18 @@
       "capability": "pdf.20.content.operator-003",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-004",
@@ -1029,9 +1056,18 @@
       "capability": "pdf.20.content.operator-004",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-005",
@@ -1079,9 +1115,18 @@
       "capability": "pdf.20.content.operator-005",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-006",
@@ -1129,9 +1174,18 @@
       "capability": "pdf.20.content.operator-006",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-007",
@@ -1179,9 +1233,18 @@
       "capability": "pdf.20.content.operator-007",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-008",
@@ -1229,9 +1292,18 @@
       "capability": "pdf.20.content.operator-008",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-009",
@@ -1279,9 +1351,18 @@
       "capability": "pdf.20.content.operator-009",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-010",
@@ -1329,9 +1410,18 @@
       "capability": "pdf.20.content.operator-010",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-011",
@@ -1379,9 +1469,18 @@
       "capability": "pdf.20.content.operator-011",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-012",
@@ -1429,9 +1528,18 @@
       "capability": "pdf.20.content.operator-012",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-013",
@@ -1479,9 +1587,18 @@
       "capability": "pdf.20.content.operator-013",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-014",
@@ -1529,9 +1646,18 @@
       "capability": "pdf.20.content.operator-014",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-015",
@@ -1579,9 +1705,18 @@
       "capability": "pdf.20.content.operator-015",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-016",
@@ -1629,9 +1764,18 @@
       "capability": "pdf.20.content.operator-016",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-017",
@@ -1679,9 +1823,18 @@
       "capability": "pdf.20.content.operator-017",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-018",
@@ -1729,9 +1882,18 @@
       "capability": "pdf.20.content.operator-018",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-019",
@@ -1779,9 +1941,18 @@
       "capability": "pdf.20.content.operator-019",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-020",
@@ -1829,9 +2000,18 @@
       "capability": "pdf.20.content.operator-020",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-021",
@@ -1879,9 +2059,18 @@
       "capability": "pdf.20.content.operator-021",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-022",
@@ -1929,9 +2118,18 @@
       "capability": "pdf.20.content.operator-022",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-023",
@@ -1979,9 +2177,18 @@
       "capability": "pdf.20.content.operator-023",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-024",
@@ -2029,9 +2236,18 @@
       "capability": "pdf.20.content.operator-024",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-025",
@@ -2079,9 +2295,18 @@
       "capability": "pdf.20.content.operator-025",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-026",
@@ -2129,9 +2354,18 @@
       "capability": "pdf.20.content.operator-026",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-027",
@@ -2179,9 +2413,18 @@
       "capability": "pdf.20.content.operator-027",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-028",
@@ -2229,9 +2472,18 @@
       "capability": "pdf.20.content.operator-028",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-029",
@@ -2279,9 +2531,18 @@
       "capability": "pdf.20.content.operator-029",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-030",
@@ -2329,9 +2590,18 @@
       "capability": "pdf.20.content.operator-030",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-031",
@@ -2379,9 +2649,18 @@
       "capability": "pdf.20.content.operator-031",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-032",
@@ -2429,9 +2708,18 @@
       "capability": "pdf.20.content.operator-032",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-033",
@@ -2479,9 +2767,18 @@
       "capability": "pdf.20.content.operator-033",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-034",
@@ -2529,9 +2826,18 @@
       "capability": "pdf.20.content.operator-034",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-035",
@@ -2579,9 +2885,18 @@
       "capability": "pdf.20.content.operator-035",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-036",
@@ -2629,9 +2944,18 @@
       "capability": "pdf.20.content.operator-036",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-037",
@@ -2679,9 +3003,18 @@
       "capability": "pdf.20.content.operator-037",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-038",
@@ -2729,9 +3062,18 @@
       "capability": "pdf.20.content.operator-038",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-039",
@@ -2779,9 +3121,18 @@
       "capability": "pdf.20.content.operator-039",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-040",
@@ -2829,9 +3180,18 @@
       "capability": "pdf.20.content.operator-040",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-041",
@@ -2879,9 +3239,18 @@
       "capability": "pdf.20.content.operator-041",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-042",
@@ -2929,9 +3298,18 @@
       "capability": "pdf.20.content.operator-042",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-043",
@@ -2979,9 +3357,18 @@
       "capability": "pdf.20.content.operator-043",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-044",
@@ -3029,9 +3416,18 @@
       "capability": "pdf.20.content.operator-044",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-045",
@@ -3079,9 +3475,18 @@
       "capability": "pdf.20.content.operator-045",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-046",
@@ -3129,9 +3534,18 @@
       "capability": "pdf.20.content.operator-046",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-047",
@@ -3179,9 +3593,18 @@
       "capability": "pdf.20.content.operator-047",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-048",
@@ -3229,9 +3652,18 @@
       "capability": "pdf.20.content.operator-048",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-049",
@@ -3279,9 +3711,18 @@
       "capability": "pdf.20.content.operator-049",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-050",
@@ -3329,9 +3770,18 @@
       "capability": "pdf.20.content.operator-050",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-051",
@@ -3379,9 +3829,18 @@
       "capability": "pdf.20.content.operator-051",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-052",
@@ -3429,9 +3888,18 @@
       "capability": "pdf.20.content.operator-052",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-053",
@@ -3479,9 +3947,18 @@
       "capability": "pdf.20.content.operator-053",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-054",
@@ -3529,9 +4006,18 @@
       "capability": "pdf.20.content.operator-054",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-055",
@@ -3579,9 +4065,18 @@
       "capability": "pdf.20.content.operator-055",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-056",
@@ -3629,9 +4124,18 @@
       "capability": "pdf.20.content.operator-056",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-057",
@@ -3679,9 +4183,18 @@
       "capability": "pdf.20.content.operator-057",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-058",
@@ -3729,9 +4242,18 @@
       "capability": "pdf.20.content.operator-058",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-059",
@@ -3779,9 +4301,18 @@
       "capability": "pdf.20.content.operator-059",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-060",
@@ -3829,9 +4360,18 @@
       "capability": "pdf.20.content.operator-060",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-061",
@@ -3879,9 +4419,18 @@
       "capability": "pdf.20.content.operator-061",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-062",
@@ -3929,9 +4478,18 @@
       "capability": "pdf.20.content.operator-062",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-063",
@@ -3979,9 +4537,18 @@
       "capability": "pdf.20.content.operator-063",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-064",
@@ -4029,9 +4596,18 @@
       "capability": "pdf.20.content.operator-064",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-065",
@@ -4079,9 +4655,18 @@
       "capability": "pdf.20.content.operator-065",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-066",
@@ -4129,9 +4714,18 @@
       "capability": "pdf.20.content.operator-066",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-067",
@@ -4179,9 +4773,18 @@
       "capability": "pdf.20.content.operator-067",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-068",
@@ -4229,9 +4832,18 @@
       "capability": "pdf.20.content.operator-068",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-069",
@@ -4279,9 +4891,18 @@
       "capability": "pdf.20.content.operator-069",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-070",
@@ -4329,9 +4950,18 @@
       "capability": "pdf.20.content.operator-070",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-071",
@@ -4379,9 +5009,18 @@
       "capability": "pdf.20.content.operator-071",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-072",
@@ -4429,9 +5068,18 @@
       "capability": "pdf.20.content.operator-072",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.content.operator-073",
@@ -4479,9 +5127,18 @@
       "capability": "pdf.20.content.operator-073",
       "section": "operators",
       "mode": "write",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
+      "currentState": "partial",
+      "fixtureStatus": "recorded-passing",
+      "fixtures": [
+        {
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ],
+          "resolution": "method-reference"
+        }
+      ]
     },
     {
       "capability": "pdf.20.renderer.requirement-001",
@@ -9021,8 +9678,8 @@
   "summary": {
     "targetModes": 944,
     "fixtureStatus": {
-      "not-contracted": 786,
-      "recorded-passing": 158
+      "not-contracted": 713,
+      "recorded-passing": 231
     }
   }
 }

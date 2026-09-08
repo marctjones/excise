@@ -23,7 +23,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -39,7 +39,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -47,7 +48,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -55,7 +57,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -123,7 +126,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -139,7 +142,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -147,7 +151,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -155,7 +160,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -223,7 +229,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -239,7 +245,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -247,7 +254,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -255,7 +263,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -323,7 +332,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -339,7 +348,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -347,7 +357,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -355,7 +366,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -423,7 +435,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -439,7 +451,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -447,7 +460,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -455,7 +469,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -523,7 +538,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -539,7 +554,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -547,7 +563,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -555,7 +572,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -623,7 +641,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -639,7 +657,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -647,7 +666,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -655,7 +675,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -723,7 +744,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -739,7 +760,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -747,7 +769,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -755,7 +778,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -823,7 +847,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -839,7 +863,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -847,7 +872,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -855,7 +881,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -923,7 +950,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -939,7 +966,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -947,7 +975,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -955,7 +984,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1023,7 +1053,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -1039,7 +1069,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -1047,7 +1078,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -1055,7 +1087,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1123,7 +1156,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -1139,7 +1172,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -1147,7 +1181,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -1155,7 +1190,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1223,7 +1259,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -1239,7 +1275,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -1247,7 +1284,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -1255,7 +1293,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1323,7 +1362,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -1339,7 +1378,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -1347,7 +1387,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -1355,7 +1396,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1423,7 +1465,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -1439,7 +1481,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -1447,7 +1490,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -1455,7 +1499,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1523,7 +1568,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -1539,7 +1584,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -1547,7 +1593,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -1555,7 +1602,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1623,7 +1671,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -1639,7 +1687,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -1647,7 +1696,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -1655,7 +1705,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1723,7 +1774,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -1739,7 +1790,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -1747,7 +1799,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -1755,7 +1808,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1823,7 +1877,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -1839,7 +1893,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -1847,7 +1902,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -1855,7 +1911,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1923,7 +1980,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -1939,7 +1996,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -1947,7 +2005,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -1955,7 +2014,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2023,7 +2083,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -2039,7 +2099,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -2047,7 +2108,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -2055,7 +2117,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2123,7 +2186,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -2139,7 +2202,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -2147,7 +2211,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -2155,7 +2220,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2223,7 +2289,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -2239,7 +2305,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -2247,7 +2314,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -2255,7 +2323,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2323,7 +2392,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -2339,7 +2408,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -2347,7 +2417,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -2355,7 +2426,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2423,7 +2495,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -2439,7 +2511,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -2447,7 +2520,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -2455,7 +2529,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2523,7 +2598,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -2539,7 +2614,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -2547,7 +2623,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -2555,7 +2632,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2623,7 +2701,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -2639,7 +2717,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -2647,7 +2726,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -2655,7 +2735,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2723,7 +2804,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -2739,7 +2820,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -2747,7 +2829,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -2755,7 +2838,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2823,7 +2907,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -2839,7 +2923,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -2847,7 +2932,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -2855,7 +2941,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2923,7 +3010,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -2939,7 +3026,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -2947,7 +3035,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -2955,7 +3044,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3023,7 +3113,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -3039,7 +3129,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -3047,7 +3138,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -3055,7 +3147,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3123,7 +3216,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -3139,7 +3232,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -3147,7 +3241,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -3155,7 +3250,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3223,7 +3319,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -3239,7 +3335,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -3247,7 +3344,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -3255,7 +3353,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3323,7 +3422,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -3339,7 +3438,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -3347,7 +3447,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -3355,7 +3456,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3423,7 +3525,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -3439,7 +3541,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -3447,7 +3550,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -3455,7 +3559,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3523,7 +3628,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -3539,7 +3644,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -3547,7 +3653,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -3555,7 +3662,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3623,7 +3731,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -3639,7 +3747,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -3647,7 +3756,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -3655,7 +3765,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3723,7 +3834,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -3739,7 +3850,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -3747,7 +3859,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -3755,7 +3868,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3823,7 +3937,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -3839,7 +3953,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -3847,7 +3962,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -3855,7 +3971,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3923,7 +4040,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -3939,7 +4056,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -3947,7 +4065,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -3955,7 +4074,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4023,7 +4143,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -4039,7 +4159,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -4047,7 +4168,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -4055,7 +4177,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4123,7 +4246,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -4139,7 +4262,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -4147,7 +4271,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -4155,7 +4280,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4223,7 +4349,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -4239,7 +4365,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -4247,7 +4374,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -4255,7 +4383,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4323,7 +4452,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -4339,7 +4468,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -4347,7 +4477,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -4355,7 +4486,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4423,7 +4555,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -4439,7 +4571,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -4447,7 +4580,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -4455,7 +4589,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4523,7 +4658,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -4539,7 +4674,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -4547,7 +4683,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -4555,7 +4692,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4623,7 +4761,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -4639,7 +4777,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -4647,7 +4786,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -4655,7 +4795,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4723,7 +4864,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -4739,7 +4880,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -4747,7 +4889,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -4755,7 +4898,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4823,7 +4967,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -4839,7 +4983,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -4847,7 +4992,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -4855,7 +5001,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4923,7 +5070,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -4939,7 +5086,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -4947,7 +5095,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -4955,7 +5104,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5023,7 +5173,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -5039,7 +5189,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -5047,7 +5198,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -5055,7 +5207,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5123,7 +5276,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -5139,7 +5292,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -5147,7 +5301,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -5155,7 +5310,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5223,7 +5379,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -5239,7 +5395,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -5247,7 +5404,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -5255,7 +5413,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5323,7 +5482,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -5339,7 +5498,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -5347,7 +5507,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -5355,7 +5516,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5423,7 +5585,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -5439,7 +5601,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -5447,7 +5610,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -5455,7 +5619,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5523,7 +5688,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -5539,7 +5704,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -5547,7 +5713,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -5555,7 +5722,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5623,7 +5791,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -5639,7 +5807,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -5647,7 +5816,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -5655,7 +5825,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5723,7 +5894,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -5739,7 +5910,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -5747,7 +5919,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -5755,7 +5928,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5823,7 +5997,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -5839,7 +6013,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -5847,7 +6022,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -5855,7 +6031,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5923,7 +6100,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -5939,7 +6116,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -5947,7 +6125,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -5955,7 +6134,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6023,7 +6203,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -6039,7 +6219,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6047,7 +6228,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -6055,7 +6237,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6123,7 +6306,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -6139,7 +6322,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6147,7 +6331,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -6155,7 +6340,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6223,7 +6409,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -6239,7 +6425,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6247,7 +6434,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -6255,7 +6443,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6323,7 +6512,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -6339,7 +6528,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6347,7 +6537,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -6355,7 +6546,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6423,7 +6615,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -6439,7 +6631,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6447,7 +6640,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -6455,7 +6649,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6523,7 +6718,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -6539,7 +6734,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6547,7 +6743,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -6555,7 +6752,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6623,7 +6821,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -6639,7 +6837,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6647,7 +6846,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -6655,7 +6855,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6723,7 +6924,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -6739,7 +6940,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6747,7 +6949,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -6755,7 +6958,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6823,7 +7027,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -6839,7 +7043,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6847,7 +7052,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -6855,7 +7061,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6923,7 +7130,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -6939,7 +7146,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6947,7 +7155,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -6955,7 +7164,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -7023,7 +7233,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -7039,7 +7249,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -7047,7 +7258,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -7055,7 +7267,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -7123,7 +7336,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -7139,7 +7352,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -7147,7 +7361,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -7155,7 +7370,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -7223,7 +7439,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "render": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -7239,7 +7455,8 @@
         "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -7247,7 +7464,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           },
           {
@@ -7255,7 +7473,8 @@
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "write"
             ]
           }
         ]
