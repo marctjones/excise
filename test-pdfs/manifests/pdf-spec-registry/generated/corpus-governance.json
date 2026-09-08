@@ -113,6 +113,7 @@
         "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs",
         "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
         "Excise.Rendering.Tests/SkiaRendererTests.cs",
+        "Excise.Rendering.Tests/Visual/RenderTailEmptyTransparencyGroupTests.cs",
         "Excise.Rendering.Tests/Visual/TamReviewCffSubsetTests.cs",
         "docs/corpus-reports/exploratory-report.json",
         "scripts/cluster-corpus-defects.sh",

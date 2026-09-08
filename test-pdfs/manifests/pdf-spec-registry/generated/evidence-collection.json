@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1009,
-  "indexedContentSha256": "b8052bf54fdaa09b8806dc37f64f41564931d99fd39b6d44208fde0a9995eecd",
+  "indexedFileCount": 1012,
+  "indexedContentSha256": "42361f7e2ef72fdae3c5a783f2c1cef24cdd32c661aafc656c3cf233a130a039",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -6563,6 +6563,16 @@
           ]
         },
         {
+          "path": "Excise.Core/ColorSpaces/PdfIccProfile.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "construction",
+            "line",
+            "path",
+            "colorspace"
+          ]
+        },
+        {
           "path": "Excise.Core/Content/ContentOperator.cs",
           "kind": "source",
           "matchedTerms": [
@@ -7218,19 +7228,9 @@
             "path",
             "colorspace"
           ]
-        },
-        {
-          "path": "Excise.Rendering/SkiaRenderer.Operators.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "clipping",
-            "line",
-            "path",
-            "colorspace"
-          ]
         }
       ],
-      "candidateReferenceCount": 440
+      "candidateReferenceCount": 442
     },
     {
       "id": "pdf.17.graphics.color",
@@ -7391,6 +7391,7 @@
           "kind": "source",
           "matchedTerms": [
             "color",
+            "colour",
             "output",
             "spaces",
             "values",
@@ -7910,6 +7911,7 @@
           "kind": "source",
           "matchedTerms": [
             "color",
+            "colour",
             "output",
             "skiarenderer"
           ]
@@ -8055,7 +8057,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 211
+      "candidateReferenceCount": 212
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -8768,6 +8770,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/ColorSpaces/PdfIccProfileTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "decoding",
+            "inline",
+            "colorspace"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -8967,17 +8978,9 @@
             "decoding",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Parsing/MalformedXRefFixtures.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "images"
-          ]
         }
       ],
-      "candidateReferenceCount": 150
+      "candidateReferenceCount": 151
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -9560,6 +9563,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "fonts",
+            "glyph"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -9773,17 +9784,9 @@
             "glyph",
             "metrics"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/RtlType0ExtractionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "fonts",
-            "glyph"
-          ]
         }
       ],
-      "candidateReferenceCount": 154
+      "candidateReferenceCount": 155
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -9854,6 +9857,14 @@
             "color",
             "colour",
             "conversion"
+          ]
+        },
+        {
+          "path": "Excise.Core/ColorSpaces/PdfIccProfile.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "color",
+            "colour"
           ]
         },
         {
@@ -10079,6 +10090,15 @@
           "matchedTerms": [
             "color",
             "scan"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "skiarenderer"
           ]
         },
         {
@@ -10536,30 +10556,9 @@
             "renderpage",
             "skiarenderer"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "conversion",
-            "renderpage",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Visual/IccBasedCmykOverprintTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "renderpage",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 107
+      "candidateReferenceCount": 109
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -11390,6 +11389,7 @@
           "matchedTerms": [
             "form",
             "xobjects",
+            "contentstream",
             "textstate"
           ]
         },
@@ -12185,6 +12185,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "iso",
+            "operators",
+            "contentstream",
+            "textstate"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -12550,17 +12560,9 @@
             "contentoperator",
             "contentstream"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Corpus/IsartorRoundTripTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "content-stream",
-            "iso"
-          ]
         }
       ],
-      "candidateReferenceCount": 99
+      "candidateReferenceCount": 101
     },
     {
       "id": "pdf.17.content.text-state",
@@ -18571,6 +18573,7 @@
           "kind": "source",
           "matchedTerms": [
             "color",
+            "colour",
             "spaces"
           ]
         },
@@ -18775,6 +18778,15 @@
           "matchedTerms": [
             "color",
             "spaces"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "skiarenderer"
           ]
         },
         {
@@ -19162,7 +19174,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 75
+      "candidateReferenceCount": 76
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -29402,6 +29414,15 @@
       },
       "candidateReferences": [
         {
+          "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core/Content/ContentStreamParser.cs",
           "kind": "source",
           "matchedTerms": [
@@ -30160,18 +30181,9 @@
             "image",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "image",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 110
+      "candidateReferenceCount": 111
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -30805,6 +30817,15 @@
       },
       "candidateReferences": [
         {
+          "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core/Content/ContentStreamWalker.cs",
           "kind": "source",
           "matchedTerms": [
@@ -31106,7 +31127,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 31
+      "candidateReferenceCount": 32
     },
     {
       "id": "pdf.20.image.requirement-027",
@@ -31156,6 +31177,15 @@
         ]
       },
       "candidateReferences": [
+        {
+          "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image"
+          ]
+        },
         {
           "path": "Excise.Core/Content/ContentStreamWalker.cs",
           "kind": "source",
@@ -31510,7 +31540,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 37
+      "candidateReferenceCount": 38
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -31560,6 +31590,15 @@
         ]
       },
       "candidateReferences": [
+        {
+          "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "devicecmyk",
+            "image",
+            "image"
+          ]
+        },
         {
           "path": "Excise.Core/Content/ContentStreamWalker.cs",
           "kind": "source",
@@ -31670,6 +31709,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/ColorSpaces/OutputIntentColorSpaceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicecmyk",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31768,7 +31816,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 21
+      "candidateReferenceCount": 23
     },
     {
       "id": "pdf.20.image.requirement-029",
@@ -31818,6 +31866,15 @@
         ]
       },
       "candidateReferences": [
+        {
+          "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "iccbased",
+            "image",
+            "image"
+          ]
+        },
         {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
@@ -31925,7 +31982,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 10
+      "candidateReferenceCount": 11
     },
     {
       "id": "pdf.20.image.requirement-030",
@@ -31975,6 +32032,15 @@
         ]
       },
       "candidateReferences": [
+        {
+          "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "indexed",
+            "image"
+          ]
+        },
         {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
@@ -32194,7 +32260,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 22
+      "candidateReferenceCount": 23
     },
     {
       "id": "pdf.20.image.requirement-031",
@@ -32255,6 +32321,15 @@
         },
         {
           "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
           "kind": "source",
           "matchedTerms": [
             "image",
@@ -32992,18 +33067,9 @@
             "lab",
             "image"
           ]
-        },
-        {
-          "path": "tests/redaction-hard-cases.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 82
+      "candidateReferenceCount": 83
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -33053,6 +33119,15 @@
         ]
       },
       "candidateReferences": [
+        {
+          "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "separation",
+            "image"
+          ]
+        },
         {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
@@ -33157,7 +33232,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 10
+      "candidateReferenceCount": 11
     },
     {
       "id": "pdf.20.image.requirement-033",
@@ -33207,6 +33282,15 @@
         ]
       },
       "candidateReferences": [
+        {
+          "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "devicen",
+            "image",
+            "image"
+          ]
+        },
         {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
@@ -33312,7 +33396,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 10
+      "candidateReferenceCount": 11
     },
     {
       "id": "pdf.20.image.requirement-034",
@@ -46204,7 +46288,9 @@
           "kind": "source",
           "matchedTerms": [
             "output",
-            "preview"
+            "preview",
+            "transparency",
+            "transparency"
           ]
         },
         {
@@ -46475,6 +46561,15 @@
           "matchedTerms": [
             "output",
             "parameters"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/ColorSpaces/OutputIntentColorSpaceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "transparency",
+            "transparency"
           ]
         },
         {
@@ -46810,7 +46905,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 71
+      "candidateReferenceCount": 72
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -53770,6 +53865,15 @@
           ]
         },
         {
+          "path": "Excise.Core/ColorSpaces/PdfIccProfile.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "class",
+            "maps",
+            "outputintent"
+          ]
+        },
+        {
           "path": "Excise.Core/Content/ContentStreamWalker.cs",
           "kind": "source",
           "matchedTerms": [
@@ -54450,17 +54554,9 @@
             "class",
             "maps"
           ]
-        },
-        {
-          "path": "Excise.Rendering/SkiaRenderer.Images.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "class",
-            "maps"
-          ]
         }
       ],
-      "candidateReferenceCount": 306
+      "candidateReferenceCount": 308
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -54832,13 +54928,23 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "data",
+            "measurement",
+            "metadata"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
             "coordinate",
             "data",
             "dictionaries",
-            "metadata"
+            "metadata",
+            "outputintent"
           ]
         },
         {
@@ -55175,17 +55281,9 @@
             "data",
             "dictionaries"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/PdftocairoOutlierClassificationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "data",
-            "measurement"
-          ]
         }
       ],
-      "candidateReferenceCount": 138
+      "candidateReferenceCount": 139
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -55616,7 +55714,8 @@
             "byte",
             "dictionaries",
             "validation",
-            "metadata"
+            "metadata",
+            "outputintent"
           ]
         },
         {
@@ -57585,6 +57684,7 @@
           "matchedTerms": [
             "conformance",
             "pdfa",
+            "profile",
             "conformance",
             "pdfa"
           ]
@@ -57988,6 +58088,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "conformance",
+            "profile",
+            "conformance",
+            "pdfa"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Authoring/PdfUaConformanceTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58097,7 +58207,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 20
+      "candidateReferenceCount": 21
     },
     {
       "id": "pdf.20.profile.pdfx",
@@ -58157,6 +58267,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "conformance",
+            "profile",
+            "conformance",
+            "pdfa"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Conformance/Pdf20RendererRequirementMatrixTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58186,7 +58306,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 7
+      "candidateReferenceCount": 8
     },
     {
       "id": "pdfe.product.safety.limited-editing",
@@ -62571,6 +62691,7 @@
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
+            "audit",
             "local",
             "log"
           ]
@@ -63055,6 +63176,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Visual/RenderTailEmptyTransparencyGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "local",
+            "log"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/Controls/PdfViewerSelectionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -63080,19 +63209,9 @@
             "ocr",
             "security"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "log",
-            "pdfe",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 106
+      "candidateReferenceCount": 107
     },
     {
       "id": "pdfe.product.platform.printing",

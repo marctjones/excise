@@ -44035,6 +44035,55 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreJoinedLigatureName_ReturnsDecomposedConcatenation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_ThreeComponentUnderscoreName_ConcatenatesAll",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithUnknownComponent_ReturnsNull",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithDotSuffix_StripsSuffixFirstThenSplits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_GlyphNameLiterallyCalledUnderscore_StillDirectMapsToUnderscoreChar",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_SingleUnderscoreWithNoComponents_ReturnsNull",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_DirectLigatureNames_StillMapToPrecomposedCodepoints",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -44974,69 +45023,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_TimesRoman_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_TimesBold_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_TimesItalic_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_Courier_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_CourierBold_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_CourierOblique_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_HelveticaOblique_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_WithSize_CreatesNewFontWithDifferentSize",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -45525,6 +45511,55 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreJoinedLigatureName_ReturnsDecomposedConcatenation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_ThreeComponentUnderscoreName_ConcatenatesAll",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithUnknownComponent_ReturnsNull",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithDotSuffix_StripsSuffixFirstThenSplits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_GlyphNameLiterallyCalledUnderscore_StillDirectMapsToUnderscoreChar",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_SingleUnderscoreWithNoComponents_ReturnsNull",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_DirectLigatureNames_StillMapToPrecomposedCodepoints",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -46464,69 +46499,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_TimesRoman_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_TimesBold_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_TimesItalic_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_Courier_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_CourierBold_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_CourierOblique_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_HelveticaOblique_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_WithSize_CreatesNewFontWithDifferentSize",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -46997,6 +46969,55 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreJoinedLigatureName_ReturnsDecomposedConcatenation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_ThreeComponentUnderscoreName_ConcatenatesAll",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithUnknownComponent_ReturnsNull",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithDotSuffix_StripsSuffixFirstThenSplits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_GlyphNameLiterallyCalledUnderscore_StillDirectMapsToUnderscoreChar",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_SingleUnderscoreWithNoComponents_ReturnsNull",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_DirectLigatureNames_StillMapToPrecomposedCodepoints",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -47936,69 +47957,6 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_TimesRoman_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_TimesBold_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_TimesItalic_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_Courier_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_CourierBold_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_CourierOblique_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_HelveticaOblique_CreatesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfFont_WithSize_CreatesNewFontWithDifferentSize",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -109566,8 +109524,8 @@
     "gradeImplemented": 787,
     "gradeVerified": 70,
     "gradeUnknown": 43,
-    "testMethods": 6325,
-    "testMethodsWithCapabilityCandidate": 3913,
+    "testMethods": 6344,
+    "testMethodsWithCapabilityCandidate": 3928,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
