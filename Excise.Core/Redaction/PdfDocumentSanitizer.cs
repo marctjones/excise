@@ -342,10 +342,22 @@ public static class PdfDocumentSanitizer
         var remove = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
         foreach (var f in files)
         {
-            if (f.Bytes == null || f.Bytes.Length == 0) continue;
-            var latin1 = Encoding.Latin1.GetString(f.Bytes);
-            var utf8 = Encoding.UTF8.GetString(f.Bytes);
-            if (terms.Any(t => Contains(latin1, t, caseSensitive) || Contains(utf8, t, caseSensitive)))
+            var hit = false;
+            if (f.Bytes is { Length: > 0 } bytes)
+            {
+                var latin1 = Encoding.Latin1.GetString(bytes);
+                var utf8 = Encoding.UTF8.GetString(bytes);
+                hit = terms.Any(t => Contains(latin1, t, caseSensitive) || Contains(utf8, t, caseSensitive));
+            }
+            // #1428: the payload wasn't the only carrier -- an attachment whose
+            // /Desc or filename (/F, /UF, read via FileName) carries the term but
+            // whose bytes don't was never flagged for removal at all, regardless
+            // of whether it came from the catalog or an annotation's own /FS.
+            if (!hit && !string.IsNullOrEmpty(f.Description))
+                hit = terms.Any(t => Contains(f.Description, t, caseSensitive));
+            if (!hit && !string.IsNullOrEmpty(f.FileName))
+                hit = terms.Any(t => Contains(f.FileName, t, caseSensitive));
+            if (hit)
                 remove.Add(f.RawDictionary);
         }
         if (remove.Count == 0) return false;
@@ -357,7 +369,42 @@ public static class PdfDocumentSanitizer
 
         changed |= FilterAssociatedFiles(document, document.Catalog, remove);
         for (var p = 1; p <= document.PageCount; p++)
-            changed |= FilterAssociatedFiles(document, document.GetPage(p).Dictionary, remove);
+        {
+            var page = document.GetPage(p);
+            changed |= FilterAssociatedFiles(document, page.Dictionary, remove);
+            // #1428: a /FileAttachment annotation's /FS is not reachable from
+            // /Names/EmbeddedFiles or /AF at all -- it can only be removed by
+            // dropping the annotation that owns it. An attachment can't be
+            // half-removed (its description/filename/bytes are one carrier), so
+            // this removes the whole annotation, matching how
+            // InteractiveRedactionScrubber.RemoveIntersectingAnnotations treats
+            // a matched annotation elsewhere in this pipeline.
+            changed |= FilterAnnotationFileAttachments(document, page.Dictionary, remove);
+        }
+        return changed;
+    }
+
+    // Remove /FileAttachment annotations whose /FS resolves into `remove` from a
+    // page's /Annots array (§12.5.6.15) -- the whole annotation, since a file
+    // attachment can't be partially scrubbed.
+    private static bool FilterAnnotationFileAttachments(PdfDocument document, PdfDictionary pageDict, HashSet<PdfDictionary> remove)
+    {
+        if (document.Resolve(pageDict.GetOptional("Annots") ?? PdfNull.Instance) is not PdfArray annots)
+            return false;
+
+        var changed = false;
+        for (var i = annots.Count - 1; i >= 0; i--)
+        {
+            if (document.Resolve(annots[i]) is not PdfDictionary annot)
+                continue;
+            if (annot.GetNameOrNull("Subtype") != "FileAttachment")
+                continue;
+            if (document.Resolve(annot.GetOptional("FS") ?? PdfNull.Instance) is not PdfDictionary fs || !remove.Contains(fs))
+                continue;
+
+            annots.RemoveAt(i);
+            changed = true;
+        }
         return changed;
     }
 

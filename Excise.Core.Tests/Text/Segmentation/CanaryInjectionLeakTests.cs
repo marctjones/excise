@@ -166,6 +166,122 @@ public class CanaryInjectionLeakTests
     }
 
     [Fact]
+    public void AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles()
+    {
+        // #1428: a /FileAttachment annotation's own /FS was invisible to
+        // GetEmbeddedFiles() entirely -- not registered in
+        // /Catalog/Names/EmbeddedFiles or /AF, the only two places the parser
+        // looked before this fix. No document-level attachment registration
+        // anywhere in this fixture.
+        var content = "BT /F1 14 Tf 72 700 Td (Body text) Tj ET\n";
+        var body = Encoding.Latin1.GetBytes(content);
+        var payload = "attachment payload\n";
+        var pdf = Encoding.Latin1.GetBytes(
+            "%PDF-1.7\n" +
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> >> /Annots [6 0 R] >>\nendobj\n" +
+            $"4 0 obj\n<< /Length {body.Length} >>\nstream\n{content}endstream\nendobj\n" +
+            "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n" +
+            "6 0 obj\n<< /Type /Annot /Subtype /FileAttachment /Rect [72 600 92 620] " +
+            "/FS 7 0 R >>\nendobj\n" +
+            "7 0 obj\n<< /Type /Filespec /F (secret.txt) /Desc (attachment description) " +
+            "/EF << /F 8 0 R >> >>\nendobj\n" +
+            $"8 0 obj\n<< /Type /EmbeddedFile /Length {payload.Length} >>\nstream\n{payload}endstream\nendobj\n" +
+            "trailer\n<< /Root 1 0 R /Size 9 >>\n%%EOF\n");
+
+        using var doc = PdfDocument.Open(pdf);
+
+        doc.HasEmbeddedFiles.Should().BeTrue();
+        var files = doc.GetEmbeddedFiles();
+        files.Should().ContainSingle(f => f.FileName == "secret.txt" && f.Description == "attachment description");
+    }
+
+    [Fact]
+    public void RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm()
+    {
+        // #1428: the security consequence of the discovery gap above --
+        // RedactText's document-level scrub only ever walked
+        // /Catalog/Names/EmbeddedFiles and /AF, so an annotation-only
+        // attachment's description, filename and payload all survived
+        // redaction undetected, and the annotation itself was never removed.
+        var content = "BT /F1 14 Tf 72 700 Td (Body text) Tj ET\n";
+        var body = Encoding.Latin1.GetBytes(content);
+        var payload = $"note: {Canary}\n";
+        var pdf = Encoding.Latin1.GetBytes(
+            "%PDF-1.7\n" +
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> >> /Annots [6 0 R] >>\nendobj\n" +
+            $"4 0 obj\n<< /Length {body.Length} >>\nstream\n{content}endstream\nendobj\n" +
+            "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n" +
+            "6 0 obj\n<< /Type /Annot /Subtype /FileAttachment /Rect [72 600 92 620] " +
+            "/FS 7 0 R >>\nendobj\n" +
+            "7 0 obj\n<< /Type /Filespec /F (secret.txt) /EF << /F 8 0 R >> >>\nendobj\n" +
+            $"8 0 obj\n<< /Type /EmbeddedFile /Length {payload.Length} >>\nstream\n{payload}endstream\nendobj\n" +
+            "trailer\n<< /Root 1 0 R /Size 9 >>\n%%EOF\n");
+
+        SavedPdfLeakScanner.FindTerm(pdf, Canary).Should().NotBeEmpty(
+            "guard: the fixture must contain the canary before redaction");
+
+        byte[] saved;
+        using (var doc = PdfDocument.Open(pdf))
+        {
+            doc.RedactText(Canary);
+            using var ms = new MemoryStream();
+            doc.Save(ms);
+            saved = ms.ToArray();
+        }
+
+        SavedPdfLeakScanner.FindTerm(saved, Canary).Should().BeEmpty(
+            "the annotation-only attachment carrying the term must be removed");
+        using var reopened = PdfDocument.Open(saved);
+        reopened.GetEmbeddedFiles().Should().BeEmpty();
+    }
+
+    [Fact]
+    public void RedactText_RemovesEmbeddedFile_WhenOnlyDescriptionContainsTheTerm()
+    {
+        // #1428: ScrubEmbeddedFiles previously matched ONLY on the decoded
+        // payload bytes -- an attachment whose /Desc carries the term but
+        // whose payload doesn't was never flagged for removal at all.
+        var content = "BT /F1 14 Tf 72 700 Td (Body text) Tj ET\n";
+        var body = Encoding.Latin1.GetBytes(content);
+        var payload = "unrelated payload content\n";
+        var pdf = Encoding.Latin1.GetBytes(
+            "%PDF-1.7\n" +
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R /Names << /EmbeddedFiles 6 0 R >> >>\nendobj\n" +
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n" +
+            $"4 0 obj\n<< /Length {body.Length} >>\nstream\n{content}endstream\nendobj\n" +
+            "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n" +
+            "6 0 obj\n<< /Names [(secret.txt) 7 0 R] >>\nendobj\n" +
+            $"7 0 obj\n<< /Type /Filespec /F (secret.txt) /Desc ({Canary}) /EF << /F 8 0 R >> >>\nendobj\n" +
+            $"8 0 obj\n<< /Type /EmbeddedFile /Length {payload.Length} >>\nstream\n{payload}endstream\nendobj\n" +
+            "trailer\n<< /Root 1 0 R /Size 9 >>\n%%EOF\n");
+
+        SavedPdfLeakScanner.FindTerm(pdf, Canary).Should().NotBeEmpty(
+            "guard: the fixture must contain the canary before redaction");
+
+        byte[] saved;
+        using (var doc = PdfDocument.Open(pdf))
+        {
+            doc.RedactText(Canary);
+            using var ms = new MemoryStream();
+            doc.Save(ms);
+            saved = ms.ToArray();
+        }
+
+        SavedPdfLeakScanner.FindTerm(saved, Canary).Should().BeEmpty(
+            "the attachment whose /Desc (not payload) carries the term must still be removed");
+        using var reopened = PdfDocument.Open(saved);
+        reopened.GetEmbeddedFiles().Should().BeEmpty();
+    }
+
+    [Fact]
     public void EmbeddedFileScrub_RemovesTheAttachmentWithTheTerm_KeepsUnrelatedOnes()
     {
         // #1151 — selective, not wholesale: an attachment containing the term is

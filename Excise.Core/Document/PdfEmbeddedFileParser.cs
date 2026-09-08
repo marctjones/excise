@@ -21,40 +21,81 @@ internal static class PdfEmbeddedFileParser
 
         // Try modern PDF 2.0: /Catalog/Names/EmbeddedFiles name tree
         var namesObj = doc.Catalog.GetOptional("Names");
+        var foundCatalogLevel = false;
         if (namesObj != null && doc.Resolve(namesObj) is PdfDictionary namesDictRoot)
         {
             var embeddedFilesObj = namesDictRoot.GetOptional("EmbeddedFiles");
             if (embeddedFilesObj != null && doc.Resolve(embeddedFilesObj) is PdfDictionary embeddedFilesRoot)
             {
                 WalkNameTree(doc, embeddedFilesRoot, result);
-                if (result.Count > 0)
-                    return result;
+                foundCatalogLevel = result.Count > 0;
             }
         }
 
         // Fall back to legacy PDF 1.7: /Catalog/Names/AF array or /Catalog/AF array
-        // These are less common but still valid per PDF 2.0 §7.7.4.
-        var afObj = namesObj != null && doc.Resolve(namesObj) is PdfDictionary namesDict
-                        ? namesDict.GetOptional("AF")
-                        : null;
-        afObj ??= doc.Catalog.GetOptional("AF");
-
-        if (afObj != null && doc.Resolve(afObj) is PdfArray afArray)
+        // These are less common but still valid per PDF 2.0 §7.7.4. Only tried when
+        // the modern tree found nothing -- an /AF array conventionally just POINTS
+        // BACK at entries already reachable from /Names/EmbeddedFiles (§14.13), so
+        // walking it too would double-count them.
+        if (!foundCatalogLevel)
         {
-            foreach (var fsObj in afArray)
+            var afObj = namesObj != null && doc.Resolve(namesObj) is PdfDictionary namesDict
+                            ? namesDict.GetOptional("AF")
+                            : null;
+            afObj ??= doc.Catalog.GetOptional("AF");
+
+            if (afObj != null && doc.Resolve(afObj) is PdfArray afArray)
             {
-                if (doc.Resolve(fsObj) is PdfDictionary fsDict)
+                foreach (var fsObj in afArray)
                 {
-                    // For legacy arrays, we don't have explicit names, so use a generated name.
-                    var name = $"_AF_{result.Count}";
-                    var file = ParseFileSpecification(doc, fsDict, name);
-                    if (file != null)
-                        result.Add(file);
+                    if (doc.Resolve(fsObj) is PdfDictionary fsDict)
+                    {
+                        // For legacy arrays, we don't have explicit names, so use a generated name.
+                        var name = $"_AF_{result.Count}";
+                        var file = ParseFileSpecification(doc, fsDict, name);
+                        if (file != null)
+                            result.Add(file);
+                    }
                 }
             }
         }
 
+        // A /FileAttachment annotation carries its OWN /FS directly (§12.5.6.15) —
+        // it is never registered in /Catalog/Names/EmbeddedFiles or /AF, so neither
+        // walk above can see it, and (unlike that pair) it is NOT an either/or with
+        // catalog-level attachments -- a document can have both, so this always
+        // runs, regardless of what was found above. Before this, GetEmbeddedFiles()
+        // (and therefore ScrubEmbeddedFiles, HasEmbeddedFiles, and the attachments
+        // panel) had no visibility into an annotation-only attachment at all -- its
+        // description, filename, and payload bytes all survived redaction undetected.
+        WalkAnnotationFileAttachments(doc, result);
+
         return result;
+    }
+
+    private static void WalkAnnotationFileAttachments(PdfDocument doc, List<PdfEmbeddedFile> result)
+    {
+        for (var pageIndex = 1; pageIndex <= doc.PageCount; pageIndex++)
+        {
+            var page = doc.GetPage(pageIndex);
+            if (doc.Resolve(page.Dictionary.GetOptional("Annots") ?? PdfNull.Instance) is not PdfArray annots)
+                continue;
+
+            foreach (var annotObj in annots)
+            {
+                if (doc.Resolve(annotObj) is not PdfDictionary annot)
+                    continue;
+                if (annot.GetNameOrNull("Subtype") != "FileAttachment")
+                    continue;
+                if (doc.Resolve(annot.GetOptional("FS") ?? PdfNull.Instance) is not PdfDictionary fsDict)
+                    continue;
+
+                var name = $"_Annotation_{pageIndex}_{result.Count}";
+                var file = ParseFileSpecification(doc, fsDict, name);
+                if (file != null)
+                    result.Add(file);
+            }
+        }
     }
 
     /// <summary>

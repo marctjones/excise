@@ -604,24 +604,16 @@ public partial class PdfDocument : IDisposable
     }
 
     /// <summary>
-    /// Check whether this document has embedded files (PDF 2.0 portfolios / associated files).
-    /// Returns true if /Catalog/Names/EmbeddedFiles or legacy /Catalog/AF are present.
+    /// Check whether this document has embedded files (PDF 2.0 portfolios /
+    /// associated files, INCLUDING a /FileAttachment annotation's own /FS —
+    /// #1428: this used to check /Catalog/Names/EmbeddedFiles and /Catalog/AF
+    /// directly and disagreed with <see cref="GetEmbeddedFiles"/>, which is the
+    /// one place that also walks annotation-level attachments; a document with
+    /// ONLY an annotation-owned attachment read as having none). Delegates to
+    /// <see cref="GetEmbeddedFiles"/> (cached after first call) so there is one
+    /// source of truth instead of two detection paths that can drift apart.
     /// </summary>
-    public bool HasEmbeddedFiles
-    {
-        get
-        {
-            var namesObj = Catalog.GetOptional("Names");
-            if (namesObj != null && Resolve(namesObj) is PdfDictionary namesDict)
-                if (namesDict.GetOptional("EmbeddedFiles") != null)
-                    return true;
-
-            if (Catalog.GetOptional("AF") != null)
-                return true;
-
-            return false;
-        }
-    }
+    public bool HasEmbeddedFiles => GetEmbeddedFiles().Count > 0;
 
     /// <summary>
     /// Get the list of embedded files in this document.
