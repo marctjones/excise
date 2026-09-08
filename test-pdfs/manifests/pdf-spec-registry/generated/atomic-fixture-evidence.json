@@ -5288,7 +5288,7 @@
       "capability": "pdf.20.renderer.requirement-013",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },

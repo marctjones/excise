@@ -64630,11 +64630,45 @@
       "capability": "pdf.20.renderer.requirement-013",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.FlateDecodeRefusesOutputExceedingTheDecodeCeiling_BeforeFinishing",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.LzwDecodeRefusesOutputExceedingTheDecodeCeiling",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::FlateDecodeRefusesOutputExceedingTheDecodeCeiling_BeforeFinishing",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::LzwDecodeRefusesOutputExceedingTheDecodeCeiling",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -109474,15 +109508,15 @@
   ],
   "summary": {
     "targetModes": 900,
-    "modesWithTestCandidates": 619,
-    "modesWithExplicitContracts": 853,
-    "modesWithPassingExplicitContracts": 853,
-    "modesWithRecordedPassingCandidate": 619,
-    "gradeImplemented": 783,
+    "modesWithTestCandidates": 620,
+    "modesWithExplicitContracts": 854,
+    "modesWithPassingExplicitContracts": 854,
+    "modesWithRecordedPassingCandidate": 620,
+    "gradeImplemented": 784,
     "gradeVerified": 70,
-    "gradeUnknown": 47,
-    "testMethods": 6307,
-    "testMethodsWithCapabilityCandidate": 3904,
+    "gradeUnknown": 46,
+    "testMethods": 6310,
+    "testMethodsWithCapabilityCandidate": 3906,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

@@ -376,6 +376,69 @@ public class HostileStructureTests
     }
 
     /// <summary>
+    /// #1408 -- a decompression bomb: a small compressed input, a large
+    /// decoded output. Unlike JBIG2's dimensions, Flate never declares its
+    /// decoded size up front, so the guard checks the running total DURING
+    /// decode rather than before allocating anything; this proves it fires
+    /// before the full (here, ~1 KB) output is materialized, not after.
+    /// </summary>
+    [Fact]
+    public void FlateDecodeRefusesOutputExceedingTheDecodeCeiling_BeforeFinishing()
+    {
+        var raw = new byte[1024];
+        using var compressed = new MemoryStream();
+        using (var zlib = new System.IO.Compression.ZLibStream(compressed, System.IO.Compression.CompressionMode.Compress, leaveOpen: true))
+            zlib.Write(raw, 0, raw.Length);
+
+        var act = () => Excise.Core.Filters.FlateFilterDecoder.DecodeFlateData(compressed.ToArray(), maxDecodedBytes: 10);
+
+        act.Should().Throw<PdfParseException>(
+                "output past the configured ceiling must be refused, not allocated in full")
+            .Where(ex => ex.IsResourceGuard, "a decode-ceiling trip is a resource guard, not an ordinary malformation")
+            .Which.Message.Should().Contain("decode ceiling");
+    }
+
+    /// <summary>
+    /// The ceiling must not be so tight that ordinary Flate streams (a page's
+    /// content stream, an object stream) are refused for their legitimate size.
+    /// </summary>
+    [Fact]
+    public void FlateDecodeAcceptsOutputWithinTheDecodeCeiling()
+    {
+        var raw = new byte[8192];
+        new Random(1).NextBytes(raw);
+        using var compressed = new MemoryStream();
+        using (var zlib = new System.IO.Compression.ZLibStream(compressed, System.IO.Compression.CompressionMode.Compress, leaveOpen: true))
+            zlib.Write(raw, 0, raw.Length);
+
+        var decoded = Excise.Core.Filters.FlateFilterDecoder.DecodeFlateData(compressed.ToArray(), maxDecodedBytes: 1024 * 1024);
+
+        decoded.Should().Equal(raw);
+    }
+
+    /// <summary>
+    /// #1408 -- the same guard applies to LZWDecode. LZW's expansion is
+    /// bounded by its 4096-entry table (nowhere near Flate's ratio), but the
+    /// guard is defense in depth, not a bet that LZW specifically is safe.
+    /// </summary>
+    [Fact]
+    public void LzwDecodeRefusesOutputExceedingTheDecodeCeiling()
+    {
+        // A real, independently-produced LZW stream (Pillow/libtiff, EarlyChange=1
+        // -- the PDF default and TIFF LZW's own convention, cross-verified
+        // elsewhere in this suite) for sixteen 0x41 bytes: 16 bytes decoded
+        // from 9 encoded bytes is enough to cross a single-digit-byte ceiling.
+        var encoded = new byte[] { 0x80, 0x10, 0x60, 0x50, 0x38, 0x24, 0x14, 0x83, 0x01 };
+        var context = new Excise.Core.Filters.PdfFilterDecodeContext(null, null);
+
+        var act = () => Excise.Core.Filters.LzwFilterDecoder.Decode(encoded, context, maxDecodedBytes: 4);
+
+        act.Should().Throw<PdfParseException>(
+                "output past the configured ceiling must be refused, not allocated in full")
+            .Where(ex => ex.IsResourceGuard, "a decode-ceiling trip is a resource guard, not an ordinary malformation");
+    }
+
+    /// <summary>
     /// Three xref-stream guards found by the #960 deep sweep at 6000 and
     /// 20000 iterations per seed — depths the checked-in 250 never reaches.
     /// Each was a raw CLR exception escaping PdfDocument.Open past the #352

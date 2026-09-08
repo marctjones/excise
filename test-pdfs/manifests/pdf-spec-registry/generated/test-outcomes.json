@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T07:39:22.757867+00:00",
-  "gitRevision": "47630a292a3bc05d774014db9117ceea27014d6e",
+  "recordedAt": "2026-09-08T13:04:04.509073+00:00",
+  "gitRevision": "e5884a291225cb74afaf2dfd8de6e8aa2d2bcdb7",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -411,6 +411,11 @@
       "path": "/tmp/new12-trx/core.trx",
       "modifiedAt": "2026-09-08T07:39:22.680223+00:00",
       "sha256": "f0018d191869f415be847655504c4b3db886564bad88a757888c324174169657"
+    },
+    {
+      "path": "/tmp/new13-trx/core.trx",
+      "modifiedAt": "2026-09-08T13:04:04.460580+00:00",
+      "sha256": "05b7ff4b4cb60ad52417048e8331bb5d79ede7a4e4bbcb33dbee56369d5be229"
     }
   ],
   "outcomes": [
@@ -32159,6 +32164,22 @@
       "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
     },
     {
+      "testName": "Excise.Core.Tests.Parsing.HostileStructureTests.FlateDecodeAcceptsOutputWithinTheDecodeCeiling",
+      "outcome": "Passed",
+      "duration": "00:00:00.0019169",
+      "trx": "/tmp/new13-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T13:04:04.460580+00:00",
+      "trxSha256": "05b7ff4b4cb60ad52417048e8331bb5d79ede7a4e4bbcb33dbee56369d5be229"
+    },
+    {
+      "testName": "Excise.Core.Tests.Parsing.HostileStructureTests.FlateDecodeRefusesOutputExceedingTheDecodeCeiling_BeforeFinishing",
+      "outcome": "Passed",
+      "duration": "00:00:00.0115066",
+      "trx": "/tmp/new13-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T13:04:04.460580+00:00",
+      "trxSha256": "05b7ff4b4cb60ad52417048e8331bb5d79ede7a4e4bbcb33dbee56369d5be229"
+    },
+    {
       "testName": "Excise.Core.Tests.Parsing.HostileStructureTests.JBig2DecodeAcceptsA1200DpiLetterScan",
       "outcome": "Passed",
       "duration": "00:00:00.0006163",
@@ -32173,6 +32194,14 @@
       "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
       "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
       "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+    },
+    {
+      "testName": "Excise.Core.Tests.Parsing.HostileStructureTests.LzwDecodeRefusesOutputExceedingTheDecodeCeiling",
+      "outcome": "Passed",
+      "duration": "00:00:00.0007617",
+      "trx": "/tmp/new13-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T13:04:04.460580+00:00",
+      "trxSha256": "05b7ff4b4cb60ad52417048e8331bb5d79ede7a4e4bbcb33dbee56369d5be229"
     },
     {
       "testName": "Excise.Core.Tests.Parsing.HostileStructureTests.MalformedXRefStreamDictionary_FailsTypedNotRaw(label: \"missing /W\", xrefEntries: \"/Index [0 5] /Size 5\")",
@@ -68376,12 +68405,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 81,
-    "tests": 8495,
+    "trxFiles": 82,
+    "tests": 8498,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7568
+      "Passed": 7571
     },
     "status": "recorded"
   }

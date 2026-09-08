@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1002,
-  "indexedContentSha256": "197f3c54b223629dc99da20f8dae729149ca089a8e2a8af4048c1744d71af0f3",
+  "indexedFileCount": 1003,
+  "indexedContentSha256": "11f9dfa723a67400dd2ba0782e77f246186beb7ff64e3b496155abc1276d1f9a",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1619,6 +1619,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Filters/StreamDecodeLimits.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decode",
+            "filters"
+          ]
+        },
+        {
           "path": "Excise.Core/Parsing/PdfLexer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -2048,18 +2056,9 @@
             "parameters",
             "xref"
           ]
-        },
-        {
-          "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "filters",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 84
+      "candidateReferenceCount": 85
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -8445,6 +8444,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Filters/StreamDecodeLimits.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decoding",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core/Graphics/PdfGraphics.cs",
           "kind": "source",
           "matchedTerms": [
@@ -8955,17 +8962,9 @@
             "image",
             "images"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Parsing/StreamLengthUntokenizableRecoveryTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decoding",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 149
+      "candidateReferenceCount": 150
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -19539,7 +19538,22 @@
         "requiredModes": [
           "render"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::FlateDecodeRefusesOutputExceedingTheDecodeCeiling_BeforeFinishing",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::LzwDecodeRefusesOutputExceedingTheDecodeCeiling",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -24180,6 +24194,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Filters/StreamDecodeLimits.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
           "matchedTerms": [
@@ -24252,6 +24276,16 @@
             "image",
             "jbig2",
             "jpx"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Parsing/HostileStructureTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image",
+            "jbig2"
           ]
         },
         {
@@ -24370,7 +24404,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 21
+      "candidateReferenceCount": 23
     },
     {
       "id": "pdf.20.image.requirement-004",
@@ -24448,6 +24482,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Filters/StreamDecodeLimits.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
           "matchedTerms": [
@@ -24521,6 +24565,16 @@
             "image",
             "jbig2",
             "jpx"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Parsing/HostileStructureTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image",
+            "jbig2"
           ]
         },
         {
@@ -24640,7 +24694,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 21
+      "candidateReferenceCount": 23
     },
     {
       "id": "pdf.20.image.requirement-005",
@@ -24718,6 +24772,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Filters/StreamDecodeLimits.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
           "matchedTerms": [
@@ -24791,6 +24855,16 @@
             "image",
             "jbig2",
             "jpx"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Parsing/HostileStructureTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image",
+            "jbig2"
           ]
         },
         {
@@ -24930,7 +25004,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 23
+      "candidateReferenceCount": 25
     },
     {
       "id": "pdf.20.image.requirement-006",
@@ -25007,6 +25081,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Filters/StreamDecodeLimits.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "lzwdecode",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
           "matchedTerms": [
@@ -25061,6 +25145,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Parsing/HostileStructureTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lzwdecode",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Parsing/StreamDecompressorTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -25093,7 +25187,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 10
+      "candidateReferenceCount": 12
     },
     {
       "id": "pdf.20.image.requirement-007",
@@ -25171,6 +25265,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Filters/StreamDecodeLimits.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "lzwdecode",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
           "matchedTerms": [
@@ -25226,6 +25330,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Parsing/HostileStructureTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lzwdecode",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Parsing/StreamDecompressorTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -25259,7 +25373,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 10
+      "candidateReferenceCount": 12
     },
     {
       "id": "pdf.20.image.requirement-008",
@@ -25345,6 +25459,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Filters/StreamDecodeLimits.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "lzwdecode",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
           "matchedTerms": [
@@ -25400,6 +25524,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Parsing/HostileStructureTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lzwdecode",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Parsing/StreamDecompressorTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -25434,7 +25568,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 10
+      "candidateReferenceCount": 12
     },
     {
       "id": "pdf.20.image.requirement-009",
@@ -26858,6 +26992,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Filters/StreamDecodeLimits.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "jbig2decode",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
           "path": "Excise.Core/Primitives/PdfName.cs",
           "kind": "source",
           "matchedTerms": [
@@ -27057,7 +27201,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 23
+      "candidateReferenceCount": 24
     },
     {
       "id": "pdf.20.image.requirement-016",
@@ -27199,6 +27343,16 @@
             "jbig2decode",
             "jbig2",
             "jpx"
+          ]
+        },
+        {
+          "path": "Excise.Core/Filters/StreamDecodeLimits.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "jbig2decode",
+            "image",
+            "jbig2"
           ]
         },
         {
@@ -27428,7 +27582,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 28
+      "candidateReferenceCount": 29
     },
     {
       "id": "pdf.20.image.requirement-017",
@@ -29400,6 +29554,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Filters/StreamDecodeLimits.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decode",
+            "image",
+            "image",
+            "jbig2"
+          ]
+        },
+        {
           "path": "Excise.Core/Parsing/PdfLexer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -29992,19 +30156,9 @@
             "image",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/RefusedImageDiagnosticTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "image",
-            "image",
-            "jbig2"
-          ]
         }
       ],
-      "candidateReferenceCount": 109
+      "candidateReferenceCount": 110
     },
     {
       "id": "pdf.20.image.requirement-024",

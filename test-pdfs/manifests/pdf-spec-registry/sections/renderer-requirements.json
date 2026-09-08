@@ -1108,7 +1108,7 @@
       },
       "modes": {
         "parse": "not-applicable",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "not-applicable"
       },
       "evidence": [
@@ -1122,7 +1122,22 @@
         "requiredModes": [
           "render"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::FlateDecodeRefusesOutputExceedingTheDecodeCeiling_BeforeFinishing",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::LzwDecodeRefusesOutputExceedingTheDecodeCeiling",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "notes": "Bound decompression, malformed streams, and repeated filter work so rendering fails deterministically instead of hanging or exhausting memory.",
       "documentation": [

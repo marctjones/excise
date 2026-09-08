@@ -2849,12 +2849,12 @@
       ],
       "targetModes": 1,
       "modeStates": {
-        "unknown": 1
+        "partial": 1
       },
-      "unknownModeCount": 1,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 0,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
+      "testCandidateModes": 1,
       "reviewBatchIssues": []
     },
     {
@@ -3070,6 +3070,6 @@
   "summary": {
     "clusters": 178,
     "targetModes": 900,
-    "unknownModeCount": 150
+    "unknownModeCount": 149
   }
 }

@@ -10,6 +10,14 @@ internal sealed class LzwFilterDecoder : AliasedFilterDecoder
     }
 
     public override byte[] Decode(byte[] data, PdfFilterDecodeContext context)
+        => Decode(data, context, StreamDecodeLimits.MaxDecompressedBytes);
+
+    /// <summary>
+    /// Exposed with an explicit cap for <see cref="StreamDecodeLimits"/>'s own
+    /// tests, matching <see cref="FlateFilterDecoder.DecodeFlateData"/>'s
+    /// testable overload.
+    /// </summary>
+    internal static byte[] Decode(byte[] data, PdfFilterDecodeContext context, long maxDecodedBytes)
     {
         // /EarlyChange (§7.4.4.3). The PDF DEFAULT IS 1: the code width grows
         // one code EARLIER than the plain LZW rule. This decoder hard-coded the
@@ -83,6 +91,7 @@ internal sealed class LzwFilterDecoder : AliasedFilterDecoder
             }
 
             output.AddRange(entry);
+            StreamDecodeLimits.ThrowIfExceeded(output.Count, maxDecodedBytes);
 
             if (prevCode >= 0 && nextCode < 4096)
             {
