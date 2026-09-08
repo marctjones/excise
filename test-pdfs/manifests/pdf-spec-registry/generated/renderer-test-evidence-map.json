@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "379cb97b9a45952d74de2b3b3b5d72a17fe3426885f03555acf28863c00bddc5",
+  "sourceFingerprint": "d9b14c6f59f866eabec91603934b365e6bbca02a4ec037eb75b1ae179191058d",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -17577,6 +17577,99 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/ImageCompositingBlendModeTests.cs::ImageCompositingBlendModeTests.GreenImage_MultiplyBlendOverRedBackdrop_CompositesToBlackNotPlainGreen",
+      "path": "Excise.Rendering.Tests/ImageCompositingBlendModeTests.cs",
+      "class": "ImageCompositingBlendModeTests",
+      "method": "GreenImage_MultiplyBlendOverRedBackdrop_CompositesToBlackNotPlainGreen",
+      "line": 30,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images",
+        "transparency"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageCompositingBlendModeTests.cs::ImageCompositingBlendModeTests.GreenImage_NormalBlendOverRedBackdrop_CompositesToPlainGreen",
+      "path": "Excise.Rendering.Tests/ImageCompositingBlendModeTests.cs",
+      "class": "ImageCompositingBlendModeTests",
+      "method": "GreenImage_NormalBlendOverRedBackdrop_CompositesToPlainGreen",
+      "line": 47,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images",
+        "transparency"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageCompositingBlendModeTests.cs::ImageCompositingBlendModeTests.ExtGStateBlendMode_SurvivesASaveAndReload_Unchanged",
+      "path": "Excise.Rendering.Tests/ImageCompositingBlendModeTests.cs",
+      "class": "ImageCompositingBlendModeTests",
+      "method": "ExtGStateBlendMode_SurvivesASaveAndReload_Unchanged",
+      "line": 65,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images",
+        "transparency"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/ImageDecodeCacheTests.cs::ImageDecodeCacheTests.RepeatedImageXObjectIsDecodedOnceAndReused",
       "path": "Excise.Rendering.Tests/ImageDecodeCacheTests.cs",
       "class": "ImageDecodeCacheTests",
@@ -32874,7 +32967,7 @@
     }
   ],
   "summary": {
-    "testMethods": 917,
+    "testMethods": 920,
     "facets": {
       "content-streams": 266,
       "content-strings-and-text": 5,
@@ -32882,11 +32975,11 @@
       "fonts": 179,
       "functions-and-shadings": 46,
       "graphics-state-and-paths": 308,
-      "images": 116,
+      "images": 119,
       "page-group-backdrop": 3,
       "renderer-integration-general": 22,
       "renderer-performance-and-lifetime": 12,
-      "transparency": 44
+      "transparency": 47
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 5,
@@ -32900,17 +32993,17 @@
       "pdf.17.graphics.fonts:extract": 179,
       "pdf.17.graphics.fonts:parse": 179,
       "pdf.17.graphics.fonts:render": 563,
-      "pdf.17.graphics.images:extract": 116,
-      "pdf.17.graphics.images:parse": 116,
-      "pdf.17.graphics.images:render": 523,
+      "pdf.17.graphics.images:extract": 119,
+      "pdf.17.graphics.images:parse": 119,
+      "pdf.17.graphics.images:render": 526,
       "pdf.17.graphics.paths-painting:parse": 308,
       "pdf.17.graphics.paths-painting:render": 308,
       "pdf.17.graphics.patterns-shadings:parse": 46,
       "pdf.17.graphics.patterns-shadings:render": 46,
       "pdf.17.graphics.state:parse": 308,
       "pdf.17.graphics.state:render": 308,
-      "pdf.17.transparency.model:parse": 44,
-      "pdf.17.transparency.model:render": 461
+      "pdf.17.transparency.model:parse": 47,
+      "pdf.17.transparency.model:render": 464
     },
     "unclassified": 22,
     "allTestsMapped": true

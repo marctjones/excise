@@ -10,12 +10,12 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Area | Target modes | Implemented | Verified | Unknown | Strict | Evidence progress | Promotion readiness | Measured | Strict unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| overall | 907 | 76.7% | 1.7% | 211 | 0.6% | 55.8% | 23.9% | 63.2% | 334 |
+| overall | 905 | 82.4% | 2.0% | 159 | 0.6% | 59.3% | 23.9% | 68.8% | 282 |
 | annotation-subtypes | 92 | 46.7% | 0.0% | 49 | 0.0% | 37.8% | 10.0% | 46.7% | 49 |
 | content | 12 | 100.0% | 8.3% | 0 | 0.0% | 76.7% | 48.3% | 100.0% | 0 |
 | document | 22 | 22.7% | 0.0% | 17 | 0.0% | 25.9% | 10.0% | 22.7% | 17 |
 | graphics | 33 | 63.6% | 15.2% | 12 | 12.1% | 56.1% | 54.8% | 72.7% | 9 |
-| image-requirements | 108 | 43.5% | 0.0% | 61 | 0.0% | 35.4% | 10.0% | 43.5% | 61 |
+| image-requirements | 106 | 91.5% | 2.8% | 9 | 0.0% | 65.1% | 10.0% | 91.5% | 9 |
 | interactive | 39 | 33.3% | 10.3% | 26 | 2.6% | 36.5% | 23.5% | 56.4% | 17 |
 | interchange | 6 | 33.3% | 16.7% | 4 | 0.0% | 32.5% | 10.0% | 50.0% | 3 |
 | multimedia | 0 | — | — | 0 | — | — | — | — | 0 |
@@ -32,7 +32,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | Category | Target modes | Strict | Evidence progress | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | File model | 36 | 0.0% | 35.7% | 10.0% | 38.9% | 100.0% | 0.0% | 22 |
-| Page content and rendering | 713 | 0.6% | 61.7% | 26.9% | 67.6% | 98.6% | 37.4% | 231 |
+| Page content and rendering | 711 | 0.6% | 66.2% | 27.0% | 74.8% | 98.6% | 37.4% | 179 |
 | Interaction and annotations | 131 | 0.8% | 37.4% | 14.0% | 49.6% | 93.1% | 6.9% | 66 |
 | Interchange and profiles | 6 | 0.0% | 32.5% | 10.0% | 50.0% | 100.0% | 0.0% | 3 |
 | PDFE product capabilities | 21 | 0.0% | 10.0% | 10.0% | 42.9% | 0.0% | 0.0% | 12 |
@@ -54,4 +54,4 @@ All 282 capability leaves have a collection record: {'candidate-evidence': 22, '
 
 ## Test and benchmark attribution
 
-Explicit test contracts: 696/907; passing recorded contracts: 696/907; candidate test coverage: 530/907. Benchmark harnesses: 6/6.
+Explicit test contracts: 746/905; passing recorded contracts: 746/905; candidate test coverage: 567/905. Benchmark harnesses: 6/6.

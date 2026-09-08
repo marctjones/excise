@@ -21,8 +21,8 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
-        "preserve": "unknown"
+        "render": "partial",
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -43,6 +43,20 @@
             "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::ASCIIHexDecode_Works",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxImageInFilterChain_Decodes_NotBlank",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -103,7 +117,7 @@
       "modes": {
         "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -124,6 +138,13 @@
             "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_ASCII85_FullName_DecodesValidData",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -183,8 +204,8 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
-        "preserve": "unknown"
+        "render": "partial",
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -205,6 +226,20 @@
             "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_RoundTrips",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FlateWrappedDctImage_DecodesTerminalJpegBytes",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -265,7 +300,7 @@
       "modes": {
         "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -286,6 +321,13 @@
             "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_WithTiffPredictor_RoundTrips",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -346,7 +388,7 @@
       "modes": {
         "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -367,6 +409,13 @@
             "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_WithPngPredictor_RoundTrips",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -426,8 +475,8 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
-        "preserve": "unknown"
+        "render": "partial",
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -448,6 +497,20 @@
             "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_LZW_SingleByteSequence",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxImageInFilterChain_Decodes_NotBlank",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -506,9 +569,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -523,7 +586,22 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Filters/LzwEarlyChangeTests.cs::RealLzwImageStream_DecodesCompletely",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "LZWDecode DecodeParms",
       "documentation": [
@@ -581,7 +659,7 @@
       "modes": {
         "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -609,6 +687,13 @@
             "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_LZW_WithTiffPredictor",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -668,8 +753,8 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
-        "preserve": "unknown"
+        "render": "partial",
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -690,6 +775,20 @@
             "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::RunLengthDecode_Works",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_RunLengthOpaqueSoftMaskRendersImageOpaque",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -749,8 +848,8 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
-        "preserve": "unknown"
+        "render": "partial",
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -771,6 +870,20 @@
             "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_CCITTFax_Group4_PopplerImageRetrieveFixture_DecodesFullImage",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/CcittEndOfBlockTests.cs::TheOnlyCorpusFileSettingEndOfBlock_RendersAtOracleParity",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -831,7 +944,7 @@
       "modes": {
         "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -859,6 +972,13 @@
             "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_CCITTFax_WithBlackIs1_InvertsPixels",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -918,8 +1038,8 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
-        "preserve": "unknown"
+        "render": "partial",
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -940,6 +1060,20 @@
             "ref": "Excise.Core.Tests/Filters/FilterSupportMapTests.cs::DctDecode_IsNotDecodedByExcise",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FlateWrappedDctImage_DecodesTerminalJpegBytes",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -998,9 +1132,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1015,7 +1149,29 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/DctImageDecoderTests.cs::DeclaredRgbColorTransformDecodesWithoutAContext",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/DctImageDecoderTests.cs::TransformPolicyUsesDeclaredValueAndCmykFallback",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "JPEG color interpretation in PDF",
       "documentation": [
@@ -1072,8 +1228,8 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
-        "preserve": "unknown"
+        "render": "partial",
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1094,6 +1250,27 @@
             "ref": "Excise.Core.Tests/Filters/FilterSupportMapTests.cs::JpxDecode_DelegatesPixelsToAThirdPartyCodec",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxSoftMasks_ClearImageBackgrounds_RenderedOutOfProcess",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxImageInFilterChain_Decodes_NotBlank",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1153,8 +1330,8 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
-        "preserve": "unknown"
+        "render": "partial",
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1175,6 +1352,20 @@
             "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_JBIG2Decode_ReturnsDataUnchanged",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs::UnknownLengthFixture_RendersAndAgreesWithTheOracle",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1233,9 +1424,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1250,7 +1441,36 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Open_IndirectJbig2Globals_ResolvesReferenceToStream",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Bug631912_JbigImageWithGlobals_DecodesFullImage",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Bug1087_JbigImageWithGlobals_DecodesFullImage",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "JBIG2Decode DecodeParms",
       "documentation": [
@@ -1308,7 +1528,7 @@
       "modes": {
         "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1329,6 +1549,13 @@
             "ref": "Excise.Core.Tests/Parsing/StreamDecompressorCoverageTests.cs::ApplyFilter_Crypt_ReturnsDataUnchanged",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1388,8 +1615,8 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
-        "preserve": "unknown"
+        "render": "partial",
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1417,6 +1644,20 @@
             "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::MultipleFilters_UsesDecodeParmsForMatchingFilter",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxImageInFilterChain_Decodes_NotBlank",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1477,7 +1718,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1499,6 +1740,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1559,7 +1807,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1581,6 +1829,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1641,7 +1896,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1663,6 +1918,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1723,7 +1985,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1745,6 +2007,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1805,7 +2074,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1827,6 +2096,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1887,7 +2163,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1917,6 +2193,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1975,9 +2258,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
-        "render": "unknown",
-        "preserve": "unknown"
+        "parse": "partial",
+        "render": "not-applicable",
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1989,10 +2272,18 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
+            "modes": [
+              "preserve",
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Image interpolation hint handling",
       "documentation": [
@@ -2050,7 +2341,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2072,6 +2363,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -2132,7 +2430,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2154,6 +2452,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -2214,7 +2519,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2236,6 +2541,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -2296,7 +2608,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2318,6 +2630,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -2378,7 +2697,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2400,6 +2719,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -2460,7 +2786,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2482,6 +2808,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -2542,7 +2875,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2564,6 +2897,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -2624,7 +2964,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2646,6 +2986,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -2706,7 +3053,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2728,6 +3075,13 @@
             "modes": [
               "render",
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -2786,9 +3140,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
-        "render": "unknown",
-        "preserve": "unknown"
+        "parse": "partial",
+        "render": "partial",
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -2803,7 +3157,23 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/ImageCompositingBlendModeTests.cs::ExtGStateBlendMode_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/ImageCompositingBlendModeTests.cs::GreenImage_MultiplyBlendOverRedBackdrop_CompositesToBlackNotPlainGreen",
+            "modes": [
+              "render",
+              "parse"
+            ]
+          }
+        ]
       },
       "notes": "Transparent image compositing",
       "documentation": [
@@ -2861,7 +3231,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "not-applicable"
       },
       "evidence": [
         {
@@ -2873,8 +3243,7 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
-          "preserve"
+          "render"
         ],
         "checks": [
           {
