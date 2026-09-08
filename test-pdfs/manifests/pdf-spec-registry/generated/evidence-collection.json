@@ -17821,7 +17821,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -17871,7 +17870,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -17985,7 +17983,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -18043,7 +18040,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -18940,6 +18936,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
+            "modes": [
+              "preserve"
+            ]
           }
         ]
       },
@@ -19006,6 +19009,13 @@
             "modes": [
               "parse",
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFont_RoundTripsThroughOpen_NoErrors",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -19159,7 +19169,6 @@
       "registeredVerification": {
         "status": "planned",
         "requiredModes": [
-          "parse",
           "render",
           "preserve"
         ],
@@ -19217,9 +19226,7 @@
       "registeredVerification": {
         "status": "planned",
         "requiredModes": [
-          "parse",
-          "render",
-          "preserve"
+          "render"
         ],
         "checks": [
           {
@@ -19268,9 +19275,7 @@
       "registeredVerification": {
         "status": "planned",
         "requiredModes": [
-          "parse",
-          "render",
-          "preserve"
+          "parse"
         ],
         "checks": [
           {
@@ -19353,6 +19358,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
+            "modes": [
+              "preserve"
+            ]
           }
         ]
       },
@@ -19425,8 +19437,6 @@
       "registeredVerification": {
         "status": "planned",
         "requiredModes": [
-          "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -19550,6 +19560,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -19760,6 +19777,13 @@
             "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::ExtractedLetters_CarryTheMcidOfTheirMarkedContentSpan",
+            "modes": [
+              "preserve"
             ]
           }
         ]

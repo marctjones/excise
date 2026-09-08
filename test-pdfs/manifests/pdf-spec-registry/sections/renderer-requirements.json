@@ -21,7 +21,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "not-applicable",
         "preserve": "unknown"
       },
       "evidence": [
@@ -34,7 +34,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -102,7 +101,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "not-applicable",
         "preserve": "unknown"
       },
       "evidence": [
@@ -115,7 +114,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -183,7 +181,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "not-applicable",
         "preserve": "unknown"
       },
       "evidence": [
@@ -196,7 +194,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -264,7 +261,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "not-applicable",
         "preserve": "unknown"
       },
       "evidence": [
@@ -277,7 +274,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -709,7 +705,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -737,6 +733,13 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_UnfilledApTextWidgetsWithValues_PaintBothAndRestoreFontStateBetween",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -797,7 +800,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -819,6 +822,13 @@
             "modes": [
               "parse",
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFont_RoundTripsThroughOpen_NoErrors",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1046,7 +1056,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "not-applicable",
         "render": "unknown",
         "preserve": "unknown"
       },
@@ -1059,7 +1069,6 @@
       "verification": {
         "status": "planned",
         "requiredModes": [
-          "parse",
           "render",
           "preserve"
         ],
@@ -1119,9 +1128,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "not-applicable",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "not-applicable"
       },
       "evidence": [
         {
@@ -1132,9 +1141,7 @@
       "verification": {
         "status": "planned",
         "requiredModes": [
-          "parse",
-          "render",
-          "preserve"
+          "render"
         ],
         "checks": [
           {
@@ -1201,8 +1208,8 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
-        "preserve": "unknown"
+        "render": "not-applicable",
+        "preserve": "not-applicable"
       },
       "evidence": [
         {
@@ -1213,9 +1220,7 @@
       "verification": {
         "status": "planned",
         "requiredModes": [
-          "parse",
-          "render",
-          "preserve"
+          "parse"
         ],
         "checks": [
           {
@@ -1283,7 +1288,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1328,6 +1333,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1386,8 +1398,8 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
-        "render": "unknown",
+        "parse": "not-applicable",
+        "render": "not-applicable",
         "preserve": "partial"
       },
       "evidence": [
@@ -1399,8 +1411,6 @@
       "verification": {
         "status": "planned",
         "requiredModes": [
-          "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -1469,7 +1479,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1514,6 +1524,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1574,7 +1591,7 @@
       "modes": {
         "parse": "partial",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -1595,6 +1612,13 @@
             "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::ExtractedLetters_CarryTheMcidOfTheirMarkedContentSpan",
+            "modes": [
+              "preserve"
             ]
           }
         ]
