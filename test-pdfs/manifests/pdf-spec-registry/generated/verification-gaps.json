@@ -46,49 +46,13 @@
     },
     {
       "capability": "pdf.17.graphics.state",
-      "mode": "parse",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.state",
-      "mode": "preserve",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.state",
-      "mode": "mutate",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.state",
-      "mode": "write",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.paths-painting",
-      "mode": "parse",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.paths-painting",
-      "mode": "preserve",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.paths-painting",
       "mode": "mutate",
       "implementationState": "partial",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.paths-painting",
-      "mode": "write",
+      "mode": "mutate",
       "implementationState": "partial",
       "reason": "no verification contract"
     },
@@ -99,24 +63,6 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.17.graphics.color",
-      "mode": "parse",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.color",
-      "mode": "preserve",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.color",
-      "mode": "write",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.17.graphics.patterns-shadings",
       "mode": "parse",
       "implementationState": "unknown",
@@ -125,12 +71,6 @@
     {
       "capability": "pdf.17.graphics.patterns-shadings",
       "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.patterns-shadings",
-      "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"
     },
@@ -178,19 +118,7 @@
     },
     {
       "capability": "pdf.17.graphics.fonts",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.fonts",
       "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.fonts",
-      "mode": "extract",
       "implementationState": "unknown",
       "reason": "no verification contract"
     },

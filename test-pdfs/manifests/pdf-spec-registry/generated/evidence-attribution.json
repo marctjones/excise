@@ -26474,9 +26474,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -26484,10 +26492,28 @@
       "section": "graphics",
       "mode": "preserve",
       "currentState": "partial",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -30863,9 +30889,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -32315,9 +32349,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -32325,10 +32367,28 @@
       "section": "graphics",
       "mode": "preserve",
       "currentState": "partial",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -36704,9 +36764,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -36727,6 +36795,15 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -37141,9 +37218,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -37151,10 +37236,28 @@
       "section": "graphics",
       "mode": "preserve",
       "currentState": "partial",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -37610,10 +37713,28 @@
       "section": "graphics",
       "mode": "write",
       "currentState": "partial",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -38057,7 +38178,7 @@
       "capability": "pdf.17.graphics.patterns-shadings",
       "section": "graphics",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
@@ -38474,9 +38595,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -42928,7 +43057,7 @@
       "capability": "pdf.17.graphics.fonts",
       "section": "graphics",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/AuthoringCoverageTests.cs::AuthoringCoverageTests.TextStyle_ResolveFont_MapsFamilyWeightSlant",
@@ -43665,7 +43794,8 @@
         {
           "test": "Excise.Core.Tests/Fonts/CffSubsetterTests.cs::CffSubsetterTests.CffParser_ParsesRealFont_WithGlyphsAndNames",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -44365,9 +44495,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Fonts/CffSubsetterTests.cs::CffParser_ParsesRealFont_WithGlyphsAndNames",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "render"
       ]
@@ -45126,7 +45264,8 @@
         {
           "test": "Excise.Core.Tests/Fonts/CffSubsetterTests.cs::CffSubsetterTests.CffParser_ParsesRealFont_WithGlyphsAndNames",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -45859,7 +45998,7 @@
       "capability": "pdf.17.graphics.fonts",
       "section": "graphics",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/AuthoringCoverageTests.cs::AuthoringCoverageTests.TextStyle_ResolveFont_MapsFamilyWeightSlant",
@@ -46596,7 +46735,8 @@
         {
           "test": "Excise.Core.Tests/Fonts/CffSubsetterTests.cs::CffSubsetterTests.CffParser_ParsesRealFont_WithGlyphsAndNames",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -47296,9 +47436,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Text/TextExtractorDifferencesEncodingTests.cs::ExtractText_DifferencesEncoding_StandardPostScriptGlyphNames_DecodeCorrectly",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "render"
       ]
@@ -105428,13 +105576,13 @@
   ],
   "summary": {
     "targetModes": 944,
-    "modesWithTestCandidates": 494,
-    "modesWithExplicitContracts": 542,
-    "modesWithPassingExplicitContracts": 542,
-    "modesWithRecordedPassingCandidate": 494,
-    "gradeImplemented": 531,
+    "modesWithTestCandidates": 498,
+    "modesWithExplicitContracts": 554,
+    "modesWithPassingExplicitContracts": 554,
+    "modesWithRecordedPassingCandidate": 498,
+    "gradeImplemented": 543,
     "gradeVerified": 11,
-    "gradeUnknown": 402,
+    "gradeUnknown": 390,
     "testMethods": 6108,
     "testMethodsWithCapabilityCandidate": 3829,
     "benchmarkScenarios": 6,

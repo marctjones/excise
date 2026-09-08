@@ -570,9 +570,9 @@
         "partial": 4
       },
       "unknownModeCount": 0,
-      "explicitContractModes": 1,
-      "passingContractModes": 1,
-      "testCandidateModes": 2,
+      "explicitContractModes": 4,
+      "passingContractModes": 4,
+      "testCandidateModes": 4,
       "reviewBatchIssues": [
         "#1341"
       ]
@@ -586,11 +586,12 @@
       "targetModes": 7,
       "modeStates": {
         "implemented": 1,
-        "unknown": 6
+        "partial": 2,
+        "unknown": 4
       },
-      "unknownModeCount": 6,
-      "explicitContractModes": 1,
-      "passingContractModes": 1,
+      "unknownModeCount": 4,
+      "explicitContractModes": 3,
+      "passingContractModes": 3,
       "testCandidateModes": 3,
       "reviewBatchIssues": [
         "#1339"
@@ -608,9 +609,9 @@
         "partial": 4
       },
       "unknownModeCount": 0,
-      "explicitContractModes": 1,
-      "passingContractModes": 1,
-      "testCandidateModes": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 4,
+      "testCandidateModes": 5,
       "reviewBatchIssues": [
         "#1341"
       ]
@@ -644,9 +645,9 @@
         "partial": 5
       },
       "unknownModeCount": 0,
-      "explicitContractModes": 1,
-      "passingContractModes": 1,
-      "testCandidateModes": 4,
+      "explicitContractModes": 4,
+      "passingContractModes": 4,
+      "testCandidateModes": 5,
       "reviewBatchIssues": [
         "#1341"
       ]
@@ -659,11 +660,12 @@
       ],
       "targetModes": 5,
       "modeStates": {
-        "unknown": 5
+        "partial": 1,
+        "unknown": 4
       },
-      "unknownModeCount": 5,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
+      "unknownModeCount": 4,
+      "explicitContractModes": 1,
+      "passingContractModes": 1,
       "testCandidateModes": 2,
       "reviewBatchIssues": [
         "#1341"
@@ -3217,6 +3219,6 @@
   "summary": {
     "clusters": 181,
     "targetModes": 944,
-    "unknownModeCount": 516
+    "unknownModeCount": 513
   }
 }

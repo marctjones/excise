@@ -458,7 +458,7 @@
       "capability": "pdf.17.graphics.patterns-shadings",
       "section": "graphics",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -539,7 +539,7 @@
       "capability": "pdf.17.graphics.fonts",
       "section": "graphics",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -572,7 +572,7 @@
       "capability": "pdf.17.graphics.fonts",
       "section": "graphics",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },

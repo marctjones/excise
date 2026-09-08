@@ -1456,7 +1456,7 @@
     {
       "capability": "pdf.17.graphics.fonts",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [
         "Excise.Core/Fonts/AdobeGlyphList.cs",
@@ -2801,7 +2801,7 @@
     {
       "capability": "pdf.17.graphics.fonts",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [
         "Excise.Core/Fonts/AdobeGlyphList.cs",

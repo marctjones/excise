@@ -5981,7 +5981,10 @@
       "registeredVerification": {
         "status": "executable",
         "requiredModes": [
-          "render"
+          "render",
+          "parse",
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6003,6 +6006,15 @@
             "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6255,7 +6267,10 @@
       "registeredVerification": {
         "status": "executable",
         "requiredModes": [
-          "render"
+          "render",
+          "parse",
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -6277,6 +6292,15 @@
             "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -7029,7 +7053,10 @@
       "registeredVerification": {
         "status": "executable",
         "requiredModes": [
-          "render"
+          "render",
+          "parse",
+          "preserve",
+          "write"
         ],
         "checks": [
           {
@@ -7051,6 +7078,15 @@
             "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -7820,7 +7856,21 @@
           "ref": "pdf20.patterns"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Rendering/SkiaRenderer.Patterns.cs",
@@ -8701,7 +8751,9 @@
       "registeredVerification": {
         "status": "executable",
         "requiredModes": [
-          "render"
+          "render",
+          "parse",
+          "extract"
         ],
         "checks": [
           {
@@ -8723,6 +8775,20 @@
             "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Fonts/CffSubsetterTests.cs::CffParser_ParsesRealFont_WithGlyphsAndNames",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/TextExtractorDifferencesEncodingTests.cs::ExtractText_DifferencesEncoding_StandardPostScriptGlyphNames_DecodeCorrectly",
+            "modes": [
+              "extract"
             ]
           }
         ]
