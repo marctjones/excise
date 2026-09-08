@@ -52,6 +52,16 @@ test-pdfs/*
 # But do commit corpus manifests
 !test-pdfs/manifests/
 !test-pdfs/manifests/**
+# Except: these two registry derived files are pure functions of source (the
+# .cs test files + sections/*.json) regenerated in ~seconds by
+# check-pdf-capability-registry.sh, and are the two heaviest + most-churned
+# files in the repo (~6 MB each, rewritten on every registry-touching commit).
+# Unlike the rest of generated/ (kept committed for drift-detection and
+# review-without-running-anything — see capability-scorecard.md), these two
+# are cheap enough to just regenerate on demand; not tracking them measurably
+# slows repo growth for no loss of the evidence itself (2026-09-08).
+test-pdfs/manifests/pdf-spec-registry/generated/test-suite-evidence-map.json
+test-pdfs/manifests/pdf-spec-registry/generated/evidence-deficiency-report.json
 # But do commit rendering quality contracts
 !test-pdfs/rendering-contracts/
 !test-pdfs/rendering-contracts/**

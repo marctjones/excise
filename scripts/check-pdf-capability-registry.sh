@@ -35,6 +35,15 @@ IMPORT_SUMMARY=import-summary.json
 # on the timestamp the gate itself had just written. Ignore those lines and
 # compare the evidence, which is what the gate is for.
 DIFF_IGNORE=(-I '"recordedAt":' -I '"gitRevision":')
+# evidence-deficiency-report.json and test-suite-evidence-map.json are
+# DELIBERATELY excluded from this list (2026-09-08, .gitignore) -- they're
+# pure functions of source, cheap to regenerate, and were the two heaviest,
+# most-churned files in the repo. build_derived() still writes them to disk
+# (build-pdf-evidence-attribution.py, build-pdf-atomic-fixture-map.py and
+# check-pdf-registry-test-refs.py all read test-suite-evidence-map.json as an
+# input), they're just no longer tracked/diffed/committed. Do not add them
+# back here without also making them tracked again -- `git checkout --
+# "${GENERATED[@]}"` below hard-fails on an untracked pathspec.
 GENERATED=(
   $GEN/summary.json
   $GEN/capability-scorecard.json
@@ -44,14 +53,12 @@ GENERATED=(
   $GEN/evidence-collection.json
   $GEN/renderer-test-evidence-map.json
   $GEN/renderer-promotion-queue.json
-  $GEN/evidence-deficiency-report.json
   $GEN/test-outcomes.json
   $GEN/reference-tool-evidence.json
   $GEN/atomic-fixture-evidence.json
   $GEN/evidence-attribution.json
   $GEN/feature-cluster-scorecard.json
   $GEN/implementation-evidence-map.json
-  $GEN/test-suite-evidence-map.json
 )
 
 # Every builder except the outcomes import, in the order the gate always ran them.
