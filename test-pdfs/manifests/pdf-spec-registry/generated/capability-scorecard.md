@@ -10,7 +10,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Area | Target modes | Implemented | Verified | Unknown | Strict | Evidence progress | Promotion readiness | Measured | Strict unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| overall | 944 | 59.9% | 1.2% | 379 | 0.5% | 45.2% | 21.3% | 46.8% | 502 |
+| overall | 944 | 66.8% | 1.2% | 313 | 0.5% | 49.4% | 22.5% | 53.8% | 436 |
 | annotation-subtypes | 92 | 46.7% | 0.0% | 49 | 0.0% | 37.8% | 10.0% | 46.7% | 49 |
 | content | 18 | 50.0% | 5.6% | 9 | 0.0% | 44.4% | 23.3% | 50.0% | 9 |
 | document | 22 | 22.7% | 0.0% | 17 | 0.0% | 25.9% | 10.0% | 22.7% | 17 |
@@ -19,10 +19,10 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | interactive | 39 | 20.5% | 10.3% | 31 | 2.6% | 28.5% | 23.5% | 43.6% | 22 |
 | interchange | 6 | 0.0% | 0.0% | 6 | 0.0% | 10.0% | 10.0% | 16.7% | 5 |
 | multimedia | 0 | — | — | 0 | — | — | — | — | 0 |
-| operators | 292 | 83.2% | 0.0% | 49 | 0.0% | 58.9% | 39.1% | 33.2% | 195 |
+| operators | 292 | 94.5% | 0.0% | 16 | 0.0% | 65.6% | 43.1% | 44.5% | 162 |
 | optional-profiles | 0 | — | — | 0 | — | — | — | — | 0 |
 | product-capabilities | 21 | 0.0% | 0.0% | 21 | 0.0% | 10.0% | 10.0% | 42.9% | 12 |
-| renderer-requirements | 285 | 64.9% | 0.0% | 100 | 0.0% | 45.7% | 10.0% | 64.9% | 100 |
+| renderer-requirements | 285 | 76.5% | 0.0% | 67 | 0.0% | 52.7% | 10.0% | 76.5% | 67 |
 | rendering | 10 | 0.0% | 0.0% | 10 | 0.0% | 10.0% | 10.0% | 10.0% | 9 |
 | syntax | 14 | 50.0% | 0.0% | 7 | 0.0% | 42.5% | 10.0% | 50.0% | 7 |
 | transparency | 4 | 25.0% | 25.0% | 3 | 0.0% | 31.2% | 30.0% | 25.0% | 3 |
@@ -32,7 +32,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | Category | Target modes | Strict | Evidence progress | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | File model | 36 | 0.0% | 32.4% | 10.0% | 33.3% | 87.5% | 0.0% | 24 |
-| Page content and rendering | 750 | 0.5% | 48.9% | 23.5% | 48.0% | 98.6% | 36.9% | 390 |
+| Page content and rendering | 750 | 0.5% | 54.2% | 25.1% | 56.8% | 98.6% | 36.9% | 324 |
 | Interaction and annotations | 131 | 0.8% | 35.0% | 14.0% | 45.8% | 86.2% | 6.9% | 71 |
 | Interchange and profiles | 6 | 0.0% | 10.0% | 10.0% | 16.7% | 0.0% | 0.0% | 5 |
 | PDFE product capabilities | 21 | 0.0% | 10.0% | 10.0% | 42.9% | 0.0% | 0.0% | 12 |
@@ -54,4 +54,4 @@ All 282 capability leaves have a collection record: {'candidate-evidence': 22, '
 
 ## Test and benchmark attribution
 
-Explicit test contracts: 565/944; passing recorded contracts: 565/944; candidate test coverage: 503/944. Benchmark harnesses: 6/6.
+Explicit test contracts: 631/944; passing recorded contracts: 631/944; candidate test coverage: 503/944. Benchmark harnesses: 6/6.
