@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1009,
-  "indexedContentSha256": "4406b4a2e308fcad5806cd172ede2ec97b1ff2ebba3f18452755663b9e255f91",
+  "indexedContentSha256": "b8052bf54fdaa09b8806dc37f64f41564931d99fd39b6d44208fde0a9995eecd",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -48626,6 +48626,7 @@
           "matchedTerms": [
             "annotations",
             "redaction",
+            "acroform",
             "action",
             "annotation",
             "redact"
@@ -49479,6 +49480,7 @@
           "matchedTerms": [
             "redaction",
             "review",
+            "acroform",
             "action",
             "annotation",
             "redact"
@@ -59009,7 +59011,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 85
+      "candidateReferenceCount": 86
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -60594,7 +60596,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 87
+      "candidateReferenceCount": 88
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -60758,6 +60760,16 @@
           ]
         },
         {
+          "path": "tests/unwired-api-baseline.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "safe",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "docs/architecture/decisions.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -60768,7 +60780,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 12
+      "candidateReferenceCount": 13
     },
     {
       "id": "pdfe.product.security.attachments",
@@ -61416,6 +61428,17 @@
           ]
         },
         {
+          "path": "tests/unwired-api-baseline.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "pdfe",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "docs/architecture/decisions.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -61428,7 +61451,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 64
+      "candidateReferenceCount": 65
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -61746,6 +61769,7 @@
           "kind": "test",
           "matchedTerms": [
             "override",
+            "pdfe",
             "signature",
             "ocr",
             "redaction"
@@ -62301,6 +62325,16 @@
           ]
         },
         {
+          "path": "tests/unwired-api-baseline.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "ocr",
+            "pdfe",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "docs/architecture/decisions.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -62311,7 +62345,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 53
     },
     {
       "id": "pdfe.product.security.audit-log",
@@ -63515,6 +63549,7 @@
           "matchedTerms": [
             "forms",
             "javascript",
+            "pdfe",
             "subset",
             "ocr",
             "redaction"
