@@ -72605,29 +72605,76 @@
       "capability": "pdf.20.annotation.subtype-001",
       "section": "annotation-subtypes",
       "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-001",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-001",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -72667,29 +72714,76 @@
       "capability": "pdf.20.annotation.subtype-002",
       "section": "annotation-subtypes",
       "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-002",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-002",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -72758,18 +72852,47 @@
       "capability": "pdf.20.annotation.subtype-003",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-003",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -72838,22 +72961,69 @@
       "capability": "pdf.20.annotation.subtype-004",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-004",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Text/TextExtractionTests.cs::TextExtractionTests.Page_Text_IncludesFreeTextAnnotationContents_ButNotStickyNoteContents",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::Page_Text_IncludesFreeTextAnnotationContents_ButNotStickyNoteContents",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -72918,18 +73088,47 @@
       "capability": "pdf.20.annotation.subtype-005",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-005",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -72998,18 +73197,47 @@
       "capability": "pdf.20.annotation.subtype-006",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-006",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73078,18 +73306,47 @@
       "capability": "pdf.20.annotation.subtype-007",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-007",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73158,18 +73415,47 @@
       "capability": "pdf.20.annotation.subtype-008",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-008",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73238,18 +73524,47 @@
       "capability": "pdf.20.annotation.subtype-009",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-009",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73318,18 +73633,47 @@
       "capability": "pdf.20.annotation.subtype-010",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-010",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73398,18 +73742,47 @@
       "capability": "pdf.20.annotation.subtype-011",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-011",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73478,18 +73851,47 @@
       "capability": "pdf.20.annotation.subtype-012",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-012",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73558,18 +73960,47 @@
       "capability": "pdf.20.annotation.subtype-013",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-013",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73638,18 +74069,47 @@
       "capability": "pdf.20.annotation.subtype-014",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-014",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73689,29 +74149,55 @@
       "capability": "pdf.20.annotation.subtype-015",
       "section": "annotation-subtypes",
       "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-015",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-015",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73770,18 +74256,47 @@
       "capability": "pdf.20.annotation.subtype-016",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-016",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73850,18 +74365,47 @@
       "capability": "pdf.20.annotation.subtype-017",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-017",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73920,18 +74464,26 @@
       "capability": "pdf.20.annotation.subtype-018",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-018",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -73990,18 +74542,47 @@
       "capability": "pdf.20.annotation.subtype-019",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-019",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -74060,18 +74641,47 @@
       "capability": "pdf.20.annotation.subtype-020",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-020",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -74130,18 +74740,26 @@
       "capability": "pdf.20.annotation.subtype-021",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-021",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -74200,18 +74818,26 @@
       "capability": "pdf.20.annotation.subtype-022",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-022",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -74270,18 +74896,26 @@
       "capability": "pdf.20.annotation.subtype-023",
       "section": "annotation-subtypes",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.annotation.subtype-023",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -107177,15 +107811,15 @@
   ],
   "summary": {
     "targetModes": 905,
-    "modesWithTestCandidates": 567,
-    "modesWithExplicitContracts": 755,
-    "modesWithPassingExplicitContracts": 755,
-    "modesWithRecordedPassingCandidate": 567,
-    "gradeImplemented": 736,
-    "gradeVerified": 19,
-    "gradeUnknown": 150,
-    "testMethods": 6132,
-    "testMethodsWithCapabilityCandidate": 3855,
+    "modesWithTestCandidates": 571,
+    "modesWithExplicitContracts": 782,
+    "modesWithPassingExplicitContracts": 782,
+    "modesWithRecordedPassingCandidate": 571,
+    "gradeImplemented": 745,
+    "gradeVerified": 37,
+    "gradeUnknown": 123,
+    "testMethods": 6136,
+    "testMethodsWithCapabilityCandidate": 3858,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

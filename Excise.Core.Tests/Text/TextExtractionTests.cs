@@ -867,4 +867,27 @@ end";
     }
 
     #endregion
+
+    /// <summary>
+    /// annotation-subtypes.json's FreeText extract mode: TextExtractor
+    /// .EmitMarkupAnnotationLetters() deliberately surfaces ONLY FreeText
+    /// /Contents as page text (confirmed against mutool -F txt: FreeText is
+    /// genuinely drawn page content, a sticky-note /Text comment is not).
+    /// A plain Text (sticky-note) annotation with the same /Contents must NOT
+    /// appear, or this test would not discriminate the deliberate scoping.
+    /// </summary>
+    [Fact]
+    public void Page_Text_IncludesFreeTextAnnotationContents_ButNotStickyNoteContents()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+        var rect = new PdfRectangle(50, 700, 250, 740);
+        doc.AddFreeTextAnnotation(1, rect, "extracted free text comment");
+        doc.AddTextAnnotation(1, new PdfRectangle(50, 600, 70, 620), "hidden sticky note comment");
+
+        var text = doc.GetPage(1).Text;
+
+        text.Should().Contain("extracted free text comment");
+        text.Should().NotContain("hidden sticky note comment");
+    }
 }

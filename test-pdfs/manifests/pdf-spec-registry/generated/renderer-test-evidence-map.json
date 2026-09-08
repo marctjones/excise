@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "0076cfedb06eb44415fe416460e7575322f87ab4394841deedadc0c61bafc7c0",
+  "sourceFingerprint": "1cee20247285b07979d4da91d816dfb62c7e05091a71b6a88e003f848cea552a",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -193,6 +193,20 @@
       "class": "AnnotationAppearancePolicyTests",
       "method": "SelectSynthesis_RegistersFallbackBoundary",
       "line": 158,
+      "xunitKind": "theory",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "renderer-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::AnnotationAppearanceStreamRenderTests.SubtypeWithNormalAppearanceStream_Renders",
+      "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
+      "class": "AnnotationAppearanceStreamRenderTests",
+      "method": "SubtypeWithNormalAppearanceStream_Renders",
+      "line": 30,
       "xunitKind": "theory",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33147,7 +33161,7 @@
     }
   ],
   "summary": {
-    "testMethods": 927,
+    "testMethods": 928,
     "facets": {
       "content-streams": 266,
       "content-strings-and-text": 5,
@@ -33157,7 +33171,7 @@
       "graphics-state-and-paths": 308,
       "images": 126,
       "page-group-backdrop": 3,
-      "renderer-integration-general": 22,
+      "renderer-integration-general": 23,
       "renderer-performance-and-lifetime": 12,
       "transparency": 47
     },
@@ -33185,7 +33199,7 @@
       "pdf.17.transparency.model:parse": 47,
       "pdf.17.transparency.model:render": 465
     },
-    "unclassified": 22,
+    "unclassified": 23,
     "allTestsMapped": true
   }
 }

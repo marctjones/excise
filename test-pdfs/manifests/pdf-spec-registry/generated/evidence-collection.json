@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1000,
-  "indexedContentSha256": "417ce0c110d30d50fe3b6d1459e0880bb98b2e86c8d25618640d021030243ee1",
+  "indexedFileCount": 1002,
+  "indexedContentSha256": "e624b69d77bf3a2d11696f2aba64112955843a180ef8764b99b7cc9b29f6fd31",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7052,7 +7052,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 437
+      "candidateReferenceCount": 439
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8724,6 +8724,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "images",
+            "inline",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Parsing/CrOnlyLineEndingRecoveryTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -8763,17 +8773,9 @@
             "decoding",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Parsing/StructureAwareFuzzTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "inline"
-          ]
         }
       ],
-      "candidateReferenceCount": 148
+      "candidateReferenceCount": 149
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -12179,7 +12181,8 @@
           "matchedTerms": [
             "iso",
             "operators",
-            "contentstream"
+            "contentstream",
+            "textextractor"
           ]
         },
         {
@@ -12546,7 +12549,8 @@
           "matchedTerms": [
             "character",
             "positioning",
-            "contentstream"
+            "contentstream",
+            "textextractor"
           ]
         },
         {
@@ -19498,6 +19502,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "preservation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -19539,7 +19551,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 6
+      "candidateReferenceCount": 7
     },
     {
       "id": "pdf.20.renderer.requirement-018",
@@ -19649,6 +19661,15 @@
           "matchedTerms": [
             "annotations",
             "synthesis"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "synthesis",
+            "skiarenderer"
           ]
         },
         {
@@ -19780,7 +19801,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 20
+      "candidateReferenceCount": 21
     },
     {
       "id": "pdf.20.renderer.requirement-019",
@@ -33360,6 +33381,41 @@
             "modes": [
               "parse"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
           }
         ]
       },
@@ -33829,6 +33885,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "widget",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34032,7 +34098,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 68
+      "candidateReferenceCount": 69
     },
     {
       "id": "pdf.20.annotation.subtype-002",
@@ -34068,6 +34134,41 @@
             "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -34521,6 +34622,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "link",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Operations/PdfDocumentSplitterTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34852,19 +34963,9 @@
             "link",
             "annotation"
           ]
-        },
-        {
-          "path": "docs/architecture/decisions.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "annotation",
-            "link",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 80
+      "candidateReferenceCount": 81
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -34906,6 +35007,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -34954,6 +35083,41 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::Page_Text_IncludesFreeTextAnnotationContents_ButNotStickyNoteContents",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -35249,6 +35413,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/TextExtractionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "freetext",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -35465,7 +35639,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 51
     },
     {
       "id": "pdf.20.annotation.subtype-005",
@@ -35508,6 +35682,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -36177,6 +36379,34 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -36553,6 +36783,34 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -36910,6 +37168,34 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -37266,6 +37552,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -37809,6 +38123,34 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -38242,6 +38584,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -38960,6 +39330,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "line",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Operations/PdfDocumentSplitterTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -39026,19 +39406,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "line",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 153
+      "candidateReferenceCount": 156
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -39081,6 +39451,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -39496,6 +39894,34 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -39888,6 +40314,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -40460,6 +40914,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Operations/PdfDocumentSplitterTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -40673,18 +41137,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation"
-          ]
         }
       ],
-      "candidateReferenceCount": 121
+      "candidateReferenceCount": 122
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -40715,6 +41170,20 @@
             "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -40818,6 +41287,25 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "popup",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "popup",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/AppearanceStreamDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -40884,7 +41372,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 16
+      "candidateReferenceCount": 18
     },
     {
       "id": "pdf.20.annotation.subtype-016",
@@ -40927,6 +41415,34 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -41130,6 +41646,34 @@
             "ref": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::StampAnnotations_SurviveSaveAndReload",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -41624,6 +42168,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -41716,6 +42267,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "caret",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -41793,7 +42353,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 16
+      "candidateReferenceCount": 17
     },
     {
       "id": "pdf.20.annotation.subtype-019",
@@ -41836,6 +42396,34 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -42494,6 +43082,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/TextExtractionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "redact",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -42645,19 +43243,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/StructuralConservationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "redact",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 116
+      "candidateReferenceCount": 117
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -42700,6 +43288,34 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -42846,6 +43462,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -42906,6 +43529,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "movie",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -42926,7 +43558,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 7
+      "candidateReferenceCount": 8
     },
     {
       "id": "pdf.20.annotation.subtype-022",
@@ -42969,6 +43601,13 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -43141,6 +43780,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/CheckboxAppearanceStateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -43231,7 +43879,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 25
+      "candidateReferenceCount": 26
     },
     {
       "id": "pdf.20.annotation.subtype-023",
@@ -43274,6 +43922,13 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -43345,6 +44000,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "watermark",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -43365,7 +44029,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 8
+      "candidateReferenceCount": 9
     },
     {
       "id": "pdf.20.annotation.subtype-024",
@@ -43395,9 +44059,27 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
+        {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "printermark",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
         {
           "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
           "kind": "test",
@@ -43428,7 +44110,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 3
+      "candidateReferenceCount": 4
     },
     {
       "id": "pdf.20.annotation.subtype-025",
@@ -43458,9 +44140,27 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
+        {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "trapnet",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
         {
           "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
           "kind": "test",
@@ -43482,7 +44182,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 2
+      "candidateReferenceCount": 3
     },
     {
       "id": "pdf.20.annotation.subtype-026",
@@ -43511,7 +44211,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -43544,9 +44252,27 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
+        {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "richmedia",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
         {
           "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
           "kind": "test",
@@ -43568,7 +44294,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 2
+      "candidateReferenceCount": 3
     },
     {
       "id": "pdf.20.annotation.subtype-028",
@@ -43598,7 +44324,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -43608,6 +44342,16 @@
             "annotation",
             "projection",
             "annotation"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "projection",
+            "annotation",
+            "pdfannotation"
           ]
         },
         {
@@ -43641,7 +44385,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 4
+      "candidateReferenceCount": 5
     },
     {
       "id": "pdf.17.transparency.model",
@@ -45966,6 +46710,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "annotations",
+            "subtypes",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -46031,20 +46785,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/IncrementalRedactionRegressionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "annotations",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 150
+      "candidateReferenceCount": 153
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -49361,16 +50104,16 @@
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/Corpus/RoundTripTests.cs",
+          "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
-            "forms",
-            "xfa",
-            "action"
+            "appearances",
+            "policy",
+            "annotation"
           ]
         }
       ],
-      "candidateReferenceCount": 122
+      "candidateReferenceCount": 123
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -50751,6 +51494,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -50820,6 +51572,18 @@
             "annotations",
             "media",
             "media"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "movie",
+            "screen",
+            "media",
+            "movie"
           ]
         },
         {
@@ -51151,27 +51915,9 @@
             "movie",
             "sound"
           ]
-        },
-        {
-          "path": "tests/annotation-synthesis-policy.json",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "sound",
-            "sound"
-          ]
-        },
-        {
-          "path": "tests/corpus-expectations-verapdf.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "media",
-            "media"
-          ]
         }
       ],
-      "candidateReferenceCount": 82
+      "candidateReferenceCount": 84
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -51452,6 +52198,17 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "projection",
+            "rich",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -51504,6 +52261,16 @@
             "annotations",
             "media",
             "media"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media",
+            "movie"
           ]
         },
         {
@@ -51778,7 +52545,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 63
+      "candidateReferenceCount": 65
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
@@ -52560,7 +53327,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 305
+      "candidateReferenceCount": 306
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -53108,6 +53875,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "data",
+            "dictionaries"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -53275,18 +54050,9 @@
             "data",
             "measurement"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "data",
-            "measurement",
-            "tagged"
-          ]
         }
       ],
-      "candidateReferenceCount": 137
+      "candidateReferenceCount": 138
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -53968,6 +54734,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "byte",
+            "dictionaries"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -54019,17 +54793,9 @@
             "validation",
             "metadata"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/CidCMapParserTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "ranges"
-          ]
         }
       ],
-      "candidateReferenceCount": 147
+      "candidateReferenceCount": 148
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -54766,7 +55532,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 456
+      "candidateReferenceCount": 458
     },
     {
       "id": "pdf.20.extension.developer",

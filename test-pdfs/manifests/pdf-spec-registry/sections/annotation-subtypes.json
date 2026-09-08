@@ -21,9 +21,9 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
-        "render": "unknown",
-        "extract": "unknown"
+        "preserve": "partial",
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -45,6 +45,41 @@
             "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -107,9 +142,9 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
-        "render": "unknown",
-        "extract": "unknown"
+        "preserve": "partial",
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -131,6 +166,41 @@
             "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -194,8 +264,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -224,6 +294,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -287,8 +385,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -317,6 +415,41 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::Page_Text_IncludesFreeTextAnnotationContents_ButNotStickyNoteContents",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -380,8 +513,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -410,6 +543,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -473,8 +634,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -503,6 +664,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -564,8 +753,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -594,6 +783,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -655,8 +872,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -685,6 +902,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -746,8 +991,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -776,6 +1021,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -837,8 +1110,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -867,6 +1140,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -928,8 +1229,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -958,6 +1259,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1021,8 +1350,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -1051,6 +1380,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1112,8 +1469,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -1142,6 +1499,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1203,8 +1588,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -1233,6 +1618,34 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1295,9 +1708,9 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
-        "render": "unknown",
-        "extract": "unknown"
+        "preserve": "partial",
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [],
       "verification": {
@@ -1314,6 +1727,20 @@
             "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1375,8 +1802,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -1405,6 +1832,34 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1468,8 +1923,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -1498,6 +1953,34 @@
             "ref": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::StampAnnotations_SurviveSaveAndReload",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1561,8 +2044,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -1591,6 +2074,13 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1654,8 +2144,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -1684,6 +2174,34 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1747,8 +2265,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -1777,6 +2295,34 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1840,8 +2386,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -1870,6 +2416,13 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1933,8 +2486,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -1963,6 +2516,13 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2026,8 +2586,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
-        "extract": "unknown"
+        "render": "partial",
+        "extract": "unimplemented"
       },
       "evidence": [
         {
@@ -2056,6 +2616,13 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2118,7 +2685,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "preserve": "unknown",
+        "preserve": "partial",
         "render": "unknown",
         "extract": "unknown"
       },
@@ -2136,7 +2703,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Prepress. Not currently recognised by name in Excise.Core; preserved as an unknown subtype. Listed so the gap is visible rather than implicit.",
       "documentation": [
@@ -2196,7 +2771,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "preserve": "unknown",
+        "preserve": "partial",
         "render": "unknown",
         "extract": "unknown"
       },
@@ -2214,7 +2789,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Prepress. As PrinterMark.",
       "documentation": [
@@ -2274,7 +2857,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "preserve": "unknown",
+        "preserve": "partial",
         "render": "unknown",
         "extract": "unknown"
       },
@@ -2292,7 +2875,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "Preserved byte-for-byte, never interpreted. excise does not embed a 3D engine.",
       "documentation": [
@@ -2352,7 +2943,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "preserve": "unknown",
+        "preserve": "partial",
         "render": "unknown",
         "extract": "unknown"
       },
@@ -2370,7 +2961,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "As 3D.",
       "documentation": [
@@ -2430,7 +3029,7 @@
       },
       "modes": {
         "parse": "unknown",
-        "preserve": "unknown",
+        "preserve": "partial",
         "render": "unknown",
         "extract": "unknown"
       },
@@ -2448,7 +3047,15 @@
           "render",
           "extract"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       },
       "notes": "As 3D.",
       "documentation": [

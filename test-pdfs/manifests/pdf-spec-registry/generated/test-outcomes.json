@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T03:35:35.759859+00:00",
-  "gitRevision": "0db1c44e50c9f453f964101457adad3aeb355943",
+  "recordedAt": "2026-09-08T03:53:46.319111+00:00",
+  "gitRevision": "6aacc73ead527fb0511ca7f2c520ddaeece18e20",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -306,6 +306,16 @@
       "path": "/tmp/new4-trx/rendering.trx",
       "modifiedAt": "2026-09-08T03:35:31.949550+00:00",
       "sha256": "e1f41a7cfbc7f77305b4888180db6933dc5cb69520cfed15e0bbe1223e4d7741"
+    },
+    {
+      "path": "/tmp/new5-trx/core.trx",
+      "modifiedAt": "2026-09-08T03:53:39.381721+00:00",
+      "sha256": "7a0f0eb863e691514bf1baed29566ddb5e801f79c1dc5a8e6a53d6442fc5b8c9"
+    },
+    {
+      "path": "/tmp/new5-trx/rendering.trx",
+      "modifiedAt": "2026-09-08T03:53:41.931859+00:00",
+      "sha256": "f8ef5d24e1c92c1b1d176e24e4a30fee7b8f0824c2f7e0404410ab8fe1334d36"
     }
   ],
   "outcomes": [
@@ -31534,6 +31544,70 @@
       "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
     },
     {
+      "testName": "Excise.Core.Tests.Invariants.NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged(subtype: \"Link\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010217",
+      "trx": "/tmp/new5-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T03:53:39.381721+00:00",
+      "trxSha256": "7a0f0eb863e691514bf1baed29566ddb5e801f79c1dc5a8e6a53d6442fc5b8c9"
+    },
+    {
+      "testName": "Excise.Core.Tests.Invariants.NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged(subtype: \"Popup\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001844",
+      "trx": "/tmp/new5-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T03:53:39.381721+00:00",
+      "trxSha256": "7a0f0eb863e691514bf1baed29566ddb5e801f79c1dc5a8e6a53d6442fc5b8c9"
+    },
+    {
+      "testName": "Excise.Core.Tests.Invariants.NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged(subtype: \"Widget\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002565",
+      "trx": "/tmp/new5-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T03:53:39.381721+00:00",
+      "trxSha256": "7a0f0eb863e691514bf1baed29566ddb5e801f79c1dc5a8e6a53d6442fc5b8c9"
+    },
+    {
+      "testName": "Excise.Core.Tests.Invariants.NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged(subtype: \"3D\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0397476",
+      "trx": "/tmp/new5-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T03:53:39.381721+00:00",
+      "trxSha256": "7a0f0eb863e691514bf1baed29566ddb5e801f79c1dc5a8e6a53d6442fc5b8c9"
+    },
+    {
+      "testName": "Excise.Core.Tests.Invariants.NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged(subtype: \"PrinterMark\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005456",
+      "trx": "/tmp/new5-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T03:53:39.381721+00:00",
+      "trxSha256": "7a0f0eb863e691514bf1baed29566ddb5e801f79c1dc5a8e6a53d6442fc5b8c9"
+    },
+    {
+      "testName": "Excise.Core.Tests.Invariants.NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged(subtype: \"Projection\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002287",
+      "trx": "/tmp/new5-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T03:53:39.381721+00:00",
+      "trxSha256": "7a0f0eb863e691514bf1baed29566ddb5e801f79c1dc5a8e6a53d6442fc5b8c9"
+    },
+    {
+      "testName": "Excise.Core.Tests.Invariants.NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged(subtype: \"RichMedia\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001869",
+      "trx": "/tmp/new5-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T03:53:39.381721+00:00",
+      "trxSha256": "7a0f0eb863e691514bf1baed29566ddb5e801f79c1dc5a8e6a53d6442fc5b8c9"
+    },
+    {
+      "testName": "Excise.Core.Tests.Invariants.NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged(subtype: \"TrapNet\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0001970",
+      "trx": "/tmp/new5-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T03:53:39.381721+00:00",
+      "trxSha256": "7a0f0eb863e691514bf1baed29566ddb5e801f79c1dc5a8e6a53d6442fc5b8c9"
+    },
+    {
       "testName": "Excise.Core.Tests.Invariants.PageInvariantTests.Extraction_IsDeterministicAcrossTwoOpens(pdf: \"/Users/marc/Documents/GitHub/pdfe/test-pdfs/genera\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
       "duration": "00:00:00.0005620",
@@ -44510,6 +44584,14 @@
       "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
     },
     {
+      "testName": "Excise.Core.Tests.Text.TextExtractionTests.Page_Text_IncludesFreeTextAnnotationContents_ButNotStickyNoteContents",
+      "outcome": "Passed",
+      "duration": "00:00:00.0395970",
+      "trx": "/tmp/new5-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T03:53:39.381721+00:00",
+      "trxSha256": "7a0f0eb863e691514bf1baed29566ddb5e801f79c1dc5a8e6a53d6442fc5b8c9"
+    },
+    {
       "testName": "Excise.Core.Tests.Text.TextExtractionTests.Page_Text_ReturnsExtractedText",
       "outcome": "Passed",
       "duration": "00:00:00.0003132",
@@ -49284,6 +49366,46 @@
       "trx": "logs/test-tier_t1_20260907_191755/rendering-deterministic.trx",
       "resultModifiedAt": "2026-09-07T23:23:21.817320+00:00",
       "trxSha256": "3a38f38270d8342af11be4b994fadd916985bcff123ac8e197d3ba6c282e3700"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.AnnotationAppearanceStreamRenderTests.SubtypeWithNormalAppearanceStream_Renders(subtype: \"Caret\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0006395",
+      "trx": "/tmp/new5-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:53:41.931859+00:00",
+      "trxSha256": "f8ef5d24e1c92c1b1d176e24e4a30fee7b8f0824c2f7e0404410ab8fe1334d36"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.AnnotationAppearanceStreamRenderTests.SubtypeWithNormalAppearanceStream_Renders(subtype: \"Movie\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005278",
+      "trx": "/tmp/new5-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:53:41.931859+00:00",
+      "trxSha256": "f8ef5d24e1c92c1b1d176e24e4a30fee7b8f0824c2f7e0404410ab8fe1334d36"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.AnnotationAppearanceStreamRenderTests.SubtypeWithNormalAppearanceStream_Renders(subtype: \"Popup\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0007852",
+      "trx": "/tmp/new5-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:53:41.931859+00:00",
+      "trxSha256": "f8ef5d24e1c92c1b1d176e24e4a30fee7b8f0824c2f7e0404410ab8fe1334d36"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.AnnotationAppearanceStreamRenderTests.SubtypeWithNormalAppearanceStream_Renders(subtype: \"Screen\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005745",
+      "trx": "/tmp/new5-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:53:41.931859+00:00",
+      "trxSha256": "f8ef5d24e1c92c1b1d176e24e4a30fee7b8f0824c2f7e0404410ab8fe1334d36"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.AnnotationAppearanceStreamRenderTests.SubtypeWithNormalAppearanceStream_Renders(subtype: \"Watermark\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0774502",
+      "trx": "/tmp/new5-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T03:53:41.931859+00:00",
+      "trxSha256": "f8ef5d24e1c92c1b1d176e24e4a30fee7b8f0824c2f7e0404410ab8fe1334d36"
     },
     {
       "testName": "Excise.Rendering.Tests.ContentOperatorRouteTests.Resolve_IdentifiesEveryType3ColorLockOperator(name: \"CS\")",
@@ -68127,12 +68249,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 60,
-    "tests": 8477,
+    "trxFiles": 62,
+    "tests": 8491,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7550
+      "Passed": 7564
     },
     "status": "recorded"
   }
