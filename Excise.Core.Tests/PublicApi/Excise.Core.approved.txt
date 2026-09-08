@@ -695,6 +695,10 @@ namespace Excise.Core.Document
         public string Name { get; init; }
         public Excise.Core.Primitives.PdfDictionary RawDictionary { get; init; }
     }
+    public static class PdfEmbeddedFileAuthoring
+    {
+        public static Excise.Core.Primitives.PdfReference AddEmbeddedFile(this Excise.Core.Document.PdfDocument document, string fileName, byte[] data, string? mimeType = null, string? description = null) { }
+    }
     public sealed class PdfField
     {
         public PdfField(Excise.Core.Document.PdfDocument document, string fullName, string partialName, Excise.Core.Document.PdfFieldType fieldType, System.Collections.Generic.IReadOnlyList<string>? options, Excise.Core.Document.PdfRectangle? rect, int? pageNumber, bool isReadOnly, bool isRequired, bool isMultiline, Excise.Core.Primitives.PdfDictionary rawDictionary, System.Collections.Generic.IReadOnlyList<Excise.Core.Primitives.PdfDictionary> widgetDictionaries) { }

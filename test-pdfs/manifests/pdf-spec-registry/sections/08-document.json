@@ -425,7 +425,7 @@
         "extract": "partial",
         "mutate": "partial",
         "write": "partial",
-        "author": "unimplemented"
+        "author": "partial"
       },
       "evidence": [],
       "notes": "Track document-level and annotation attachments separately; do not execute attached content.",
@@ -509,6 +509,13 @@
             "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed",
             "modes": [
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+            "modes": [
+              "author"
             ]
           }
         ]

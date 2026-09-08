@@ -8518,6 +8518,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -8744,15 +8753,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SkipsEmptyText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -22039,6 +22039,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -22265,15 +22274,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SkipsEmptyText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -23537,6 +23537,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -23763,15 +23772,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SkipsEmptyText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -25003,6 +25003,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -25235,15 +25244,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -25410,11 +25410,29 @@
       "capability": "pdf.17.document.embedded-files",
       "section": "document",
       "mode": "author",
-      "currentState": "unimplemented",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -89985,6 +90003,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_ThenScrub_RemovesIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_RemovesEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -90923,15 +90950,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_FullwidthNeedle_AlsoRemovesAsciiText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_AsciiNeedle_DoesNotTouchUnrelatedText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -91462,6 +91480,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_ThenScrub_RemovesIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_RemovesEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -92400,15 +92427,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_FullwidthNeedle_AlsoRemovesAsciiText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_AsciiNeedle_DoesNotTouchUnrelatedText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -92953,6 +92971,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_ThenScrub_RemovesIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_RemovesEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -93891,15 +93918,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_FullwidthNeedle_AlsoRemovesAsciiText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_AsciiNeedle_DoesNotTouchUnrelatedText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94472,6 +94490,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_ThenScrub_RemovesIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_RemovesEmbeddedFiles",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95410,15 +95437,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_FullwidthNeedle_AlsoRemovesAsciiText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_AsciiNeedle_DoesNotTouchUnrelatedText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103184,6 +103202,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103410,15 +103437,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SkipsEmptyText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -104644,6 +104662,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::PdfEmbeddedFileTests.ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104870,15 +104897,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SkipsEmptyText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -109526,15 +109544,15 @@
   ],
   "summary": {
     "targetModes": 900,
-    "modesWithTestCandidates": 621,
-    "modesWithExplicitContracts": 855,
-    "modesWithPassingExplicitContracts": 855,
-    "modesWithRecordedPassingCandidate": 621,
-    "gradeImplemented": 785,
+    "modesWithTestCandidates": 622,
+    "modesWithExplicitContracts": 856,
+    "modesWithPassingExplicitContracts": 856,
+    "modesWithRecordedPassingCandidate": 622,
+    "gradeImplemented": 786,
     "gradeVerified": 70,
-    "gradeUnknown": 45,
-    "testMethods": 6316,
-    "testMethodsWithCapabilityCandidate": 3907,
+    "gradeUnknown": 44,
+    "testMethods": 6321,
+    "testMethodsWithCapabilityCandidate": 3909,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T14:26:35.957261+00:00",
-  "gitRevision": "a02ecfc292e6a2b291eb3dd89c34abf11c57af84",
+  "recordedAt": "2026-09-08T14:32:51.915839+00:00",
+  "gitRevision": "00f02586d5b0cfcad9d23e7b60de0f9b8e67c16e",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -421,6 +421,11 @@
       "path": "/tmp/outline-authoring-trx/outline-authoring.trx",
       "modifiedAt": "2026-09-08T14:26:31.847153+00:00",
       "sha256": "5288e0633ccbae985207b621ec6b16c2a504d471fc556ad8af74a61fb8bc589e"
+    },
+    {
+      "path": "/tmp/embedded-file-trx/embedded-file-authoring.trx",
+      "modifiedAt": "2026-09-08T14:32:48.333588+00:00",
+      "sha256": "de075d7a7dce2792b7382576ed396eb28e0eaf1ed3a89df5e9f25f2e6e0335cb"
     }
   ],
   "outcomes": [
@@ -24391,6 +24396,46 @@
       "trx": "/tmp/new10-trx/core.trx",
       "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
       "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_OnPdfWithExistingAttachment_AppendsRatherThanReplacing",
+      "outcome": "Passed",
+      "duration": "00:00:00.0005746",
+      "trx": "/tmp/embedded-file-trx/embedded-file-authoring.trx",
+      "resultModifiedAt": "2026-09-08T14:32:48.333588+00:00",
+      "trxSha256": "de075d7a7dce2792b7382576ed396eb28e0eaf1ed3a89df5e9f25f2e6e0335cb"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_OnPdfWithoutAttachments_CreatesNameTreeAndFile",
+      "outcome": "Passed",
+      "duration": "00:00:00.0002158",
+      "trx": "/tmp/embedded-file-trx/embedded-file-authoring.trx",
+      "resultModifiedAt": "2026-09-08T14:32:48.333588+00:00",
+      "trxSha256": "de075d7a7dce2792b7382576ed396eb28e0eaf1ed3a89df5e9f25f2e6e0335cb"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_ThenScrub_RemovesIt",
+      "outcome": "Passed",
+      "duration": "00:00:00.0236310",
+      "trx": "/tmp/embedded-file-trx/embedded-file-authoring.trx",
+      "resultModifiedAt": "2026-09-08T14:32:48.333588+00:00",
+      "trxSha256": "de075d7a7dce2792b7382576ed396eb28e0eaf1ed3a89df5e9f25f2e6e0335cb"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_Twice_KeepsBothAndSortsByName",
+      "outcome": "Passed",
+      "duration": "00:00:00.0055725",
+      "trx": "/tmp/embedded-file-trx/embedded-file-authoring.trx",
+      "resultModifiedAt": "2026-09-08T14:32:48.333588+00:00",
+      "trxSha256": "de075d7a7dce2792b7382576ed396eb28e0eaf1ed3a89df5e9f25f2e6e0335cb"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileAuthoringTests.AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+      "outcome": "Passed",
+      "duration": "00:00:00.0173694",
+      "trx": "/tmp/embedded-file-trx/embedded-file-authoring.trx",
+      "resultModifiedAt": "2026-09-08T14:32:48.333588+00:00",
+      "trxSha256": "de075d7a7dce2792b7382576ed396eb28e0eaf1ed3a89df5e9f25f2e6e0335cb"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileTests.EmbeddedFile_SurvivesASaveAndReload_WhenUntouched",
@@ -68458,12 +68503,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 83,
-    "tests": 8504,
+    "trxFiles": 84,
+    "tests": 8509,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7577
+      "Passed": 7582
     },
     "status": "recorded"
   }
