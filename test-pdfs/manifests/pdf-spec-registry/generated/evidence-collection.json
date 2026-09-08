@@ -16629,7 +16629,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -16648,6 +16649,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_TextLeading_AffectsLineSpacing",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -22545,6 +22553,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_TextLeading_AffectsLineSpacing",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -22859,7 +22874,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -22995,7 +23009,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -23035,7 +23048,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -23075,7 +23087,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -23115,7 +23126,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [

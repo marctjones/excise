@@ -61559,11 +61559,19 @@
       "capability": "pdf.20.content.operator-060",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_TextLeading_AffectsLineSpacing",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62439,17 +62447,6 @@
     {
       "capability": "pdf.20.content.operator-067",
       "section": "operators",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.content.operator-067",
-      "section": "operators",
       "mode": "write",
       "currentState": "partial",
       "testCandidates": [
@@ -62812,17 +62809,6 @@
     {
       "capability": "pdf.20.content.operator-070",
       "section": "operators",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.content.operator-070",
-      "section": "operators",
       "mode": "write",
       "currentState": "partial",
       "testCandidates": [
@@ -62931,17 +62917,6 @@
     {
       "capability": "pdf.20.content.operator-071",
       "section": "operators",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.content.operator-071",
-      "section": "operators",
       "mode": "write",
       "currentState": "partial",
       "testCandidates": [
@@ -63050,17 +63025,6 @@
     {
       "capability": "pdf.20.content.operator-072",
       "section": "operators",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.content.operator-072",
-      "section": "operators",
       "mode": "write",
       "currentState": "partial",
       "testCandidates": [
@@ -63164,17 +63128,6 @@
       ],
       "explicitContractStatus": "passing",
       "grade": "implemented",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.content.operator-073",
-      "section": "operators",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -68712,11 +68665,19 @@
       "capability": "pdf.20.renderer.requirement-082",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_TextLeading_AffectsLineSpacing",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69242,17 +69203,6 @@
     {
       "capability": "pdf.20.renderer.requirement-089",
       "section": "renderer-requirements",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-089",
-      "section": "renderer-requirements",
       "mode": "preserve",
       "currentState": "partial",
       "testCandidates": [
@@ -69465,17 +69415,6 @@
     {
       "capability": "pdf.20.renderer.requirement-092",
       "section": "renderer-requirements",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-092",
-      "section": "renderer-requirements",
       "mode": "preserve",
       "currentState": "partial",
       "testCandidates": [
@@ -69534,17 +69473,6 @@
     {
       "capability": "pdf.20.renderer.requirement-093",
       "section": "renderer-requirements",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-093",
-      "section": "renderer-requirements",
       "mode": "preserve",
       "currentState": "partial",
       "testCandidates": [
@@ -69598,17 +69526,6 @@
       ],
       "explicitContractStatus": "passing",
       "grade": "implemented",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-094",
-      "section": "renderer-requirements",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -69667,17 +69584,6 @@
       ],
       "explicitContractStatus": "passing",
       "grade": "implemented",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-095",
-      "section": "renderer-requirements",
-      "mode": "render",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -106428,14 +106334,14 @@
     }
   ],
   "summary": {
-    "targetModes": 944,
+    "targetModes": 934,
     "modesWithTestCandidates": 503,
-    "modesWithExplicitContracts": 651,
-    "modesWithPassingExplicitContracts": 651,
+    "modesWithExplicitContracts": 653,
+    "modesWithPassingExplicitContracts": 653,
     "modesWithRecordedPassingCandidate": 503,
-    "gradeImplemented": 640,
+    "gradeImplemented": 642,
     "gradeVerified": 11,
-    "gradeUnknown": 293,
+    "gradeUnknown": 281,
     "testMethods": 6112,
     "testMethodsWithCapabilityCandidate": 3835,
     "benchmarkScenarios": 6,

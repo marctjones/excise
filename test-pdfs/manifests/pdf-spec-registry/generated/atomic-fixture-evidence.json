@@ -4352,7 +4352,7 @@
       "capability": "pdf.20.content.operator-060",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -4764,14 +4764,6 @@
     {
       "capability": "pdf.20.content.operator-067",
       "section": "operators",
-      "mode": "render",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.content.operator-067",
-      "section": "operators",
       "mode": "write",
       "currentState": "partial",
       "fixtureStatus": "recorded-passing",
@@ -4937,14 +4929,6 @@
           "resolution": "method-reference"
         }
       ]
-    },
-    {
-      "capability": "pdf.20.content.operator-070",
-      "section": "operators",
-      "mode": "render",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
     },
     {
       "capability": "pdf.20.content.operator-070",
@@ -4996,14 +4980,6 @@
           "resolution": "method-reference"
         }
       ]
-    },
-    {
-      "capability": "pdf.20.content.operator-071",
-      "section": "operators",
-      "mode": "render",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
     },
     {
       "capability": "pdf.20.content.operator-071",
@@ -5055,14 +5031,6 @@
           "resolution": "method-reference"
         }
       ]
-    },
-    {
-      "capability": "pdf.20.content.operator-072",
-      "section": "operators",
-      "mode": "render",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
     },
     {
       "capability": "pdf.20.content.operator-072",
@@ -5114,14 +5082,6 @@
           "resolution": "method-reference"
         }
       ]
-    },
-    {
-      "capability": "pdf.20.content.operator-073",
-      "section": "operators",
-      "mode": "render",
-      "currentState": "unknown",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
     },
     {
       "capability": "pdf.20.content.operator-073",
@@ -7096,7 +7056,7 @@
       "capability": "pdf.20.renderer.requirement-082",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7257,14 +7217,6 @@
       "section": "renderer-requirements",
       "mode": "parse",
       "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-089",
-      "section": "renderer-requirements",
-      "mode": "render",
-      "currentState": "unknown",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7329,14 +7281,6 @@
       "section": "renderer-requirements",
       "mode": "parse",
       "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-092",
-      "section": "renderer-requirements",
-      "mode": "render",
-      "currentState": "unknown",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7353,14 +7297,6 @@
       "section": "renderer-requirements",
       "mode": "parse",
       "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-093",
-      "section": "renderer-requirements",
-      "mode": "render",
-      "currentState": "unknown",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7377,14 +7313,6 @@
       "section": "renderer-requirements",
       "mode": "parse",
       "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-094",
-      "section": "renderer-requirements",
-      "mode": "render",
-      "currentState": "unknown",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7401,14 +7329,6 @@
       "section": "renderer-requirements",
       "mode": "parse",
       "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-095",
-      "section": "renderer-requirements",
-      "mode": "render",
-      "currentState": "unknown",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9676,9 +9596,9 @@
     }
   ],
   "summary": {
-    "targetModes": 944,
+    "targetModes": 934,
     "fixtureStatus": {
-      "not-contracted": 713,
+      "not-contracted": 703,
       "recorded-passing": 231
     }
   }

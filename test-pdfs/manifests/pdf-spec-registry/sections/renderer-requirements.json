@@ -7016,7 +7016,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -7039,6 +7039,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_TextLeading_AffectsLineSpacing",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -7632,7 +7639,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "not-applicable",
         "preserve": "partial"
       },
       "evidence": [
@@ -7645,7 +7652,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -7892,7 +7898,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "not-applicable",
         "preserve": "partial"
       },
       "evidence": [
@@ -7905,7 +7911,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -7974,7 +7979,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "not-applicable",
         "preserve": "partial"
       },
       "evidence": [
@@ -7987,7 +7992,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -8056,7 +8060,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "not-applicable",
         "preserve": "partial"
       },
       "evidence": [
@@ -8069,7 +8073,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -8138,7 +8141,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "not-applicable",
         "preserve": "partial"
       },
       "evidence": [
@@ -8151,7 +8154,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [

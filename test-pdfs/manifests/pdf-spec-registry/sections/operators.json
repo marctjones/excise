@@ -6571,7 +6571,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -6589,7 +6589,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -6608,6 +6609,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_TextLeading_AffectsLineSpacing",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -7340,7 +7348,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "not-applicable",
         "write": "partial"
       },
       "evidence": [
@@ -7665,7 +7673,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "not-applicable",
         "write": "partial"
       },
       "evidence": [
@@ -7768,7 +7776,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "not-applicable",
         "write": "partial"
       },
       "evidence": [
@@ -7871,7 +7879,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "not-applicable",
         "write": "partial"
       },
       "evidence": [
@@ -7974,7 +7982,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "not-applicable",
         "write": "partial"
       },
       "evidence": [
