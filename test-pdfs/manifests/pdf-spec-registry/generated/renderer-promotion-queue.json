@@ -6,7 +6,7 @@
     {
       "capability": "pdf.17.graphics.images",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [
         "Excise.Core/Filters/Jbig2/GenericRegionDecoder.cs",
@@ -199,7 +199,7 @@
     {
       "capability": "pdf.17.graphics.images",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [],
       "directTestCandidates": [],

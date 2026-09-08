@@ -490,7 +490,21 @@
           "ref": "pdf20.syntax.streams"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/XRefParserTests.cs::ParseXRef_TraditionalTable_ParsesSuccessfully",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Authoring/PdfA.cs",
@@ -7879,7 +7893,9 @@
       "registeredVerification": {
         "status": "planned",
         "requiredModes": [
-          "render"
+          "render",
+          "parse",
+          "preserve"
         ],
         "checks": [
           {
@@ -7887,6 +7903,14 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
             ]
           }
         ]
@@ -7971,7 +7995,9 @@
       "registeredVerification": {
         "status": "executable",
         "requiredModes": [
-          "render"
+          "render",
+          "parse",
+          "preserve"
         ],
         "checks": [
           {
@@ -7993,6 +8019,14 @@
             "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
             ]
           }
         ]
@@ -17790,7 +17824,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/XRefParserTests.cs::ParseXRef_TraditionalTable_ParsesSuccessfully",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -17832,7 +17874,15 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/XRefParserTests.cs::ParseXRef_TraditionalTable_ParsesSuccessfully",
+            "modes": [
+              "parse"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -18043,6 +18093,14 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
           }
         ]
       },
@@ -18091,6 +18149,14 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_scn_WorksLikeScWithoutPattern",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
             ]
           }
         ]
@@ -18761,6 +18827,14 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
           }
         ]
       },
@@ -18800,6 +18874,14 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
             ]
           }
         ]
@@ -18850,6 +18932,13 @@
             "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_UnfilledApTextWidgetsWithValues_PaintBothAndRestoreFontStateBetween",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -19032,6 +19121,13 @@
             "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::ParseOptionalContentGroups_SingleOcgDefaultOn_IsVisibleByDefault",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -19226,7 +19322,39 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "parse",
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "parse",
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "parse",
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -19392,7 +19520,39 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::PolicyRows_AreWellFormed",
+            "modes": [
+              "parse",
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "parse",
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EverySynthesisSiteInTheRenderer_IsNamedByARow",
+            "modes": [
+              "parse",
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [
         {
@@ -19715,7 +19875,23 @@
           "render",
           "preserve"
         ],
-        "checks": []
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs::VerifySignatures_PdfWithValidDetachedCmsAndByteRange_ReturnsValidResult",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.App.Tests/Unit/SignatureApplicationServiceTests.cs::SignDocument_ExternalOracle_PdfsigReportsValidUntrustedSignature",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       },
       "candidateReferences": [],
       "candidateReferenceCount": 0
@@ -47109,7 +47285,29 @@
         "redact"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_UnfilledApTextWidgetsWithValues_PaintBothAndRestoreFontStateBetween",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
@@ -48920,7 +49118,29 @@
           "ref": "pdf20.optional-content"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::ParseOptionalContentGroups_SingleOcgDefaultOn_IsVisibleByDefault",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Document/OptionalContentVisibility.cs",
@@ -51909,7 +52129,30 @@
           "ref": "pdf20.signatures"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs::VerifySignatures_PdfWithValidDetachedCmsAndByteRange_ReturnsValidResult",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.App.Tests/Unit/SignatureApplicationServiceTests.cs::SignDocument_ExternalOracle_PdfsigReportsValidUntrustedSignature",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Automation/PdfCommandIds.cs",

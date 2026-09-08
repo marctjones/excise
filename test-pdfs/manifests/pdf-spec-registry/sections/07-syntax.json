@@ -120,7 +120,7 @@
         "rationale": "Required for reliable open, save, and forensic-safe mutation."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "mutate": "unknown",
         "write": "unknown"
@@ -176,6 +176,21 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/XRefParserTests.cs::ParseXRef_TraditionalTable_ParsesSuccessfully",
+            "modes": [
+              "parse"
+            ]
+          }
         ]
       }
     },

@@ -206,8 +206,8 @@
         "rationale": "Inspection and status reporting are valuable; signing and certificate management are deferred."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
+        "parse": "partial",
+        "preserve": "partial",
         "extract": "unknown",
         "mutate": "unknown",
         "write": "unknown",
@@ -265,6 +265,30 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs::VerifySignatures_PdfWithValidDetachedCmsAndByteRange_ReturnsValidResult",
+            "modes": [
+              "parse",
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.App.Tests/Unit/SignatureApplicationServiceTests.cs::SignDocument_ExternalOracle_PdfsigReportsValidUntrustedSignature",
+            "modes": [
+              "preserve"
+            ]
+          }
         ]
       }
     },

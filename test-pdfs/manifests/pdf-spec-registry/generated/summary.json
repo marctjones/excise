@@ -23,9 +23,9 @@
   "decisionStates": {
     "blocked": 1,
     "deferred": 10,
-    "preserve-only": 11,
+    "preserve-only": 13,
     "required": 247,
-    "supported": 13
+    "supported": 11
   },
   "modeCoverage": {
     "author": 23,
@@ -39,5 +39,5 @@
   },
   "migrationStatus": "active-until-migrated",
   "productPolicy": "AD-009",
-  "verificationGapCount": 91
+  "verificationGapCount": 80
 }

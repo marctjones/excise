@@ -4,12 +4,6 @@
   "gaps": [
     {
       "capability": "pdf.17.syntax.objects",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.syntax.objects",
       "mode": "preserve",
       "implementationState": "unknown",
       "reason": "no verification contract"
@@ -46,18 +40,6 @@
     },
     {
       "capability": "pdf.17.graphics.patterns-shadings",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.patterns-shadings",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.patterns-shadings",
       "mode": "write",
       "implementationState": "unknown",
       "reason": "no verification contract"
@@ -65,18 +47,6 @@
     {
       "capability": "pdf.17.graphics.patterns-shadings",
       "mode": "author",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.images",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.images",
-      "mode": "preserve",
       "implementationState": "unknown",
       "reason": "no verification contract"
     },
@@ -298,19 +268,7 @@
     },
     {
       "capability": "pdf.17.interactive.forms",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.forms",
       "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.forms",
-      "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"
     },
@@ -346,19 +304,7 @@
     },
     {
       "capability": "pdf.17.interactive.optional-content",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.optional-content",
       "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.optional-content",
-      "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"
     },
@@ -384,18 +330,6 @@
       "capability": "pdf.17.interactive.optional-content",
       "mode": "author",
       "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interchange.signatures",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interchange.signatures",
-      "mode": "preserve",
-      "implementationState": "unknown",
       "reason": "no verification contract"
     },
     {

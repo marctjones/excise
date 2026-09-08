@@ -527,9 +527,9 @@
         "rationale": "Filling, saving, and flattening ordinary office and court forms are core workflows; scripts and XFA are distinct scopes."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "extract": "unknown",
         "mutate": "unknown",
         "write": "unknown",
@@ -581,6 +581,29 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_UnfilledApTextWidgetsWithValues_PaintBothAndRestoreFontStateBetween",
+            "modes": [
+              "render"
+            ]
+          }
         ]
       }
     },
@@ -687,9 +710,9 @@
         "rationale": "Layers affect appearance and must be viewable, toggleable, and preserved through edits."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "extract": "unknown",
         "mutate": "unknown",
         "write": "unknown",
@@ -744,6 +767,29 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::ParseOptionalContentGroups_SingleOcgDefaultOn_IsVisibleByDefault",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+            "modes": [
+              "render"
+            ]
+          }
         ]
       }
     }

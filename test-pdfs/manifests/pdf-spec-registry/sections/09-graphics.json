@@ -473,8 +473,8 @@
         "rationale": "Required by real-world rendering but authoring may remain narrow."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
+        "parse": "partial",
+        "preserve": "partial",
         "render": "partial",
         "write": "unknown",
         "author": "unknown"
@@ -531,7 +531,9 @@
       "verification": {
         "status": "planned",
         "requiredModes": [
-          "render"
+          "render",
+          "parse",
+          "preserve"
         ],
         "checks": [
           {
@@ -539,6 +541,14 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
             ]
           }
         ]
@@ -567,8 +577,8 @@
         "rationale": "Images are common page content and may be redaction carriers."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
+        "parse": "partial",
+        "preserve": "partial",
         "render": "implemented",
         "extract": "unknown",
         "mutate": "unknown",
@@ -603,7 +613,9 @@
       "verification": {
         "status": "executable",
         "requiredModes": [
-          "render"
+          "render",
+          "parse",
+          "preserve"
         ],
         "checks": [
           {
@@ -625,6 +637,14 @@
             "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve"
             ]
           }
         ]
