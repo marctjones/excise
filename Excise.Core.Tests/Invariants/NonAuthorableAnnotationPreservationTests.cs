@@ -32,11 +32,16 @@ public class NonAuthorableAnnotationPreservationTests
 
     private static PdfDocument SaveAndReopen(PdfDocument doc) => PdfDocument.Open(doc.SaveToBytes());
 
-    /// <summary>Widget, Link, and Popup: typed subtypes the authoring API never creates.</summary>
+    /// <summary>Widget, Link, Popup, and Redact: typed subtypes the authoring API never creates.
+    /// Redact is corpus-free, negative/conservation evidence for
+    /// pdf.17.interactive.redaction-review-drafts' preserve mode (#1428 investigation) --
+    /// complements UnauthoredAnnotationPreservationTests' qpdf-oracled real-fixture
+    /// row for the same subtype rather than replacing it.</summary>
     [Theory]
     [InlineData("Widget")]
     [InlineData("Link")]
     [InlineData("Popup")]
+    [InlineData("Redact")]
     public void TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged(string subtype)
     {
         using var doc = PdfDocument.CreateNew();

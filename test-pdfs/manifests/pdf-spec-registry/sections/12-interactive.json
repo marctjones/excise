@@ -329,7 +329,7 @@
           "ref": "test-pdfs/pdfium/redact_annot.pdf; veraPDF annotation conformance fixtures"
         }
       ],
-      "notes": "Planned product capability, disabled by default. A review draft must carry an explicit non-shareable/unapplied state; it is never evidence of content removal.",
+      "notes": "Planned product capability, disabled by default. A review draft must carry an explicit non-shareable/unapplied state; it is never evidence of content removal. parse/preserve are proven: /Redact is a typed subtype (PdfAnnotationParser.cs), and it round-trips through save/reload both in the corpus-free synthetic sweep and against the real pdfium fixture (qpdf-oracled, negative-controlled). render/mutate/write/author remain genuinely unbuilt -- see product-policy.json's redactionReviewDrafts contract (:19-22): render has no synthesis for an /AP-less mark at all (distinct from redaction-annotations, which deliberately never acts on one); mutate is the apply-one-annotation contract (remove content, draw the /IC/OverlayText overlay as page content, delete the annotation), not yet built; write is author-a-review-draft-plus-warning, not yet built; author has no AddRedactAnnotation method. The safe-copy refusal this capability's own rationale depends on (never produce a safe-redacted copy with unresolved incoming /Redact) is also unbuilt -- tracked in #1430, not a mode of this capability but the mechanism its rationale names.",
       "documentation": [
         "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
       ],
@@ -375,6 +375,40 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "mutate",
+          "write",
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
         ]
       }
     },

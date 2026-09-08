@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1012,
-  "indexedContentSha256": "42361f7e2ef72fdae3c5a783f2c1cef24cdd32c661aafc656c3cf233a130a039",
+  "indexedContentSha256": "6db5094c4e61445b09eca165645e60ded6cf10f2e989fa2d0014895451da0ac5",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1978,6 +1978,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "decode",
+            "syntax",
+            "xref"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/NonPageCarrierRedactionLeakTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -2046,19 +2055,9 @@
             "decode",
             "filters"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "filters",
-            "parameters",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 85
+      "candidateReferenceCount": 86
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -4030,6 +4029,7 @@
             "named",
             "navigation",
             "outlines",
+            "viewer",
             "catalog",
             "metadata",
             "pdfdocument"
@@ -19784,6 +19784,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Text/TextExtractor.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotations",
+            "appearance-stream"
+          ]
+        },
+        {
           "path": "Excise.Core/Validation/PdfUaValidator.cs",
           "kind": "source",
           "matchedTerms": [
@@ -19817,7 +19825,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 5
+      "candidateReferenceCount": 6
     },
     {
       "id": "pdf.20.renderer.requirement-017",
@@ -34465,7 +34473,8 @@
             "annotation",
             "widget",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -34743,6 +34752,13 @@
             "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -35202,7 +35218,8 @@
             "annotation",
             "link",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -35630,6 +35647,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -36362,6 +36386,13 @@
             "modes": [
               "parse"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -36677,6 +36708,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "highlight",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36986,7 +37027,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 61
+      "candidateReferenceCount": 62
     },
     {
       "id": "pdf.20.annotation.subtype-006",
@@ -37092,6 +37133,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -37532,6 +37580,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -37952,6 +38007,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -38364,6 +38426,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -38963,6 +39032,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -39466,6 +39542,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -40190,7 +40273,8 @@
             "annotation",
             "line",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -40375,6 +40459,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -40860,6 +40951,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -41322,6 +41420,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -41900,7 +42005,8 @@
             "annotation",
             "ink",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -42273,7 +42379,8 @@
             "annotation",
             "popup",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -42424,6 +42531,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -42451,6 +42565,26 @@
           ]
         },
         {
+          "path": "Excise.Core/Document/PdfDocument.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "fileattachment",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core/Document/PdfEmbeddedFileParser.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "fileattachment",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Forms/FdfSerializer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -42469,6 +42603,16 @@
             "fileattachment",
             "annotation",
             "pdfannotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "fileattachment",
+            "annotation",
             "redact"
           ]
         },
@@ -42512,6 +42656,16 @@
             "fileattachment",
             "annotation",
             "pdfannotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "fileattachment",
+            "annotation",
             "redact"
           ]
         },
@@ -42583,7 +42737,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 15
+      "candidateReferenceCount": 19
     },
     {
       "id": "pdf.20.annotation.subtype-017",
@@ -42690,6 +42844,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -42806,6 +42967,17 @@
             "annotation",
             "stamp",
             "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core/Text/TextExtractor.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "pdfannotation",
             "redact"
           ]
         },
@@ -42969,6 +43141,16 @@
             "stamp",
             "annotation",
             "pdfannotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
             "redact"
           ]
         },
@@ -43140,7 +43322,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 44
+      "candidateReferenceCount": 46
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -43190,6 +43372,13 @@
             "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -43441,6 +43630,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -43509,6 +43705,16 @@
         },
         {
           "path": "Excise.Core/Document/PdfDocument.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "redact",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core/Document/PdfEmbeddedFileParser.cs",
           "kind": "source",
           "matchedTerms": [
             "annotation",
@@ -43948,6 +44154,17 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "redact",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -44239,29 +44456,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/RedactionVisualGoldSetTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "redact",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/StickyNoteIconTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "redact",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 117
+      "candidateReferenceCount": 119
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -44332,6 +44529,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -44485,6 +44689,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -44624,6 +44835,13 @@
             "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -44796,6 +45014,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -44895,7 +45123,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 26
+      "candidateReferenceCount": 27
     },
     {
       "id": "pdf.20.annotation.subtype-023",
@@ -44945,6 +45173,13 @@
             "ref": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs::SubtypeWithNormalAppearanceStream_Renders",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -45016,6 +45251,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "watermark",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -45045,7 +45290,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 9
+      "candidateReferenceCount": 10
     },
     {
       "id": "pdf.20.annotation.subtype-024",
@@ -45100,7 +45345,8 @@
             "annotation",
             "printermark",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -45188,7 +45434,8 @@
             "annotation",
             "trapnet",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -45314,7 +45561,8 @@
             "annotation",
             "richmedia",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -45402,7 +45650,8 @@
             "annotation",
             "projection",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -47848,7 +48097,9 @@
             "annotation",
             "annotations",
             "subtypes",
-            "annotation"
+            "action",
+            "annotation",
+            "redact"
           ]
         },
         {
@@ -47897,18 +48148,20 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Text/Segmentation/CarrierTextRecoveryTests.cs",
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotation",
             "annotations",
+            "appearances",
+            "acroform",
             "action",
             "annotation",
             "redact"
           ]
         },
         {
-          "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
+          "path": "Excise.Core.Tests/Text/Segmentation/CarrierTextRecoveryTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotation",
@@ -47919,7 +48172,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 153
+      "candidateReferenceCount": 154
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -48308,6 +48561,17 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -48320,6 +48584,18 @@
         },
         {
           "path": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
+            "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotations",
@@ -48751,7 +49027,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 67
+      "candidateReferenceCount": 69
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -48780,7 +49056,40 @@
           "ref": "test-pdfs/pdfium/redact_annot.pdf; veraPDF annotation conformance fixtures"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "mutate",
+          "write",
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Document/PdfPage.cs",
@@ -49080,6 +49389,19 @@
             "redaction",
             "review",
             "action",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "drafts",
+            "redaction",
+            "redaction-review-drafts",
+            "review",
+            "action",
+            "annotation",
             "redact"
           ]
         },
@@ -49615,7 +49937,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 78
+      "candidateReferenceCount": 79
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -51195,6 +51517,7 @@
           "kind": "test",
           "matchedTerms": [
             "acroform",
+            "appearances",
             "fields",
             "acroform",
             "action",
@@ -52720,6 +53043,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "screen",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/CarrierTextRecoveryTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -53100,23 +53433,9 @@
             "screen",
             "media"
           ]
-        },
-        {
-          "path": "tests/annotation-support-matrix.json",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "media",
-            "movie",
-            "screen",
-            "sound",
-            "media",
-            "movie",
-            "sound"
-          ]
         }
       ],
-      "candidateReferenceCount": 84
+      "candidateReferenceCount": 85
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -53423,6 +53742,15 @@
             "annotations",
             "media",
             "rich",
+            "media"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
             "media"
           ]
         },
@@ -53744,7 +54072,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 65
+      "candidateReferenceCount": 66
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
@@ -58393,6 +58721,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Document/PdfEmbeddedFileParser.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "pdfe",
+            "redaction",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core/Document/PdfPage.cs",
           "kind": "source",
           "matchedTerms": [
@@ -59119,19 +59456,9 @@
             "redaction",
             "redaction"
           ]
-        },
-        {
-          "path": "tests/gui-interaction-coverage.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "redaction",
-            "safety",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 86
+      "candidateReferenceCount": 87
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -59177,6 +59504,16 @@
             "visibility",
             "redaction",
             "security"
+          ]
+        },
+        {
+          "path": "Excise.Core/Document/PdfEmbeddedFileParser.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "pdfe",
+            "redaction",
+            "visibility",
+            "redaction"
           ]
         },
         {
@@ -59501,6 +59838,15 @@
           "matchedTerms": [
             "pdfe",
             "redaction",
+            "redaction"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "redaction",
+            "review",
             "redaction"
           ]
         },
@@ -59895,27 +60241,9 @@
             "review",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/HiddenDialogCoverageTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "redaction",
-            "visibility",
-            "redaction"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/KeyboardShortcutEffectTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "redaction",
-            "visibility",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 107
+      "candidateReferenceCount": 109
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -60025,8 +60353,10 @@
           "path": "Excise.Core/Document/PdfEmbeddedFileParser.cs",
           "kind": "source",
           "matchedTerms": [
+            "attachment",
             "metadata",
-            "pdfe"
+            "pdfe",
+            "redaction"
           ]
         },
         {
@@ -60442,7 +60772,8 @@
           "matchedTerms": [
             "attachment",
             "metadata",
-            "redaction"
+            "redaction",
+            "security"
           ]
         },
         {
@@ -60975,6 +61306,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Document/PdfEmbeddedFileParser.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "pdfe",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core/Editing/PdfEditOperation.cs",
           "kind": "source",
           "matchedTerms": [
@@ -61238,7 +61579,8 @@
             "attachment",
             "attachments",
             "save",
-            "redaction"
+            "redaction",
+            "security"
           ]
         },
         {
@@ -61571,7 +61913,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 65
+      "candidateReferenceCount": 66
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -62549,7 +62891,8 @@
           "kind": "source",
           "matchedTerms": [
             "log",
-            "pdfe"
+            "pdfe",
+            "redaction"
           ]
         },
         {

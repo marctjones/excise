@@ -23,7 +23,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "not-applicable"
       },
       "evidence": [
         {
@@ -84,7 +84,7 @@
           }
         ]
       },
-      "notes": "Form fields. The largest non-visual use of annotations in the format \u2014 every AcroForm field's on-page presence is a Widget. Field VALUES are text, so this is a redaction carrier. Page-raster oracle APIs legitimately draw nothing here (pdfium's form-fill layer is a separate pass), which is why Widget rows are judged over 3 engines, not 5.",
+      "notes": "Form fields. The largest non-visual use of annotations in the format \u2014 every AcroForm field's on-page presence is a Widget. Field VALUES are text, so this is a redaction carrier. Page-raster oracle APIs legitimately draw nothing here (pdfium's form-fill layer is a separate pass), which is why Widget rows are judged over 3 engines, not 5. Widget's real text carrier is field /V (see pdf.17.interactive.forms), not annotation-level extraction; its base /Contents is alt-text only and is scrubbed by RedactionCarriers.Annotations (#1427) regardless.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -144,7 +144,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -202,10 +202,17 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "Navigation only: GoTo and URI. A /URI is user-visible text and travels with the file, so it is a carrier. \u00a712.5.6.5 default 1pt border implemented in #987; the absurd-width case refuses per #1015.",
+      "notes": "Navigation only: GoTo and URI. A /URI is user-visible text and travels with the file, so it is a carrier. \u00a712.5.6.5 default 1pt border implemented in #987; the absurd-width case refuses per #1015. extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -265,7 +272,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -344,10 +351,17 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "The sticky-note icon. /Contents is the note body \u2014 real human text outside the content stream.",
+      "notes": "The sticky-note icon. /Contents is the note body \u2014 real human text outside the content stream. extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -563,7 +577,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -649,10 +663,17 @@
             "modes": [
               "parse"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "Quad-based text markup. Magnitude divergence tracked as #1004.",
+      "notes": "Quad-based text markup. Magnitude divergence tracked as #1004. extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -712,7 +733,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -805,10 +826,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": null,
+      "notes": " extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -866,7 +894,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -959,10 +987,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": null,
+      "notes": " extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -1020,7 +1055,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -1113,10 +1148,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": null,
+      "notes": " extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -1174,7 +1216,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -1260,10 +1302,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": null,
+      "notes": " extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -1321,7 +1370,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -1407,10 +1456,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": null,
+      "notes": " extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -1468,7 +1524,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -1568,10 +1624,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "Line endings are distinguishable and preserved in order across a save (#933).",
+      "notes": "Line endings are distinguishable and preserved in order across a save (#933). extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -1631,7 +1694,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -1731,10 +1794,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": null,
+      "notes": " extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -1792,7 +1862,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -1892,10 +1962,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": null,
+      "notes": " extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -1953,7 +2030,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -2053,10 +2130,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "Every point preserved in order across a save (#933).",
+      "notes": "Every point preserved in order across a save (#933). extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -2116,7 +2200,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "not-applicable"
       },
       "evidence": [],
       "verification": {
@@ -2151,7 +2235,7 @@
           }
         ]
       },
-      "notes": "Deliberately never drawn inline \u2014 it is the note window for its parent markup annotation, and its text belongs to that parent. Recognised precisely so it is NOT rendered onto the page.",
+      "notes": "Deliberately never drawn inline \u2014 it is the note window for its parent markup annotation, and its text belongs to that parent. Recognised precisely so it is NOT rendered onto the page. Popup has no independent content by spec (\u00a712.5.6.14): a parented Popup's own /Contents (if any) is ignored by conforming readers and its /Parent's /Contents governs. No /AP of its own either. Its parent's carriers are scrubbed by RedactionCarriers.Annotations (#1427) regardless.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -2209,7 +2293,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -2267,10 +2351,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "Embeds an ENTIRE arbitrary file. The most consequential data carrier in the format \u2014 scrubbed by default in the GUI redaction-copy flow (#467). No synthesis: the oracles disagree on the icon and there is nothing to copy.",
+      "notes": "Embeds an ENTIRE arbitrary file. The most consequential data carrier in the format \u2014 scrubbed by default in the GUI redaction-copy flow (#467). No synthesis: the oracles disagree on the icon and there is nothing to copy. extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -2330,7 +2421,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -2424,10 +2515,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "No synthesis, by decision #1015: 3 of 5 engines draw and disagree 4.7x on quantity and 3.6x on bbox height. A stamp's picture is viewer-specific art \u2014 there is nothing to copy, only an invitation to invent some.",
+      "notes": "No synthesis, by decision #1015: 3 of 5 engines draw and disagree 4.7x on quantity and 3.6x on bbox height. A stamp's picture is viewer-specific art \u2014 there is nothing to copy, only an invitation to invent some. extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -2487,7 +2585,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -2524,10 +2622,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "No synthesis. #972's first fix drew a caret where a tick belonged, with identical pixel count and identical bbox \u2014 the case that proved an ink count and a bbox cannot discriminate shape.",
+      "notes": "No synthesis. #972's first fix drew a caret where a tick belonged, with identical pixel count and identical bbox \u2014 the case that proved an ink count and a bbox cannot discriminate shape. extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -2587,7 +2692,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -2645,10 +2750,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "\u00a712.5.6.23. Marks a region INTENDED for redaction \u2014 an instruction to a processor, not a picture. excise recognises and preserves it; whether excise should ACT on it is an open product question, not a rendering one.",
+      "notes": "\u00a712.5.6.23. Marks a region INTENDED for redaction \u2014 an instruction to a processor, not a picture. excise recognises and preserves it; whether excise should ACT on it is an open product question, not a rendering one. extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -2708,7 +2820,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -2766,10 +2878,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "Preserved, never played. Embedded audio is a data carrier.",
+      "notes": "Preserved, never played. Embedded audio is a data carrier. extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -2829,7 +2948,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -2866,10 +2985,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "Preserved, never played.",
+      "notes": "Preserved, never played. extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -2929,7 +3055,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -2966,10 +3092,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "Media playback surface. Preserved, never played, its action never executed.",
+      "notes": "Media playback surface. Preserved, never played, its action never executed. extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
@@ -3029,7 +3162,7 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unimplemented"
+        "extract": "partial"
       },
       "evidence": [
         {
@@ -3066,10 +3199,17 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
-      "notes": "Drawn from its /AP only.",
+      "notes": "Drawn from its /AP only. extract is partial via the generic /AP appearance-stream text path (TextExtractor.EmitMarkupAnnotationLetters, #1429) -- any drawn text in this subtype's own appearance stream is extracted, verified via the AnnotationAppearanceStream carrier test. Its /Contents popup-comment text (where the subtype has one) is deliberately NOT folded into page.Text (matches mutool, #660) but IS scrubbed regardless by RedactionCarriers.Annotations (#1427) -- extract=partial reflects the extraction surface, not a redaction gap.",
       "documentation": [
         "test-pdfs/manifests/pdf20-renderer-requirements.json"
       ],
