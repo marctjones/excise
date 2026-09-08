@@ -485,7 +485,13 @@ public static class PdfDocumentSanitizer
                 // /Contents was scrubbed, an intra-annotation asymmetry exactly like
                 // the /A /URI one below. Excising the term from the raw string works
                 // whether the value is plain or XHTML markup.
-                foreach (var key in new[] { "Contents", "T", "RC" })
+                // /Subj is the "subject" text string on markup annotations (Table 170,
+                // §12.5.6.2) — a separate free-text carrier from /Contents, not scrubbed
+                // by anything before this. /OverlayText is Redact-specific (Table 192,
+                // §12.5.6.23): the text a viewer draws over the redacted region when no
+                // /RO overlay form is present — the annotation's OWN stated replacement
+                // text, and until this fix nothing in the codebase read it at all.
+                foreach (var key in new[] { "Contents", "T", "RC", "Subj", "OverlayText" })
                 {
                     var value = ResolveStringOrNull(document, annot, key);
                     if (string.IsNullOrEmpty(value)) continue;

@@ -42,6 +42,8 @@ public class CanaryInjectionLeakTests
         TjSplit,            // canary split across a TJ array — defeats byte matching
         FormXObject,        // #355 / #1040
         AnnotationContents, // #608
+        AnnotationSubj,     // /Subj on a markup annotation (Table 170, §12.5.6.2) — never scrubbed before this fix
+        RedactOverlayText,  // /OverlayText on a /Redact annotation (Table 192, §12.5.6.23) — never scrubbed before this fix
         AcroFormValue,      // /V — #1038
         AcroFormFieldName,  // /T — #1130 (fixed this session)
         AcroFormTooltip,    // /TU — #1130
@@ -260,6 +262,25 @@ public class CanaryInjectionLeakTests
                 pageExtras.Append($" /Annots [{an} 0 R]");
                 extraObjects.Add($"{an} 0 obj\n<< /Type /Annot /Subtype /Text /Rect [72 700 92 720] " +
                     $"/Contents ({Canary}) >>\nendobj\n");
+                break;
+            }
+            case Carrier.AnnotationSubj:
+            {
+                // /Contents deliberately unrelated so this row isolates /Subj —
+                // a survival here can't be explained by the (already-scrubbed)
+                // /Contents carrier accidentally covering for it.
+                int an = Reserve();
+                pageExtras.Append($" /Annots [{an} 0 R]");
+                extraObjects.Add($"{an} 0 obj\n<< /Type /Annot /Subtype /Highlight /Rect [72 700 92 720] " +
+                    $"/Contents (unrelated) /Subj ({Canary}) /QuadPoints [72 720 92 720 72 700 92 700] >>\nendobj\n");
+                break;
+            }
+            case Carrier.RedactOverlayText:
+            {
+                int an = Reserve();
+                pageExtras.Append($" /Annots [{an} 0 R]");
+                extraObjects.Add($"{an} 0 obj\n<< /Type /Annot /Subtype /Redact /Rect [72 700 92 720] " +
+                    $"/QuadPoints [72 720 92 720 72 700 92 700] /OverlayText ({Canary}) >>\nendobj\n");
                 break;
             }
             case Carrier.AcroFormValue:
