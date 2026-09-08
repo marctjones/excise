@@ -1266,14 +1266,14 @@
       ],
       "targetModes": 7,
       "modeStates": {
-        "partial": 2,
+        "partial": 3,
         "unimplemented": 1,
-        "unknown": 4
+        "unknown": 3
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 2,
-      "passingContractModes": 2,
-      "testCandidateModes": 1,
+      "unknownModeCount": 3,
+      "explicitContractModes": 3,
+      "passingContractModes": 3,
+      "testCandidateModes": 2,
       "reviewBatchIssues": []
     },
     {
@@ -2789,13 +2789,12 @@
       ],
       "targetModes": 3,
       "modeStates": {
-        "partial": 2,
-        "unknown": 1
+        "partial": 3
       },
-      "unknownModeCount": 1,
-      "explicitContractModes": 2,
-      "passingContractModes": 2,
-      "testCandidateModes": 1,
+      "unknownModeCount": 0,
+      "explicitContractModes": 3,
+      "passingContractModes": 3,
+      "testCandidateModes": 2,
       "reviewBatchIssues": []
     },
     {
@@ -2920,13 +2919,12 @@
       ],
       "targetModes": 2,
       "modeStates": {
-        "partial": 1,
-        "unknown": 1
+        "partial": 2
       },
-      "unknownModeCount": 1,
-      "explicitContractModes": 1,
-      "passingContractModes": 1,
-      "testCandidateModes": 1,
+      "unknownModeCount": 0,
+      "explicitContractModes": 2,
+      "passingContractModes": 2,
+      "testCandidateModes": 2,
       "reviewBatchIssues": []
     },
     {
@@ -2937,13 +2935,12 @@
       ],
       "targetModes": 2,
       "modeStates": {
-        "partial": 1,
-        "unknown": 1
+        "partial": 2
       },
-      "unknownModeCount": 1,
-      "explicitContractModes": 1,
-      "passingContractModes": 1,
-      "testCandidateModes": 1,
+      "unknownModeCount": 0,
+      "explicitContractModes": 2,
+      "passingContractModes": 2,
+      "testCandidateModes": 2,
       "reviewBatchIssues": []
     },
     {
@@ -2969,12 +2966,11 @@
       "capabilityIds": [
         "pdf.20.renderer.requirement-011"
       ],
-      "targetModes": 3,
+      "targetModes": 1,
       "modeStates": {
-        "partial": 1,
-        "unknown": 2
+        "partial": 1
       },
-      "unknownModeCount": 2,
+      "unknownModeCount": 0,
       "explicitContractModes": 1,
       "passingContractModes": 1,
       "testCandidateModes": 0,
@@ -3071,12 +3067,12 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "partial": 1,
-        "unknown": 3
+        "partial": 2,
+        "unknown": 2
       },
-      "unknownModeCount": 3,
-      "explicitContractModes": 1,
-      "passingContractModes": 1,
+      "unknownModeCount": 2,
+      "explicitContractModes": 2,
+      "passingContractModes": 2,
       "testCandidateModes": 4,
       "reviewBatchIssues": []
     },
@@ -3102,21 +3098,21 @@
       "capabilityIds": [
         "pdf.17.transparency.model"
       ],
-      "targetModes": 4,
+      "targetModes": 2,
       "modeStates": {
         "partial": 1,
-        "unknown": 3
+        "unknown": 1
       },
-      "unknownModeCount": 3,
+      "unknownModeCount": 1,
       "explicitContractModes": 1,
       "passingContractModes": 1,
-      "testCandidateModes": 2,
+      "testCandidateModes": 1,
       "reviewBatchIssues": []
     }
   ],
   "summary": {
     "clusters": 178,
-    "targetModes": 911,
-    "unknownModeCount": 343
+    "targetModes": 907,
+    "unknownModeCount": 334
   }
 }

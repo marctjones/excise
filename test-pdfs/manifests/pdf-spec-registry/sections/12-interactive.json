@@ -711,7 +711,7 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
+        "preserve": "partial",
         "render": "partial",
         "extract": "unknown",
         "mutate": "unknown",
@@ -773,7 +773,8 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render"
+          "render",
+          "preserve"
         ],
         "checks": [
           {
@@ -788,6 +789,13 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]

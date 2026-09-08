@@ -1065,6 +1065,34 @@ public class PdfDocumentTests
         resolved.Should().BeSameAs(byReference);
     }
 
+    /// <summary>
+    /// The indirect-reference graph itself -- not any one feature's data --
+    /// survives a save. Object numbers and byte offsets are rewritten on
+    /// every save; what must stay true is that the trailer's /Root reference
+    /// still resolves to the actual catalog, and the page tree reached
+    /// through it is intact. #1411: distinct from every feature-specific
+    /// preserve test elsewhere in the suite, which each prove one thing
+    /// (a font, an annotation, a form field...) survives -- this is the
+    /// general claim underneath all of them.
+    /// </summary>
+    [Fact]
+    public void IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve()
+    {
+        using var doc = PdfDocument.Open(CreateMinimalPdf());
+        var pageCountBefore = doc.PageCount;
+
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
+
+        var rootReference = reopened.Trailer.GetReference("Root");
+        var resolved = reopened.Resolve(rootReference);
+
+        resolved.Should().BeSameAs(reopened.Catalog,
+            "the trailer's /Root indirect reference must still resolve to the catalog after a save, even though object numbers and byte offsets were rewritten");
+        reopened.PageCount.Should().Be(pageCountBefore,
+            "the page tree reached through the object graph must be intact");
+    }
+
     [Fact]
     public void GetObject_UndefinedObjectNumber_ResolvesToNull()
     {

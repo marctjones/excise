@@ -26,8 +26,8 @@
         "rationale": "Common page appearance with high differential-render risk."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
+        "parse": "not-applicable",
+        "preserve": "not-applicable",
         "render": "partial",
         "write": "unknown"
       },

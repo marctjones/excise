@@ -10,7 +10,9 @@
         {
           "source": "iso-32000-2",
           "clauses": [
-            "Annex A"
+            "7.3",
+            "7.4",
+            "7.5"
           ]
         }
       ],
@@ -22,7 +24,7 @@
       "modes": {
         "parse": "partial",
         "render": "not-applicable",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -42,6 +44,13 @@
             "ref": "Excise.Core.Tests/Parsing/XRefParserTests.cs::ParseXRef_TraditionalTable_ParsesSuccessfully",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -90,7 +99,9 @@
         {
           "source": "iso-32000-2",
           "clauses": [
-            "Annex A"
+            "7.3",
+            "7.4",
+            "7.5"
           ]
         }
       ],
@@ -102,7 +113,7 @@
       "modes": {
         "parse": "partial",
         "render": "not-applicable",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -122,6 +133,13 @@
             "ref": "Excise.Core.Tests/Parsing/XRefParserTests.cs::ParseXRef_TraditionalTable_ParsesSuccessfully",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -887,9 +905,9 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "not-applicable",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "not-applicable"
       },
       "evidence": [
         {
@@ -900,9 +918,7 @@
       "verification": {
         "status": "planned",
         "requiredModes": [
-          "parse",
-          "render",
-          "preserve"
+          "render"
         ],
         "checks": [
           {
@@ -970,7 +986,7 @@
       "modes": {
         "parse": "partial",
         "render": "partial",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -998,6 +1014,13 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]

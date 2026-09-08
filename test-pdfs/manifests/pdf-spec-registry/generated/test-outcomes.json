@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T01:03:47.124712+00:00",
-  "gitRevision": "a57a6291325c8fd5a475628ef3e1003d2491ba6b",
-  "dotnetVersion": "10.0.300 [/usr/local/share/dotnet/sdk]",
+  "recordedAt": "2026-09-08T02:40:49.751813+00:00",
+  "gitRevision": "e525e2566bed07c6c2ec35f1e47d5f77c20c706e",
+  "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
     {
@@ -286,6 +286,11 @@
       "path": "/tmp/new-tests-trx/rendering.trx",
       "modifiedAt": "2026-09-08T01:03:41.169150+00:00",
       "sha256": "cf1dd18a04603b2467af3405caab02a66239c3f227533bac49b38ea5262e041a"
+    },
+    {
+      "path": "/tmp/new2-trx/core.trx",
+      "modifiedAt": "2026-09-08T02:40:49.627846+00:00",
+      "sha256": "a2dc8e9b07cf40d82419259627c2f679c3ac4eb824a62e8f48b44ab230a1ce8b"
     }
   ],
   "outcomes": [
@@ -23946,6 +23951,14 @@
       "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
     },
     {
+      "testName": "Excise.Core.Tests.Document.PdfDocumentTests.IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+      "outcome": "Passed",
+      "duration": "00:00:00.0623705",
+      "trx": "/tmp/new2-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T02:40:49.627846+00:00",
+      "trxSha256": "a2dc8e9b07cf40d82419259627c2f679c3ac4eb824a62e8f48b44ab230a1ce8b"
+    },
+    {
       "testName": "Excise.Core.Tests.Document.PdfDocumentTests.Info_WithMetadata_ReturnsInfoDictionary",
       "outcome": "Passed",
       "duration": "00:00:00.0002181",
@@ -25032,6 +25045,14 @@
       "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
       "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
       "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
+      "outcome": "Passed",
+      "duration": "00:00:00.0606561",
+      "trx": "/tmp/new2-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T02:40:49.627846+00:00",
+      "trxSha256": "a2dc8e9b07cf40d82419259627c2f679c3ac4eb824a62e8f48b44ab230a1ce8b"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfOcgTests.ParseOptionalContentGroups_CachedAfterFirstCall",
@@ -67947,12 +67968,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 56,
-    "tests": 8457,
+    "trxFiles": 57,
+    "tests": 8459,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7530
+      "Passed": 7532
     },
     "status": "recorded"
   }

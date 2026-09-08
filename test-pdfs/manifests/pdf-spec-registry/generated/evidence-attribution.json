@@ -5839,7 +5839,7 @@
       "capability": "pdf.17.syntax.objects",
       "section": "syntax",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
@@ -7282,9 +7282,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "save"
       ]
@@ -8448,6 +8456,16 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.SaveAndLoad_PreservesPageCount",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -8503,6 +8521,15 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -8710,24 +8737,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/PageInvariantTests.cs::PageInvariantTests.SaveAndReload_PreservesPageCountAndLetters",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.StructureTreeCycle_SurvivesRedactAndSave",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -21793,6 +21802,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.SaveAndLoad_PreservesPageCount",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -21848,6 +21866,15 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -22055,24 +22082,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/PageInvariantTests.cs::PageInvariantTests.SaveAndReload_PreservesPageCountAndLetters",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.StructureTreeCycle_SurvivesRedactAndSave",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -23262,6 +23271,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.SaveAndLoad_PreservesPageCount",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -23317,6 +23335,15 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -23524,24 +23551,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/PageInvariantTests.cs::PageInvariantTests.SaveAndReload_PreservesPageCountAndLetters",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.StructureTreeCycle_SurvivesRedactAndSave",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -24726,6 +24735,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.SaveAndLoad_PreservesPageCount",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -24781,6 +24799,15 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -24988,24 +25015,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/PageInvariantTests.cs::PageInvariantTests.SaveAndReload_PreservesPageCountAndLetters",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.StructureTreeCycle_SurvivesRedactAndSave",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -63236,11 +63245,29 @@
       "capability": "pdf.20.renderer.requirement-001",
       "section": "renderer-requirements",
       "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63276,11 +63303,29 @@
       "capability": "pdf.20.renderer.requirement-002",
       "section": "renderer-requirements",
       "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -63825,17 +63870,6 @@
     {
       "capability": "pdf.20.renderer.requirement-011",
       "section": "renderer-requirements",
-      "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-011",
-      "section": "renderer-requirements",
       "mode": "render",
       "currentState": "partial",
       "testCandidates": [],
@@ -63850,17 +63884,6 @@
       ],
       "explicitContractStatus": "passing",
       "grade": "implemented",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.20.renderer.requirement-011",
-      "section": "renderer-requirements",
-      "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
       "benchmarkScenarios": []
     },
     {
@@ -63915,11 +63938,29 @@
       "capability": "pdf.20.renderer.requirement-012",
       "section": "renderer-requirements",
       "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -73374,479 +73415,6 @@
       "capability": "pdf.20.annotation.subtype-023",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.17.transparency.model",
-      "section": "transparency",
-      "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_TransparencyParameters_ReadsAlphaAndBlendMode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_BlendModeArray_PicksFirstName",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs::PdfAnnotationAuthoringTests.SetAnnotationOpacity_WritesCA",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.TryDecodeManaged_Jp2GrayWithOpacityCanDecodeFirstColorComponent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_Opacity_SurvivesExportAndImport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_Opacity_SurvivesExportAndImport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.BlendMask_IsGrowOnlyAndDisposedWithOwner",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.LowerCA_DrawsLighter",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.LowCA_FadesTheBorderAsWellAsTheInterior",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.NoCA_RendersIdenticallyToCA1",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.OpacityMatchesIndependentRenderers",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.TextUnderATranslucentHighlight_StaysReadable",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DifferentialMetricsTests.cs::DifferentialMetricsTests.Compare_PremultipliedAlphaMatchesGetPixelSemantics",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/IccBasedOverprintDifferentialTests.cs::IccBasedOverprintDifferentialTests.IccBasedCmykOverprint_LandsOnGhostscriptSimulateSideOfTheKnockout",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/OverprintDifferentialTests.cs::OverprintDifferentialTests.GeneratedOverprintFixture_LandsOnGhostscriptSimulateSideOfTheKnockout",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/SeparationOverprintDifferentialTests.cs::SeparationOverprintDifferentialTests.SeparationOverprintFixture_LandsOnGhostscriptSimulateSideOfTheKnockout",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/SeparationOverprintDifferentialTests.cs::SeparationOverprintDifferentialTests.DeviceNOverprintFixture_LandsOnGhostscriptSimulateSideOfTheKnockout",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxSoftMaskRenderTests.JpxSoftMasks_ClearImageBackgrounds_RenderedOutOfProcess",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxSoftMaskRenderTests.JpxImageInFilterChain_Decodes_NotBlank",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/PageGroupBackdropTests.cs::PageGroupBackdropTests.BlendModesThatCollapseAgainstWhite_NowDrawInk",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/PageGroupBackdropTests.cs::PageGroupBackdropTests.NormalBlend_IsUnaffected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_SoftMaskedImage_ComposesStraightAlphaSamples",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Transparency_OverlappingRectangles_BlendingApplied",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_StrokeAlpha_CA_Operator",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsBug852992_FormSoftMaskCanResolveFormShadingResources",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue1905_FlateSoftMasksRespectDecodePolarity",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsChromeMarkedContent_MismatchedSoftMaskKeepsImageTextVisible",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue19326_JpxGrayImageWithSoftMaskRendersVisibleContent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue13931_FlateSoftMaskMakesImageMatteTransparent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_RunLengthOpaqueSoftMaskRendersImageOpaque",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsAlphaTrans_DirectAxialShadingUsesFunctionReferencesAndAlpha",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_GhentDeviceCmykImageSoftMasks_UpdateTransparencyGroupBackdrop",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_AltonaDeviceCmykTransparencyGroupFallback_PreservesInvocationAlpha",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_GhentDeviceCmykTransparencyGroup_AppliesInvocationBlendInCmyk",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_GhentDeviceCmykKnockoutGroup_CompositesNestedGroupInCmyk",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_GhentOutputIntentIndicator_SyncsLabBackdropForCmykBlendGroup",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue16263_HugeSoftMaskDownsamplesInsteadOfTimingOut",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ExtGState_StrokeAlpha_AppliesTransparency",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ExtGState_FillAlpha_AppliesTransparency",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ExtGState_BothAlphas_AppliesBothTransparencies",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ExtGState_AlphaClampedToValidRange",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Visual/CmykTransparencyRegressionTests.cs::CmykTransparencyRegressionTests.RenderPage_Issue13520_DoesNotPaintDarkSoftMaskLobe",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Visual/DeviceCmykBlendPathRenderTests.cs::DeviceCmykBlendPathRenderTests.RenderPage_DeviceCmykGroupBlendFills_ProducePinnedColors",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Visual/DeviceCmykBlendPathRenderTests.cs::DeviceCmykBlendPathRenderTests.RenderPage_DeviceCmykKnockoutAndIsolatedGroups_ProducePinnedColors",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Visual/DeviceCmykBlendPixelContractTests.cs::DeviceCmykBlendPixelContractTests.WritePremulRgba_MatchesSetPixel_ForAllAlphaChannelPairs",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Visual/DeviceCmykBlendPixelContractTests.cs::DeviceCmykBlendPixelContractTests.RawAlphaByte_MatchesGetPixelAlpha_ForPremulPixels",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Visual/OverprintRenderingTests.cs::OverprintRenderingTests.PlainPage_NoOverprintAndOpm0_AreByteIdenticalKnockouts",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Visual/SeparationOverprintRenderingTests.cs::SeparationOverprintRenderingTests.SeparationKnockout_WithoutOverprint_KnocksTheColorantOut",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        }
-      ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
-      "benchmarkScenarios": []
-    },
-    {
-      "capability": "pdf.17.transparency.model",
-      "section": "transparency",
-      "mode": "preserve",
       "currentState": "unknown",
       "testCandidates": [],
       "explicitContracts": [],
@@ -99098,11 +98666,29 @@
       "capability": "pdf.17.interactive.optional-content",
       "section": "interactive",
       "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -100522,6 +100108,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.SaveAndLoad_PreservesPageCount",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100577,6 +100172,15 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100784,24 +100388,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/PageInvariantTests.cs::PageInvariantTests.SaveAndReload_PreservesPageCountAndLetters",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.StructureTreeCycle_SurvivesRedactAndSave",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -101974,6 +101560,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.SaveAndLoad_PreservesPageCount",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -102029,6 +101624,15 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -102236,24 +101840,6 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/PageInvariantTests.cs::PageInvariantTests.SaveAndReload_PreservesPageCountAndLetters",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.OutlineCycle_SurvivesRedactAndSave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Parsing/HostileStructureTests.cs::HostileStructureTests.StructureTreeCycle_SurvivesRedactAndSave",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -106724,16 +106310,16 @@
     }
   ],
   "summary": {
-    "targetModes": 911,
-    "modesWithTestCandidates": 527,
-    "modesWithExplicitContracts": 691,
-    "modesWithPassingExplicitContracts": 691,
-    "modesWithRecordedPassingCandidate": 527,
-    "gradeImplemented": 676,
+    "targetModes": 907,
+    "modesWithTestCandidates": 530,
+    "modesWithExplicitContracts": 696,
+    "modesWithPassingExplicitContracts": 696,
+    "modesWithRecordedPassingCandidate": 530,
+    "gradeImplemented": 681,
     "gradeVerified": 15,
-    "gradeUnknown": 220,
-    "testMethods": 6112,
-    "testMethodsWithCapabilityCandidate": 3835,
+    "gradeUnknown": 211,
+    "testMethods": 6114,
+    "testMethodsWithCapabilityCandidate": 3837,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

@@ -4746,111 +4746,6 @@
     },
     {
       "capability": "pdf.17.transparency.model",
-      "mode": "parse",
-      "currentState": "unknown",
-      "promotion": "review-required",
-      "implementationCandidates": [
-        "Excise.Rendering/Transparency/DeviceCmykBackdrop.cs",
-        "Excise.Rendering/Transparency/DeviceCmykExecutionState.cs"
-      ],
-      "directTestCandidates": [
-        "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.BlendMask_IsGrowOnlyAndDisposedWithOwner",
-        "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.LowerCA_DrawsLighter",
-        "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.LowCA_FadesTheBorderAsWellAsTheInterior",
-        "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.NoCA_RendersIdenticallyToCA1",
-        "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.OpacityMatchesIndependentRenderers",
-        "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.TextUnderATranslucentHighlight_StaysReadable",
-        "Excise.Rendering.Tests/Differential/DifferentialMetricsTests.cs::DifferentialMetricsTests.Compare_PremultipliedAlphaMatchesGetPixelSemantics",
-        "Excise.Rendering.Tests/Differential/IccBasedOverprintDifferentialTests.cs::IccBasedOverprintDifferentialTests.IccBasedCmykOverprint_LandsOnGhostscriptSimulateSideOfTheKnockout",
-        "Excise.Rendering.Tests/Differential/OverprintDifferentialTests.cs::OverprintDifferentialTests.GeneratedOverprintFixture_LandsOnGhostscriptSimulateSideOfTheKnockout",
-        "Excise.Rendering.Tests/Differential/SeparationOverprintDifferentialTests.cs::SeparationOverprintDifferentialTests.SeparationOverprintFixture_LandsOnGhostscriptSimulateSideOfTheKnockout",
-        "Excise.Rendering.Tests/Differential/SeparationOverprintDifferentialTests.cs::SeparationOverprintDifferentialTests.DeviceNOverprintFixture_LandsOnGhostscriptSimulateSideOfTheKnockout",
-        "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxSoftMaskRenderTests.JpxSoftMasks_ClearImageBackgrounds_RenderedOutOfProcess",
-        "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxSoftMaskRenderTests.JpxImageInFilterChain_Decodes_NotBlank",
-        "Excise.Rendering.Tests/PageGroupBackdropTests.cs::PageGroupBackdropTests.BlendModesThatCollapseAgainstWhite_NowDrawInk",
-        "Excise.Rendering.Tests/PageGroupBackdropTests.cs::PageGroupBackdropTests.NormalBlend_IsUnaffected",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_SoftMaskedImage_ComposesStraightAlphaSamples",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_Transparency_OverlappingRectangles_BlendingApplied",
-        "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::SkiaRendererCoverageTests.RenderPage_StrokeAlpha_CA_Operator",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsBug852992_FormSoftMaskCanResolveFormShadingResources",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue1905_FlateSoftMasksRespectDecodePolarity",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsChromeMarkedContent_MismatchedSoftMaskKeepsImageTextVisible",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue19326_JpxGrayImageWithSoftMaskRendersVisibleContent",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue13931_FlateSoftMaskMakesImageMatteTransparent",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_RunLengthOpaqueSoftMaskRendersImageOpaque",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsAlphaTrans_DirectAxialShadingUsesFunctionReferencesAndAlpha",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_GhentDeviceCmykImageSoftMasks_UpdateTransparencyGroupBackdrop",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_AltonaDeviceCmykTransparencyGroupFallback_PreservesInvocationAlpha",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_GhentDeviceCmykTransparencyGroup_AppliesInvocationBlendInCmyk",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_GhentDeviceCmykKnockoutGroup_CompositesNestedGroupInCmyk",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_GhentOutputIntentIndicator_SyncsLabBackdropForCmykBlendGroup",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsIssue16263_HugeSoftMaskDownsamplesInsteadOfTimingOut",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ExtGState_StrokeAlpha_AppliesTransparency",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ExtGState_FillAlpha_AppliesTransparency",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ExtGState_BothAlphas_AppliesBothTransparencies",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_ExtGState_AlphaClampedToValidRange",
-        "Excise.Rendering.Tests/Visual/CmykTransparencyRegressionTests.cs::CmykTransparencyRegressionTests.RenderPage_Issue13520_DoesNotPaintDarkSoftMaskLobe",
-        "Excise.Rendering.Tests/Visual/DeviceCmykBlendPathRenderTests.cs::DeviceCmykBlendPathRenderTests.RenderPage_DeviceCmykGroupBlendFills_ProducePinnedColors",
-        "Excise.Rendering.Tests/Visual/DeviceCmykBlendPathRenderTests.cs::DeviceCmykBlendPathRenderTests.RenderPage_DeviceCmykKnockoutAndIsolatedGroups_ProducePinnedColors",
-        "Excise.Rendering.Tests/Visual/DeviceCmykBlendPixelContractTests.cs::DeviceCmykBlendPixelContractTests.WritePremulRgba_MatchesSetPixel_ForAllAlphaChannelPairs",
-        "Excise.Rendering.Tests/Visual/DeviceCmykBlendPixelContractTests.cs::DeviceCmykBlendPixelContractTests.RawAlphaByte_MatchesGetPixelAlpha_ForPremulPixels",
-        "Excise.Rendering.Tests/Visual/OverprintRenderingTests.cs::OverprintRenderingTests.PlainPage_NoOverprintAndOpm0_AreByteIdenticalKnockouts",
-        "Excise.Rendering.Tests/Visual/SeparationOverprintRenderingTests.cs::SeparationOverprintRenderingTests.SeparationKnockout_WithoutOverprint_KnocksTheColorantOut"
-      ],
-      "independentEvidenceCandidates": [
-        "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.LowerCA_DrawsLighter",
-        "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.LowCA_FadesTheBorderAsWellAsTheInterior",
-        "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.NoCA_RendersIdenticallyToCA1",
-        "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.OpacityMatchesIndependentRenderers",
-        "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::AnnotationOpacityTests.TextUnderATranslucentHighlight_StaysReadable",
-        "Excise.Rendering.Tests/Differential/DifferentialMetricsTests.cs::DifferentialMetricsTests.Compare_PremultipliedAlphaMatchesGetPixelSemantics",
-        "Excise.Rendering.Tests/Differential/IccBasedOverprintDifferentialTests.cs::IccBasedOverprintDifferentialTests.IccBasedCmykOverprint_LandsOnGhostscriptSimulateSideOfTheKnockout",
-        "Excise.Rendering.Tests/Differential/OverprintDifferentialTests.cs::OverprintDifferentialTests.GeneratedOverprintFixture_LandsOnGhostscriptSimulateSideOfTheKnockout",
-        "Excise.Rendering.Tests/Differential/SeparationOverprintDifferentialTests.cs::SeparationOverprintDifferentialTests.SeparationOverprintFixture_LandsOnGhostscriptSimulateSideOfTheKnockout",
-        "Excise.Rendering.Tests/Differential/SeparationOverprintDifferentialTests.cs::SeparationOverprintDifferentialTests.DeviceNOverprintFixture_LandsOnGhostscriptSimulateSideOfTheKnockout",
-        "Excise.Rendering.Tests/SkiaRendererTests.cs::SkiaRendererTests.RenderPage_PdfjsAlphaTrans_DirectAxialShadingUsesFunctionReferencesAndAlpha",
-        "Excise.Rendering.Tests/Visual/CmykTransparencyRegressionTests.cs::CmykTransparencyRegressionTests.RenderPage_Issue13520_DoesNotPaintDarkSoftMaskLobe",
-        "Excise.Rendering.Tests/Visual/DeviceCmykBlendPathRenderTests.cs::DeviceCmykBlendPathRenderTests.RenderPage_DeviceCmykGroupBlendFills_ProducePinnedColors",
-        "Excise.Rendering.Tests/Visual/DeviceCmykBlendPathRenderTests.cs::DeviceCmykBlendPathRenderTests.RenderPage_DeviceCmykKnockoutAndIsolatedGroups_ProducePinnedColors",
-        "Excise.Rendering.Tests/Visual/DeviceCmykBlendPixelContractTests.cs::DeviceCmykBlendPixelContractTests.WritePremulRgba_MatchesSetPixel_ForAllAlphaChannelPairs",
-        "Excise.Rendering.Tests/Visual/DeviceCmykBlendPixelContractTests.cs::DeviceCmykBlendPixelContractTests.RawAlphaByte_MatchesGetPixelAlpha_ForPremulPixels",
-        "Excise.Rendering.Tests/Visual/OverprintRenderingTests.cs::OverprintRenderingTests.PlainPage_NoOverprintAndOpm0_AreByteIdenticalKnockouts",
-        "Excise.Rendering.Tests/Visual/SeparationOverprintRenderingTests.cs::SeparationOverprintRenderingTests.SeparationKnockout_WithoutOverprint_KnocksTheColorantOut"
-      ],
-      "requiredBeforePartial": [
-        "review one or more implementation candidates and confirm responsibility",
-        "review one or more direct test candidates and record the exact asserted behavior",
-        "record a known limitation or an explicit out-of-scope boundary"
-      ],
-      "requiredBeforeStrict": [
-        "add or identify an atomic fixture that isolates the feature",
-        "accept a differential or corpus oracle for the intended behavior",
-        "set implemented only after all required mode evidence is reviewed and the verification contract is executable"
-      ]
-    },
-    {
-      "capability": "pdf.17.transparency.model",
-      "mode": "preserve",
-      "currentState": "unknown",
-      "promotion": "review-required",
-      "implementationCandidates": [],
-      "directTestCandidates": [],
-      "independentEvidenceCandidates": [],
-      "requiredBeforePartial": [
-        "review one or more implementation candidates and confirm responsibility",
-        "review one or more direct test candidates and record the exact asserted behavior",
-        "record a known limitation or an explicit out-of-scope boundary"
-      ],
-      "requiredBeforeStrict": [
-        "add or identify an atomic fixture that isolates the feature",
-        "accept a differential or corpus oracle for the intended behavior",
-        "set implemented only after all required mode evidence is reviewed and the verification contract is executable"
-      ]
-    },
-    {
-      "capability": "pdf.17.transparency.model",
       "mode": "render",
       "currentState": "partial",
       "promotion": "review-required",
@@ -5789,15 +5684,15 @@
     }
   ],
   "summary": {
-    "contracts": 23,
-    "withImplementationCandidates": 12,
-    "withDirectTestCandidates": 11,
-    "withIndependentCandidates": 10,
+    "contracts": 21,
+    "withImplementationCandidates": 11,
+    "withDirectTestCandidates": 10,
+    "withIndependentCandidates": 9,
     "byCapability": {
       "pdf.17.graphics.images": 6,
       "pdf.17.graphics.fonts": 7,
       "pdf.17.content.streams": 6,
-      "pdf.17.transparency.model": 4
+      "pdf.17.transparency.model": 2
     }
   }
 }

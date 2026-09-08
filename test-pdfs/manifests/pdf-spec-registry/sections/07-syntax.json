@@ -121,7 +121,7 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
+        "preserve": "partial",
         "mutate": "unknown",
         "write": "unknown"
       },
@@ -181,7 +181,8 @@
       "verification": {
         "status": "planned",
         "requiredModes": [
-          "parse"
+          "parse",
+          "preserve"
         ],
         "checks": [
           {
@@ -189,6 +190,13 @@
             "ref": "Excise.Core.Tests/Parsing/XRefParserTests.cs::ParseXRef_TraditionalTable_ParsesSuccessfully",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+            "modes": [
+              "preserve"
             ]
           }
         ]

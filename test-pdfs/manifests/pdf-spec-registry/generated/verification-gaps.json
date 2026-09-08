@@ -4,12 +4,6 @@
   "gaps": [
     {
       "capability": "pdf.17.syntax.objects",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.syntax.objects",
       "mode": "mutate",
       "implementationState": "unknown",
       "reason": "no verification contract"
@@ -154,18 +148,6 @@
     },
     {
       "capability": "pdf.17.transparency.model",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.transparency.model",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.transparency.model",
       "mode": "write",
       "implementationState": "unknown",
       "reason": "no verification contract"
@@ -300,12 +282,6 @@
       "capability": "pdf.17.interactive.forms",
       "mode": "execute",
       "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.optional-content",
-      "mode": "preserve",
-      "implementationState": "unknown",
       "reason": "no verification contract"
     },
     {

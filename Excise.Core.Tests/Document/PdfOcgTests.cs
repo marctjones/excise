@@ -104,6 +104,34 @@ public class PdfOcgTests
         config.OffByDefault.Should().Contain("DirectOcgName");
     }
 
+    /// <summary>
+    /// The OCG configuration -- group identity and default-off state -- must
+    /// survive an open-save-reopen round trip, not just a fresh parse. #1410.
+    /// </summary>
+    [Fact]
+    public void OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged()
+    {
+        // A single OCG that IS off-by-default -- the interesting state to
+        // prove survives, as opposed to the empty-/OFF fixtures used elsewhere
+        // in this file, where "before" and "after" would both trivially be empty.
+        var original = CreateMinimalPdfWithOffArrayDirectName();
+        using var opened = PdfDocument.Open(new System.IO.MemoryStream(original));
+        var ocgsBefore = opened.GetOptionalContentGroups();
+        var configBefore = opened.GetOptionalContentGroupConfig();
+        ocgsBefore.Should().HaveCount(1);
+        configBefore.OffByDefault.Should().Contain("DirectOcgName");
+
+        var saved = opened.SaveToBytes();
+        using var reopened = PdfDocument.Open(new System.IO.MemoryStream(saved));
+        var ocgsAfter = reopened.GetOptionalContentGroups();
+        var configAfter = reopened.GetOptionalContentGroupConfig();
+
+        ocgsAfter.Should().HaveCount(1, "group identity must survive the save");
+        configAfter.BaseState.Should().Be(configBefore.BaseState);
+        configAfter.OffByDefault.Should().Contain("DirectOcgName",
+            "the off-by-default state must survive the save, not just parse fresh from a hand-built fixture");
+    }
+
     // Helper: Create a minimal PDF with OCProperties
     private static byte[] CreateMinimalPdfWithOcg(string? ocgConfig)
     {

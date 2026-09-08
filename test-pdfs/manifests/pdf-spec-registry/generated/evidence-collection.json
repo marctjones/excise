@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 997,
-  "indexedContentSha256": "6b76b782933e1d2cf4a34c78f03c593ae2e0c9f78cf28263ded2b6f27302d7fb",
+  "indexedContentSha256": "7d4a01f0fdbd9229d6e38590395cee98d3e0cdefb564668ea35844c7d2e5c9a5",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -493,7 +493,8 @@
       "registeredVerification": {
         "status": "planned",
         "requiredModes": [
-          "parse"
+          "parse",
+          "preserve"
         ],
         "checks": [
           {
@@ -501,6 +502,13 @@
             "ref": "Excise.Core.Tests/Parsing/XRefParserTests.cs::ParseXRef_TraditionalTable_ParsesSuccessfully",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -17830,6 +17838,13 @@
             "modes": [
               "parse"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+            "modes": [
+              "preserve"
+            ]
           }
         ]
       },
@@ -17878,6 +17893,13 @@
             "ref": "Excise.Core.Tests/Parsing/XRefParserTests.cs::ParseXRef_TraditionalTable_ParsesSuccessfully",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -19072,9 +19094,7 @@
       "registeredVerification": {
         "status": "planned",
         "requiredModes": [
-          "parse",
-          "render",
-          "preserve"
+          "render"
         ],
         "checks": [
           {
@@ -19138,6 +19158,13 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -37734,6 +37761,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "line",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PdfLinkTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37869,19 +37905,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/HarakatNiqqudRedactionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "line",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 152
+      "candidateReferenceCount": 153
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -44735,6 +44761,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "flags",
+            "acroform",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PdfLinkTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -44877,22 +44913,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/RedactionCarrierAuditTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "annotations",
-            "geometry",
-            "acroform",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 149
+      "candidateReferenceCount": 150
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -48034,7 +48057,8 @@
           "matchedTerms": [
             "acroform",
             "fields",
-            "acroform"
+            "acroform",
+            "annotation"
           ]
         },
         {
@@ -49146,7 +49170,8 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render"
+          "render",
+          "preserve"
         ],
         "checks": [
           {
@@ -49161,6 +49186,13 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
+            "modes": [
+              "preserve"
             ]
           }
         ]
