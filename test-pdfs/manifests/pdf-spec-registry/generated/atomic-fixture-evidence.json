@@ -838,12 +838,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -853,12 +855,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -884,12 +888,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -899,12 +905,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -930,12 +938,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -945,12 +955,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -976,12 +988,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -991,12 +1005,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1022,12 +1038,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1037,12 +1055,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1068,12 +1088,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1083,12 +1105,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1114,12 +1138,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1129,12 +1155,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1160,12 +1188,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1175,12 +1205,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1206,12 +1238,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1221,12 +1255,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1252,12 +1288,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1267,12 +1305,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1298,12 +1338,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1313,12 +1355,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1344,12 +1388,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1359,12 +1405,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1390,12 +1438,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1405,12 +1455,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1436,12 +1488,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1451,12 +1505,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1482,12 +1538,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1497,12 +1555,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1528,12 +1588,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1543,12 +1605,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1574,12 +1638,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1589,12 +1655,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1620,12 +1688,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1635,12 +1705,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1666,12 +1738,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1681,12 +1755,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1712,12 +1788,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1727,12 +1805,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1758,12 +1838,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1773,12 +1855,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1804,12 +1888,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1819,12 +1905,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1850,12 +1938,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1865,12 +1955,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1896,12 +1988,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1911,12 +2005,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1942,12 +2038,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1957,12 +2055,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -1988,12 +2088,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2003,12 +2105,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2034,12 +2138,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2049,12 +2155,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2080,12 +2188,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2095,12 +2205,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2126,12 +2238,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2141,12 +2255,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2172,12 +2288,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2187,12 +2305,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2218,12 +2338,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2233,12 +2355,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2264,12 +2388,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2279,12 +2405,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2310,12 +2438,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2325,12 +2455,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2356,12 +2488,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2371,12 +2505,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2402,12 +2538,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2417,12 +2555,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2448,12 +2588,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2463,12 +2605,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2494,12 +2638,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2509,12 +2655,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2540,12 +2688,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2555,12 +2705,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2586,12 +2738,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2601,12 +2755,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2632,12 +2788,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2647,12 +2805,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2678,12 +2838,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2693,12 +2855,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2724,12 +2888,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2739,12 +2905,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2770,12 +2938,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2785,12 +2955,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2816,12 +2988,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2831,12 +3005,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2862,12 +3038,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2877,12 +3055,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2908,12 +3088,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2923,12 +3105,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2954,12 +3138,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -2969,12 +3155,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3000,12 +3188,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3015,12 +3205,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3046,12 +3238,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3061,12 +3255,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3092,12 +3288,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3107,12 +3305,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3138,12 +3338,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3153,12 +3355,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3184,12 +3388,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3199,12 +3405,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3230,12 +3438,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3245,12 +3455,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3276,12 +3488,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3291,12 +3505,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3322,12 +3538,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3337,12 +3555,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3368,12 +3588,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3383,12 +3605,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3414,12 +3638,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3429,12 +3655,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3460,12 +3688,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3475,12 +3705,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3506,12 +3738,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3521,12 +3755,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3552,12 +3788,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3567,12 +3805,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3598,12 +3838,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3613,12 +3855,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3644,12 +3888,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3659,12 +3905,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3690,12 +3938,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3705,12 +3955,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3736,12 +3988,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3751,12 +4005,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3782,12 +4038,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3797,12 +4055,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3828,12 +4088,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3843,12 +4105,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3874,12 +4138,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3889,12 +4155,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3920,12 +4188,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3935,12 +4205,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3966,12 +4238,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -3981,12 +4255,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -4012,12 +4288,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -4027,12 +4305,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -4058,12 +4338,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -4073,12 +4355,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -4104,12 +4388,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -4119,12 +4405,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -4150,12 +4438,14 @@
       "section": "operators",
       "mode": "parse",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -4165,12 +4455,14 @@
       "section": "operators",
       "mode": "preserve",
       "currentState": "unknown",
-      "fixtureStatus": "contracted-not-run",
+      "fixtureStatus": "recorded-passing",
       "fixtures": [
         {
           "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "testRecord": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
-          "recordedOutcomes": [],
+          "recordedOutcomes": [
+            "Passed"
+          ],
           "resolution": "method-reference"
         }
       ]
@@ -8729,9 +9021,8 @@
   "summary": {
     "targetModes": 944,
     "fixtureStatus": {
-      "contracted-not-run": 146,
       "not-contracted": 786,
-      "recorded-passing": 12
+      "recorded-passing": 158
     }
   }
 }
