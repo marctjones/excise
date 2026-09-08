@@ -315,12 +315,6 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.20.content.operator-003",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.20.content.operator-004",
       "mode": "render",
       "implementationState": "unknown",
@@ -363,12 +357,6 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.20.content.operator-011",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.20.content.operator-012",
       "mode": "render",
       "implementationState": "unknown",
@@ -376,12 +364,6 @@
     },
     {
       "capability": "pdf.20.content.operator-013",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-014",
       "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"
@@ -405,79 +387,13 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.20.content.operator-018",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-019",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-020",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-021",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.20.content.operator-022",
       "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.20.content.operator-023",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.20.content.operator-024",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-025",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-026",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-027",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-028",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-029",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-030",
       "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"
@@ -501,19 +417,7 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.20.content.operator-034",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.20.content.operator-035",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-036",
       "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"
@@ -537,30 +441,6 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.20.content.operator-040",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-041",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-042",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-043",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.20.content.operator-044",
       "mode": "render",
       "implementationState": "unknown",
@@ -574,12 +454,6 @@
     },
     {
       "capability": "pdf.20.content.operator-046",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-047",
       "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"
@@ -663,25 +537,7 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.20.content.operator-061",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.20.content.operator-062",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-063",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-064",
       "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"

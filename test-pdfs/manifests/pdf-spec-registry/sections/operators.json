@@ -228,7 +228,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -246,7 +246,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -265,6 +266,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Translation_cm_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1052,7 +1060,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -1070,7 +1078,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -1089,6 +1098,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ExtGState_StrokeAlpha_AppliesTransparency",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1361,7 +1377,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -1379,7 +1395,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -1398,6 +1415,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CubicBezierCurve_RendersSmoothCurve",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1773,7 +1797,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -1791,7 +1815,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -1810,6 +1835,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SingleOperator_JustRectangle",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1876,7 +1908,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -1894,7 +1926,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -1913,6 +1946,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StrokeOnly_S_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1979,7 +2019,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -1997,7 +2037,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -2016,6 +2057,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CloseAndStroke_sOperator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2082,7 +2130,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -2100,7 +2148,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -2119,6 +2168,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillOnly_f_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2288,7 +2344,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -2306,7 +2362,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -2325,6 +2382,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillEvenOdd_fStar_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2494,7 +2558,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -2512,7 +2576,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -2531,6 +2596,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_FillStrokeEvenOdd_BStarOperator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2597,7 +2669,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -2615,7 +2687,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -2634,6 +2707,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CloseFillStroke_bOperator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2700,7 +2780,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -2718,7 +2798,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -2737,6 +2818,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CloseFillStrokeEvenOdd_bStarOperator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2803,7 +2891,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -2821,7 +2909,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -2840,6 +2929,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_NoOp_n_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2906,7 +3002,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -2924,7 +3020,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -2943,6 +3040,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -3009,7 +3113,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -3027,7 +3131,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -3046,6 +3151,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_WStar_EvenOddRule",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -3421,7 +3533,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -3439,7 +3551,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -3458,6 +3571,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_scn_WorksLikeScWithoutPattern",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -3627,7 +3747,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -3645,7 +3765,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -3664,6 +3785,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_scn_WorksLikeScWithoutPattern",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -4039,7 +4167,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -4057,7 +4185,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -4076,6 +4205,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -4142,7 +4278,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -4160,7 +4296,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -4179,6 +4316,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CmykFillAndStroke_SeparateColors",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -4245,7 +4389,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -4263,7 +4407,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -4282,6 +4427,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CmykFillAndStroke_SeparateColors",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -4348,7 +4500,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -4366,7 +4518,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -4385,6 +4538,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -4760,7 +4920,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -4778,7 +4938,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -4797,6 +4958,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_FormXObject_RendersContent",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -6202,7 +6370,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -6220,7 +6388,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -6239,6 +6408,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -6408,7 +6584,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -6426,7 +6602,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -6445,6 +6622,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_SingleQuoteOperator_MovesAndShowsText",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -6511,7 +6695,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -6529,7 +6713,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -6548,6 +6733,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_DoubleQuoteOperator_SetsSpacingAndShowsText",
+            "modes": [
+              "render"
             ]
           }
         ]
