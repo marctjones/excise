@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T07:10:26.561177+00:00",
-  "gitRevision": "3ba2352c2e8cde6da8f8c0770689ca8adfeba0f3",
+  "recordedAt": "2026-09-08T07:39:22.757867+00:00",
+  "gitRevision": "47630a292a3bc05d774014db9117ceea27014d6e",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -406,6 +406,11 @@
       "path": "/tmp/new11-trx/app.trx",
       "modifiedAt": "2026-09-08T07:10:18.900004+00:00",
       "sha256": "fce6973fe9040f8d818a1766f3d70eb5563d711602aa2828ef019192c86c8c36"
+    },
+    {
+      "path": "/tmp/new12-trx/core.trx",
+      "modifiedAt": "2026-09-08T07:39:22.680223+00:00",
+      "sha256": "f0018d191869f415be847655504c4b3db886564bad88a757888c324174169657"
     }
   ],
   "outcomes": [
@@ -39156,10 +39161,10 @@
     {
       "testName": "Excise.Core.Tests.Security.SecurityHandlerEdgeTests.Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
       "outcome": "Passed",
-      "duration": "00:00:00.0127079",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0659395",
+      "trx": "/tmp/new12-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T07:39:22.680223+00:00",
+      "trxSha256": "f0018d191869f415be847655504c4b3db886564bad88a757888c324174169657"
     },
     {
       "testName": "Excise.Core.Tests.Text.ArabicPresentationFormFoldingTests.ContainsPresentationForms_DetectsBothBlocks",
@@ -68371,7 +68376,7 @@
     }
   ],
   "summary": {
-    "trxFiles": 80,
+    "trxFiles": 81,
     "tests": 8495,
     "outcomes": {
       "Failed": 3,

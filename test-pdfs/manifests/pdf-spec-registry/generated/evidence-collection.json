@@ -10829,7 +10829,25 @@
         "skiarenderer"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Encryption/PdfPermissions.cs",

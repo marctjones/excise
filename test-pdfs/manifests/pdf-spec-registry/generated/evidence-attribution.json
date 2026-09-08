@@ -48249,33 +48249,87 @@
       "capability": "pdf.20.compatibility.deprecated",
       "section": "rendering",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.compatibility.deprecated",
       "section": "rendering",
       "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.20.compatibility.deprecated",
       "section": "rendering",
       "mode": "write",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -109420,13 +109474,13 @@
   ],
   "summary": {
     "targetModes": 900,
-    "modesWithTestCandidates": 616,
-    "modesWithExplicitContracts": 850,
-    "modesWithPassingExplicitContracts": 850,
-    "modesWithRecordedPassingCandidate": 616,
-    "gradeImplemented": 780,
+    "modesWithTestCandidates": 619,
+    "modesWithExplicitContracts": 853,
+    "modesWithPassingExplicitContracts": 853,
+    "modesWithRecordedPassingCandidate": 619,
+    "gradeImplemented": 783,
     "gradeVerified": 70,
-    "gradeUnknown": 50,
+    "gradeUnknown": 47,
     "testMethods": 6307,
     "testMethodsWithCapabilityCandidate": 3904,
     "benchmarkScenarios": 6,

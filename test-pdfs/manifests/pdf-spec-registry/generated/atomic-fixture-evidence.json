@@ -644,7 +644,7 @@
       "capability": "pdf.20.compatibility.deprecated",
       "section": "rendering",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -652,7 +652,7 @@
       "capability": "pdf.20.compatibility.deprecated",
       "section": "rendering",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -660,7 +660,7 @@
       "capability": "pdf.20.compatibility.deprecated",
       "section": "rendering",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },

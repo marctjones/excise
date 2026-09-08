@@ -16,24 +16,6 @@
     },
     {
       "capability": "pdf.20.compatibility.deprecated",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.compatibility.deprecated",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.compatibility.deprecated",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.compatibility.deprecated",
       "mode": "execute",
       "implementationState": "unimplemented",
       "reason": "no verification contract"

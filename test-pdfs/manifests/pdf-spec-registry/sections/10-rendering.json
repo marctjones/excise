@@ -240,9 +240,9 @@
         "rationale": "Existing PDFs may use deprecated 1.7 facilities; readers preserve or safely ignore them, while writers must not add them to new PDF 2.0 output."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
-        "write": "unknown",
+        "parse": "partial",
+        "preserve": "partial",
+        "write": "partial",
         "execute": "unimplemented"
       },
       "evidence": [],
@@ -279,6 +279,25 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::Rc4V1R2_GetReEncryptionOptions_UpgradesToAes256AndPreservesPermissions",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
+          }
         ]
       }
     }
