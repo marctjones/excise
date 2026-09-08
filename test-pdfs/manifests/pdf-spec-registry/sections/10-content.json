@@ -202,8 +202,8 @@
       ],
       "classification": "core",
       "decision": {
-        "state": "required",
-        "rationale": "Every standard operator must have an explicit parse/preserve decision; semantic execution is mode-specific."
+        "state": "deferred",
+        "rationale": "Annex A is explicitly (informative) per its own heading -- it creates no independent requirement, only an alphabetical index pointing to the normative operator tables in chapters 8/9 (e.g. \"b\" -> Table 59, Path-painting operators). Confirmed against the actual ISO 32000-2 wiki text, not inferred. Superseded by operators.json, whose 73 per-operator capabilities cover every row of Table A.1 individually and reached 100% implemented in this session -- this container capability's own prior note (\"migrate the current 73 stable operator IDs into operators/ ... before declaring this active\") anticipated exactly this. Not counted toward content.json's denominator: its evidence is fully represented on operators.json/renderer-requirements.json."
       },
       "modes": {
         "parse": "partial",

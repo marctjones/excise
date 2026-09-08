@@ -22,9 +22,9 @@
   "capabilities": 282,
   "decisionStates": {
     "blocked": 1,
-    "deferred": 9,
+    "deferred": 10,
     "preserve-only": 11,
-    "required": 248,
+    "required": 247,
     "supported": 13
   },
   "modeCoverage": {

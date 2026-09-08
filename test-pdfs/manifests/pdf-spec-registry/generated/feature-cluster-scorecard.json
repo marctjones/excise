@@ -442,22 +442,6 @@
     },
     {
       "section": "content",
-      "cluster": "All ISO 32000-2 Annex A content-stream operators",
-      "capabilityIds": [
-        "pdf.20.content.operators"
-      ],
-      "targetModes": 6,
-      "modeStates": {
-        "partial": 6
-      },
-      "unknownModeCount": 0,
-      "explicitContractModes": 6,
-      "passingContractModes": 6,
-      "testCandidateModes": 5,
-      "reviewBatchIssues": []
-    },
-    {
-      "section": "content",
       "cluster": "Page content streams, form XObjects, and resource-scoped interpretation",
       "capabilityIds": [
         "pdf.17.content.streams"
@@ -3165,8 +3149,8 @@
     }
   ],
   "summary": {
-    "clusters": 181,
-    "targetModes": 934,
+    "clusters": 180,
+    "targetModes": 928,
     "unknownModeCount": 395
   }
 }

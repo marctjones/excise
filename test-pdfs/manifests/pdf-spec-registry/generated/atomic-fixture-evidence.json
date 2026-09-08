@@ -738,54 +738,6 @@
       "fixtures": []
     },
     {
-      "capability": "pdf.20.content.operators",
-      "section": "content",
-      "mode": "parse",
-      "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.content.operators",
-      "section": "content",
-      "mode": "preserve",
-      "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.content.operators",
-      "section": "content",
-      "mode": "render",
-      "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.content.operators",
-      "section": "content",
-      "mode": "extract",
-      "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.content.operators",
-      "section": "content",
-      "mode": "mutate",
-      "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.content.operators",
-      "section": "content",
-      "mode": "write",
-      "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
       "capability": "pdf.17.content.text-state",
       "section": "content",
       "mode": "parse",
@@ -9596,9 +9548,9 @@
     }
   ],
   "summary": {
-    "targetModes": 934,
+    "targetModes": 928,
     "fixtureStatus": {
-      "not-contracted": 703,
+      "not-contracted": 697,
       "recorded-passing": 231
     }
   }
