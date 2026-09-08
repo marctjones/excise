@@ -124,6 +124,7 @@ public partial class MainWindowViewModel
 
         IsRedactionMode = false;
         IsTypewriterMode = false;
+        _hasWarnedAboutSignedDocumentThisSession = false;
 
         _logger.LogInformation(">>> STEP 3: Setting current file and document state");
         _currentFilePath = filePath;

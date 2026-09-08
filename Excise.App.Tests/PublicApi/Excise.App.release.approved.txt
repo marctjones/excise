@@ -282,6 +282,7 @@ namespace Excise.App.Services
     {
         public PdfDocumentService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PdfDocumentService> logger) { }
         public string? CurrentUserPassword { get; }
+        public bool HasSignatures { get; }
         public bool IsDocumentLoaded { get; }
         public bool IsEncrypted { get; }
         public int PageCount { get; }

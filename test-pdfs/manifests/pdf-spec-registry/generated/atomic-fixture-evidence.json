@@ -9310,7 +9310,7 @@
       "capability": "pdfe.product.security.signature-and-permission-warning",
       "section": "product-capabilities",
       "mode": "mutate",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },

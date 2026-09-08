@@ -1421,12 +1421,12 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "partial": 2,
-        "unimplemented": 2
+        "partial": 3,
+        "unimplemented": 1
       },
       "unknownModeCount": 0,
-      "explicitContractModes": 2,
-      "passingContractModes": 2,
+      "explicitContractModes": 3,
+      "passingContractModes": 3,
       "testCandidateModes": 4,
       "reviewBatchIssues": []
     },

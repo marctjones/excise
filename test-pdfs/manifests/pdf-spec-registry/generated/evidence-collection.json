@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1007,
-  "indexedContentSha256": "37596fb20cd0ce2c47e9f1cae17bac471b70bf6bbddc55fa16a8171f569e2022",
+  "indexedFileCount": 1009,
+  "indexedContentSha256": "4406b4a2e308fcad5806cd172ede2ec97b1ff2ebba3f18452755663b9e255f91",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4997,6 +4997,7 @@
           "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
+            "dates",
             "information",
             "metadata",
             "catalog",
@@ -7229,7 +7230,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 439
+      "candidateReferenceCount": 440
     },
     {
       "id": "pdf.17.graphics.color",
@@ -46160,7 +46161,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 135
+      "candidateReferenceCount": 136
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -50787,17 +50788,16 @@
           ]
         },
         {
-          "path": "Excise.App/Services/SignatureApplicationService.cs",
+          "path": "Excise.App/Services/SignatureVerificationService.cs",
           "kind": "source",
           "matchedTerms": [
             "acroform",
             "fields",
-            "acroform",
-            "annotation"
+            "acroform"
           ]
         },
         {
-          "path": "Excise.App/Services/SignatureVerificationService.cs",
+          "path": "Excise.App/Services/SignedFieldDetector.cs",
           "kind": "source",
           "matchedTerms": [
             "acroform",
@@ -52107,7 +52107,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 109
+      "candidateReferenceCount": 110
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -55631,6 +55631,7 @@
           "matchedTerms": [
             "byte",
             "permissions",
+            "signatures",
             "metadata"
           ]
         },
@@ -55718,6 +55719,7 @@
           "kind": "source",
           "matchedTerms": [
             "byte",
+            "digital",
             "permissions",
             "signatures",
             "validation"
@@ -55928,7 +55930,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 149
+      "candidateReferenceCount": 150
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -57385,6 +57387,14 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/SignedDocumentEditWarningTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/StartupActivationWorkflowTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -57407,18 +57417,9 @@
             "extension",
             "extensions"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/AnnotationWorkflowServiceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions",
-            "pdfa"
-          ]
         }
       ],
-      "candidateReferenceCount": 114
+      "candidateReferenceCount": 115
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -58393,6 +58394,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/PdfDocumentService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "editing",
+            "pdfe",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.App/Services/RedactedCopyDialogFormatter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -58997,20 +59007,9 @@
             "redaction",
             "security"
           ]
-        },
-        {
-          "path": "tests/milestones-baseline.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "editing",
-            "pdfe",
-            "redaction",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 84
+      "candidateReferenceCount": 85
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -61454,7 +61453,8 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "extract"
+          "extract",
+          "mutate"
         ],
         "checks": [
           {
@@ -61463,6 +61463,20 @@
             "modes": [
               "parse",
               "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/SignedDocumentEditWarningTests.cs::SaveFileAsAsync_SignedSource_AsksForConfirmation_AndProceedsWhenConfirmed",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/SignedDocumentEditWarningTests.cs::SaveFileAsAsync_UnsignedSource_NeverAsksForConfirmation",
+            "modes": [
+              "mutate"
             ]
           }
         ]
@@ -61508,6 +61522,15 @@
         },
         {
           "path": "Excise.Core/Writing/PdfDocumentWriter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "pdfe",
+            "signature",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
             "pdfe",
@@ -61752,7 +61775,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 29
+      "candidateReferenceCount": 30
     },
     {
       "id": "pdfe.product.ocr.scanned-documents",

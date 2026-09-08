@@ -64,6 +64,11 @@ public partial class MainWindowViewModel : ViewModelBase
         Excise.Core.Text.WhitespaceMode.Smart;
     private bool _isRedactionMode;
     private PdfPageRect? _currentRedactionPageArea;
+    // Whether the user has already confirmed editing a signed document this
+    // document-session (#1415). Reset in PrepareDocumentOpen for each newly
+    // opened document; there's no "remember across documents" -- each signed
+    // document gets its own one-time warning.
+    private bool _hasWarnedAboutSignedDocumentThisSession;
     // Text selection is the resting affordance of the reading view (#831):
     // like every PDF reader, a drag selects text by default — no mode toggle
     // needed. Editing modes turn it off on entry and restore it on exit.
@@ -1033,6 +1038,27 @@ public partial class MainWindowViewModel : ViewModelBase
     // confirm. Dropping protection is only possible through the Security
     // dialog's explicit Remove Protection action (#641).
 
+    /// <summary>
+    /// Ask the user to confirm before a save that would invalidate an
+    /// existing digital signature (#1415). Returns true when it's safe to
+    /// proceed: the document isn't signed, the user already confirmed once
+    /// this document-session, or they confirm now. Fail-closed like
+    /// <see cref="IUserDialogService.ShowConfirmAsync"/> itself: declining
+    /// blocks the save.
+    /// </summary>
+    private async Task<bool> ConfirmProceedIfDocumentSignedAsync()
+    {
+        if (!_documentService.HasSignatures || _hasWarnedAboutSignedDocumentThisSession)
+            return true;
+
+        var confirmed = await _dialogService.ShowConfirmAsync(
+            "Document Is Digitally Signed",
+            "This document contains a digital signature. Saving your changes will invalidate that signature. Continue?");
+        if (confirmed)
+            _hasWarnedAboutSignedDocumentThisSession = true;
+        return confirmed;
+    }
+
     private async Task SaveFileAsync()
     {
         _logger.LogInformation("Save command triggered");
@@ -1040,6 +1066,12 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!_documentService.IsDocumentLoaded)
         {
             _logger.LogWarning("Cannot save: No document loaded");
+            return;
+        }
+
+        if (!await ConfirmProceedIfDocumentSignedAsync())
+        {
+            _logger.LogInformation("Save cancelled: user declined the signed-document warning");
             return;
         }
 
@@ -2035,6 +2067,12 @@ public partial class MainWindowViewModel : ViewModelBase
     public async Task SaveFileAsAsync(string filePath)
     {
         _logger.LogInformation("Saving document to: {FilePath}", filePath);
+
+        if (!await ConfirmProceedIfDocumentSignedAsync())
+        {
+            _logger.LogInformation("Save cancelled: user declined the signed-document warning");
+            return;
+        }
 
         try
         {

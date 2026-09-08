@@ -460,7 +460,7 @@
       "modes": {
         "parse": "partial",
         "extract": "partial",
-        "mutate": "unimplemented",
+        "mutate": "partial",
         "write": "unimplemented"
       },
       "evidence": [],
@@ -476,7 +476,9 @@
         "corpusRefs": [],
         "referenceToolRefs": [],
         "architectureRefs": [],
-        "issueRefs": [],
+        "issueRefs": [
+          "#1415"
+        ],
         "knownLimitations": [
           "Permit editing after an interactive warning that signatures will be invalidated and removed. Permit explicit override of advisory flags such as no-printing; never recover passwords or bypass encryption."
         ],
@@ -505,7 +507,8 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "extract"
+          "extract",
+          "mutate"
         ],
         "checks": [
           {
@@ -514,6 +517,20 @@
             "modes": [
               "parse",
               "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/SignedDocumentEditWarningTests.cs::SaveFileAsAsync_SignedSource_AsksForConfirmation_AndProceedsWhenConfirmed",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/SignedDocumentEditWarningTests.cs::SaveFileAsAsync_UnsignedSource_NeverAsksForConfirmation",
+            "modes": [
+              "mutate"
             ]
           }
         ]

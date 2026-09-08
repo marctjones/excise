@@ -236,26 +236,12 @@ public class SignatureApplicationService
     /// </summary>
     private static void GuardNoExistingSignedSignature(PdfDocument document)
     {
-        var acroForm = document.Resolve(document.Catalog.GetOptional("AcroForm") ?? PdfNull.Instance) as PdfDictionary;
-        var fields = acroForm != null
-            ? document.Resolve(acroForm.GetOptional("Fields") ?? PdfNull.Instance) as PdfArray
-            : null;
-        if (fields == null)
+        if (SignedFieldDetector.HasSignedField(document))
         {
-            return;
-        }
-
-        foreach (var item in fields)
-        {
-            if (document.Resolve(item) is PdfDictionary fieldDict &&
-                fieldDict.GetNameOrNull("FT") == "Sig" &&
-                fieldDict.GetOptional("V") != null)
-            {
-                throw new InvalidOperationException(
-                    "Document already contains a signed signature field. excise saves are full " +
-                    "rewrites, so adding a second signature would invalidate the existing one; " +
-                    "multi-signature support requires incremental-update saves (issue #623).");
-            }
+            throw new InvalidOperationException(
+                "Document already contains a signed signature field. excise saves are full " +
+                "rewrites, so adding a second signature would invalidate the existing one; " +
+                "multi-signature support requires incremental-update saves (issue #623).");
         }
     }
 

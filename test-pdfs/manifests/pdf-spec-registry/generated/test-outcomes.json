@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T14:32:51.915839+00:00",
-  "gitRevision": "00f02586d5b0cfcad9d23e7b60de0f9b8e67c16e",
+  "recordedAt": "2026-09-08T14:42:31.592393+00:00",
+  "gitRevision": "ba0336cfa63b33865e485d81fb9de33abb0433c6",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -426,6 +426,11 @@
       "path": "/tmp/embedded-file-trx/embedded-file-authoring.trx",
       "modifiedAt": "2026-09-08T14:32:48.333588+00:00",
       "sha256": "de075d7a7dce2792b7382576ed396eb28e0eaf1ed3a89df5e9f25f2e6e0335cb"
+    },
+    {
+      "path": "/tmp/signed-doc-trx/signed-doc-warning.trx",
+      "modifiedAt": "2026-09-08T14:42:27.905558+00:00",
+      "sha256": "6e060ba983a6d0d106895a527edfb0f0f376ed3a2f6c41c323e59d1ceb4fb239"
     }
   ],
   "outcomes": [
@@ -3916,6 +3921,38 @@
       "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
       "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
       "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+    },
+    {
+      "testName": "Excise.App.Tests.UI.SignedDocumentEditWarningTests.SaveFileAsAsync_SignedSource_AsksForConfirmation_AndProceedsWhenConfirmed",
+      "outcome": "Passed",
+      "duration": "00:00:00.0917836",
+      "trx": "/tmp/signed-doc-trx/signed-doc-warning.trx",
+      "resultModifiedAt": "2026-09-08T14:42:27.905558+00:00",
+      "trxSha256": "6e060ba983a6d0d106895a527edfb0f0f376ed3a2f6c41c323e59d1ceb4fb239"
+    },
+    {
+      "testName": "Excise.App.Tests.UI.SignedDocumentEditWarningTests.SaveFileAsAsync_SignedSource_DeclinedConfirmation_DoesNotSave",
+      "outcome": "Passed",
+      "duration": "00:00:00.1680521",
+      "trx": "/tmp/signed-doc-trx/signed-doc-warning.trx",
+      "resultModifiedAt": "2026-09-08T14:42:27.905558+00:00",
+      "trxSha256": "6e060ba983a6d0d106895a527edfb0f0f376ed3a2f6c41c323e59d1ceb4fb239"
+    },
+    {
+      "testName": "Excise.App.Tests.UI.SignedDocumentEditWarningTests.SaveFileAsAsync_SignedSource_OnlyAsksOnceAcrossMultipleSaves",
+      "outcome": "Passed",
+      "duration": "00:00:00.3188396",
+      "trx": "/tmp/signed-doc-trx/signed-doc-warning.trx",
+      "resultModifiedAt": "2026-09-08T14:42:27.905558+00:00",
+      "trxSha256": "6e060ba983a6d0d106895a527edfb0f0f376ed3a2f6c41c323e59d1ceb4fb239"
+    },
+    {
+      "testName": "Excise.App.Tests.UI.SignedDocumentEditWarningTests.SaveFileAsAsync_UnsignedSource_NeverAsksForConfirmation",
+      "outcome": "Passed",
+      "duration": "00:00:00.0076603",
+      "trx": "/tmp/signed-doc-trx/signed-doc-warning.trx",
+      "resultModifiedAt": "2026-09-08T14:42:27.905558+00:00",
+      "trxSha256": "6e060ba983a6d0d106895a527edfb0f0f376ed3a2f6c41c323e59d1ceb4fb239"
     },
     {
       "testName": "Excise.App.Tests.UI.StartupActivationWorkflowTests.CommandLineArgs_ResolvedPath_ActuallyLoadsIntoTheViewModel",
@@ -68503,12 +68540,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 84,
-    "tests": 8509,
+    "trxFiles": 85,
+    "tests": 8513,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7582
+      "Passed": 7586
     },
     "status": "recorded"
   }

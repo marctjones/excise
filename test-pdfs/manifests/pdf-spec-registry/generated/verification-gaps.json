@@ -124,12 +124,6 @@
     },
     {
       "capability": "pdfe.product.security.signature-and-permission-warning",
-      "mode": "mutate",
-      "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.security.signature-and-permission-warning",
       "mode": "write",
       "implementationState": "unimplemented",
       "reason": "no verification contract"

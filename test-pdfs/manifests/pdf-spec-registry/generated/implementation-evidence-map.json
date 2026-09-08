@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "4ca5af67e82c34e1df3c335c66e67dfa2361f03e9bf30678d4e52bf9ac2f7134",
+  "sourceFingerprint": "4e7a737272ef95e8737bbc8e08566cee76fd95e0cd0edf7800b1fd2a6087d6db",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6692,6 +6692,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Services/SignedFieldDetector.cs",
+      "path": "Excise.App/Services/SignedFieldDetector.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Services/SigningCertificateFactory.cs",
       "path": "Excise.App/Services/SigningCertificateFactory.cs",
       "kind": "source-file",
@@ -8466,7 +8476,7 @@
     }
   ],
   "summary": {
-    "records": 394,
+    "records": 395,
     "facets": {
       "annotations": 10,
       "content-and-graphics": 18,
@@ -8474,7 +8484,7 @@
       "fonts": 28,
       "forms": 8,
       "images": 28,
-      "product-integration-general": 208,
+      "product-integration-general": 209,
       "redaction": 51,
       "safe-save-and-metadata": 17,
       "security-and-encryption": 19,
@@ -8549,7 +8559,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 19,
       "pdfe.product.security.signature-and-permission-warning:write": 19
     },
-    "fallbackRecords": 208,
+    "fallbackRecords": 209,
     "allRecordsMapped": true
   }
 }

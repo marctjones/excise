@@ -44,6 +44,15 @@ public class PdfDocumentService
         => _currentDocument?.GetReEncryptionOptions(_currentUserPassword);
 
     /// <summary>
+    /// Whether the currently-loaded document already has a signed /Sig field.
+    /// A cheap in-memory check, not cryptographic verification -- editing and
+    /// saving invalidates any existing signature (excise saves are full
+    /// rewrites), so this is what the GUI's edit/save flow uses to decide
+    /// whether to warn the user first (#1415).
+    /// </summary>
+    public bool HasSignatures => _currentDocument != null && SignedFieldDetector.HasSignedField(_currentDocument);
+
+    /// <summary>
     /// The password the current document was successfully opened with
     /// (null for none/empty). Needed since #643 because a preserving save
     /// writes ENCRYPTED output, so the app's own post-save reload paths

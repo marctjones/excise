@@ -106641,7 +106641,7 @@
       "capability": "pdfe.product.security.signature-and-permission-warning",
       "section": "product-capabilities",
       "mode": "mutate",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.Registry_CoversCoreGuiCliAndSecurityCommands",
@@ -108075,18 +108075,33 @@
           ]
         },
         {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
+          "test": "Excise.App.Tests/UI/SignedDocumentEditWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_SignedSource_AsksForConfirmation_AndProceedsWhenConfirmed",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.App.Tests/UI/SignedDocumentEditWarningTests.cs::SaveFileAsAsync_SignedSource_AsksForConfirmation_AndProceedsWhenConfirmed",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.App.Tests/UI/SignedDocumentEditWarningTests.cs::SaveFileAsAsync_UnsignedSource_NeverAsksForConfirmation",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -109545,14 +109560,14 @@
   "summary": {
     "targetModes": 900,
     "modesWithTestCandidates": 622,
-    "modesWithExplicitContracts": 856,
-    "modesWithPassingExplicitContracts": 856,
+    "modesWithExplicitContracts": 857,
+    "modesWithPassingExplicitContracts": 857,
     "modesWithRecordedPassingCandidate": 622,
-    "gradeImplemented": 786,
+    "gradeImplemented": 787,
     "gradeVerified": 70,
-    "gradeUnknown": 44,
-    "testMethods": 6321,
-    "testMethodsWithCapabilityCandidate": 3909,
+    "gradeUnknown": 43,
+    "testMethods": 6325,
+    "testMethodsWithCapabilityCandidate": 3913,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
