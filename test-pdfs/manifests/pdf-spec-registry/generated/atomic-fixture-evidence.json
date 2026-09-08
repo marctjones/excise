@@ -7856,7 +7856,7 @@
       "capability": "pdf.20.image.requirement-019",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7880,7 +7880,7 @@
       "capability": "pdf.20.image.requirement-020",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7904,7 +7904,7 @@
       "capability": "pdf.20.image.requirement-021",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7928,7 +7928,7 @@
       "capability": "pdf.20.image.requirement-022",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7952,7 +7952,7 @@
       "capability": "pdf.20.image.requirement-023",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7976,7 +7976,7 @@
       "capability": "pdf.20.image.requirement-024",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8024,7 +8024,7 @@
       "capability": "pdf.20.image.requirement-026",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8048,7 +8048,7 @@
       "capability": "pdf.20.image.requirement-027",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8072,7 +8072,7 @@
       "capability": "pdf.20.image.requirement-028",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8096,7 +8096,7 @@
       "capability": "pdf.20.image.requirement-029",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8120,7 +8120,7 @@
       "capability": "pdf.20.image.requirement-030",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8144,7 +8144,7 @@
       "capability": "pdf.20.image.requirement-031",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8168,7 +8168,7 @@
       "capability": "pdf.20.image.requirement-032",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8192,7 +8192,7 @@
       "capability": "pdf.20.image.requirement-033",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8216,7 +8216,7 @@
       "capability": "pdf.20.image.requirement-034",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8264,7 +8264,7 @@
       "capability": "pdf.20.image.requirement-036",
       "section": "image-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },

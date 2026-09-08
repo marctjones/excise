@@ -1475,7 +1475,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -1497,7 +1497,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -1556,7 +1557,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -1578,7 +1579,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ExtGState_SMask_AppliesForFilledRect",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -1637,7 +1639,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -1659,7 +1661,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -1718,7 +1721,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -1740,7 +1743,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::ColorKeyMaskUsesRawSamplesBeforeColorConversion",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -1799,7 +1803,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -1821,7 +1825,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_OneBitImage_UsesDecodeArrayPolarity",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -1880,7 +1885,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -1902,14 +1907,16 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::PackedFourBitSamplesAreUnpackedPerRow",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           },
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::OneBitRowsHonorBytePadding",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -2041,7 +2048,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -2063,7 +2070,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/ImageColorConverterTests.cs::GetImageColorConverter_DeviceGray_UsesExactByteTable",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -2122,7 +2130,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -2144,7 +2152,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_DeviceRGB_SetsRGBColor",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -2203,7 +2212,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -2225,7 +2234,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_DeviceCMYK_SetsCMYKColor",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -2284,7 +2294,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -2306,7 +2316,8 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs::ICCBased_N4_CMYK_ReturnsCMYKColorSpace",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -2365,7 +2376,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -2387,7 +2398,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ImageXObject_ResolvesNamedIndexedColorSpaceResource",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -2446,7 +2458,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -2468,7 +2480,8 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs::Lab_ToRgb_Mid_GrayValue",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -2527,7 +2540,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -2549,7 +2562,8 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs::Separation_ToRgb_ApproximatesAsGrayscaleTint",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -2608,7 +2622,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -2630,7 +2644,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_PdfjsIssue13520_DeviceNShadingTintTransformDoesNotCollapseToBlack",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -2689,7 +2704,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -2711,7 +2726,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ScaledImageXObject_AppliesCTM",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
@@ -2843,7 +2859,7 @@
         "rationale": "Generated from the active legacy coverage matrix; refine product intent at the leaf."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "render": "partial",
         "preserve": "unknown"
       },
@@ -2865,7 +2881,8 @@
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ExceedsPixelLimit_ThrowsResourceLimit",
             "modes": [
-              "render"
+              "render",
+              "parse"
             ]
           }
         ]
