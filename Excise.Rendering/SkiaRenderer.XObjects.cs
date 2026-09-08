@@ -252,11 +252,31 @@ internal partial class RenderContext
         if (_rootBitmap == null || _deviceCmyk.Backdrop == null)
             return;
 
+        // #1425/#1426: this was the one _rootBitmap.GetPixel-per-pixel loop
+        // #1402 left unconverted in this file. GetPixel returns STRAIGHT
+        // (unpremultiplied) colour from the raw premultiplied bytes this
+        // bitmap actually stores, so reproducing its output needs an actual
+        // unpremultiply, not just re-deriving the formula in premultiplied
+        // terms (an earlier version of this comment tried that; it changes
+        // the skip-threshold comparison's behaviour materially at low alpha
+        // -- SyncDeviceCmykBackdropFromRootBitmapPixelContractTests caught
+        // it). UnpremultiplyChannel matches SKBitmap.GetPixel's own
+        // unpremultiply to within 1/255 in the rare case they diverge at
+        // all (measured: 322/65280 value/alpha pairs, always by exactly 1),
+        // which only ever flips this function's approximate 12-unit skip
+        // threshold at an exact tie (measured: 1/200,000 random trials) --
+        // see that test file for both measurements.
+        _canvas.Flush();
+        var rootRowBytes = _rootBitmap.RowBytes;
+        var rootPixels = GetRootPixelSpan();
+
         for (var y = 0; y < height; y++)
         {
             var parentY = top + y;
             if (parentY < 0 || parentY >= _rootBitmap.Height)
                 continue;
+
+            var rowStart = parentY * rootRowBytes;
 
             for (var x = 0; x < width; x++)
             {
@@ -264,23 +284,43 @@ internal partial class RenderContext
                 if (parentX < 0 || parentX >= _rootBitmap.Width)
                     continue;
 
-                var pixel = _rootBitmap.GetPixel(parentX, parentY);
+                var offset = rowStart + (parentX * 4);
+                var rawAlpha = rootPixels[offset + 3];
+                var straightR = UnpremultiplyChannel(rootPixels[offset], rawAlpha);
+                var straightG = UnpremultiplyChannel(rootPixels[offset + 1], rawAlpha);
+                var straightB = UnpremultiplyChannel(rootPixels[offset + 2], rawAlpha);
+
                 var retained = _deviceCmyk.Backdrop.Get(parentX, parentY);
                 var (retainedR, retainedG, retainedB) = DeviceCmykToRgb(retained);
-                if (Math.Abs(pixel.Red - ToByte(retainedR)) +
-                    Math.Abs(pixel.Green - ToByte(retainedG)) +
-                    Math.Abs(pixel.Blue - ToByte(retainedB)) <= 12)
+                if (Math.Abs(straightR - ToByte(retainedR)) +
+                    Math.Abs(straightG - ToByte(retainedG)) +
+                    Math.Abs(straightB - ToByte(retainedB)) <= 12)
                 {
                     continue;
                 }
 
-                var alpha = pixel.Alpha / 255.0;
-                var r = (pixel.Red / 255.0 * alpha) + (1 - alpha);
-                var g = (pixel.Green / 255.0 * alpha) + (1 - alpha);
-                var b = (pixel.Blue / 255.0 * alpha) + (1 - alpha);
+                var alpha = rawAlpha / 255.0;
+                var r = (straightR / 255.0 * alpha) + (1 - alpha);
+                var g = (straightG / 255.0 * alpha) + (1 - alpha);
+                var b = (straightB / 255.0 * alpha) + (1 - alpha);
                 _deviceCmyk.Backdrop.Set(parentX, parentY, RgbToDeviceCmyk(r, g, b), alpha);
             }
         }
+    }
+
+    /// <summary>
+    /// Recovers a straight (unpremultiplied) channel value from this
+    /// bitmap's raw premultiplied byte, matching what <c>SKBitmap.GetPixel</c>
+    /// would return closely enough for <see cref="SyncDeviceCmykBackdropFromRootBitmap"/>'s
+    /// approximate skip-threshold comparison (see that method's comment and
+    /// SyncDeviceCmykBackdropFromRootBitmapPixelContractTests for the measured
+    /// agreement). Internal so that test can pin the measurement.
+    /// </summary>
+    internal static byte UnpremultiplyChannel(byte raw, byte alpha)
+    {
+        if (alpha == 0)
+            return 0;
+        return (byte)Math.Clamp((raw * 255 + (alpha / 2)) / alpha, 0, 255);
     }
 
     private void CompositeDeviceCmykGroupBitmap(
