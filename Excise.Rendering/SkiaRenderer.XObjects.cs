@@ -148,6 +148,48 @@ internal partial class RenderContext
         return MapRect(matrix, bounds);
     }
 
+    /// <summary>
+    /// Category-based, cache-reusing check for "this form's content stream
+    /// cannot mark the page at all" (#1426). Uses the same
+    /// <see cref="Excise.Core.Content.OperatorCategory"/> the parser already
+    /// assigns every operator, rather than a second hand-rolled operator
+    /// list -- PathPainting/TextShowing/Shading/XObject are exactly the
+    /// categories that can put ink on the page; every other category
+    /// (graphics/text state, path construction, clipping, colour, marked
+    /// content, compatibility) cannot by construction. Reuses the same
+    /// byte[]-keyed parse cache <see cref="ExecuteContentBytes"/> already
+    /// relies on, so a form invoked dozens of times (the exact shape this
+    /// exists for) only pays the parse cost once.
+    /// </summary>
+    private bool FormContentStreamPaintsNothing(Excise.Core.Primitives.PdfStream formStream)
+    {
+        var contentBytes = formStream.DecodedData;
+        if (contentBytes.Length == 0)
+            return true;
+
+        if (!_resourceScope.TryGetParsedContent(contentBytes, out var content))
+        {
+            content = new Excise.Core.Content.ContentStreamParser(contentBytes, _page)
+                { ComputeOperatorMetadata = false }
+                .Parse(_cancellationToken);
+            _resourceScope.CacheParsedContent(contentBytes, content);
+        }
+
+        foreach (var op in content!.Operators)
+        {
+            switch (op.Category)
+            {
+                case Excise.Core.Content.OperatorCategory.PathPainting:
+                case Excise.Core.Content.OperatorCategory.TextShowing:
+                case Excise.Core.Content.OperatorCategory.Shading:
+                case Excise.Core.Content.OperatorCategory.XObject:
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
     private bool TryRenderDeviceCmykFormGroup(
         Excise.Core.Primitives.PdfStream formStream,
         Excise.Core.Primitives.PdfDictionary? group,
@@ -159,6 +201,19 @@ internal partial class RenderContext
         {
             return false;
         }
+
+        // #1426: a degenerate/no-op form still gets a full group-bitmap
+        // allocate + backdrop-sync + composite on every invocation without
+        // this check -- measured at 57 invocations on the mesh-shading
+        // Class B fixture, ~1.7 GB of memory traffic per render to paint
+        // nothing. Per ISO 32000-1 §11.4/§11.6.6 a group that paints
+        // nothing contributes nothing to the backdrop either way, so
+        // skipping straight past both the group-bitmap path AND the
+        // SyncDeviceCmykBackdropFromRootBitmap side effect is correct, not
+        // just fast -- verified against mutool/pdftocairo on both known
+        // fixtures, see RenderTailEmptyTransparencyGroupTests.
+        if (FormContentStreamPaintsNothing(formStream))
+            return true;
 
         var invocationBounds = GetFormInvocationBounds(formStream);
         if (invocationBounds == null)
