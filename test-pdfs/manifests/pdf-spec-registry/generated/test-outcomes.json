@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T06:05:45.439765+00:00",
-  "gitRevision": "dbaa8ce60f277822b92a7ef563e3269a2816f53d",
+  "recordedAt": "2026-09-08T06:46:09.955345+00:00",
+  "gitRevision": "b159c43e3fd71efa6701bcf7164321d1f3381000",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -361,6 +361,41 @@
       "path": "/tmp/new9-trx/app.trx",
       "modifiedAt": "2026-09-08T06:05:40.397784+00:00",
       "sha256": "c7cfd5e6d4c092cbe67501d0540adaa930a00fec2a7cfd5731dd003deb6aa4d0"
+    },
+    {
+      "path": "/tmp/new10-trx/app.trx",
+      "modifiedAt": "2026-09-08T06:45:47.320884+00:00",
+      "sha256": "88e95ea876db9f21fc6b973484f044d0154c8c9dffbd0a49fd0e3732a8178949"
+    },
+    {
+      "path": "/tmp/new10-trx/app2.trx",
+      "modifiedAt": "2026-09-08T06:45:59.412858+00:00",
+      "sha256": "553a5fdc6df45a2474267a4dc78f114394b7901ef7a6bb6d3c58f329f80fdb88"
+    },
+    {
+      "path": "/tmp/new10-trx/core.trx",
+      "modifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "sha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
+    },
+    {
+      "path": "/tmp/new10-trx/core2.trx",
+      "modifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "sha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
+    },
+    {
+      "path": "/tmp/new10-trx/core3.trx",
+      "modifiedAt": "2026-09-08T06:45:49.032417+00:00",
+      "sha256": "024041e11e666255abd709e1cfe7e1ac38a2b95d87ab3776274c4c54efbed0bc"
+    },
+    {
+      "path": "/tmp/new10-trx/core4.trx",
+      "modifiedAt": "2026-09-08T06:46:02.219347+00:00",
+      "sha256": "85e863f6f873de050b8c0eacb89fb556c5a067f8b9ee9f4677605bf57b12d449"
+    },
+    {
+      "path": "/tmp/new10-trx/rendering.trx",
+      "modifiedAt": "2026-09-08T06:45:45.545666+00:00",
+      "sha256": "dfd09b524c1a7781c6017bb34ecd63fb92c999fd9e08905810b1e17decee3d2c"
     }
   ],
   "outcomes": [
@@ -3287,10 +3322,10 @@
     {
       "testName": "Excise.App.Tests.UI.PageOrganizationSavePersistenceTests.RemoveSelectedPagesCommand_ThenSaveAs_RemovedPageIsGoneAccordingToAnIndependentExtractor",
       "outcome": "Passed",
-      "duration": "00:00:01.2689048",
-      "trx": "/tmp/new7-trx/app.trx",
-      "resultModifiedAt": "2026-09-08T04:34:59.174007+00:00",
-      "trxSha256": "60555040b5fbbd3f5b5bf3b93506da2589b94439d196b53c20b66e11286fef62"
+      "duration": "00:00:00.6506426",
+      "trx": "/tmp/new10-trx/app2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:59.412858+00:00",
+      "trxSha256": "553a5fdc6df45a2474267a4dc78f114394b7901ef7a6bb6d3c58f329f80fdb88"
     },
     {
       "testName": "Excise.App.Tests.UI.PageOrganizationSavePersistenceTests.RemoveSelectedPagesCommand_ThenSaveAs_RemovedPageIsGoneOnReopen",
@@ -10079,10 +10114,10 @@
     {
       "testName": "Excise.App.Tests.Unit.SignatureVerificationServiceTests.VerifySignatures_PdfWithValidDetachedCmsAndByteRange_ReturnsValidResult",
       "outcome": "Passed",
-      "duration": "00:00:00.0444005",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.4800024",
+      "trx": "/tmp/new10-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T06:45:47.320884+00:00",
+      "trxSha256": "88e95ea876db9f21fc6b973484f044d0154c8c9dffbd0a49fd0e3732a8178949"
     },
     {
       "testName": "Excise.App.Tests.Unit.SignatureVerificationServiceTests.VerifySignatures_ReturnsListNotNull",
@@ -14599,10 +14634,10 @@
     {
       "testName": "Excise.Core.Tests.ColorSpaces.PdfColorSpaceTests.DeviceCmyk_Black_ConvertsToBlack",
       "outcome": "Passed",
-      "duration": "00:00:00.0001431",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0012916",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.ColorSpaces.PdfColorSpaceTests.DeviceCmyk_MixedColor_ConvertsCorrectly",
@@ -24037,6 +24072,14 @@
       "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
     },
     {
+      "testName": "Excise.Core.Tests.Document.PdfDocumentTests.HeaderVersion_SurvivesASaveAndReload_Unchanged",
+      "outcome": "Passed",
+      "duration": "00:00:00.0007682",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
+    },
+    {
       "testName": "Excise.Core.Tests.Document.PdfDocumentTests.IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
       "outcome": "Passed",
       "duration": "00:00:00.0623705",
@@ -24319,10 +24362,10 @@
     {
       "testName": "Excise.Core.Tests.Document.PdfDocumentTests.Version_MultipleVersionFormats_ParsesCorrectly",
       "outcome": "Passed",
-      "duration": "00:00:00.0005651",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0006091",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileTests.EmbeddedFile_SurvivesASaveAndReload_WhenUntouched",
@@ -24951,10 +24994,10 @@
     {
       "testName": "Excise.Core.Tests.Document.PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
       "outcome": "Passed",
-      "duration": "00:00:00.0028693",
-      "trx": "/tmp/new3-trx/core.trx",
-      "resultModifiedAt": "2026-09-08T03:12:16.378491+00:00",
-      "trxSha256": "b36c685e1211926cd52cf8df4595b1167f83db5a995cec3c3ffa59d82f2bd850"
+      "duration": "00:00:00.0919920",
+      "trx": "/tmp/new10-trx/core4.trx",
+      "resultModifiedAt": "2026-09-08T06:46:02.219347+00:00",
+      "trxSha256": "85e863f6f873de050b8c0eacb89fb556c5a067f8b9ee9f4677605bf57b12d449"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfLinkTests.Parse_AnnotsNotArray_ReturnsEmpty",
@@ -26615,10 +26658,10 @@
     {
       "testName": "Excise.Core.Tests.Editing.PdfTypewriterTextOperationTests.Apply_SurvivesSaveAndReopenAsFlatText",
       "outcome": "Passed",
-      "duration": "00:00:00.0025168",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0470632",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Editing.PdfTypewriterTextOperationTests.Create_StoresTextBoundsStyleAndPendingState",
@@ -30079,10 +30122,10 @@
     {
       "testName": "Excise.Core.Tests.Graphics.EmbeddedFontTests.EmbeddedFont_RoundTripsThroughOpen_NoErrors",
       "outcome": "Passed",
-      "duration": "00:00:00.0405978",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0508860",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Graphics.EmbeddedFontTests.EmbeddedFont_UnicodeText_RoundTripsThroughExtraction",
@@ -31255,98 +31298,98 @@
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"Circle\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0004819",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0004679",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"FreeText\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0005592",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0020576",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"Highlight\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0015923",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0003258",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"Ink\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0003996",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0011123",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"Line\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0006644",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0015585",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"PolyLine\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0005573",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0002293",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"Polygon\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0021936",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0013536",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"Square\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0024279",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0310016",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"Squiggly\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0004929",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0002509",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"StrikeOut\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0003739",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0002144",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"Text\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0003678",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0003772",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype(subtype: \"Underline\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0004342",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0007806",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Invariants.AnnotationInvariantTests.AuthoredAnnotation_PreservesItsContents(subtype: \"Circle\")",
@@ -41471,10 +41514,10 @@
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.GlyphRemoverTests.Process_Reconstruction_InheritsFontAcrossTextBlocks",
       "outcome": "Passed",
-      "duration": "00:00:00.0009356",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0092980",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.GlyphRemoverTests.Process_Reconstruction_PreservesSourceTextMatrixInLocalCoordinates",
@@ -42023,10 +42066,10 @@
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.ImageRedactorTests.ProcessOperations_FullyContainedImage_Removed",
       "outcome": "Passed",
-      "duration": "00:00:00.0005236",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0310066",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.ImageRedactorTests.ProcessOperations_FullyContainedStrategy_KeepsPartiallyOverlapping",
@@ -42191,26 +42234,26 @@
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.InlineImageRedactionEndToEndTests.HiddenTextDetector_FlagsTextHiddenUnderInlineImage",
       "outcome": "Passed",
-      "duration": "00:00:00.0023157",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0327705",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.InlineImageRedactionEndToEndTests.RedactArea_AwayFromInlineImage_PreservesBytesOnRoundTrip",
       "outcome": "Passed",
-      "duration": "00:00:00.0009232",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0094397",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.InlineImageRedactionEndToEndTests.RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
       "outcome": "Passed",
-      "duration": "00:00:00.0009053",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0012815",
+      "trx": "/tmp/new10-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
+      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.InvisibleSeparatorRedactionTests.RedactText_NeedleWithPlainSpace_RemovesNonBreakingSpaceText",
@@ -42639,10 +42682,10 @@
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.ObstructionStripperTests.StripObstructions_BlackFillRectangle_RemovesPathAndFill",
       "outcome": "Passed",
-      "duration": "00:00:00.0008481",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0028248",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.ObstructionStripperTests.StripObstructions_CMYKBlackColor_RemovesPathAndFill",
@@ -42863,66 +42906,66 @@
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.OperationReconstructorTests.Reconstruct_CidFontSegment_EmitsHexStringWithRawBytes",
       "outcome": "Passed",
-      "duration": "00:00:00.0008372",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0043703",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.OperationReconstructorTests.Reconstruct_DefaultTextState_OmitsStateOperators",
       "outcome": "Passed",
-      "duration": "00:00:00.0007341",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0003931",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.OperationReconstructorTests.Reconstruct_InvalidFontInputs_FallsBackToDefaults",
       "outcome": "Passed",
-      "duration": "00:00:00.0005913",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0001586",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.OperationReconstructorTests.Reconstruct_NoSegments_ReturnsEmpty",
       "outcome": "Passed",
-      "duration": "00:00:00.0001332",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0005509",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.OperationReconstructorTests.Reconstruct_NonDefaultTextState_EmitsMatchingOperators",
       "outcome": "Passed",
-      "duration": "00:00:00.0006186",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0023753",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.OperationReconstructorTests.Reconstruct_PositionsSegmentsByStartXStartY",
       "outcome": "Passed",
-      "duration": "00:00:00.0006162",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0008841",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.OperationReconstructorTests.Reconstruct_SingleSegment_EmitsBtTfTmTjEt",
       "outcome": "Passed",
-      "duration": "00:00:00.0008642",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0213122",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.OperationReconstructorTests.Reconstruct_TfOperator_UsesEffectiveSizeWithUnitTextMatrix",
       "outcome": "Passed",
-      "duration": "00:00:00.0003529",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0002053",
+      "trx": "/tmp/new10-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T06:45:34.753246+00:00",
+      "trxSha256": "1e98af1472541a394860411b2989802e37a007bf1cbb6ef1f4f38c95336f70ff"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.OverprintedTextRedactionTests.AGenuineDoubleLetter_IsNotCollapsed",
@@ -47623,10 +47666,10 @@
     {
       "testName": "Excise.Core.Tests.Writing.PdfDocumentWriterTests.Pdf15Save_LinearizedInputSavesToCompressedOutput",
       "outcome": "Passed",
-      "duration": "00:00:00.1072004",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0861369",
+      "trx": "/tmp/new10-trx/core3.trx",
+      "resultModifiedAt": "2026-09-08T06:45:49.032417+00:00",
+      "trxSha256": "024041e11e666255abd709e1cfe7e1ac38a2b95d87ab3776274c4c54efbed0bc"
     },
     {
       "testName": "Excise.Core.Tests.Writing.PdfDocumentWriterTests.Pdf15Save_MutoolExtractsCompressedOutput_WhenAvailable",
@@ -66055,10 +66098,10 @@
     {
       "testName": "Excise.Rendering.Tests.SkiaRendererTests.RenderPage_ColorSpace_DeviceCMYK_SetsCMYKColor",
       "outcome": "Passed",
-      "duration": "00:00:00.0015483",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-deterministic.trx",
-      "resultModifiedAt": "2026-09-07T23:23:21.817320+00:00",
-      "trxSha256": "3a38f38270d8342af11be4b994fadd916985bcff123ac8e197d3ba6c282e3700"
+      "duration": "00:00:00.0889839",
+      "trx": "/tmp/new10-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T06:45:45.545666+00:00",
+      "trxSha256": "dfd09b524c1a7781c6017bb34ecd63fb92c999fd9e08905810b1e17decee3d2c"
     },
     {
       "testName": "Excise.Rendering.Tests.SkiaRendererTests.RenderPage_ColorSpace_DeviceGray_SetsGrayscale",
@@ -68318,12 +68361,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 71,
-    "tests": 8494,
+    "trxFiles": 78,
+    "tests": 8495,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7567
+      "Passed": 7568
     },
     "status": "recorded"
   }

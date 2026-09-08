@@ -237,7 +237,7 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "extract": "unknown",
+        "extract": "partial",
         "mutate": "unknown",
         "write": "unknown",
         "author": "partial",
@@ -301,7 +301,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "author"
+          "author",
+          "extract"
         ],
         "checks": [
           {
@@ -309,7 +310,8 @@
             "ref": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs::VerifySignatures_PdfWithValidDetachedCmsAndByteRange_ReturnsValidResult",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "extract"
             ]
           },
           {

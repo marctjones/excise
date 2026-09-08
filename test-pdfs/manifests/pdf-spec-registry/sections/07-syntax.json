@@ -29,8 +29,8 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
-        "write": "unknown"
+        "preserve": "partial",
+        "write": "partial"
       },
       "evidence": [],
       "notes": "Includes version header, tokens, names, strings, arrays, dictionaries, booleans, null, and indirect references.",
@@ -89,6 +89,20 @@
             "modes": [
               "parse"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::HeaderVersion_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs::Pdf15Save_LinearizedInputSavesToCompressedOutput",
+            "modes": [
+              "write"
+            ]
           }
         ]
       }
@@ -122,8 +136,8 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "mutate": "unknown",
-        "write": "unknown"
+        "mutate": "partial",
+        "write": "partial"
       },
       "evidence": [
         {
@@ -182,7 +196,9 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "mutate",
+          "write"
         ],
         "checks": [
           {
@@ -197,6 +213,14 @@
             "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::RemoveSelectedPagesCommand_ThenSaveAs_RemovedPageIsGoneAccordingToAnIndependentExtractor",
+            "modes": [
+              "mutate",
+              "write"
             ]
           }
         ]
@@ -320,7 +344,7 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "mutate": "unknown",
+        "mutate": "partial",
         "write": "partial"
       },
       "evidence": [],
@@ -384,6 +408,13 @@
               "preserve",
               "parse",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Cli.Tests/RedactCommandTests.cs::RunRedact_EncryptedSource_WithAllowDecrypt_WritesPlaintextAndWarns",
+            "modes": [
+              "mutate"
             ]
           }
         ]

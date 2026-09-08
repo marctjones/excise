@@ -1247,7 +1247,7 @@
     {
       "capability": "pdf.17.graphics.images",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [
         "Excise.Core/Filters/Jbig2/GenericRegionDecoder.cs",
@@ -1451,7 +1451,7 @@
     {
       "capability": "pdf.17.graphics.images",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [],
       "directTestCandidates": [],
@@ -1470,7 +1470,7 @@
     {
       "capability": "pdf.17.graphics.images",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [],
       "directTestCandidates": [],
@@ -1768,7 +1768,7 @@
     {
       "capability": "pdf.17.graphics.fonts",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [],
       "directTestCandidates": [],
@@ -3115,7 +3115,7 @@
     {
       "capability": "pdf.17.graphics.fonts",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [],
       "directTestCandidates": [],
@@ -3134,7 +3134,7 @@
     {
       "capability": "pdf.17.graphics.fonts",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [],
       "directTestCandidates": [],
@@ -3153,7 +3153,7 @@
     {
       "capability": "pdf.17.graphics.fonts",
       "mode": "author",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [],
       "directTestCandidates": [],
@@ -5704,29 +5704,10 @@
         "accept a differential or corpus oracle for the intended behavior",
         "set implemented only after all required mode evidence is reviewed and the verification contract is executable"
       ]
-    },
-    {
-      "capability": "pdf.17.transparency.model",
-      "mode": "write",
-      "currentState": "unknown",
-      "promotion": "review-required",
-      "implementationCandidates": [],
-      "directTestCandidates": [],
-      "independentEvidenceCandidates": [],
-      "requiredBeforePartial": [
-        "review one or more implementation candidates and confirm responsibility",
-        "review one or more direct test candidates and record the exact asserted behavior",
-        "record a known limitation or an explicit out-of-scope boundary"
-      ],
-      "requiredBeforeStrict": [
-        "add or identify an atomic fixture that isolates the feature",
-        "accept a differential or corpus oracle for the intended behavior",
-        "set implemented only after all required mode evidence is reviewed and the verification contract is executable"
-      ]
     }
   ],
   "summary": {
-    "contracts": 21,
+    "contracts": 20,
     "withImplementationCandidates": 11,
     "withDirectTestCandidates": 10,
     "withIndependentCandidates": 9,
@@ -5734,7 +5715,7 @@
       "pdf.17.graphics.images": 6,
       "pdf.17.graphics.fonts": 7,
       "pdf.17.content.streams": 6,
-      "pdf.17.transparency.model": 2
+      "pdf.17.transparency.model": 1
     }
   }
 }

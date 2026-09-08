@@ -3,123 +3,15 @@
   "generatedBy": "scripts/check-pdf-spec-registry.py",
   "gaps": [
     {
-      "capability": "pdf.17.syntax.objects",
-      "mode": "mutate",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.syntax.objects",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.state",
-      "mode": "mutate",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.paths-painting",
-      "mode": "mutate",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.paths-painting",
-      "mode": "author",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.17.graphics.patterns-shadings",
       "mode": "write",
-      "implementationState": "unknown",
+      "implementationState": "unimplemented",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.graphics.patterns-shadings",
       "mode": "author",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.images",
-      "mode": "extract",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.images",
-      "mode": "mutate",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.images",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.fonts",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.fonts",
-      "mode": "mutate",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.fonts",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.graphics.fonts",
-      "mode": "author",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.rendering.colour-conversion",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.rendering.colour-conversion",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.rendering.colour-conversion",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.compatibility.versions",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.compatibility.versions",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.compatibility.versions",
-      "mode": "write",
-      "implementationState": "unknown",
+      "implementationState": "unimplemented",
       "reason": "no verification contract"
     },
     {
@@ -144,12 +36,6 @@
       "capability": "pdf.20.compatibility.deprecated",
       "mode": "execute",
       "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.transparency.model",
-      "mode": "write",
-      "implementationState": "unknown",
       "reason": "no verification contract"
     },
     {
@@ -306,12 +192,6 @@
       "capability": "pdf.17.interactive.optional-content",
       "mode": "author",
       "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interchange.signatures",
-      "mode": "extract",
-      "implementationState": "unknown",
       "reason": "no verification contract"
     },
     {

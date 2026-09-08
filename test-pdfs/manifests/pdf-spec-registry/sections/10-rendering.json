@@ -26,9 +26,9 @@
         "rationale": "This is distinct from colour-space parsing: it defines the final rendered result."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
-        "render": "unknown"
+        "parse": "partial",
+        "preserve": "partial",
+        "render": "partial"
       },
       "evidence": [],
       "notes": "Each renderer/oracle contract must state which device and colour-management assumptions it makes.",
@@ -70,6 +70,37 @@
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
         ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs::DeviceCmyk_Black_ConvertsToBlack",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_DeviceCMYK_SetsCMYKColor",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
       }
     },
     {
@@ -101,9 +132,9 @@
         "rationale": "Excise must read common historic files safely even when it does not write every legacy feature."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
-        "write": "unknown"
+        "parse": "partial",
+        "preserve": "partial",
+        "write": "partial"
       },
       "evidence": [],
       "notes": "Track PDF 1.0 through 1.7 intake separately from PDF 2.0 output; linearization is a performance/streaming feature, not a visual feature.",
@@ -146,6 +177,37 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::Version_MultipleVersionFormats_ParsesCorrectly",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::HeaderVersion_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs::Pdf15Save_LinearizedInputSavesToCompressedOutput",
+            "modes": [
+              "write"
+            ]
+          }
         ]
       }
     },

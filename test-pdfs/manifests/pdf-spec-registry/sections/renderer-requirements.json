@@ -200,7 +200,7 @@
       "modes": {
         "parse": "partial",
         "render": "not-applicable",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -220,6 +220,20 @@
             "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::Flattening_MaterializesInheritedAttributesOntoLeaves",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::InheritedRotateAndResources_SurviveASaveAndReparse_StillResolveOnLeaves",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::RotatePage180Command_ThenSaveAs_RotationSurvivesReopen",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -280,7 +294,7 @@
       "modes": {
         "parse": "partial",
         "render": "not-applicable",
-        "preserve": "unknown"
+        "preserve": "partial"
       },
       "evidence": [
         {
@@ -300,6 +314,20 @@
             "ref": "Excise.Core.Tests/Document/DefaultMediaBoxTests.cs::MediaBoxOnThePage_WinsOverAnInheritedOne",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::InheritedRotateAndResources_SurviveASaveAndReparse_StillResolveOnLeaves",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::RotatePage180Command_ThenSaveAs_RotationSurvivesReopen",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1081,7 +1109,7 @@
       "modes": {
         "parse": "not-applicable",
         "render": "unknown",
-        "preserve": "unknown"
+        "preserve": "not-applicable"
       },
       "evidence": [
         {
@@ -1092,8 +1120,7 @@
       "verification": {
         "status": "planned",
         "requiredModes": [
-          "render",
-          "preserve"
+          "render"
         ],
         "checks": []
       },
@@ -1613,7 +1640,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "not-applicable",
         "preserve": "partial"
       },
       "evidence": [
@@ -1626,7 +1653,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [

@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1002,
-  "indexedContentSha256": "d66e9e8a0c932cbd25e363990952e86abbd159d5edcf0ddc741c25a308717a09",
+  "indexedContentSha256": "197f3c54b223629dc99da20f8dae729149ca089a8e2a8af4048c1744d71af0f3",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -35,6 +35,20 @@
             "ref": "Excise.Core.Tests/Parsing/ParserHardeningTests.cs::PdfDocument_Open_HeaderWithinFirstKilobyte_Succeeds",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::HeaderVersion_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs::Pdf15Save_LinearizedInputSavesToCompressedOutput",
+            "modes": [
+              "write"
             ]
           }
         ]
@@ -494,7 +508,9 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "mutate",
+          "write"
         ],
         "checks": [
           {
@@ -509,6 +525,14 @@
             "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::IndirectObjectGraph_SurvivesASaveAndReload_ReferencesStillResolve",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::RemoveSelectedPagesCommand_ThenSaveAs_RemovedPageIsGoneAccordingToAnIndependentExtractor",
+            "modes": [
+              "mutate",
+              "write"
             ]
           }
         ]
@@ -2071,6 +2095,13 @@
               "preserve",
               "parse",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Cli.Tests/RedactCommandTests.cs::RunRedact_EncryptedSource_WithAllowDecrypt_WritesPlaintextAndWarns",
+            "modes": [
+              "mutate"
             ]
           }
         ]
@@ -6131,7 +6162,8 @@
           "render",
           "parse",
           "preserve",
-          "write"
+          "write",
+          "mutate"
         ],
         "checks": [
           {
@@ -6162,6 +6194,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/OperationReconstructorTests.cs::Reconstruct_NonDefaultTextState_EmitsMatchingOperators",
+            "modes": [
+              "mutate"
             ]
           }
         ]
@@ -6425,7 +6464,9 @@
           "render",
           "parse",
           "preserve",
-          "write"
+          "write",
+          "mutate",
+          "author"
         ],
         "checks": [
           {
@@ -6456,6 +6497,20 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/ObstructionStripperTests.cs::StripObstructions_BlackFillRectangle_RemovesPathAndFill",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_HasTheRequestedSubtype",
+            "modes": [
+              "author"
             ]
           }
         ]
@@ -8118,7 +8173,10 @@
         "requiredModes": [
           "render",
           "parse",
-          "preserve"
+          "preserve",
+          "extract",
+          "mutate",
+          "write"
         ],
         "checks": [
           {
@@ -8148,6 +8206,27 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/DocumentImageExportWorkflowServiceTests.cs::ExportPageAsync_EncodesAccordingToOutputExtension",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/ImageRedactorTests.cs::ProcessOperations_FullyContainedImage_Removed",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/InlineImageRedactionEndToEndTests.cs::RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
+            "modes": [
+              "write"
             ]
           }
         ]
@@ -8932,7 +9011,11 @@
         "requiredModes": [
           "render",
           "parse",
-          "extract"
+          "extract",
+          "preserve",
+          "write",
+          "mutate",
+          "author"
         ],
         "checks": [
           {
@@ -8968,6 +9051,28 @@
             "ref": "Excise.Core.Tests/Text/TextExtractorDifferencesEncodingTests.cs::ExtractText_DifferencesEncoding_StandardPostScriptGlyphNames_DecodeCorrectly",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFont_RoundTripsThroughOpen_NoErrors",
+            "modes": [
+              "preserve",
+              "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/GlyphRemoverTests.cs::Process_Reconstruction_InheritsFontAcrossTextBlocks",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::Apply_SurvivesSaveAndReopenAsFlatText",
+            "modes": [
+              "author"
             ]
           }
         ]
@@ -9688,7 +9793,37 @@
         "skiarenderer"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/ColorSpaces/PdfColorSpaceTests.cs::DeviceCmyk_Black_ConvertsToBlack",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_DeviceCMYK_SetsCMYKColor",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
@@ -10432,7 +10567,37 @@
         "skiarenderer"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::Version_MultipleVersionFormats_ParsesCorrectly",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfDocumentTests.cs::HeaderVersion_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs::Pdf15Save_LinearizedInputSavesToCompressedOutput",
+            "modes": [
+              "write"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Encryption/PdfStandardSecurityHandler.cs",
@@ -10497,6 +10662,9 @@
           "path": "Excise.Core.Tests/Document/PdfDocumentTests.cs",
           "kind": "test",
           "matchedTerms": [
+            "declarations",
+            "limits",
+            "linearized",
             "version",
             "versions"
           ]
@@ -18133,6 +18301,20 @@
             "modes": [
               "parse"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::InheritedRotateAndResources_SurviveASaveAndReparse_StillResolveOnLeaves",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::RotatePage180Command_ThenSaveAs_RotationSurvivesReopen",
+            "modes": [
+              "preserve"
+            ]
           }
         ]
       },
@@ -18189,6 +18371,20 @@
             "ref": "Excise.Core.Tests/Document/DefaultMediaBoxTests.cs::MediaBoxOnThePage_WinsOverAnInheritedOne",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::InheritedRotateAndResources_SurviveASaveAndReparse_StillResolveOnLeaves",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::RotatePage180Command_ThenSaveAs_RotationSurvivesReopen",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -19323,8 +19519,7 @@
       "registeredVerification": {
         "status": "planned",
         "requiredModes": [
-          "render",
-          "preserve"
+          "render"
         ],
         "checks": []
       },
@@ -19939,7 +20134,6 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render",
           "preserve"
         ],
         "checks": [
@@ -54730,7 +54924,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "author"
+          "author",
+          "extract"
         ],
         "checks": [
           {
@@ -54738,7 +54933,8 @@
             "ref": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs::VerifySignatures_PdfWithValidDetachedCmsAndByteRange_ReturnsValidResult",
             "modes": [
               "parse",
-              "preserve"
+              "preserve",
+              "extract"
             ]
           },
           {

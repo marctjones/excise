@@ -62,7 +62,8 @@
           "render",
           "parse",
           "preserve",
-          "write"
+          "write",
+          "mutate"
         ],
         "checks": [
           {
@@ -93,6 +94,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/OperationReconstructorTests.cs::Reconstruct_NonDefaultTextState_EmitsMatchingOperators",
+            "modes": [
+              "mutate"
             ]
           }
         ]
@@ -210,7 +218,9 @@
           "render",
           "parse",
           "preserve",
-          "write"
+          "write",
+          "mutate",
+          "author"
         ],
         "checks": [
           {
@@ -241,6 +251,20 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/ObstructionStripperTests.cs::StripObstructions_BlackFillRectangle_RemovesPathAndFill",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_HasTheRequestedSubtype",
+            "modes": [
+              "author"
             ]
           }
         ]
@@ -476,8 +500,8 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "write": "unknown",
-        "author": "unknown"
+        "write": "unimplemented",
+        "author": "unimplemented"
       },
       "evidence": [
         {
@@ -580,9 +604,9 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "implemented",
-        "extract": "unknown",
-        "mutate": "unknown",
-        "write": "unknown"
+        "extract": "partial",
+        "mutate": "partial",
+        "write": "partial"
       },
       "evidence": [
         {
@@ -615,7 +639,10 @@
         "requiredModes": [
           "render",
           "parse",
-          "preserve"
+          "preserve",
+          "extract",
+          "mutate",
+          "write"
         ],
         "checks": [
           {
@@ -645,6 +672,27 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/DocumentImageExportWorkflowServiceTests.cs::ExportPageAsync_EncodesAccordingToOutputExtension",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/ImageRedactorTests.cs::ProcessOperations_FullyContainedImage_Removed",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/InlineImageRedactionEndToEndTests.cs::RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
+            "modes": [
+              "write"
             ]
           }
         ]
@@ -727,12 +775,12 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
+        "preserve": "partial",
         "render": "implemented",
         "extract": "partial",
-        "mutate": "unknown",
-        "write": "unknown",
-        "author": "unknown"
+        "mutate": "partial",
+        "write": "partial",
+        "author": "partial"
       },
       "evidence": [
         {
@@ -761,7 +809,11 @@
         "requiredModes": [
           "render",
           "parse",
-          "extract"
+          "extract",
+          "preserve",
+          "write",
+          "mutate",
+          "author"
         ],
         "checks": [
           {
@@ -797,6 +849,28 @@
             "ref": "Excise.Core.Tests/Text/TextExtractorDifferencesEncodingTests.cs::ExtractText_DifferencesEncoding_StandardPostScriptGlyphNames_DecodeCorrectly",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFont_RoundTripsThroughOpen_NoErrors",
+            "modes": [
+              "preserve",
+              "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/GlyphRemoverTests.cs::Process_Reconstruction_InheritsFontAcrossTextBlocks",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::Apply_SurvivesSaveAndReopenAsFlatText",
+            "modes": [
+              "author"
             ]
           }
         ]

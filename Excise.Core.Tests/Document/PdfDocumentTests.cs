@@ -1093,6 +1093,24 @@ public class PdfDocumentTests
             "the page tree reached through the object graph must be intact");
     }
 
+    /// <summary>
+    /// 10-rendering.json's "Version declarations, compatibility, implementation
+    /// limits, and linearized files" preserve claim: a document's declared
+    /// /PDF-1.x header version survives a save unchanged -- excise must not
+    /// silently bump an old file to its own CreateNew default (1.7) just
+    /// because it re-wrote the file.
+    /// </summary>
+    [Fact]
+    public void HeaderVersion_SurvivesASaveAndReload_Unchanged()
+    {
+        using var doc = PdfDocument.Open(CreateMinimalPdf());
+        doc.Version.Should().Be("1.4"); // sanity: CreateMinimalPdf declares %PDF-1.4
+
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        reopened.Version.Should().Be("1.4",
+            "the source file's declared version must survive a save unchanged, not silently become excise's own default");
+    }
+
     [Fact]
     public void GetObject_UndefinedObjectNumber_ResolvesToNull()
     {
