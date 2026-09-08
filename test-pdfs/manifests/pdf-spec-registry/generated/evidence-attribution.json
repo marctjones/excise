@@ -72813,10 +72813,24 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72842,10 +72856,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72922,10 +72943,24 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72951,10 +72986,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72988,6 +73030,13 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -73049,10 +73098,31 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::TextMarkup_QuadPointsAreSeenByQpdf_CoveringTheRequestedRegion",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73078,10 +73148,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73158,10 +73235,31 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::TextMarkup_QuadPointsAreSeenByQpdf_CoveringTheRequestedRegion",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73187,10 +73285,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73224,6 +73329,13 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -73267,10 +73379,31 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::TextMarkup_QuadPointsAreSeenByQpdf_CoveringTheRequestedRegion",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73296,10 +73429,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73333,6 +73473,13 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -73376,10 +73523,31 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::TextMarkup_QuadPointsAreSeenByQpdf_CoveringTheRequestedRegion",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73405,10 +73573,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73442,6 +73617,13 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -73485,10 +73667,24 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73514,10 +73710,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73551,6 +73754,13 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -73594,10 +73804,24 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73623,10 +73847,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73660,6 +73891,13 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -73703,10 +73941,38 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::GeometryBearingAnnotations_HaveTheirGeometrySeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::GeometryBearingAnnotations_HaveTheirEveryPointSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73732,10 +73998,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73769,6 +74042,13 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -73812,10 +74092,38 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::GeometryBearingAnnotations_HaveTheirGeometrySeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::GeometryBearingAnnotations_HaveTheirEveryPointSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73841,10 +74149,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73878,6 +74193,13 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -73921,10 +74243,38 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::GeometryBearingAnnotations_HaveTheirGeometrySeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::GeometryBearingAnnotations_HaveTheirEveryPointSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73950,10 +74300,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73987,6 +74344,13 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -74030,10 +74394,38 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::GeometryBearingAnnotations_HaveTheirGeometrySeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::GeometryBearingAnnotations_HaveTheirEveryPointSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74059,10 +74451,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74096,6 +74495,13 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -74326,10 +74732,31 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_IsSeenByQpdfsOwnParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_ContentsAreSeenByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::ImageStamp_IsSeenByQpdf_WithItsAppearanceSizedToTheRect",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74355,10 +74782,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74392,6 +74826,20 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRowsEvidence_StillHoldsAgainstTheOracles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::ImageStamp_IsSeenByQpdf_WithItsAppearanceSizedToTheRect",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -107815,8 +108263,8 @@
     "modesWithExplicitContracts": 782,
     "modesWithPassingExplicitContracts": 782,
     "modesWithRecordedPassingCandidate": 571,
-    "gradeImplemented": 745,
-    "gradeVerified": 37,
+    "gradeImplemented": 719,
+    "gradeVerified": 63,
     "gradeUnknown": 123,
     "testMethods": 6136,
     "testMethodsWithCapabilityCandidate": 3858,

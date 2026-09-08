@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T03:53:46.319111+00:00",
-  "gitRevision": "6aacc73ead527fb0511ca7f2c520ddaeece18e20",
+  "recordedAt": "2026-09-08T04:19:04.403854+00:00",
+  "gitRevision": "094e5f86a82387562789082d0c2de8e4de769a21",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -316,6 +316,11 @@
       "path": "/tmp/new5-trx/rendering.trx",
       "modifiedAt": "2026-09-08T03:53:41.931859+00:00",
       "sha256": "f8ef5d24e1c92c1b1d176e24e4a30fee7b8f0824c2f7e0404410ab8fe1334d36"
+    },
+    {
+      "path": "/tmp/new6-trx/rendering.trx",
+      "modifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "sha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     }
   ],
   "outcomes": [
@@ -50162,474 +50167,474 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"Circle\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0295535",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0237504",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"FreeText\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0325152",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0236431",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"Highlight\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0281498",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0248792",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"Ink\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0281885",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0236178",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"Line\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0261688",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0236986",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"PolyLine\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0289092",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0237006",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"Polygon\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0285124",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0223118",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"Square\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0278309",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0214205",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"Squiggly\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0272839",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0252142",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"Stamp\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0279935",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0218472",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"StrikeOut\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0276327",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0227520",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"Text\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0389595",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0237370",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_ContentsAreSeenByQpdf(subtype: \"Underline\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0412669",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0215986",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"Circle\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0308945",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0236951",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"FreeText\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0352947",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0246591",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"Highlight\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0294501",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0242960",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"Ink\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0289040",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0241591",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"Line\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0272466",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0221337",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"PolyLine\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0316574",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0261722",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"Polygon\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0373540",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0241075",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"Square\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0291036",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0240188",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"Squiggly\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0287199",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0221727",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"Stamp\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0348788",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0244343",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"StrikeOut\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0345346",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0240529",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"Text\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0306048",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0243130",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser(subtype: \"Underline\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0280349",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0238256",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"Circle\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0597992",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0773776",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"FreeText\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0739443",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0903041",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"Highlight\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0554912",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0789070",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"Ink\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0589063",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0797027",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"Line\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0619557",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0912807",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"PolyLine\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0629291",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0786077",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"Polygon\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0727734",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0487629",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"Square\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0537751",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0757128",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"Squiggly\")",
       "outcome": "Passed",
-      "duration": "00:00:00.1079168",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.2564643",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"Stamp\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0598822",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0801120",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"StrikeOut\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0651024",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0650773",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"Text\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0545182",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0781756",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles(subtype: \"Underline\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0634228",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0765607",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.EverySubtypeCoreCanAuthor_IsAlsoJudgedByTheIndependentOracle",
       "outcome": "Passed",
-      "duration": "00:00:00.0018449",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0018374",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.GeometryBearingAnnotations_HaveTheirEveryPointSeenByQpdf",
       "outcome": "Passed",
-      "duration": "00:00:00.0407766",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0273522",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.GeometryBearingAnnotations_HaveTheirGeometrySeenByQpdf",
       "outcome": "Passed",
-      "duration": "00:00:00.0299346",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0266044",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.ImageStamp_IsSeenByQpdf_WithItsAppearanceSizedToTheRect",
       "outcome": "Passed",
-      "duration": "00:00:00.0308890",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0241547",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt(subtype: \"Circle\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0293821",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0236139",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt(subtype: \"FreeText\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0301188",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0283603",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt(subtype: \"Ink\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0331918",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0233477",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt(subtype: \"Line\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0288776",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0231649",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt(subtype: \"PolyLine\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0263828",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0216915",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt(subtype: \"Polygon\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0274080",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0231183",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt(subtype: \"Square\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0285396",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0232814",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt(subtype: \"Squiggly\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0278553",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0236161",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt(subtype: \"Stamp\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0297127",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0226840",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt(subtype: \"StrikeOut\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0282768",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0222912",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt(subtype: \"Underline\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0317240",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0236038",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.TextMarkup_QuadPointsAreSeenByQpdf_CoveringTheRequestedRegion(subtype: \"Highlight\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0281519",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0265256",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.TextMarkup_QuadPointsAreSeenByQpdf_CoveringTheRequestedRegion(subtype: \"Squiggly\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0283206",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0241427",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.TextMarkup_QuadPointsAreSeenByQpdf_CoveringTheRequestedRegion(subtype: \"StrikeOut\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0308201",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0445314",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.TextMarkup_QuadPointsAreSeenByQpdf_CoveringTheRequestedRegion(subtype: \"Underline\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0272452",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0263343",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.TheOracleDistinguishesNoAnnotationsFromNotBeingAsked",
       "outcome": "Passed",
-      "duration": "00:00:00.0677040",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0567840",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationSynthesisPolicyGateTests.EveryRow_MatchesWhatExciseDraws",
@@ -63130,106 +63135,106 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"3D\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0587499",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0888190",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Caret\", relativePath: \"test-pdfs/pdfjs/annotation-caret-ink.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0668024",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.1246235",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"FileAttachment\", relativePath: \"test-pdfs/pdfjs/annotation-fileattachment.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0640905",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0793254",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Movie\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0509468",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0784382",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"PrinterMark\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0538135",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0705649",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Projection\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0702244",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0808864",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Redact\", relativePath: \"test-pdfs/pdfium/redact_annot.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0524195",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.1343978",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"RichMedia\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0826493",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.1464402",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Screen\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0526379",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0772490",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Sound\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0516028",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0963186",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"TrapNet\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0559275",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0763431",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Watermark\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0564146",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0779751",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.TheMeasurementNoticesWhenAnAnnotationIsDropped",
       "outcome": "Passed",
-      "duration": "00:00:00.0527104",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0840970",
+      "trx": "/tmp/new6-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T04:19:00.067048+00:00",
+      "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UndecodableImageFabricationTests.ImageWithFarTooLittleSampleData_IsNotPaintedAsInk",
@@ -68249,7 +68254,7 @@
     }
   ],
   "summary": {
-    "trxFiles": 62,
+    "trxFiles": 63,
     "tests": 8491,
     "outcomes": {
       "Failed": 3,
