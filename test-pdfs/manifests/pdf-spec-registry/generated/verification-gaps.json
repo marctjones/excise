@@ -327,66 +327,12 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdfe.product.safety.limited-editing",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.safety.limited-editing",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdfe.product.redaction.review-panel",
       "mode": "author",
       "implementationState": "unimplemented",
       "reason": "no verification contract"
     },
     {
-      "capability": "pdfe.product.security.privacy-clean-copy",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.security.privacy-clean-copy",
-      "mode": "mutate",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.security.privacy-clean-copy",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.security.privacy-clean-copy",
-      "mode": "author",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.security.external-links",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.security.external-links",
-      "mode": "extract",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.security.attachments",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdfe.product.security.attachments",
       "mode": "extract",
       "implementationState": "unimplemented",
@@ -394,26 +340,8 @@
     },
     {
       "capability": "pdfe.product.security.attachments",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.security.attachments",
       "mode": "mutate",
       "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.security.signature-and-permission-warning",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.security.signature-and-permission-warning",
-      "mode": "extract",
-      "implementationState": "unknown",
       "reason": "no verification contract"
     },
     {

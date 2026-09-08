@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T04:54:54.105647+00:00",
-  "gitRevision": "ae692e491211d2beebd61b650a14445c8f5f5d83",
+  "recordedAt": "2026-09-08T06:05:45.439765+00:00",
+  "gitRevision": "dbaa8ce60f277822b92a7ef563e3269a2816f53d",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -356,6 +356,11 @@
       "path": "/tmp/new8-trx/ocr.trx",
       "modifiedAt": "2026-09-08T04:54:45.820711+00:00",
       "sha256": "bb56c232d1f7da5a4f8f8da7b23b0d85f9a675929db00609b7f3feb06b756333"
+    },
+    {
+      "path": "/tmp/new9-trx/app.trx",
+      "modifiedAt": "2026-09-08T06:05:40.397784+00:00",
+      "sha256": "c7cfd5e6d4c092cbe67501d0540adaa930a00fec2a7cfd5731dd003deb6aa4d0"
     }
   ],
   "outcomes": [
@@ -8578,10 +8583,10 @@
     {
       "testName": "Excise.App.Tests.Unit.RedactedCopySafetyPolicyTests.PrepareRedactedCopy_ScrubsInfoXmpAndEmbeddedFilesBeforeSave",
       "outcome": "Passed",
-      "duration": "00:00:00.0015662",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.1288567",
+      "trx": "/tmp/new9-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T06:05:40.397784+00:00",
+      "trxSha256": "c7cfd5e6d4c092cbe67501d0540adaa930a00fec2a7cfd5731dd003deb6aa4d0"
     },
     {
       "testName": "Excise.App.Tests.Unit.RedactedCopySafetyPolicyTests.PrepareRedactedCopy_WhenPreviewTextStillExtracts_ReturnsWarningWithoutEchoingPreviewText",
@@ -8602,10 +8607,10 @@
     {
       "testName": "Excise.App.Tests.Unit.RedactedCopySafetyPolicyTests.PrepareRedactedCopy_WithBookmarksAndOffBoxAnnotations_SaysTheyWereNotExamined",
       "outcome": "Passed",
-      "duration": "00:00:00.0010630",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.3272725",
+      "trx": "/tmp/new9-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T06:05:40.397784+00:00",
+      "trxSha256": "c7cfd5e6d4c092cbe67501d0540adaa930a00fec2a7cfd5731dd003deb6aa4d0"
     },
     {
       "testName": "Excise.App.Tests.Unit.RedactedCopySafetyPolicyTests.PrepareRedactedCopy_WithCapturedText_SurgicallyScrubsRemoteCarriers",
@@ -68313,7 +68318,7 @@
     }
   ],
   "summary": {
-    "trxFiles": 70,
+    "trxFiles": 71,
     "tests": 8494,
     "outcomes": {
       "Failed": 3,

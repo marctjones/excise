@@ -57721,7 +57721,8 @@
         "status": "planned",
         "requiredModes": [
           "mutate",
-          "write"
+          "write",
+          "parse"
         ],
         "checks": [
           {
@@ -57729,7 +57730,8 @@
             "ref": "Excise.Ocr.Tests/RedactionConfidenceCheckerTests.cs::ClassifyPage_ExciseFindsNothing_OracleFindsRealText_IsSevere",
             "modes": [
               "mutate",
-              "write"
+              "write",
+              "parse"
             ]
           },
           {
@@ -59326,7 +59328,33 @@
         "security"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "mutate",
+          "write",
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/RedactedCopySafetyPolicyTests.cs::PrepareRedactedCopy_WithBookmarksAndOffBoxAnnotations_SaysTheyWereNotExamined",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/RedactedCopySafetyPolicyTests.cs::PrepareRedactedCopy_ScrubsInfoXmpAndEmbeddedFilesBeforeSave",
+            "modes": [
+              "mutate",
+              "write",
+              "author"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
@@ -60109,14 +60137,18 @@
       "registeredVerification": {
         "status": "planned",
         "requiredModes": [
-          "execute"
+          "execute",
+          "parse",
+          "extract"
         ],
         "checks": [
           {
             "kind": "unit",
             "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::OpenExternalLinkCommand_AllowlistedScheme_AsksForConfirmationWithTheUrlVisible",
             "modes": [
-              "execute"
+              "execute",
+              "parse",
+              "extract"
             ]
           },
           {
@@ -60272,7 +60304,29 @@
         "security"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::GetEmbeddedFiles_SingleFileViaNameTree_ReturnsFileWithName",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::EmbeddedFile_SurvivesASaveAndReload_WhenUntouched",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Document/PdfDocument.cs",
@@ -60891,7 +60945,23 @@
         "security"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs::VerifySignatures_PdfWithValidDetachedCmsAndByteRange_ReturnsValidResult",
+            "modes": [
+              "parse",
+              "extract"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Automation/PdfCommandRegistry.cs",

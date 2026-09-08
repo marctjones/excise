@@ -20,8 +20,8 @@
         "rationale": "A daily-driver editor must not silently corrupt or insecurely redact a feature it cannot safely handle."
       },
       "modes": {
-        "parse": "unknown",
-        "render": "unknown",
+        "parse": "partial",
+        "render": "not-applicable",
         "mutate": "partial",
         "write": "partial"
       },
@@ -67,7 +67,8 @@
         "status": "planned",
         "requiredModes": [
           "mutate",
-          "write"
+          "write",
+          "parse"
         ],
         "checks": [
           {
@@ -75,7 +76,8 @@
             "ref": "Excise.Ocr.Tests/RedactionConfidenceCheckerTests.cs::ClassifyPage_ExciseFindsNothing_OracleFindsRealText_IsSevere",
             "modes": [
               "mutate",
-              "write"
+              "write",
+              "parse"
             ]
           },
           {
@@ -186,10 +188,10 @@
         "rationale": "Ordinary saves preserve document context; security workflows need an explicit clean-copy option."
       },
       "modes": {
-        "parse": "unknown",
-        "mutate": "unknown",
-        "write": "unknown",
-        "author": "unknown"
+        "parse": "partial",
+        "mutate": "partial",
+        "write": "partial",
+        "author": "partial"
       },
       "evidence": [],
       "notes": "Ordinary Save preserves metadata and attachments. Save as Redacted Copy scrubs metadata; users may explicitly strip attachments and create a privacy-clean copy.",
@@ -229,6 +231,33 @@
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
         ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "mutate",
+          "write",
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/RedactedCopySafetyPolicyTests.cs::PrepareRedactedCopy_WithBookmarksAndOffBoxAnnotations_SaysTheyWereNotExamined",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/RedactedCopySafetyPolicyTests.cs::PrepareRedactedCopy_ScrubsInfoXmpAndEmbeddedFilesBeforeSave",
+            "modes": [
+              "mutate",
+              "write",
+              "author"
+            ]
+          }
+        ]
       }
     },
     {
@@ -248,8 +277,8 @@
         "rationale": "Useful web links must not become an execution or local-resource boundary escape."
       },
       "modes": {
-        "parse": "unknown",
-        "extract": "unknown",
+        "parse": "partial",
+        "extract": "partial",
         "execute": "partial"
       },
       "evidence": [
@@ -297,14 +326,18 @@
       "verification": {
         "status": "planned",
         "requiredModes": [
-          "execute"
+          "execute",
+          "parse",
+          "extract"
         ],
         "checks": [
           {
             "kind": "unit",
             "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::OpenExternalLinkCommand_AllowlistedScheme_AsksForConfirmationWithTheUrlVisible",
             "modes": [
-              "execute"
+              "execute",
+              "parse",
+              "extract"
             ]
           },
           {
@@ -341,9 +374,9 @@
         "rationale": "Attachments are useful office data but must never execute implicitly or remain hidden from the user."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "extract": "unimplemented",
-        "preserve": "unknown",
+        "preserve": "partial",
         "mutate": "unimplemented"
       },
       "evidence": [],
@@ -383,6 +416,29 @@
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
         ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::GetEmbeddedFiles_SingleFileViaNameTree_ReturnsFileWithName",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::EmbeddedFile_SurvivesASaveAndReload_WhenUntouched",
+            "modes": [
+              "preserve"
+            ]
+          }
+        ]
       }
     },
     {
@@ -402,8 +458,8 @@
         "rationale": "Users may legitimately edit their documents but must understand signature and permission consequences."
       },
       "modes": {
-        "parse": "unknown",
-        "extract": "unknown",
+        "parse": "partial",
+        "extract": "partial",
         "mutate": "unimplemented",
         "write": "unimplemented"
       },
@@ -443,6 +499,23 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "extract"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs::VerifySignatures_PdfWithValidDetachedCmsAndByteRange_ReturnsValidResult",
+            "modes": [
+              "parse",
+              "extract"
+            ]
+          }
         ]
       }
     },

@@ -1363,13 +1363,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unimplemented": 2,
-        "unknown": 2
+        "partial": 2,
+        "unimplemented": 2
       },
-      "unknownModeCount": 2,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 0,
+      "unknownModeCount": 0,
+      "explicitContractModes": 2,
+      "passingContractModes": 2,
+      "testCandidateModes": 2,
       "reviewBatchIssues": []
     },
     {
@@ -1378,15 +1378,14 @@
       "capabilityIds": [
         "pdfe.product.safety.limited-editing"
       ],
-      "targetModes": 4,
+      "targetModes": 3,
       "modeStates": {
-        "partial": 2,
-        "unknown": 2
+        "partial": 3
       },
-      "unknownModeCount": 2,
-      "explicitContractModes": 2,
-      "passingContractModes": 2,
-      "testCandidateModes": 2,
+      "unknownModeCount": 0,
+      "explicitContractModes": 3,
+      "passingContractModes": 3,
+      "testCandidateModes": 3,
       "reviewBatchIssues": []
     },
     {
@@ -1397,12 +1396,12 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unknown": 4
+        "partial": 4
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 2,
+      "unknownModeCount": 0,
+      "explicitContractModes": 4,
+      "passingContractModes": 4,
+      "testCandidateModes": 4,
       "reviewBatchIssues": []
     },
     {
@@ -1413,13 +1412,12 @@
       ],
       "targetModes": 3,
       "modeStates": {
-        "partial": 1,
-        "unknown": 2
+        "partial": 3
       },
-      "unknownModeCount": 2,
-      "explicitContractModes": 1,
-      "passingContractModes": 1,
-      "testCandidateModes": 1,
+      "unknownModeCount": 0,
+      "explicitContractModes": 3,
+      "passingContractModes": 3,
+      "testCandidateModes": 3,
       "reviewBatchIssues": []
     },
     {
@@ -1430,13 +1428,13 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "unimplemented": 2,
-        "unknown": 2
+        "partial": 2,
+        "unimplemented": 2
       },
-      "unknownModeCount": 2,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 3,
+      "unknownModeCount": 0,
+      "explicitContractModes": 2,
+      "passingContractModes": 2,
+      "testCandidateModes": 4,
       "reviewBatchIssues": []
     },
     {
@@ -3083,7 +3081,7 @@
   ],
   "summary": {
     "clusters": 178,
-    "targetModes": 904,
-    "unknownModeCount": 207
+    "targetModes": 903,
+    "unknownModeCount": 195
   }
 }
