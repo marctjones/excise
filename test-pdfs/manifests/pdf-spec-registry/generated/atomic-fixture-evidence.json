@@ -8721,7 +8721,7 @@
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8729,7 +8729,7 @@
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8737,7 +8737,7 @@
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8745,7 +8745,7 @@
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8753,7 +8753,7 @@
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8761,7 +8761,7 @@
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8769,7 +8769,7 @@
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "author",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8793,7 +8793,7 @@
       "capability": "pdf.17.interactive.redaction-annotations",
       "section": "interactive",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9006,7 +9006,7 @@
       "capability": "pdf.17.interactive.forms",
       "section": "interactive",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9022,7 +9022,7 @@
       "capability": "pdf.17.interactive.forms",
       "section": "interactive",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9030,7 +9030,7 @@
       "capability": "pdf.17.interactive.forms",
       "section": "interactive",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9038,7 +9038,7 @@
       "capability": "pdf.17.interactive.forms",
       "section": "interactive",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9046,7 +9046,7 @@
       "capability": "pdf.17.interactive.forms",
       "section": "interactive",
       "mode": "author",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9086,7 +9086,7 @@
       "capability": "pdf.17.interactive.optional-content",
       "section": "interactive",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9094,7 +9094,7 @@
       "capability": "pdf.17.interactive.optional-content",
       "section": "interactive",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9102,7 +9102,7 @@
       "capability": "pdf.17.interactive.optional-content",
       "section": "interactive",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },

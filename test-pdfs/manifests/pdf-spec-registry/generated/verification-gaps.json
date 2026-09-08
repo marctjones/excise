@@ -39,54 +39,6 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.17.interactive.annotations",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.annotations",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.annotations",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.annotations",
-      "mode": "extract",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.annotations",
-      "mode": "mutate",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.annotations",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.annotations",
-      "mode": "author",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.redaction-annotations",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.17.interactive.redaction-annotations",
       "mode": "mutate",
       "implementationState": "unimplemented",
@@ -132,36 +84,6 @@
       "capability": "pdf.17.interactive.redaction-review-drafts",
       "mode": "author",
       "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.forms",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.forms",
-      "mode": "extract",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.forms",
-      "mode": "mutate",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.forms",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.forms",
-      "mode": "author",
-      "implementationState": "unknown",
       "reason": "no verification contract"
     },
     {
@@ -172,20 +94,14 @@
     },
     {
       "capability": "pdf.17.interactive.optional-content",
-      "mode": "extract",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.optional-content",
       "mode": "mutate",
-      "implementationState": "unknown",
+      "implementationState": "unimplemented",
       "reason": "no verification contract"
     },
     {
       "capability": "pdf.17.interactive.optional-content",
       "mode": "write",
-      "implementationState": "unknown",
+      "implementationState": "unimplemented",
       "reason": "no verification contract"
     },
     {

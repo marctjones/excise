@@ -1148,14 +1148,13 @@
       ],
       "targetModes": 8,
       "modeStates": {
-        "partial": 2,
-        "unimplemented": 1,
-        "unknown": 5
+        "partial": 7,
+        "unimplemented": 1
       },
-      "unknownModeCount": 5,
-      "explicitContractModes": 2,
-      "passingContractModes": 2,
-      "testCandidateModes": 4,
+      "unknownModeCount": 0,
+      "explicitContractModes": 7,
+      "passingContractModes": 7,
+      "testCandidateModes": 7,
       "reviewBatchIssues": []
     },
     {
@@ -1166,12 +1165,12 @@
       ],
       "targetModes": 7,
       "modeStates": {
-        "unknown": 7
+        "partial": 7
       },
-      "unknownModeCount": 7,
-      "explicitContractModes": 0,
-      "passingContractModes": 0,
-      "testCandidateModes": 4,
+      "unknownModeCount": 0,
+      "explicitContractModes": 7,
+      "passingContractModes": 7,
+      "testCandidateModes": 7,
       "reviewBatchIssues": []
     },
     {
@@ -1199,13 +1198,12 @@
       ],
       "targetModes": 6,
       "modeStates": {
-        "partial": 3,
-        "unimplemented": 2,
-        "unknown": 1
+        "partial": 4,
+        "unimplemented": 2
       },
-      "unknownModeCount": 1,
-      "explicitContractModes": 3,
-      "passingContractModes": 3,
+      "unknownModeCount": 0,
+      "explicitContractModes": 4,
+      "passingContractModes": 4,
       "testCandidateModes": 4,
       "reviewBatchIssues": []
     },
@@ -1235,14 +1233,13 @@
       ],
       "targetModes": 7,
       "modeStates": {
-        "partial": 3,
-        "unimplemented": 1,
-        "unknown": 3
+        "partial": 4,
+        "unimplemented": 3
       },
-      "unknownModeCount": 3,
-      "explicitContractModes": 3,
-      "passingContractModes": 3,
-      "testCandidateModes": 2,
+      "unknownModeCount": 0,
+      "explicitContractModes": 4,
+      "passingContractModes": 4,
+      "testCandidateModes": 3,
       "reviewBatchIssues": []
     },
     {
@@ -3073,6 +3070,6 @@
   "summary": {
     "clusters": 178,
     "targetModes": 900,
-    "unknownModeCount": 169
+    "unknownModeCount": 153
   }
 }

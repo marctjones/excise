@@ -26,13 +26,13 @@
         "rationale": "Annotations are authored, preserved, displayed, and may carry redactable data."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
-        "render": "unknown",
-        "extract": "unknown",
-        "mutate": "unknown",
-        "write": "unknown",
-        "author": "unknown",
+        "parse": "partial",
+        "preserve": "partial",
+        "render": "partial",
+        "extract": "partial",
+        "mutate": "partial",
+        "write": "partial",
+        "author": "partial",
         "execute": "not-applicable"
       },
       "evidence": [
@@ -85,6 +85,77 @@
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
         ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "render",
+          "extract",
+          "mutate",
+          "write",
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::Page_Text_IncludesFreeTextAnnotationContents_ButNotStickyNoteContents",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_ScrubsAnnotationRichText_NotJustContents",
+            "modes": [
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_HasTheRequestedSubtype",
+            "modes": [
+              "author"
+            ]
+          }
+        ]
       }
     },
     {
@@ -112,7 +183,7 @@
       "modes": {
         "parse": "partial",
         "preserve": "partial",
-        "render": "unknown",
+        "render": "partial",
         "extract": "not-applicable",
         "mutate": "unimplemented",
         "write": "partial",
@@ -137,7 +208,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -153,6 +225,13 @@
             "modes": [
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/AnnotationDisplayControlTests.cs::RedactAnnotations_AreReportedAndNeverApplied",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -528,12 +607,12 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
+        "preserve": "partial",
         "render": "partial",
-        "extract": "unknown",
-        "mutate": "unknown",
-        "write": "unknown",
-        "author": "unknown",
+        "extract": "partial",
+        "mutate": "partial",
+        "write": "partial",
+        "author": "partial",
         "execute": "unimplemented"
       },
       "evidence": [],
@@ -587,7 +666,12 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "render"
+          "render",
+          "preserve",
+          "extract",
+          "mutate",
+          "write",
+          "author"
         ],
         "checks": [
           {
@@ -602,6 +686,23 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_UnfilledApTextWidgetsWithValues_PaintBothAndRestoreFontStateBetween",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
+            "modes": [
+              "preserve",
+              "extract",
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::AddTextField_SurvivesSaveAndReload",
+            "modes": [
+              "author"
             ]
           }
         ]
@@ -742,9 +843,9 @@
         "parse": "partial",
         "preserve": "partial",
         "render": "partial",
-        "extract": "unknown",
-        "mutate": "unknown",
-        "write": "unknown",
+        "extract": "partial",
+        "mutate": "unimplemented",
+        "write": "unimplemented",
         "author": "unimplemented"
       },
       "evidence": [
@@ -803,7 +904,8 @@
         "requiredModes": [
           "parse",
           "render",
-          "preserve"
+          "preserve",
+          "extract"
         ],
         "checks": [
           {
@@ -825,6 +927,13 @@
             "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::ParseOptionalContentGroups_MultipleOcgsMixed_CorrectVisibility",
+            "modes": [
+              "extract"
             ]
           }
         ]

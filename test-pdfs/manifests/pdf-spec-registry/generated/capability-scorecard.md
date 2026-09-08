@@ -10,13 +10,13 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Area | Target modes | Implemented | Verified | Unknown | Strict | Evidence progress | Promotion readiness | Measured | Strict unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| overall | 900 | 92.9% | 7.6% | 64 | 0.6% | 66.3% | 24.9% | 81.2% | 169 |
+| overall | 900 | 94.4% | 7.8% | 50 | 0.6% | 67.3% | 25.0% | 83.0% | 153 |
 | annotation-subtypes | 92 | 76.1% | 47.8% | 22 | 0.0% | 62.6% | 10.0% | 100.0% | 0 |
 | content | 12 | 100.0% | 8.3% | 0 | 0.0% | 76.7% | 48.3% | 100.0% | 0 |
 | document | 21 | 90.5% | 9.5% | 2 | 0.0% | 67.9% | 10.0% | 100.0% | 0 |
 | graphics | 33 | 93.9% | 15.2% | 2 | 12.1% | 72.4% | 79.1% | 100.0% | 0 |
 | image-requirements | 106 | 100.0% | 3.8% | 0 | 0.0% | 70.4% | 10.0% | 100.0% | 0 |
-| interactive | 39 | 33.3% | 10.3% | 26 | 2.6% | 36.5% | 23.5% | 56.4% | 17 |
+| interactive | 39 | 69.2% | 15.4% | 12 | 2.6% | 58.8% | 25.1% | 97.4% | 1 |
 | interchange | 6 | 66.7% | 33.3% | 2 | 0.0% | 55.0% | 10.0% | 66.7% | 2 |
 | multimedia | 0 | — | — | 0 | — | — | — | — | 0 |
 | operators | 287 | 100.0% | 0.0% | 0 | 0.0% | 69.1% | 45.0% | 49.1% | 146 |
@@ -33,7 +33,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | File model | 35 | 0.0% | 70.6% | 10.0% | 100.0% | 100.0% | 0.0% | 0 |
 | Page content and rendering | 708 | 0.6% | 68.7% | 28.2% | 78.8% | 99.5% | 37.4% | 150 |
-| Interaction and annotations | 131 | 0.8% | 54.8% | 14.0% | 87.0% | 93.1% | 6.9% | 17 |
+| Interaction and annotations | 131 | 0.8% | 61.5% | 14.5% | 99.2% | 96.6% | 6.9% | 1 |
 | Interchange and profiles | 6 | 0.0% | 55.0% | 10.0% | 66.7% | 100.0% | 0.0% | 2 |
 | PDFE product capabilities | 20 | 0.0% | 55.0% | 10.0% | 100.0% | 100.0% | 0.0% | 0 |
 
@@ -41,9 +41,9 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Workflow | Target modes | Implemented | Promotion readiness | Modes at >=50 | Modes at >=90 | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| forms | 8 | 0.0% | 10.0% | 0 | 0 | 5 |
+| forms | 8 | 0.0% | 10.0% | 0 | 0 | 0 |
 | redaction | 5 | 20.0% | 84.0% | 5 | 3 | 0 |
-| redaction-annotations | 6 | 0.0% | 35.8% | 3 | 0 | 1 |
+| redaction-annotations | 6 | 0.0% | 46.7% | 4 | 0 | 0 |
 | rendering | 4 | 50.0% | 95.0% | 4 | 4 | 0 |
 | safe-save | 5 | 0.0% | 10.0% | 0 | 0 | 0 |
 
@@ -54,4 +54,4 @@ All 282 capability leaves have a collection record: {'candidate-evidence': 22, '
 
 ## Test and benchmark attribution
 
-Explicit test contracts: 836/900; passing recorded contracts: 836/900; candidate test coverage: 609/900. Benchmark harnesses: 6/6.
+Explicit test contracts: 850/900; passing recorded contracts: 850/900; candidate test coverage: 616/900. Benchmark harnesses: 6/6.

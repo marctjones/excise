@@ -77439,7 +77439,7 @@
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.MetadataFreeParse_SkipsBoundsAnnotations",
@@ -78002,7 +78002,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -78803,7 +78804,8 @@
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -78839,7 +78841,8 @@
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -78882,16 +78885,24 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.MetadataFreeParse_SkipsBoundsAnnotations",
@@ -79454,7 +79465,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -80255,7 +80267,8 @@
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -80291,7 +80304,8 @@
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -80334,16 +80348,38 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AuthoredAnnotation_SurvivesAnExciseReopenAndResave_AsQpdfReadsBothFiles",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.MetadataFreeParse_SkipsBoundsAnnotations",
@@ -80906,7 +80942,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -81707,7 +81744,8 @@
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -81743,7 +81781,8 @@
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -81786,27 +81825,54 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs::EveryRow_MatchesWhatExciseDraws",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "extract",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Text/TextExtractionTests.cs::TextExtractionTests.Page_Text_IncludesFreeTextAnnotationContents_ButNotStickyNoteContents",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::Page_Text_IncludesFreeTextAnnotationContents_ButNotStickyNoteContents",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.MetadataFreeParse_SkipsBoundsAnnotations",
@@ -82369,7 +82435,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::PdfAnnotationParserTests.Parse_AllAnnotationSubtypes",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -83170,7 +83237,8 @@
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -83206,7 +83274,8 @@
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_SurvivesASaveAndReloadUnchanged",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -83249,31 +83318,77 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_ScrubsAnnotationRichText_NotJustContents",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "write",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_ScrubsAnnotationRichText_NotJustContents",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::RedactText_ScrubsAnnotationRichText_NotJustContents",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.interactive.annotations",
       "section": "interactive",
       "mode": "author",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.AuthoredAnnotation_HasTheRequestedSubtype",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_HasTheRequestedSubtype",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -86202,7 +86317,7 @@
       "capability": "pdf.17.interactive.redaction-annotations",
       "section": "interactive",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.MetadataFreeParse_SkipsBoundsAnnotations",
@@ -87646,9 +87761,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.App.Tests/UI/AnnotationDisplayControlTests.cs::RedactAnnotations_AreReportedAndNeverApplied",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -95684,7 +95807,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_SurvivesSaveAndReload",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -95792,7 +95916,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -96736,11 +96861,30 @@
       "capability": "pdf.17.interactive.forms",
       "section": "interactive",
       "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -97160,7 +97304,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_SurvivesSaveAndReload",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -97268,7 +97413,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -98212,11 +98358,30 @@
       "capability": "pdf.17.interactive.forms",
       "section": "interactive",
       "mode": "extract",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -98225,7 +98390,7 @@
       "capability": "pdf.17.interactive.forms",
       "section": "interactive",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/AuthoringCoverageTests.cs::AuthoringCoverageTests.Builder_FormFields_WithDateAndTooltips_AreLive",
@@ -98636,7 +98801,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_SurvivesSaveAndReload",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -98744,7 +98910,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -99669,9 +99836,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -99680,7 +99855,7 @@
       "capability": "pdf.17.interactive.forms",
       "section": "interactive",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/AuthoringCoverageTests.cs::AuthoringCoverageTests.Builder_FormFields_WithDateAndTooltips_AreLive",
@@ -100091,7 +100266,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_SurvivesSaveAndReload",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -100199,7 +100375,8 @@
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
-            "keyword-facet-candidate"
+            "keyword-facet-candidate",
+            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -101124,9 +101301,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -101135,11 +101320,30 @@
       "capability": "pdf.17.interactive.forms",
       "section": "interactive",
       "mode": "author",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddTextField_SurvivesSaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::AddTextField_SurvivesSaveAndReload",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -101238,18 +101442,36 @@
       "capability": "pdf.17.interactive.optional-content",
       "section": "interactive",
       "mode": "extract",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfOcgTests.cs::PdfOcgTests.ParseOptionalContentGroups_MultipleOcgsMixed_CorrectVisibility",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::ParseOptionalContentGroups_MultipleOcgsMixed_CorrectVisibility",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.interactive.optional-content",
       "section": "interactive",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -101260,7 +101482,7 @@
       "capability": "pdf.17.interactive.optional-content",
       "section": "interactive",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "unimplemented",
       "testCandidates": [],
       "explicitContracts": [],
       "explicitContractStatus": "not-contracted",
@@ -109198,15 +109420,15 @@
   ],
   "summary": {
     "targetModes": 900,
-    "modesWithTestCandidates": 609,
-    "modesWithExplicitContracts": 836,
-    "modesWithPassingExplicitContracts": 836,
-    "modesWithRecordedPassingCandidate": 609,
-    "gradeImplemented": 768,
-    "gradeVerified": 68,
-    "gradeUnknown": 64,
+    "modesWithTestCandidates": 616,
+    "modesWithExplicitContracts": 850,
+    "modesWithPassingExplicitContracts": 850,
+    "modesWithRecordedPassingCandidate": 616,
+    "gradeImplemented": 780,
+    "gradeVerified": 70,
+    "gradeUnknown": 50,
     "testMethods": 6307,
-    "testMethodsWithCapabilityCandidate": 3903,
+    "testMethodsWithCapabilityCandidate": 3904,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

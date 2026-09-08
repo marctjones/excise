@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T06:46:09.955345+00:00",
-  "gitRevision": "b159c43e3fd71efa6701bcf7164321d1f3381000",
+  "recordedAt": "2026-09-08T07:10:26.561177+00:00",
+  "gitRevision": "3ba2352c2e8cde6da8f8c0770689ca8adfeba0f3",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -396,6 +396,16 @@
       "path": "/tmp/new10-trx/rendering.trx",
       "modifiedAt": "2026-09-08T06:45:45.545666+00:00",
       "sha256": "dfd09b524c1a7781c6017bb34ecd63fb92c999fd9e08905810b1e17decee3d2c"
+    },
+    {
+      "path": "/tmp/new11-trx/core.trx",
+      "modifiedAt": "2026-09-08T07:09:40.549349+00:00",
+      "sha256": "852df4d151b4608dff170a8c22488f3613aa9150e288f4078d0648bc99cfdf01"
+    },
+    {
+      "path": "/tmp/new11-trx/app.trx",
+      "modifiedAt": "2026-09-08T07:10:18.900004+00:00",
+      "sha256": "fce6973fe9040f8d818a1766f3d70eb5563d711602aa2828ef019192c86c8c36"
     }
   ],
   "outcomes": [
@@ -1354,10 +1364,10 @@
     {
       "testName": "Excise.App.Tests.UI.AnnotationDisplayControlTests.RedactAnnotations_AreReportedAndNeverApplied",
       "outcome": "Passed",
-      "duration": "00:00:00.3871812",
-      "trx": "/tmp/new8-trx/app.trx",
-      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
-      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
+      "duration": "00:00:03.9082268",
+      "trx": "/tmp/new11-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T07:10:18.900004+00:00",
+      "trxSha256": "fce6973fe9040f8d818a1766f3d70eb5563d711602aa2828ef019192c86c8c36"
     },
     {
       "testName": "Excise.App.Tests.UI.AnnotationDisplayControlTests.TheChromeControlsAreOffByDefault",
@@ -21226,10 +21236,10 @@
     {
       "testName": "Excise.Core.Tests.Document.PdfAcroFormAuthoringTests.AddTextField_SurvivesSaveAndReload",
       "outcome": "Passed",
-      "duration": "00:00:00.0007325",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.1176198",
+      "trx": "/tmp/new11-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T07:09:40.549349+00:00",
+      "trxSha256": "852df4d151b4608dff170a8c22488f3613aa9150e288f4078d0648bc99cfdf01"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfAcroFormEditingTests.FlattenAcroForm_BakesTextValueIntoContentStream",
@@ -21370,10 +21380,10 @@
     {
       "testName": "Excise.Core.Tests.Document.PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
       "outcome": "Passed",
-      "duration": "00:00:00.0006974",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.1175749",
+      "trx": "/tmp/new11-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T07:09:40.549349+00:00",
+      "trxSha256": "852df4d151b4608dff170a8c22488f3613aa9150e288f4078d0648bc99cfdf01"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfAcroFormParserTests.Parse_ButtonFieldType_Recognized",
@@ -25274,10 +25284,10 @@
     {
       "testName": "Excise.Core.Tests.Document.PdfOcgTests.ParseOptionalContentGroups_MultipleOcgsMixed_CorrectVisibility",
       "outcome": "Passed",
-      "duration": "00:00:00.0006447",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0816633",
+      "trx": "/tmp/new11-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T07:09:40.549349+00:00",
+      "trxSha256": "852df4d151b4608dff170a8c22488f3613aa9150e288f4078d0648bc99cfdf01"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfOcgTests.ParseOptionalContentGroups_NoOcProperties_ReturnsEmpty",
@@ -40658,10 +40668,10 @@
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.AdversarialRedactionRegressionTests.RedactText_ScrubsAnnotationRichText_NotJustContents",
       "outcome": "Passed",
-      "duration": "00:00:00.0169101",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.1208623",
+      "trx": "/tmp/new11-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T07:09:40.549349+00:00",
+      "trxSha256": "852df4d151b4608dff170a8c22488f3613aa9150e288f4078d0648bc99cfdf01"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.AdversarialRedactionRegressionTests.RedactText_ScrubsFormCarriersBeyondValue(file: \"issue15053.pdf\", term: \"toggled\")",
@@ -68361,7 +68371,7 @@
     }
   ],
   "summary": {
-    "trxFiles": 78,
+    "trxFiles": 80,
     "tests": 8495,
     "outcomes": {
       "Failed": 3,
