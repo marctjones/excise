@@ -46,7 +46,9 @@ Excise.App	tests-only	SuggestSafeRedactedFilename	triage:test-covered app servic
 Excise.App	tests-only	TogglePin	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ValidateScript	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.Core	nowhere	Failures	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
+Excise.Core	nowhere	PdfEmbeddedFileAuthoring	triage:public library authoring API mirroring AcroFormAuthoring's shape (#1413); GUI wiring is the attachments panel, #1414, explicitly deferred
 Excise.Core	nowhere	SetCreator	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
+Excise.Core	tests-only	AddEmbeddedFile	triage:public library authoring API mirroring AcroFormAuthoring's shape (#1413); GUI wiring is the attachments panel, #1414, explicitly deferred
 Excise.Core	tests-only	AsItalic	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BeginPath	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BulletList	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -123,7 +125,6 @@ Excise.Rendering	tests-only	BBoxHeight	triage:#933 qpdf reference-oracle surface
 Excise.Rendering	tests-only	BBoxWidth	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
 Excise.Rendering	tests-only	EncryptR4	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	EndLineEnding	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	ExtractAll	#1372 the page-range surface of the PdftotextTextExtractor oracle (row below). Test-only by design and must stay that way: production reading a PDF through Poppler would make an external tool part of excise's behaviour, which is the opposite of an independent oracle.
 Excise.Rendering	tests-only	FallbackTolerancePt	#1146 residue CLI wires these
 Excise.Rendering	tests-only	InkStrokeCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	LayoutGapPreserved	#1146 residue CLI wires these
