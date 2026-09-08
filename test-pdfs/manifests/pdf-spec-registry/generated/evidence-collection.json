@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1002,
-  "indexedContentSha256": "66918b8768a838149022c1c90939c7fbdc698e0463c88a04955a4aba99d140fc",
+  "indexedContentSha256": "d66e9e8a0c932cbd25e363990952e86abbd159d5edcf0ddc741c25a308717a09",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -50729,7 +50729,35 @@
           "ref": "annotation-support-matrix.notSupported"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "execute"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::OpenExternalLinkCommand_AllowlistedScheme_AsksForConfirmationWithTheUrlVisible",
+            "modes": [
+              "execute"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::OpenExternalLinkCommand_DisallowedScheme_NeverConfirms_BlocksWithMessage",
+            "modes": [
+              "execute"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::ShowDangerousLinkRefusalCommand_ExplainsWhyEachActionTypeWasBlocked",
+            "modes": [
+              "execute"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Automation/PdfCommandIds.cs",
@@ -53177,7 +53205,36 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
             "modes": [
-              "parse"
+              "parse",
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_SetsMarkInfoStructTreeAndViewerPrefs",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_PdfInfoReportsStructureForHeadingsParagraphsTables",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_TableNestsTableTrTdTh",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_MultiPageParagraph_SpansPagesWithStructParents",
+            "modes": [
+              "author"
             ]
           }
         ]
@@ -54672,7 +54729,8 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "author"
         ],
         "checks": [
           {
@@ -54687,7 +54745,8 @@
             "kind": "differential",
             "ref": "Excise.App.Tests/Unit/SignatureApplicationServiceTests.cs::SignDocument_ExternalOracle_PdfsigReportsValidUntrustedSignature",
             "modes": [
-              "preserve"
+              "preserve",
+              "author"
             ]
           }
         ]
@@ -55403,7 +55462,56 @@
         "tagged"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_SetsMarkInfoStructTreeAndViewerPrefs",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_PdfInfoReportsStructureForHeadingsParagraphsTables",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_TableNestsTableTrTdTh",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_MultiPageParagraph_SpansPagesWithStructParents",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Validation/PdfUaValidatorTests.cs::WellTaggedDocument_PassesCheckedSubset",
+            "modes": [
+              "author"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Authoring/PdfA.cs",
@@ -57245,7 +57353,56 @@
           "ref": "veraPDF corpus"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_SetsMarkInfoStructTreeAndViewerPrefs",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_PdfInfoReportsStructureForHeadingsParagraphsTables",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_TableNestsTableTrTdTh",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_MultiPageParagraph_SpansPagesWithStructParents",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Validation/PdfUaValidatorTests.cs::WellTaggedDocument_PassesCheckedSubset",
+            "modes": [
+              "author"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Authoring/PdfA.cs",
@@ -57560,7 +57717,39 @@
         "security"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Ocr.Tests/RedactionConfidenceCheckerTests.cs::ClassifyPage_ExciseFindsNothing_OracleFindsRealText_IsSevere",
+            "modes": [
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs::Severe_WithoutOverride_Throws",
+            "modes": [
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs::Severe_WithAllowLowConfidence_ReturnsWarning_DoesNotThrow",
+            "modes": [
+              "mutate",
+              "write"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Content/ContentStreamWalker.cs",
@@ -58352,7 +58541,21 @@
         "security"
       ],
       "registeredEvidence": [],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/AnnotationDisplayControlTests.cs::RedactAnnotations_AreReportedAndNeverApplied",
+            "modes": [
+              "render"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Document/PdfDocument.cs",
@@ -59903,7 +60106,35 @@
           "ref": "Adobe Acrobat Trust Manager; Microsoft URI activation security guidance; PDF Association action guidance"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "execute"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::OpenExternalLinkCommand_AllowlistedScheme_AsksForConfirmationWithTheUrlVisible",
+            "modes": [
+              "execute"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::OpenExternalLinkCommand_DisallowedScheme_NeverConfirms_BlocksWithMessage",
+            "modes": [
+              "execute"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::ShowDangerousLinkRefusalCommand_ExplainsWhyEachActionTypeWasBlocked",
+            "modes": [
+              "execute"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Document/PdfDocument.cs",

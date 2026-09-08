@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using AwesomeAssertions;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
@@ -131,7 +132,7 @@ public class AnnotationDisplayControlTests
     }
 
     [FixedAvaloniaFact]
-    public async System.Threading.Tasks.Task RedactAnnotations_AreReportedAndNeverApplied()
+    public async Task RedactAnnotations_AreReportedAndNeverApplied()
     {
         // #1021 decision 5. A /Redact annotation marks a region somebody
         // INTENDED to redact (§12.5.6.23). It is an instruction to a processor,

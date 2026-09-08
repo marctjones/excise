@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "8944cbb4757758a90b811c0c13bde482a7e6683821a1f05f9d2525098ffb9759",
+  "sourceFingerprint": "3fd9ada6104e3c7728c320b2a54cecc3925f2f9e09747169458c9c29dc0309c0",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -8153,10 +8153,290 @@
       ],
       "parentCapabilityModes": [],
       "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Ocr/DifferentialOcrAuditor.cs",
+      "path": "Excise.Ocr/DifferentialOcrAuditor.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Ocr/OcrResult.cs",
+      "path": "Excise.Ocr/OcrResult.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Ocr/PdfOcrService.cs",
+      "path": "Excise.Ocr/PdfOcrService.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Ocr/PdfRasterRedactionConverter.cs",
+      "path": "Excise.Ocr/PdfRasterRedactionConverter.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Ocr/PdfSearchableConverter.cs",
+      "path": "Excise.Ocr/PdfSearchableConverter.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Ocr/RedactionConfidenceChecker.cs",
+      "path": "Excise.Ocr/RedactionConfidenceChecker.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Automation/PdfViewerAutomationPeer.cs",
+      "path": "Excise.Avalonia/Automation/PdfViewerAutomationPeer.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/ContinuousReadingAnchor.cs",
+      "path": "Excise.Avalonia/Controls/ContinuousReadingAnchor.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/HiddenTextHighlight.cs",
+      "path": "Excise.Avalonia/Controls/HiddenTextHighlight.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.Accessibility.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.Accessibility.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.ContinuousGrid.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.ContinuousGrid.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.ContinuousSelection.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.ContinuousSelection.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.Diagnostics.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.Diagnostics.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.Interaction.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.Trace.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.Trace.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.Types.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.Types.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.Typewriter.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.Typewriter.cs",
+      "kind": "source-file",
+      "facets": [
+        "safe-save-and-metadata"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.WheelPan.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.WheelPan.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Controls/SinglePageRenderLifetime.cs",
+      "path": "Excise.Avalonia/Controls/SinglePageRenderLifetime.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Avalonia/Imaging/SkiaInterop.cs",
+      "path": "Excise.Avalonia/Imaging/SkiaInterop.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
     }
   ],
   "summary": {
-    "records": 369,
+    "records": 391,
     "facets": {
       "annotations": 10,
       "content-and-graphics": 18,
@@ -8164,9 +8444,9 @@
       "fonts": 28,
       "forms": 8,
       "images": 28,
-      "product-integration-general": 186,
-      "redaction": 49,
-      "safe-save-and-metadata": 16,
+      "product-integration-general": 205,
+      "redaction": 51,
+      "safe-save-and-metadata": 17,
       "security-and-encryption": 19,
       "transparency": 2
     },
@@ -8178,9 +8458,9 @@
       "pdf.17.document.catalog-pages:parse": 32,
       "pdf.17.document.catalog-pages:preserve": 32,
       "pdf.17.document.catalog-pages:write": 32,
-      "pdf.17.document.metadata:mutate": 16,
-      "pdf.17.document.metadata:preserve": 16,
-      "pdf.17.document.metadata:write": 16,
+      "pdf.17.document.metadata:mutate": 17,
+      "pdf.17.document.metadata:preserve": 17,
+      "pdf.17.document.metadata:write": 17,
       "pdf.17.graphics.color:parse": 1,
       "pdf.17.graphics.color:preserve": 1,
       "pdf.17.graphics.color:render": 1,
@@ -8214,10 +8494,10 @@
       "pdf.17.interactive.redaction-annotations:parse": 10,
       "pdf.17.interactive.redaction-annotations:preserve": 10,
       "pdf.17.interactive.redaction-annotations:render": 10,
-      "pdf.17.security.redaction-content-removal:extract": 49,
-      "pdf.17.security.redaction-content-removal:mutate": 49,
-      "pdf.17.security.redaction-content-removal:render": 49,
-      "pdf.17.security.redaction-content-removal:write": 49,
+      "pdf.17.security.redaction-content-removal:extract": 51,
+      "pdf.17.security.redaction-content-removal:mutate": 51,
+      "pdf.17.security.redaction-content-removal:render": 51,
+      "pdf.17.security.redaction-content-removal:write": 51,
       "pdf.17.syntax.encryption:mutate": 19,
       "pdf.17.syntax.encryption:parse": 19,
       "pdf.17.syntax.encryption:preserve": 19,
@@ -8225,21 +8505,21 @@
       "pdf.17.syntax.file:parse": 32,
       "pdf.17.syntax.file:preserve": 32,
       "pdf.17.syntax.file:write": 32,
-      "pdf.17.syntax.objects:mutate": 16,
+      "pdf.17.syntax.objects:mutate": 17,
       "pdf.17.syntax.objects:parse": 32,
-      "pdf.17.syntax.objects:preserve": 45,
-      "pdf.17.syntax.objects:write": 45,
+      "pdf.17.syntax.objects:preserve": 46,
+      "pdf.17.syntax.objects:write": 46,
       "pdf.17.transparency.model:parse": 2,
       "pdf.17.transparency.model:render": 2,
-      "pdfe.product.security.privacy-clean-copy:mutate": 16,
-      "pdfe.product.security.privacy-clean-copy:preserve": 16,
-      "pdfe.product.security.privacy-clean-copy:write": 16,
+      "pdfe.product.security.privacy-clean-copy:mutate": 17,
+      "pdfe.product.security.privacy-clean-copy:preserve": 17,
+      "pdfe.product.security.privacy-clean-copy:write": 17,
       "pdfe.product.security.signature-and-permission-warning:mutate": 19,
       "pdfe.product.security.signature-and-permission-warning:parse": 19,
       "pdfe.product.security.signature-and-permission-warning:preserve": 19,
       "pdfe.product.security.signature-and-permission-warning:write": 19
     },
-    "fallbackRecords": 186,
+    "fallbackRecords": 205,
     "allRecordsMapped": true
   }
 }

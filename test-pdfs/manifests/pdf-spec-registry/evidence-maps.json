@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceRoots": ["Excise.Core", "Excise.Rendering", "Excise.App", "Excise.Cli"],
-  "testRoots": ["Excise.Core.Tests", "Excise.Rendering.Tests", "Excise.App.Tests", "Excise.Cli.Tests"],
+  "sourceRoots": ["Excise.Core", "Excise.Rendering", "Excise.App", "Excise.Cli", "Excise.Ocr", "Excise.Avalonia"],
+  "testRoots": ["Excise.Core.Tests", "Excise.Rendering.Tests", "Excise.App.Tests", "Excise.Cli.Tests", "Excise.Ocr.Tests", "Excise.Avalonia.Tests"],
   "mapInventory": [
     {"id":"spec-citations","generator":"scripts/build-pdf-spec-inventory.py","output":"generated/spec-source-inventory.json","purpose":"SHA-256-pinned ISO clause audit"},
     {"id":"capability-discovery","generator":"scripts/collect-pdf-capability-evidence.py","output":"generated/evidence-collection.json","purpose":"all registry leaves and repository evidence candidates"},

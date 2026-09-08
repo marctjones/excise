@@ -31,7 +31,7 @@
         "extract": "unknown",
         "mutate": "unknown",
         "write": "unknown",
-        "author": "unimplemented"
+        "author": "partial"
       },
       "evidence": [
         {
@@ -97,7 +97,36 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
             "modes": [
-              "parse"
+              "parse",
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_SetsMarkInfoStructTreeAndViewerPrefs",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_PdfInfoReportsStructureForHeadingsParagraphsTables",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_TableNestsTableTrTdTh",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_MultiPageParagraph_SpansPagesWithStructParents",
+            "modes": [
+              "author"
             ]
           }
         ]
@@ -211,7 +240,7 @@
         "extract": "unknown",
         "mutate": "unknown",
         "write": "unknown",
-        "author": "unimplemented",
+        "author": "partial",
         "execute": "not-applicable"
       },
       "evidence": [
@@ -271,7 +300,8 @@
         "status": "planned",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "author"
         ],
         "checks": [
           {
@@ -286,7 +316,8 @@
             "kind": "differential",
             "ref": "Excise.App.Tests/Unit/SignatureApplicationServiceTests.cs::SignDocument_ExternalOracle_PdfsigReportsValidUntrustedSignature",
             "modes": [
-              "preserve"
+              "preserve",
+              "author"
             ]
           }
         ]
@@ -324,7 +355,7 @@
         "extract": "unknown",
         "mutate": "unknown",
         "write": "unknown",
-        "author": "unimplemented"
+        "author": "partial"
       },
       "evidence": [],
       "notes": "Profile conformance belongs under optional profiles, with external validation evidence.",
@@ -366,6 +397,56 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_SetsMarkInfoStructTreeAndViewerPrefs",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_PdfInfoReportsStructureForHeadingsParagraphsTables",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_TableNestsTableTrTdTh",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_MultiPageParagraph_SpansPagesWithStructParents",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Validation/PdfUaValidatorTests.cs::WellTaggedDocument_PassesCheckedSubset",
+            "modes": [
+              "author"
+            ]
+          }
         ]
       }
     }

@@ -9182,7 +9182,7 @@
       "capability": "pdf.17.interchange.signatures",
       "section": "interchange",
       "mode": "author",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9206,7 +9206,7 @@
       "capability": "pdfe.product.safety.limited-editing",
       "section": "product-capabilities",
       "mode": "mutate",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9214,7 +9214,7 @@
       "capability": "pdfe.product.safety.limited-editing",
       "section": "product-capabilities",
       "mode": "write",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9222,7 +9222,7 @@
       "capability": "pdfe.product.redaction.review-panel",
       "section": "product-capabilities",
       "mode": "render",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9286,7 +9286,7 @@
       "capability": "pdfe.product.security.external-links",
       "section": "product-capabilities",
       "mode": "execute",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },

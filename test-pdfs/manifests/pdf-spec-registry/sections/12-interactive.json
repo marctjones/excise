@@ -635,7 +635,7 @@
         "extract": "unknown",
         "mutate": "unknown",
         "write": "unknown",
-        "execute": "unimplemented"
+        "execute": "partial"
       },
       "evidence": [
         {
@@ -684,6 +684,35 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "execute"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::OpenExternalLinkCommand_AllowlistedScheme_AsksForConfirmationWithTheUrlVisible",
+            "modes": [
+              "execute"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::OpenExternalLinkCommand_DisallowedScheme_NeverConfirms_BlocksWithMessage",
+            "modes": [
+              "execute"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::ShowDangerousLinkRefusalCommand_ExplainsWhyEachActionTypeWasBlocked",
+            "modes": [
+              "execute"
+            ]
+          }
         ]
       }
     },

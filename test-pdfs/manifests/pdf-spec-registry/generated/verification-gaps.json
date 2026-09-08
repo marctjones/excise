@@ -327,12 +327,6 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.17.interchange.signatures",
-      "mode": "author",
-      "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdfe.product.safety.limited-editing",
       "mode": "parse",
       "implementationState": "unknown",
@@ -342,24 +336,6 @@
       "capability": "pdfe.product.safety.limited-editing",
       "mode": "render",
       "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.safety.limited-editing",
-      "mode": "mutate",
-      "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.safety.limited-editing",
-      "mode": "write",
-      "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.redaction.review-panel",
-      "mode": "render",
-      "implementationState": "unimplemented",
       "reason": "no verification contract"
     },
     {
@@ -402,12 +378,6 @@
       "capability": "pdfe.product.security.external-links",
       "mode": "extract",
       "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdfe.product.security.external-links",
-      "mode": "execute",
-      "implementationState": "unimplemented",
       "reason": "no verification contract"
     },
     {

@@ -22,8 +22,8 @@
       "modes": {
         "parse": "unknown",
         "render": "unknown",
-        "mutate": "unimplemented",
-        "write": "unimplemented"
+        "mutate": "partial",
+        "write": "partial"
       },
       "evidence": [],
       "notes": "View with a clear limitation; refuse the edit/redaction on attempt and identify the blocking feature.",
@@ -62,6 +62,39 @@
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
         ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "mutate",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Ocr.Tests/RedactionConfidenceCheckerTests.cs::ClassifyPage_ExciseFindsNothing_OracleFindsRealText_IsSevere",
+            "modes": [
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs::Severe_WithoutOverride_Throws",
+            "modes": [
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs::Severe_WithAllowLowConfidence_ReturnsWarning_DoesNotThrow",
+            "modes": [
+              "mutate",
+              "write"
+            ]
+          }
+        ]
       }
     },
     {
@@ -81,7 +114,7 @@
         "rationale": "Users must be made immediately aware of proposed but unapplied redactions."
       },
       "modes": {
-        "render": "unimplemented",
+        "render": "partial",
         "author": "unimplemented"
       },
       "evidence": [],
@@ -118,6 +151,21 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "render"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/AnnotationDisplayControlTests.cs::RedactAnnotations_AreReportedAndNeverApplied",
+            "modes": [
+              "render"
+            ]
+          }
         ]
       }
     },
@@ -202,7 +250,7 @@
       "modes": {
         "parse": "unknown",
         "extract": "unknown",
-        "execute": "unimplemented"
+        "execute": "partial"
       },
       "evidence": [
         {
@@ -244,6 +292,35 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "execute"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::OpenExternalLinkCommand_AllowlistedScheme_AsksForConfirmationWithTheUrlVisible",
+            "modes": [
+              "execute"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::OpenExternalLinkCommand_DisallowedScheme_NeverConfirms_BlocksWithMessage",
+            "modes": [
+              "execute"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/Unit/ExternalLinkClickTests.cs::ShowDangerousLinkRefusalCommand_ExplainsWhyEachActionTypeWasBlocked",
+            "modes": [
+              "execute"
+            ]
+          }
         ]
       }
     },

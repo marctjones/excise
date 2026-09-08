@@ -156,7 +156,7 @@
         "parse": "unknown",
         "preserve": "unknown",
         "write": "unknown",
-        "author": "unimplemented"
+        "author": "partial"
       },
       "evidence": [
         {
@@ -199,6 +199,56 @@
         "negativeOrConservationTestRefs": [],
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+        ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "author"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_SetsMarkInfoStructTreeAndViewerPrefs",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_PdfInfoReportsStructureForHeadingsParagraphsTables",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_TableNestsTableTrTdTh",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_FormFields_AppearInStructureTreeAsForm",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs::Tagged_MultiPageParagraph_SpansPagesWithStructParents",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Validation/PdfUaValidatorTests.cs::WellTaggedDocument_PassesCheckedSubset",
+            "modes": [
+              "author"
+            ]
+          }
         ]
       }
     },

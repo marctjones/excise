@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T04:35:19.275466+00:00",
-  "gitRevision": "853d938751ed1ed38e55c6f9df751c6d63724449",
+  "recordedAt": "2026-09-08T04:54:54.105647+00:00",
+  "gitRevision": "ae692e491211d2beebd61b650a14445c8f5f5d83",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -336,6 +336,26 @@
       "path": "/tmp/new7-trx/core2.trx",
       "modifiedAt": "2026-09-08T04:35:12.747711+00:00",
       "sha256": "dd240fbd2bd78a827d43c82dd0a107a20c4dcf87cbf0b9e2f4c3385baf1324c5"
+    },
+    {
+      "path": "/tmp/new8-trx/app.trx",
+      "modifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "sha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
+    },
+    {
+      "path": "/tmp/new8-trx/cli.trx",
+      "modifiedAt": "2026-09-08T04:54:49.111456+00:00",
+      "sha256": "914fec07d5829ccf92f7dfbc9fe50921149f5046f6e8ae3b7d7a8f5cb56cc99c"
+    },
+    {
+      "path": "/tmp/new8-trx/core.trx",
+      "modifiedAt": "2026-09-08T04:54:43.500859+00:00",
+      "sha256": "9724ff9f4e03668f181077a2b316565490ceccf8562058720b26b1247256927e"
+    },
+    {
+      "path": "/tmp/new8-trx/ocr.trx",
+      "modifiedAt": "2026-09-08T04:54:45.820711+00:00",
+      "sha256": "bb56c232d1f7da5a4f8f8da7b23b0d85f9a675929db00609b7f3feb06b756333"
     }
   ],
   "outcomes": [
@@ -1294,10 +1314,10 @@
     {
       "testName": "Excise.App.Tests.UI.AnnotationDisplayControlTests.RedactAnnotations_AreReportedAndNeverApplied",
       "outcome": "Passed",
-      "duration": "00:00:00.0387817",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.3871812",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.UI.AnnotationDisplayControlTests.TheChromeControlsAreOffByDefault",
@@ -6086,98 +6106,98 @@
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.OpenExternalLinkCommand_AllowlistedScheme_AsksForConfirmationWithTheUrlVisible(uri: \"http://example.com\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0074994",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0031987",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.OpenExternalLinkCommand_AllowlistedScheme_AsksForConfirmationWithTheUrlVisible(uri: \"https://example.com/path?query=1\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0006149",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0018149",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.OpenExternalLinkCommand_AllowlistedScheme_AsksForConfirmationWithTheUrlVisible(uri: \"mailto:someone@example.com\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0003703",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0008771",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.OpenExternalLinkCommand_DisallowedScheme_NeverConfirms_BlocksWithMessage(uri: \"file:///etc/passwd\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0004766",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0046332",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.OpenExternalLinkCommand_DisallowedScheme_NeverConfirms_BlocksWithMessage(uri: \"ftp://example.com/file\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0004117",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0010552",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.OpenExternalLinkCommand_DisallowedScheme_NeverConfirms_BlocksWithMessage(uri: \"javascript:alert(1)\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0060344",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0105924",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.OpenExternalLinkCommand_DisallowedScheme_NeverConfirms_BlocksWithMessage(uri: \"not a url at all\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0003533",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0010869",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.OpenExternalLinkCommand_UserDeclines_DoesNotThrow",
       "outcome": "Passed",
-      "duration": "00:00:00.0007961",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0033848",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.ShowDangerousLinkRefusalCommand_ExplainsWhyEachActionTypeWasBlocked(actionType: \"GoToE\", expectedReasonFragment: \"navigates into an embedded file\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0005543",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0014736",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.ShowDangerousLinkRefusalCommand_ExplainsWhyEachActionTypeWasBlocked(actionType: \"GoToR\", expectedReasonFragment: \"navigates into a remote file\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0003558",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0008687",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.ShowDangerousLinkRefusalCommand_ExplainsWhyEachActionTypeWasBlocked(actionType: \"Launch\", expectedReasonFragment: \"launches an external application or file\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0003449",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0007438",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.ExternalLinkClickTests.ShowDangerousLinkRefusalCommand_ExplainsWhyEachActionTypeWasBlocked(actionType: \"URI:file\", expectedReasonFragment: \"'file'\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0002947",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.0007969",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.FilenameSuggestionServiceTests.SuggestPageSubsetFilename_AddsPageRange",
@@ -9574,10 +9594,10 @@
     {
       "testName": "Excise.App.Tests.Unit.SignatureApplicationServiceTests.SignDocument_ExternalOracle_PdfsigReportsValidUntrustedSignature",
       "outcome": "Passed",
-      "duration": "00:00:00.1739946",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:00.2244280",
+      "trx": "/tmp/new8-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:54:35.891193+00:00",
+      "trxSha256": "3dad0e8a30ff5cabb1d65273e734b49d4c4256bf2eb5633ddd9a36cc01ebe304"
     },
     {
       "testName": "Excise.App.Tests.Unit.SignatureApplicationServiceTests.SignDocument_FieldNameCollidesWithNonSignatureField_Throws",
@@ -13462,18 +13482,18 @@
     {
       "testName": "Excise.Cli.Tests.RedactionConfidencePolicyTests.Severe_WithAllowLowConfidence_ReturnsWarning_DoesNotThrow",
       "outcome": "Passed",
-      "duration": "00:00:00.0000423",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Cli.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:33.590542+00:00",
-      "trxSha256": "4d24dbdcdfb16d243a64d0ed798ae1a2102dd3e95d0d72c8925c1bd118439b56"
+      "duration": "00:00:00.0009847",
+      "trx": "/tmp/new8-trx/cli.trx",
+      "resultModifiedAt": "2026-09-08T04:54:49.111456+00:00",
+      "trxSha256": "914fec07d5829ccf92f7dfbc9fe50921149f5046f6e8ae3b7d7a8f5cb56cc99c"
     },
     {
       "testName": "Excise.Cli.Tests.RedactionConfidencePolicyTests.Severe_WithoutOverride_Throws",
       "outcome": "Passed",
-      "duration": "00:00:00.0003123",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Cli.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:33.590542+00:00",
-      "trxSha256": "4d24dbdcdfb16d243a64d0ed798ae1a2102dd3e95d0d72c8925c1bd118439b56"
+      "duration": "00:00:00.0223384",
+      "trx": "/tmp/new8-trx/cli.trx",
+      "resultModifiedAt": "2026-09-08T04:54:49.111456+00:00",
+      "trxSha256": "914fec07d5829ccf92f7dfbc9fe50921149f5046f6e8ae3b7d7a8f5cb56cc99c"
     },
     {
       "testName": "Excise.Cli.Tests.RedactionConfidencePolicyTests.Unverified_NoOracle_WithStrict_Throws",
@@ -14342,74 +14362,74 @@
     {
       "testName": "Excise.Core.Tests.Authoring.TaggedPdfTests.NotTagged_HasNoStructTree",
       "outcome": "Passed",
-      "duration": "00:00:00.0006241",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0007837",
+      "trx": "/tmp/new8-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:54:43.500859+00:00",
+      "trxSha256": "9724ff9f4e03668f181077a2b316565490ceccf8562058720b26b1247256927e"
     },
     {
       "testName": "Excise.Core.Tests.Authoring.TaggedPdfTests.Tagged_ContentStreamHasMarkedContent",
       "outcome": "Passed",
-      "duration": "00:00:00.0017514",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0487956",
+      "trx": "/tmp/new8-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:54:43.500859+00:00",
+      "trxSha256": "9724ff9f4e03668f181077a2b316565490ceccf8562058720b26b1247256927e"
     },
     {
       "testName": "Excise.Core.Tests.Authoring.TaggedPdfTests.Tagged_DecorativeContentIsMarkedAsArtifact",
       "outcome": "Passed",
-      "duration": "00:00:00.0009436",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0007483",
+      "trx": "/tmp/new8-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:54:43.500859+00:00",
+      "trxSha256": "9724ff9f4e03668f181077a2b316565490ceccf8562058720b26b1247256927e"
     },
     {
       "testName": "Excise.Core.Tests.Authoring.TaggedPdfTests.Tagged_FormFields_AppearInStructureTreeAsForm",
       "outcome": "Passed",
-      "duration": "00:00:00.0035361",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0070868",
+      "trx": "/tmp/new8-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:54:43.500859+00:00",
+      "trxSha256": "9724ff9f4e03668f181077a2b316565490ceccf8562058720b26b1247256927e"
     },
     {
       "testName": "Excise.Core.Tests.Authoring.TaggedPdfTests.Tagged_MultiPageParagraph_SpansPagesWithStructParents",
       "outcome": "Passed",
-      "duration": "00:00:00.0063664",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0031312",
+      "trx": "/tmp/new8-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:54:43.500859+00:00",
+      "trxSha256": "9724ff9f4e03668f181077a2b316565490ceccf8562058720b26b1247256927e"
     },
     {
       "testName": "Excise.Core.Tests.Authoring.TaggedPdfTests.Tagged_PdfInfoReportsStructureForHeadingsParagraphsTables",
       "outcome": "Passed",
-      "duration": "00:00:00.0026316",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0007998",
+      "trx": "/tmp/new8-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:54:43.500859+00:00",
+      "trxSha256": "9724ff9f4e03668f181077a2b316565490ceccf8562058720b26b1247256927e"
     },
     {
       "testName": "Excise.Core.Tests.Authoring.TaggedPdfTests.Tagged_PreSaveWrite_InvalidatesPreviouslyParsedTagState",
       "outcome": "Passed",
-      "duration": "00:00:00.0004973",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0020799",
+      "trx": "/tmp/new8-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:54:43.500859+00:00",
+      "trxSha256": "9724ff9f4e03668f181077a2b316565490ceccf8562058720b26b1247256927e"
     },
     {
       "testName": "Excise.Core.Tests.Authoring.TaggedPdfTests.Tagged_SetsMarkInfoStructTreeAndViewerPrefs",
       "outcome": "Passed",
-      "duration": "00:00:00.0005352",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0009290",
+      "trx": "/tmp/new8-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:54:43.500859+00:00",
+      "trxSha256": "9724ff9f4e03668f181077a2b316565490ceccf8562058720b26b1247256927e"
     },
     {
       "testName": "Excise.Core.Tests.Authoring.TaggedPdfTests.Tagged_TableNestsTableTrTdTh",
       "outcome": "Passed",
-      "duration": "00:00:00.0006453",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0005070",
+      "trx": "/tmp/new8-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:54:43.500859+00:00",
+      "trxSha256": "9724ff9f4e03668f181077a2b316565490ceccf8562058720b26b1247256927e"
     },
     {
       "testName": "Excise.Core.Tests.Automation.PdfCommandRegistryTests.AllCommands_HaveStableUniqueIdsAndAccessibleMetadata",
@@ -47158,10 +47178,10 @@
     {
       "testName": "Excise.Core.Tests.Validation.PdfUaValidatorTests.WellTaggedDocument_PassesCheckedSubset",
       "outcome": "Passed",
-      "duration": "00:00:00.0487970",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0732651",
+      "trx": "/tmp/new8-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:54:43.500859+00:00",
+      "trxSha256": "9724ff9f4e03668f181077a2b316565490ceccf8562058720b26b1247256927e"
     },
     {
       "testName": "Excise.Core.Tests.Validation.PdfUaVeraPdfCrossCheckTests.ExciseVerdict_AgreesWithVeraPdf_OnConformantFixture",
@@ -49062,10 +49082,10 @@
     {
       "testName": "Excise.Ocr.Tests.RedactionConfidenceCheckerTests.ClassifyPage_ExciseFindsNothing_OracleFindsRealText_IsSevere",
       "outcome": "Passed",
-      "duration": "00:00:00.0007444",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/Excise.Ocr.Tests.trx",
-      "resultModifiedAt": "2026-08-31T19:48:28.611183+00:00",
-      "trxSha256": "4a0ce5702f84a09e50e7b970a050a99f145246f4a978e5342b8ec5bca62ff303"
+      "duration": "00:00:00.0181622",
+      "trx": "/tmp/new8-trx/ocr.trx",
+      "resultModifiedAt": "2026-09-08T04:54:45.820711+00:00",
+      "trxSha256": "bb56c232d1f7da5a4f8f8da7b23b0d85f9a675929db00609b7f3feb06b756333"
     },
     {
       "testName": "Excise.Ocr.Tests.RedactionConfidenceCheckerTests.ClassifyPage_IdenticalText_IsOk",
@@ -68293,7 +68313,7 @@
     }
   ],
   "summary": {
-    "trxFiles": 66,
+    "trxFiles": 70,
     "tests": 8494,
     "outcomes": {
       "Failed": 3,
