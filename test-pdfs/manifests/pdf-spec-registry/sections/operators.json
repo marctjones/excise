@@ -1243,7 +1243,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -1261,7 +1261,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -1280,6 +1281,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1346,7 +1354,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -1364,7 +1372,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -1383,6 +1392,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1560,7 +1576,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -1578,7 +1594,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -1597,6 +1614,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1663,7 +1687,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -1681,7 +1705,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -1700,6 +1725,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1766,7 +1798,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -1784,7 +1816,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -1803,6 +1836,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2313,7 +2353,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -2331,7 +2371,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -2350,6 +2391,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillAlias_F_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -2527,7 +2575,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -2545,7 +2593,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -2564,6 +2613,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillStroke_B_Operator",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -6729,7 +6785,7 @@
       "modes": {
         "parse": "unknown",
         "preserve": "unknown",
-        "render": "unknown",
+        "render": "partial",
         "write": "partial"
       },
       "evidence": [
@@ -6747,7 +6803,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -6766,6 +6823,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_TJOperator_ShowsTextArrayWithPositionAdjustments",
+            "modes": [
+              "render"
             ]
           }
         ]

@@ -201,55 +201,7 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.20.content.operator-012",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-013",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-015",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-016",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-017",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-022",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-024",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.20.content.operator-060",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-062",
       "mode": "render",
       "implementationState": "unknown",
       "reason": "no verification contract"

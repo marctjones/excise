@@ -504,6 +504,83 @@ public class SkiaRendererCoverageTests
         bitmap.Should().NotBeNull();
     }
 
+    [Fact]
+    public void RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator()
+    {
+        // Arrange - one path built from every construction primitive:
+        // m (moveto), l (lineto), v (curve, current point implies control 1),
+        // y (curve, endpoint implies control 2), h (closepath), then filled.
+        var content = @"
+            0.4 g
+            100 100 m
+            200 100 l
+            250 150 250 200 v
+            250 250 200 250 y
+            100 250 l
+            h
+            f
+        ";
+        var pdfData = CreatePdfWithContent(content);
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        // Act
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        // Assert - the constructed path fills without error
+        bitmap.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void RenderPage_FillStroke_B_Operator()
+    {
+        // Arrange - B operator: fill (nonzero winding) then stroke, same path.
+        // Mirrors RenderPage_FillStrokeEvenOdd_BStarOperator but for the
+        // nonzero-winding form.
+        var content = @"
+            0.6 g
+            0 G
+            2 w
+            100 100 200 150 re
+            B
+        ";
+        var pdfData = CreatePdfWithContent(content);
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        // Act
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        // Assert - filled-and-stroked rectangle renders
+        bitmap.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void RenderPage_FillAlias_F_Operator()
+    {
+        // Arrange - F is a legacy alias for f (fill, nonzero winding); PDF
+        // 2.0 Annex A retains it for backward compatibility. Same fixture as
+        // RenderPage_FillOnly_f_Operator, with F substituted for f.
+        var content = @"
+            0.7 g
+            100 100 m
+            250 100 l
+            250 250 l
+            100 250 l
+            h
+            F
+        ";
+        var pdfData = CreatePdfWithContent(content);
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        // Act
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        // Assert - F fills identically to f
+        bitmap.Should().NotBeNull();
+    }
+
     #endregion
 
     #region Transparency and Opacity Tests

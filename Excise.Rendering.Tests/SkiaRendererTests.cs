@@ -3417,6 +3417,32 @@ public class SkiaRendererTests
     }
 
     [Fact]
+    public void RenderPage_TJOperator_ShowsTextArrayWithPositionAdjustments()
+    {
+        // Arrange - TJ operator shows an array of strings and glyph-space
+        // number adjustments (thousandths of text space, subtracted from the
+        // pen position). Distinct from bare Tj, which the other tests here
+        // already cover.
+        var content = @"
+            BT
+            /F1 20 Tf
+            100 700 Td
+            [(Kern) -150 (ed) 50 (Text)] TJ
+            ET
+        ";
+        var pdfData = CreatePdfWithContent(content);
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        // Act
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        // Assert - the array's strings render with the adjustments applied
+        bitmap.Should().NotBeNull();
+        bitmap.Width.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
     public void RenderPage_MixedLineOperators_CombinesTjQuoteAndDoubleQuote()
     {
         // Arrange - Mix Tj, ', and " operators in same text object

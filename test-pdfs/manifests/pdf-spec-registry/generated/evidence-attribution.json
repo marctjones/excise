@@ -55463,11 +55463,19 @@
       "capability": "pdf.20.content.operator-012",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55582,11 +55590,19 @@
       "capability": "pdf.20.content.operator-013",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55828,11 +55844,19 @@
       "capability": "pdf.20.content.operator-015",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -55947,11 +55971,19 @@
       "capability": "pdf.20.content.operator-016",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56066,11 +56098,19 @@
       "capability": "pdf.20.content.operator-017",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56693,11 +56733,19 @@
       "capability": "pdf.20.content.operator-022",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillAlias_F_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -56939,11 +56987,19 @@
       "capability": "pdf.20.content.operator-024",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillStroke_B_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -61749,11 +61805,19 @@
       "capability": "pdf.20.content.operator-062",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_TJOperator_ShowsTextArrayWithPositionAdjustments",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -64936,11 +65000,19 @@
       "capability": "pdf.20.renderer.requirement-034",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65005,11 +65077,19 @@
       "capability": "pdf.20.renderer.requirement-035",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65151,11 +65231,19 @@
       "capability": "pdf.20.renderer.requirement-037",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65220,11 +65308,19 @@
       "capability": "pdf.20.renderer.requirement-038",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65289,11 +65385,19 @@
       "capability": "pdf.20.renderer.requirement-039",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65666,11 +65770,19 @@
       "capability": "pdf.20.renderer.requirement-044",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillAlias_F_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -65812,11 +65924,19 @@
       "capability": "pdf.20.renderer.requirement-046",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillStroke_B_Operator",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -68722,11 +68842,19 @@
       "capability": "pdf.20.renderer.requirement-084",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_TJOperator_ShowsTextArrayWithPositionAdjustments",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -106270,14 +106398,14 @@
   "summary": {
     "targetModes": 944,
     "modesWithTestCandidates": 503,
-    "modesWithExplicitContracts": 631,
-    "modesWithPassingExplicitContracts": 631,
+    "modesWithExplicitContracts": 647,
+    "modesWithPassingExplicitContracts": 647,
     "modesWithRecordedPassingCandidate": 503,
-    "gradeImplemented": 620,
+    "gradeImplemented": 636,
     "gradeVerified": 11,
-    "gradeUnknown": 313,
-    "testMethods": 6108,
-    "testMethodsWithCapabilityCandidate": 3831,
+    "gradeUnknown": 297,
+    "testMethods": 6112,
+    "testMethodsWithCapabilityCandidate": 3835,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

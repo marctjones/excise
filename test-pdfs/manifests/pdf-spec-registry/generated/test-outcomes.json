@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedBy": "scripts/collect-pdf-test-outcomes.py (merged by merge_test_outcomes.py -- partial refresh, App.Tests kept from the prior snapshot)",
+  "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T00:01:15.719730+00:00",
-  "gitRevision": "c017457d9b533444f299ce5cc96d8fe277a3705f",
+  "recordedAt": "2026-09-08T01:03:47.124712+00:00",
+  "gitRevision": "a57a6291325c8fd5a475628ef3e1003d2491ba6b",
   "dotnetVersion": "10.0.300 [/usr/local/share/dotnet/sdk]",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -281,6 +281,11 @@
       "path": "logs/test-tier_t1_20260907_191755/Excise.Avalonia.Tests.trx",
       "modifiedAt": "2026-09-07T23:20:38.296794+00:00",
       "sha256": "037ad58c87fe6956f66d9cea331e86e0e32414051628fbbb4c34bcb75dd229b5"
+    },
+    {
+      "path": "/tmp/new-tests-trx/rendering.trx",
+      "modifiedAt": "2026-09-08T01:03:41.169150+00:00",
+      "sha256": "cf1dd18a04603b2467af3405caab02a66239c3f227533bac49b38ea5262e041a"
     }
   ],
   "outcomes": [
@@ -65149,6 +65154,14 @@
       "trxSha256": "3a38f38270d8342af11be4b994fadd916985bcff123ac8e197d3ba6c282e3700"
     },
     {
+      "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_FillAlias_F_Operator",
+      "outcome": "Passed",
+      "duration": "00:00:00.0017340",
+      "trx": "/tmp/new-tests-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T01:03:41.169150+00:00",
+      "trxSha256": "cf1dd18a04603b2467af3405caab02a66239c3f227533bac49b38ea5262e041a"
+    },
+    {
       "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_FillEvenOdd_fStar_Operator",
       "outcome": "Passed",
       "duration": "00:00:00.0026072",
@@ -65163,6 +65176,14 @@
       "trx": "logs/test-tier_t1_20260907_191755/rendering-deterministic.trx",
       "resultModifiedAt": "2026-09-07T23:23:21.817320+00:00",
       "trxSha256": "3a38f38270d8342af11be4b994fadd916985bcff123ac8e197d3ba6c282e3700"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_FillStroke_B_Operator",
+      "outcome": "Passed",
+      "duration": "00:00:00.0526124",
+      "trx": "/tmp/new-tests-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T01:03:41.169150+00:00",
+      "trxSha256": "cf1dd18a04603b2467af3405caab02a66239c3f227533bac49b38ea5262e041a"
     },
     {
       "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_FlateWrappedDctImage_DecodesTerminalJpegBytes",
@@ -65259,6 +65280,14 @@
       "trx": "logs/test-tier_t1_20260907_191755/rendering-deterministic.trx",
       "resultModifiedAt": "2026-09-07T23:23:21.817320+00:00",
       "trxSha256": "3a38f38270d8342af11be4b994fadd916985bcff123ac8e197d3ba6c282e3700"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+      "outcome": "Passed",
+      "duration": "00:00:00.0013034",
+      "trx": "/tmp/new-tests-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T01:03:41.169150+00:00",
+      "trxSha256": "cf1dd18a04603b2467af3405caab02a66239c3f227533bac49b38ea5262e041a"
     },
     {
       "testName": "Excise.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_PatternType1ColoredTilingFill_ComposesOverlappingCell",
@@ -66949,6 +66978,14 @@
       "trxSha256": "3a38f38270d8342af11be4b994fadd916985bcff123ac8e197d3ba6c282e3700"
     },
     {
+      "testName": "Excise.Rendering.Tests.SkiaRendererTests.RenderPage_TJOperator_ShowsTextArrayWithPositionAdjustments",
+      "outcome": "Passed",
+      "duration": "00:00:00.0526946",
+      "trx": "/tmp/new-tests-trx/rendering.trx",
+      "resultModifiedAt": "2026-09-08T01:03:41.169150+00:00",
+      "trxSha256": "cf1dd18a04603b2467af3405caab02a66239c3f227533bac49b38ea5262e041a"
+    },
+    {
       "testName": "Excise.Rendering.Tests.SkiaRendererTests.RenderPage_TextLeading_AffectsLineSpacing",
       "outcome": "Passed",
       "duration": "00:00:00.0018512",
@@ -67910,12 +67947,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 55,
-    "tests": 8453,
+    "trxFiles": 56,
+    "tests": 8457,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7526
+      "Passed": 7530
     },
     "status": "recorded"
   }
