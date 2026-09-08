@@ -5192,7 +5192,7 @@
       "capability": "pdf.20.renderer.requirement-003",
       "section": "renderer-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5216,7 +5216,7 @@
       "capability": "pdf.20.renderer.requirement-004",
       "section": "renderer-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5248,7 +5248,7 @@
       "capability": "pdf.20.renderer.requirement-005",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5272,7 +5272,7 @@
       "capability": "pdf.20.renderer.requirement-006",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5296,7 +5296,7 @@
       "capability": "pdf.20.renderer.requirement-007",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5320,7 +5320,7 @@
       "capability": "pdf.20.renderer.requirement-008",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5336,7 +5336,7 @@
       "capability": "pdf.20.renderer.requirement-009",
       "section": "renderer-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5360,7 +5360,7 @@
       "capability": "pdf.20.renderer.requirement-010",
       "section": "renderer-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5368,7 +5368,7 @@
       "capability": "pdf.20.renderer.requirement-010",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5392,7 +5392,7 @@
       "capability": "pdf.20.renderer.requirement-011",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5408,7 +5408,7 @@
       "capability": "pdf.20.renderer.requirement-012",
       "section": "renderer-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5464,7 +5464,7 @@
       "capability": "pdf.20.renderer.requirement-014",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5480,7 +5480,7 @@
       "capability": "pdf.20.renderer.requirement-015",
       "section": "renderer-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5544,7 +5544,7 @@
       "capability": "pdf.20.renderer.requirement-017",
       "section": "renderer-requirements",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -5576,7 +5576,7 @@
       "capability": "pdf.20.renderer.requirement-019",
       "section": "renderer-requirements",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
