@@ -44,6 +44,7 @@ public class CanaryInjectionLeakTests
         AnnotationContents, // #608
         AnnotationSubj,     // /Subj on a markup annotation (Table 170, §12.5.6.2) — never scrubbed before this fix
         RedactOverlayText,  // /OverlayText on a /Redact annotation (Table 192, §12.5.6.23) — never scrubbed before this fix
+        AnnotationAppearanceStream, // text drawn in a non-Widget annotation's /AP /N (§12.5.5) — invisible to extraction/redaction before this fix
         AcroFormValue,      // /V — #1038
         AcroFormFieldName,  // /T — #1130 (fixed this session)
         AcroFormTooltip,    // /TU — #1130
@@ -397,6 +398,22 @@ public class CanaryInjectionLeakTests
                 pageExtras.Append($" /Annots [{an} 0 R]");
                 extraObjects.Add($"{an} 0 obj\n<< /Type /Annot /Subtype /Redact /Rect [72 700 92 720] " +
                     $"/QuadPoints [72 720 92 720 72 700 92 700] /OverlayText ({Canary}) >>\nendobj\n");
+                break;
+            }
+            case Carrier.AnnotationAppearanceStream:
+            {
+                // The measured real-world shape (#1428): a Stamp annotation
+                // with no /Contents at all, whose /AP /N draws the canary as
+                // real glyphs -- exactly how a stamp's face text, a watermark,
+                // or a Screen/Line caption is actually authored.
+                int an = Reserve();
+                int ap = Reserve();
+                pageExtras.Append($" /Annots [{an} 0 R]");
+                var apContent = $"BT /F1 12 Tf 2 2 Td ({Canary}) Tj ET\n";
+                extraObjects.Add($"{an} 0 obj\n<< /Type /Annot /Subtype /Stamp /Rect [72 700 172 720] " +
+                    $"/AP << /N {ap} 0 R >> >>\nendobj\n");
+                extraObjects.Add($"{ap} 0 obj\n<< /Type /XObject /Subtype /Form /BBox [0 0 100 20] " +
+                    $"/Resources << /Font << /F1 5 0 R >> >> /Length {apContent.Length} >>\nstream\n{apContent}endstream\nendobj\n");
                 break;
             }
             case Carrier.AcroFormValue:

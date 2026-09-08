@@ -283,10 +283,29 @@ public class TextExtractor
 
         foreach (var annot in annotations)
         {
-            if (annot.Subtype != Document.PdfAnnotationSubtype.FreeText) continue;
-            if (string.IsNullOrEmpty(annot.Contents)) continue;
+            if (annot.Subtype == Document.PdfAnnotationSubtype.FreeText && !string.IsNullOrEmpty(annot.Contents))
+                EmitMultiLineLettersInRect(annot.Contents, annot.Rect, "Annotation:FreeText");
 
-            EmitMultiLineLettersInRect(annot.Contents, annot.Rect, "Annotation:FreeText");
+            // #1428: an annotation's /AP /N appearance stream is genuine drawn
+            // ink — §12.5.5 renders it verbatim, in precedence over any
+            // synthesized appearance — and until this fix it was invisible to
+            // extraction, to the term-driven redaction scrub, and to
+            // RedactText's own oracle-vs-self verification, on EVERY subtype
+            // except FreeText's /Contents path above. Measured leak: a Stamp
+            // annotation whose /AP drew "STAMPSECRET" survived
+            // RedactText("STAMPSECRET") -- mutool AND pdftotext both still
+            // read it in the saved output. Reuses the exact machinery the
+            // AcroForm widget path already proved (ExtractWidgetAppearanceText
+            // needs only /AP + optional /AS, nothing Widget-specific), so this
+            // is the same appearance-stream reader with a wider set of callers,
+            // not a new one. Deliberately excludes Widget (its /AP is already
+            // extracted via the AcroForm field-value path, EmitFormFieldLetters
+            // -- extracting it again here would double-emit).
+            if (annot.Subtype == Document.PdfAnnotationSubtype.Widget) continue;
+
+            var apText = ExtractWidgetAppearanceText(annot.RawDictionary);
+            if (!string.IsNullOrEmpty(apText))
+                EmitMultiLineLettersInRect(apText, annot.Rect, $"Annotation:{annot.Subtype}");
         }
     }
 
