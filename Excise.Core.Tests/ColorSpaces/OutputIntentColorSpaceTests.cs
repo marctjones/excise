@@ -76,6 +76,45 @@ public class OutputIntentColorSpaceTests
     }
 
     [Fact]
+    public void FromName_DeviceCmykOutputIntentProfile_ReturnsTheSameInstanceAcrossCalls()
+    {
+        // #1425: distinct from the value-equality test above. The renderer's
+        // per-pixel DeviceCMYK->RGB conversion cache (Excise.Rendering's
+        // ImageColorConverter) is keyed by THIS PdfColorSpace instance's
+        // reference identity, not its value -- a fresh wrapper object on
+        // every call would silently defeat that cache even though every
+        // wrapper carries the same (already document-cached) ICC profile
+        // and produces identical ToRgb output. This is called once per
+        // RenderContext construction, i.e. once per transparency-group child
+        // -- dozens of times on a real page.
+        var icc = PdfIccProfileTests.BuildLut16CmykProfile();
+        using var doc = WithOutputIntent(icc);
+
+        var first = PdfColorSpace.FromName("DeviceCMYK", doc);
+        var second = PdfColorSpace.FromName("CMYK", doc);
+        var third = PdfColorSpace.Parse(new PdfName("DeviceCMYK"), doc);
+
+        ReferenceEquals(first, second).Should().BeTrue("both DeviceCMYK spellings must return the same cached instance");
+        ReferenceEquals(first, third).Should().BeTrue("Parse must route through the same per-document cache as FromName");
+    }
+
+    [Fact]
+    public void FromName_DeviceCmykOutputIntentProfile_DifferentDocumentsGetDifferentInstances()
+    {
+        // The cache must be per-document, not global -- two documents with
+        // their own (even identical-content) OutputIntent profiles must not
+        // share a PdfColorSpace instance.
+        var icc = PdfIccProfileTests.BuildLut16CmykProfile();
+        using var docA = WithOutputIntent(icc);
+        using var docB = WithOutputIntent(icc);
+
+        var csA = PdfColorSpace.FromName("DeviceCMYK", docA);
+        var csB = PdfColorSpace.FromName("DeviceCMYK", docB);
+
+        ReferenceEquals(csA, csB).Should().BeFalse("each document must get its own cached instance");
+    }
+
+    [Fact]
     public void FromName_MalformedOutputIntents_FallBackToPlainDeviceCmyk()
     {
         // Entry is not a dictionary.

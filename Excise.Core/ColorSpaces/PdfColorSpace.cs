@@ -27,6 +27,7 @@ public sealed class PdfColorSpace
     private Dictionary<TintColorCacheKey, (double R, double G, double B)>? _tintRgbCache;
     private readonly object _tintRgbCacheLock = new();
     private static readonly ConditionalWeakTable<PdfDocument, OutputIntentProfileBox> OutputIntentProfiles = new();
+    private static readonly ConditionalWeakTable<PdfDocument, PdfColorSpace> DeviceCmykOutputIntentColorSpaces = new();
 
     private const int MaxTintRgbCacheEntries = 4096;
 
@@ -80,10 +81,22 @@ public sealed class PdfColorSpace
         if (name is "DeviceCMYK" or "CMYK" &&
             GetOutputIntentProfile(doc) is { } outputIntentProfile)
         {
-            return new PdfColorSpace(
-                PdfColorSpaceType.DeviceCMYK,
-                4,
-                iccProfile: outputIntentProfile);
+            // #1425: one shared instance per document, not a fresh wrapper on
+            // every call. This is called once per RenderContext construction
+            // (i.e. once per transparency-group child, which can be dozens
+            // per page), and the renderer's per-pixel DeviceCMYK->RGB lattice
+            // cache (Excise.Rendering/ImageColorConverter) is keyed by THIS
+            // instance's reference identity -- a fresh wrapper each call
+            // would defeat that cache and rebuild the 17^4-entry lattice
+            // from scratch on every single group invocation. The wrapped
+            // outputIntentProfile is already document-cached (OutputIntentProfiles
+            // above); this closes the same gap one level up.
+            return DeviceCmykOutputIntentColorSpaces.GetValue(
+                doc,
+                _ => new PdfColorSpace(
+                    PdfColorSpaceType.DeviceCMYK,
+                    4,
+                    iccProfile: outputIntentProfile));
         }
 
         return FromName(name);

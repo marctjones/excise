@@ -991,8 +991,31 @@ internal partial class RenderContext
             alpha);
     }
 
+    /// <summary>
+    /// #1425: routes through the same cached interpolation lattice the
+    /// image-decode path already uses (Excise.Rendering/ImageColorConverter,
+    /// #1350/#949) instead of calling PreviewColorSpace.ToRgb -- and, for an
+    /// ICC-backed (OutputIntent) preview space, PdfIccProfile.ToRgb -- fresh
+    /// per pixel. Called from every DeviceCMYK transparency-group composite
+    /// and blend-mode paint pixel (see SkiaRenderer.XObjects.cs and
+    /// SkiaRenderer.Paths.cs call sites). #949 only audited the image paths;
+    /// this closes the gap it left on the vector side. Falls back to the
+    /// original per-call path when no lattice is available (PreviewColorSpace
+    /// is never Lab-PCS or an unusual component count in practice -- DeviceCMYK
+    /// is always 4 components -- but the fallback keeps this correct either way).
+    /// </summary>
     private (double R, double G, double B) DeviceCmykToRgb(DeviceCmykColor color)
-        => _deviceCmyk.PreviewColorSpace.ToRgb(new[] { color.C, color.M, color.Y, color.K });
+    {
+        var converter = ImageColorConverter.For(_deviceCmyk.PreviewColorSpace);
+        if (converter != null)
+        {
+            Span<double> values = stackalloc double[4] { color.C, color.M, color.Y, color.K };
+            var (r, g, b) = converter.ToRgb(values);
+            return (r / 255.0, g / 255.0, b / 255.0);
+        }
+
+        return _deviceCmyk.PreviewColorSpace.ToRgb(new[] { color.C, color.M, color.Y, color.K });
+    }
 
     private static SKColor CmykToColor(double c, double m, double y, double k)
     {
