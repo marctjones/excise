@@ -62559,11 +62559,19 @@
       "capability": "pdf.20.content.operator-068",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "corpus",
+          "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -62678,11 +62686,19 @@
       "capability": "pdf.20.content.operator-069",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "corpus",
+          "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69296,11 +69312,19 @@
       "capability": "pdf.20.renderer.requirement-090",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "corpus",
+          "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -69365,11 +69389,19 @@
       "capability": "pdf.20.renderer.requirement-091",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "corpus",
+          "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -106398,12 +106430,12 @@
   "summary": {
     "targetModes": 944,
     "modesWithTestCandidates": 503,
-    "modesWithExplicitContracts": 647,
-    "modesWithPassingExplicitContracts": 647,
+    "modesWithExplicitContracts": 651,
+    "modesWithPassingExplicitContracts": 651,
     "modesWithRecordedPassingCandidate": 503,
-    "gradeImplemented": 636,
+    "gradeImplemented": 640,
     "gradeVerified": 11,
-    "gradeUnknown": 297,
+    "gradeUnknown": 293,
     "testMethods": 6112,
     "testMethodsWithCapabilityCandidate": 3835,
     "benchmarkScenarios": 6,

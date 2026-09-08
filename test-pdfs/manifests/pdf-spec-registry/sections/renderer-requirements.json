@@ -7714,7 +7714,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -7737,6 +7737,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -7796,7 +7803,7 @@
       },
       "modes": {
         "parse": "partial",
-        "render": "unknown",
+        "render": "partial",
         "preserve": "partial"
       },
       "evidence": [
@@ -7819,6 +7826,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+            "modes": [
+              "render"
             ]
           }
         ]

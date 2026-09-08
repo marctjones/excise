@@ -420,11 +420,11 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
+        "preserve": "partial",
         "render": "not-applicable",
-        "extract": "unknown",
+        "extract": "partial",
         "mutate": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -490,6 +490,15 @@
             "ref": "Excise.Core.Tests/Content/ContentStreamParserTests.cs::Parse_BMCOperator_BeginMarkedContent_ParsesCorrectly",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::ExtractedLetters_CarryTheMcidOfTheirMarkedContentSpan",
+            "modes": [
+              "extract",
+              "preserve",
+              "write"
             ]
           }
         ]

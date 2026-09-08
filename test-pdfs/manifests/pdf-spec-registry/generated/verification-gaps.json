@@ -213,18 +213,6 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.20.content.operator-068",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.20.content.operator-069",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.20.content.operator-070",
       "mode": "render",
       "implementationState": "unknown",

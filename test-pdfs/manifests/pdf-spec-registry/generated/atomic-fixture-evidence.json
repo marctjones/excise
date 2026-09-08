@@ -4824,7 +4824,7 @@
       "capability": "pdf.20.content.operator-068",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -4883,7 +4883,7 @@
       "capability": "pdf.20.content.operator-069",
       "section": "operators",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7288,7 +7288,7 @@
       "capability": "pdf.20.renderer.requirement-090",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -7312,7 +7312,7 @@
       "capability": "pdf.20.renderer.requirement-091",
       "section": "renderer-requirements",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },

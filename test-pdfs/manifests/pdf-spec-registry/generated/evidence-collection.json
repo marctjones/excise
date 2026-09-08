@@ -12571,6 +12571,15 @@
             "modes": [
               "parse"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::ExtractedLetters_CarryTheMcidOfTheirMarkedContentSpan",
+            "modes": [
+              "extract",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -17167,7 +17176,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -17186,6 +17196,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -17328,7 +17345,8 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "write"
+          "write",
+          "render"
         ],
         "checks": [
           {
@@ -17347,6 +17365,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -22886,6 +22911,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -22926,6 +22958,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
+            "modes": [
+              "render"
             ]
           }
         ]

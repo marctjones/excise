@@ -39,5 +39,5 @@
   },
   "migrationStatus": "active-until-migrated",
   "productPolicy": "AD-009",
-  "verificationGapCount": 102
+  "verificationGapCount": 100
 }
