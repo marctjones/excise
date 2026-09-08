@@ -35,8 +35,31 @@ internal static class AdobeGlyphList
         // Glyph variant suffix convention, e.g. "A.sc", "one.oldstyle" — look
         // up the base name before the first '.'.
         var dot = glyphName.IndexOf('.');
-        if (dot > 0 && NameToUnicode.TryGetValue(glyphName.Substring(0, dot), out var baseName))
-            return baseName;
+        var baseName = dot > 0 ? glyphName.Substring(0, dot) : glyphName;
+        if (dot > 0 && NameToUnicode.TryGetValue(baseName, out var direct2))
+            return direct2;
+
+        // AGL "component-joined" convention: a ligature or diacritic-combination
+        // name built by joining component glyph names with '_' (e.g. "f_i" for
+        // an fi ligature, "s_s_t" for sst) — look up each component individually
+        // and concatenate. Emitting the DECOMPOSED string ("f"+"i" -> "fi")
+        // rather than a precomposed ligature codepoint matches how independent
+        // extractors (mutool) read the same glyph, which both text-extraction
+        // parity and substring-match redaction depend on (#1423). Only when
+        // EVERY component maps — a partial match would silently drop a
+        // character, which is worse than no match at all.
+        if (baseName.IndexOf('_') > 0)
+        {
+            var parts = baseName.Split('_');
+            var sb = new System.Text.StringBuilder();
+            foreach (var part in parts)
+            {
+                if (part.Length == 0 || !NameToUnicode.TryGetValue(part, out var component))
+                    return null;
+                sb.Append(component);
+            }
+            return sb.ToString();
+        }
 
         return null;
     }
@@ -309,6 +332,9 @@ internal static class AdobeGlyphList
         // Common ligatures
         ["fi"] = "ﬁ",
         ["fl"] = "ﬂ",
+        ["ff"] = "ﬀ",
+        ["ffi"] = "ﬃ",
+        ["ffl"] = "ﬄ",
 
         // Symbol-font Greek letters (common in math/technical /Differences arrays)
         ["Alpha"] = "Α",

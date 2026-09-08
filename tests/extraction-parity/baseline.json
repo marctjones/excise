@@ -1,6 +1,6 @@
 {
-  "aggregateCoverage": 0.9999,
-  "generatedUtc": "2026-08-13T01:10:03.2715560Z",
+  "aggregateCoverage": 1.0,
+  "generatedUtc": "2026-09-08T18:08:57.2783380Z",
   "mutoolVersion": "mutool version 1.27.2",
   "pageCount": 332,
   "pages": {
@@ -221,7 +221,7 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#122": {
-      "coverageFloor": 0.9985,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#123": {
@@ -233,8 +233,8 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#125": {
-      "coverageFloor": 0.9968,
-      "similarityFloor": 0.9938
+      "coverageFloor": 0.9996,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#126": {
       "coverageFloor": 1,
@@ -309,12 +309,12 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#29": {
-      "coverageFloor": 0.9942,
-      "similarityFloor": 0.9899
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#3": {
-      "coverageFloor": 0.9905,
-      "similarityFloor": 0.9966
+      "coverageFloor": 0.9994,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#30": {
       "coverageFloor": 1,
@@ -385,23 +385,23 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#46": {
-      "coverageFloor": 0.9881,
-      "similarityFloor": 0.994
+      "coverageFloor": 0.9987,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#47": {
-      "coverageFloor": 0.988,
-      "similarityFloor": 0.9927
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#48": {
-      "coverageFloor": 0.9885,
-      "similarityFloor": 0.9937
+      "coverageFloor": 0.9986,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#49": {
       "coverageFloor": 0.9998,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#5": {
-      "coverageFloor": 0.9989,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#50": {
@@ -481,8 +481,8 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#68": {
-      "coverageFloor": 0.9988,
-      "similarityFloor": 0.9966
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#69": {
       "coverageFloor": 1,

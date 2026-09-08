@@ -4,6 +4,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text;
+using Excise.Core.Text.Segmentation;
 using Xunit;
 
 namespace Excise.Core.Tests.Text;
@@ -109,6 +110,61 @@ public class TextExtractorDifferencesEncodingTests
 
         letters.Should().HaveCount(1);
         letters[0].Value.Should().Be("ﬁ");
+    }
+
+    [Fact]
+    public void ExtractText_DifferencesEncoding_UnderscoreJoinedLigatureName_DecodesToDecomposedString()
+    {
+        // #1423: "/f_i" is the AGL "component-joined" convention for an fi
+        // ligature (found in real Type1C subsets, e.g. UZLCYJ+TimesLTStd-Roman)
+        // — before the fix, this glyph name matched nothing in the AGL table
+        // and fell through to a raw WinAnsi byte echo, producing a control
+        // character. Decoded string is "fi" (decomposed, two chars) to match
+        // how mutool reads the same glyph — not the precomposed ligature
+        // codepoint.
+        var pdfData = CreatePdfWithDifferencesEncoding(
+            content: "BT /F1 12 Tf 100 700 Td <01> Tj ET",
+            baseEncoding: null,
+            differences: "[1 /f_i]");
+        using var doc = PdfDocument.Open(pdfData);
+        var extractor = new TextExtractor(doc.GetPage(1));
+
+        var letters = extractor.ExtractLetters();
+
+        letters.Should().HaveCount(1);
+        letters[0].Value.Should().Be("fi");
+    }
+
+    [Fact]
+    public void RedactText_UnderscoreJoinedLigatureGlyphInWord_RemovesWholeWordAndLeavesNoResidue()
+    {
+        // #1423 security regression pin: the real-world leak was
+        // RedactText("filing") silently leaving every lowercase "filing" that
+        // used an /f_i differences glyph for its fi ligature on
+        // irs-1040-instructions.pdf -- mutool itself could still read the
+        // residue (17 mutool-visible survivors out of 498 occurrences).
+        // code 0x01 -> /f_i (the ligature glyph), then raw WinAnsi bytes for
+        // l, i, n, g.
+        var pdfData = CreatePdfWithDifferencesEncoding(
+            content: "BT /F1 12 Tf 100 700 Td <016C696E67> Tj ET",
+            baseEncoding: null,
+            differences: "[1 /f_i]");
+        using var doc = PdfDocument.Open(pdfData);
+
+        // Anti-vacuity: the word must actually extract as "filing" before
+        // redaction, or this test proves nothing.
+        doc.GetPage(1).Text.Should().Contain("filing",
+            "sanity: the /f_i differences glyph must decode to \"fi\" for the word to read as \"filing\" at all");
+
+        var removed = doc.RedactText("filing").VerifiedRemovals;
+        removed.Should().BeGreaterThan(0);
+
+        var saved = doc.SaveToBytes();
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain("filing",
+            "the word must not survive in the saved bytes under any carrier -- this is the exact leak shape found on irs-1040-instructions.pdf");
+
+        using var reopened = PdfDocument.Open(saved);
+        reopened.GetPage(1).Text.Should().NotContain("filing");
     }
 
     [Fact]
