@@ -10,9 +10,9 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Area | Target modes | Implemented | Verified | Unknown | Strict | Evidence progress | Promotion readiness | Measured | Strict unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| overall | 934 | 69.9% | 1.2% | 281 | 0.5% | 51.4% | 23.1% | 56.7% | 404 |
+| overall | 934 | 70.9% | 1.3% | 272 | 0.5% | 52.0% | 23.3% | 57.7% | 395 |
 | annotation-subtypes | 92 | 46.7% | 0.0% | 49 | 0.0% | 37.8% | 10.0% | 46.7% | 49 |
-| content | 18 | 50.0% | 5.6% | 9 | 0.0% | 44.4% | 23.3% | 50.0% | 9 |
+| content | 18 | 100.0% | 11.1% | 0 | 0.0% | 75.3% | 35.6% | 100.0% | 0 |
 | document | 22 | 22.7% | 0.0% | 17 | 0.0% | 25.9% | 10.0% | 22.7% | 17 |
 | graphics | 33 | 51.5% | 15.2% | 16 | 12.1% | 48.8% | 50.0% | 60.6% | 13 |
 | image-requirements | 108 | 43.5% | 0.0% | 61 | 0.0% | 35.4% | 10.0% | 43.5% | 61 |
@@ -32,7 +32,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | Category | Target modes | Strict | Evidence progress | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | File model | 36 | 0.0% | 32.4% | 10.0% | 33.3% | 87.5% | 0.0% | 24 |
-| Page content and rendering | 740 | 0.5% | 56.8% | 25.8% | 60.5% | 98.6% | 36.9% | 292 |
+| Page content and rendering | 740 | 0.5% | 57.5% | 26.1% | 61.8% | 98.6% | 36.9% | 283 |
 | Interaction and annotations | 131 | 0.8% | 35.0% | 14.0% | 45.8% | 86.2% | 6.9% | 71 |
 | Interchange and profiles | 6 | 0.0% | 10.0% | 10.0% | 16.7% | 0.0% | 0.0% | 5 |
 | PDFE product capabilities | 21 | 0.0% | 10.0% | 10.0% | 42.9% | 0.0% | 0.0% | 12 |
@@ -54,4 +54,4 @@ All 282 capability leaves have a collection record: {'candidate-evidence': 22, '
 
 ## Test and benchmark attribution
 
-Explicit test contracts: 653/934; passing recorded contracts: 653/934; candidate test coverage: 503/934. Benchmark harnesses: 6/6.
+Explicit test contracts: 662/934; passing recorded contracts: 662/934; candidate test coverage: 509/934. Benchmark harnesses: 6/6.

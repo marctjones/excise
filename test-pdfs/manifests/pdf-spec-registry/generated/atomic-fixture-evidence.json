@@ -692,7 +692,7 @@
       "capability": "pdf.17.content.streams",
       "section": "content",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -725,7 +725,7 @@
       "capability": "pdf.17.content.streams",
       "section": "content",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -733,7 +733,7 @@
       "capability": "pdf.17.content.streams",
       "section": "content",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -757,7 +757,7 @@
       "capability": "pdf.20.content.operators",
       "section": "content",
       "mode": "render",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -765,7 +765,7 @@
       "capability": "pdf.20.content.operators",
       "section": "content",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -773,7 +773,7 @@
       "capability": "pdf.20.content.operators",
       "section": "content",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -797,7 +797,7 @@
       "capability": "pdf.17.content.text-state",
       "section": "content",
       "mode": "preserve",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -821,7 +821,7 @@
       "capability": "pdf.17.content.text-state",
       "section": "content",
       "mode": "mutate",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -829,7 +829,7 @@
       "capability": "pdf.17.content.text-state",
       "section": "content",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },

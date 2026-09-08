@@ -183,24 +183,6 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.17.content.streams",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.content.streams",
-      "mode": "mutate",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.content.streams",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.17.transparency.model",
       "mode": "parse",
       "implementationState": "unknown",

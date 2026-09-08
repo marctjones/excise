@@ -10573,7 +10573,10 @@
         "requiredModes": [
           "render",
           "parse",
-          "extract"
+          "extract",
+          "preserve",
+          "write",
+          "mutate"
         ],
         "checks": [
           {
@@ -10608,7 +10611,9 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
-              "parse"
+              "parse",
+              "preserve",
+              "write"
             ]
           },
           {
@@ -10616,6 +10621,13 @@
             "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::Page_Text_ReturnsExtractedText",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "security",
+            "ref": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+            "modes": [
+              "mutate"
             ]
           }
         ]
@@ -11391,6 +11403,41 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::Page_Text_ReturnsExtractedText",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::RendersSimilarlyToMutool",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "corpus",
+            "ref": "Excise.Rendering.Tests/Corpus/ConformanceTests.cs::ConformanceTests_SmokeCorpus_ParsesAndRendersWithoutCrashing",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "security",
+            "ref": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+            "modes": [
+              "mutate"
             ]
           }
         ]
@@ -12201,7 +12248,9 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
-              "parse"
+              "parse",
+              "preserve",
+              "write"
             ]
           },
           {
@@ -12209,6 +12258,13 @@
             "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::TextExtraction_TjOperator_ExtractsText",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "security",
+            "ref": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+            "modes": [
+              "mutate"
             ]
           }
         ]
@@ -12579,6 +12635,13 @@
               "extract",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "security",
+            "ref": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+            "modes": [
+              "mutate"
             ]
           }
         ]
