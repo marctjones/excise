@@ -785,6 +785,11 @@ namespace Excise.Core.Document
         public System.Collections.Generic.IReadOnlySet<string> OffByDefault { get; }
         public bool IsVisibleByDefault(string ocgName) { }
     }
+    public static class PdfOutlineAuthoring
+    {
+        public static Excise.Core.Primitives.PdfReference AddChildOutlineItem(this Excise.Core.Document.PdfDocument document, Excise.Core.Primitives.PdfReference parentRef, string title, int pageNumber) { }
+        public static Excise.Core.Primitives.PdfReference AddOutlineItem(this Excise.Core.Document.PdfDocument document, string title, int pageNumber) { }
+    }
     public sealed class PdfOutlineItem
     {
         public PdfOutlineItem(string title, int? pageNumber, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfOutlineItem> children) { }

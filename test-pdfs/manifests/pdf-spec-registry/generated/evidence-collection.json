@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1003,
-  "indexedContentSha256": "11f9dfa723a67400dd2ba0782e77f246186beb7ff64e3b496155abc1276d1f9a",
+  "indexedFileCount": 1005,
+  "indexedContentSha256": "edf887f6b73d8667c8a8e67a1282f629f639df1f44cf1dc19c74e8a3dab6f353",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -3033,6 +3033,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Document/PdfOutlineAuthoring.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "catalog",
+            "tree",
+            "catalog",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.Core/Document/PdfPage.cs",
           "kind": "source",
           "matchedTerms": [
@@ -3743,19 +3753,9 @@
             "catalog",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "catalog",
-            "geometry",
-            "catalog",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 108
+      "candidateReferenceCount": 109
     },
     {
       "id": "pdf.17.document.navigation",
@@ -3829,6 +3829,13 @@
             "modes": [
               "mutate",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::AddOutlineItem_SurvivesASaveAndReload",
+            "modes": [
+              "author"
             ]
           }
         ]
@@ -3945,6 +3952,16 @@
             "destinations",
             "named",
             "outlines",
+            "catalog",
+            "pdfdocument"
+          ]
+        },
+        {
+          "path": "Excise.Core/Document/PdfOutlineAuthoring.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "outlines",
+            "viewer",
             "catalog",
             "pdfdocument"
           ]
@@ -4624,21 +4641,9 @@
             "viewer",
             "catalog"
           ]
-        },
-        {
-          "path": "tests/format-compatibility-suite.json",
-          "kind": "test",
-          "matchedTerms": [
-            "destinations",
-            "named",
-            "outlines",
-            "metadata",
-            "pagetree",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 87
+      "candidateReferenceCount": 88
     },
     {
       "id": "pdf.17.document.metadata",

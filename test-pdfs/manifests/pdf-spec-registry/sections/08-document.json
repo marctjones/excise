@@ -163,7 +163,7 @@
         "extract": "partial",
         "mutate": "partial",
         "write": "partial",
-        "author": "unimplemented"
+        "author": "partial"
       },
       "evidence": [],
       "notes": "Destinations have security and broken-reference cases; track them separately from actions.",
@@ -261,6 +261,13 @@
             "modes": [
               "mutate",
               "write"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::AddOutlineItem_SurvivesASaveAndReload",
+            "modes": [
+              "author"
             ]
           }
         ]

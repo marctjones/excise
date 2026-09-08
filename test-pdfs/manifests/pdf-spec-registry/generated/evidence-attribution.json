@@ -8662,6 +8662,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -8744,15 +8753,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_SingleComponent_ExtractsMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -20774,11 +20774,29 @@
       "capability": "pdf.17.document.navigation",
       "section": "document",
       "mode": "author",
-      "currentState": "unimplemented",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::AddOutlineItem_SurvivesASaveAndReload",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -22165,6 +22183,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -22247,15 +22274,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_SingleComponent_ExtractsMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -23663,6 +23681,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -23745,15 +23772,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_SingleComponent_ExtractsMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -25129,6 +25147,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -25211,15 +25238,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_SingleComponent_ExtractsMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103310,6 +103328,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103392,15 +103419,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_SingleComponent_ExtractsMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -104770,6 +104788,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::PdfOutlineAuthoringTests.AddOutlineItem_SurvivesASaveAndReload",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104852,15 +104879,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_ValidSizMarker_ExtractsMetadata",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs::CodestreamParserTests.ReadInfo_SingleComponent_ExtractsMetadata",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -109508,15 +109526,15 @@
   ],
   "summary": {
     "targetModes": 900,
-    "modesWithTestCandidates": 620,
-    "modesWithExplicitContracts": 854,
-    "modesWithPassingExplicitContracts": 854,
-    "modesWithRecordedPassingCandidate": 620,
-    "gradeImplemented": 784,
+    "modesWithTestCandidates": 621,
+    "modesWithExplicitContracts": 855,
+    "modesWithPassingExplicitContracts": 855,
+    "modesWithRecordedPassingCandidate": 621,
+    "gradeImplemented": 785,
     "gradeVerified": 70,
-    "gradeUnknown": 46,
-    "testMethods": 6310,
-    "testMethodsWithCapabilityCandidate": 3906,
+    "gradeUnknown": 45,
+    "testMethods": 6316,
+    "testMethodsWithCapabilityCandidate": 3907,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

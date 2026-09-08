@@ -10,10 +10,10 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Area | Target modes | Implemented | Verified | Unknown | Strict | Evidence progress | Promotion readiness | Measured | Strict unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| overall | 900 | 94.9% | 7.8% | 46 | 0.6% | 67.6% | 25.0% | 83.4% | 149 |
+| overall | 900 | 95.0% | 7.8% | 45 | 0.6% | 67.6% | 25.0% | 83.4% | 149 |
 | annotation-subtypes | 92 | 76.1% | 47.8% | 22 | 0.0% | 62.6% | 10.0% | 100.0% | 0 |
 | content | 12 | 100.0% | 8.3% | 0 | 0.0% | 76.7% | 48.3% | 100.0% | 0 |
-| document | 21 | 90.5% | 9.5% | 2 | 0.0% | 67.9% | 10.0% | 100.0% | 0 |
+| document | 21 | 95.2% | 9.5% | 1 | 0.0% | 70.7% | 10.0% | 100.0% | 0 |
 | graphics | 33 | 93.9% | 15.2% | 2 | 12.1% | 72.4% | 79.1% | 100.0% | 0 |
 | image-requirements | 106 | 100.0% | 3.8% | 0 | 0.0% | 70.4% | 10.0% | 100.0% | 0 |
 | interactive | 39 | 69.2% | 15.4% | 12 | 2.6% | 58.8% | 25.1% | 97.4% | 1 |
@@ -31,7 +31,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Category | Target modes | Strict | Evidence progress | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| File model | 35 | 0.0% | 70.6% | 10.0% | 100.0% | 100.0% | 0.0% | 0 |
+| File model | 35 | 0.0% | 72.3% | 10.0% | 100.0% | 100.0% | 0.0% | 0 |
 | Page content and rendering | 708 | 0.6% | 69.0% | 28.2% | 79.4% | 100.0% | 37.4% | 146 |
 | Interaction and annotations | 131 | 0.8% | 61.5% | 14.5% | 99.2% | 96.6% | 6.9% | 1 |
 | Interchange and profiles | 6 | 0.0% | 55.0% | 10.0% | 66.7% | 100.0% | 0.0% | 2 |
@@ -54,4 +54,4 @@ All 282 capability leaves have a collection record: {'candidate-evidence': 22, '
 
 ## Test and benchmark attribution
 
-Explicit test contracts: 854/900; passing recorded contracts: 854/900; candidate test coverage: 620/900. Benchmark harnesses: 6/6.
+Explicit test contracts: 855/900; passing recorded contracts: 855/900; candidate test coverage: 621/900. Benchmark harnesses: 6/6.
