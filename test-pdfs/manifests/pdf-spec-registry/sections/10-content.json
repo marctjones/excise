@@ -28,10 +28,10 @@
         "rationale": "This is the shared semantic path for rendering, extraction, and rewriting."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "partial",
-        "extract": "unknown",
+        "extract": "partial",
         "mutate": "unknown",
         "write": "unknown"
       },
@@ -64,7 +64,9 @@
       "verification": {
         "status": "executable",
         "requiredModes": [
-          "render"
+          "render",
+          "parse",
+          "extract"
         ],
         "checks": [
           {
@@ -93,6 +95,20 @@
             "ref": "Excise.Rendering.Tests/Corpus/ConformanceTests.cs::ConformanceTests_SmokeCorpus_ParsesAndRendersWithoutCrashing",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::Page_Text_ReturnsExtractedText",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -179,11 +195,11 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
+        "preserve": "partial",
         "render": "unknown",
         "extract": "unknown",
         "mutate": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [
         {
@@ -250,7 +266,9 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
-              "parse"
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -285,10 +303,10 @@
         "rationale": "Text is a user-facing and security-critical semantic layer."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "unknown",
         "render": "partial",
-        "extract": "unknown",
+        "extract": "partial",
         "mutate": "unknown",
         "write": "unknown"
       },
@@ -357,6 +375,20 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CombinedTextState_AppliesAllSettings",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::TextExtraction_TjOperator_ExtractsText",
+            "modes": [
+              "extract"
             ]
           }
         ]

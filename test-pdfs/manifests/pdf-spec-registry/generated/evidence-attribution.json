@@ -10193,40 +10193,94 @@
       "capability": "pdf.17.syntax.filters",
       "section": "syntax",
       "mode": "parse",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::StreamFilterCoverageTests.FlateDecode_RoundTrips",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_RoundTrips",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.syntax.filters",
       "section": "syntax",
       "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::StreamFilterCoverageTests.FlateDecode_RoundTrips",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_RoundTrips",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.syntax.filters",
       "section": "syntax",
       "mode": "write",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::StreamFilterCoverageTests.FlateDecode_RoundTrips",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_RoundTrips",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.syntax.encryption",
       "section": "syntax",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.Registry_CoversCoreGuiCliAndSecurityCommands",
@@ -11670,9 +11724,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Security/EncryptionPreservationTests.cs::SaveWithReEncryptionOptions_RoundTripsProtectionAndPermissions",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -14593,7 +14655,7 @@
       "capability": "pdf.17.syntax.encryption",
       "section": "syntax",
       "mode": "write",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.Registry_CoversCoreGuiCliAndSecurityCommands",
@@ -16037,9 +16099,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Security/EncryptionPreservationTests.cs::SaveWithReEncryptionOptions_RoundTripsProtectionAndPermissions",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -47604,7 +47674,7 @@
       "capability": "pdf.17.content.streams",
       "section": "content",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Custom_GivesDirectGraphicsAccess",
@@ -49047,9 +49117,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "render"
       ]
@@ -50554,8 +50632,17 @@
       "capability": "pdf.17.content.streams",
       "section": "content",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Text/TextExtractionTests.cs::TextExtractionTests.Page_Text_ReturnsExtractedText",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
         {
           "test": "Excise.Rendering.Tests/PdfStringEscapeTests.cs::PdfStringEscapeTests.Decodes_StandardEscapes",
           "mappingSources": [
@@ -50602,9 +50689,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::Page_Text_ReturnsExtractedText",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "render"
       ]
@@ -53550,11 +53645,29 @@
       "capability": "pdf.20.content.operators",
       "section": "content",
       "mode": "preserve",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
@@ -53594,19 +53707,46 @@
       "capability": "pdf.20.content.operators",
       "section": "content",
       "mode": "write",
-      "currentState": "unknown",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": []
     },
     {
       "capability": "pdf.17.content.text-state",
       "section": "content",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
         {
           "test": "Excise.Rendering.Tests/PdfStringEscapeTests.cs::PdfStringEscapeTests.Decodes_StandardEscapes",
           "mappingSources": [
@@ -53653,9 +53793,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "search"
       ]
@@ -53744,8 +53892,17 @@
       "capability": "pdf.17.content.text-state",
       "section": "content",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "partial",
       "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Text/TextExtractionTests.cs::TextExtractionTests.TextExtraction_TjOperator_ExtractsText",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
         {
           "test": "Excise.Rendering.Tests/PdfStringEscapeTests.cs::PdfStringEscapeTests.Decodes_StandardEscapes",
           "mappingSources": [
@@ -53792,9 +53949,17 @@
           ]
         }
       ],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
-      "grade": "unknown",
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::TextExtraction_TjOperator_ExtractsText",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        }
+      ],
+      "explicitContractStatus": "passing",
+      "grade": "implemented",
       "benchmarkScenarios": [
         "search"
       ]
@@ -105576,15 +105741,15 @@
   ],
   "summary": {
     "targetModes": 944,
-    "modesWithTestCandidates": 498,
-    "modesWithExplicitContracts": 554,
-    "modesWithPassingExplicitContracts": 554,
-    "modesWithRecordedPassingCandidate": 498,
-    "gradeImplemented": 543,
+    "modesWithTestCandidates": 503,
+    "modesWithExplicitContracts": 565,
+    "modesWithPassingExplicitContracts": 565,
+    "modesWithRecordedPassingCandidate": 503,
+    "gradeImplemented": 554,
     "gradeVerified": 11,
-    "gradeUnknown": 390,
+    "gradeUnknown": 379,
     "testMethods": 6108,
-    "testMethodsWithCapabilityCandidate": 3829,
+    "testMethodsWithCapabilityCandidate": 3831,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

@@ -202,9 +202,9 @@
         "rationale": "Content and resources cannot be safely understood without bounded decoding."
       },
       "modes": {
-        "parse": "unknown",
-        "preserve": "unknown",
-        "write": "unknown"
+        "parse": "partial",
+        "preserve": "partial",
+        "write": "partial"
       },
       "evidence": [
         {
@@ -251,6 +251,25 @@
         "explicitEvidenceGaps": [
           "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
         ]
+      },
+      "verification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_RoundTrips",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
+          }
+        ]
       }
     },
     {
@@ -276,10 +295,10 @@
         "rationale": "Open documents with valid credentials and offer modern protection without mistaking advisory permissions for cryptographic authorization."
       },
       "modes": {
-        "parse": "unknown",
+        "parse": "partial",
         "preserve": "partial",
         "mutate": "unknown",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [],
       "notes": "Do not recover passwords or bypass encryption. New output must not use obsolete or weak encryption; password stripping is permitted only after legitimate opening, with a warning. Explicit user confirmation is required to override advisory permission flags.",
@@ -339,7 +358,9 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/Security/EncryptionPreservationTests.cs::SaveWithReEncryptionOptions_RoundTripsProtectionAndPermissions",
             "modes": [
-              "preserve"
+              "preserve",
+              "parse",
+              "write"
             ]
           }
         ]

@@ -27,24 +27,6 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.17.syntax.filters",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.syntax.filters",
-      "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.syntax.filters",
-      "mode": "write",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.17.graphics.state",
       "mode": "mutate",
       "implementationState": "partial",
@@ -202,19 +184,7 @@
     },
     {
       "capability": "pdf.17.content.streams",
-      "mode": "parse",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.content.streams",
       "mode": "preserve",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.content.streams",
-      "mode": "extract",
       "implementationState": "unknown",
       "reason": "no verification contract"
     },

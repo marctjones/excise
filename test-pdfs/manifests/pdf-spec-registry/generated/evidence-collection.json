@@ -1288,7 +1288,25 @@
           "ref": "pdf-image-feature-matrix"
         }
       ],
-      "registeredVerification": null,
+      "registeredVerification": {
+        "status": "planned",
+        "requiredModes": [
+          "parse",
+          "preserve",
+          "write"
+        ],
+        "checks": [
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Parsing/StreamFilterCoverageTests.cs::FlateDecode_RoundTrips",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
+          }
+        ]
+      },
       "candidateReferences": [
         {
           "path": "Excise.Core/Content/ContentStreamWalker.cs",
@@ -2027,7 +2045,9 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/Security/EncryptionPreservationTests.cs::SaveWithReEncryptionOptions_RoundTripsProtectionAndPermissions",
             "modes": [
-              "preserve"
+              "preserve",
+              "parse",
+              "write"
             ]
           }
         ]
@@ -10551,7 +10571,9 @@
       "registeredVerification": {
         "status": "executable",
         "requiredModes": [
-          "render"
+          "render",
+          "parse",
+          "extract"
         ],
         "checks": [
           {
@@ -10580,6 +10602,20 @@
             "ref": "Excise.Rendering.Tests/Corpus/ConformanceTests.cs::ConformanceTests_SmokeCorpus_ParsesAndRendersWithoutCrashing",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::Page_Text_ReturnsExtractedText",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -11352,7 +11388,9 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
-              "parse"
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -12157,6 +12195,20 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CombinedTextState_AppliesAllSettings",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/TextExtractionTests.cs::TextExtraction_TjOperator_ExtractsText",
+            "modes": [
+              "extract"
             ]
           }
         ]

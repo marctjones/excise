@@ -3137,7 +3137,7 @@
     {
       "capability": "pdf.17.content.streams",
       "mode": "parse",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [
         "Excise.Core/Content/ContentOperator.cs",
@@ -4638,7 +4638,7 @@
     {
       "capability": "pdf.17.content.streams",
       "mode": "extract",
-      "currentState": "unknown",
+      "currentState": "partial",
       "promotion": "review-required",
       "implementationCandidates": [],
       "directTestCandidates": [
