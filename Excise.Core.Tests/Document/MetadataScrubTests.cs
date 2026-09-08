@@ -159,6 +159,35 @@ public class MetadataScrubTests
         reopened.GetXmpMetadata().Should().BeNull();
     }
 
+    /// <summary>
+    /// document.json's metadata preserve claim: /Info and XMP survive a
+    /// save+reload UNCHANGED when nothing scrubs them -- the counterpart to
+    /// every ScrubMetadata test above, which only proves the scrubbed path.
+    /// </summary>
+    [Fact]
+    public void Metadata_SurvivesASaveAndReload_WhenUntouched()
+    {
+        var pdf = BuildPdfWithMetadata(
+            title: "Keep Me Title",
+            author: "Keep Me Author",
+            subject: "Keep Me Subject",
+            keywords: "keep-me-keyword",
+            creator: "Keep Me Creator",
+            producer: "Keep Me Producer",
+            xmpBody: "<?xml version=\"1.0\"?><x:xmpmeta xmlns:x=\"adobe:ns:meta/\">keep me xmp</x:xmpmeta>");
+
+        using var doc = PdfDocument.Open(pdf);
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+
+        reopened.Title.Should().Be("Keep Me Title");
+        reopened.Author.Should().Be("Keep Me Author");
+        reopened.Subject.Should().Be("Keep Me Subject");
+        reopened.Keywords.Should().Be("keep-me-keyword");
+        reopened.Creator.Should().Be("Keep Me Creator");
+        reopened.Producer.Should().Be("Keep Me Producer");
+        Encoding.UTF8.GetString(reopened.GetXmpMetadata()!).Should().Contain("keep me xmp");
+    }
+
     // ─── PDF builders ────────────────────────────────────────────────────────
 
     private static byte[] BuildPdfWithMetadata(

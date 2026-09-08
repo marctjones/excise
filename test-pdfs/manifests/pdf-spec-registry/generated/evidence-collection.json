@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1002,
-  "indexedContentSha256": "e624b69d77bf3a2d11696f2aba64112955843a180ef8764b99b7cc9b29f6fd31",
+  "indexedContentSha256": "66918b8768a838149022c1c90939c7fbdc698e0463c88a04955a4aba99d140fc",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -2851,7 +2851,6 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "render",
           "mutate",
           "write"
         ],
@@ -2861,6 +2860,28 @@
             "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::Flattening_MaterializesInheritedAttributesOntoLeaves",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::InheritedRotateAndResources_SurviveASaveAndReparse_StillResolveOnLeaves",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::RotatePage180Command_ThenSaveAs_RotationSurvivesReopen",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::RemoveSelectedPagesCommand_ThenSaveAs_RemovedPageIsGoneAccordingToAnIndependentExtractor",
+            "modes": [
+              "mutate",
+              "write"
             ]
           }
         ]
@@ -3277,6 +3298,8 @@
           "kind": "test",
           "matchedTerms": [
             "catalog",
+            "geometry",
+            "inheritance",
             "tree",
             "catalog",
             "pdfdocument"
@@ -3740,6 +3763,42 @@
             "ref": "Excise.Core.Tests/Document/NamedDestinationTests.cs::GetNamedDestinations_OldFormDests_ParsesCorrectly",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/NamedDestinationTests.cs::GetNamedDestinations_RoundTrip_LegacyDests_SurvivesSaveAndReopen",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/NamedDestinationTests.cs::GetNamedDestinations_RoundTrip_ModernNamesTree_SurvivesSaveAndReopen",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Operations/PdfDocumentSplitterTests.cs::SplitAtBookmarks_UsesRootLevelOutlineDestinationsAsBoundaries",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/NonPageCarrierRedactionLeakTests.cs::Redaction_DoesNotLeaveSecretInOutlineTitles",
+            "modes": [
+              "mutate",
+              "write"
             ]
           }
         ]
@@ -4593,6 +4652,27 @@
             "modes": [
               "mutate"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/MetadataScrubTests.cs::Metadata_SurvivesASaveAndReload_WhenUntouched",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/NonPageCarrierRedactionLeakTests.cs::Redaction_DoesNotLeaveSecretInXmpMetadata",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/MetadataScrubTests.cs::ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
+            "modes": [
+              "write"
+            ]
           }
         ]
       },
@@ -5369,7 +5449,29 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::GetEmbeddedFiles_SingleFileViaNameTree_ReturnsFileWithName",
             "modes": [
-              "parse"
+              "parse",
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::EmbeddedFile_SurvivesASaveAndReload_WhenUntouched",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::ScrubEmbeddedFiles_RemovesEmbeddedFiles",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed",
+            "modes": [
+              "write"
             ]
           }
         ]
@@ -5626,6 +5728,7 @@
           "kind": "test",
           "matchedTerms": [
             "embedded",
+            "embedded-files",
             "portfolios",
             "catalog",
             "metadata",
@@ -6187,6 +6290,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dictionaries",
+            "resource"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/OcgMembershipExtractionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -6265,7 +6376,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 23
+      "candidateReferenceCount": 24
     },
     {
       "id": "pdf.17.graphics.paths-painting",
@@ -55115,6 +55226,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "byte",
+            "dictionaries"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PdfDocumentOpenPipelineTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -55260,19 +55379,9 @@
             "validation",
             "metadata"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "permissions",
-            "validation",
-            "metadata"
-          ]
         }
       ],
-      "candidateReferenceCount": 148
+      "candidateReferenceCount": 149
     },
     {
       "id": "pdf.17.interchange.accessibility",

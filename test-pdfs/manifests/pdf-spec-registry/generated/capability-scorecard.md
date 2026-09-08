@@ -10,10 +10,10 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Area | Target modes | Implemented | Verified | Unknown | Strict | Evidence progress | Promotion readiness | Measured | Strict unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| overall | 905 | 86.4% | 7.0% | 123 | 0.6% | 62.4% | 23.9% | 75.2% | 224 |
+| overall | 904 | 88.1% | 7.2% | 108 | 0.6% | 63.4% | 23.9% | 77.1% | 207 |
 | annotation-subtypes | 92 | 76.1% | 47.8% | 22 | 0.0% | 62.6% | 10.0% | 100.0% | 0 |
 | content | 12 | 100.0% | 8.3% | 0 | 0.0% | 76.7% | 48.3% | 100.0% | 0 |
-| document | 22 | 22.7% | 0.0% | 17 | 0.0% | 25.9% | 10.0% | 22.7% | 17 |
+| document | 21 | 90.5% | 9.5% | 2 | 0.0% | 67.9% | 10.0% | 100.0% | 0 |
 | graphics | 33 | 63.6% | 15.2% | 12 | 12.1% | 56.1% | 54.8% | 72.7% | 9 |
 | image-requirements | 106 | 100.0% | 3.8% | 0 | 0.0% | 70.4% | 10.0% | 100.0% | 0 |
 | interactive | 39 | 33.3% | 10.3% | 26 | 2.6% | 36.5% | 23.5% | 56.4% | 17 |
@@ -31,7 +31,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Category | Target modes | Strict | Evidence progress | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| File model | 36 | 0.0% | 35.7% | 10.0% | 38.9% | 100.0% | 0.0% | 22 |
+| File model | 35 | 0.0% | 61.1% | 10.0% | 85.7% | 100.0% | 0.0% | 5 |
 | Page content and rendering | 711 | 0.6% | 67.0% | 27.0% | 76.1% | 98.6% | 37.4% | 170 |
 | Interaction and annotations | 131 | 0.8% | 54.8% | 14.0% | 87.0% | 93.1% | 6.9% | 17 |
 | Interchange and profiles | 6 | 0.0% | 32.5% | 10.0% | 50.0% | 100.0% | 0.0% | 3 |
@@ -45,7 +45,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | redaction | 5 | 20.0% | 84.0% | 5 | 3 | 0 |
 | redaction-annotations | 6 | 0.0% | 35.8% | 3 | 0 | 1 |
 | rendering | 4 | 50.0% | 95.0% | 4 | 4 | 0 |
-| safe-save | 5 | 0.0% | 10.0% | 0 | 0 | 4 |
+| safe-save | 5 | 0.0% | 10.0% | 0 | 0 | 2 |
 
 ## Evidence collection
 
@@ -54,4 +54,4 @@ All 282 capability leaves have a collection record: {'candidate-evidence': 22, '
 
 ## Test and benchmark attribution
 
-Explicit test contracts: 782/905; passing recorded contracts: 782/905; candidate test coverage: 571/905. Benchmark harnesses: 6/6.
+Explicit test contracts: 796/904; passing recorded contracts: 796/904; candidate test coverage: 581/904. Benchmark harnesses: 6/6.

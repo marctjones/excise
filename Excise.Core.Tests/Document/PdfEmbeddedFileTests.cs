@@ -201,6 +201,25 @@ public class PdfEmbeddedFileTests
         reopened.HasEmbeddedFiles.Should().BeFalse();
     }
 
+    /// <summary>
+    /// document.json's embedded-files preserve claim: an attachment survives
+    /// a save+reload byte-for-byte when nothing scrubs it -- the counterpart
+    /// to ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed above,
+    /// which only proves the scrubbed path.
+    /// </summary>
+    [Fact]
+    public void EmbeddedFile_SurvivesASaveAndReload_WhenUntouched()
+    {
+        var pdf = BuildPdfWithEmbeddedFile("keep-me.xml", "<keep-me/>");
+        using var doc = PdfDocument.Open(pdf);
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+
+        var files = reopened.GetEmbeddedFiles();
+        files.Should().HaveCount(1);
+        files[0].Name.Should().Be("keep-me.xml");
+        Encoding.UTF8.GetString(files[0].Bytes!).Should().Contain("keep-me");
+    }
+
     [Fact]
     public void GetEmbeddedFiles_Caching_SameInstanceReturned()
     {

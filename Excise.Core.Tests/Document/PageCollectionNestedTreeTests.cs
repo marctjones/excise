@@ -159,6 +159,37 @@ public class PageCollectionNestedTreeTests
             "marker-page-ONE", "marker-page-ONE", "marker-page-TWO", "marker-page-THREE");
     }
 
+    /// <summary>
+    /// document.json's "Document catalog, page tree, inheritance, and page
+    /// geometry" preserve claim: PagesA's inheritable /Rotate 90 and
+    /// /Resources survive a full save+reparse and still resolve correctly on
+    /// its leaves, which declare neither locally. A naive writer that
+    /// flattens inherited attributes onto leaves while reading but does not
+    /// restore the /Parent chain on write would break exactly this -- the
+    /// individual dictionaries could each look fine in isolation while the
+    /// INHERITANCE ITSELF silently stopped resolving.
+    /// </summary>
+    [Fact]
+    public void InheritedRotateAndResources_SurviveASaveAndReparse_StillResolveOnLeaves()
+    {
+        using var doc = PdfDocument.Open(BuildNestedTreePdf());
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+
+        foreach (var marker in new[] { "marker-page-ONE", "marker-page-TWO" })
+        {
+            var page = reopened.GetPages().Single(p => Marker(p) == marker);
+            page.Rotation.Should().Be(90,
+                $"{marker}: /Rotate is inherited from the intermediate Pages node, not declared locally");
+            page.Resources.Should().NotBeNull($"{marker}: /Resources is inherited from the intermediate Pages node");
+            page.Resources!.GetArray("ProcSet").Select(v => v.ToString()).Should().Contain("/PDF");
+        }
+
+        // The third leaf sits under a DIFFERENT intermediate node with no
+        // /Rotate/-/Resources of its own -- must NOT pick up PagesA's values.
+        var unrelated = reopened.GetPages().Single(p => Marker(p) == "marker-page-THREE");
+        unrelated.Rotation.Should().Be(0, "marker-page-THREE's ancestor never declared /Rotate");
+    }
+
     // ------------------------------------------------------------- plumbing
 
     private static void AddContentStream(List<(int objNum, string content)> objects, int objNum, string content)

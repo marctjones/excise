@@ -477,15 +477,14 @@
       "capabilityIds": [
         "pdf.17.document.catalog-pages"
       ],
-      "targetModes": 5,
+      "targetModes": 4,
       "modeStates": {
-        "partial": 1,
-        "unknown": 4
+        "partial": 4
       },
-      "unknownModeCount": 4,
-      "explicitContractModes": 1,
-      "passingContractModes": 1,
-      "testCandidateModes": 3,
+      "unknownModeCount": 0,
+      "explicitContractModes": 4,
+      "passingContractModes": 4,
+      "testCandidateModes": 4,
       "reviewBatchIssues": []
     },
     {
@@ -496,13 +495,12 @@
       ],
       "targetModes": 5,
       "modeStates": {
-        "partial": 2,
-        "unknown": 3
+        "partial": 5
       },
-      "unknownModeCount": 3,
-      "explicitContractModes": 2,
-      "passingContractModes": 2,
-      "testCandidateModes": 4,
+      "unknownModeCount": 0,
+      "explicitContractModes": 5,
+      "passingContractModes": 5,
+      "testCandidateModes": 5,
       "reviewBatchIssues": []
     },
     {
@@ -513,13 +511,13 @@
       ],
       "targetModes": 6,
       "modeStates": {
-        "partial": 1,
-        "unknown": 5
+        "partial": 5,
+        "unimplemented": 1
       },
-      "unknownModeCount": 5,
-      "explicitContractModes": 1,
-      "passingContractModes": 1,
-      "testCandidateModes": 1,
+      "unknownModeCount": 0,
+      "explicitContractModes": 5,
+      "passingContractModes": 5,
+      "testCandidateModes": 5,
       "reviewBatchIssues": []
     },
     {
@@ -530,13 +528,13 @@
       ],
       "targetModes": 6,
       "modeStates": {
-        "partial": 1,
-        "unknown": 5
+        "partial": 5,
+        "unimplemented": 1
       },
-      "unknownModeCount": 5,
-      "explicitContractModes": 1,
-      "passingContractModes": 1,
-      "testCandidateModes": 1,
+      "unknownModeCount": 0,
+      "explicitContractModes": 5,
+      "passingContractModes": 5,
+      "testCandidateModes": 5,
       "reviewBatchIssues": []
     },
     {
@@ -3085,7 +3083,7 @@
   ],
   "summary": {
     "clusters": 178,
-    "targetModes": 905,
-    "unknownModeCount": 224
+    "targetModes": 904,
+    "unknownModeCount": 207
   }
 }

@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T04:19:04.403854+00:00",
-  "gitRevision": "094e5f86a82387562789082d0c2de8e4de769a21",
+  "recordedAt": "2026-09-08T04:35:19.275466+00:00",
+  "gitRevision": "853d938751ed1ed38e55c6f9df751c6d63724449",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -321,6 +321,21 @@
       "path": "/tmp/new6-trx/rendering.trx",
       "modifiedAt": "2026-09-08T04:19:00.067048+00:00",
       "sha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
+    },
+    {
+      "path": "/tmp/new7-trx/core.trx",
+      "modifiedAt": "2026-09-08T04:34:50.800452+00:00",
+      "sha256": "b230210edc6144ea47a35a4c5ac82b35518a075de1192f55a62ddb3292b62f90"
+    },
+    {
+      "path": "/tmp/new7-trx/app.trx",
+      "modifiedAt": "2026-09-08T04:34:59.174007+00:00",
+      "sha256": "60555040b5fbbd3f5b5bf3b93506da2589b94439d196b53c20b66e11286fef62"
+    },
+    {
+      "path": "/tmp/new7-trx/core2.trx",
+      "modifiedAt": "2026-09-08T04:35:12.747711+00:00",
+      "sha256": "dd240fbd2bd78a827d43c82dd0a107a20c4dcf87cbf0b9e2f4c3385baf1324c5"
     }
   ],
   "outcomes": [
@@ -3247,10 +3262,10 @@
     {
       "testName": "Excise.App.Tests.UI.PageOrganizationSavePersistenceTests.RemoveSelectedPagesCommand_ThenSaveAs_RemovedPageIsGoneAccordingToAnIndependentExtractor",
       "outcome": "Passed",
-      "duration": "00:00:00.1622732",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:01.2689048",
+      "trx": "/tmp/new7-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:34:59.174007+00:00",
+      "trxSha256": "60555040b5fbbd3f5b5bf3b93506da2589b94439d196b53c20b66e11286fef62"
     },
     {
       "testName": "Excise.App.Tests.UI.PageOrganizationSavePersistenceTests.RemoveSelectedPagesCommand_ThenSaveAs_RemovedPageIsGoneOnReopen",
@@ -3271,10 +3286,10 @@
     {
       "testName": "Excise.App.Tests.UI.PageOrganizationSavePersistenceTests.RotatePage180Command_ThenSaveAs_RotationSurvivesReopen",
       "outcome": "Passed",
-      "duration": "00:00:00.1273312",
-      "trx": "/Users/marc/Documents/GitHub/pdfe/logs/full-suite_Debug_20260831_153932/app-tests-unchunked-evidence.trx",
-      "resultModifiedAt": "2026-08-31T20:59:31.724410+00:00",
-      "trxSha256": "aad4ad7136dbca346d4a2e127c7c537b3d6f1e0c29227626774eb1058d83bc4a"
+      "duration": "00:00:02.5537405",
+      "trx": "/tmp/new7-trx/app.trx",
+      "resultModifiedAt": "2026-09-08T04:34:59.174007+00:00",
+      "trxSha256": "60555040b5fbbd3f5b5bf3b93506da2589b94439d196b53c20b66e11286fef62"
     },
     {
       "testName": "Excise.App.Tests.UI.PageOrganizationWorkflowTests.MoveCurrentPageAsync_ReordersDocumentAndMarksDirty",
@@ -20165,6 +20180,14 @@
       "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
     },
     {
+      "testName": "Excise.Core.Tests.Document.MetadataScrubTests.Metadata_SurvivesASaveAndReload_WhenUntouched",
+      "outcome": "Passed",
+      "duration": "00:00:00.0883213",
+      "trx": "/tmp/new7-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:34:50.800452+00:00",
+      "trxSha256": "b230210edc6144ea47a35a4c5ac82b35518a075de1192f55a62ddb3292b62f90"
+    },
+    {
       "testName": "Excise.Core.Tests.Document.MetadataScrubTests.ScrubInfoKeys_NullArgument_DoesNotThrow",
       "outcome": "Passed",
       "duration": "00:00:00.0012235",
@@ -20223,10 +20246,10 @@
     {
       "testName": "Excise.Core.Tests.Document.MetadataScrubTests.ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
       "outcome": "Passed",
-      "duration": "00:00:00.0006295",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0634924",
+      "trx": "/tmp/new7-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T04:35:12.747711+00:00",
+      "trxSha256": "dd240fbd2bd78a827d43c82dd0a107a20c4dcf87cbf0b9e2f4c3385baf1324c5"
     },
     {
       "testName": "Excise.Core.Tests.Document.MidTierCoverageTests.ContentStreamParser_Parse_IgnoresComments",
@@ -20503,18 +20526,18 @@
     {
       "testName": "Excise.Core.Tests.Document.NamedDestinationTests.GetNamedDestinations_RoundTrip_LegacyDests_SurvivesSaveAndReopen",
       "outcome": "Passed",
-      "duration": "00:00:00.0008953",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0027829",
+      "trx": "/tmp/new7-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T04:35:12.747711+00:00",
+      "trxSha256": "dd240fbd2bd78a827d43c82dd0a107a20c4dcf87cbf0b9e2f4c3385baf1324c5"
     },
     {
       "testName": "Excise.Core.Tests.Document.NamedDestinationTests.GetNamedDestinations_RoundTrip_ModernNamesTree_SurvivesSaveAndReopen",
       "outcome": "Passed",
-      "duration": "00:00:00.0012352",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0078628",
+      "trx": "/tmp/new7-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T04:35:12.747711+00:00",
+      "trxSha256": "dd240fbd2bd78a827d43c82dd0a107a20c4dcf87cbf0b9e2f4c3385baf1324c5"
     },
     {
       "testName": "Excise.Core.Tests.Document.NamedDestinationTests.GetNamedDestinations_XYZMode_ParsesAllCoordinates",
@@ -20603,6 +20626,14 @@
       "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
       "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
       "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PageCollectionNestedTreeTests.InheritedRotateAndResources_SurviveASaveAndReparse_StillResolveOnLeaves",
+      "outcome": "Passed",
+      "duration": "00:00:00.0891436",
+      "trx": "/tmp/new7-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:34:50.800452+00:00",
+      "trxSha256": "b230210edc6144ea47a35a4c5ac82b35518a075de1192f55a62ddb3292b62f90"
     },
     {
       "testName": "Excise.Core.Tests.Document.PageCollectionNestedTreeTests.Insert_OnNestedTree_LandsAtTheRequestedIndex",
@@ -24269,6 +24300,14 @@
       "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
     },
     {
+      "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileTests.EmbeddedFile_SurvivesASaveAndReload_WhenUntouched",
+      "outcome": "Passed",
+      "duration": "00:00:00.0883331",
+      "trx": "/tmp/new7-trx/core.trx",
+      "resultModifiedAt": "2026-09-08T04:34:50.800452+00:00",
+      "trxSha256": "b230210edc6144ea47a35a4c5ac82b35518a075de1192f55a62ddb3292b62f90"
+    },
+    {
       "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileTests.GetEmbeddedFiles_Caching_SameInstanceReturned",
       "outcome": "Passed",
       "duration": "00:00:00.0001686",
@@ -24447,18 +24486,18 @@
     {
       "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileTests.ScrubEmbeddedFiles_RemovesEmbeddedFiles",
       "outcome": "Passed",
-      "duration": "00:00:00.0002920",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0019337",
+      "trx": "/tmp/new7-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T04:35:12.747711+00:00",
+      "trxSha256": "dd240fbd2bd78a827d43c82dd0a107a20c4dcf87cbf0b9e2f4c3385baf1324c5"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileTests.ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed",
       "outcome": "Passed",
-      "duration": "00:00:00.0005503",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0680980",
+      "trx": "/tmp/new7-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T04:35:12.747711+00:00",
+      "trxSha256": "dd240fbd2bd78a827d43c82dd0a107a20c4dcf87cbf0b9e2f4c3385baf1324c5"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfEmbeddedFileTests.ScrubMetadata_DefaultParameter_ScrubsAttachments",
@@ -25463,10 +25502,10 @@
     {
       "testName": "Excise.Core.Tests.Document.PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
       "outcome": "Passed",
-      "duration": "00:00:00.0038415",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0145705",
+      "trx": "/tmp/new7-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T04:35:12.747711+00:00",
+      "trxSha256": "dd240fbd2bd78a827d43c82dd0a107a20c4dcf87cbf0b9e2f4c3385baf1324c5"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfPageLabelTests.GetPageLabel_SimpleDecimal_ReturnsFormattedLabels",
@@ -31759,10 +31798,10 @@
     {
       "testName": "Excise.Core.Tests.Operations.PdfDocumentSplitterTests.SplitAtBookmarks_UsesRootLevelOutlineDestinationsAsBoundaries",
       "outcome": "Passed",
-      "duration": "00:00:00.0018621",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0592010",
+      "trx": "/tmp/new7-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T04:35:12.747711+00:00",
+      "trxSha256": "dd240fbd2bd78a827d43c82dd0a107a20c4dcf87cbf0b9e2f4c3385baf1324c5"
     },
     {
       "testName": "Excise.Core.Tests.Operations.PdfDocumentSplitterTests.SplitAtPageBoundaries_ImpliesLeadingZeroBoundaryIfMissing",
@@ -42551,18 +42590,18 @@
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.NonPageCarrierRedactionLeakTests.Redaction_DoesNotLeaveSecretInOutlineTitles",
       "outcome": "Passed",
-      "duration": "00:00:00.0006073",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.0056136",
+      "trx": "/tmp/new7-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T04:35:12.747711+00:00",
+      "trxSha256": "dd240fbd2bd78a827d43c82dd0a107a20c4dcf87cbf0b9e2f4c3385baf1324c5"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.NonPageCarrierRedactionLeakTests.Redaction_DoesNotLeaveSecretInXmpMetadata",
       "outcome": "Passed",
-      "duration": "00:00:00.0024895",
-      "trx": "logs/test-tier_t1_20260907_191755/Excise.Core.Tests.trx",
-      "resultModifiedAt": "2026-09-07T23:20:13.131554+00:00",
-      "trxSha256": "8433c365dfe8053e156f9c44f1f2c17f8c781653426146e54995bb94b0bbbce6"
+      "duration": "00:00:00.1004756",
+      "trx": "/tmp/new7-trx/core2.trx",
+      "resultModifiedAt": "2026-09-08T04:35:12.747711+00:00",
+      "trxSha256": "dd240fbd2bd78a827d43c82dd0a107a20c4dcf87cbf0b9e2f4c3385baf1324c5"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.NonPageCarrierRedactionLeakTests.Sanitizer_LeavesUnrelatedMetadataIntact",
@@ -68254,12 +68293,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 63,
-    "tests": 8491,
+    "trxFiles": 66,
+    "tests": 8494,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7564
+      "Passed": 7567
     },
     "status": "recorded"
   }

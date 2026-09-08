@@ -31,10 +31,10 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
-        "render": "unknown",
-        "mutate": "unknown",
-        "write": "unknown"
+        "preserve": "partial",
+        "render": "not-applicable",
+        "mutate": "partial",
+        "write": "partial"
       },
       "evidence": [
         {
@@ -95,7 +95,6 @@
         "requiredModes": [
           "parse",
           "preserve",
-          "render",
           "mutate",
           "write"
         ],
@@ -105,6 +104,28 @@
             "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::Flattening_MaterializesInheritedAttributesOntoLeaves",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::InheritedRotateAndResources_SurviveASaveAndReparse_StillResolveOnLeaves",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::RotatePage180Command_ThenSaveAs_RotationSurvivesReopen",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::RemoveSelectedPagesCommand_ThenSaveAs_RemovedPageIsGoneAccordingToAnIndependentExtractor",
+            "modes": [
+              "mutate",
+              "write"
             ]
           }
         ]
@@ -138,11 +159,11 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
-        "extract": "unknown",
-        "mutate": "unknown",
-        "write": "unknown",
-        "author": "unknown"
+        "preserve": "partial",
+        "extract": "partial",
+        "mutate": "partial",
+        "write": "partial",
+        "author": "unimplemented"
       },
       "evidence": [],
       "notes": "Destinations have security and broken-reference cases; track them separately from actions.",
@@ -205,6 +226,42 @@
             "modes": [
               "parse"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/NamedDestinationTests.cs::GetNamedDestinations_RoundTrip_LegacyDests_SurvivesSaveAndReopen",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/NamedDestinationTests.cs::GetNamedDestinations_RoundTrip_ModernNamesTree_SurvivesSaveAndReopen",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Operations/PdfDocumentSplitterTests.cs::SplitAtBookmarks_UsesRootLevelOutlineDestinationsAsBoundaries",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/NonPageCarrierRedactionLeakTests.cs::Redaction_DoesNotLeaveSecretInOutlineTitles",
+            "modes": [
+              "mutate",
+              "write"
+            ]
           }
         ]
       }
@@ -235,10 +292,10 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
-        "extract": "unknown",
+        "preserve": "partial",
+        "extract": "partial",
         "mutate": "partial",
-        "write": "unknown"
+        "write": "partial"
       },
       "evidence": [],
       "notes": "Metadata is a redaction carrier and needs saved-byte evidence, not a page-render-only test.",
@@ -306,6 +363,27 @@
             "modes": [
               "mutate"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/MetadataScrubTests.cs::Metadata_SurvivesASaveAndReload_WhenUntouched",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Text/Segmentation/NonPageCarrierRedactionLeakTests.cs::Redaction_DoesNotLeaveSecretInXmpMetadata",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/MetadataScrubTests.cs::ScrubMetadata_RoundTrip_SaveAndReload_StaysScrubbed",
+            "modes": [
+              "write"
+            ]
           }
         ]
       }
@@ -336,11 +414,11 @@
       },
       "modes": {
         "parse": "partial",
-        "preserve": "unknown",
-        "extract": "unknown",
-        "mutate": "unknown",
-        "write": "unknown",
-        "author": "unknown"
+        "preserve": "partial",
+        "extract": "partial",
+        "mutate": "partial",
+        "write": "partial",
+        "author": "unimplemented"
       },
       "evidence": [],
       "notes": "Track document-level and annotation attachments separately; do not execute attached content.",
@@ -401,7 +479,29 @@
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::GetEmbeddedFiles_SingleFileViaNameTree_ReturnsFileWithName",
             "modes": [
-              "parse"
+              "parse",
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::EmbeddedFile_SurvivesASaveAndReload_WhenUntouched",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::ScrubEmbeddedFiles_RemovesEmbeddedFiles",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed",
+            "modes": [
+              "write"
             ]
           }
         ]
