@@ -9,6 +9,7 @@ namespace Excise.Core.ColorSpaces;
 internal sealed class PdfIccProfile
 {
     private readonly string _colorSpace;
+    private readonly string _pcs;
     private readonly MatrixProfile? _matrixProfile;
     private readonly Lut16Profile? _aToBLut16Profile;
     private readonly Lut16Profile? _bToALut16Profile;
@@ -20,11 +21,13 @@ internal sealed class PdfIccProfile
 
     private PdfIccProfile(
         string colorSpace,
+        string pcs,
         MatrixProfile? matrixProfile,
         Lut16Profile? aToBLut16Profile,
         Lut16Profile? bToALut16Profile)
     {
         _colorSpace = colorSpace;
+        _pcs = pcs;
         _matrixProfile = matrixProfile;
         _aToBLut16Profile = aToBLut16Profile;
         _bToALut16Profile = bToALut16Profile;
@@ -38,6 +41,13 @@ internal sealed class PdfIccProfile
                 return null;
 
             var colorSpace = ReadSignature(data, 16);
+            // §6.4.2 (ICC.1:2004): the header's PCS field is bytes 20-23,
+            // right after the 16-byte data-colour-space field this file
+            // already read. A lut16 (mft2) A2B tag's CLUT output is encoded
+            // per THIS field -- 'Lab ' or 'XYZ ' use different 16-bit
+            // encodings (#1424). Getting it wrong silently reinterprets one
+            // as the other rather than failing to parse.
+            var pcs = ReadSignature(data, 20);
             var tagCount = (int)ReadUInt32(data, 128);
             if (tagCount < 0 || 132 + tagCount * 12 > data.Length)
                 return null;
@@ -56,7 +66,10 @@ internal sealed class PdfIccProfile
             if (colorSpace == "RGB " &&
                 TryParseMatrixProfile(data, tags, out var matrixProfile))
             {
-                return new PdfIccProfile(colorSpace, matrixProfile, null, null);
+                // Matrix/TRC RGB profiles are XYZ-PCS unconditionally by
+                // construction (rXYZ/gXYZ/bXYZ ARE the device-to-XYZ(D50)
+                // matrix) -- the header's PCS field doesn't govern this path.
+                return new PdfIccProfile(colorSpace, "XYZ ", matrixProfile, null, null);
             }
 
             Lut16Profile? bToALut16Profile = null;
@@ -66,7 +79,7 @@ internal sealed class PdfIccProfile
             if (tags.TryGetValue("A2B0", out var a2b0) &&
                 TryParseLut16Profile(data, a2b0.Offset, a2b0.Size, out var lut16Profile))
             {
-                return new PdfIccProfile(colorSpace, null, lut16Profile, bToALut16Profile);
+                return new PdfIccProfile(colorSpace, pcs, null, lut16Profile, bToALut16Profile);
             }
         }
         catch
@@ -147,7 +160,21 @@ internal sealed class PdfIccProfile
         {
             var output = EvaluateLut16(_aToBLut16Profile, values);
             if (output.Length >= 3)
+            {
+                // #1424: a lut16 A2B tag's CLUT output is encoded per the
+                // profile's OWN PCS, not always Lab. An XYZ-PCS profile's
+                // output decoded as Lab produces a completely different
+                // (and wrong) colour -- confirmed against littleCMS on a
+                // real FOGRA CMYK profile: decoding as Lab put a red logo
+                // at RGB(7,12,118); decoding the identical CLUT output as
+                // XYZ matched littleCMS to a couple of units.
+                if (_pcs == "XYZ ")
+                {
+                    var xyz = DecodeIccXyz(output[0], output[1], output[2]);
+                    return XyzD50ToLab(xyz.X, xyz.Y, xyz.Z);
+                }
                 return DecodeIccLab(output[0], output[1], output[2]);
+            }
         }
 
         return null;
@@ -157,6 +184,13 @@ internal sealed class PdfIccProfile
     {
         if (_bToALut16Profile == null || _bToALut16Profile.InputChannels < 3)
             return null;
+
+        if (_pcs == "XYZ ")
+        {
+            var xyz = LabD50ToXyz(l, a, b);
+            var encoded = EncodeIccXyz(xyz.X, xyz.Y, xyz.Z);
+            return EvaluateLut16(_bToALut16Profile, new[] { encoded.X, encoded.Y, encoded.Z });
+        }
 
         return EvaluateLut16(_bToALut16Profile, new[]
         {
@@ -316,6 +350,28 @@ internal sealed class PdfIccProfile
             l * 100.0,
             a * 255.0 - 128.0,
             b * 255.0 - 128.0);
+
+    /// <summary>
+    /// ICC v2 §6.5.3 "u1Fixed15Number" PCSXYZ encoding used inside lut16
+    /// (mft2) tags when the profile's PCS is XYZ: 1.0 in XYZ maps to 0x8000
+    /// (32768), and the 16-bit table entries this class already normalizes
+    /// to [0,1] via /65535.0 (<see cref="InterpolateTable"/>) need one more
+    /// factor to recover the actual XYZ value. Not the D50White-relative Lab
+    /// encoding <see cref="DecodeIccLab"/> handles -- a different PCS uses a
+    /// different wire format, not just different units (#1424).
+    /// </summary>
+    private static (double X, double Y, double Z) DecodeIccXyz(double x, double y, double z)
+        => (
+            x * 65535.0 / 32768.0,
+            y * 65535.0 / 32768.0,
+            z * 65535.0 / 32768.0);
+
+    /// <summary>Inverse of <see cref="DecodeIccXyz"/>, clamped to the table's [0,1] input domain.</summary>
+    private static (double X, double Y, double Z) EncodeIccXyz(double x, double y, double z)
+        => (
+            Math.Clamp(x * 32768.0 / 65535.0, 0, 1),
+            Math.Clamp(y * 32768.0 / 65535.0, 0, 1),
+            Math.Clamp(z * 32768.0 / 65535.0, 0, 1));
 
     private static (double X, double Y, double Z) LabD50ToXyz(double l, double a, double b)
     {

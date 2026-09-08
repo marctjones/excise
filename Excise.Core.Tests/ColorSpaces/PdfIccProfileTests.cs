@@ -139,8 +139,14 @@ public class PdfIccProfileTests
         return ms.ToArray();
     }
 
-    /// <summary>Assembles header + tag table + tag data into one profile byte array.</summary>
-    internal static byte[] BuildProfile(string colorSpace, List<(string Sig, byte[] Data)> tags)
+    /// <summary>
+    /// Assembles header + tag table + tag data into one profile byte array.
+    /// <paramref name="pcs"/> defaults to "Lab " -- the PCS every existing
+    /// test's hand-built profile implicitly needs (#1424 added reading this
+    /// field; before that fix it was never even looked at, so these profiles
+    /// never specified it and got zero bytes, which also decode as "not XYZ").
+    /// </summary>
+    internal static byte[] BuildProfile(string colorSpace, List<(string Sig, byte[] Data)> tags, string pcs = "Lab ")
     {
         const int headerSize = 132;
         int tagTableSize = tags.Count * 12;
@@ -160,9 +166,10 @@ public class PdfIccProfileTests
 
         var bytes = ms.ToArray();
 
-        // Patch header: total size (0-3), colorSpace (16-19), tagCount (128-131).
+        // Patch header: total size (0-3), colorSpace (16-19), PCS (20-23), tagCount (128-131).
         PatchU32(bytes, 0, (uint)bytes.Length);
         PatchAscii(bytes, 16, colorSpace);
+        PatchAscii(bytes, 20, pcs);
         PatchU32(bytes, 128, (uint)tags.Count);
 
         // Patch tag table.
@@ -422,6 +429,98 @@ public class PdfIccProfileTests
         var viaDirect = profile.ToRgb(values);
 
         viaPreview.Should().Be(viaDirect, "a matrix-only output intent has no B2A0 LUT, so preview falls back to direct ToRgb");
+    }
+
+    /// <summary>
+    /// A 3-in/3-out mft2 tag with identity input/output tables (so
+    /// EvaluateLut16's per-channel table lookups are no-ops) and a single
+    /// controlled CLUT corner, for tests that need to know EXACTLY what
+    /// <c>EvaluateLut16</c> will return for a given input rather than a
+    /// deterministic-but-opaque ramp (<see cref="BuildMft2Tag"/>'s formula).
+    /// gridPoints=2 means input (0,0,0) lands exactly on the (0,0,0) grid
+    /// corner with weight 1 and every other corner at weight 0 (see
+    /// InterpolateClut), so <paramref name="corner000"/> passes straight
+    /// through.
+    /// </summary>
+    private static byte[] BuildMft2TagWithCorner(ushort[] corner000)
+    {
+        const int channels = 3;
+        const int gridPoints = 2;
+        using var ms = new MemoryStream();
+        WriteAscii(ms, "mft2");
+        WriteU32(ms, 0);
+        ms.WriteByte(channels);
+        ms.WriteByte(channels);
+        ms.WriteByte(gridPoints);
+        ms.WriteByte(0);
+        ms.Write(new byte[36], 0, 36);
+        WriteU16(ms, 2); // inputEntries
+        WriteU16(ms, 2); // outputEntries
+
+        for (var c = 0; c < channels; c++) { WriteU16(ms, 0); WriteU16(ms, 65535); } // identity input tables
+
+        // CLUT: 2^3 = 8 corners, 3 channels each. Only corner index 0 (all-zero) matters here.
+        for (var i = 0; i < 8; i++)
+            for (var c = 0; c < channels; c++)
+                WriteU16(ms, i == 0 ? corner000[c] : (ushort)0);
+
+        for (var c = 0; c < channels; c++) { WriteU16(ms, 0); WriteU16(ms, 65535); } // identity output tables
+
+        return ms.ToArray();
+    }
+
+    [Fact]
+    public void TryParse_XyzPcsLut16Profile_DecodesClutOutputAsXyzNotLab()
+    {
+        // #1424: the ICC v2 header's PCS field (offset 20) governs how a
+        // lut16 A2B tag's CLUT output is encoded. Build a CLUT whose (0,0,0)
+        // corner is the D50 white point, encoded per the u1Fixed15Number
+        // PCSXYZ wire format (1.0 -> 0x8000/32768). With PCS correctly read
+        // as XYZ, feeding (0,0,0) must decode near-white. The bug this pins
+        // (decoding the identical bytes as Lab instead) would instead read
+        // L~48, a~-0.5, b~-23 -- a medium grey with a green-blue tint, NOT
+        // white -- which is exactly the class of error that turned a red
+        // FOGRA logo navy on the real Altona fixture this issue was found on.
+        var d50WhiteAsXyzU16 = new ushort[]
+        {
+            (ushort)Math.Round(0.96422 * 32768.0), // 31601
+            (ushort)Math.Round(1.00000 * 32768.0), // 32768
+            (ushort)Math.Round(0.82521 * 32768.0), // 27041
+        };
+        var tags = new List<(string, byte[])> { ("A2B0", BuildMft2TagWithCorner(d50WhiteAsXyzU16)) };
+        var profile = PdfIccProfile.TryParse(BuildProfile("CMYK", tags, pcs: "XYZ "));
+
+        profile.Should().NotBeNull();
+        var rgb = profile!.ToRgb(new[] { 0.0, 0.0, 0.0 });
+
+        rgb.Should().NotBeNull();
+        rgb!.Value.R.Should().BeGreaterThan(0.95, "the (0,0,0) corner encodes the D50 white point in XYZ and must render near-white, not the medium grey a Lab misdecode would produce");
+        rgb.Value.G.Should().BeGreaterThan(0.95);
+        rgb.Value.B.Should().BeGreaterThan(0.95);
+    }
+
+    [Fact]
+    public void TryParse_LabPcsLut16Profile_UnaffectedByPcsField_StillDecodesAsLab()
+    {
+        // Same CLUT bytes as the XYZ test above, but with PCS left at the
+        // default "Lab " -- must decode via the ORIGINAL Lab path and must
+        // NOT be near-white (confirms the branch in ToPcsLab is actually
+        // conditioned on the PCS field, not just always taking the XYZ path).
+        var sameBytes = new ushort[]
+        {
+            (ushort)Math.Round(0.96422 * 32768.0),
+            (ushort)Math.Round(1.00000 * 32768.0),
+            (ushort)Math.Round(0.82521 * 32768.0),
+        };
+        var tags = new List<(string, byte[])> { ("A2B0", BuildMft2TagWithCorner(sameBytes)) };
+        var profile = PdfIccProfile.TryParse(BuildProfile("CMYK", tags)); // default pcs: "Lab "
+
+        profile.Should().NotBeNull();
+        var rgb = profile!.ToRgb(new[] { 0.0, 0.0, 0.0 });
+
+        rgb.Should().NotBeNull();
+        (rgb!.Value.R > 0.95 && rgb.Value.G > 0.95 && rgb.Value.B > 0.95).Should().BeFalse(
+            "decoding the same bytes as Lab (not XYZ) must NOT produce near-white -- otherwise the two paths aren't actually distinct");
     }
 
     [Fact]
