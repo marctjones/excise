@@ -2,27 +2,29 @@
   "Path": "verapdf-corpus/veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-d.pdf",
   "Source": "veraPDF corpus",
   "Owner": "rendering:color",
-  "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
+  "RootCause": "NONE",
   "ImprovementPriority": "NONE",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Confidence": "HIGH",
+  "Notes": "Second corpus copy of the PDF_A-2b fixture of the same name; same uncoloured tiling pattern, same verdict. Fixed in #1373.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_TARGET",
+      "QualityStatus": "TARGET_MATCH",
+      "PixelAgreement": "MATCHES_SOME",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
+      "RootCause": "NONE",
       "Target": {
-        "Mode": "ACCEPTED_REFERENCE",
-        "Primary": "pdftocairo",
-        "Reason": "Poppler is the accepted screen-preview target for this uncalibrated Device-color fixture; pdfe preserves the same brown/black source-color semantics while MuPDF/Ghostscript choose a visibly different cyan policy."
+        "Mode": "PDF_SPEC",
+        "Primary": "ghostscript",
+        "Reason": "ISO 32000-2 §8.7.3.3 decides this page, not a majority: an uncoloured (PaintType 2) tiling pattern's content stream shall not specify colour, so the cell paints in the tint from `1 0 0 0 scn`, resolved through the page's own /DefaultCMYK profile. Transforming 100% cyan through that profile (CMYK->Lab, LittleCMS) gives sRGB (0,158,224) -- exactly what Ghostscript renders and within one unit of mutool. pdftocairo renders (109,78,55) because Poppler honours the cell's own `sc`; it is a reference that is wrong here, which is why this page must NOT be pinned to it."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Focused 150 DPI review shows pdfe follows the accepted Poppler screen-preview color behavior; residual differences are edge/rasterization placement.",
-      "Notes": "Reviewed against pdfe, Poppler, MuPDF, and Ghostscript renders on 2026-07-03."
+      "QualityReason": "excise renders the dominant non-white colour as (0,157,224) at 150 DPI, matching mutool exactly and Ghostscript to one unit, and matching the page's own ICC profile.",
+      "Notes": "Re-reviewed 2026-09-09 alongside the PDF_A-2b copy; both were pinned Mode=ACCEPTED_REFERENCE/Primary=pdftocairo, which enshrined the defect fixed in #1373.",
+      "Issue": 1373
     }
-  }
+  },
+  "Issue": 1373
 }
