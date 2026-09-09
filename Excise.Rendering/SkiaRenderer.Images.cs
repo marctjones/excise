@@ -500,9 +500,26 @@ internal partial class RenderContext
                         resolvedColorSpace,
                         GetImageDecodeArray(imageStream),
                         TryGetColorKeyMask(imageStream, resolvedColorSpace.Components),
-                        _cancellationToken));
+                        _cancellationToken),
+                        out var dctFailure);
                     if (decoded != null)
                         return decoded;
+
+                    // #1383 — a JPEG whose component count contradicts the
+                    // dictionary's /ColorSpace describes two incompatible
+                    // images, not one ambiguous one. Draw NOTHING rather than
+                    // handing it to a generic decode that ignores the
+                    // dictionary and paints Skia's 0x80 fill as a flat grey
+                    // rectangle the reader cannot distinguish from content.
+                    if (dctFailure == DctImageDecoder.DctDecodeFailure
+                            .ComponentCountContradictsColorSpace)
+                    {
+                        AddDiagnostic(
+                            "recovered malformation: DCTDecode image refused — its SOF " +
+                            "component count contradicts the dictionary's /ColorSpace " +
+                            $"({colorSpace}); no image drawn (#1383)");
+                        return null;
+                    }
                 }
 
                 return EncodedImageDecoder.Decode(new EncodedImageDecodeRequest(
@@ -518,6 +535,19 @@ internal partial class RenderContext
                     imageStream.EncodedData,
                     CancellationToken: _cancellationToken));
                 return bitmap;
+            }
+
+            // #1396 — a filter that attempted this stream and refused says why,
+            // and that reason must reach the user. Without it the refusal
+            // arrives as a bare "not decoded", indistinguishable from a stream
+            // nothing has got to yet, and an unimplemented JBIG2 feature (our
+            // gap) reads the same as a corrupt codestream (the file's).
+            if (imageStream.DecodeFailureReason is { } reason)
+            {
+                AddDiagnostic(
+                    $"recovered malformation: {reason} — no image drawn " +
+                    $"({width}x{height}, {bitsPerComponent} bpc, {colorSpace}) (#1396)");
+                return null;
             }
 
             return CreateBitmapFromRawData(

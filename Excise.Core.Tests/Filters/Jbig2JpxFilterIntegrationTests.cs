@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using Excise.Core.Filters;
 using Excise.Core.Parsing;
 using Excise.Core.Primitives;
 using Xunit;
@@ -7,8 +8,15 @@ namespace Excise.Core.Tests.Filters;
 
 /// <summary>
 /// Integration tests for wiring JBIG2Decode/JPXDecode into StreamDecompressor (#325).
-/// Verifies the safe-fallback contract: unsupported/incomplete image data is left
-/// as the raw encoded bytes rather than producing a crash or a silently-wrong image.
+///
+/// ⚠️ The contract these tests pin CHANGED in #1396, and the old one was the
+/// defect. "Unsupported image data is left as the raw encoded bytes" is safe
+/// only for a filter whose codestream something downstream still understands —
+/// DCTDecode (a registered pass-through) and JPXDecode (decoded at the image
+/// layer, see SkiaRenderer.Images.GetTerminalJpxData). For JBIG2 nothing
+/// downstream recognises the codestream, so the bytes reached the rasteriser as
+/// one-bit image SAMPLES and were painted as noise. JBIG2 now REFUSES an
+/// attempted decode it cannot finish; JPX keeps its pass-through, deliberately.
 /// </summary>
 public class Jbig2JpxFilterIntegrationTests
 {
@@ -78,15 +86,61 @@ public class Jbig2JpxFilterIntegrationTests
         return new PdfStream(dict, data);
     }
 
+    /// <summary>
+    /// ⚠️ This test asserted the OPPOSITE until #1396, and the old assertion —
+    /// "unsupported JBIG2 must pass through unchanged" — was the defect written
+    /// down as a contract.
+    ///
+    /// <para>Passing the bytes through is not a neutral no-op for a filter whose
+    /// output is image SAMPLES. The stream was marked decoded, and the image
+    /// path rasterised the still-compressed JBIG2 codestream as one-bit pixels:
+    /// visual noise presented as page content, with no diagnostic. On pdfium's
+    /// bug_867501.pdf that painted 184,589 of 185,724 pixels black.</para>
+    ///
+    /// <para>#878's guard caught only the extreme shape — it refuses a buffer
+    /// supplying under half the samples the image needs. A codestream that
+    /// compresses poorly, or a small image, clears that bar and still gets
+    /// painted, which is why the guess is replaced by a refusal here.</para>
+    /// </summary>
     [Fact]
-    public void Jbig2_UnsupportedSegment_FallsBackToRawBytes()
+    public void Jbig2_AttemptedDecodeThatFails_RefusesInsteadOfReturningItsInput()
     {
         byte[] raw = BuildJbig2Segment(1, 63);
         var stream = MakeImage("JBIG2Decode", raw, 8, 8);
 
-        new StreamDecompressor().Decompress(stream);
+        var decode = () => new StreamDecompressor().Decompress(stream);
 
-        stream.DecodedData.Should().Equal(raw, "unsupported JBIG2 must pass through unchanged");
+        var thrown = decode.Should().Throw<Exception>(
+            "a decoder that tried and failed must FAIL — handing back the encoded " +
+            "bytes makes them image samples, and they get painted").Which;
+        thrown.Message.Should().Contain("JBIG2Decode",
+            "the report has to name which filter refused");
+        stream.IsDecoded.Should().BeFalse(
+            "a refused stream must not read back as decoded, or the codestream is " +
+            "still available to be painted as samples");
+    }
+
+    /// <summary>
+    /// The two causes are reported distinctly because only one of them is
+    /// excise's bug: an unimplemented-but-legal JBIG2 feature is a gap worth a
+    /// bug report, corrupt data is the file's problem (#1396).
+    /// </summary>
+    [Fact]
+    public void FilterRefusal_DistinguishesAnUnimplementedFeatureFromCorruptInput()
+    {
+        var ourGap = new PdfFilterDecodeException(
+            "JBIG2Decode", PdfFilterDecodeFailureKind.Unimplemented, "symbol dictionary context retention");
+        var theirFile = new PdfFilterDecodeException(
+            "JBIG2Decode", PdfFilterDecodeFailureKind.CorruptInput, "truncated page information segment");
+
+        ourGap.Message.Should().Contain("JBIG2Decode")
+            .And.Contain("unimplemented feature")
+            .And.Contain("symbol dictionary context retention");
+        theirFile.Message.Should().Contain("JBIG2Decode")
+            .And.Contain("corrupt or non-conforming data")
+            .And.Contain("truncated page information segment");
+        ourGap.Message.Should().NotBe(theirFile.Message,
+            "a reader has to be able to tell excise's gap from the file's defect");
     }
 
     [Fact]
@@ -121,12 +175,24 @@ public class Jbig2JpxFilterIntegrationTests
         stream.DecodedData.Should().Equal(raw, "malformed JPX data is a known codec fallback, not a dispatcher failure");
     }
 
+    /// <summary>
+    /// The refusal added in #1396 is narrow: a decode that SUCCEEDS still
+    /// produces samples, and the sample count is the page bitmap's, never the
+    /// codestream's length. This is the guard against over-correcting the
+    /// pass-through fix into "JBIG2 never decodes".
+    /// </summary>
     [Fact]
-    public void Jbig2_DoesNotThrowFromDecompress()
+    public void Jbig2_DecodableStream_StillProducesPageSizedSamples()
     {
         var stream = MakeImage("JBIG2Decode", new byte[] { 0xFF, 0xAC, 0x01 }, 4, 4);
-        var act = () => new StreamDecompressor().Decompress(stream);
-        act.Should().NotThrow();
+
+        new StreamDecompressor().Decompress(stream);
+
+        stream.IsDecoded.Should().BeTrue();
+        stream.DecodedData.Length.Should().Be(4,
+            "a 4x4 one-bit image is one byte per row — a length equal to the " +
+            "ENCODED stream would mean the codestream had been passed through " +
+            "as samples again (#1396)");
     }
 
     [Fact]
@@ -139,20 +205,24 @@ public class Jbig2JpxFilterIntegrationTests
         parms["JBIG2Globals"] = new PdfStream(globals);
         stream["DecodeParms"] = parms;
 
-        new StreamDecompressor().Decompress(stream);
+        var act = () => new StreamDecompressor().Decompress(stream);
 
-        stream.DecodedData.Should().Equal(raw, "unsupported global JBIG2 segments should pass through the original image bytes");
+        act.Should().Throw<PdfFilterDecodeException>(
+            "unsupported global JBIG2 segments used to pass the image bytes through " +
+            "as samples, and those bytes were painted (#1396)");
     }
 
     [Fact]
-    public void Jbig2_UnsupportedGenericRegionMode_FallsBackToRawBytes()
+    public void Jbig2_UnsupportedGenericRegionMode_Refuses()
     {
         byte[] segmentData = BuildGenericRegionBody(width: 1, height: 1, regionFlags: 0, genericRegionFlags: 0x02, 0x00);
         byte[] raw = BuildJbig2Segment(1, 38, segmentData);
         var stream = MakeImage("JBIG2Decode", raw, 1, 1);
 
-        new StreamDecompressor().Decompress(stream);
+        var act = () => new StreamDecompressor().Decompress(stream);
 
-        stream.DecodedData.Should().Equal(raw, "unsupported arithmetic template modes must pass through unchanged");
+        act.Should().Throw<PdfFilterDecodeException>(
+            "an unsupported arithmetic template mode is a decode excise ATTEMPTED " +
+            "and could not finish; passing the codestream through made it samples (#1396)");
     }
 }

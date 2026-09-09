@@ -578,6 +578,13 @@ internal partial class RenderContext
         }
     }
 
+    /// <summary>
+    /// Record one recovered malformation. A refusal a user cannot see is
+    /// indistinguishable from content that was never there, so anything the
+    /// renderer declines to draw says so here (#1383, #1396).
+    /// </summary>
+    private void AddDiagnostic(string message) => _options.Diagnostics?.Add(message);
+
     private void AddDiagnostics(IEnumerable<ContentStreamReadWarning> warnings)
     {
         if (_options.Diagnostics == null)

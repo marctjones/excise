@@ -59,6 +59,29 @@ internal static class AdobeGlyphList
         if (_map.TryGetValue(glyphName, out unicode))
             return true;
 
+        // #1382: fall through to Excise.Core's glyph-name table, which CLAUDE.md
+        // makes the single font-decoding authority ("One walk, many sinks").
+        // THIS TABLE IS A SECOND, SMALLER COPY and the drift was a blank page:
+        // pdfium 363015187.pdf carries /Differences [49 /Alpha] on a
+        // non-embedded TrueType. The name is not here (this subset stops at
+        // Latin Extended-A), so the code mapped to '\0' and the renderer drew
+        // NOTHING — where mutool inks 109 px and pdftocairo 138. Core's table
+        // has the Greek block, so consulting it costs one dictionary miss and
+        // removes a whole class of silently-undrawn glyph names.
+        //
+        // Consulted AFTER the local table, never before, so this is purely
+        // additive: no name that resolves today can change meaning. Only a
+        // single-code-point mapping is accepted — Core also decodes AGL
+        // component-joined ligature names ("f_i" -> "fi", #1423), which a
+        // `char` cannot carry; those keep falling through as before.
+        // Full consolidation of the two tables is #1440.
+        var core = Excise.Core.Text.AdobeGlyphList.ToUnicode(glyphName);
+        if (core is { Length: 1 })
+        {
+            unicode = core[0];
+            return true;
+        }
+
         // Uniform naming convention (AGL §D.1): /uniXXXX for BMP codepoints.
         if (glyphName.Length == 7 && glyphName.StartsWith("uni"))
         {

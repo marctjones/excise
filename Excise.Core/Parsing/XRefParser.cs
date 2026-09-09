@@ -226,6 +226,32 @@ public class XRefParser
         return false;
     }
 
+    /// <summary>
+    /// Locate a traditional <c>xref</c> keyword near a stated offset that does
+    /// not land on one.
+    /// </summary>
+    /// <remarks>
+    /// The window spans <see cref="XRefNearbyOffsetRepairWindow"/> bytes on
+    /// BOTH sides of <paramref name="position"/>, nearest match first.
+    ///
+    /// It searched only BACKWARDS until #1382, and the forward half is the one
+    /// that was needed. pdfium's <c>bug_602650.pdf</c> states every section
+    /// offset 4 bytes early — they land on the <c>obj</c> tail of the preceding
+    /// <c>endobj</c>, with the keyword just AHEAD ("obj\nxref"). The root
+    /// section survived that only by accident: its failure fell through to
+    /// <see cref="TryFindLastTraditionalXRef"/>, which rescans the file tail.
+    /// A <c>/Prev</c> section gets no such fallback — <see cref="ParseDocumentXRef"/>
+    /// simply threw, the open pipeline caught it and dropped the older revision,
+    /// and with it objects 1-3 of that file. The page's <c>/Contents 3 0 R</c>
+    /// then resolved to null and the page rendered BLANK, where mutool and
+    /// pdftocairo both draw its two text strings.
+    ///
+    /// Nearest-first ordering matters: an early offset must not be allowed to
+    /// reach past its own section to an unrelated <c>xref</c> further away, so
+    /// candidates are tried in order of distance rather than backward-then-forward.
+    /// The keyword is still required to stand as a whole token, so the "xref"
+    /// inside a neighbouring "startxref" is never accepted.
+    /// </remarks>
     private bool TryFindNearbyTraditionalXRef(long position, out long repairedPosition)
     {
         repairedPosition = 0;
@@ -233,7 +259,8 @@ public class XRefParser
             return false;
 
         var searchStart = Math.Max(0, position - XRefNearbyOffsetRepairWindow);
-        var searchSize = checked((int)(position - searchStart));
+        var searchEnd = Math.Min(_stream.Length, position + XRefNearbyOffsetRepairWindow);
+        var searchSize = checked((int)(searchEnd - searchStart));
         if (searchSize < 4)
             return false;
 
@@ -241,16 +268,28 @@ public class XRefParser
         _stream.Position = searchStart;
         var bytesRead = _stream.Read(buffer, 0, buffer.Length);
 
-        for (var i = bytesRead - 4; i >= 0; i--)
+        // Index of `position` within the buffer; candidates are scanned outward
+        // from here so the closest keyword wins.
+        var origin = checked((int)(position - searchStart));
+        for (var distance = 0; distance <= searchSize; distance++)
         {
-            if (!MatchesKeyword(buffer, i, "xref"u8))
-                continue;
+            for (var sign = 0; sign < 2; sign++)
+            {
+                var i = sign == 0 ? origin - distance : origin + distance;
+                if (distance == 0 && sign == 1)
+                    continue;
+                if (i < 0 || i + 4 > bytesRead)
+                    continue;
 
-            if (!IsPdfTokenBoundary(buffer, i - 1) || !IsPdfTokenBoundary(buffer, i + 4))
-                continue;
+                if (!MatchesKeyword(buffer, i, "xref"u8))
+                    continue;
 
-            repairedPosition = searchStart + i;
-            return true;
+                if (!IsPdfTokenBoundary(buffer, i - 1) || !IsPdfTokenBoundary(buffer, i + 4))
+                    continue;
+
+                repairedPosition = searchStart + i;
+                return true;
+            }
         }
 
         return false;

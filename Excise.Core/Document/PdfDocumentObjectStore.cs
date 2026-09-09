@@ -195,6 +195,12 @@ internal sealed class PdfDocumentObjectStore : IDisposable
                     catch (Exception ex) when (ex is not OutOfMemoryException)
                     {
                         // Image and unsupported content filters may remain encoded.
+                        // One unreadable image must not fail the document open —
+                        // but a decoder that ATTEMPTED the decode and refused
+                        // has something worth saying, and this is the only place
+                        // that still holds it (#1396).
+                        if (ex is Filters.PdfFilterDecodeException)
+                            filteredStream.SetDecodeFailureReason(ex.Message);
                     }
                 }
             }
