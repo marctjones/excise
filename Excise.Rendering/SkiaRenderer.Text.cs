@@ -1356,14 +1356,7 @@ internal partial class RenderContext
     //     what made pdfium's text_form_negative_fontsize.pdf come out with no
     //     page text while mutool, pdftocairo, pdftoppm and Ghostscript all
     //     drew it mirrored.
-    private float GetEffectiveFontSize()
-    {
-        var c = _textState.TextMatrixC;
-        var d = _textState.TextMatrixD;
-        var yScale = (float)Math.Sqrt(c * c + d * d);
-        if (yScale < 1e-6f) yScale = 1f;
-        return _textState.FontSize * yScale;
-    }
+    private float GetEffectiveFontSize() => _textState.FontSize * ComputeTextMatrixYScale();
 
     /// <summary>
     /// −1 when <c>Tf</c> was given a negative size, +1 otherwise. The
@@ -1372,6 +1365,23 @@ internal partial class RenderContext
     /// call sites multiply back in when they hand a value to the text matrix.
     /// </summary>
     private float GetFontSizeSign() => _textState.FontSize < 0f ? -1f : 1f;
+
+    /// <summary>
+    /// The text matrix's Y-axis scale magnitude -- sqrt(Tm.c^2 + Tm.d^2).
+    /// Tc/Tw (character/word spacing) are already in unscaled text-space
+    /// units per PDF spec 9.4.3 and must NOT be scaled by font size; they
+    /// are scaled by this instead, to land in the same pre-xyRatio canvas
+    /// frame effectiveSize (= FontSize * this) puts the glyph-width term in.
+    /// Shared by every per-glyph cursor-advance site in this file so they
+    /// can't drift from each other the way two of them once did.
+    /// </summary>
+    private float ComputeTextMatrixYScale()
+    {
+        var c = _textState.TextMatrixC;
+        var d = _textState.TextMatrixD;
+        var yScale = (float)Math.Sqrt(c * c + d * d);
+        return yScale < 1e-6f ? 1f : yScale;
+    }
 
     // Horizontal-to-vertical aspect ratio of the text matrix. Most PDFs use a
     // uniform Tm (X-scale == Y-scale) so this is 1. When they don't — e.g. a
@@ -1764,30 +1774,29 @@ internal partial class RenderContext
                 // against Times/Helvetica, regardless of the system font we
                 // substituted for the actual glyphs.
                 //
-                // Per-glyph cursor advance after drawing byte b:
-                //     /Widths[b]/1000 * fontSize    (intended glyph width)
-                //   + Tc                             (character spacing)
-                //   + (b == 0x20 ? Tw : 0)           (word spacing on space)
-                //
-                // Multiplied by the horizontal-scaling factor Tz (Th) per
-                // PDF spec 9.4.4.
+                // Per PDF spec 9.4.3 (equation for horizontal displacement):
+                //   tx = ((w0/1000) * Tfs + Tc + (b == 0x20 ? Tw : 0)) * Th
+                // Tc and Tw are ALREADY in unscaled text-space units -- same
+                // units as Tfs itself -- and are added AFTER the glyph-width
+                // term is scaled by Tfs, never scaled by Tfs a second time.
+                // (This file previously scaled the whole sum, including Tc/Tw,
+                // by effectiveSize here -- a real bug caught by a mutool
+                // differential test, since fixed. The ByteToGlyph branch
+                // below already had this right; see its longer comment.)
                 //
                 // We're inside a canvas that's already been scaled by xyRatio
-                // for the X axis, so cursor is in the pre-xyRatio frame.
-                // Tc / Tw are unscaled; we don't apply Tm's xScale here
-                // because the canvas transform handles it.
-                // Per-glyph advance per PDF spec 9.4.4:
-                //   tx = (w0/1000 + Tc + (b == 0x20 ? Tw : 0)) * Tm_scale * Th
-                // With Tf=1 and Tm scale = effectiveSize, Tm_scale = effectiveSize.
-                // Multiplying everything together puts cursor in the canvas frame
-                // we just set up with Scale(xyRatio, -1).
-                // The outer Scale already folded Th into the canvas X axis, so
-                // cursor advances in the *pre-Th* frame: (w/1000 + spacing) * Tfs.
-                // Multiplying by Th again here would double-apply the horizontal
-                // scale and over-shoot per-glyph spacing under any non-default Tz.
+                // for the X axis, so cursor is in the pre-xyRatio frame, and
+                // by Scale(xyRatio, -1) -- the outer Scale already folded Th
+                // into the canvas X axis, so cursor advances in the *pre-Th*
+                // frame. Tc/Tw are scaled by the text matrix's Y-axis scale
+                // (yScale) rather than by effectiveSize, to land in that same
+                // frame -- consistent with effectiveSize itself being
+                // fontSize*yScale (GetEffectiveFontSize), and with how the
+                // ByteToGlyph branch below computes it.
                 float cursor = 0f;
                 float tc = _textState.CharSpacing;
                 float tw = _textState.WordSpacing;
+                var spacingYScale = ComputeTextMatrixYScale();
                 SKPath? localClipPath = clipText ? new SKPath() : null;
                 for (int i = 0; i < sourceBytes!.Length; i++)
                 {
@@ -1842,8 +1851,10 @@ internal partial class RenderContext
                     // is already in the mirrored frame, while Tc/Tw are added
                     // after the Tfs multiply in §9.4.4 and so keep pushing in
                     // the text's nominal direction. No-op when Tf is positive.
-                    float spacing = tc + (sourceBytes[i] == 0x20 ? tw : 0f);
-                    cursor += (w / 1000f + spacing * sizeSign) * effectiveSize;
+                    // Tc/Tw are scaled by spacingYScale, NOT effectiveSize --
+                    // see the comment above this block.
+                    float spacing = (tc + (sourceBytes[i] == 0x20 ? tw : 0f)) * spacingYScale;
+                    cursor += (w / 1000f) * effectiveSize + spacing * sizeSign;
                 }
                 AddPendingTextClipPath(localClipPath, x, y, th, ySign);
                 localClipPath?.Dispose();
@@ -1894,10 +1905,7 @@ internal partial class RenderContext
                 SKPoint[]? positions = null;
                 if (needsExplicitSpacing)
                 {
-                    var tmC = _textState.TextMatrixC;
-                    var tmD = _textState.TextMatrixD;
-                    var yScale = (float)Math.Sqrt(tmC * tmC + tmD * tmD);
-                    if (yScale < 1e-6f) yScale = 1f;
+                    var yScale = ComputeTextMatrixYScale();
 
                     positions = new SKPoint[gids.Length];
                     float cursor = 0f;

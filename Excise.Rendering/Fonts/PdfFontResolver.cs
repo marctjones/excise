@@ -1,4 +1,5 @@
 using Excise.Core.Document;
+using Excise.Core.Fonts;
 using Excise.Core.Primitives;
 using Excise.Core.Text;
 
@@ -31,6 +32,32 @@ internal static class PdfFontResolver
                 widths = new float[widthsArray.Count];
                 for (var i = 0; i < widthsArray.Count; i++)
                     widths[i] = (float)widthsArray.GetNumber(i);
+            }
+            else if (subtype == "Type1" && StandardFontMetrics.TryGetWidth(baseFont, 'A', out _))
+            {
+                // Standard-14 font, no /Widths array (ISO 32000-2 9.6.2.2: not
+                // required for these -- a reader is expected to fall back to
+                // the font's own built-in AFM metrics). subtype == "Type1" is
+                // required, not just a name match: /BaseFont defaults to
+                // "Helvetica" when absent (line above), and a Type3 font with
+                // no /BaseFont at all -- common, since its CharProcs define
+                // everything -- would otherwise get AFM Helvetica widths
+                // instead of its own real per-glyph d0/d1 metrics (caught by
+                // RenderPage_Type3Font_MissingWidths_AdvancesByCharProcWx).
+                // Without this fallback at all, every
+                // per-glyph cursor-advance site in SkiaRenderer.Text.cs that
+                // gates on currentFont.Widths != null silently stopped
+                // applying Tc/Tw within a string for exactly the common case
+                // (plain Helvetica/Times/Courier with no /Widths) -- caught
+                // by a mutool differential test, not by any existing test,
+                // because everything downstream was internally consistent
+                // with itself. Same authority (GetWidthOrFallback) already
+                // used by the shared content walk (Excise.Core), so
+                // rendering and extraction/redaction agree on these widths.
+                firstChar = 0;
+                widths = new float[256];
+                for (var code = 0; code < 256; code++)
+                    widths[code] = (float)StandardFontMetrics.GetWidthOrFallback(baseFont, code);
             }
 
             descriptor = ResolveAs<PdfDictionary>(document, fontDictionary.GetOptional("FontDescriptor"));
