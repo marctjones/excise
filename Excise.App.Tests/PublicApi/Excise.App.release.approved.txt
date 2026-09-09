@@ -32,6 +32,17 @@ namespace Excise.App.Automation
 }
 namespace Excise.App.Models
 {
+    public sealed class AttachmentEntry : System.IEquatable<Excise.App.Models.AttachmentEntry>
+    {
+        public AttachmentEntry(string Name, string FileName, string? Description, string? MimeType, int? SizeInBytes) { }
+        public string? Description { get; init; }
+        public string DisplayText { get; }
+        public string FileName { get; init; }
+        public string? MimeType { get; init; }
+        public string Name { get; init; }
+        public string SizeDisplay { get; }
+        public int? SizeInBytes { get; init; }
+    }
     public class ClipboardEntry : ReactiveUI.ReactiveObject
     {
         public ClipboardEntry() { }
@@ -583,6 +594,9 @@ namespace Excise.App.ViewModels
         public bool AreCommentAnnotationsVisible { get; set; }
         public bool AreFieldAndLinkAnnotationsVisible { get; set; }
         public bool AreFormFieldsHighlighted { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.AttachmentEntry> Attachments { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AttachmentsCommand { get; }
+        public string AttachmentsSummary { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, int> AutoDetectFieldsCommand { get; }
         public bool CanMoveSelectedPagesEarlier { get; }
         public bool CanMoveSelectedPagesLater { get; }
@@ -626,6 +640,7 @@ namespace Excise.App.ViewModels
         public Excise.Core.Document.PdfFieldType FormAuthoringFieldType { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> GoToNextPendingTypewriterEditCommand { get; }
         public ReactiveUI.ReactiveCommand<int, System.Reactive.Unit> GoToPageCommand { get; }
+        public bool HasAttachments { get; }
         public bool HasOutline { get; }
         public bool HasPendingTypewriterEdits { get; }
         public bool HasRecentFiles { get; }
@@ -706,6 +721,7 @@ namespace Excise.App.ViewModels
         public bool SearchUseRegex { get; set; }
         public bool SearchWholeWords { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SecurityCommand { get; }
+        public Excise.App.Models.AttachmentEntry? SelectedAttachment { get; set; }
         public Excise.App.Models.OutlineNode? SelectedOutlineNode { get; set; }
         public int SelectedPageCount { get; }
         public string SelectedText { get; set; }
@@ -813,15 +829,18 @@ namespace Excise.App.ViewModels
         public void OnTypewriterTextEdited(System.Guid operationId, string text, int pageNumber) { }
         public System.Threading.Tasks.Task<bool> OpenDroppedFilesAsync(System.Collections.Generic.IReadOnlyList<Avalonia.Platform.Storage.IStorageItem> files) { }
         public System.Threading.Tasks.Task RedactTextCommand(string text) { }
+        public System.Threading.Tasks.Task<bool> SaveAttachmentAsync(Excise.App.Models.AttachmentEntry entry, string outputPath) { }
         public System.Threading.Tasks.Task SaveDocumentCommand(string filePath) { }
         public System.Threading.Tasks.Task SaveFileAsAsync(string filePath) { }
         public System.Threading.Tasks.Task SaveFlattenedFormCopyAsAsync(string filePath) { }
+        public System.Threading.Tasks.Task SaveSelectedAttachmentAsync() { }
         public void SetHoveredAnnotationInfo(string? info) { }
         public void SetHoveredLinkTarget(string? target) { }
         public System.Threading.Tasks.Task SetSelectedTextAndCopyAsync(string text) { }
         public void SetTypewriterColor(string? hex) { }
         public System.Threading.Tasks.Task SignDocumentAsAsync(string certificatePath, string? password, string outputPath) { }
         public System.Threading.Tasks.Task SignDocumentAsync() { }
+        public void StripAllAttachments() { }
         public void ToggleAnnotationAuditMode() { }
         public void ToggleAnnotationsVisible() { }
         public void ToggleClipboardSidebar() { }
@@ -996,6 +1015,12 @@ namespace Excise.App.Views
     public class AboutWindow : Avalonia.Controls.Window
     {
         public AboutWindow() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class AttachmentsDialog : Avalonia.Controls.Window
+    {
+        public AttachmentsDialog() { }
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public void InitializeComponent(bool loadXaml = true) { }
     }

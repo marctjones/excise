@@ -157,6 +157,12 @@ internal static class MacNativeMenuBuilder
             Add(menu,
                 Submenu("Tools",
                     TrackDocumentItem(CommandItem("Verify Digital Signatures...", _viewModel.VerifySignaturesCommand)),
+                    // #1414. Listed here deliberately: on macOS the in-window
+                    // menu bar is hidden (MainWindow.axaml.cs), so an item that
+                    // exists only in MainWindow.axaml is unreachable on this
+                    // project's primary platform — which is exactly the
+                    // "wired to nothing" failure this work is about.
+                    TrackDocumentItem(CommandItem("Attachments...", _viewModel.AttachmentsCommand)),
                     TrackDocumentItem(_revealHiddenTextItem),
                     TrackDocumentItem(_revealRasterizedHiddenItem)));
 

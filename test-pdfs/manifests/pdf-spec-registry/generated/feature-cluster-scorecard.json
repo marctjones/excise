@@ -1334,13 +1334,12 @@
       ],
       "targetModes": 4,
       "modeStates": {
-        "partial": 2,
-        "unimplemented": 2
+        "partial": 4
       },
       "unknownModeCount": 0,
-      "explicitContractModes": 2,
+      "explicitContractModes": 4,
       "passingContractModes": 2,
-      "testCandidateModes": 2,
+      "testCandidateModes": 4,
       "reviewBatchIssues": []
     },
     {

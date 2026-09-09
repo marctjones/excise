@@ -79,6 +79,8 @@ public static class PdfCommandIds
     public const string ExportAllPages = "document.exportAllPages";
     public const string Print = "document.print";
     public const string Security = "document.security";
+    /// <summary>#1414 — view, save, or strip embedded files.</summary>
+    public const string Attachments = "document.attachments";
     public const string CombineDocuments = "document.combine";
     public const string SplitDocument = "document.split";
 

@@ -44,9 +44,9 @@ Excise.App	tests-only	SuggestPageSubsetFilename	triage:test-covered app service/
 Excise.App	tests-only	SuggestSafeRedactedFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ValidateScript	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.Core	nowhere	Failures	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
-Excise.Core	nowhere	PdfEmbeddedFileAuthoring	triage:public library authoring API mirroring AcroFormAuthoring's shape (#1413); GUI wiring is the attachments panel, #1414, explicitly deferred
+Excise.Core	nowhere	PdfEmbeddedFileAuthoring	triage:public library AUTHORING API (#1413). #1414 shipped the attachments panel, but it only lists, saves and strips - excise has no UI that ADDS an attachment, so this stays tests-only by design
 Excise.Core	nowhere	SetCreator	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
-Excise.Core	tests-only	AddEmbeddedFile	triage:public library authoring API mirroring AcroFormAuthoring's shape (#1413); GUI wiring is the attachments panel, #1414, explicitly deferred
+Excise.Core	tests-only	AddEmbeddedFile	triage:public library AUTHORING API (#1413). #1414 shipped the attachments panel, but it only lists, saves and strips - excise has no UI that ADDS an attachment, so this stays tests-only by design
 Excise.Core	tests-only	AsItalic	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BeginPath	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BulletList	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -75,7 +75,6 @@ Excise.Core	tests-only	GetOptionalContentGroups	triage:public library/domain API
 Excise.Core	tests-only	GetPageLabel	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetSignatureFields	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetTextFields	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	HasEmbeddedFiles	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	HasOverflow	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	HorizontalRule	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	InvokeXObject	triage:public library/domain API; tests exercise contract; external callers may use it
