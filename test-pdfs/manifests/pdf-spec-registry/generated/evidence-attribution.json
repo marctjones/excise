@@ -51849,6 +51849,13 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/RedactionWidthPolicyTests.cs::RedactionWidthPolicyTests.Collapse_BoxWidthMeasuresTheRemovedString_TheChannelBeingClosed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs::WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -54886,6 +54893,13 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/RedactionWidthPolicyTests.cs::RedactionWidthPolicyTests.Collapse_BoxWidthMeasuresTheRemovedString_TheChannelBeingClosed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs::WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -55014,6 +55028,13 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Rendering.Tests/Differential/RedactionWidthPolicyTests.cs::RedactionWidthPolicyTests.Collapse_BoxWidthMeasuresTheRemovedString_TheChannelBeingClosed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs::WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -55132,6 +55153,13 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/RedactionWidthPolicyTests.cs::RedactionWidthPolicyTests.Collapse_BoxWidthMeasuresTheRemovedString_TheChannelBeingClosed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs::WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer",
@@ -95811,6 +95839,90 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Strip_IsStillTheDefault_AndLeavesTheRevealingResidue",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_DropsTheEntireUri_SoNoStructureSurvivesToInferFrom",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_ChangesNothing_AndSaysTheCarrierStillHoldsTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_WithoutAHit_SaysSo_RatherThanImplyingALeak",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RefusalOnAnUnnamedCarrier_StillReachesTheReport",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.NoRefusalRow_ForACarrierTheDocumentDoesNotHave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DefaultPolicy_ChangesNothingVersusThePreOptionCall",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ScrubTerms_ReportsPerCarrierWhatRan",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DisabledCarrier_IsNotEvenExamined_SoItGetsNoRow",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_EmptiesTheWholeInfoField_RatherThanCuttingTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Policy_HasValueSemantics",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95920,115 +96032,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheRestOfTheFieldValueSurvives",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheCollateralIsExactlyTheTermAndNothingElse",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.ARedactionThatMatchesNothingLeavesTheValueAlone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_OverFormText_RemovesItFromSavedPdfBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
-          "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_NestedForm_RemovesInnermostText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormSharedByAnotherPage_LeavesOtherPageIntact",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormResourceNameCollision_RenamesAndKeepsBothFonts",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWhoseBBoxMissesArea_IsLeftAsDoAndNotFlattened",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithMatrixUnderPageCm_FlattensAndRedacts",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_PageWithImageAndForm_RedactsFormLeavesImageDo",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormViaInheritedPageResources_IsFlattened",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithCollidingExtGStateAndRealMatrix_RenamesAndFlattens",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97288,6 +97291,90 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Strip_IsStillTheDefault_AndLeavesTheRevealingResidue",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_DropsTheEntireUri_SoNoStructureSurvivesToInferFrom",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_ChangesNothing_AndSaysTheCarrierStillHoldsTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_WithoutAHit_SaysSo_RatherThanImplyingALeak",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RefusalOnAnUnnamedCarrier_StillReachesTheReport",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.NoRefusalRow_ForACarrierTheDocumentDoesNotHave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DefaultPolicy_ChangesNothingVersusThePreOptionCall",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ScrubTerms_ReportsPerCarrierWhatRan",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DisabledCarrier_IsNotEvenExamined_SoItGetsNoRow",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_EmptiesTheWholeInfoField_RatherThanCuttingTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Policy_HasValueSemantics",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97397,115 +97484,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheRestOfTheFieldValueSurvives",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheCollateralIsExactlyTheTermAndNothingElse",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.ARedactionThatMatchesNothingLeavesTheValueAlone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_OverFormText_RemovesItFromSavedPdfBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
-          "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_NestedForm_RemovesInnermostText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormSharedByAnotherPage_LeavesOtherPageIntact",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormResourceNameCollision_RenamesAndKeepsBothFonts",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWhoseBBoxMissesArea_IsLeftAsDoAndNotFlattened",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithMatrixUnderPageCm_FlattensAndRedacts",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_PageWithImageAndForm_RedactsFormLeavesImageDo",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormViaInheritedPageResources_IsFlattened",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithCollidingExtGStateAndRealMatrix_RenamesAndFlattens",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98779,6 +98757,90 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Strip_IsStillTheDefault_AndLeavesTheRevealingResidue",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_DropsTheEntireUri_SoNoStructureSurvivesToInferFrom",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_ChangesNothing_AndSaysTheCarrierStillHoldsTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_WithoutAHit_SaysSo_RatherThanImplyingALeak",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RefusalOnAnUnnamedCarrier_StillReachesTheReport",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.NoRefusalRow_ForACarrierTheDocumentDoesNotHave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DefaultPolicy_ChangesNothingVersusThePreOptionCall",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ScrubTerms_ReportsPerCarrierWhatRan",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DisabledCarrier_IsNotEvenExamined_SoItGetsNoRow",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_EmptiesTheWholeInfoField_RatherThanCuttingTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Policy_HasValueSemantics",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98888,115 +98950,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheRestOfTheFieldValueSurvives",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheCollateralIsExactlyTheTermAndNothingElse",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.ARedactionThatMatchesNothingLeavesTheValueAlone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_OverFormText_RemovesItFromSavedPdfBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
-          "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_NestedForm_RemovesInnermostText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormSharedByAnotherPage_LeavesOtherPageIntact",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormResourceNameCollision_RenamesAndKeepsBothFonts",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWhoseBBoxMissesArea_IsLeftAsDoAndNotFlattened",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithMatrixUnderPageCm_FlattensAndRedacts",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_PageWithImageAndForm_RedactsFormLeavesImageDo",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormViaInheritedPageResources_IsFlattened",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithCollidingExtGStateAndRealMatrix_RenamesAndFlattens",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100298,6 +100251,90 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Strip_IsStillTheDefault_AndLeavesTheRevealingResidue",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_DropsTheEntireUri_SoNoStructureSurvivesToInferFrom",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_ChangesNothing_AndSaysTheCarrierStillHoldsTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_WithoutAHit_SaysSo_RatherThanImplyingALeak",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RefusalOnAnUnnamedCarrier_StillReachesTheReport",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.NoRefusalRow_ForACarrierTheDocumentDoesNotHave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DefaultPolicy_ChangesNothingVersusThePreOptionCall",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ScrubTerms_ReportsPerCarrierWhatRan",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DisabledCarrier_IsNotEvenExamined_SoItGetsNoRow",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_EmptiesTheWholeInfoField_RatherThanCuttingTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.Policy_HasValueSemantics",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100407,115 +100444,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheRestOfTheFieldValueSurvives",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.TheCollateralIsExactlyTheTermAndNothingElse",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldValueRedactionTests.cs::proves.ARedactionThatMatchesNothingLeavesTheValueAlone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_OverFormText_RemovesItFromSavedPdfBytes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
-          "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_NestedForm_RemovesInnermostText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormSharedByAnotherPage_LeavesOtherPageIntact",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormResourceNameCollision_RenamesAndKeepsBothFonts",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWhoseBBoxMissesArea_IsLeftAsDoAndNotFlattened",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithMatrixUnderPageCm_FlattensAndRedacts",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_PageWithImageAndForm_RedactsFormLeavesImageDo",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormViaInheritedPageResources_IsFlattened",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::FormXObjectRedactionTests.RedactArea_FormWithCollidingExtGStateAndRealMatrix_RenamesAndFlattens",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -114708,8 +114636,8 @@
     "gradeImplemented": 197,
     "gradeVerified": 682,
     "gradeUnknown": 19,
-    "testMethods": 6439,
-    "testMethodsWithCapabilityCandidate": 4026,
+    "testMethods": 6489,
+    "testMethodsWithCapabilityCandidate": 4067,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

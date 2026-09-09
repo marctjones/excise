@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "de37bbd4cd0cd670dc49383392c5e98a7e0b571a2badfc9ef0ef3e765bf9c264",
+  "sourceFingerprint": "44686f9d14a77d329d3f00572752dca617f432550aeea97c8cb488b057f7e390",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -3596,6 +3596,29 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Redaction/CarrierScrubPolicy.cs",
+      "path": "Excise.Core/Redaction/CarrierScrubPolicy.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Redaction/CarrierTextRecovery.cs",
       "path": "Excise.Core/Redaction/CarrierTextRecovery.cs",
       "kind": "source-file",
@@ -4585,6 +4608,16 @@
     {
       "id": "Excise.Core/Text/TextSelectionEngine.cs",
       "path": "Excise.Core/Text/TextSelectionEngine.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Text/UnicodeTextSafety.cs",
+      "path": "Excise.Core/Text/UnicodeTextSafety.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -6732,16 +6765,6 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.App/Services/UnicodeTextSafety.cs",
-      "path": "Excise.App/Services/UnicodeTextSafety.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
       "id": "Excise.App/Services/UrlOpener.cs",
       "path": "Excise.App/Services/UrlOpener.cs",
       "kind": "source-file",
@@ -8476,7 +8499,7 @@
     }
   ],
   "summary": {
-    "records": 395,
+    "records": 396,
     "facets": {
       "annotations": 10,
       "content-and-graphics": 18,
@@ -8485,7 +8508,7 @@
       "forms": 8,
       "images": 28,
       "product-integration-general": 209,
-      "redaction": 51,
+      "redaction": 52,
       "safe-save-and-metadata": 17,
       "security-and-encryption": 19,
       "transparency": 2
@@ -8534,10 +8557,10 @@
       "pdf.17.interactive.redaction-annotations:parse": 10,
       "pdf.17.interactive.redaction-annotations:preserve": 10,
       "pdf.17.interactive.redaction-annotations:render": 10,
-      "pdf.17.security.redaction-content-removal:extract": 51,
-      "pdf.17.security.redaction-content-removal:mutate": 51,
-      "pdf.17.security.redaction-content-removal:render": 51,
-      "pdf.17.security.redaction-content-removal:write": 51,
+      "pdf.17.security.redaction-content-removal:extract": 52,
+      "pdf.17.security.redaction-content-removal:mutate": 52,
+      "pdf.17.security.redaction-content-removal:render": 52,
+      "pdf.17.security.redaction-content-removal:write": 52,
       "pdf.17.syntax.encryption:mutate": 19,
       "pdf.17.syntax.encryption:parse": 19,
       "pdf.17.syntax.encryption:preserve": 19,
