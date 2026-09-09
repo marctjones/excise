@@ -10,7 +10,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 
 | Area | Target modes | Implemented | Verified | Unknown | Strict | Evidence progress | Promotion readiness | Measured | Strict unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| overall | 898 | 97.9% | 23.3% | 19 | 0.6% | 71.8% | 25.8% | 83.4% | 149 |
+| overall | 898 | 97.9% | 47.7% | 19 | 0.6% | 75.1% | 31.9% | 83.4% | 149 |
 | annotation-subtypes | 90 | 100.0% | 64.4% | 0 | 0.0% | 79.6% | 10.0% | 100.0% | 0 |
 | content | 12 | 100.0% | 83.3% | 0 | 0.0% | 87.9% | 48.3% | 100.0% | 0 |
 | document | 21 | 100.0% | 95.2% | 0 | 0.0% | 86.4% | 10.0% | 100.0% | 0 |
@@ -19,7 +19,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | interactive | 39 | 74.4% | 51.3% | 10 | 2.6% | 65.1% | 29.0% | 97.4% | 1 |
 | interchange | 6 | 66.7% | 33.3% | 2 | 0.0% | 55.0% | 10.0% | 66.7% | 2 |
 | multimedia | 0 | — | — | 0 | — | — | — | — | 0 |
-| operators | 287 | 100.0% | 8.4% | 0 | 0.0% | 71.1% | 47.1% | 49.1% | 146 |
+| operators | 287 | 100.0% | 84.7% | 0 | 0.0% | 81.3% | 66.2% | 49.1% | 146 |
 | optional-profiles | 0 | — | — | 0 | — | — | — | — | 0 |
 | product-capabilities | 20 | 80.0% | 0.0% | 4 | 0.0% | 58.0% | 10.0% | 100.0% | 0 |
 | renderer-requirements | 259 | 100.0% | 10.4% | 0 | 0.0% | 69.0% | 10.0% | 100.0% | 0 |
@@ -32,7 +32,7 @@ Critical-path benchmark readiness: 100.0% ({'existing-harness': 6}).
 | Category | Target modes | Strict | Evidence progress | Promotion readiness | Measured | Planned verification | Executable verification | Unknown |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | File model | 35 | 0.0% | 86.3% | 10.0% | 100.0% | 100.0% | 0.0% | 0 |
-| Page content and rendering | 708 | 0.6% | 71.0% | 29.0% | 79.4% | 100.0% | 37.4% | 146 |
+| Page content and rendering | 708 | 0.6% | 75.1% | 36.8% | 79.4% | 100.0% | 37.4% | 146 |
 | Interaction and annotations | 129 | 0.8% | 75.2% | 15.7% | 99.2% | 100.0% | 6.9% | 1 |
 | Interchange and profiles | 6 | 0.0% | 55.0% | 10.0% | 66.7% | 100.0% | 0.0% | 2 |
 | PDFE product capabilities | 20 | 0.0% | 58.0% | 10.0% | 100.0% | 100.0% | 0.0% | 0 |

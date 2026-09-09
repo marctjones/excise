@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
@@ -567,6 +568,116 @@ public class OperatorVerificationParityTests : IDisposable
             $"6 0 obj\n<< /Length {content.Length} >>\nstream\n{content}\nendstream\nendobj\n",
         };
         return Assemble(objects);
+    }
+
+    /// <summary>
+    /// The SAME 73-operator content stream as
+    /// <c>Excise.Core.Tests/Content/OperatorCoverageTests.cs::
+    /// AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip</c>
+    /// (kept byte-identical deliberately -- one inventory, not two that could
+    /// drift), wrapped in a minimal real PDF and round-tripped through excise,
+    /// with an INDEPENDENT tool (qpdf) confirming every operator token is
+    /// still present in the content stream afterward -- not excise's own
+    /// parser checking excise's own writer, which is all the existing
+    /// AuthoritativeOperatorInventory test can ever prove (kind=unit, cited
+    /// for every operator's parse/preserve/write mode; this is the
+    /// kind=differential counterpart).
+    ///
+    /// One test genuinely covers all 73 operators' parse/preserve/write
+    /// claims in a single execution -- the same "one test, cited broadly"
+    /// shape the existing self-test already uses, just with an oracle this
+    /// time. Undefined resource names (/GS1, /Sh1, /Im1, /F1, /CS0, /CS1)
+    /// are deliberately left undeclared in Resources: this checks operator
+    /// SURVIVAL in the content-stream bytes, not resource resolution or
+    /// rendering, and qpdf's structural check does not require resources to
+    /// resolve.
+    /// </summary>
+    [Fact]
+    public void AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+
+        var content = string.Join("\n", new[]
+        {
+            "q 1 0 0 1 10 10 cm 2 w 1 J 1 j 10 M [3 2] 0 d 1.0 ri 1 i /GS1 gs",
+            "10 10 m 20 20 l 30 0 40 10 50 20 c 5 5 v 6 6 y h 0 0 10 10 re",
+            "S s f F f* B B* b b* W n W*",
+            "/CS0 CS /CS1 cs 0.1 G 0.2 g 0.1 0.2 0.3 RG 0.4 0.5 0.6 rg " +
+            "0 0 0 1 K 0 0 0 1 k 0.5 SC 0.5 SCN 0.5 sc 0.5 scn",
+            "/Sh1 sh",
+            "BT /F1 12 Tf 14 TL 1 Tc 2 Tw 100 Tz 0 Tr 1 Ts 10 20 Td 5 6 TD " +
+            "1 0 0 1 7 8 Tm T* (a) Tj [(b) -10 (c)] TJ (d) ' 1 2 (e) \" ET",
+            "/P <</MCID 0>> BDC /Span BMC EMC EMC /Pt 1 MP /Tg /Val DP BX /Unknown EX",
+            "750 0 d0 750 0 0 0 700 700 d1",
+            "/Im1 Do",
+            "Q",
+        });
+
+        var expectedOperators = new[]
+        {
+            "q","cm","w","J","j","M","d","ri","i","gs",
+            "m","l","c","v","y","h","re",
+            "S","s","f","F","f*","B","B*","b","b*","W","n","W*",
+            "CS","cs","G","g","RG","rg","K","k","SC","SCN","sc","scn",
+            "sh",
+            "BT","Tf","TL","Tc","Tw","Tz","Tr","Ts","Td","TD","Tm","T*","Tj","TJ","'","\"","ET",
+            "BDC","BMC","EMC","MP","DP","BX","EX",
+            "d0","d1","Do","Q",
+        };
+
+        var contentBytes = Encoding.ASCII.GetBytes(content);
+        var pdf = Assemble(new List<string>
+        {
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 200 200] >>\nendobj\n",
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> >>\nendobj\n",
+            $"4 0 obj\n<< /Length {contentBytes.Length} >>\nstream\n{content}\nendstream\nendobj\n",
+        });
+
+        var before = WriteTemp(pdf);
+        var beforeTokens = QpdfContentStreamTokens(before);
+        foreach (var op in expectedOperators)
+            beforeTokens.Should().Contain(op,
+                $"guard: qpdf's own decompressed view of the fixture must contain '{op}' before excise touches it");
+
+        byte[] saved;
+        using (var doc = PdfDocument.Open(pdf))
+            saved = doc.SaveToBytes();
+
+        var after = WriteTemp(saved);
+        QpdfReferenceTool.Check(after)?.Success.Should().BeTrue(
+            "qpdf must independently accept what excise wrote as structurally valid");
+
+        var afterTokens = QpdfContentStreamTokens(after);
+        foreach (var op in expectedOperators)
+            afterTokens.Should().Contain(op,
+                $"operator '{op}' must survive an open-save round trip, confirmed by qpdf's own decompressed " +
+                "view of the saved content stream -- not by excise re-parsing its own output");
+    }
+
+    /// <summary>Every whitespace-delimited token in qpdf's decompressed content-stream
+    /// dump of page 1 -- an independent view of what operators/operands the saved
+    /// file actually contains, not excise's own tokenizer.</summary>
+    private static HashSet<string> QpdfContentStreamTokens(string pdfPath)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo("qpdf")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        psi.ArgumentList.Add("--qdf");
+        psi.ArgumentList.Add("--object-streams=disable");
+        psi.ArgumentList.Add(pdfPath);
+        psi.ArgumentList.Add("-");
+
+        using var proc = System.Diagnostics.Process.Start(psi)!;
+        var stdout = proc.StandardOutput.ReadToEnd();
+        proc.StandardError.ReadToEnd();
+        proc.WaitForExit(30_000);
+
+        return stdout.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).ToHashSet();
     }
 
     private static byte[] Assemble(List<string> objects)

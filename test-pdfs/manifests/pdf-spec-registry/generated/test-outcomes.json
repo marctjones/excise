@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-09T02:45:05.802297+00:00",
-  "gitRevision": "bda291a3a9e2e5bedbed03ab69d851b0cbab879f",
+  "recordedAt": "2026-09-09T03:54:07.353230+00:00",
+  "gitRevision": "da76995f501a7e06c8d4a12ae29d6f1a58720524",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -506,6 +506,11 @@
       "path": "/tmp/trx-imgmask/imgmask.trx",
       "modifiedAt": "2026-09-09T02:45:05.717926+00:00",
       "sha256": "86606a21ad1812ba2c2e5d798a464e40ad55b1d7753a394c9b5226bc4f179bb2"
+    },
+    {
+      "path": "/tmp/trx-operators/opinv.trx",
+      "modifiedAt": "2026-09-09T03:54:07.301669+00:00",
+      "sha256": "900437b01bca91df9c209288f3f6eaf0080339342d0442bca28f7ce662ba607a"
     }
   ],
   "outcomes": [
@@ -53990,6 +53995,14 @@
       "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
     },
     {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+      "outcome": "Passed",
+      "duration": "00:00:00.0774526",
+      "trx": "/tmp/trx-operators/opinv.trx",
+      "resultModifiedAt": "2026-09-09T03:54:07.301669+00:00",
+      "trxSha256": "900437b01bca91df9c209288f3f6eaf0080339342d0442bca28f7ce662ba607a"
+    },
+    {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
       "outcome": "Passed",
       "duration": "00:00:00.0705533",
@@ -69415,12 +69428,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 100,
-    "tests": 8613,
+    "trxFiles": 101,
+    "tests": 8614,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7686
+      "Passed": 7687
     },
     "status": "recorded"
   }

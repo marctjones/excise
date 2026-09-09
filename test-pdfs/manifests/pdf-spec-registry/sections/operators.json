@@ -68,6 +68,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -178,6 +187,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StateStack_SaveRestore",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -290,6 +308,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -400,6 +427,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_StrokingColorSpace_CS_SCN",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -519,6 +555,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -630,6 +675,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -740,6 +794,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_MiterLimit_Applied",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -859,6 +922,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -969,6 +1041,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_RenderingIntent_Perceptual",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1081,6 +1162,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -1191,6 +1281,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ExtGState_StrokeAlpha_AppliesTransparency",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1303,6 +1402,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -1413,6 +1521,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1525,6 +1642,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -1635,6 +1761,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -1747,6 +1882,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -1858,6 +2002,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -1968,6 +2121,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SingleOperator_JustRectangle",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2087,6 +2249,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -2197,6 +2368,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CloseAndStroke_sOperator",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2316,6 +2496,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -2426,6 +2615,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillAlias_F_Operator",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2545,6 +2743,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -2655,6 +2862,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillStroke_B_Operator",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2767,6 +2983,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -2877,6 +3102,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CloseFillStroke_bOperator",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -2989,6 +3223,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -3099,6 +3342,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_NoOp_n_Operator",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3218,6 +3470,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -3335,6 +3596,15 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Clip_WStar_EvenOddConfinesSubsequentFill_MatchesIndependentRenderers",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3454,6 +3724,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -3571,6 +3850,15 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3690,6 +3978,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -3807,6 +4104,15 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -3926,6 +4232,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -4043,6 +4358,15 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4162,6 +4486,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -4279,6 +4612,15 @@
             "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4398,6 +4740,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -4516,6 +4867,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -4627,6 +4987,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -4737,6 +5106,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CmykFillAndStroke_SeparateColors",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -4856,6 +5234,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -4966,6 +5353,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_InlineImage_Grayscale_RendersWithoutError",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5078,6 +5474,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -5188,6 +5593,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_InlineImage_Grayscale_RendersWithoutError",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5300,6 +5714,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -5410,6 +5833,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CombinedTextState_AppliesAllSettings",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5522,6 +5954,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -5633,6 +6074,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -5743,6 +6193,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CombinedTextState_AppliesAllSettings",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -5862,6 +6321,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -5980,6 +6448,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -6090,6 +6567,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CombinedTextState_AppliesAllSettings",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6209,6 +6695,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -6319,6 +6814,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_TextRise_OffsetText",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6431,6 +6935,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -6542,6 +7055,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -6652,6 +7174,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_Tm_SetsTextMatrix",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6771,6 +7302,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -6881,6 +7421,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_SimpleText_SingleFont",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -6993,6 +7542,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -7104,6 +7662,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -7214,6 +7781,15 @@
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_DoubleQuoteOperator_SetsSpacingAndShowsText",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
@@ -7333,6 +7909,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -7451,6 +8036,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -7549,6 +8143,15 @@
           {
             "kind": "atomic-fixture",
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "parse",
               "preserve",
@@ -7665,6 +8268,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -7776,6 +8388,15 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -7874,6 +8495,15 @@
           {
             "kind": "atomic-fixture",
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "parse",
               "preserve",
@@ -7982,6 +8612,15 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -8085,6 +8724,15 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -8183,6 +8831,15 @@
           {
             "kind": "atomic-fixture",
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
             "modes": [
               "parse",
               "preserve",

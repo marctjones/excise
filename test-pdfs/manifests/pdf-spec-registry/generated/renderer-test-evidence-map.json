@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "62ece3b2c2aef5cd0a6fff9670a80b3cc4e6fba119444e49965be0bf1a5e9397",
+  "sourceFingerprint": "9b4b551d591dc58a36fd5bc8dce33cd8465f7793b581120085f3f114e7ddf48d",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -9675,7 +9675,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "NonzeroFill_F_DonutIsSolid_MatchesIndependentRenderers",
-      "line": 60,
+      "line": 61,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9716,7 +9716,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "EvenOddFill_FStar_DonutHasHole_MatchesIndependentRenderers",
-      "line": 87,
+      "line": 88,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9757,7 +9757,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "Clip_W_NonzeroWindingConfinesSubsequentFill_MatchesIndependentRenderers",
-      "line": 117,
+      "line": 118,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9798,7 +9798,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "Clip_WStar_EvenOddConfinesSubsequentFill_MatchesIndependentRenderers",
-      "line": 144,
+      "line": 145,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9839,7 +9839,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "DashPattern_D_ReducesStrokeInkVsSolid_MatchesMutool",
-      "line": 189,
+      "line": 190,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9895,7 +9895,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "LineCap_J_RoundExtendsPastButt_MatchesMutool",
-      "line": 233,
+      "line": 234,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9936,7 +9936,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
-      "line": 276,
+      "line": 277,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -9977,7 +9977,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
-      "line": 305,
+      "line": 306,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -10033,7 +10033,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "TextRenderMode_Tr3Invisible_PaintsNoInk_MatchesMutool",
-      "line": 339,
+      "line": 340,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -10074,7 +10074,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "HorizontalScaling_Tz_HalvesWidth_MatchesMutool",
-      "line": 372,
+      "line": 373,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -10118,7 +10118,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
-      "line": 452,
+      "line": 453,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -10159,7 +10159,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
       "class": "OperatorVerificationParityTests",
       "method": "AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
-      "line": 491,
+      "line": 492,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -10198,6 +10198,47 @@
           "capability": "pdf.17.graphics.patterns-shadings",
           "modes": [
             "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::OperatorVerificationParityTests.AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+      "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+      "class": "OperatorVerificationParityTests",
+      "method": "AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+      "line": 596,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
             "render"
           ]
         },
@@ -36589,11 +36630,11 @@
     }
   ],
   "summary": {
-    "testMethods": 1009,
+    "testMethods": 1010,
     "facets": {
-      "content-streams": 305,
+      "content-streams": 306,
       "content-strings-and-text": 6,
-      "differential-rendering": 516,
+      "differential-rendering": 517,
       "fonts": 180,
       "functions-and-shadings": 47,
       "graphics-state-and-paths": 314,
@@ -36605,8 +36646,8 @@
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 6,
-      "pdf.17.content.streams:parse": 311,
-      "pdf.17.content.streams:render": 655,
+      "pdf.17.content.streams:parse": 312,
+      "pdf.17.content.streams:render": 656,
       "pdf.17.content.text-state:extract": 6,
       "pdf.17.content.text-state:parse": 6,
       "pdf.17.content.text-state:render": 6,
@@ -36614,10 +36655,10 @@
       "pdf.17.graphics.color:render": 47,
       "pdf.17.graphics.fonts:extract": 180,
       "pdf.17.graphics.fonts:parse": 180,
-      "pdf.17.graphics.fonts:render": 645,
+      "pdf.17.graphics.fonts:render": 646,
       "pdf.17.graphics.images:extract": 146,
       "pdf.17.graphics.images:parse": 146,
-      "pdf.17.graphics.images:render": 614,
+      "pdf.17.graphics.images:render": 615,
       "pdf.17.graphics.paths-painting:parse": 314,
       "pdf.17.graphics.paths-painting:render": 314,
       "pdf.17.graphics.patterns-shadings:parse": 47,
@@ -36625,7 +36666,7 @@
       "pdf.17.graphics.state:parse": 314,
       "pdf.17.graphics.state:render": 314,
       "pdf.17.transparency.model:parse": 53,
-      "pdf.17.transparency.model:render": 546
+      "pdf.17.transparency.model:render": 547
     },
     "unclassified": 23,
     "allTestsMapped": true
