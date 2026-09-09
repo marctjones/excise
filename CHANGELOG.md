@@ -6,7 +6,12 @@ semantic versioning.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- **`ContentTransform.TransformPoint(x, y)` is public** (#1436), a follow-up to
+  #1433. The struct and its `A`–`F` fields were already public, but the method
+  that applies the matrix was `internal`, so every caller resolving page-space
+  coordinates from `ContentOperator.GraphicsTransform` had to reimplement
+  `(x·A + y·C + E, x·B + y·D + F)` itself.
 
 ## [3.9.3] - 2026-09-09
 

@@ -400,6 +400,10 @@ namespace Excise.Core.Content
         public double D { get; init; }
         public double E { get; init; }
         public double F { get; init; }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})]
+        public System.ValueTuple<double, double> TransformPoint(double x, double y) { }
     }
     public enum OperatorCategory
     {

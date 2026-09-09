@@ -114,6 +114,21 @@ public class ContentStreamParserMetadataModeTests
         var pageY = t.B * x + t.D * y + t.F;
         pageX.Should().Be(20);
         pageY.Should().Be(38);
+
+        // #1436: the library exposes that operation, so a caller does not have
+        // to reimplement the two lines above.
+        t.TransformPoint(x, y).Should().Be((20.0, 38.0));
+    }
+
+    [Fact]
+    public void TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate()
+    {
+        // #1436. The CTMs in the tests above are axis-aligned (B = C = 0), so
+        // they cannot tell A*x + C*y from A*x + B*y. A quarter-turn rotation
+        // (A=0, B=1, C=-1, D=0) plus a translation does: (5,6) maps to
+        // (0*5 + -1*6 + 100, 1*5 + 0*6 + 200) = (94, 205).
+        new ContentTransform(0, 1, -1, 0, 100, 200)
+            .TransformPoint(5, 6).Should().Be((94.0, 205.0));
     }
 
     [Fact]

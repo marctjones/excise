@@ -532,7 +532,13 @@ public readonly record struct ContentTransform(
         return true;
     }
 
-    internal (double X, double Y) TransformPoint(double x, double y) =>
+    /// <summary>
+    /// Applies this matrix to a point: (x', y') = (A·x + C·y + E, B·x + D·y + F).
+    /// Public so callers resolving page-space coordinates from
+    /// <see cref="ContentOperator.GraphicsTransform"/> use the library's
+    /// implementation instead of re-deriving it (issue #1436).
+    /// </summary>
+    public (double X, double Y) TransformPoint(double x, double y) =>
         (x * A + y * C + E, x * B + y * D + F);
 }
 
