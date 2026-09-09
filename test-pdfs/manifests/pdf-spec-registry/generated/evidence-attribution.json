@@ -190,6 +190,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -1424,24 +1438,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultipleFlags_AllRecognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_WidgetRect_Captured",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -1659,6 +1655,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -2893,24 +2903,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultipleFlags_AllRecognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_WidgetRect_Captured",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -3128,6 +3120,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -4362,24 +4368,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultipleFlags_AllRecognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_WidgetRect_Captured",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -4597,6 +4585,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -5831,24 +5833,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultipleFlags_AllRecognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_WidgetRect_Captured",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -6091,6 +6075,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -7306,24 +7304,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NameWithHash_HexEncoded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NameWithSlash_HexEncoded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -7416,6 +7396,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -8776,24 +8770,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SurvivesSaveAndReopenAsFlatText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SkipsEmptyText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -9023,6 +8999,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -10232,24 +10222,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NameWithSpace_HexEncoded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NameWithHash_HexEncoded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NameWithSlash_HexEncoded",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -16483,6 +16455,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -17723,24 +17709,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultipleFlags_AllRecognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -17950,6 +17918,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -19192,24 +19174,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultipleFlags_AllRecognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -19471,6 +19435,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -20707,24 +20685,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultipleFlags_AllRecognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_WidgetRect_Captured",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -21098,6 +21058,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -22453,24 +22427,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_FlattensTextIntoPageContentAndMarksApplied",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SurvivesSaveAndReopenAsFlatText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SkipsEmptyText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -22610,6 +22566,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -23965,24 +23935,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_FlattensTextIntoPageContentAndMarksApplied",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SurvivesSaveAndReopenAsFlatText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SkipsEmptyText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -24083,6 +24035,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -25438,24 +25404,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_FlattensTextIntoPageContentAndMarksApplied",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SurvivesSaveAndReopenAsFlatText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SkipsEmptyText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -25799,6 +25747,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -27123,24 +27085,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -27288,6 +27232,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -28612,24 +28570,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -28762,6 +28702,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -30086,24 +30040,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -30222,6 +30158,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -31546,24 +31496,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -31682,6 +31614,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -33006,24 +32952,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -33171,6 +33099,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -34495,24 +34437,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -34645,6 +34569,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -35969,24 +35907,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -36112,6 +36032,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -37436,24 +37370,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -48793,6 +48709,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -50117,24 +50047,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -50300,6 +50212,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -51624,24 +51550,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -51875,6 +51783,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -53199,24 +53121,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -53344,6 +53248,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -54668,24 +54586,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiWithOperands_ClearsOperands",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_GsOperator_WithTrInGraphicsState_ParsesSuccessfully",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103571,6 +103471,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104922,24 +104836,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_FlattensTextIntoPageContentAndMarksApplied",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SurvivesSaveAndReopenAsFlatText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SkipsEmptyText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -105031,6 +104927,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -106382,24 +106292,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_FlattensTextIntoPageContentAndMarksApplied",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SurvivesSaveAndReopenAsFlatText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_SkipsEmptyText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -111069,8 +110961,8 @@
     "gradeImplemented": 670,
     "gradeVerified": 209,
     "gradeUnknown": 19,
-    "testMethods": 6423,
-    "testMethodsWithCapabilityCandidate": 4010,
+    "testMethods": 6425,
+    "testMethodsWithCapabilityCandidate": 4012,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

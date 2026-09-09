@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1020,
-  "indexedContentSha256": "5a498847380eeca58a7053fe615b8eea3ef382337e8cdfb53ac2a6022b5bcf78",
+  "indexedContentSha256": "23e9c68aff9ac64d5a3ce91dce3f34a1acc9183227db4a373258cf5d932c38d0",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7522,7 +7522,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 449
+      "candidateReferenceCount": 450
     },
     {
       "id": "pdf.17.graphics.color",
@@ -35257,6 +35257,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Content/WalkedGlyphByteOffsetTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -35441,7 +35450,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 40
+      "candidateReferenceCount": 41
     },
     {
       "id": "pdf.20.image.requirement-035",
@@ -43552,6 +43561,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/AcroFormFlattenerPushButtonTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -43885,18 +43904,9 @@
             "ink",
             "annotation"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/CorpusAppearanceStreamTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation"
-          ]
         }
       ],
-      "candidateReferenceCount": 123
+      "candidateReferenceCount": 124
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -56856,7 +56866,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 311
+      "candidateReferenceCount": 312
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -56909,6 +56919,15 @@
         },
         {
           "path": "Excise.Core/Content/ContentOperator.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "coordinate",
+            "data",
+            "metadata"
+          ]
+        },
+        {
+          "path": "Excise.Core/Content/ContentStreamParser.cs",
           "kind": "source",
           "matchedTerms": [
             "coordinate",
@@ -57307,6 +57326,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "coordinate",
+            "data",
+            "metadata"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Content/Operators/GraphicsStateOperatorTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -57565,25 +57593,9 @@
             "coordinate",
             "data"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/CcittEndOfBlockTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "data",
-            "measurement"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "data",
-            "dictionaries"
-          ]
         }
       ],
-      "candidateReferenceCount": 139
+      "candidateReferenceCount": 141
     },
     {
       "id": "pdf.17.interchange.signatures",
