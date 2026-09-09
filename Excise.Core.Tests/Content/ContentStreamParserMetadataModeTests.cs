@@ -83,6 +83,59 @@ public class ContentStreamParserMetadataModeTests
     }
 
     [Fact]
+    public void FullParse_CapturesTransformAtEveryPathConstructionOperator()
+    {
+        // #1433: page-space coordinates for individual path-construction
+        // operators, not just the aggregate paint-operator bbox. Each of
+        // m/l/re gets its own GraphicsTransform snapshot -- not only
+        // text-showing operators -- so a caller transforms the raw Operands
+        // itself instead of needing a second CTM tracker outside the library.
+        var bytes = Encoding.Latin1.GetBytes(
+            "2 0 0 3 10 20 cm 1 1 m 2 2 l 5 6 80 90 re f");
+
+        var ops = new ContentStreamParser(bytes).Parse().Operators;
+        var expectedCtm = new ContentTransform(2, 0, 0, 3, 10, 20);
+
+        var moveTo = ops.Single(op => op.Name == "m");
+        var lineTo = ops.Single(op => op.Name == "l");
+        var rect = ops.Single(op => op.Name == "re");
+
+        moveTo.GraphicsTransform.Should().Be(expectedCtm,
+            "m must carry the CTM in effect when it executed, same as a text-showing operator does");
+        lineTo.GraphicsTransform.Should().Be(expectedCtm);
+        rect.GraphicsTransform.Should().Be(expectedCtm);
+
+        // A caller applies the transform to the raw operands itself: re's
+        // (x,y) corner (5,6) maps to page space as
+        // (A*x + C*y + E, B*x + D*y + F) = (2*5+0*6+10, 0*5+3*6+20) = (20, 38).
+        var t = rect.GraphicsTransform!.Value;
+        var (x, y) = (5.0, 6.0);
+        var pageX = t.A * x + t.C * y + t.E;
+        var pageY = t.B * x + t.D * y + t.F;
+        pageX.Should().Be(20);
+        pageY.Should().Be(38);
+    }
+
+    [Fact]
+    public void FullParse_CmOperatorItself_CarriesThePreCmCtm()
+    {
+        // The CTM a "cm" operator's own GraphicsTransform carries is the CTM
+        // BEFORE that cm's product is folded in -- ExecuteOperator applies
+        // the state change only after the sink callback returns (verified
+        // directly against ContentStreamWalker's dispatch order), so a
+        // second "cm" must show the identity, not its own product.
+        var bytes = Encoding.Latin1.GetBytes("2 0 0 3 10 20 cm 1 0 0 1 5 5 cm");
+
+        var ops = new ContentStreamParser(bytes).Parse().Operators
+            .Where(op => op.Name == "cm").ToList();
+
+        ops[0].GraphicsTransform.Should().Be(new ContentTransform(1, 0, 0, 1, 0, 0),
+            "the first cm executes against the identity CTM");
+        ops[1].GraphicsTransform.Should().Be(new ContentTransform(2, 0, 0, 3, 10, 20),
+            "the second cm's snapshot is the first cm's product, not its own");
+    }
+
+    [Fact]
     public void DefaultMode_ComputesMetadata_RedactionContractUnchanged()
     {
         // Redaction and extraction construct the parser without touching

@@ -144,6 +144,19 @@ public class ContentStreamParser
         if (!ComputeOperatorMetadata)
             return;
 
+        // CTM in effect when THIS operator executed (§8.3.4) -- not only for
+        // text-showing operators (BeginTextShow snapshots the same values for
+        // its own TextTransform pairing). A caller wanting page-space
+        // coordinates for a path-construction operator's raw Operands
+        // transforms them through this, mirroring how redaction already
+        // cancels it to recover page-space letter geometry (#1433). For a
+        // "cm" operator itself, this is the CTM BEFORE that cm's own product
+        // is folded in -- the walker applies cm's own state change only
+        // after this callback returns.
+        op.GraphicsTransform = new ContentTransform(
+            _walker.Ctm_a, _walker.Ctm_b, _walker.Ctm_c,
+            _walker.Ctm_d, _walker.Ctm_e, _walker.Ctm_f);
+
         if (AccumulatePathConstruction(name, operands)) return;
         if (AccumulatePathPainting(name, op)) return;
         AccumulateType3GlyphMetrics(name, operands, op);

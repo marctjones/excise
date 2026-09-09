@@ -305,6 +305,7 @@ namespace Excise.Core.Content
         public ContentOperator(string name, System.Collections.Generic.IReadOnlyList<Excise.Core.Primitives.PdfObject> operands) { }
         public Excise.Core.Document.PdfRectangle? BoundingBox { get; }
         public Excise.Core.Content.OperatorCategory Category { get; }
+        public Excise.Core.Content.ContentTransform? GraphicsTransform { get; }
         public byte[]? InlineImageData { get; }
         public string Name { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Primitives.PdfObject> Operands { get; }
@@ -389,6 +390,16 @@ namespace Excise.Core.Content
     {
         public ContentStreamWriter() { }
         public byte[] Write(Excise.Core.Content.ContentStream content) { }
+    }
+    public readonly struct ContentTransform : System.IEquatable<Excise.Core.Content.ContentTransform>
+    {
+        public ContentTransform(double A, double B, double C, double D, double E, double F) { }
+        public double A { get; init; }
+        public double B { get; init; }
+        public double C { get; init; }
+        public double D { get; init; }
+        public double E { get; init; }
+        public double F { get; init; }
     }
     public enum OperatorCategory
     {

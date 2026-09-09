@@ -55,11 +55,17 @@ public class ContentOperator
     internal double? TextAdvanceThousandths { get; set; }
 
     /// <summary>
-    /// Graphics CTM active when a parsed text-showing operator executed.
-    /// Redaction reconstructs kept glyphs from page-space letter geometry, so
-    /// it must cancel this transform before emitting those page coordinates.
+    /// Graphics CTM active when this operator executed (§8.3.4). Populated
+    /// for every operator when the stream was parsed with operator metadata
+    /// on (the default), not only text-showing operators -- a caller wanting
+    /// page-space coordinates for a path-construction operator (<c>m/l/c/v/
+    /// y/h/re</c>) transforms its raw <see cref="Operands"/> through this,
+    /// the same way redaction cancels it to recover page-space letter
+    /// geometry from a text-showing operator. Null when operator metadata
+    /// wasn't computed for this parse (<c>ComputeOperatorMetadata = false</c>,
+    /// e.g. the renderer's own tokenizer-only walk, #598).
     /// </summary>
-    internal ContentTransform? GraphicsTransform { get; set; }
+    public ContentTransform? GraphicsTransform { get; internal set; }
 
     /// <summary>Text matrix active when this text-showing operator began.</summary>
     internal ContentTransform? TextTransform { get; set; }
@@ -500,7 +506,11 @@ public class ContentOperator
     }
 }
 
-internal readonly record struct ContentTransform(
+/// <summary>
+/// A PDF transformation matrix [A B C D E F] (§8.3.4), page-space CTM shape:
+/// (x', y') = (A·x + C·y + E, B·x + D·y + F).
+/// </summary>
+public readonly record struct ContentTransform(
     double A, double B, double C, double D, double E, double F)
 {
     internal bool TryInvert(out ContentTransform inverse)
