@@ -28,13 +28,6 @@ namespace Excise.App.ViewModels;
 public partial class MainWindowViewModel
 {
     /// <summary>
-    /// Test seam: set to <c>true</c> once a close has been approved so the
-    /// re-entrant close does not prompt again. Owned by the view; see
-    /// <c>MainWindow.OnWindowClosing</c>.
-    /// </summary>
-    internal bool UnsavedChangesPromptShownForTesting { get; private set; }
-
-    /// <summary>
     /// Whether a destructive transition would lose work right now.
     /// </summary>
     /// <remarks>
@@ -69,8 +62,6 @@ public partial class MainWindowViewModel
         if (!_documentService.IsDocumentLoaded || !FileState.HasUnsavedChanges)
             return true;
 
-        UnsavedChangesPromptShownForTesting = true;
-
         var decision = await _dialogService.ShowUnsavedChangesAsync(
             "Unsaved Changes",
             BuildUnsavedChangesMessage(actionDescription),
@@ -79,6 +70,16 @@ public partial class MainWindowViewModel
         switch (decision)
         {
             case UnsavedChangesDecision.Discard:
+                // Clear the dirty state, don't just report "go ahead".
+                //
+                // Quit is the case that proves this is required rather than
+                // tidy: ExitAsync asks, the user picks Discard, TryShutdown
+                // then closes the window -- and OnWindowClosing would find the
+                // counters STILL non-zero and ask the identical question a
+                // second time. Any other guard that runs after this one (a
+                // second window, a queued file activation) would do the same.
+                // Discard means the edits are gone, so the state must say so.
+                FileState.MarkSaved();
                 _logger.LogInformation(
                     "Unsaved changes discarded by explicit user choice before {Action}", actionDescription);
                 return true;

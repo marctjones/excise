@@ -267,6 +267,65 @@ public class UnsavedChangesOnCloseTests : IDisposable
         window.Close();
     }
 
+    /// <summary>
+    /// Discard must CLEAR the dirty state, not merely return "go ahead".
+    /// </summary>
+    /// <remarks>
+    /// Quit is where this bites. ExitAsync asks, the user picks Discard,
+    /// TryShutdown then closes the window — and if the counters were still
+    /// non-zero, OnWindowClosing would ask the identical question a second
+    /// time. The double prompt cannot be reproduced headlessly (there is no
+    /// desktop lifetime to shut down), so the property it depends on is
+    /// pinned directly.
+    /// </remarks>
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task Discard_ClearsDirtyState_SoASecondGuardDoesNotAskAgain()
+    {
+        var source = NewPdf("discard-clears.pdf");
+        var (vm, dialog) = CreateViewModel();
+        await vm.LoadDocumentAsync(source);
+        await MakeDirtyAsync(vm);
+
+        dialog.Decision = UnsavedChangesDecision.Discard;
+        var proceed = await vm.ConfirmDiscardUnsavedChangesAsync("quit excise");
+
+        proceed.Should().BeTrue();
+        vm.HasUnsavedDocumentChanges.Should().BeFalse(
+            "after Discard the edits are gone, so a later guard must not re-ask about them");
+
+        dialog.Decision = UnsavedChangesDecision.Cancel;
+        (await vm.ConfirmDiscardUnsavedChangesAsync("close this window")).Should().BeTrue(
+            "a second guard must pass straight through rather than prompting again");
+        dialog.UnsavedPromptCount.Should().Be(1, "exactly one prompt for one user decision");
+    }
+
+    /// <summary>
+    /// macOS Launch Services delivers a file activation whenever the user
+    /// double-clicks a PDF in Finder while excise is already running — a
+    /// document replacement, and before #1233 an unguarded one.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task FileActivation_WithUnsavedChanges_Cancelled_KeepsTheCurrentDocument()
+    {
+        var first = NewPdf("activation-first.pdf", "First");
+        var second = NewPdf("activation-second.pdf", "Second");
+
+        var (vm, dialog) = CreateViewModel();
+        await vm.LoadDocumentAsync(first);
+        await MakeDirtyAsync(vm);
+
+        dialog.Decision = UnsavedChangesDecision.Cancel;
+        await Excise.App.App.OpenPathAsync(
+            vm, second, Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+
+        dialog.UnsavedPromptCount.Should().Be(1,
+            "double-clicking a PDF in Finder replaces the open document, so it must ask");
+        vm.FileState.CurrentFilePath.Should().Be(first,
+            "cancelling must leave the current document open");
+
+        vm.FileState.MarkSaved();
+    }
+
     // ------------------------------------------------- Ctrl+W / document close
 
     [FixedAvaloniaFact(Timeout = 30000)]

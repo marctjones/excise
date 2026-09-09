@@ -144,12 +144,23 @@ public partial class MainWindow : Window
 
     private async System.Threading.Tasks.Task PromptThenCloseAsync(MainWindowViewModel viewModel)
     {
-        var proceed = await viewModel.ConfirmDiscardUnsavedChangesAsync("close this window");
-        if (!proceed)
-            return;
+        try
+        {
+            var proceed = await viewModel.ConfirmDiscardUnsavedChangesAsync("close this window");
+            if (!proceed)
+                return;
 
-        _closeApproved = true;
-        Close();
+            _closeApproved = true;
+            Close();
+        }
+        catch (Exception ex)
+        {
+            // Nothing awaits this continuation, so an escaping exception would
+            // be an unobserved task: the window would silently stay open with
+            // no diagnostic. Fail toward keeping the document (do NOT set
+            // _closeApproved) but say why.
+            System.Diagnostics.Debug.WriteLine($"Unsaved-changes close prompt failed: {ex}");
+        }
     }
 
     private void PersistWindowStateOnClose()
@@ -199,7 +210,23 @@ public partial class MainWindow : Window
         if (files == null)
             return;
 
-        _ = viewModel.OpenDroppedFilesAsync([.. files]);
+        _ = OpenDroppedFilesSafeAsync(viewModel, [.. files]);
+    }
+
+    private static async System.Threading.Tasks.Task OpenDroppedFilesSafeAsync(
+        MainWindowViewModel viewModel,
+        System.Collections.Generic.IReadOnlyList<global::Avalonia.Platform.Storage.IStorageItem> files)
+    {
+        try
+        {
+            await viewModel.OpenDroppedFilesAsync(files);
+        }
+        catch (Exception ex)
+        {
+            // Drop delivers no place to await, so an escaping exception would
+            // be an unobserved task and the drop would look ignored.
+            System.Diagnostics.Debug.WriteLine($"Drop-to-open failed: {ex}");
+        }
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
