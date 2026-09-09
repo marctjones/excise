@@ -36,6 +36,7 @@ internal static class SavedPdfLeakScanner
     public static IReadOnlyList<string> FindTerm(byte[] saved, string term)
     {
         var hits = new List<string>();
+        saved = MaskFileIdentifier(saved);
 
         // Search the ENCODED BYTES of the term, not a decoded string of the whole
         // haystack. Decoding a >1GB stream to a string overflows
@@ -103,6 +104,7 @@ internal static class SavedPdfLeakScanner
     /// </summary>
     public static string AllCarriersText(byte[] saved)
     {
+        saved = MaskFileIdentifier(saved);
         var sb = new StringBuilder();
         sb.Append(Encoding.Latin1.GetString(saved)).Append('\n');
         sb.Append(Encoding.BigEndianUnicode.GetString(saved)).Append('\n');
@@ -149,6 +151,99 @@ internal static class SavedPdfLeakScanner
         }
         return bodies;
     }
+
+    /// <summary>
+    /// Blank the STRING VALUES of the trailer/xref-stream <c>/ID</c> array
+    /// (§14.4) so a short needle cannot collide with them.
+    ///
+    /// <para><b>Why this exclusion exists.</b> <c>/ID</c> is a random 16-byte
+    /// file identifier written as uppercase hex. It is content-INDEPENDENT
+    /// serialization metadata: no page text, no carrier, nothing a redaction
+    /// could leak into. But a 3-character ASCII needle has a ~1-in-a-few-dozen
+    /// chance of appearing in 32 random hex digits, so scanning it makes every
+    /// short-term absence assertion intermittently red. Observed at least four
+    /// times on <c>FullwidthFormsRedactionTests</c> alone — <c>/ID</c>
+    /// <c>479CCFE4C1FA...DABC6B61...</c> matched needle <c>ABC</c>, and
+    /// <c>F37F6B37EA4F42180EF0F2141237C322</c> matched <c>123</c>, both times
+    /// with a provably clean redacted page (#1295, #771, #800).</para>
+    ///
+    /// <para><b>Why it is here and not in each test.</b> The exclusion used to
+    /// live in a hand-rolled per-test searchable view; #1049's migration to
+    /// this shared scanner dropped it and reintroduced the flake. One shared
+    /// policy is the fix — see <c>SavedPdfLeakScannerTests</c>, which pins both
+    /// directions on a forced <c>/ID</c>.</para>
+    ///
+    /// <para><b>Scope is deliberately narrow.</b> Only strings <i>inside an
+    /// <c>/ID [ … ]</c> array</i> are blanked — not hex strings generally, since
+    /// a <c>&lt;…&gt;</c> in a content stream is a real text carrier and
+    /// blanking those would make the scanner blind to exactly the leaks it
+    /// exists to catch. Bytes are overwritten IN PLACE with NUL at the same
+    /// length, so every file offset, the raw/UTF-16BE/UTF-8 views, and all
+    /// stream boundaries stay valid.</para>
+    /// </summary>
+    internal static byte[] MaskFileIdentifier(byte[] saved)
+    {
+        byte[]? masked = null;
+        var i = 0;
+
+        while (true)
+        {
+            var at = IndexOf(saved, "/ID", i);
+            if (at < 0) break;
+            i = at + 3;
+
+            // "/IDS" is a different name; the identifier key ends here.
+            if (i < saved.Length && IsRegularCharacter(saved[i])) continue;
+
+            var p = SkipWhitespace(saved, i);
+            // The file identifier is always an ARRAY of one or two strings.
+            // Anything else that happens to be named /ID is not it.
+            if (p >= saved.Length || saved[p] != (byte)'[') continue;
+            p++;
+
+            masked ??= (byte[])saved.Clone();
+
+            while (p < saved.Length && saved[p] != (byte)']')
+            {
+                if (saved[p] == (byte)'<')
+                {
+                    p++;
+                    while (p < saved.Length && saved[p] != (byte)'>') masked[p++] = 0;
+                }
+                else if (saved[p] == (byte)'(')
+                {
+                    // §7.3.4.2 literal-string form, legal though rarely emitted.
+                    p++;
+                    for (var depth = 1; p < saved.Length && depth > 0; p++)
+                    {
+                        if (saved[p] == (byte)'\\') { masked[p] = 0; p++; if (p < saved.Length) masked[p] = 0; continue; }
+                        if (saved[p] == (byte)'(') depth++;
+                        else if (saved[p] == (byte)')' && --depth == 0) break;
+                        masked[p] = 0;
+                    }
+                }
+                p++;
+            }
+
+            i = p;
+        }
+
+        return masked ?? saved;
+    }
+
+    private static int SkipWhitespace(byte[] b, int from)
+    {
+        var i = from;
+        while (i < b.Length && (b[i] == ' ' || b[i] == '\r' || b[i] == '\n'
+                                || b[i] == '\t' || b[i] == '\f' || b[i] == 0)) i++;
+        return i;
+    }
+
+    /// <summary>§7.2.2: anything that is not whitespace or a delimiter.</summary>
+    private static bool IsRegularCharacter(byte c)
+        => !(c == ' ' || c == '\r' || c == '\n' || c == '\t' || c == '\f' || c == 0
+             || c == '(' || c == ')' || c == '<' || c == '>' || c == '['
+             || c == ']' || c == '{' || c == '}' || c == '/' || c == '%');
 
     /// <summary>
     /// Inflate a zlib/deflate stream body, or null when it is not compressed
