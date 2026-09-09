@@ -32,8 +32,35 @@ internal static class DctImageDecoder
         return normalizedColorSpace == "DeviceCMYK" ? 0 : null;
     }
 
-    internal static SKBitmap? Decode(DctImageDecodeRequest request)
+    /// <summary>
+    /// Why a <see cref="Decode"/> produced no bitmap — the distinction the
+    /// caller needs in order to decide whether a generic Skia decode is a
+    /// reasonable second attempt or a way of fabricating content (#1383).
+    /// </summary>
+    internal enum DctDecodeFailure
     {
+        /// <summary>Decoded, or not attempted.</summary>
+        None,
+
+        /// <summary>
+        /// The JPEG's own SOF component count contradicts the number of
+        /// components the image dictionary's <c>/ColorSpace</c> requires. The
+        /// file does not describe one image ambiguously — it describes two
+        /// incompatible images, and no recovery can pick between them.
+        /// </summary>
+        ComponentCountContradictsColorSpace,
+
+        /// <summary>Anything else: truncation, an unsupported process, a
+        /// codec throw. These stay eligible for the generic decode.</summary>
+        Other,
+    }
+
+    internal static SKBitmap? Decode(DctImageDecodeRequest request)
+        => Decode(request, out _);
+
+    internal static SKBitmap? Decode(DctImageDecodeRequest request, out DctDecodeFailure failure)
+    {
+        failure = DctDecodeFailure.Other;
         request.CancellationToken.ThrowIfCancellationRequested();
         if (request.Bytes.Length == 0 ||
             request.SourceWidth <= 0 ||
@@ -60,6 +87,48 @@ internal static class DctImageDecoder
             using var input = new MemoryStream(request.Bytes, writable: false);
             decompressor.jpeg_stdio_src(input);
             decompressor.jpeg_read_header(true);
+
+            // #1383 — the memory-safety guard, promoted to a REPORTED outcome,
+            // and read from the SOF BEFORE the input colour space is forced.
+            //
+            // pdfium's bug_603518.pdf is the regression fixture for
+            // chromium:603518, where pdfium read 4 bytes per pixel out of a
+            // 3-byte-per-pixel buffer while recovering from a failed decoder
+            // init. Its dictionary says /DeviceCMYK (4 components) and
+            // /Width 999 /Height 999; its JPEG says 3 components and
+            // 640x63760. Refusing is CORRECT and must stay.
+            //
+            // What was wrong is what happened next. The contradiction did not
+            // surface as the DecodeCmyk component guard at all — assigning
+            // Jpeg_color_space = JCS_YCCK to a 3-component JPEG makes libjpeg
+            // throw "Bogus JPEG colorspace" first — so the outcome reaching the
+            // caller was an ordinary decode failure, and the caller fell
+            // through to a generic Skia decode that ignores the dictionary's
+            // CMYK claim. Skia filled the truncated scan data with 0x80:
+            // 2,414,880 pixels of exactly (128,128,128) at 150 dpi, a flat grey
+            // rectangle a reader cannot tell from real content. §7.4.8 defers
+            // DCTDecode to ISO/IEC 10918 and prescribes no recovery, and
+            // notably §7.4.9 resolves this precedence question for JPXDecode
+            // (a present /ColorSpace wins) while no equivalent clause exists
+            // here — so the file is non-conformant and a conforming reader may
+            // reject the image, which is now what excise does.
+            //
+            // ⚠️ NARROWED TO THE CMYK DIRECTION ON PURPOSE. A /DeviceCMYK
+            // dictionary over a JPEG with fewer than 4 components cannot be
+            // reconciled: any recovery must invent a channel. The mirror case
+            // — a /DeviceRGB dictionary over a 1-component GRAYSCALE JPEG — is
+            // common, benign, and decoded correctly by the generic path, so it
+            // deliberately still gets its second attempt. Widening this to "any
+            // component-count mismatch", or to "any decode failure", would
+            // start silently dropping recoverable images: the dangerous
+            // direction, and the one this issue's acceptance calls out.
+            if (outputColorSpace == J_COLOR_SPACE.JCS_CMYK &&
+                decompressor.Num_components != 4)
+            {
+                failure = DctDecodeFailure.ComponentCountContradictsColorSpace;
+                return null;
+            }
+
             decompressor.Jpeg_color_space = inputColorSpace;
             decompressor.Out_color_space = outputColorSpace;
             decompressor.Scale_num = 1;
@@ -72,9 +141,12 @@ internal static class DctImageDecoder
             if (width <= 0 || height <= 0)
                 return null;
 
-            return outputColorSpace == J_COLOR_SPACE.JCS_CMYK
+            var bitmap = outputColorSpace == J_COLOR_SPACE.JCS_CMYK
                 ? DecodeCmyk(decompressor, width, height, request)
                 : DecodeRgb(decompressor, width, height, request);
+            if (bitmap != null)
+                failure = DctDecodeFailure.None;
+            return bitmap;
         }
         catch (OperationCanceledException)
         {
