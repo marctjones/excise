@@ -15,20 +15,20 @@
       "unknown": 149
     },
     "gradeStates": {
-      "implemented": 208,
+      "implemented": 197,
       "unknown": 19,
-      "verified": 671
+      "verified": 682
     },
     "gradedImplementedOrBetterPercent": 97.9,
-    "gradedVerifiedPercent": 74.7,
+    "gradedVerifiedPercent": 75.9,
     "gradedUnknownCount": 19,
     "measuredModeCoveragePercent": 83.4,
     "implementedModeCoveragePercent": 0.6,
-    "promotionReadinessPercent": 32.1,
-    "implementationEvidenceProgressPercent": 79.1,
+    "promotionReadinessPercent": 32.2,
+    "implementationEvidenceProgressPercent": 79.3,
     "promotionReadinessMilestones": {
       "discoveredOrBetter": 898,
-      "directTestOrBetter": 294,
+      "directTestOrBetter": 299,
       "independentEvidenceOrBetter": 37,
       "strictImplemented": 5
     },
@@ -422,20 +422,20 @@
         "unknown": 146
       },
       "gradeStates": {
-        "implemented": 180,
+        "implemented": 169,
         "unknown": 3,
-        "verified": 525
+        "verified": 536
       },
       "gradedImplementedOrBetterPercent": 99.6,
-      "gradedVerifiedPercent": 74.2,
+      "gradedVerifiedPercent": 75.7,
       "gradedUnknownCount": 3,
       "measuredModeCoveragePercent": 79.4,
       "implementedModeCoveragePercent": 0.6,
-      "promotionReadinessPercent": 36.9,
-      "implementationEvidenceProgressPercent": 79.6,
+      "promotionReadinessPercent": 37.1,
+      "implementationEvidenceProgressPercent": 79.9,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 708,
-        "directTestOrBetter": 285,
+        "directTestOrBetter": 290,
         "independentEvidenceOrBetter": 34,
         "strictImplemented": 4
       },
@@ -1101,19 +1101,19 @@
         "unknown": 146
       },
       "gradeStates": {
-        "implemented": 39,
-        "verified": 248
+        "implemented": 34,
+        "verified": 253
       },
       "gradedImplementedOrBetterPercent": 100.0,
-      "gradedVerifiedPercent": 86.4,
+      "gradedVerifiedPercent": 88.2,
       "gradedUnknownCount": 0,
       "measuredModeCoveragePercent": 49.1,
       "implementedModeCoveragePercent": 0.0,
-      "promotionReadinessPercent": 66.6,
-      "implementationEvidenceProgressPercent": 81.6,
+      "promotionReadinessPercent": 67.1,
+      "implementationEvidenceProgressPercent": 81.8,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 287,
-        "directTestOrBetter": 250,
+        "directTestOrBetter": 255,
         "independentEvidenceOrBetter": 0,
         "strictImplemented": 0
       },
@@ -1210,16 +1210,16 @@
         "partial": 259
       },
       "gradeStates": {
-        "implemented": 77,
-        "verified": 182
+        "implemented": 71,
+        "verified": 188
       },
       "gradedImplementedOrBetterPercent": 100.0,
-      "gradedVerifiedPercent": 70.3,
+      "gradedVerifiedPercent": 72.6,
       "gradedUnknownCount": 0,
       "measuredModeCoveragePercent": 100.0,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 10.0,
-      "implementationEvidenceProgressPercent": 78.0,
+      "implementationEvidenceProgressPercent": 78.3,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 259,
         "directTestOrBetter": 0,
@@ -2012,8 +2012,8 @@
     "modesWithExplicitContracts": 879,
     "modesWithPassingExplicitContracts": 878,
     "modesWithRecordedPassingCandidate": 644,
-    "gradeImplemented": 208,
-    "gradeVerified": 671,
+    "gradeImplemented": 197,
+    "gradeVerified": 682,
     "gradeUnknown": 19,
     "testMethods": 6428,
     "testMethodsWithCapabilityCandidate": 4015,

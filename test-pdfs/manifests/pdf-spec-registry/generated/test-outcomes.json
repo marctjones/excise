@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-09T04:44:32.381450+00:00",
-  "gitRevision": "84a03446ce22c20236d591549c74c39690278270",
+  "recordedAt": "2026-09-09T04:50:13.525655+00:00",
+  "gitRevision": "33f2e5953b5a1728af0ddffb8aacfca23a402f4c",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -531,6 +531,11 @@
       "path": "/tmp/trx-rewire/rw.trx",
       "modifiedAt": "2026-09-09T04:44:28.518016+00:00",
       "sha256": "b173122b2ddcb7afd7e80d9a747e8946d939e5a4c471f87af9617f19b55906ac"
+    },
+    {
+      "path": "/tmp/trx-rewire2/rw2.trx",
+      "modifiedAt": "2026-09-09T04:50:09.296563+00:00",
+      "sha256": "42408d1e52e437a5430fe12c98ef3986c94ce526f09e22277f9402872f6a35ed"
     }
   ],
   "outcomes": [
@@ -54449,10 +54454,10 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
       "outcome": "Passed",
-      "duration": "00:00:00.0987953",
-      "trx": "/tmp/trx-integration/agents.trx",
-      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
-      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+      "duration": "00:00:00.0284617",
+      "trx": "/tmp/trx-rewire2/rw2.trx",
+      "resultModifiedAt": "2026-09-09T04:50:09.296563+00:00",
+      "trxSha256": "42408d1e52e437a5430fe12c98ef3986c94ce526f09e22277f9402872f6a35ed"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.HorizontalScaling_Tz_HalvesWidth_MatchesMutool",
@@ -54489,10 +54494,10 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
       "outcome": "Passed",
-      "duration": "00:00:00.1795989",
-      "trx": "/tmp/trx-integration/agents.trx",
-      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
-      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+      "duration": "00:00:00.0754373",
+      "trx": "/tmp/trx-rewire2/rw2.trx",
+      "resultModifiedAt": "2026-09-09T04:50:09.296563+00:00",
+      "trxSha256": "42408d1e52e437a5430fe12c98ef3986c94ce526f09e22277f9402872f6a35ed"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.TextRenderMode_Tr3Invisible_PaintsNoInk_MatchesMutool",
@@ -63753,10 +63758,10 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
       "outcome": "Passed",
-      "duration": "00:00:00.3100296",
-      "trx": "/tmp/trx-integration/agents.trx",
-      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
-      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+      "duration": "00:00:00.1871721",
+      "trx": "/tmp/trx-rewire2/rw2.trx",
+      "resultModifiedAt": "2026-09-09T04:50:09.296563+00:00",
+      "trxSha256": "42408d1e52e437a5430fe12c98ef3986c94ce526f09e22277f9402872f6a35ed"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.RgbFillAndStroke_PixelValuesMatchIndependentRenderer",
@@ -69832,7 +69837,7 @@
     }
   ],
   "summary": {
-    "trxFiles": 105,
+    "trxFiles": 106,
     "tests": 8662,
     "outcomes": {
       "Failed": 3,
