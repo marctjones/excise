@@ -8,6 +8,87 @@ semantic versioning.
 
 Nothing yet.
 
+## [3.10.0] - 2026-09-09
+
+**Read this before upgrading from any 3.9.x build.** The `v3.9.2` git tag
+sits on a lineage that is not an ancestor of `develop` — the two histories
+share only a June 2026 common ancestor, discovered while investigating
+issues #1431/#1432/#1434 (below). Nobody currently knows why or how the
+divergence happened; it predates this release. If you consumed a package
+built from `v3.9.2` (or any earlier `v3.x` tag) and hit a regression, a
+rebuild from `v3.9.2` will still show it — the fix is here, on `develop`,
+not on that lineage. `v3.10.0` is cut directly from current `develop`.
+
+### Fixed — security
+- **Four real redaction-content-carrier leaks**, each independently
+  oracle-verified (qpdf/mutool), each with a `CanaryInjectionLeakTests`
+  regression pin: AGL underscore-joined ligature names weren't decoded
+  before matching, so a redacted term survived under an affected font
+  (#1423); annotation `/Subj` and `/Redact` annotations' `/OverlayText`
+  weren't in the document-carrier scrub list at all (#1427);
+  `/FileAttachment` annotations' own `/FS` was invisible to
+  `GetEmbeddedFiles()`/redaction — only catalog-level `/Names/EmbeddedFiles`
+  and `/AF` were ever walked (#1428); annotation `/AP` appearance-stream
+  text (Stamp, Watermark, and others) was rendered but not extracted, so it
+  survived a redaction that removed the same text from the page body
+  (#1429).
+- **A decompression-bomb guard on Flate/LZW decode** (#1408).
+- **`Tc`/`Tw` (character/word spacing) silently dropped or blown off-canvas
+  within a `Tj` string** (#1392) — two distinct bugs in
+  `SkiaRenderer.Text.cs`: with no `/Widths` array (the common case for
+  base-14 fonts, which aren't required to carry one), spacing had zero
+  effect on glyph layout; with `/Widths` present, spacing was incorrectly
+  scaled by font size a second time, pushing glyphs off-page under a large
+  `Tw`. A visual-rendering bug, not a redaction-security one — the
+  extraction/redaction sink was unaffected and confirmed so directly.
+- **`/ImageMask true` stencils with no explicit `/BitsPerComponent` rendered
+  as a blank page.** Per ISO 32000-2 §8.9.6.2 the key "shall not be
+  specified" for a stencil mask (implicitly 1) and real producers commonly
+  omit it; the renderer defaulted the missing key to 8 before checking
+  `/ImageMask`, so the 1-bit decode path never triggered.
+
+### Fixed — performance
+- Three DeviceCMYK rendering hot-path fixes: reading the ICC profile PCS
+  field so XYZ-PCS lut16 profiles decode correctly instead of as Lab
+  (#1424); caching the vector CMYK→RGB conversion through the image lattice
+  instead of per-pixel ICC (#1425); converting a per-pixel `GetPixel` call
+  in the CMYK backdrop sync to raw spans (#1426).
+
+### Added
+- **Outline (bookmark) and embedded-file (attachment) authoring APIs**
+  (#1412, #1413) — `PdfOutlineAuthoring`/`PdfOutlineParser` and the
+  embedded-file authoring surface. `PdfDocument.HasEmbeddedFiles` now
+  delegates to `GetEmbeddedFiles().Count > 0` (was an independent,
+  drifted check — the same drift that let #1428 ship).
+- **A save-warning before overwriting a digitally signed document's edits**
+  (#1415).
+- **`ContentOperator.GraphicsTransform` now populates for every content-stream
+  operator**, not only text-showing ones, and is public along with the
+  `ContentTransform` struct it uses (#1433). A caller wanting page-space
+  coordinates for a path-construction operator (`m`/`l`/`c`/`v`/`y`/`h`/`re`)
+  applies the transform to the operator's raw `Operands` directly, instead of
+  reimplementing CTM tracking outside the library.
+
+### Registry
+- The PDF capability registry's independently-oracled evidence grew
+  substantially this cycle: **verified capability/mode pairs 71 → 209
+  (7.9% → 23.3% of 898 target modes)**, via a large parallel verification
+  pass (six concurrent audits, one per registry section) plus the earlier
+  RC22 milestone. "Verified" means an independent tool (qpdf, mutool,
+  pdftotext, or a reference renderer) confirmed the behavior — not just an
+  excise test checking excise's own output. See `CLAUDE.md`'s no-self-oracle
+  section for why that distinction is load-bearing: three of this project's
+  worst historical leaks (#636, #608, #637) passed a fully green
+  self-testing suite for months.
+
+### Closed as not-reproducing
+- #1431 (`/TU` tooltip not written), #1432 (PDF/A archival output not
+  embedding a Unicode font), #1434 (exported fillable PDF missing `/Widget`
+  annotations entirely) — all three were real regressions on the orphaned
+  `v3.9.2` lineage described above, but do not reproduce on `develop`;
+  verified with real repros against excise's actual public API before
+  closing, not assumed fixed by association.
+
 ## [3.9.2] - 2026-09-05
 
 151 commits since 3.9.1. Nothing user-facing changed in the PDF engine; this
