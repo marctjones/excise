@@ -157,6 +157,15 @@
             "modes": [
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       },
@@ -352,6 +361,15 @@
             "modes": [
               "mutate"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
+            ]
           }
         ]
       }
@@ -543,6 +561,15 @@
             "ref": "Excise.Rendering.Tests/Differential/AdvanceParityTests.cs::PerGlyphAdvanceParity_AgainstMutool",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AuthoritativeOperatorInventory_SurvivesRoundTrip_ConfirmedByQpdf",
+            "modes": [
+              "parse",
+              "preserve",
+              "write"
             ]
           }
         ]
