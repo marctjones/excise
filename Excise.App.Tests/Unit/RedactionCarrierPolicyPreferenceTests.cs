@@ -3,6 +3,7 @@ using AwesomeAssertions;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.Core.Operations;
+using Excise.Core.Text.Segmentation;
 using Xunit;
 
 namespace Excise.App.Tests.Unit;
@@ -106,6 +107,30 @@ public class RedactionCarrierPolicyPreferenceTests
         main.BuildRedactedCopySafetyOptions().WholeWord.Should().BeTrue(
             "a toggle that does not reach PdfDocumentSanitizer is a setting the " +
             "user believes in and does not have");
+    }
+
+    [Fact]
+    public void WidthPolicy_DefaultsToCollapse_AndRoundTripsThroughPreferences()
+    {
+        // #1189. The default keeps today's behaviour: an exact-width box that
+        // does not reflow the page — and that IS the ruler #1140 recorded, so
+        // changing the default is a product decision, not a side effect.
+        var main = MainWindowViewModelTestFactory.Create();
+        main.RedactionWidthPolicy.Should().Be(WidthPolicy.CollapsePreserveLayout);
+
+        var prefs = new PreferencesViewModel();
+        prefs.WidthPolicyOptions.Should().BeEquivalentTo(new[]
+        {
+            WidthPolicy.CollapsePreserveLayout,
+            WidthPolicy.CloseGap,
+            WidthPolicy.OvershootPreserveLayout,
+        });
+
+        prefs.LoadFromMainViewModel(main);
+        prefs.SelectedRedactionWidthPolicy = WidthPolicy.OvershootPreserveLayout;
+        prefs.SaveToMainViewModel(main);
+
+        main.RedactionWidthPolicy.Should().Be(WidthPolicy.OvershootPreserveLayout);
     }
 
     [Fact]

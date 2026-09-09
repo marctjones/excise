@@ -355,7 +355,8 @@ public partial class MainWindowViewModel
 
                     var result = _redactionService.RedactText(
                         currentInput, currentOutput, text, caseSensitive: false,
-                        allowLowConfidence: false, wholeWord: RedactionWholeWord);   // #1052
+                        allowLowConfidence: false, wholeWord: RedactionWholeWord,   // #1052
+                        width: RedactionWidthPolicy);                               // #1189
 
                     if (!result.Success)
                     {

@@ -727,6 +727,66 @@ public class RedactCommandTests : IDisposable
         policy.ModeFor(carrier).Should().Be(mode);
     }
 
+    [Theory]
+    [InlineData("--close-width")]
+    [InlineData("--no-box")]
+    public async Task RunAsync_Redact_OvershootBox_RejectsContradictoryFlags(string other)
+    {
+        // #1189: --close-width draws no box (#1140) and --no-box draws no box,
+        // so there is nothing to widen. A redaction tool must never silently
+        // ignore a flag the user passed.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
+
+        var prevErr = Console.Error;
+        Console.SetError(new StringWriter());
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--overshoot-box", other
+            });
+        }
+        finally
+        {
+            Console.SetError(prevErr);
+        }
+
+        exitCode.Should().Be(1);
+        File.Exists(outputPath).Should().BeFalse("the run was rejected before writing");
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_OvershootBox_EndToEnd_StillRemovesTheText()
+    {
+        // The full CLI path for --overshoot-box. The box policy is cosmetic;
+        // glyph removal is unconditional and must stay so.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET WORLD"));
+
+        var prevOut = Console.Out;
+        Console.SetOut(new StringWriter());
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--overshoot-box"
+            });
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+        }
+
+        exitCode.Should().Be(0);
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "SECRET").Should().BeEmpty();
+        AppendedFillBoxColors(outputPath).Should().NotBeEmpty("overshoot still draws a box");
+    }
+
     [Fact]
     public async Task RunAsync_Redact_WholeWordFlag_EndToEnd_SparesTheLongerWord()
     {

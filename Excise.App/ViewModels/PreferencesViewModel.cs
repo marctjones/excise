@@ -22,6 +22,8 @@ public class PreferencesViewModel : ViewModelBase
     private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
         Excise.Core.Operations.CarrierScrubMode.Strip;
     private bool _redactionWholeWord;
+    private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
+        Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
 
     public PreferencesViewModel()
     {
@@ -125,6 +127,16 @@ public class PreferencesViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _redactionWholeWord, value);
     }
 
+    // Redaction width / box policy (#1189). AOT-safe Enum.GetValues<T>().
+    public Excise.Core.Text.Segmentation.WidthPolicy[] WidthPolicyOptions { get; } =
+        System.Enum.GetValues<Excise.Core.Text.Segmentation.WidthPolicy>();
+
+    public Excise.Core.Text.Segmentation.WidthPolicy SelectedRedactionWidthPolicy
+    {
+        get => _redactionWidthPolicy;
+        set => this.RaiseAndSetIfChanged(ref _redactionWidthPolicy, value);
+    }
+
     // Commands
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
@@ -158,6 +170,7 @@ public class PreferencesViewModel : ViewModelBase
         SelectedLinkUriCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.Strip;
         SelectedMetadataCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.Strip;
         RedactionWholeWord = false;
+        SelectedRedactionWidthPolicy = Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
     }
 
     private void CloseWindow()
@@ -172,6 +185,7 @@ public class PreferencesViewModel : ViewModelBase
         SelectedLinkUriCarrierPolicy = mainViewModel.LinkUriCarrierPolicy;
         SelectedMetadataCarrierPolicy = mainViewModel.MetadataCarrierPolicy;
         RedactionWholeWord = mainViewModel.RedactionWholeWord;
+        SelectedRedactionWidthPolicy = mainViewModel.RedactionWidthPolicy;
     }
 
     public void SaveToMainViewModel(MainWindowViewModel mainViewModel)
@@ -181,5 +195,6 @@ public class PreferencesViewModel : ViewModelBase
         mainViewModel.LinkUriCarrierPolicy = SelectedLinkUriCarrierPolicy;
         mainViewModel.MetadataCarrierPolicy = SelectedMetadataCarrierPolicy;
         mainViewModel.RedactionWholeWord = RedactionWholeWord;
+        mainViewModel.RedactionWidthPolicy = SelectedRedactionWidthPolicy;
     }
 }

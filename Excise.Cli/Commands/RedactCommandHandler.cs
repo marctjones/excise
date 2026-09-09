@@ -103,8 +103,8 @@ internal static class RedactCommandHandler
             CaseSensitive = request.CaseSensitive,
             WholeWord = request.WholeWord,   // #1052
             DrawBox = request.DrawBox,
-            Width = request.CloseWidth
-                ? WidthPolicy.CloseGap
+            Width = request.CloseWidth ? WidthPolicy.CloseGap
+                : request.OvershootBox ? WidthPolicy.OvershootPreserveLayout   // #1189
                 : WidthPolicy.CollapsePreserveLayout,
             BoxColor = request.BoxColor,
             // #1188/#1169: per-carrier mode. Null keeps the all-Strip default.
@@ -223,7 +223,8 @@ internal readonly record struct RedactCommandRequest(
     bool OcrImageText = false,
     bool FlattenOcr = false,
     Excise.Core.Operations.CarrierScrubPolicy? CarrierPolicy = null,   // #1188/#1169
-    bool WholeWord = false);   // #1052
+    bool WholeWord = false,   // #1052
+    bool OvershootBox = false);   // #1189
 
 internal sealed record RedactCommandResult(
     string InputPath,

@@ -67,6 +67,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
         Excise.Core.Operations.CarrierScrubMode.Strip;
     private bool _redactionWholeWord;
+    private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
+        Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
     private bool _isRedactionMode;
     private PdfPageRect? _currentRedactionPageArea;
     // Whether the user has already confirmed editing a signed document this
@@ -312,6 +314,24 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         get => _redactionWholeWord;
         set => this.RaiseAndSetIfChanged(ref _redactionWholeWord, value);
+    }
+
+    /// <summary>
+    /// How the removed run's WIDTH is handled (#1189). Default
+    /// <see cref="Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout"/>.
+    /// </summary>
+    /// <remarks>
+    /// A layout choice and a SECURITY choice at once. The default box is drawn
+    /// to the exact extent of the removed run, which makes it a ruler for the
+    /// removed string's length (#1140). Overshoot rounds the box width up so
+    /// similar-length candidates stop being separable by measuring it; CloseGap
+    /// removes the advance entirely — the only option that also closes the
+    /// content-stream channel — and reflows the line.
+    /// </remarks>
+    public Excise.Core.Text.Segmentation.WidthPolicy RedactionWidthPolicy
+    {
+        get => _redactionWidthPolicy;
+        set => this.RaiseAndSetIfChanged(ref _redactionWidthPolicy, value);
     }
 
     /// <summary>

@@ -2,8 +2,11 @@ namespace Excise.Core.Text.Segmentation;
 
 /// <summary>
 /// How a redaction residue's per-character width is handled (#1187 surface for
-/// #1045/#1145). Only implemented values are present; <c>Overshoot</c> (obscure
-/// the run's width against the de-redaction side channel) arrives with #1189.
+/// #1045/#1145/#1189). Width is both a layout and a SECURITY decision: the
+/// glyph-position / width de-redaction side channel is the research's top
+/// unhardened gap, and each value trades differently against it. Read each
+/// value's remarks for what it actually closes — none of them closes
+/// everything, and two of them leave the content-stream advance intact.
 /// </summary>
 public enum WidthPolicy
 {
@@ -18,6 +21,26 @@ public enum WidthPolicy
     /// channel at the cost of reflowing the line (#1145).
     /// </summary>
     CloseGap,
+
+    /// <summary>
+    /// As <see cref="CollapsePreserveLayout"/>, but draw the covering box WIDER
+    /// than the removed run — out to the surviving neighbours on the line —
+    /// so the box's width no longer encodes how long the removed string was
+    /// (#1189). Layout does not reflow.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ <b>This closes the RENDERED width channel, not the whole width side
+    /// channel.</b> Preserving layout means the content stream still carries one
+    /// <c>TJ</c> adjustment equal to the removed run's total advance
+    /// (<c>OperandGlyphSplitter</c>), and that number is a direct measurement of
+    /// the removed string's width to anyone who reads the file rather than looks
+    /// at the page. Overshoot defeats the box-as-ruler oracle (#1140) and a
+    /// pixel-level measurement of the redacted region; it does not defeat a
+    /// content-stream one. <see cref="CloseGap"/> is what destroys that, at the
+    /// cost of reflowing the line. Saying otherwise would be a gate that claims
+    /// a property the code does not have.
+    /// </remarks>
+    OvershootPreserveLayout,
 }
 
 /// <summary>

@@ -153,7 +153,9 @@ public class RedactionService
     /// </param>
     public TextRedactionResult RedactText(
         string inputPath, string outputPath, string textToRedact, bool caseSensitive = false,
-        bool allowLowConfidence = false, bool wholeWord = false)
+        bool allowLowConfidence = false, bool wholeWord = false,
+        Excise.Core.Text.Segmentation.WidthPolicy width =
+            Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout)
     {
         _logger.LogInformation(
             "RedactText: '{Text}' in {Input} (wholeWord={WholeWord})",
@@ -182,6 +184,7 @@ public class RedactionService
             {
                 CaseSensitive = caseSensitive,
                 WholeWord = wholeWord,   // #1052
+                Width = width,           // #1189
             });
             int totalMatches = redaction.VerifiedRemovals;
             // #643: this path opens without a password, so only empty-user-

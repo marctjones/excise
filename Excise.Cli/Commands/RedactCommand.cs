@@ -71,6 +71,16 @@ internal static class RedactCommand
             Description = "Create a fresh image-only PDF: rasterize every page, OCR the requested visible term, black out its pixels, and discard all original PDF carriers. Requires tesseract; intentionally removes selectable text, forms, links, and metadata.",
             DefaultValueFactory = _ => false,
         };
+        var overshootBoxOption = new Option<bool>("--overshoot-box")
+        {
+            Description = "Round the covering box's width UP to a whole em, growing into the " +
+                "space beside it without covering neighbouring text, so the box stops being a " +
+                "ruler for the removed string's length (#1189). Layout does not reflow. " +
+                "NOTE: this blurs only the RENDERED width -- the content stream still carries " +
+                "the removed run's advance, so a reader of the file can still measure it. " +
+                "--close-width is what destroys that, at the cost of reflowing the line.",
+            DefaultValueFactory = _ => false,
+        };
         var wholeWordOption = new Option<bool>("--whole-word")
         {
             Description = "Match whole words only: the term must be bounded by a non-word " +
@@ -115,6 +125,7 @@ internal static class RedactCommand
             boxColorOption,
             ocrImageTextOption,
             flattenOcrOption,
+            overshootBoxOption,
             wholeWordOption,
             carrierPolicyOption,
             progressOption,
@@ -130,6 +141,7 @@ internal static class RedactCommand
             var flattenOcr = parseResult.GetValue(flattenOcrOption);
             var ocrImageText = parseResult.GetValue(ocrImageTextOption);
             var closeWidth = parseResult.GetValue(closeWidthOption);
+            var overshootBox = parseResult.GetValue(overshootBoxOption);
             var strict = parseResult.GetValue(strictOption);
             var allowLowConfidence = parseResult.GetValue(allowLowConfidenceOption);
 
@@ -142,6 +154,24 @@ internal static class RedactCommand
             if (string.IsNullOrEmpty(text))
             {
                 Console.Error.WriteLine("Redaction text must not be empty.");
+                return 1;
+            }
+
+            if (overshootBox && closeWidth)
+            {
+                // Two different answers to the same question, and --close-width
+                // draws no box at all (#1140), so there would be nothing to
+                // overshoot. Refuse rather than silently pick one.
+                Console.Error.WriteLine(
+                    "--overshoot-box and --close-width are mutually exclusive: --close-width " +
+                    "removes the advance and draws no box, so there is no box width to obscure.");
+                return 1;
+            }
+
+            if (overshootBox && noBox)
+            {
+                Console.Error.WriteLine(
+                    "--overshoot-box and --no-box are mutually exclusive: there is no box to widen.");
                 return 1;
             }
 
@@ -197,7 +227,8 @@ internal static class RedactCommand
                     ocrImageText,
                     flattenOcr,
                     carrierPolicy,
-                    parseResult.GetValue(wholeWordOption)),
+                    parseResult.GetValue(wholeWordOption),
+                    overshootBox),
                     progress);
 
                 foreach (var diagnostic in result.Diagnostics)
