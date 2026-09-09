@@ -154,6 +154,59 @@
             "modes": [
               "author"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredFreeTextInk",
+            "modes": [
+              "author",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredShapeInk",
+            "modes": [
+              "author",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredLineAndArrowInk",
+            "modes": [
+              "author",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredStampInk",
+            "modes": [
+              "author",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationBorderTests.cs::TheBorderBoxMatchesIndependentRenderers",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::OpacityMatchesIndependentRenderers",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/StickyNoteIconTests.cs::DegenerateRect_StillDrawsAMarker_AsMutoolDoes",
+            "modes": [
+              "author"
+            ]
           }
         ]
       }

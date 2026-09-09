@@ -83979,10 +83979,38 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredFreeTextInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredShapeInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredLineAndArrowInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredStampInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -84009,10 +84037,59 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredFreeTextInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationAuthoringDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredShapeInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredLineAndArrowInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredStampInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationBorderTests.cs::TheBorderBoxMatchesIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationOpacityTests.cs::OpacityMatchesIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/StickyNoteIconTests.cs::DegenerateRect_StillDrawsAMarker_AsMutoolDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -110140,8 +110217,8 @@
     "modesWithExplicitContracts": 879,
     "modesWithPassingExplicitContracts": 878,
     "modesWithRecordedPassingCandidate": 644,
-    "gradeImplemented": 781,
-    "gradeVerified": 98,
+    "gradeImplemented": 779,
+    "gradeVerified": 100,
     "gradeUnknown": 19,
     "testMethods": 6348,
     "testMethodsWithCapabilityCandidate": 3934,
