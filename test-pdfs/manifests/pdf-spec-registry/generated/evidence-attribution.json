@@ -48488,7 +48488,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -48496,7 +48496,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74121,7 +74121,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -74129,7 +74129,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74195,7 +74195,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -74203,7 +74203,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74279,7 +74279,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
           "recordedOutcomes": [
             "Passed"
@@ -74287,7 +74287,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74363,7 +74363,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -74371,7 +74371,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74447,7 +74447,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
           "recordedOutcomes": [
             "Passed"
@@ -74455,7 +74455,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74521,7 +74521,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -74529,7 +74529,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74598,7 +74598,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -74606,7 +74606,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74679,7 +74679,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -74687,7 +74687,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74763,7 +74763,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -74771,7 +74771,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74830,7 +74830,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -74838,7 +74838,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74914,7 +74914,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -74922,7 +74922,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -74998,7 +74998,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75006,7 +75006,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75072,7 +75072,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75080,7 +75080,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75163,7 +75163,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75171,7 +75171,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75230,7 +75230,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75238,7 +75238,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75339,7 +75339,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75347,7 +75347,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75413,7 +75413,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75421,7 +75421,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75513,7 +75513,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75521,7 +75521,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75594,7 +75594,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75602,7 +75602,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75668,7 +75668,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75676,7 +75676,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75742,7 +75742,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75750,7 +75750,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75823,7 +75823,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75831,7 +75831,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75890,7 +75890,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75898,7 +75898,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75971,7 +75971,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
           "recordedOutcomes": [
             "Passed"
@@ -75979,7 +75979,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76000,7 +76000,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
           "recordedOutcomes": [
             "Passed"
@@ -76008,7 +76008,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76029,7 +76029,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
           "recordedOutcomes": [
             "Passed"
@@ -76037,7 +76037,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76096,7 +76096,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -76104,7 +76104,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76163,7 +76163,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -76171,7 +76171,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76230,7 +76230,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -76238,7 +76238,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76317,7 +76317,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -76325,7 +76325,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76384,7 +76384,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
           "recordedOutcomes": [
             "Passed"
@@ -76392,7 +76392,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76471,7 +76471,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -76479,7 +76479,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76558,7 +76558,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -76566,7 +76566,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76625,7 +76625,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
           "recordedOutcomes": [
             "Passed"
@@ -76633,7 +76633,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76699,7 +76699,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
           "recordedOutcomes": [
             "Passed"
@@ -76707,7 +76707,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -114386,8 +114386,8 @@
     "modesWithExplicitContracts": 879,
     "modesWithPassingExplicitContracts": 878,
     "modesWithRecordedPassingCandidate": 644,
-    "gradeImplemented": 256,
-    "gradeVerified": 623,
+    "gradeImplemented": 220,
+    "gradeVerified": 659,
     "gradeUnknown": 19,
     "testMethods": 6428,
     "testMethodsWithCapabilityCandidate": 4015,

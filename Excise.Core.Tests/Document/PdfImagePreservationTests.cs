@@ -1,6 +1,8 @@
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using System.Diagnostics;
+using System.Text.Json;
 using Xunit;
 
 namespace Excise.Core.Tests.Document;
@@ -20,10 +22,12 @@ namespace Excise.Core.Tests.Document;
 /// </summary>
 public class PdfImagePreservationTests
 {
-    private static PdfDocument SaveAndReopen(PdfDocument doc)
+    private static PdfDocument SaveAndReopen(PdfDocument doc) => SaveAndReopen(doc, out _);
+
+    private static PdfDocument SaveAndReopen(PdfDocument doc, out byte[] savedBytes)
     {
-        var bytes = doc.SaveToBytes();
-        return PdfDocument.Open(bytes);
+        savedBytes = doc.SaveToBytes();
+        return PdfDocument.Open(savedBytes);
     }
 
     private static PdfReference AddImageObject(PdfDocument doc, PdfDictionary dict, byte[] data)
@@ -46,10 +50,143 @@ public class PdfImagePreservationTests
     }
 
     private static PdfStream ReopenAndGetImage(PdfDocument doc, out PdfDocument reopened, string name = "Im0")
+        => ReopenAndGetImage(doc, out reopened, out _, name);
+
+    private static PdfStream ReopenAndGetImage(PdfDocument doc, out PdfDocument reopened, out byte[] savedBytes, string name = "Im0")
     {
-        reopened = SaveAndReopen(doc);
+        reopened = SaveAndReopen(doc, out savedBytes);
         var image = reopened.GetPage(1).GetXObject(name).Should().BeOfType<PdfStream>().Subject;
         return image;
+    }
+
+    private static string? FindQpdf()
+    {
+        var envPath = System.Environment.GetEnvironmentVariable("PATH") ?? "";
+        foreach (var dir in envPath.Split(System.IO.Path.PathSeparator))
+        {
+            var candidate = System.IO.Path.Combine(dir, "qpdf");
+            if (System.IO.File.Exists(candidate)) return candidate;
+        }
+        return null;
+    }
+
+    private static string RunQpdfText(string qpdfPath, params string[] args)
+    {
+        var psi = new ProcessStartInfo(qpdfPath)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        foreach (var a in args) psi.ArgumentList.Add(a);
+        using var proc = Process.Start(psi)!;
+        var stdout = proc.StandardOutput.ReadToEnd();
+        proc.StandardError.ReadToEnd();
+        proc.WaitForExit(30_000);
+        return stdout;
+    }
+
+    private static byte[] RunQpdfRawBytes(string qpdfPath, params string[] args)
+    {
+        var psi = new ProcessStartInfo(qpdfPath)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        foreach (var a in args) psi.ArgumentList.Add(a);
+        using var proc = Process.Start(psi)!;
+        using var ms = new System.IO.MemoryStream();
+        proc.StandardOutput.BaseStream.CopyTo(ms);
+        proc.StandardError.ReadToEnd();
+        proc.WaitForExit(30_000);
+        return ms.ToArray();
+    }
+
+    /// <summary>
+    /// qpdf's own raw (still-encoded) stream bytes for the object reachable
+    /// from page 1's named XObject <paramref name="xobjectName"/>, optionally
+    /// following further indirect-reference hops through
+    /// <paramref name="nestedPath"/> keys/array-indices (e.g. "SMask", or
+    /// "DecodeParms" then "JBIG2Globals") inside that object's own
+    /// dictionary. An array index is written "[n]". This is qpdf's own
+    /// independent decode of the SAME saved bytes -- not excise's own reader
+    /// agreeing with itself -- via `qpdf --json=1` (page-1 image list gives
+    /// the object reference directly by XObject name, so there is no need to
+    /// disambiguate by dictionary content) and
+    /// `qpdf --show-object=N --raw-stream-data` (the raw encoded bytes,
+    /// bypassing `--qdf`'s auto-uncompression of Flate/LZW/ASCII85/ASCIIHex/
+    /// RunLength streams, which was tried first and made a byte-exact search
+    /// impossible for those filters).
+    /// </summary>
+    private static byte[] QpdfIndependentStreamBytes(string qpdfPath, byte[] pdfBytes, string xobjectName, params string[] nestedPath)
+    {
+        var tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"excise-imgpreserve-qpdf-{System.Guid.NewGuid():N}.pdf");
+        System.IO.File.WriteAllBytes(tempFile, pdfBytes);
+        try
+        {
+            var json = RunQpdfText(qpdfPath, "--json=1", tempFile, "-");
+            using var doc = JsonDocument.Parse(json);
+            var page = doc.RootElement.GetProperty("pages")[0];
+
+            string? objNum = null;
+            foreach (var img in page.GetProperty("images").EnumerateArray())
+            {
+                if (img.GetProperty("name").GetString() == "/" + xobjectName)
+                {
+                    objNum = img.GetProperty("object").GetString()!.Split(' ')[0];
+                    break;
+                }
+            }
+            if (objNum is null)
+                throw new System.InvalidOperationException($"qpdf's own page-1 image list has no XObject named /{xobjectName}");
+
+            var current = doc.RootElement.GetProperty("objects").GetProperty(objNum + " 0 R");
+            foreach (var key in nestedPath)
+            {
+                current = key.StartsWith('[') && key.EndsWith(']') && int.TryParse(key[1..^1], out var idx)
+                    ? current[idx]
+                    : current.GetProperty("/" + key);
+                if (current.ValueKind == JsonValueKind.String)
+                {
+                    objNum = current.GetString()!.Split(' ')[0];
+                    current = doc.RootElement.GetProperty("objects").GetProperty(objNum + " 0 R");
+                }
+            }
+
+            return RunQpdfRawBytes(qpdfPath, "--show-object=" + objNum, "--raw-stream-data", tempFile);
+        }
+        finally
+        {
+            try { System.IO.File.Delete(tempFile); } catch { /* best effort */ }
+        }
+    }
+
+    /// <summary>qpdf's own "colorspace" field for a named XObject on page 1 --
+    /// the full structured /ColorSpace array as qpdf itself parsed it, not
+    /// excise's reading of the same bytes.</summary>
+    private static JsonElement QpdfColorSpaceForNamedXObject(string qpdfPath, byte[] pdfBytes, string xobjectName)
+    {
+        var tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"excise-imgpreserve-qpdf-{System.Guid.NewGuid():N}.pdf");
+        System.IO.File.WriteAllBytes(tempFile, pdfBytes);
+        try
+        {
+            var json = RunQpdfText(qpdfPath, "--json=1", tempFile, "-");
+            using var doc = JsonDocument.Parse(json);
+            var page = doc.RootElement.GetProperty("pages")[0];
+            foreach (var img in page.GetProperty("images").EnumerateArray())
+            {
+                if (img.GetProperty("name").GetString() == "/" + xobjectName)
+                    return img.GetProperty("colorspace").Clone();
+            }
+            throw new System.InvalidOperationException($"qpdf's own page-1 image list has no XObject named /{xobjectName}");
+        }
+        finally
+        {
+            try { System.IO.File.Delete(tempFile); } catch { /* best effort */ }
+        }
     }
 
     /// <summary>
@@ -80,7 +217,7 @@ public class PdfImagePreservationTests
         var imageRef = AddImageObject(doc, dict, data);
         PlaceOnNewPage(doc, imageRef);
 
-        var image = ReopenAndGetImage(doc, out var reopened);
+        var image = ReopenAndGetImage(doc, out var reopened, out var savedBytes);
         using var _ = reopened;
 
         image.EncodedData.Should().Equal(data, "the writer must not re-decode/re-encode a Flate stream on save");
@@ -99,6 +236,12 @@ public class PdfImagePreservationTests
         var content = reopened.GetPage(1).GetContentStreamBytes();
         System.Text.Encoding.ASCII.GetString(content).Should().Contain("2 0 0 3 5 7 cm",
             "the CTM placing the image must survive unchanged (image-placement:CTM)");
+
+        var qpdf = FindQpdf();
+        Assert.SkipUnless(qpdf is not null, "qpdf not on PATH");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Im0").Should().Equal(data,
+            "qpdf's own independent decode of the saved file must show the exact same encoded stream bytes -- " +
+            "confirming the write-path guarantee is not merely excise's own reader agreeing with itself");
     }
 
     /// <summary>
@@ -131,7 +274,7 @@ public class PdfImagePreservationTests
         var imageRef = AddImageObject(doc, dict, data);
         PlaceOnNewPage(doc, imageRef);
 
-        var image = ReopenAndGetImage(doc, out var reopened);
+        var image = ReopenAndGetImage(doc, out var reopened, out var savedBytes);
         using var _ = reopened;
 
         image.EncodedData.Should().Equal(data);
@@ -146,6 +289,13 @@ public class PdfImagePreservationTests
 
         var smask = reopened.Resolve(image.GetReference("SMask")).Should().BeOfType<PdfStream>().Subject;
         smask.EncodedData.Should().Equal(maskData);
+
+        var qpdf = FindQpdf();
+        Assert.SkipUnless(qpdf is not null, "qpdf not on PATH");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Im0").Should().Equal(data,
+            "qpdf's own independent decode of the saved file must show the exact same encoded stream bytes");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Im0", "SMask").Should().Equal(maskData,
+            "qpdf's own independent decode of the SMask stream reached from the main image must match too");
     }
 
     /// <summary>
@@ -176,7 +326,7 @@ public class PdfImagePreservationTests
         var imageRef = AddImageObject(doc, dict, data);
         PlaceOnNewPage(doc, imageRef);
 
-        var image = ReopenAndGetImage(doc, out var reopened);
+        var image = ReopenAndGetImage(doc, out var reopened, out var savedBytes);
         using var _ = reopened;
 
         image.EncodedData.Should().Equal(data);
@@ -189,6 +339,13 @@ public class PdfImagePreservationTests
         var mask = reopened.Resolve(image.GetReference("Mask")).Should().BeOfType<PdfStream>().Subject;
         mask.EncodedData.Should().Equal(stencilData);
         mask.GetBool("ImageMask", false).Should().BeTrue();
+
+        var qpdf = FindQpdf();
+        Assert.SkipUnless(qpdf is not null, "qpdf not on PATH");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Im0").Should().Equal(data,
+            "qpdf's own independent decode of the saved file must show the exact same encoded stream bytes");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Im0", "Mask").Should().Equal(stencilData,
+            "qpdf's own independent decode of the stencil-mask stream reached from the main image must match too");
     }
 
     /// <summary>
@@ -215,7 +372,7 @@ public class PdfImagePreservationTests
         var imageRef = AddImageObject(doc, dict, data);
         PlaceOnNewPage(doc, imageRef);
 
-        var image = ReopenAndGetImage(doc, out var reopened);
+        var image = ReopenAndGetImage(doc, out var reopened, out var savedBytes);
         using var _ = reopened;
 
         image.EncodedData.Should().Equal(data);
@@ -223,6 +380,11 @@ public class PdfImagePreservationTests
         image.GetName("Filter").Should().Be("DCTDecode");
         image.GetDictionary("DecodeParms").GetInt("ColorTransform").Should().Be(0);
         image.GetArray("Mask").Select(v => ((PdfInteger)v).Value).Should().Equal(0, 10, 0, 10, 0, 10, 0, 10);
+
+        var qpdf = FindQpdf();
+        Assert.SkipUnless(qpdf is not null, "qpdf not on PATH");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Im0").Should().Equal(data,
+            "qpdf's own independent decode of the saved file must show the exact same encoded stream bytes");
     }
 
     /// <summary>
@@ -262,7 +424,7 @@ public class PdfImagePreservationTests
         var xobjects = page1.Resources!.GetDictionary("XObject");
         xobjects["Im1"] = cryptRef;
 
-        var reopened = SaveAndReopen(doc);
+        var reopened = SaveAndReopen(doc, out var savedBytes);
         using var _ = reopened;
         var jbig2 = reopened.GetPage(1).GetXObject("Im0").Should().BeOfType<PdfStream>().Subject;
         jbig2.EncodedData.Should().Equal(jbig2Data);
@@ -279,6 +441,15 @@ public class PdfImagePreservationTests
         var crypt = reopened.GetPage(1).GetXObject("Im1").Should().BeOfType<PdfStream>().Subject;
         crypt.EncodedData.Should().Equal(cryptData);
         crypt.GetArray("Filter").Select(f => ((PdfName)f).Value).Should().Equal("Crypt", "FlateDecode");
+
+        var qpdf = FindQpdf();
+        Assert.SkipUnless(qpdf is not null, "qpdf not on PATH");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Im0").Should().Equal(jbig2Data,
+            "qpdf's own independent decode of the saved file must show the exact same encoded stream bytes");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Im0", "DecodeParms", "JBIG2Globals").Should().Equal(globalsData,
+            "qpdf's own independent decode of the JBIG2Globals stream reached from the main image must match too");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Im1").Should().Equal(cryptData,
+            "qpdf's own independent decode of the Crypt-filtered image must match too");
     }
 
     /// <summary>
@@ -302,7 +473,7 @@ public class PdfImagePreservationTests
         var imageRef = AddImageObject(doc, dict, data);
         PlaceOnNewPage(doc, imageRef);
 
-        var image = ReopenAndGetImage(doc, out var reopened);
+        var image = ReopenAndGetImage(doc, out var reopened, out var savedBytes);
         using var _ = reopened;
 
         image.EncodedData.Should().Equal(data);
@@ -312,6 +483,13 @@ public class PdfImagePreservationTests
         var icc = reopened.Resolve(cs[1]).Should().BeOfType<PdfStream>().Subject;
         icc.EncodedData.Should().Equal(iccData);
         icc.GetInt("N").Should().Be(3);
+
+        var qpdf = FindQpdf();
+        Assert.SkipUnless(qpdf is not null, "qpdf not on PATH");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Im0").Should().Equal(data,
+            "qpdf's own independent decode of the saved file must show the exact same encoded stream bytes");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Im0", "ColorSpace", "[1]").Should().Equal(iccData,
+            "qpdf's own independent decode of the ICCBased profile stream reached from the main image must match too");
     }
 
     /// <summary>
@@ -353,7 +531,7 @@ public class PdfImagePreservationTests
         page.Dictionary["Resources"] = resources;
         page.SetContentStreamBytes(System.Text.Encoding.ASCII.GetBytes("q /Lab Do /Sep Do /DevN Do Q"));
 
-        var reopened = SaveAndReopen(doc);
+        var reopened = SaveAndReopen(doc, out var savedBytes);
         using var _ = reopened;
         var reopenedPage = reopened.GetPage(1);
 
@@ -368,6 +546,15 @@ public class PdfImagePreservationTests
         var devNCs = devN.GetArray("ColorSpace");
         ((PdfName)devNCs[0]).Value.Should().Be("DeviceN");
         ((PdfArray)devNCs[1]).Select(v => ((PdfName)v).Value).Should().Equal("Cyan", "Magenta");
+
+        var qpdf = FindQpdf();
+        Assert.SkipUnless(qpdf is not null, "qpdf not on PATH");
+        QpdfColorSpaceForNamedXObject(qpdf!, savedBytes, "Lab")[0].GetString().Should().Be("/Lab",
+            "qpdf's own independent parse of the saved /ColorSpace array must agree it is Lab");
+        QpdfColorSpaceForNamedXObject(qpdf!, savedBytes, "Sep")[0].GetString().Should().Be("/Separation",
+            "qpdf's own independent parse of the saved /ColorSpace array must agree it is Separation");
+        QpdfColorSpaceForNamedXObject(qpdf!, savedBytes, "DevN")[0].GetString().Should().Be("/DeviceN",
+            "qpdf's own independent parse of the saved /ColorSpace array must agree it is DeviceN");
     }
 
     /// <summary>
@@ -412,7 +599,7 @@ public class PdfImagePreservationTests
         page.Dictionary["Resources"] = resources;
         page.SetContentStreamBytes(System.Text.Encoding.ASCII.GetBytes("q /Hex Do /Rle Do /Tiff Do Q"));
 
-        var reopened = SaveAndReopen(doc);
+        var reopened = SaveAndReopen(doc, out var savedBytes);
         using var _ = reopened;
         var reopenedPage = reopened.GetPage(1);
 
@@ -428,5 +615,14 @@ public class PdfImagePreservationTests
         var tiff = reopenedPage.GetXObject("Tiff").Should().BeOfType<PdfStream>().Subject;
         tiff.EncodedData.Should().Equal(tiffData);
         tiff.GetDictionary("DecodeParms").GetInt("Predictor").Should().Be(2);
+
+        var qpdf = FindQpdf();
+        Assert.SkipUnless(qpdf is not null, "qpdf not on PATH");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Hex").Should().Equal(hexData,
+            "qpdf's own independent decode of the saved ASCIIHexDecode stream must match");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Rle").Should().Equal(rleData,
+            "qpdf's own independent decode of the saved RunLengthDecode stream must match");
+        QpdfIndependentStreamBytes(qpdf!, savedBytes, "Tiff").Should().Equal(tiffData,
+            "qpdf's own independent decode of the saved TIFF-predictor Flate stream must match");
     }
 }

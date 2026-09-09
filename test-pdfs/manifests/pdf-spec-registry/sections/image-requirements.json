@@ -46,7 +46,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -148,7 +148,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -250,7 +250,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
             "modes": [
               "preserve"
@@ -352,7 +352,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -454,7 +454,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
             "modes": [
               "preserve"
@@ -556,7 +556,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -651,7 +651,7 @@
         ],
         "checks": [
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -760,7 +760,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -862,7 +862,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -964,7 +964,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -1066,7 +1066,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -1161,7 +1161,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -1256,7 +1256,7 @@
         ],
         "checks": [
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -1365,7 +1365,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -1474,7 +1474,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -1562,7 +1562,7 @@
         ],
         "checks": [
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -1678,7 +1678,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -1787,7 +1787,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -1890,7 +1890,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -1993,7 +1993,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -2089,7 +2089,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -2185,7 +2185,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -2282,7 +2282,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
             "modes": [
               "preserve"
@@ -2379,7 +2379,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
             "modes": [
               "preserve"
@@ -2459,7 +2459,7 @@
         ],
         "checks": [
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
             "modes": [
               "preserve",
@@ -2549,7 +2549,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -2638,7 +2638,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -2727,7 +2727,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -2816,7 +2816,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -2905,7 +2905,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
             "modes": [
               "preserve"
@@ -2994,7 +2994,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -3083,7 +3083,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -3172,7 +3172,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"
@@ -3261,7 +3261,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
             "modes": [
               "preserve"

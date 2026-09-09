@@ -87,7 +87,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
             "modes": [
               "preserve"

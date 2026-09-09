@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-09T04:11:07.509266+00:00",
-  "gitRevision": "c31fbbc2acadfd4cb3100bc6924c80a466961f6c",
+  "recordedAt": "2026-09-09T04:33:55.867336+00:00",
+  "gitRevision": "c20c5dac9756607b32f79ded01aa6a38ee55d269",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -521,6 +521,11 @@
       "path": "/tmp/trx-annotparse/ap.trx",
       "modifiedAt": "2026-09-09T04:11:07.456764+00:00",
       "sha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "path": "/tmp/trx-imgpreserve/ip.trx",
+      "modifiedAt": "2026-09-09T04:33:53.154940+00:00",
+      "sha256": "3c0715bf1bda25a19596d31012c7a4812558ed324e9abd4bb845841cbfac379c"
     }
   ],
   "outcomes": [
@@ -25319,66 +25324,66 @@
     {
       "testName": "Excise.Core.Tests.Document.PdfImagePreservationTests.Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
       "outcome": "Passed",
-      "duration": "00:00:00.0010623",
-      "trx": "/tmp/new3-trx/core.trx",
-      "resultModifiedAt": "2026-09-08T03:12:16.378491+00:00",
-      "trxSha256": "b36c685e1211926cd52cf8df4595b1167f83db5a995cec3c3ffa59d82f2bd850"
+      "duration": "00:00:00.0602210",
+      "trx": "/tmp/trx-imgpreserve/ip.trx",
+      "resultModifiedAt": "2026-09-09T04:33:53.154940+00:00",
+      "trxSha256": "3c0715bf1bda25a19596d31012c7a4812558ed324e9abd4bb845841cbfac379c"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfImagePreservationTests.AsciiHexRgbImage_RunLengthImage_AndTiffPredictorImage_SurviveASaveAndReload_Unchanged",
       "outcome": "Passed",
-      "duration": "00:00:00.0443680",
-      "trx": "/tmp/new3-trx/core.trx",
-      "resultModifiedAt": "2026-09-08T03:12:16.378491+00:00",
-      "trxSha256": "b36c685e1211926cd52cf8df4595b1167f83db5a995cec3c3ffa59d82f2bd850"
+      "duration": "00:00:00.1182630",
+      "trx": "/tmp/trx-imgpreserve/ip.trx",
+      "resultModifiedAt": "2026-09-09T04:33:53.154940+00:00",
+      "trxSha256": "3c0715bf1bda25a19596d31012c7a4812558ed324e9abd4bb845841cbfac379c"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfImagePreservationTests.CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
       "outcome": "Passed",
-      "duration": "00:00:00.0018096",
-      "trx": "/tmp/new3-trx/core.trx",
-      "resultModifiedAt": "2026-09-08T03:12:16.378491+00:00",
-      "trxSha256": "b36c685e1211926cd52cf8df4595b1167f83db5a995cec3c3ffa59d82f2bd850"
+      "duration": "00:00:00.0593549",
+      "trx": "/tmp/trx-imgpreserve/ip.trx",
+      "resultModifiedAt": "2026-09-09T04:33:53.154940+00:00",
+      "trxSha256": "3c0715bf1bda25a19596d31012c7a4812558ed324e9abd4bb845841cbfac379c"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfImagePreservationTests.DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
       "outcome": "Passed",
-      "duration": "00:00:00.0021784",
-      "trx": "/tmp/new3-trx/core.trx",
-      "resultModifiedAt": "2026-09-08T03:12:16.378491+00:00",
-      "trxSha256": "b36c685e1211926cd52cf8df4595b1167f83db5a995cec3c3ffa59d82f2bd850"
+      "duration": "00:00:00.0316824",
+      "trx": "/tmp/trx-imgpreserve/ip.trx",
+      "resultModifiedAt": "2026-09-09T04:33:53.154940+00:00",
+      "trxSha256": "3c0715bf1bda25a19596d31012c7a4812558ed324e9abd4bb845841cbfac379c"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfImagePreservationTests.FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
       "outcome": "Passed",
-      "duration": "00:00:00.0031794",
-      "trx": "/tmp/new3-trx/core.trx",
-      "resultModifiedAt": "2026-09-08T03:12:16.378491+00:00",
-      "trxSha256": "b36c685e1211926cd52cf8df4595b1167f83db5a995cec3c3ffa59d82f2bd850"
+      "duration": "00:00:00.0323650",
+      "trx": "/tmp/trx-imgpreserve/ip.trx",
+      "resultModifiedAt": "2026-09-09T04:33:53.154940+00:00",
+      "trxSha256": "3c0715bf1bda25a19596d31012c7a4812558ed324e9abd4bb845841cbfac379c"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfImagePreservationTests.Jbig2ImageWithGlobalsReference_AndCryptFilteredImage_SurviveASaveAndReload_Unchanged",
       "outcome": "Passed",
-      "duration": "00:00:00.0018475",
-      "trx": "/tmp/new3-trx/core.trx",
-      "resultModifiedAt": "2026-09-08T03:12:16.378491+00:00",
-      "trxSha256": "b36c685e1211926cd52cf8df4595b1167f83db5a995cec3c3ffa59d82f2bd850"
+      "duration": "00:00:00.0929233",
+      "trx": "/tmp/trx-imgpreserve/ip.trx",
+      "resultModifiedAt": "2026-09-09T04:33:53.154940+00:00",
+      "trxSha256": "3c0715bf1bda25a19596d31012c7a4812558ed324e9abd4bb845841cbfac379c"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfImagePreservationTests.JpxImageWithIccBasedColorSpace_SurvivesASaveAndReload_Unchanged",
       "outcome": "Passed",
-      "duration": "00:00:00.0011933",
-      "trx": "/tmp/new3-trx/core.trx",
-      "resultModifiedAt": "2026-09-08T03:12:16.378491+00:00",
-      "trxSha256": "b36c685e1211926cd52cf8df4595b1167f83db5a995cec3c3ffa59d82f2bd850"
+      "duration": "00:00:00.0593829",
+      "trx": "/tmp/trx-imgpreserve/ip.trx",
+      "resultModifiedAt": "2026-09-09T04:33:53.154940+00:00",
+      "trxSha256": "3c0715bf1bda25a19596d31012c7a4812558ed324e9abd4bb845841cbfac379c"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfImagePreservationTests.LabSeparationAndDeviceNColorSpaces_SurviveASaveAndReload_Unchanged",
       "outcome": "Passed",
-      "duration": "00:00:00.0919920",
-      "trx": "/tmp/new10-trx/core4.trx",
-      "resultModifiedAt": "2026-09-08T06:46:02.219347+00:00",
-      "trxSha256": "85e863f6f873de050b8c0eacb89fb556c5a067f8b9ee9f4677605bf57b12d449"
+      "duration": "00:00:00.0471564",
+      "trx": "/tmp/trx-imgpreserve/ip.trx",
+      "resultModifiedAt": "2026-09-09T04:33:53.154940+00:00",
+      "trxSha256": "3c0715bf1bda25a19596d31012c7a4812558ed324e9abd4bb845841cbfac379c"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfLinkTests.Parse_AnnotsNotArray_ReturnsEmpty",
@@ -69822,7 +69827,7 @@
     }
   ],
   "summary": {
-    "trxFiles": 103,
+    "trxFiles": 104,
     "tests": 8662,
     "outcomes": {
       "Failed": 3,
