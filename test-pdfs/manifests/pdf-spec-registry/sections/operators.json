@@ -512,6 +512,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::LineCap_J_RoundExtendsPastButt_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -842,6 +849,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_DashedLine_RendersDashPattern",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::DashPattern_D_ReducesStrokeInkVsSolid_MatchesMutool",
             "modes": [
               "render"
             ]
@@ -2066,6 +2080,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::DashPattern_D_ReducesStrokeInkVsSolid_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -2288,6 +2309,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::NonzeroFill_F_DonutIsSolid_MatchesIndependentRenderers",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -2507,6 +2535,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillEvenOdd_fStar_Operator",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::EvenOddFill_FStar_DonutHasHole_MatchesIndependentRenderers",
             "modes": [
               "render"
             ]
@@ -3176,6 +3211,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Clip_W_NonzeroWindingConfinesSubsequentFill_MatchesIndependentRenderers",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3284,6 +3326,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_WStar_EvenOddRule",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Clip_WStar_EvenOddConfinesSubsequentFill_MatchesIndependentRenderers",
             "modes": [
               "render"
             ]
@@ -3398,6 +3447,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3506,6 +3562,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_DeviceRgbColorSpace_cs_scn",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
             "modes": [
               "render"
             ]
@@ -3620,6 +3683,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3728,6 +3798,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_scn_WorksLikeScWithoutPattern",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
             "modes": [
               "render"
             ]
@@ -3842,6 +3919,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3950,6 +4034,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ColorSpace_scn_WorksLikeScWithoutPattern",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
             "modes": [
               "render"
             ]
@@ -4064,6 +4155,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -4172,6 +4270,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_GrayscaleFillOperator_g_ShowsGrayPixel",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
             "modes": [
               "render"
             ]
@@ -4286,6 +4391,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -4394,6 +4506,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
             "modes": [
               "render"
             ]
@@ -4727,6 +4846,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
             "modes": [
               "render"
             ]
@@ -5729,6 +5855,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::HorizontalScaling_Tz_HalvesWidth_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -5837,6 +5970,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_TD_MovesAndSetsLeading",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
             "modes": [
               "render"
             ]
@@ -6059,6 +6199,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_CombinedTextState_AppliesAllSettings",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::TextRenderMode_Tr3Invisible_PaintsNoInk_MatchesMutool",
             "modes": [
               "render"
             ]
@@ -6617,6 +6764,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -7172,6 +7326,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_MissingWidthsWxAdvance_MatchesGhostscript",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -7280,6 +7441,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_Type3Font_d1ImageMaskXObjectGlyph_PaintsInTextFillColor",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1BBoxClip_MatchesPdftocairo",
             "modes": [
               "render"
             ]
