@@ -81690,6 +81690,27 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs::BlankPageRecoveryTests.PageThatRenderedBlank_NowInksWithinBandOfTheOracles",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs::BlankPageRecoveryTests.GlyphNamesOutsideTheRendererSubset_ResolveThroughCore",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs::BlankPageRecoveryTests.TextOperatorsOutsideATextObject_DrawWhatTheOraclesDraw",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/CcittEndOfBlockTests.cs::CcittEndOfBlockTests.TheOnlyCorpusFileSettingEndOfBlock_RendersAtOracleParity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82397,33 +82418,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_R4_EmptyPassword_ExtractsCorrectText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_R4_DifferentUserAndOwnerPasswords_BothExtractTheSameCorrectText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_R4_NonAsciiPassword_ExtractsCorrectText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_R4_WrongPassword_FailsToExtract",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -114708,8 +114702,8 @@
     "gradeImplemented": 197,
     "gradeVerified": 682,
     "gradeUnknown": 19,
-    "testMethods": 6439,
-    "testMethodsWithCapabilityCandidate": 4026,
+    "testMethods": 6447,
+    "testMethodsWithCapabilityCandidate": 4034,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
