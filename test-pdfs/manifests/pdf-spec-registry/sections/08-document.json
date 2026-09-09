@@ -391,6 +391,29 @@
             "modes": [
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::HandAuthoredMetadata_ParsedByExcise_MatchesQpdfsIndependentRead",
+            "modes": [
+              "parse",
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::Metadata_SurvivesExciseRoundTrip_QpdfConfirmsPreservation",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::ScrubMetadata_ThenSave_QpdfConfirmsMetadataIsGone",
+            "modes": [
+              "mutate",
+              "write"
+            ]
           }
         ]
       }
@@ -514,6 +537,42 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::EmbeddedFile_AuthoredByQpdf_IsParsedByExciseWithExactBytes",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::EmbeddedFile_ExtractedBytes_MatchQpdfsIndependentExtraction",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::EmbeddedFile_SurvivesExciseRoundTrip_QpdfConfirmsPreservation",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::ScrubEmbeddedFiles_ThenSave_QpdfConfirmsAttachmentIsGone",
+            "modes": [
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::AddEmbeddedFile_ThenSave_IsSeenByQpdfsIndependentParser",
             "modes": [
               "author"
             ]

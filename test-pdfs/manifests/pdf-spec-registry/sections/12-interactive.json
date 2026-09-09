@@ -154,6 +154,21 @@
             "modes": [
               "author"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::HandAuthoredAnnotation_ParsedByExcise_MatchesQpdfsIndependentParser",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::RedactText_ScrubsAnnotationContents_QpdfConfirmsRemoval",
+            "modes": [
+              "mutate",
+              "write"
+            ]
           }
         ]
       }
