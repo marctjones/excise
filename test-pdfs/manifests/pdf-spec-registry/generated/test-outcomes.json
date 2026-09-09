@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-09T01:44:58.748545+00:00",
-  "gitRevision": "26243bbbca652993111bf77430a1dfce2568cd06",
+  "recordedAt": "2026-09-09T01:49:10.949907+00:00",
+  "gitRevision": "0f9813359c96f98c65658d5845f84df0539e4fec",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -481,6 +481,11 @@
       "path": "/tmp/trx-merge6/structparity3.trx",
       "modifiedAt": "2026-09-09T01:44:58.666255+00:00",
       "sha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+    },
+    {
+      "path": "/tmp/trx-merge7/structparity4.trx",
+      "modifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "sha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
     }
   ],
   "outcomes": [
@@ -52317,84 +52322,92 @@
       "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
     },
     {
+      "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.AcroFormFieldCount_MatchesQpdf_FlatFormNoInheritance(relativePath: \"test-pdfs/pdfjs/bug1669099.pdf\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0331561",
+      "trx": "/tmp/trx-merge7/structparity4.trx",
+      "resultModifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "trxSha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
+    },
+    {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.AddOutlineItem_ProducesAnOutlineQpdfIndependentlyReadsBack",
       "outcome": "Passed",
-      "duration": "00:00:00.0439603",
-      "trx": "/tmp/trx-merge6/structparity3.trx",
-      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
-      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+      "duration": "00:00:00.0365532",
+      "trx": "/tmp/trx-merge7/structparity4.trx",
+      "resultModifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "trxSha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.OcgCount_MatchesQpdf(relativePath: \"test-pdfs/poppler/unittestcases/NestedLayers.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0247686",
-      "trx": "/tmp/trx-merge6/structparity3.trx",
-      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
-      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+      "duration": "00:00:00.0225390",
+      "trx": "/tmp/trx-merge7/structparity4.trx",
+      "resultModifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "trxSha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.OcgCount_SurvivesAnOpenSaveRoundTrip(relativePath: \"test-pdfs/poppler/unittestcases/NestedLayers.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0459891",
-      "trx": "/tmp/trx-merge6/structparity3.trx",
-      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
-      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+      "duration": "00:00:00.0391633",
+      "trx": "/tmp/trx-merge7/structparity4.trx",
+      "resultModifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "trxSha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.OutlineItemCount_MatchesQpdf(relativePath: \"test-pdfs/local-real-world/foss-primer.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0430419",
-      "trx": "/tmp/trx-merge6/structparity3.trx",
-      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
-      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+      "duration": "00:00:00.0346069",
+      "trx": "/tmp/trx-merge7/structparity4.trx",
+      "resultModifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "trxSha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.OutlineItemCount_SurvivesAnOpenSaveRoundTrip(relativePath: \"test-pdfs/local-real-world/foss-primer.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0922714",
-      "trx": "/tmp/trx-merge6/structparity3.trx",
-      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
-      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+      "duration": "00:00:00.0764909",
+      "trx": "/tmp/trx-merge7/structparity4.trx",
+      "resultModifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "trxSha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.PageCount_MatchesQpdf(relativePath: \"test-pdfs/local-real-world/foss-primer.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0239963",
-      "trx": "/tmp/trx-merge6/structparity3.trx",
-      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
-      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+      "duration": "00:00:00.0186090",
+      "trx": "/tmp/trx-merge7/structparity4.trx",
+      "resultModifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "trxSha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.PageCount_MatchesQpdf(relativePath: \"test-pdfs/local-real-world/producingoss.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0347589",
-      "trx": "/tmp/trx-merge6/structparity3.trx",
-      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
-      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+      "duration": "00:00:00.0317648",
+      "trx": "/tmp/trx-merge7/structparity4.trx",
+      "resultModifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "trxSha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner",
       "outcome": "Passed",
-      "duration": "00:00:00.0826535",
-      "trx": "/tmp/trx-merge6/structparity3.trx",
-      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
-      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+      "duration": "00:00:00.0694139",
+      "trx": "/tmp/trx-merge7/structparity4.trx",
+      "resultModifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "trxSha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.StructElementCount_MatchesQpdf(relativePath: \"test-pdfs/pdfium/tagged_nested.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0251655",
-      "trx": "/tmp/trx-merge6/structparity3.trx",
-      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
-      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+      "duration": "00:00:00.0207603",
+      "trx": "/tmp/trx-merge7/structparity4.trx",
+      "resultModifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "trxSha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.StructElementCount_SurvivesAnOpenSaveRoundTrip(relativePath: \"test-pdfs/pdfium/tagged_nested.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.1104195",
-      "trx": "/tmp/trx-merge6/structparity3.trx",
-      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
-      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+      "duration": "00:00:00.0943075",
+      "trx": "/tmp/trx-merge7/structparity4.trx",
+      "resultModifiedAt": "2026-09-09T01:49:10.878309+00:00",
+      "trxSha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.EncryptedCorpusPasswordCoverageTests.EveryEncryptedFixture_EitherOpensFreely_OrHasAKnownPassword",
@@ -68750,12 +68763,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 95,
-    "tests": 8533,
+    "trxFiles": 96,
+    "tests": 8534,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7606
+      "Passed": 7607
     },
     "status": "recorded"
   }

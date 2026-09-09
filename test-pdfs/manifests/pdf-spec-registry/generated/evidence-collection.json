@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1013,
-  "indexedContentSha256": "1419da71659f295328d4e7a2d766aa611dbf1645fdd3506b32c8b783192b02eb",
+  "indexedContentSha256": "dd76222d0e4137a4e07f82ce216252c995eda5e5f6eed22ab331df9731998fce",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -3852,7 +3852,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 112
+      "candidateReferenceCount": 113
     },
     {
       "id": "pdf.17.document.navigation",
@@ -51058,6 +51058,13 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::AcroFormFieldCount_MatchesQpdf_FlatFormNoInheritance",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_UnfilledApTextWidgetsWithValues_PaintBothAndRestoreFontStateBetween",
             "modes": [
@@ -52005,7 +52012,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 124
+      "candidateReferenceCount": 125
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -63917,6 +63924,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "local",
+            "log",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -63996,19 +64013,9 @@
             "log",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/DialogInputInteractionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "log",
-            "pdfe",
-            "ocr",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 108
+      "candidateReferenceCount": 109
     },
     {
       "id": "pdfe.product.platform.printing",

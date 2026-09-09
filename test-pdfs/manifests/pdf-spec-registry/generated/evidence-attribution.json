@@ -77592,6 +77592,15 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.AcroFormFieldCount_MatchesQpdf_FlatFormNoInheritance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -78071,15 +78080,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs::ExtractionParityTests.PageTextOrderStrategy_KnownFormAndTablePages_RemainRawStream",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs::ExtractionParityTests.GenerateExtractionParityReport",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97641,10 +97641,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::AcroFormFieldCount_MatchesQpdf_FlatFormNoInheritance",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -110287,11 +110294,11 @@
     "modesWithExplicitContracts": 879,
     "modesWithPassingExplicitContracts": 878,
     "modesWithRecordedPassingCandidate": 644,
-    "gradeImplemented": 769,
-    "gradeVerified": 110,
+    "gradeImplemented": 768,
+    "gradeVerified": 111,
     "gradeUnknown": 19,
-    "testMethods": 6357,
-    "testMethodsWithCapabilityCandidate": 3943,
+    "testMethods": 6358,
+    "testMethodsWithCapabilityCandidate": 3944,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

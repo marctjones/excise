@@ -231,6 +231,45 @@ public class DocumentStructureParityTests
         }
     }
 
+    [Theory]
+    [InlineData("test-pdfs/pdfjs/bug1669099.pdf")]
+    public void AcroFormFieldCount_MatchesQpdf_FlatFormNoInheritance(string relativePath)
+    {
+        // The concrete example discussed earlier: TaggedPdfTests's
+        // Tagged_FormFields_AppearInStructureTreeAsForm proves excise's own
+        // writer and excise's own GetAcroForm() agree with each other on a
+        // form excise itself authored -- never a form written by anyone
+        // else. This fixture is a REAL third-party AcroForm, and every
+        // widget carries its own /FT directly (verified: no field here
+        // relies on /Parent inheritance for its type), so a flat qpdf count
+        // of /Subtype /Widget objects with /FT is an unambiguous independent
+        // answer -- deliberately avoiding hierarchical forms, where "how
+        // many fields" depends on inheritance rules an independent flat
+        // count can't safely replicate without becoming a second copy of
+        // excise's own resolution logic.
+        var path = Resolve(relativePath);
+        Assert.SkipWhen(path == null, $"corpus fixture not present: {relativePath}");
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+
+        var expected = QpdfFlatWidgetFieldCount(path!);
+        Assert.SkipWhen(expected < 0, "qpdf could not read the fixture");
+        expected.Should().BeGreaterThan(0,
+            "guard: the fixture must actually contain flat (non-inheriting) form fields");
+
+        using var doc = PdfDocument.Open(File.ReadAllBytes(path!));
+        doc.GetAcroForm()!.Fields.Count.Should().Be(expected,
+            "excise's field count must agree with an independent qpdf-side count on a form " +
+            "excise did not write -- not just on forms excise authored and read back itself");
+    }
+
+    private static int QpdfFlatWidgetFieldCount(string pdfPath)
+    {
+        if (!QpdfJsonObjects(pdfPath, out var objects)) return -1;
+        return objects.Values.Count(v =>
+            v.TryGetProperty("/Subtype", out var subtype) && subtype.GetString() == "/Widget" &&
+            v.TryGetProperty("/FT", out _));
+    }
+
     [Fact]
     public void RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner()
     {

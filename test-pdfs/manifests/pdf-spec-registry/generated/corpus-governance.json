@@ -101,6 +101,7 @@
         "Excise.Core.Tests/Text/TextExtractorDifferencesEncodingTests.cs",
         "Excise.Core/Fonts/StandardFontMetrics.cs",
         "Excise.Rendering.Tests/Corpus/RecoverablePdfRenderingTests.cs",
+        "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
         "Excise.Rendering.Tests/Differential/EncryptedCorpusPasswordCoverageTests.cs",
         "Excise.Rendering.Tests/Differential/EncryptedRedactionOutputIntegrityTests.cs",
         "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs",

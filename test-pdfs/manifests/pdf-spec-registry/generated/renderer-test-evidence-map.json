@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "4b4ece78ca154e6e5e6c9aa986cae055061812ac1cb1932ef0fcf4e31ddb6378",
+  "sourceFingerprint": "5fdc535ed6bfbd7771bfeab295db8096a2a9af4f7859a63748004b2aad9dd85d",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -4519,11 +4519,50 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.AcroFormFieldCount_MatchesQpdf_FlatFormNoInheritance",
+      "path": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
+      "class": "DocumentStructureParityTests",
+      "method": "AcroFormFieldCount_MatchesQpdf_FlatFormNoInheritance",
+      "line": 236,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner",
       "path": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
       "class": "DocumentStructureParityTests",
       "method": "RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner",
-      "line": 235,
+      "line": 274,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4564,7 +4603,7 @@
       "path": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
       "class": "DocumentStructureParityTests",
       "method": "AddOutlineItem_ProducesAnOutlineQpdfIndependentlyReadsBack",
-      "line": 281,
+      "line": 320,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -33771,11 +33810,11 @@
     }
   ],
   "summary": {
-    "testMethods": 943,
+    "testMethods": 944,
     "facets": {
       "content-streams": 269,
       "content-strings-and-text": 5,
-      "differential-rendering": 450,
+      "differential-rendering": 451,
       "fonts": 179,
       "functions-and-shadings": 46,
       "graphics-state-and-paths": 308,
@@ -33788,7 +33827,7 @@
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 5,
       "pdf.17.content.streams:parse": 274,
-      "pdf.17.content.streams:render": 589,
+      "pdf.17.content.streams:render": 590,
       "pdf.17.content.text-state:extract": 5,
       "pdf.17.content.text-state:parse": 5,
       "pdf.17.content.text-state:render": 5,
@@ -33796,10 +33835,10 @@
       "pdf.17.graphics.color:render": 46,
       "pdf.17.graphics.fonts:extract": 179,
       "pdf.17.graphics.fonts:parse": 179,
-      "pdf.17.graphics.fonts:render": 579,
+      "pdf.17.graphics.fonts:render": 580,
       "pdf.17.graphics.images:extract": 129,
       "pdf.17.graphics.images:parse": 129,
-      "pdf.17.graphics.images:render": 548,
+      "pdf.17.graphics.images:render": 549,
       "pdf.17.graphics.paths-painting:parse": 308,
       "pdf.17.graphics.paths-painting:render": 308,
       "pdf.17.graphics.patterns-shadings:parse": 46,
@@ -33807,7 +33846,7 @@
       "pdf.17.graphics.state:parse": 308,
       "pdf.17.graphics.state:render": 308,
       "pdf.17.transparency.model:parse": 52,
-      "pdf.17.transparency.model:render": 480
+      "pdf.17.transparency.model:render": 481
     },
     "unclassified": 23,
     "allTestsMapped": true

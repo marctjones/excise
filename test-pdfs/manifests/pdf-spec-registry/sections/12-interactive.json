@@ -769,6 +769,13 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::AcroFormFieldCount_MatchesQpdf_FlatFormNoInheritance",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_UnfilledApTextWidgetsWithValues_PaintBothAndRestoreFontStateBetween",
             "modes": [
