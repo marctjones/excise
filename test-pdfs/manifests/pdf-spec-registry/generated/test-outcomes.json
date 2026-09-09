@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-08T22:05:50.701099+00:00",
-  "gitRevision": "7a60430a57e2c92c686c2bd1604fbda421fe90c9",
+  "recordedAt": "2026-09-09T00:48:40.814591+00:00",
+  "gitRevision": "efbe0b33c765669a70c04a4c9ebc7b836de099ae",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -441,6 +441,11 @@
       "path": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
       "modifiedAt": "2026-09-08T22:05:46.931996+00:00",
       "sha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+    },
+    {
+      "path": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "modifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "sha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     }
   ],
   "outcomes": [
@@ -63487,106 +63492,130 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"3D\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0264887",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0186075",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Caret\", relativePath: \"test-pdfs/pdfjs/annotation-caret-ink.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0340914",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0225251",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"FileAttachment\", relativePath: \"test-pdfs/pdfjs/annotation-fileattachment.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0305510",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0196306",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Link\", relativePath: \"test-pdfs/pdfjs/annotation-link-text-popup.pdf\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0252670",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Movie\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0277226",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0199003",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Popup\", relativePath: \"test-pdfs/pdfjs/annotation-highlight.pdf\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0194900",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"PrinterMark\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0252373",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0180993",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Projection\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0311906",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0202308",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Redact\", relativePath: \"test-pdfs/pdfium/redact_annot.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0655230",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0527259",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"RichMedia\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0453553",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0352989",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Screen\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0267023",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0180122",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Sound\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0318943",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0188256",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"TrapNet\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0259550",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0201615",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Watermark\", relativePath: \"test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF\"\u00b7\u00b7\u00b7)",
       "outcome": "Passed",
-      "duration": "00:00:00.0262662",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0185335",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip(subtype: \"Widget\", relativePath: \"test-pdfs/pdfjs/annotation-button-widget.pdf\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0300619",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UnauthoredAnnotationPreservationTests.TheMeasurementNoticesWhenAnAnnotationIsDropped",
       "outcome": "Passed",
-      "duration": "00:00:00.0294270",
-      "trx": "/tmp/unauthored-annot-trx/unauthored-annot.trx",
-      "resultModifiedAt": "2026-09-08T22:05:46.931996+00:00",
-      "trxSha256": "fb495bbbb5b8fe206b15c0f9266ddd5148f16227bd0eda125fa0e9f17bfca8da"
+      "duration": "00:00:00.0237518",
+      "trx": "/tmp/trx-merge/UnauthoredAnnotationPreservationTests.trx",
+      "resultModifiedAt": "2026-09-09T00:48:40.761709+00:00",
+      "trxSha256": "f30b6edeb2d969eeb36ff5d9df4890dc4724b3e39fccc674633d3601e172ed15"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.UndecodableImageFabricationTests.ImageWithFarTooLittleSampleData_IsNotPaintedAsInk",
@@ -68606,12 +68635,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 87,
-    "tests": 8520,
+    "trxFiles": 88,
+    "tests": 8523,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7593
+      "Passed": 7596
     },
     "status": "recorded"
   }

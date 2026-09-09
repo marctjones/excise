@@ -14264,7 +14264,7 @@
       "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
       "class": "UnauthoredAnnotationPreservationTests",
       "method": "ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
-      "line": 89,
+      "line": 105,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -14303,7 +14303,7 @@
       "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
       "class": "UnauthoredAnnotationPreservationTests",
       "method": "TheMeasurementNoticesWhenAnAnnotationIsDropped",
-      "line": 134,
+      "line": 150,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [

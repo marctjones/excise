@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1012,
-  "indexedContentSha256": "4679cda16a65aa2324bf49afafeb20336102e445c4a8d5ec2c5143b324ac30e0",
+  "indexedContentSha256": "497b568e3a51b7cd91a62c8a4211eacee98fa75d1ce5297c19365cfea3b724b3",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -34000,6 +34000,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
+            "modes": [
+              "preserve"
+            ]
           }
         ]
       },
@@ -34587,6 +34594,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "widget",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34683,7 +34700,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 69
+      "candidateReferenceCount": 70
     },
     {
       "id": "pdf.20.annotation.subtype-002",
@@ -34752,6 +34769,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
             ]
@@ -36790,6 +36814,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "highlight",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Visual/AnnotationDefaultAppearanceTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37029,7 +37063,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 62
+      "candidateReferenceCount": 63
     },
     {
       "id": "pdf.20.annotation.subtype-006",
@@ -42273,6 +42307,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
+            "modes": [
+              "preserve"
+            ]
           }
         ]
       },
@@ -42433,6 +42474,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "popup",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/annotation-support-matrix.json",
           "kind": "test",
           "matchedTerms": [
@@ -42461,7 +42512,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 18
+      "candidateReferenceCount": 19
     },
     {
       "id": "pdf.20.annotation.subtype-016",
@@ -51635,7 +51686,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 123
+      "candidateReferenceCount": 124
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -63942,6 +63993,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "forms",
+            "javascript",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -64089,7 +64149,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 32
+      "candidateReferenceCount": 33
     }
   ],
   "summary": {

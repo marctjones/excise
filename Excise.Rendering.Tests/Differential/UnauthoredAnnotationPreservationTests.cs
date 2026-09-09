@@ -79,6 +79,22 @@ public class UnauthoredAnnotationPreservationTests
                      ("Caret", @"test-pdfs/pdfjs/annotation-caret-ink.pdf"),
                      ("FileAttachment", @"test-pdfs/pdfjs/annotation-fileattachment.pdf"),
                      ("Redact", @"test-pdfs/pdfium/redact_annot.pdf"),
+                     // Widget/Link/Popup: not "unauthored" in the sense above (excise
+                     // fully interprets all three -- forms, hyperlinks, markup popups),
+                     // but the app's annotation-AUTHORING API never creates them either
+                     // (NonAuthorableAnnotationPreservationTests), so until this row their
+                     // preserve claim rested only on a self-built synthetic fixture with no
+                     // independent oracle. Same qpdf-count mechanism closes that gap on a
+                     // real corpus file for #1346/#1347 registry verification.
+                     ("Widget", @"test-pdfs/pdfjs/annotation-button-widget.pdf"),
+                     ("Link", @"test-pdfs/pdfjs/annotation-link-text-popup.pdf"),
+                     // NOT annotation-link-text-popup.pdf: it has two /Popup objects, but
+                     // only one is in the page's /Annots array -- the other belongs to a
+                     // Text annotation that ISN'T on the page either, so qpdf's whole-file
+                     // object count (2) never matched what excise's page-tree-driven save
+                     // can legitimately carry forward (1). annotation-highlight.pdf's
+                     // single /Popup is page-reachable, so the count is unambiguous.
+                     ("Popup", @"test-pdfs/pdfjs/annotation-highlight.pdf"),
                  })
             d.Add(subtype, path);
         return d;

@@ -15,12 +15,12 @@
       "unknown": 149
     },
     "gradeStates": {
-      "implemented": 798,
+      "implemented": 795,
       "unknown": 19,
-      "verified": 81
+      "verified": 84
     },
     "gradedImplementedOrBetterPercent": 97.9,
-    "gradedVerifiedPercent": 9.0,
+    "gradedVerifiedPercent": 9.4,
     "gradedUnknownCount": 19,
     "measuredModeCoveragePercent": 83.4,
     "implementedModeCoveragePercent": 0.6,
@@ -693,17 +693,17 @@
         "unknown": 1
       },
       "gradeStates": {
-        "implemented": 58,
+        "implemented": 55,
         "unknown": 10,
-        "verified": 61
+        "verified": 64
       },
       "gradedImplementedOrBetterPercent": 92.2,
-      "gradedVerifiedPercent": 47.3,
+      "gradedVerifiedPercent": 49.6,
       "gradedUnknownCount": 10,
       "measuredModeCoveragePercent": 99.2,
       "implementedModeCoveragePercent": 0.8,
       "promotionReadinessPercent": 15.7,
-      "implementationEvidenceProgressPercent": 73.2,
+      "implementationEvidenceProgressPercent": 73.6,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 129,
         "directTestOrBetter": 9,
@@ -1416,16 +1416,16 @@
         "partial": 90
       },
       "gradeStates": {
-        "implemented": 39,
-        "verified": 51
+        "implemented": 36,
+        "verified": 54
       },
       "gradedImplementedOrBetterPercent": 100.0,
-      "gradedVerifiedPercent": 56.7,
+      "gradedVerifiedPercent": 60.0,
       "gradedUnknownCount": 0,
       "measuredModeCoveragePercent": 100.0,
       "implementedModeCoveragePercent": 0.0,
       "promotionReadinessPercent": 10.0,
-      "implementationEvidenceProgressPercent": 78.4,
+      "implementationEvidenceProgressPercent": 78.9,
       "promotionReadinessMilestones": {
         "discoveredOrBetter": 90,
         "directTestOrBetter": 0,
@@ -2011,8 +2011,8 @@
     "modesWithExplicitContracts": 879,
     "modesWithPassingExplicitContracts": 879,
     "modesWithRecordedPassingCandidate": 644,
-    "gradeImplemented": 798,
-    "gradeVerified": 81,
+    "gradeImplemented": 795,
+    "gradeVerified": 84,
     "gradeUnknown": 19,
     "testMethods": 6348,
     "testMethodsWithCapabilityCandidate": 3932,
