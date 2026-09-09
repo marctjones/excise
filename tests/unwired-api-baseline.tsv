@@ -71,6 +71,7 @@ Excise.Core	tests-only	GetDictionary	triage:public library/domain API; tests exe
 Excise.Core	tests-only	GetOperators	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetOptionalContentGroups	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetPageLabel	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	GetPages	triage:public library/domain API; lost its only production caller (FdfSerializer.ExportAnnotations) when #921 retired FDF/XFDF; PdfDocument.GetPages() is a basic page-enumeration accessor, tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetSignatureFields	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetTextFields	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	HasOverflow	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -81,6 +82,7 @@ Excise.Core	tests-only	IsNumber	triage:public library/domain API; tests exercise
 Excise.Core	tests-only	IsPartialOverlap	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsRadioButton	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsTaggedPdf	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	IsTextMarkup	triage:public library/domain API; lost its only production caller (FdfSerializer/XfdfSerializer export filtering) when #921 retired FDF/XFDF; PdfAnnotation.IsTextMarkup is a basic subtype predicate, tests exercise contract; external callers may use it
 Excise.Core	tests-only	NamedActionName	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	NextActions	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	NumberedList	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -106,6 +108,7 @@ Excise.Core	tests-only	ToEncodedString	triage:public library/domain API; tests e
 Excise.Core	tests-only	ToIntArray	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	Transition	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	TryGetString	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	TryParseIndirectObject	triage:public library/domain API; lost its only production caller (FdfSerializer's %FDF body-object parse) when #921 retired FDF/XFDF; PdfParser.TryParseIndirectObject is a basic parser primitive, tests exercise contract; external callers may use it
 Excise.Core	tests-only	WasHexString	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	WithAlignment	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	WithColor	triage:public library/domain API; tests exercise contract; external callers may use it
