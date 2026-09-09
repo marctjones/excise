@@ -244,6 +244,82 @@ public class FullPageImageRenderFidelityTests
     }
 
     /// <summary>
+    /// The codec a real scan actually uses. Everything else in this file is an
+    /// unfiltered raw-sample image, which is the cleanest ground truth but is
+    /// NOT what #1437's reporter has -- a scanned page is normally DCTDecode.
+    /// Asserting the DCT case from the shape of the raw-sample result would be
+    /// exactly the inference this codebase keeps getting burned by, so it is
+    /// measured.
+    ///
+    /// The comparison isolates excise's PIPELINE from the JPEG DECODE: ground
+    /// truth is the same JPEG bytes decoded directly, so a shared libjpeg
+    /// cancels out on both sides and what remains is whatever the renderer
+    /// added on top. Any IDCT rounding is common to both and cannot show up as
+    /// a delta.
+    /// </summary>
+    [Fact]
+    public void FullPageJpegImage_RenderedAtItsNativeResolution_AddsNothingOnTopOfTheDecode()
+    {
+        // A smooth gradient with structure -- a plausible scan, and a pattern
+        // where any filtering or colour round-trip would show as a delta.
+        using var source = new SKBitmap(ImageWidth, ImageHeight, SKColorType.Rgba8888, SKAlphaType.Opaque);
+        for (var y = 0; y < ImageHeight; y++)
+        {
+            for (var x = 0; x < ImageWidth; x++)
+            {
+                var band = (y / 20 % 2) == 0 ? 40 : 0;
+                source.SetPixel(x, y, new SKColor(
+                    (byte)Math.Clamp((x * 255 / ImageWidth) + band, 0, 255),
+                    (byte)(y * 255 / ImageHeight),
+                    (byte)Math.Clamp(255 - (x * 255 / ImageWidth), 0, 255)));
+            }
+        }
+
+        using var encoded = SKImage.FromBitmap(source).Encode(SKEncodedImageFormat.Jpeg, 100);
+        var jpeg = encoded.ToArray();
+
+        var pdf = BuildImagePdf(
+            PageWidthPoints,
+            PageHeightPoints,
+            $"/Width {ImageWidth} /Height {ImageHeight} /ColorSpace /DeviceRGB " +
+            "/BitsPerComponent 8 /Filter /DCTDecode",
+            jpeg);
+
+        using var rendered = Render(pdf, dpi: 300);
+        rendered.Width.Should().Be(ImageWidth);
+        rendered.Height.Should().Be(ImageHeight);
+
+        // Ground truth: the same JPEG bytes, decoded outside the renderer.
+        using var decoded = SKBitmap.Decode(jpeg);
+        decoded.Should().NotBeNull();
+        decoded!.Width.Should().Be(ImageWidth);
+
+        var identical = 0;
+        var maxDelta = 0;
+        for (var y = 0; y < ImageHeight; y++)
+        {
+            for (var x = 0; x < ImageWidth; x++)
+            {
+                var a = rendered.GetPixel(x, y);
+                var b = decoded.GetPixel(x, y);
+                var delta = Math.Max(
+                    Math.Abs(a.Red - b.Red),
+                    Math.Max(Math.Abs(a.Green - b.Green), Math.Abs(a.Blue - b.Blue)));
+                if (delta == 0) identical++;
+                if (delta > maxDelta) maxDelta = delta;
+            }
+        }
+
+        _output.WriteLine(
+            $"1:1 DCTDecode render vs direct JPEG decode: {identical}/{ImageWidth * ImageHeight} " +
+            $"pixels identical, max per-channel delta {maxDelta}");
+
+        maxDelta.Should().Be(0,
+            "at 1:1 the renderer must hand back the decoder's own pixels for a JPEG scan too -- " +
+            "this is the codec #1437's reporter actually has");
+    }
+
+    /// <summary>
     /// WHICH LAYER drops the pixels, measured rather than read off the code.
     ///
     /// Two candidates produce a point-sampled 2:1 downscale, and the obvious
