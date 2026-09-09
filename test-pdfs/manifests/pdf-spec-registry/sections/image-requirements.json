@@ -58,6 +58,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::AsciiHexEncodedRedImage_MatchesMutoolDecode",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -150,6 +157,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::Ascii85EncodedRedImage_RendersSolidRed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::Ascii85EncodedRedImage_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -248,6 +262,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::PlainFlateEncodedGradient_MatchesMutoolDecode",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -340,6 +361,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::TiffPredictorFlateImage_RendersTheGradient",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::TiffPredictorFlateGradient_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -438,6 +466,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::PngPredictorFlateGradient_MatchesMutoolDecode",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -530,6 +565,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxImageInFilterChain_Decodes_NotBlank",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::PlainLzwEncodedGradient_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -730,6 +772,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::LzwWithTiffPredictorGradient_MatchesMutoolDecode",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -822,6 +871,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_RunLengthOpaqueSoftMaskRendersImageOpaque",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::RunLengthEncodedSolidGray_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -1117,6 +1173,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::DctEncodedSolidColor_MatchesMutoolDecode",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -1318,6 +1381,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxImageInFilterChain_Decodes_NotBlank",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::JpxEncodedSolidColor_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -1620,6 +1690,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::CryptIdentityFilteredImage_MatchesMutoolDecode",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -1722,6 +1799,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::Ascii85ThenFlateFilterChain_MatchesMutoolDecode",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -1810,6 +1894,13 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::StencilImageMask_PaintsSameRegionMutoolDoes",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -1900,6 +1991,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::SoftMaskAlphaRamp_CompositesSameAsMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -1989,6 +2087,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::ExplicitMaskStream_PaintsSameRegionMutoolDoes",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -2077,6 +2182,14 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::DctCmykImageWithColorKeyMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ColorKeyMaskDifferentialTests.cs::ColorKeyMaskedIndexedImage_LeavesNoBlackWhereMutoolLeavesNone",
+            "modes": [
+              "parse",
+              "render"
             ]
           }
         ]
@@ -3145,6 +3258,13 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::ScaledAndTranslatedImage_BoundingBoxMatchesMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
