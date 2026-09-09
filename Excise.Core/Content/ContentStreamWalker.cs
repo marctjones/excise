@@ -148,6 +148,22 @@ internal sealed class ContentStreamWalker
     public bool TrackState { get; set; } = true;
 
     /// <summary>
+    /// The tokenizer's byte offset into the content currently being walked.
+    /// Read from inside a sink callback it is the offset just PAST the token
+    /// that triggered the callback — which is what lets a sink record the
+    /// source span an operator occupied without tokenizing the bytes a second
+    /// time (#1093).
+    ///
+    /// <para>⚠️ Offsets are relative to the bytes the walker is walking RIGHT
+    /// NOW. <see cref="RunNested"/> swaps in a form XObject's bytes, so a sink
+    /// that follows nested walks (only <c>TextExtractor</c> does) must not
+    /// treat these as offsets into the outer stream.
+    /// <see cref="ContentStreamParser"/>, the sink that uses this, never
+    /// nests.</para>
+    /// </summary>
+    internal int SourcePosition => _pos;
+
+    /// <summary>
     /// Upper bound on an inline image's data scan when no <c>/L</c> length is
     /// declared (#347). Inline images are meant to be small (§8.9.7); this is
     /// far larger than any legitimate one and just bounds malicious input.

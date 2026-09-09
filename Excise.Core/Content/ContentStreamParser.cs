@@ -21,6 +21,11 @@ namespace Excise.Core.Content;
 public class ContentStreamParser
 {
     private readonly ContentStreamWalker _walker;
+    private readonly byte[] _content;
+
+    // Where the next operator's source span starts — the end of the previous
+    // one, so spans tile the stream with no gaps (#1093).
+    private int _spanCursor;
 
     /// <summary>Max nesting depth for content-stream arrays before bailing.</summary>
     public int MaxNestingDepth
@@ -50,6 +55,23 @@ public class ContentStreamParser
         get => _walker.TrackState;
         set => _walker.TrackState = value;
     }
+
+    /// <summary>
+    /// When true, every operator records the CONTIGUOUS source span it
+    /// occupied (<see cref="ContentOperator.SourceStart"/>) plus a fingerprint
+    /// of its serialized form, and <see cref="ContentStream.SourceBytes"/>
+    /// carries the bytes those offsets index. That is what
+    /// <see cref="ContentStreamWriter.Write(ContentStream, byte[])"/> needs to
+    /// re-emit untouched operators VERBATIM rather than re-serializing the
+    /// whole stream — the round-trip risk #1093 exists to remove (inline-image
+    /// syntax #354, float formatting #762, PDFDocEncoding octal escapes: each
+    /// corrupted content the edit never intended to touch).
+    ///
+    /// <para>Off by default: it costs one extra serialization per operator at
+    /// parse time, and a caller that only reads metadata (the renderer, the
+    /// tagging scanner) never writes the stream back.</para>
+    /// </summary>
+    internal bool TrackSourceSpans { get; set; }
 
     // Accumulators. All of this is per-operator metadata derived from what the
     // walker reports; none of it is state that survives q/Q, which is why none
@@ -82,7 +104,8 @@ public class ContentStreamParser
     /// <param name="page">Optional page reference for font resolution.</param>
     public ContentStreamParser(byte[] content, PdfPage? page = null, PdfDictionary? resources = null)
     {
-        _walker = new ContentStreamWalker(content, page);
+        _content = content ?? Array.Empty<byte>();
+        _walker = new ContentStreamWalker(_content, page);
         // #1098: an appearance stream is a Form XObject whose fonts live in its
         // OWN /Resources, not the page's. Push them so glyphs decode when this
         // parses a stream no `Do` on the page points at.
@@ -98,11 +121,15 @@ public class ContentStreamParser
     {
         _operators.Clear();
         _current = null;
+        _spanCursor = 0;
 
         var sink = new OperatorSink(this);
         _walker.Walk(ref sink, cancellationToken);
 
-        return new ContentStream(new List<ContentOperator>(_operators));
+        return new ContentStream(new List<ContentOperator>(_operators))
+        {
+            SourceBytes = TrackSourceSpans ? _content : null,
+        };
     }
 
     /// <summary>
@@ -140,6 +167,7 @@ public class ContentStreamParser
         var op = new ContentOperator(name, operands.ToList());
         _operators.Add(op);
         _current = op;
+        RecordSourceSpan(op);
 
         if (!ComputeOperatorMetadata)
             return;
@@ -174,6 +202,34 @@ public class ContentStreamParser
         op.InlineImageData = imageData;
         _operators.Add(op);
         _current = op;
+        // Recorded AFTER InlineImageData is attached: the fingerprint has to
+        // cover the pixel bytes, and the span has to reach past EI.
+        RecordSourceSpan(op);
+    }
+
+    /// <summary>
+    /// Give <paramref name="op"/> the source bytes it was parsed from: from
+    /// where the previous operator ended (so leading whitespace and comments
+    /// travel with it) to just past its own operator token, which is where the
+    /// walker's tokenizer now stands (#1093).
+    /// </summary>
+    private void RecordSourceSpan(ContentOperator op)
+    {
+        if (!TrackSourceSpans) return;
+
+        int end = _walker.SourcePosition;
+        if (end < _spanCursor || end > _content.Length)
+        {
+            // Should not happen on a top-level walk; leaving the span unset is
+            // the fail-safe — the writer re-serializes an operator it cannot
+            // locate rather than copying the wrong bytes.
+            return;
+        }
+
+        op.SourceStart = _spanCursor;
+        op.SourceEnd = end;
+        op.SourceFingerprint = ContentStreamWriter.Fingerprint(op);
+        _spanCursor = end;
     }
 
     private bool AccumulatePathConstruction(string name, List<PdfObject> operands)

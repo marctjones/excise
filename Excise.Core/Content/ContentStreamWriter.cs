@@ -27,6 +27,129 @@ public class ContentStreamWriter
     }
 
     /// <summary>
+    /// Write <paramref name="content"/> back out, keeping the ORIGINAL bytes of
+    /// every operator that was not touched (#1093).
+    ///
+    /// <para>Re-serializing a whole stream to change one operator puts every
+    /// other operator through this class's escaping, number formatting and
+    /// inline-image reconstruction — and each of those has silently corrupted
+    /// content an edit never intended to touch: inline-image syntax (#354),
+    /// float formatting (#762), PDFDocEncoding octal escapes. Each was found by
+    /// a leak, not by a gate. Bytes that are copied cannot be reformatted.</para>
+    ///
+    /// <para>An operator is copied verbatim only when it carries a source span
+    /// (<see cref="ContentStreamParser.TrackSourceSpans"/>) AND its serialized
+    /// form still hashes to what it hashed to at parse time. That second
+    /// condition is the fail-closed one: redaction mutates some parsed operands
+    /// IN PLACE — <c>MarkedContentCarrierScrubber</c> removes an
+    /// <c>/ActualText</c> from a <c>BDC</c> operand dictionary, the #636 leak
+    /// carrier — and copying such an operator's original bytes would put the
+    /// scrubbed text back into the file. A mismatch re-serializes, which is
+    /// exactly today's behaviour, so the failure mode of this check is "no
+    /// worse than before".</para>
+    ///
+    /// <para>A stream whose operators are all present, all unmodified and still
+    /// in source order round-trips BYTE-IDENTICALLY.</para>
+    /// </summary>
+    /// <param name="content">The (possibly edited) operator list.</param>
+    /// <param name="source">The bytes <paramref name="content"/> was parsed
+    /// from — <see cref="ContentStream.SourceBytes"/>.</param>
+    internal byte[] Write(ContentStream content, byte[] source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        var ops = content.Operators;
+
+        // The whole-stream case: every operator verbatim, in order, tiling the
+        // source from offset 0. Then the answer IS the source — including the
+        // tail after the last operator, which no per-operator copy can know
+        // about.
+        if (IsUnmodifiedWholeStream(ops, source))
+            return (byte[])source.Clone();
+
+        _sb.Clear();
+        for (int i = 0; i < ops.Count; i++)
+        {
+            var op = ops[i];
+            if (!CanCopyVerbatim(op, source))
+            {
+                WriteOperator(op);
+                continue;
+            }
+
+            _sb.Append(Encoding.Latin1.GetString(source, op.SourceStart, op.SourceEnd - op.SourceStart));
+
+            // A span ends on its operator token with no trailing separator —
+            // the whitespace that followed belongs to the NEXT operator's span.
+            // So a separator is needed unless the next operator is the one that
+            // physically followed this one in the source; without it "Tj" and a
+            // re-serialized "1 0 0 1 5 5 cm" would fuse into "Tj1 0 0 …".
+            var next = i + 1 < ops.Count ? ops[i + 1] : null;
+            bool followsContiguously = next != null
+                && CanCopyVerbatim(next, source)
+                && next.SourceStart == op.SourceEnd;
+            if (!followsContiguously)
+                _sb.Append('\n');
+        }
+
+        return Encoding.Latin1.GetBytes(_sb.ToString());
+    }
+
+    /// <summary>
+    /// Whether every operator can be copied verbatim, in source order, with no
+    /// gaps, starting at offset 0 — i.e. nothing was removed, added, reordered
+    /// or modified.
+    /// </summary>
+    private static bool IsUnmodifiedWholeStream(IReadOnlyList<ContentOperator> ops, byte[] source)
+    {
+        if (ops.Count == 0) return false;
+
+        int expected = 0;
+        foreach (var op in ops)
+        {
+            if (!CanCopyVerbatim(op, source) || op.SourceStart != expected) return false;
+            expected = op.SourceEnd;
+        }
+
+        // Anything after the last operator is whitespace/comments; copying the
+        // source wholesale keeps it, which is what makes this byte-identical.
+        return true;
+    }
+
+    private static bool CanCopyVerbatim(ContentOperator op, byte[] source) =>
+        op.HasSourceSpan
+        && op.SourceEnd <= source.Length
+        && Fingerprint(op) == op.SourceFingerprint;
+
+    // One reusable writer per thread for fingerprinting, so the check costs no
+    // allocation beyond the serialized text itself.
+    [ThreadStatic] private static ContentStreamWriter? _fingerprintWriter;
+
+    /// <summary>
+    /// A hash of the operator's serialized form, used to detect that a parsed
+    /// operator's operands were mutated after its source span was recorded.
+    ///
+    /// <para>SHA-256 truncated to 128 bits rather than a fast non-cryptographic
+    /// hash on purpose: the content this hashes is written by the document's
+    /// author, and in a redaction tool the document's author is the adversary.
+    /// A forgeable hash would let a crafted <c>BDC</c> dictionary collide with
+    /// its own scrubbed form and so survive redaction — the exact leak this
+    /// check exists to prevent (#1093).</para>
+    /// </summary>
+    internal static UInt128 Fingerprint(ContentOperator op)
+    {
+        var writer = _fingerprintWriter ??= new ContentStreamWriter();
+        writer._sb.Clear();
+        writer.WriteOperator(op);
+
+        Span<byte> digest = stackalloc byte[32];
+        System.Security.Cryptography.SHA256.HashData(
+            Encoding.Latin1.GetBytes(writer._sb.ToString()), digest);
+
+        return new UInt128(BitConverter.ToUInt64(digest[8..]), BitConverter.ToUInt64(digest));
+    }
+
+    /// <summary>
     /// Write a single operator.
     /// </summary>
     private void WriteOperator(ContentOperator op)

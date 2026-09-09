@@ -20,6 +20,15 @@ public class ContentStream
     public IReadOnlyList<ContentOperator> Operators => _operators.AsReadOnly();
 
     /// <summary>
+    /// The bytes this stream was parsed from, when it was parsed with
+    /// <see cref="ContentStreamParser.TrackSourceSpans"/>; null otherwise.
+    /// <see cref="ContentOperator.SourceStart"/> indexes into these, and
+    /// <see cref="ContentStreamWriter.Write(ContentStream, byte[])"/> copies
+    /// from them so an untouched operator keeps its original bytes (#1093).
+    /// </summary>
+    internal byte[]? SourceBytes { get; init; }
+
+    /// <summary>
     /// Creates a new content stream with the specified operators.
     /// </summary>
     public ContentStream(IEnumerable<ContentOperator> operators)
