@@ -845,6 +845,41 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Fonts/SymbolicTrueTypeSymbolCmapExtractionTests.cs::SymbolCmap_Extraction_RecoversIntendedText_NotRawWinAnsi",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/TextExtractionDifferentialTests.cs::TextMatchesMutool",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Fonts/SymbolicTrueTypeSymbolCmapExtractionTests.cs::SymbolCmap_Redaction_RemovesText_OracleConfirms",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/TypewriterOutputFidelityTests.cs::TypedText_IsDrawnByIndependentRenderers_InTheTargetRegion",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/TypewriterOutputFidelityTests.cs::TypedText_IsReadBackByAnIndependentExtractor",
+            "modes": [
+              "author"
+            ]
+          },
+          {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Text/TextExtractorDifferencesEncodingTests.cs::ExtractText_DifferencesEncoding_StandardPostScriptGlyphNames_DecodeCorrectly",
             "modes": [

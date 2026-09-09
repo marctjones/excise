@@ -416,6 +416,76 @@
             "modes": [
               "mutate"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/QpdfReferenceToolTests.cs::IsEncrypted_OnAnEncryptedFixture_ReturnsTrue",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::Qpdf_RecognizedAsEncrypted_AndNoPasswordIsRejected",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::Qpdf_CorrectUserPassword_AcceptedAndFileChecksClean",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs::Preserve_EncryptMetadataFalse_SurvivesRoundTrip",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::QpdfWrittenR4File_ExciseIndependentlyDecryptsIt",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::Ghostscript_EmptyPassword_RendersIdenticallyToUnencryptedBaseline",
+            "modes": [
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::Mutool_EmptyPassword_ExtractsCorrectText",
+            "modes": [
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::Qpdf_EmptyPasswords_ReportsR6AesV3AndBothPasswordsValidate",
+            "modes": [
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs::Redact_R6Source_OutputSameR6AndPermissions_SecretUnrecoverableByQpdfAndMutool",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/EncryptedRedactionOutputIntegrityTests.cs::RedactedEncryptedOutput_IsValidAndActuallyRedacted",
+            "modes": [
+              "mutate"
+            ]
           }
         ]
       }

@@ -723,12 +723,48 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FlattenedTextField_RendersInGhostscriptToo",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::InteractiveFilledTextField_IsShownByViewersThatHonorNeedAppearances",
+            "modes": [
+              "render"
+            ]
+          },
+          {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
             "modes": [
               "preserve",
               "extract",
               "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FlattenedMultilineValue_StaysInsideItsFieldBox",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FlattenedTextField_ValueIsBakedIntoPageContent",
+            "modes": [
+              "extract",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FlattenedCheckbox_CheckmarkIsVisible",
+            "modes": [
               "write"
             ]
           },

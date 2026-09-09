@@ -425,6 +425,27 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_MissingWidthsWxAdvance_MatchesGhostscript",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_Tr4PaintsGlyphAndOverlay_MatchesPdftocairoAndMutool",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1BBoxClip_MatchesGhostscript",
+            "modes": [
+              "render"
+            ]
+          },
+          {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
             "modes": [
@@ -441,8 +462,43 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RtlRedactionDifferentialTests.cs::RtlExtraction_MatchesIndependentExtractor",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Fonts/VerticalWritingRenderingTests.cs::IdentityV_MatchesLiveGhostscript",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Fonts/Type0HorizontalSpacingRenderingTests.cs::HorizontalTc_MatchesLiveGhostscript",
+            "modes": [
+              "render"
+            ]
+          },
+          {
             "kind": "security",
             "ref": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RtlRedactionDifferentialTests.cs::RedactedRtlWord_IsNotRecoverableByAnIndependentExtractor",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RtlType0RedactionDifferentialTests.cs::Type0Rtl_Redaction_LeavesNoTextForAnIndependentExtractor",
             "modes": [
               "mutate"
             ]

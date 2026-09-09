@@ -122,6 +122,27 @@
           },
           {
             "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/PageOrganizationDifferentialTests.cs::PageMutations_LeaveAStructurallyValidPdf_PerQpdf",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs::RunSplit_Fragments_AreStructurallyValid_PerQpdf",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.App.Tests/UI/PageOrganizationCommandTests.cs::CombineDocumentsCommand_WrittenFile_IsVerifiedByIndependentTools",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
             "ref": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::RemoveSelectedPagesCommand_ThenSaveAs_RemovedPageIsGoneAccordingToAnIndependentExtractor",
             "modes": [
               "mutate",

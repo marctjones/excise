@@ -11780,10 +11780,31 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/QpdfReferenceToolTests.cs::IsEncrypted_OnAnEncryptedFixture_ReturnsTrue",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::Qpdf_RecognizedAsEncrypted_AndNoPasswordIsRejected",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs::Qpdf_CorrectUserPassword_AcceptedAndFileChecksClean",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -13241,10 +13262,24 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs::Preserve_EncryptMetadataFalse_SurvivesRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::QpdfWrittenR4File_ExciseIndependentlyDecryptsIt",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -14702,10 +14737,25 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs::Redact_R6Source_OutputSameR6AndPermissions_SecretUnrecoverableByQpdfAndMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/EncryptedRedactionOutputIntegrityTests.cs::RedactedEncryptedOutput_IsValidAndActuallyRedacted",
+          "recordedOutcomes": [
+            "NotExecuted",
+            "Passed"
+          ]
         }
       ],
-      "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "explicitContractStatus": "partial-or-failing",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -16163,10 +16213,31 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::Ghostscript_EmptyPassword_RendersIdenticallyToUnencryptedBaseline",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::Mutool_EmptyPassword_ExtractsCorrectText",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::Qpdf_EmptyPasswords_ReportsR6AesV3AndBothPasswordsValidate",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -19092,10 +19163,31 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/PageOrganizationDifferentialTests.cs::PageMutations_LeaveAStructurallyValidPdf_PerQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs::RunSplit_Fragments_AreStructurallyValid_PerQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.App.Tests/UI/PageOrganizationCommandTests.cs::CombineDocumentsCommand_WrittenFile_IsVerifiedByIndependentTools",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "open"
       ]
@@ -47967,6 +48059,20 @@
       ],
       "explicitContracts": [
         {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Fonts/SymbolicTrueTypeSymbolCmapExtractionTests.cs::SymbolCmap_Extraction_RecoversIntendedText_NotRawWinAnsi",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/TextExtractionDifferentialTests.cs::TextMatchesMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "kind": "unit",
           "ref": "Excise.Core.Tests/Text/TextExtractorDifferencesEncodingTests.cs::ExtractText_DifferencesEncoding_StandardPostScriptGlyphNames_DecodeCorrectly",
           "recordedOutcomes": [
@@ -47975,7 +48081,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -47999,6 +48105,13 @@
       ],
       "explicitContracts": [
         {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Fonts/SymbolicTrueTypeSymbolCmapExtractionTests.cs::SymbolCmap_Redaction_RemovesText_OracleConfirms",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "kind": "unit",
           "ref": "Excise.Core.Tests/Text/Segmentation/GlyphRemoverTests.cs::Process_Reconstruction_InheritsFontAcrossTextBlocks",
           "recordedOutcomes": [
@@ -48007,7 +48120,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -48062,6 +48175,20 @@
       ],
       "explicitContracts": [
         {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/TypewriterOutputFidelityTests.cs::TypedText_IsDrawnByIndependentRenderers_InTheTargetRegion",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/TypewriterOutputFidelityTests.cs::TypedText_IsReadBackByAnIndependentExtractor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "kind": "unit",
           "ref": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::Apply_SurvivesSaveAndReopenAsFlatText",
           "recordedOutcomes": [
@@ -48070,7 +48197,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -54479,10 +54606,45 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_MissingWidthsWxAdvance_MatchesGhostscript",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_Tr4PaintsGlyphAndOverlay_MatchesPdftocairoAndMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1BBoxClip_MatchesGhostscript",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Fonts/VerticalWritingRenderingTests.cs::IdentityV_MatchesLiveGhostscript",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Fonts/Type0HorizontalSpacingRenderingTests.cs::HorizontalTc_MatchesLiveGhostscript",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "search"
       ]
@@ -54555,10 +54717,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RtlRedactionDifferentialTests.cs::RtlExtraction_MatchesIndependentExtractor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "search"
       ]
@@ -54586,10 +54755,24 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RtlRedactionDifferentialTests.cs::RedactedRtlWord_IsNotRecoverableByAnIndependentExtractor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RtlType0RedactionDifferentialTests.cs::Type0Rtl_Redaction_LeavesNoTextForAnIndependentExtractor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "search"
       ]
@@ -98822,10 +99005,24 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FlattenedTextField_RendersInGhostscriptToo",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::InteractiveFilledTextField_IsShownByViewersThatHonorNeedAppearances",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -98854,10 +99051,24 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FlattenedMultilineValue_StaysInsideItsFieldBox",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FlattenedTextField_ValueIsBakedIntoPageContent",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -101784,10 +101995,24 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FlattenedTextField_ValueIsBakedIntoPageContent",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FlattenedCheckbox_CheckmarkIsVisible",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "forms"
       ]
@@ -109913,13 +110138,13 @@
     "targetModes": 898,
     "modesWithTestCandidates": 644,
     "modesWithExplicitContracts": 879,
-    "modesWithPassingExplicitContracts": 879,
+    "modesWithPassingExplicitContracts": 878,
     "modesWithRecordedPassingCandidate": 644,
-    "gradeImplemented": 795,
-    "gradeVerified": 84,
+    "gradeImplemented": 781,
+    "gradeVerified": 98,
     "gradeUnknown": 19,
     "testMethods": 6348,
-    "testMethodsWithCapabilityCandidate": 3932,
+    "testMethodsWithCapabilityCandidate": 3934,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
