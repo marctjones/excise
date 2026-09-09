@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1020,
-  "indexedContentSha256": "c9299d6c999372ba8b9829c68d8c8cf5f01be02a02f0215ff51d1e9dc6ea1fcd",
+  "indexedContentSha256": "30553c4aff67c9479200dbdcd6bc0b97141757724f0e9cd23e34e479c638f666",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1292,6 +1292,7 @@
           "matchedTerms": [
             "cross-reference",
             "indirect",
+            "streams",
             "syntax",
             "trailer",
             "xref"
@@ -7522,7 +7523,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 450
+      "candidateReferenceCount": 451
     },
     {
       "id": "pdf.17.graphics.color",
@@ -11963,6 +11964,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "form",
+            "streams"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -12084,18 +12093,9 @@
             "form",
             "streams"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "form",
-            "streams",
-            "textextractor"
-          ]
         }
       ],
-      "candidateReferenceCount": 110
+      "candidateReferenceCount": 111
     },
     {
       "id": "pdf.20.content.operators",
@@ -19795,6 +19795,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "streams",
+            "syntax"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/NonPageCarrierRedactionLeakTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -19853,7 +19861,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 11
+      "candidateReferenceCount": 12
     },
     {
       "id": "pdf.20.renderer.requirement-003",
@@ -37095,6 +37103,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -37990,6 +38005,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -38725,6 +38747,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
             ]
@@ -39486,6 +39515,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -39932,6 +39968,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -40359,6 +40402,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -40776,6 +40826,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
             ]
@@ -41404,6 +41461,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -41912,6 +41976,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
             ]
@@ -42832,6 +42903,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -43323,6 +43401,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -43790,6 +43875,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
             ]
@@ -44929,6 +45021,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -45250,6 +45349,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
             ]
@@ -45788,6 +45894,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -46051,6 +46164,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
             ]
@@ -46954,6 +47074,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -47120,6 +47247,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
+            ]
           }
         ]
       },
@@ -47282,6 +47416,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -47636,6 +47777,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
+            "modes": [
+              "extract"
             ]
           }
         ]
@@ -54986,6 +55134,7 @@
           "kind": "test",
           "matchedTerms": [
             "actions",
+            "including",
             "javascript",
             "uri",
             "acroform",
@@ -63439,6 +63588,7 @@
           "kind": "test",
           "matchedTerms": [
             "attachment",
+            "copy",
             "metadata",
             "redaction",
             "security"

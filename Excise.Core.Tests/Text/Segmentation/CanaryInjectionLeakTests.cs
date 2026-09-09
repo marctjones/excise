@@ -141,6 +141,115 @@ public class CanaryInjectionLeakTests
             "here is a definite leak (the token cannot occur incidentally)");
     }
 
+    /// <summary>
+    /// The differential counterpart to <see cref="RedactingTheCanary_RemovesItFromEveryCarrier"/>:
+    /// every assertion there goes through <see cref="SavedPdfLeakScanner"/> --
+    /// excise's own carrier-agnostic byte scanner, still excise code reading
+    /// excise output. This asks qpdf to decode the saved file's object graph
+    /// instead (its own JSON dump, which resolves compressed /ObjStm content
+    /// the way qpdf's own decompressor understands it -- a genuinely
+    /// independent reader, not a second copy of excise's scan logic), so a
+    /// blind spot shared by excise's scrubber and excise's scanner can't
+    /// both agree and both be wrong.
+    ///
+    /// Excludes <see cref="Carrier.TjSplit"/> for the same reason the
+    /// existing test does: the canary is split across three kerned TJ
+    /// fragments and is not contiguous in ANY byte-level view, qpdf's
+    /// included -- only an extractor that reassembles the run can see it,
+    /// which is exactly what the existing test's special case already
+    /// measures.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(CarrierMatrix))]
+    public void RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(Carrier carrier)
+    {
+        if (carrier == Carrier.TjSplit)
+            return; // covered by the extractor-based assertion in the sibling test.
+
+        var qpdf = FindQpdf();
+        Assert.SkipWhen(qpdf is null, "qpdf not on PATH");
+
+        var pdf = BuildCanaryPdf(carrier);
+
+        QpdfContainsCanary(qpdf!, pdf).Should().BeTrue(
+            $"guard: qpdf's own object-graph view must independently confirm the canary is present " +
+            $"in the {carrier} fixture before redaction, or a clean result afterward would prove nothing");
+
+        byte[] saved;
+        using (var doc = PdfDocument.Open(pdf))
+        {
+            doc.RedactText(Canary);
+            using var ms = new MemoryStream();
+            doc.Save(ms);
+            saved = ms.ToArray();
+        }
+
+        var stillPresent = QpdfContainsCanary(qpdf!, saved);
+
+        if (KnownLeaks.TryGetValue(carrier, out var issue))
+        {
+            stillPresent.Should().BeTrue(
+                $"{carrier} is a KNOWN unscrubbed carrier ({issue}); if qpdf now independently confirms " +
+                "it clean, delete its KnownLeaks entry so the checklist tells the truth");
+            return;
+        }
+
+        stillPresent.Should().BeFalse(
+            $"redacting the canary must remove it from the {carrier} carrier in qpdf's own independent " +
+            "view of the saved file -- not merely from excise's own scanner's view of it");
+    }
+
+    private static string? FindQpdf()
+    {
+        var envPath = Environment.GetEnvironmentVariable("PATH") ?? "";
+        foreach (var dir in envPath.Split(Path.PathSeparator))
+        {
+            var candidate = Path.Combine(dir, "qpdf");
+            if (File.Exists(candidate)) return candidate;
+        }
+        return null;
+    }
+
+    /// <summary>Whether the canary appears anywhere in qpdf's own
+    /// decompressed QDF-mode dump of <paramref name="pdfBytes"/> -- unlike
+    /// <c>--json=1 --json-key=objects</c> (dictionary metadata only, stream
+    /// BODIES omitted -- confirmed empirically: it cannot see a canary
+    /// planted in a content stream or an embedded-file payload at all, a
+    /// false negative caught by this method's own first draft failing on
+    /// carrier PageContent, the simplest possible case), <c>--qdf
+    /// --object-streams=disable</c> decompresses every stream, including
+    /// content streams and attachment payloads, into readable text.</summary>
+    private static bool QpdfContainsCanary(string qpdfPath, byte[] pdfBytes)
+    {
+        var tempFile = Path.Combine(Path.GetTempPath(), $"excise-canary-qpdf-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(tempFile, pdfBytes);
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo(qpdfPath)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            psi.ArgumentList.Add("--qdf");
+            psi.ArgumentList.Add("--object-streams=disable");
+            psi.ArgumentList.Add(tempFile);
+            psi.ArgumentList.Add("-");
+
+            using var proc = System.Diagnostics.Process.Start(psi)!;
+            var stdout = proc.StandardOutput.ReadToEnd();
+            proc.StandardError.ReadToEnd();
+            proc.WaitForExit(30_000);
+
+            return stdout.Contains(Canary, StringComparison.Ordinal);
+        }
+        finally
+        {
+            try { File.Delete(tempFile); } catch { /* best effort */ }
+        }
+    }
+
     [Fact]
     public void SavedByteOracle_RejectsAnIntentionalCanarySurvivalMutation()
     {

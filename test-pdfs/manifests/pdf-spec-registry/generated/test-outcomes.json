@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-09T03:54:07.353230+00:00",
-  "gitRevision": "da76995f501a7e06c8d4a12ae29d6f1a58720524",
+  "recordedAt": "2026-09-09T03:59:58.782670+00:00",
+  "gitRevision": "d0d743425a7944025aaabd519981520db7bc7839",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -511,6 +511,11 @@
       "path": "/tmp/trx-operators/opinv.trx",
       "modifiedAt": "2026-09-09T03:54:07.301669+00:00",
       "sha256": "900437b01bca91df9c209288f3f6eaf0080339342d0442bca28f7ce662ba607a"
+    },
+    {
+      "path": "/tmp/trx-canary/canary.trx",
+      "modifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "sha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
     }
   ],
   "outcomes": [
@@ -41235,6 +41240,206 @@
       "trxSha256": "7fb150759e7b0ba66e2524e2cf5f4ae8d75879137ea29b51e093c59a463b6f28"
     },
     {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: AcroFormFieldName)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0184708",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: AcroFormTooltip)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0197572",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: AcroFormValue)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0188224",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: AnnotAaUri)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0191562",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: AnnotationAppearanceStream)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0204177",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: AnnotationContents)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0195074",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: AnnotationSubj)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0186246",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: CatalogAaUri)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0181436",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: EmbeddedFile)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0187232",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: FieldActionUri)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0186356",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: FormXObject)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0210968",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: InfoTitle)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0179411",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: InlineActualText)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0314692",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: JavaScript)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0191338",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: LinkUri)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0190678",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: OpenActionUri)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0187282",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: OutlineActionUri)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0197862",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: OutlineTitle)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0175377",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: OutlineTitleIndirect)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0179070",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: PageContent)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0178552",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: RedactOverlayText)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0204604",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: StructActualText)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0200169",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: TjSplit)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000112",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: XmpCatalog)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0182167",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf(carrier: XmpPage)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0649239",
+      "trx": "/tmp/trx-canary/canary.trx",
+      "resultModifiedAt": "2026-09-09T03:59:58.729796+00:00",
+      "trxSha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
       "testName": "Excise.Core.Tests.Text.Segmentation.CanaryInjectionLeakTests.SavedByteOracle_RejectsAnIntentionalCanarySurvivalMutation",
       "outcome": "Passed",
       "duration": "00:00:00.0006236",
@@ -69428,12 +69633,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 101,
-    "tests": 8614,
+    "trxFiles": 102,
+    "tests": 8639,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7687
+      "Passed": 7712
     },
     "status": "recorded"
   }
