@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "b1a602da94e2d1a7ce32b22940f42d98aa3770d0511df1b019996f92a0fbe903",
+  "sourceFingerprint": "0ae62288f5ca96a17bb777154da69c188c9ffd2d7c8f0a4a2d0f391293f495b2",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -2871,26 +2871,6 @@
           ]
         }
       ],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.Core/Forms/FdfSerializer.cs",
-      "path": "Excise.Core/Forms/FdfSerializer.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.Core/Forms/XfdfSerializer.cs",
-      "path": "Excise.Core/Forms/XfdfSerializer.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -6849,6 +6829,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/ViewModels/BatesNumberingDialogViewModel.cs",
+      "path": "Excise.App/ViewModels/BatesNumberingDialogViewModel.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/ViewModels/DocumentStateManager.cs",
       "path": "Excise.App/ViewModels/DocumentStateManager.cs",
       "kind": "source-file",
@@ -6924,6 +6914,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/ViewModels/MainWindowViewModel.Bates.cs",
+      "path": "Excise.App/ViewModels/MainWindowViewModel.Bates.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -7539,6 +7539,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Views/BatesNumberingDialog.axaml.cs",
+      "path": "Excise.App/Views/BatesNumberingDialog.axaml.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -8643,7 +8653,7 @@
     }
   ],
   "summary": {
-    "records": 401,
+    "records": 402,
     "facets": {
       "annotations": 10,
       "content-and-graphics": 18,
@@ -8651,7 +8661,7 @@
       "fonts": 28,
       "forms": 8,
       "images": 28,
-      "product-integration-general": 213,
+      "product-integration-general": 214,
       "redaction": 51,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 19,
@@ -8730,7 +8740,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 19,
       "pdfe.product.security.signature-and-permission-warning:write": 19
     },
-    "fallbackRecords": 213,
+    "fallbackRecords": 214,
     "allRecordsMapped": true
   }
 }
