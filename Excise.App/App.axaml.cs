@@ -221,20 +221,9 @@ public partial class App : Application
     // (IActivatableLifetime.Activated -> FileActivatedEventArgs.Files).
     internal static string? ResolveActivatedPdfPath(IReadOnlyList<IStorageItem> files)
     {
-        foreach (var file in files)
-        {
-            var path = file.TryGetLocalPath();
-            if (string.IsNullOrWhiteSpace(path))
-                continue;
-
-            if (!string.Equals(System.IO.Path.GetExtension(path), ".pdf", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            if (System.IO.File.Exists(path))
-                return System.IO.Path.GetFullPath(path);
-        }
-
-        return null;
+        // #1002: the rule now lives in DroppedPdfResolver so drag-and-drop and
+        // file activation cannot drift apart. Behaviour is unchanged.
+        return Excise.App.Services.DroppedPdfResolver.ResolveFirstPdf(files);
     }
 
     private void ConfigureServices(IServiceCollection services)

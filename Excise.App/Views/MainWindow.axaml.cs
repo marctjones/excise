@@ -82,6 +82,15 @@ public partial class MainWindow : Window
         // Save settings on close, and guard unsaved document changes (#1233)
         this.Closing += OnWindowClosing;
 
+        // Drag-and-drop a PDF onto the window to open it (#1002). Registered
+        // in code rather than as XAML attributes so the DragOver handler that
+        // ADVERTISES the drop (without it the OS shows a "no entry" cursor and
+        // never delivers a Drop) cannot be separated from the Drop handler
+        // itself.
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        AddHandler(DragDrop.DropEvent, OnDrop);
+
         // Add keyboard handler for Ctrl+C
         this.KeyDown += MainWindow_KeyDown;
 
@@ -156,6 +165,41 @@ public partial class MainWindow : Window
         // Cancel any pending toast auto-dismiss so nothing is left queued on
         // the dispatcher when the window/test tears down.
         _toastTimer?.Stop();
+    }
+
+    /// <summary>
+    /// Advertise that a file drag is acceptable (#1002).
+    /// </summary>
+    /// <remarks>
+    /// Required, not optional: with no DragOver handler setting an effect, the
+    /// platform treats the drag as rejected, shows a "not allowed" cursor and
+    /// never raises Drop — the feature would look unimplemented while the Drop
+    /// handler sat there correctly written.
+    /// </remarks>
+    private void OnDragOver(object? sender, DragEventArgs e)
+    {
+        e.DragEffects = e.DataTransfer.Contains(DataFormat.File)
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Adapter only: turn the drag payload into storage items and hand them to
+    /// the ViewModel, which owns every decision (#1002).
+    /// </summary>
+    private void OnDrop(object? sender, DragEventArgs e)
+    {
+        e.Handled = true;
+
+        if (DataContext is not MainWindowViewModel viewModel)
+            return;
+
+        var files = e.DataTransfer.TryGetFiles();
+        if (files == null)
+            return;
+
+        _ = viewModel.OpenDroppedFilesAsync([.. files]);
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)

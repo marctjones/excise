@@ -830,6 +830,7 @@ namespace Excise.App.ViewModels
         public void OnTypewriterTextCreated(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
         public void OnTypewriterTextDeleted(System.Guid operationId) { }
         public void OnTypewriterTextEdited(System.Guid operationId, string text, int pageNumber) { }
+        public System.Threading.Tasks.Task<bool> OpenDroppedFilesAsync(System.Collections.Generic.IReadOnlyList<Avalonia.Platform.Storage.IStorageItem> files) { }
         public System.Threading.Tasks.Task RedactTextCommand(string text) { }
         public System.Threading.Tasks.Task SaveDocumentCommand(string filePath) { }
         public System.Threading.Tasks.Task SaveFileAsAsync(string filePath) { }
