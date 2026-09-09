@@ -207,6 +207,19 @@ public partial class App : Application
         try
         {
             logger.LogInformation("Loading PDF from startup/open event: {Path}", path);
+
+            // #1233: at STARTUP nothing is open and this is a no-op, but the
+            // same method serves macOS Launch Services file activation, which
+            // fires whenever the user double-clicks a PDF in Finder while
+            // excise is already running with a dirty document. Without this
+            // guard that is a silent-data-loss path -- and on macOS it is a
+            // very ordinary way to open a file.
+            if (!await vm.ConfirmDiscardUnsavedChangesAsync("open a different document"))
+            {
+                logger.LogInformation("Open of {Path} cancelled at the unsaved-changes prompt", path);
+                return;
+            }
+
             await vm.LoadDocumentAsync(path);
             logger.LogInformation("Loaded PDF from startup/open event: {Path}", path);
         }
@@ -221,20 +234,9 @@ public partial class App : Application
     // (IActivatableLifetime.Activated -> FileActivatedEventArgs.Files).
     internal static string? ResolveActivatedPdfPath(IReadOnlyList<IStorageItem> files)
     {
-        foreach (var file in files)
-        {
-            var path = file.TryGetLocalPath();
-            if (string.IsNullOrWhiteSpace(path))
-                continue;
-
-            if (!string.Equals(System.IO.Path.GetExtension(path), ".pdf", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            if (System.IO.File.Exists(path))
-                return System.IO.Path.GetFullPath(path);
-        }
-
-        return null;
+        // #1002: the rule now lives in DroppedPdfResolver so drag-and-drop and
+        // file activation cannot drift apart. Behaviour is unchanged.
+        return Excise.App.Services.DroppedPdfResolver.ResolveFirstPdf(files);
     }
 
     private void ConfigureServices(IServiceCollection services)

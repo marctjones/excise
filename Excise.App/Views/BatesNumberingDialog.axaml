@@ -1,0 +1,80 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Excise.App.ViewModels"
+        x:Class="Excise.App.Views.BatesNumberingDialog"
+        x:DataType="vm:BatesNumberingDialogViewModel"
+        Title="Bates Numbering"
+        Width="460" Height="380"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <Grid Margin="18" RowDefinitions="Auto,Auto,*,Auto">
+
+        <TextBlock Grid.Row="0"
+                   Text="Stamp a sequential number on every page."
+                   FontWeight="SemiBold" FontSize="13"
+                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+        <TextBlock Grid.Row="1"
+                   Margin="0,6,0,12"
+                   TextWrapping="Wrap" FontSize="11"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   Text="The numbers become real page content. Your original file is not modified — save afterwards to write a copy."/>
+
+        <Grid Grid.Row="2" ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" VerticalAlignment="Top">
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Prefix" VerticalAlignment="Center" Margin="0,4"/>
+            <TextBox x:Name="PrefixBox" Grid.Row="0" Grid.Column="1" Margin="0,4"
+                     Text="{Binding Prefix}" PlaceholderText="e.g. DOE"
+                     AutomationProperties.Name="Bates prefix"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Suffix" VerticalAlignment="Center" Margin="0,4"/>
+            <TextBox x:Name="SuffixBox" Grid.Row="1" Grid.Column="1" Margin="0,4"
+                     Text="{Binding Suffix}" PlaceholderText="e.g. -CONF"
+                     AutomationProperties.Name="Bates suffix"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Start number" VerticalAlignment="Center" Margin="0,4"/>
+            <NumericUpDown x:Name="StartNumberBox" Grid.Row="2" Grid.Column="1" Margin="0,4"
+                           Minimum="0" Maximum="99999999" Increment="1" FormatString="0"
+                           Value="{Binding StartNumber}"
+                           AutomationProperties.Name="Bates start number"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Digits" VerticalAlignment="Center" Margin="0,4"/>
+            <NumericUpDown x:Name="DigitsBox" Grid.Row="3" Grid.Column="1" Margin="0,4"
+                           Minimum="1" Maximum="12" Increment="1" FormatString="0"
+                           Value="{Binding NumberOfDigits}"
+                           AutomationProperties.Name="Bates digit count"/>
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Position" VerticalAlignment="Center" Margin="0,4"/>
+            <ComboBox x:Name="PositionBox" Grid.Row="4" Grid.Column="1" Margin="0,4"
+                      HorizontalAlignment="Stretch"
+                      ItemsSource="{Binding Positions}"
+                      SelectedItem="{Binding Position}"
+                      AutomationProperties.Name="Bates position"/>
+
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="Font size" VerticalAlignment="Center" Margin="0,4"/>
+            <NumericUpDown x:Name="FontSizeBox" Grid.Row="5" Grid.Column="1" Margin="0,4"
+                           Minimum="4" Maximum="72" Increment="1" FormatString="0"
+                           Value="{Binding FontSize}"
+                           AutomationProperties.Name="Bates font size"/>
+
+            <TextBlock Grid.Row="6" Grid.Column="0" Text="First page reads" VerticalAlignment="Center" Margin="0,10,0,4"/>
+            <TextBlock x:Name="PreviewText" Grid.Row="6" Grid.Column="1" Margin="0,10,0,4"
+                       VerticalAlignment="Center"
+                       FontFamily="{DynamicResource MonospaceFontFamily}"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource BrandPrimaryBrush}"
+                       Text="{Binding Preview}"/>
+        </Grid>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Margin="0,14,0,0" Spacing="8">
+            <Button x:Name="BatesCancelButton" Content="Cancel" Padding="20,5"
+                    IsCancel="True" Click="OnCancel"
+                    AutomationProperties.Name="Cancel Bates Numbering"/>
+            <Button x:Name="BatesApplyButton" Content="Apply" Padding="20,5"
+                    IsDefault="True" Click="OnApply"
+                    AutomationProperties.Name="Apply Bates Numbering"/>
+        </StackPanel>
+    </Grid>
+</Window>

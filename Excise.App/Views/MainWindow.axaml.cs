@@ -79,28 +79,17 @@ public partial class MainWindow : Window
         _windowSettings = WindowSettings.Load();
         _windowSettings.ApplyTo(this);
 
-        // Save settings on close
-        this.Closing += (s, e) =>
-        {
-            if (DataContext is MainWindowViewModel viewModel)
-            {
-                _windowSettings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
-                _windowSettings.ReadingOrderStrategy = viewModel.ReadingOrderStrategy.ToString();
-                _windowSettings.WhitespaceMode = viewModel.WhitespaceMode.ToString();
-                // #1052/#1169/#1189: redaction policy is a preference like any
-                // other. A security choice that silently resets to the less-safe
-                // default on every launch is worse than no choice at all.
-                _windowSettings.RedactionWholeWord = viewModel.RedactionWholeWord;
-                _windowSettings.RedactionWidthPolicy = viewModel.RedactionWidthPolicy.ToString();
-                _windowSettings.LinkUriCarrierPolicy = viewModel.LinkUriCarrierPolicy.ToString();
-                _windowSettings.MetadataCarrierPolicy = viewModel.MetadataCarrierPolicy.ToString();
-            }
-            _windowSettings.CaptureFrom(this);
-            _windowSettings.Save();
-            // Cancel any pending toast auto-dismiss so nothing is left queued on
-            // the dispatcher when the window/test tears down.
-            _toastTimer?.Stop();
-        };
+        // Save settings on close, and guard unsaved document changes (#1233)
+        this.Closing += OnWindowClosing;
+
+        // Drag-and-drop a PDF onto the window to open it (#1002). Registered
+        // in code rather than as XAML attributes so the DragOver handler that
+        // ADVERTISES the drop (without it the OS shows a "no entry" cursor and
+        // never delivers a Drop) cannot be separated from the Drop handler
+        // itself.
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        AddHandler(DragDrop.DropEvent, OnDrop);
 
         // Add keyboard handler for Ctrl+C
         this.KeyDown += MainWindow_KeyDown;
@@ -112,6 +101,139 @@ public partial class MainWindow : Window
             _isNativeWindowOpened = true;
             SchedulePlatformMenuConfigure();
         };
+    }
+
+    /// <summary>
+    /// Set once the user has answered the unsaved-changes prompt and chosen to
+    /// proceed, so the programmatic re-close does not ask again. Without it the
+    /// re-issued <see cref="Window.Close"/> would re-enter this handler and
+    /// prompt forever.
+    /// </summary>
+    private bool _closeApproved;
+
+    /// <summary>
+    /// #1233. <see cref="Window.Closing"/> is synchronous and the prompt is
+    /// not, so the only workable shape is: cancel this close, ask, and re-issue
+    /// the close if the answer allows it.
+    /// </summary>
+    /// <remarks>
+    /// This stays in code-behind because cancelling a routed window event and
+    /// re-invoking <c>Close()</c> is view mechanics that a ViewModel has no
+    /// handle on. Every DECISION — whether anything is dirty, how a save is
+    /// routed so an original is preserved, what a failed save means — belongs
+    /// to <see cref="MainWindowViewModel.ConfirmDiscardUnsavedChangesAsync"/>
+    /// and is tested there.
+    /// </remarks>
+    private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
+    {
+        if (!_closeApproved &&
+            DataContext is MainWindowViewModel guardViewModel &&
+            guardViewModel.HasUnsavedDocumentChanges)
+        {
+            e.Cancel = true;
+
+            // Fire-and-forget deliberately: the handler must return
+            // synchronously with Cancel set, and the continuation re-enters
+            // Close() on the UI thread once the user has answered.
+            _ = PromptThenCloseAsync(guardViewModel);
+            return;
+        }
+
+        PersistWindowStateOnClose();
+    }
+
+    private async System.Threading.Tasks.Task PromptThenCloseAsync(MainWindowViewModel viewModel)
+    {
+        try
+        {
+            var proceed = await viewModel.ConfirmDiscardUnsavedChangesAsync("close this window");
+            if (!proceed)
+                return;
+
+            _closeApproved = true;
+            Close();
+        }
+        catch (Exception ex)
+        {
+            // Nothing awaits this continuation, so an escaping exception would
+            // be an unobserved task: the window would silently stay open with
+            // no diagnostic. Fail toward keeping the document (do NOT set
+            // _closeApproved) but say why.
+            System.Diagnostics.Debug.WriteLine($"Unsaved-changes close prompt failed: {ex}");
+        }
+    }
+
+    private void PersistWindowStateOnClose()
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            _windowSettings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
+            _windowSettings.ReadingOrderStrategy = viewModel.ReadingOrderStrategy.ToString();
+            _windowSettings.WhitespaceMode = viewModel.WhitespaceMode.ToString();
+            // #1052/#1169/#1189: redaction policy is a preference like any
+            // other. A security choice that silently resets to the less-safe
+            // default on every launch is worse than no choice at all.
+            _windowSettings.RedactionWholeWord = viewModel.RedactionWholeWord;
+            _windowSettings.RedactionWidthPolicy = viewModel.RedactionWidthPolicy.ToString();
+            _windowSettings.LinkUriCarrierPolicy = viewModel.LinkUriCarrierPolicy.ToString();
+            _windowSettings.MetadataCarrierPolicy = viewModel.MetadataCarrierPolicy.ToString();
+        }
+        _windowSettings.CaptureFrom(this);
+        _windowSettings.Save();
+        // Cancel any pending toast auto-dismiss so nothing is left queued on
+        // the dispatcher when the window/test tears down.
+        _toastTimer?.Stop();
+    }
+
+    /// <summary>
+    /// Advertise that a file drag is acceptable (#1002).
+    /// </summary>
+    /// <remarks>
+    /// Required, not optional: with no DragOver handler setting an effect, the
+    /// platform treats the drag as rejected, shows a "not allowed" cursor and
+    /// never raises Drop — the feature would look unimplemented while the Drop
+    /// handler sat there correctly written.
+    /// </remarks>
+    private void OnDragOver(object? sender, DragEventArgs e)
+    {
+        e.DragEffects = e.DataTransfer.Contains(DataFormat.File)
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Adapter only: turn the drag payload into storage items and hand them to
+    /// the ViewModel, which owns every decision (#1002).
+    /// </summary>
+    private void OnDrop(object? sender, DragEventArgs e)
+    {
+        e.Handled = true;
+
+        if (DataContext is not MainWindowViewModel viewModel)
+            return;
+
+        var files = e.DataTransfer.TryGetFiles();
+        if (files == null)
+            return;
+
+        _ = OpenDroppedFilesSafeAsync(viewModel, [.. files]);
+    }
+
+    private static async System.Threading.Tasks.Task OpenDroppedFilesSafeAsync(
+        MainWindowViewModel viewModel,
+        System.Collections.Generic.IReadOnlyList<global::Avalonia.Platform.Storage.IStorageItem> files)
+    {
+        try
+        {
+            await viewModel.OpenDroppedFilesAsync(files);
+        }
+        catch (Exception ex)
+        {
+            // Drop delivers no place to await, so an escaping exception would
+            // be an unobserved task and the drop would look ignored.
+            System.Diagnostics.Debug.WriteLine($"Drop-to-open failed: {ex}");
+        }
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
@@ -710,8 +832,59 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Ctrl+Z: Undo. The Edit menu advertises InputGesture="Ctrl+Z", which in
+        // Avalonia is DISPLAY TEXT ONLY — every working shortcut in this window
+        // is duplicated here by hand, and these three never were, so the menu
+        // named a key that did nothing. Same defect class as #827's Ctrl+E /
+        // Ctrl+, / Enter. (#1170)
+        //
+        // Guarded on a focused text editor and deliberately NOT marked handled
+        // in that case: a window-level Ctrl+Z would otherwise swallow the
+        // TextBox's own native undo in the search box and every dialog field.
+        if (e.Key == Key.Z && e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
+            !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            if (FocusManager.GetFocusedElement() is TextBox)
+                return;
+
+            viewModel.UndoCommand?.Execute().Subscribe();
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+Y: Redo (the gesture the Edit menu advertises on Windows/Linux;
+        // macOS uses Cmd+Shift+Z through the native menu). (#1170)
+        if (e.Key == Key.Y && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            if (FocusManager.GetFocusedElement() is TextBox)
+                return;
+
+            viewModel.RedoCommand?.Execute().Subscribe();
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+Shift+C: toggle continuous scroll. (#1170)
+        //
+        // MUST precede the plain Ctrl+C branch below, which does not exclude
+        // Shift — the same ordering hazard #369 documents at the top of this
+        // handler for Ctrl+Shift+O vs Ctrl+O. The Ctrl+C branch now excludes
+        // Shift explicitly as well, so the two cannot fight over the key even
+        // if one is later moved.
+        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
+            e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            if (FocusManager.GetFocusedElement() is TextBox)
+                return;
+
+            viewModel.ToggleContinuousViewCommand?.Execute().Subscribe();
+            e.Handled = true;
+            return;
+        }
+
         // Ctrl+C: Copy text
-        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
+            !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
         {
             if (viewModel.IsTextSelectionMode)
             {

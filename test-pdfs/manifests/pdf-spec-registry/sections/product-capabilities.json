@@ -375,26 +375,37 @@
       },
       "modes": {
         "parse": "partial",
-        "extract": "unimplemented",
+        "extract": "partial",
         "preserve": "partial",
-        "mutate": "unimplemented"
+        "mutate": "partial"
       },
       "evidence": [],
-      "notes": "Show attachments in a panel, permit explicit save to disk only, preserve by default, allow stripping on save, and warn when their presence is not otherwise obvious.",
+      "notes": "Show attachments in a panel, permit explicit save to disk only, preserve by default, allow stripping on save, and warn when their presence is not otherwise obvious. #1414 shipped the GUI surface: Document > Attachments... lists every embedded file, saves one to a user-chosen path, and strips them all as a pending edit (so the original is preserved by the normal save routing). Presence is warned about with a toast on open. Removal is verified with qpdf, not with excise reading its own output.",
       "documentation": [
         "test-pdfs/manifests/pdf-spec-registry/product-policy.json"
       ],
       "tracking": {
         "owner": "PDF capability registry",
         "reviewState": "migration-pending",
-        "implementationRefs": [],
+        "implementationRefs": [
+          "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
+          "Excise.App/Views/AttachmentsDialog.axaml",
+          "Excise.App/Views/AttachmentsDialog.axaml.cs",
+          "Excise.App/Models/AttachmentEntry.cs"
+        ],
         "fixtureRefs": [],
         "corpusRefs": [],
-        "referenceToolRefs": [],
+        "referenceToolRefs": [
+          "qpdf"
+        ],
         "architectureRefs": [],
-        "issueRefs": [],
+        "issueRefs": [
+          1414
+        ],
         "knownLimitations": [
-          "Show attachments in a panel, permit explicit save to disk only, preserve by default, allow stripping on save, and warn when their presence is not otherwise obvious."
+          "The GUI surface is a modal Attachments dialog (Document > Attachments...), not a docked sidebar panel; both sidebar columns are already occupied by existing panels.",
+          "Stripping is all-or-nothing: there is no per-attachment remove.",
+          "excise never opens or executes an attachment; explicit save-to-disk is the only egress."
         ],
         "processorRoles": [
           "extract",
@@ -402,7 +413,7 @@
           "parse",
           "preserve"
         ],
-        "supportLevel": "planned",
+        "supportLevel": "partial",
         "normativeSourcePins": [
           {
             "source": "pdfe-product",
@@ -411,17 +422,25 @@
         ],
         "errataStatus": "not-reviewed",
         "lastReviewedCommit": "de51c9e5e5875d84f332fbc993ae94773f41a70d",
-        "positiveTestRefs": [],
-        "negativeOrConservationTestRefs": [],
+        "positiveTestRefs": [
+          "Excise.App.Tests/UI/AttachmentsPanelTests.cs::OpeningADocumentWithAttachments_ListsThem",
+          "Excise.App.Tests/UI/AttachmentsPanelTests.cs::SaveAttachment_WritesTheOriginalBytesToDisk"
+        ],
+        "negativeOrConservationTestRefs": [
+          "Excise.App.Tests/UI/AttachmentsPanelTests.cs::StripThenSave_RemovesTheAttachment_VerifiedByQpdf",
+          "Excise.App.Tests/UI/AttachmentsPanelTests.cs::StripAttachments_MarksTheDocumentDirty_ButDoesNotTouchTheOriginalFile"
+        ],
         "explicitEvidenceGaps": [
-          "No paired positive and negative/conservation evidence is claimed; do not promote this capability to implemented-and-proven."
+          "Removal is corroborated by qpdf --list-attachments (an independent implementation), but only on a single-attachment Flate fixture; multi-attachment and /AF associated-file layouts are not yet covered by an independent oracle. Do not promote to implemented-and-proven on this evidence."
         ]
       },
       "verification": {
-        "status": "planned",
+        "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "extract",
+          "mutate"
         ],
         "checks": [
           {
@@ -436,6 +455,27 @@
             "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs::EmbeddedFile_SurvivesASaveAndReload_WhenUntouched",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::OpeningADocumentWithAttachments_ListsThem",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::SaveAttachment_WritesTheOriginalBytesToDisk",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::StripThenSave_RemovesTheAttachment_VerifiedByQpdf",
+            "modes": [
+              "mutate"
             ]
           }
         ]

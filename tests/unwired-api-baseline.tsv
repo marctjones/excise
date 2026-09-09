@@ -17,7 +17,6 @@
 # 25 test references, zero production callers, so CFF fonts ship unsubsetted)
 # and #896 (RedactWithOptions, same shape, and the CLI leaked redacted terms
 # into /Info and XMP for exactly as long as nothing called the safe path).
-Excise.App	nowhere	ApplyBatesNumbers	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	ConvertBack	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	DisplayName	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	IsReplaying	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
@@ -29,9 +28,8 @@ Excise.App	nowhere	PagesIndexed	triage:app surface likely XAML/framework binding
 Excise.App	nowhere	SetCommandId	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	SetShowToolTip	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	TypeIndicator	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
-Excise.App	tests-only	AddOrUpdate	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	AddPagesFromPdf	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	ApplyBatesNumbersToSet	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	ApplyBatesNumbersToSet	triage:#1306 wired the SINGLE-document Bates path (ApplyBatesNumbers) to the GUI; this multi-file batch entry point stays deliberately unwired - it stamps a continuing sequence across files on disk and writes new ones, which is a CLI/batch shape, and Excise.Cli cannot reference Excise.App
 Excise.App	tests-only	CalculateNextNumber	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	CurrentPageText	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ExecuteFileAsync	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
@@ -43,12 +41,11 @@ Excise.App	tests-only	PreferencesPath	triage:test-covered app service/helper sur
 Excise.App	tests-only	ShowInfo	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	SuggestPageSubsetFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	SuggestSafeRedactedFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	TogglePin	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ValidateScript	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.Core	nowhere	Failures	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
-Excise.Core	nowhere	PdfEmbeddedFileAuthoring	triage:public library authoring API mirroring AcroFormAuthoring's shape (#1413); GUI wiring is the attachments panel, #1414, explicitly deferred
+Excise.Core	nowhere	PdfEmbeddedFileAuthoring	triage:public library AUTHORING API (#1413). #1414 shipped the attachments panel, but it only lists, saves and strips - excise has no UI that ADDS an attachment, so this stays tests-only by design
 Excise.Core	nowhere	SetCreator	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
-Excise.Core	tests-only	AddEmbeddedFile	triage:public library authoring API mirroring AcroFormAuthoring's shape (#1413); GUI wiring is the attachments panel, #1414, explicitly deferred
+Excise.Core	tests-only	AddEmbeddedFile	triage:public library AUTHORING API (#1413). #1414 shipped the attachments panel, but it only lists, saves and strips - excise has no UI that ADDS an attachment, so this stays tests-only by design
 Excise.Core	tests-only	AsItalic	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BeginPath	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BulletList	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -61,7 +58,6 @@ Excise.Core	tests-only	DocumentJavaScriptActions	triage:public library/domain AP
 Excise.Core	tests-only	Dropdown	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	EndBaseLine	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ExtractWords	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	FdfSerializer	issue:#921 FDF/XFDF shipping surface remains open
 Excise.Core	tests-only	FillEvenOdd	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FindText	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FlyOpaqueRectangle	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -75,9 +71,9 @@ Excise.Core	tests-only	GetDictionary	triage:public library/domain API; tests exe
 Excise.Core	tests-only	GetOperators	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetOptionalContentGroups	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetPageLabel	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	GetPages	triage:public library/domain API; lost its only production caller (FdfSerializer.ExportAnnotations) when #921 retired FDF/XFDF; PdfDocument.GetPages() is a basic page-enumeration accessor, tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetSignatureFields	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetTextFields	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	HasEmbeddedFiles	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	HasOverflow	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	HorizontalRule	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	InvokeXObject	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -86,6 +82,7 @@ Excise.Core	tests-only	IsNumber	triage:public library/domain API; tests exercise
 Excise.Core	tests-only	IsPartialOverlap	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsRadioButton	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsTaggedPdf	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	IsTextMarkup	triage:public library/domain API; lost its only production caller (FdfSerializer/XfdfSerializer export filtering) when #921 retired FDF/XFDF; PdfAnnotation.IsTextMarkup is a basic subtype predicate, tests exercise contract; external callers may use it
 Excise.Core	tests-only	NamedActionName	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	NextActions	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	NumberedList	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -111,6 +108,7 @@ Excise.Core	tests-only	ToEncodedString	triage:public library/domain API; tests e
 Excise.Core	tests-only	ToIntArray	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	Transition	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	TryGetString	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	TryParseIndirectObject	triage:public library/domain API; lost its only production caller (FdfSerializer's %FDF body-object parse) when #921 retired FDF/XFDF; PdfParser.TryParseIndirectObject is a basic parser primitive, tests exercise contract; external callers may use it
 Excise.Core	tests-only	WasHexString	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	WithAlignment	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	WithColor	triage:public library/domain API; tests exercise contract; external callers may use it

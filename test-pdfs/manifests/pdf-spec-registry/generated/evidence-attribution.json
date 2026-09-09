@@ -81033,24 +81033,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_Opacity_SurvivesExportAndImport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_Opacity_SurvivesExportAndImport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Unrotated_VisualTopHalf_MapsToContentTopHalf",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81688,27 +81670,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs::BlankPageRecoveryTests.PageThatRenderedBlank_NowInksWithinBandOfTheOracles",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs::BlankPageRecoveryTests.GlyphNamesOutsideTheRendererSubset_ResolveThroughCore",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/BlankPageRecoveryTests.cs::BlankPageRecoveryTests.TextOperatorsOutsideATextObject_DrawWhatTheOraclesDraw",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         },
         {
           "test": "Excise.Rendering.Tests/Differential/CcittEndOfBlockTests.cs::CcittEndOfBlockTests.TheOnlyCorpusFileSettingEndOfBlock_RendersAtOracleParity",
@@ -82418,6 +82379,51 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_R4_EmptyPassword_ExtractsCorrectText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_R4_DifferentUserAndOwnerPasswords_BothExtractTheSameCorrectText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_R4_NonAsciiPassword_ExtractsCorrectText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_R4_WrongPassword_FailsToExtract",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Ghostscript_R4_EmptyPassword_RendersIdenticallyToUnencryptedBaseline",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Ghostscript_R4_OwnerPassword_RendersIdenticallyToUnencryptedBaseline",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -83740,87 +83746,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsArray",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.CrossFormat_FdfAndXfdf_ImportToEquivalentAnnotations",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Import_WithoutAnnotsArray_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsElement",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Import_WithoutAnnotsSection_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfGraphics_DrawInvisibleText_SkipsCharactersFontCannotEncode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -83896,6 +83821,88 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Line_PreservesItsEndpointsInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesFreeTextAnnotationContent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_ScrubsAnnotationRichText_NotJustContents",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -85218,87 +85225,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsArray",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.CrossFormat_FdfAndXfdf_ImportToEquivalentAnnotations",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Import_WithoutAnnotsArray_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsElement",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Import_WithoutAnnotsSection_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfGraphics_DrawInvisibleText_SkipsCharactersFontCannotEncode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -85374,6 +85300,88 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Line_PreservesItsEndpointsInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesFreeTextAnnotationContent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_ScrubsAnnotationRichText_NotJustContents",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -86696,87 +86704,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsArray",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.CrossFormat_FdfAndXfdf_ImportToEquivalentAnnotations",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Import_WithoutAnnotsArray_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsElement",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Import_WithoutAnnotsSection_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfGraphics_DrawInvisibleText_SkipsCharactersFontCannotEncode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -86852,6 +86779,88 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Line_PreservesItsEndpointsInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesFreeTextAnnotationContent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_ScrubsAnnotationRichText_NotJustContents",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -88190,87 +88199,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsArray",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.CrossFormat_FdfAndXfdf_ImportToEquivalentAnnotations",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Import_WithoutAnnotsArray_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsElement",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Import_WithoutAnnotsSection_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfGraphics_DrawInvisibleText_SkipsCharactersFontCannotEncode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -88346,6 +88274,88 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Line_PreservesItsEndpointsInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesFreeTextAnnotationContent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_ScrubsAnnotationRichText_NotJustContents",
+          "mappingSources": [
+            "keyword-facet-candidate",
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -89805,87 +89815,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsArray",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.CrossFormat_FdfAndXfdf_ImportToEquivalentAnnotations",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Import_WithoutAnnotsArray_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsElement",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Import_WithoutAnnotsSection_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfGraphics_DrawInvisibleText_SkipsCharactersFontCannotEncode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -89959,6 +89888,87 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Line_PreservesItsEndpointsInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesFreeTextAnnotationContent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_ScrubsAnnotationRichText_NotJustContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -91274,87 +91284,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsArray",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.CrossFormat_FdfAndXfdf_ImportToEquivalentAnnotations",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Import_WithoutAnnotsArray_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsElement",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Import_WithoutAnnotsSection_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfGraphics_DrawInvisibleText_SkipsCharactersFontCannotEncode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -91428,6 +91357,87 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Line_PreservesItsEndpointsInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesFreeTextAnnotationContent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_ScrubsAnnotationRichText_NotJustContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -92736,87 +92746,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsArray",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.CrossFormat_FdfAndXfdf_ImportToEquivalentAnnotations",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Import_WithoutAnnotsArray_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsElement",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Import_WithoutAnnotsSection_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfGraphics_DrawInvisibleText_SkipsCharactersFontCannotEncode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -92890,6 +92819,87 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Line_PreservesItsEndpointsInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesFreeTextAnnotationContent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_ScrubsAnnotationRichText_NotJustContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94198,87 +94208,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsArray",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.CrossFormat_FdfAndXfdf_ImportToEquivalentAnnotations",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Import_WithoutAnnotsArray_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_EmptyDocument_YieldsEmptyAnnotsElement",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_ImportedAnnotations_SurviveSaveAndReload",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Import_WithoutAnnotsSection_YieldsEmptyResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.RoundTrip_StampAnnotation_PreservesIconAndIsReauthored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsTests.cs::PdfGraphicsTests.PdfGraphics_DrawInvisibleText_SkipsCharactersFontCannotEncode",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94352,6 +94281,87 @@
         },
         {
           "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.Line_PreservesItsEndpointsInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.VertexShapes_PreserveEveryVertexInOrderAcrossASave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AnnotationInvariantTests.EverySubtypeCoreCanAuthor_IsCoveredHere",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::NonAuthorableAnnotationPreservationTests.UnmodeledExoticSubtype_SurvivesASaveAndReload_RawDictionaryUnchanged",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactArea_OverAnnotation_RemovesContentsAndAppearanceBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_FindsAndRemovesFreeTextAnnotationContent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs::AdversarialRedactionRegressionTests.RedactText_ScrubsAnnotationRichText_NotJustContents",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.AnnotationFileAttachment_IsDiscoveredByGetEmbeddedFiles",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenPayloadContainsTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -101814,24 +101824,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_SkipsLinkWidgetAndPopupSubtypes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_SkipsLinkWidgetAndPopupSubtypes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -102031,6 +102023,24 @@
         },
         {
           "test": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::PageOrganizationSavePersistenceTests.RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormAuthoringDrag_RealPointer_FiresFormFieldRectDrawnWithFlippedRect",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormFieldCheckbox_RealToggle_CommitsValueAndMarksDirty",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103318,24 +103328,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_SkipsLinkWidgetAndPopupSubtypes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_SkipsLinkWidgetAndPopupSubtypes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103535,6 +103527,24 @@
         },
         {
           "test": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::PageOrganizationSavePersistenceTests.RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormAuthoringDrag_RealPointer_FiresFormFieldRectDrawnWithFlippedRect",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormFieldCheckbox_RealToggle_CommitsValueAndMarksDirty",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -104843,24 +104853,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_SkipsLinkWidgetAndPopupSubtypes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_SkipsLinkWidgetAndPopupSubtypes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -105060,6 +105052,24 @@
         },
         {
           "test": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::PageOrganizationSavePersistenceTests.RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormAuthoringDrag_RealPointer_FiresFormFieldRectDrawnWithFlippedRect",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormFieldCheckbox_RealToggle_CommitsValueAndMarksDirty",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -106308,24 +106318,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Forms/FdfSerializerTests.cs::FdfSerializerTests.Export_SkipsLinkWidgetAndPopupSubtypes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs::XfdfSerializerTests.Export_SkipsLinkWidgetAndPopupSubtypes",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs::PdfDocumentMergerTests.Merge_SourceWithNoOutlineOrAcroForm_DoesNotThrow_AndContributesNoFieldsOrOutline",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -106525,6 +106517,24 @@
         },
         {
           "test": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::PageOrganizationSavePersistenceTests.RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormAuthoringDrag_RealPointer_FiresFormFieldRectDrawnWithFlippedRect",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormFieldCheckbox_RealToggle_CommitsValueAndMarksDirty",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -110236,10 +110246,36 @@
       "capability": "pdfe.product.security.attachments",
       "section": "product-capabilities",
       "mode": "extract",
-      "currentState": "unimplemented",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.OpeningADocumentWithAttachments_ListsThem",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.SaveAttachment_WritesTheOriginalBytesToDisk",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": []
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::OpeningADocumentWithAttachments_ListsThem",
+          "recordedOutcomes": []
+        },
+        {
+          "kind": "unit",
+          "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::SaveAttachment_WritesTheOriginalBytesToDisk",
+          "recordedOutcomes": []
+        }
+      ],
+      "explicitContractStatus": "not-run",
       "grade": "unknown",
       "benchmarkScenarios": []
     },
@@ -110276,10 +110312,24 @@
       "capability": "pdfe.product.security.attachments",
       "section": "product-capabilities",
       "mode": "mutate",
-      "currentState": "unimplemented",
-      "testCandidates": [],
-      "explicitContracts": [],
-      "explicitContractStatus": "not-contracted",
+      "currentState": "partial",
+      "testCandidates": [
+        {
+          "test": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::AttachmentsPanelTests.StripThenSave_RemovesTheAttachment_VerifiedByQpdf",
+          "mappingSources": [
+            "registry-verification-contract"
+          ],
+          "recordedOutcomes": []
+        }
+      ],
+      "explicitContracts": [
+        {
+          "kind": "unit",
+          "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::StripThenSave_RemovesTheAttachment_VerifiedByQpdf",
+          "recordedOutcomes": []
+        }
+      ],
+      "explicitContractStatus": "not-run",
       "grade": "unknown",
       "benchmarkScenarios": []
     },
@@ -114695,15 +114745,15 @@
   ],
   "summary": {
     "targetModes": 898,
-    "modesWithTestCandidates": 644,
-    "modesWithExplicitContracts": 879,
+    "modesWithTestCandidates": 646,
+    "modesWithExplicitContracts": 881,
     "modesWithPassingExplicitContracts": 878,
     "modesWithRecordedPassingCandidate": 644,
     "gradeImplemented": 197,
     "gradeVerified": 682,
     "gradeUnknown": 19,
-    "testMethods": 6447,
-    "testMethodsWithCapabilityCandidate": 4034,
+    "testMethods": 6428,
+    "testMethodsWithCapabilityCandidate": 4029,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

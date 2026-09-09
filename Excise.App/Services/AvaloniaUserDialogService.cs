@@ -295,6 +295,114 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
         return await dialog.ShowDialog<bool>(mainWindow);
     }
 
+    /// <summary>
+    /// Three-way Save / Discard / Cancel prompt for unsaved document changes
+    /// (#1233).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Button roles are chosen so that neither of the two keys a user hits
+    /// reflexively can destroy work:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><description><b>Enter</b> (<c>IsDefault</c>) is the SAVE button —
+    /// the issue requires Save-a-Copy to be the primary action for an original
+    /// source.</description></item>
+    /// <item><description><b>Escape</b> (<c>IsCancel</c>) is Cancel, and
+    /// closing the dialog by any other means also yields
+    /// <see cref="UnsavedChangesDecision.Cancel"/> via the
+    /// <c>ShowDialog</c> default.</description></item>
+    /// <item><description><b>Discard</b> is neither, so it takes a deliberate
+    /// click.</description></item>
+    /// </list>
+    /// <para>
+    /// This inverts <see cref="ShowConfirmAsync"/>'s "Cancel is IsDefault"
+    /// choice on purpose: there, Enter would perform a destructive action;
+    /// here, Enter performs the SAFE one.
+    /// </para>
+    /// </remarks>
+    public async Task<UnsavedChangesDecision> ShowUnsavedChangesAsync(
+        string title, string message, string saveActionText)
+    {
+        var mainWindow = GetMainWindow();
+        if (mainWindow == null)
+        {
+            // Fail-closed toward keeping the document: never report "discard"
+            // just because there was nobody to ask.
+            _logger.LogWarning(
+                "Could not show unsaved-changes dialog: Main window not found. Message was: {Message}",
+                message);
+            return UnsavedChangesDecision.Cancel;
+        }
+
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 520,
+            Height = 240,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false
+        };
+
+        var messageText = new TextBlock
+        {
+            Text = message,
+            TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
+            MaxWidth = 470
+        };
+        AutomationProperties.SetName(messageText, title);
+        AutomationProperties.SetHelpText(messageText, message);
+
+        var saveButton = new Button
+        {
+            Content = string.IsNullOrWhiteSpace(saveActionText) ? "Save a Copy" : saveActionText,
+            IsDefault = true,
+            Padding = new Thickness(24, 5)
+        };
+        AutomationProperties.SetName(saveButton, $"{saveButton.Content} - {title}");
+        AutomationProperties.SetHelpText(saveButton, "Save the changes, then continue. The original file is not overwritten.");
+
+        var discardButton = new Button
+        {
+            Content = "Discard Changes",
+            Padding = new Thickness(24, 5)
+        };
+        AutomationProperties.SetName(discardButton, $"Discard Changes - {title}");
+        AutomationProperties.SetHelpText(discardButton, "Continue and permanently lose the unsaved changes.");
+
+        var cancelButton = new Button
+        {
+            Content = "Cancel",
+            IsCancel = true,
+            Padding = new Thickness(24, 5)
+        };
+        AutomationProperties.SetName(cancelButton, $"Cancel - {title}");
+        AutomationProperties.SetHelpText(cancelButton, "Keep the document open with its unsaved changes.");
+
+        saveButton.Click += (_, _) => dialog.Close(UnsavedChangesDecision.Save);
+        discardButton.Click += (_, _) => dialog.Close(UnsavedChangesDecision.Discard);
+        cancelButton.Click += (_, _) => dialog.Close(UnsavedChangesDecision.Cancel);
+
+        dialog.Content = new StackPanel
+        {
+            Margin = new Thickness(20),
+            Spacing = 12,
+            Children =
+            {
+                messageText,
+                new StackPanel
+                {
+                    Orientation = global::Avalonia.Layout.Orientation.Horizontal,
+                    HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Right,
+                    Spacing = 8,
+                    Children = { cancelButton, discardButton, saveButton }
+                }
+            }
+        };
+
+        return await dialog.ShowDialog<UnsavedChangesDecision>(mainWindow);
+    }
+
     private static Window? GetMainWindow()
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

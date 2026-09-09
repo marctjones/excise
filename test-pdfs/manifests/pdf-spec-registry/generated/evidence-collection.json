@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1023,
-  "indexedContentSha256": "8b8838fe2c4af6b33b937adebdabc06dadd0a4ddb9a53ec5d9885d884eabd88b",
+  "indexedFileCount": 1030,
+  "indexedContentSha256": "dddb7c5ed3a0fd7e5fb614d0dc9b35f6a4c044c4fd839ff11685e2bb4eeaa0e3",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -116,18 +116,6 @@
           "matchedTerms": [
             "header",
             "structure"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "header",
-            "structure",
-            "syntax",
-            "pdfobject",
-            "pdfparser",
-            "xref"
           ]
         },
         {
@@ -303,16 +291,6 @@
           "matchedTerms": [
             "header",
             "structure"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "header",
-            "syntax",
-            "pdfobject",
-            "xref"
           ]
         },
         {
@@ -514,7 +492,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 49
+      "candidateReferenceCount": 47
     },
     {
       "id": "pdf.17.syntax.objects",
@@ -743,19 +721,6 @@
           "matchedTerms": [
             "indirect",
             "streams"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "cross-reference",
-            "indirect",
-            "syntax",
-            "trailer",
-            "pdfobject",
-            "pdfparser",
-            "xref"
           ]
         },
         {
@@ -1128,17 +1093,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "indirect",
-            "syntax",
-            "trailer",
-            "pdfobject",
-            "xref"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -1364,9 +1318,30 @@
             "trailer",
             "xref"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/NonPageCarrierRedactionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "incremental",
+            "streams",
+            "syntax",
+            "trailer",
+            "update",
+            "xref"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/RedactionCarrierAuditTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "indirect",
+            "trailer",
+            "xref"
+          ]
         }
       ],
-      "candidateReferenceCount": 137
+      "candidateReferenceCount": 135
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -3260,16 +3235,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "catalog",
-            "geometry",
-            "catalog",
-            "pdfdocument"
-          ]
-        },
-        {
           "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
           "kind": "source",
           "matchedTerms": [
@@ -3690,16 +3655,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "catalog",
-            "geometry",
-            "catalog",
-            "pdfdocument"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -3928,9 +3883,31 @@
             "catalog",
             "pdfdocument"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "catalog",
+            "tree",
+            "catalog",
+            "pdfdocument"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "catalog",
+            "tree",
+            "catalog",
+            "metadata",
+            "pagetree",
+            "pdfdocument"
+          ]
         }
       ],
-      "candidateReferenceCount": 120
+      "candidateReferenceCount": 117
     },
     {
       "id": "pdf.17.document.navigation",
@@ -4182,15 +4159,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "named",
-            "viewer",
-            "pdfdocument"
-          ]
-        },
-        {
           "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
           "kind": "source",
           "matchedTerms": [
@@ -4342,6 +4310,7 @@
           "path": "Excise.App/Views/MainWindow.axaml.cs",
           "kind": "source",
           "matchedTerms": [
+            "named",
             "navigation",
             "preferences",
             "viewer"
@@ -4844,9 +4813,20 @@
             "viewer",
             "catalog"
           ]
+        },
+        {
+          "path": "tests/corpus-expectations-pdfium.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "labels",
+            "named",
+            "outlines",
+            "viewer",
+            "catalog"
+          ]
         }
       ],
-      "candidateReferenceCount": 89
+      "candidateReferenceCount": 88
     },
     {
       "id": "pdf.17.document.metadata",
@@ -5269,6 +5249,14 @@
             "information",
             "catalog",
             "pdfdocument"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Bates.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "identifiers",
+            "information"
           ]
         },
         {
@@ -5700,7 +5688,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 74
+      "candidateReferenceCount": 75
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -5806,6 +5794,15 @@
         ]
       },
       "candidateReferences": [
+        {
+          "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "collections",
+            "embedded",
+            "metadata"
+          ]
+        },
         {
           "path": "Excise.Core/Document/PdfAnnotationParser.cs",
           "kind": "source",
@@ -6016,6 +6013,14 @@
         },
         {
           "path": "Excise.App/ViewModels/AboutWindowViewModel.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "collections",
+            "embedded"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
           "kind": "source",
           "matchedTerms": [
             "collections",
@@ -6436,7 +6441,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 66
+      "candidateReferenceCount": 68
     },
     {
       "id": "pdf.17.graphics.state",
@@ -7179,24 +7184,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "line",
-            "path",
-            "style"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "line",
-            "path",
-            "style"
-          ]
-        },
-        {
           "path": "Excise.Core/Graphics/PdfFont.cs",
           "kind": "source",
           "matchedTerms": [
@@ -7574,12 +7561,34 @@
             "clipping",
             "line",
             "path",
-            "colorspace",
-            "skiarenderer"
+            "colorspace"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/SkiaRenderer.Operators.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "clipping",
+            "line",
+            "path",
+            "colorspace"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/SkiaRenderer.Paths.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "clipping",
+            "construction",
+            "line",
+            "painting",
+            "path",
+            "style",
+            "colorspace"
           ]
         }
       ],
-      "candidateReferenceCount": 453
+      "candidateReferenceCount": 454
     },
     {
       "id": "pdf.17.graphics.color",
@@ -7867,24 +7876,6 @@
           "path": "Excise.Core/Fonts/CidFontWidths.cs",
           "kind": "source",
           "matchedTerms": [
-            "output",
-            "values"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "color",
-            "output",
-            "values"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "color",
             "output",
             "values"
           ]
@@ -8230,16 +8221,6 @@
             "output",
             "spaces",
             "values",
-            "colorspace",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering/SkiaRenderer.Operators.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "color",
-            "colour",
             "colorspace"
           ]
         },
@@ -8262,15 +8243,6 @@
             "colour",
             "spaces",
             "values",
-            "colorspace"
-          ]
-        },
-        {
-          "path": "Excise.Rendering/SkiaRenderer.State.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "color",
-            "colour",
             "colorspace"
           ]
         },
@@ -8414,9 +8386,45 @@
             "output",
             "values"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "spaces",
+            "colorspace"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterOracleTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "colour",
+            "output",
+            "values"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Content/GraphicsStateTextParameterTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "values",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "spaces",
+            "colorspace"
+          ]
         }
       ],
-      "candidateReferenceCount": 224
+      "candidateReferenceCount": 217
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9030,8 +9038,7 @@
             "images",
             "masks",
             "xobjects",
-            "colorspace",
-            "skiarenderer"
+            "colorspace"
           ]
         },
         {
@@ -9102,6 +9109,14 @@
         },
         {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "images"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
           "kind": "source",
           "matchedTerms": [
             "image",
@@ -9359,14 +9374,6 @@
             "decoding",
             "image",
             "inline"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Parsing/HybridReferenceXRefTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decoding",
-            "image"
           ]
         }
       ],
@@ -10210,7 +10217,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 158
+      "candidateReferenceCount": 157
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -10487,15 +10494,6 @@
           "kind": "source",
           "matchedTerms": [
             "color",
-            "colour",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering/SkiaRenderer.Operators.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "color",
             "colour"
           ]
         },
@@ -10515,14 +10513,6 @@
             "color",
             "colour",
             "conversion"
-          ]
-        },
-        {
-          "path": "Excise.Rendering/SkiaRenderer.State.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "color",
-            "colour"
           ]
         },
         {
@@ -10549,7 +10539,6 @@
             "color",
             "colour",
             "conversion",
-            "transfer",
             "renderpage",
             "skiarenderer"
           ]
@@ -10584,6 +10573,14 @@
           "matchedTerms": [
             "color",
             "scan"
+          ]
+        },
+        {
+          "path": "Excise.App/Views/MainWindow.axaml.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "scan",
+            "transfer"
           ]
         },
         {
@@ -10636,14 +10633,6 @@
         },
         {
           "path": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "scan"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
           "kind": "test",
           "matchedTerms": [
             "color",
@@ -10913,17 +10902,6 @@
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/Differential/SoftMaskIndependenceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "transfer",
-            "renderpage",
-            "skiarenderer"
-          ]
-        },
-        {
           "path": "Excise.Rendering.Tests/Differential/TextRasterInkParityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -10939,18 +10917,6 @@
           "matchedTerms": [
             "color",
             "colour",
-            "renderpage",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/UncolouredTilingPatternColourTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "colour-conversion",
-            "conversion",
             "renderpage",
             "skiarenderer"
           ]
@@ -10982,9 +10948,51 @@
             "renderpage",
             "skiarenderer"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Fonts/FontRenderingMatrixTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/FormXObjectParseCacheTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "scan",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/ImageDecodeCacheTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "conversion",
+            "renderpage",
+            "skiarenderer"
+          ]
         }
       ],
-      "candidateReferenceCount": 118
+      "candidateReferenceCount": 115
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -13033,7 +13041,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 106
+      "candidateReferenceCount": 105
     },
     {
       "id": "pdf.17.content.text-state",
@@ -13676,6 +13684,14 @@
           ]
         },
         {
+          "path": "Excise.App/Views/MainWindow.axaml.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "marked",
+            "property"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -13836,7 +13852,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 32
+      "candidateReferenceCount": 33
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -20511,16 +20527,7 @@
           "matchedTerms": [
             "color",
             "colour",
-            "spaces",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering/SkiaRenderer.Operators.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "color",
-            "colour"
+            "spaces"
           ]
         },
         {
@@ -20539,14 +20546,6 @@
             "color",
             "colour",
             "spaces"
-          ]
-        },
-        {
-          "path": "Excise.Rendering/SkiaRenderer.State.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "color",
-            "colour"
           ]
         },
         {
@@ -20779,25 +20778,7 @@
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/Differential/SoftMaskIndependenceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "skiarenderer"
-          ]
-        },
-        {
           "path": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/UncolouredTilingPatternColourTests.cs",
           "kind": "test",
           "matchedTerms": [
             "color",
@@ -20971,9 +20952,42 @@
             "color",
             "spaces"
           ]
+        },
+        {
+          "path": "tests/corpus-expectations-verapdf.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "spaces"
+          ]
+        },
+        {
+          "path": "tests/redaction-hard-cases.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "pdf20"
+          ]
+        },
+        {
+          "path": "tests/reference-performance/fixtures.json",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour"
+          ]
+        },
+        {
+          "path": "docs/architecture/decisions.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "color",
+            "spaces"
+          ]
         }
       ],
-      "candidateReferenceCount": 84
+      "candidateReferenceCount": 80
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -21964,14 +21978,6 @@
           ]
         },
         {
-          "path": "Excise.App.Tests/UI/GuiWorkflowCoverageMatrixTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "synthesis"
-          ]
-        },
-        {
           "path": "Excise.App.Tests/UI/PdfViewerHeadlessRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -22030,7 +22036,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 22
+      "candidateReferenceCount": 21
     },
     {
       "id": "pdf.20.renderer.requirement-019",
@@ -31852,15 +31858,6 @@
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/Differential/UncolouredTilingPatternColourTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "mask",
-            "image"
-          ]
-        },
-        {
           "path": "Excise.Rendering.Tests/ImageDecodeCacheTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31984,7 +31981,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 46
+      "candidateReferenceCount": 45
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -32357,15 +32354,6 @@
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/Differential/UncolouredTilingPatternColourTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "mask",
-            "image"
-          ]
-        },
-        {
           "path": "Excise.Rendering.Tests/ImageDecodeCacheTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -32489,7 +32477,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 46
+      "candidateReferenceCount": 45
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -32933,6 +32921,15 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.App/Views/MainWindow.axaml.cs",
           "kind": "source",
           "matchedTerms": [
@@ -33298,19 +33295,9 @@
             "image",
             "jpx"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "image",
-            "image",
-            "jbig2"
-          ]
         }
       ],
-      "candidateReferenceCount": 114
+      "candidateReferenceCount": 115
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -34642,15 +34629,6 @@
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/Differential/UncolouredTilingPatternColourTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "devicergb",
-            "image",
-            "image"
-          ]
-        },
-        {
           "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34782,7 +34760,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 43
+      "candidateReferenceCount": 42
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -35001,15 +34979,6 @@
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/Differential/UncolouredTilingPatternColourTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "devicecmyk",
-            "image",
-            "image"
-          ]
-        },
-        {
           "path": "Excise.Rendering.Tests/ImageColorConverterTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -35067,7 +35036,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 24
+      "candidateReferenceCount": 23
     },
     {
       "id": "pdf.20.image.requirement-029",
@@ -35801,6 +35770,15 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.HiddenText.cs",
           "kind": "source",
           "matchedTerms": [
@@ -36144,15 +36122,6 @@
         },
         {
           "path": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/UncolouredTilingPatternColourTests.cs",
           "kind": "test",
           "matchedTerms": [
             "image",
@@ -36875,6 +36844,15 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.HiddenText.cs",
           "kind": "source",
           "matchedTerms": [
@@ -37091,16 +37069,6 @@
             "image",
             "image",
             "jpx"
-          ]
-        },
-        {
-          "path": "tests/reachability-baseline.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "ctm",
-            "image",
-            "image",
-            "jbig2"
           ]
         }
       ],
@@ -37424,28 +37392,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "widget",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "widget",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
           "kind": "source",
           "matchedTerms": [
@@ -37752,26 +37698,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "widget",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "widget",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -38005,7 +37931,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 72
+      "candidateReferenceCount": 68
     },
     {
       "id": "pdf.20.annotation.subtype-002",
@@ -38225,28 +38151,6 @@
             "annotation",
             "link",
             "annotation"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "link",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "link",
-            "annotation",
-            "pdfannotation",
-            "redact"
           ]
         },
         {
@@ -38527,26 +38431,6 @@
         },
         {
           "path": "Excise.Core.Tests/Document/PdfPageTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "link",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "link",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotation",
@@ -38900,9 +38784,28 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "tests/skia-rasterisation-register.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "link",
+            "annotation"
+          ]
+        },
+        {
+          "path": "docs/architecture/decisions.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "link",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 82
+      "candidateReferenceCount": 78
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -39200,28 +39103,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "freetext",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "freetext",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
           "kind": "source",
           "matchedTerms": [
@@ -39373,26 +39254,6 @@
             "annotation",
             "pdfannotation",
             "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "freetext",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "freetext",
-            "annotation",
-            "pdfannotation"
           ]
         },
         {
@@ -39653,7 +39514,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 51
+      "candidateReferenceCount": 47
     },
     {
       "id": "pdf.20.annotation.subtype-005",
@@ -39832,28 +39693,6 @@
         },
         {
           "path": "Excise.Core/Document/PdfPage.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "highlight",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "highlight",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
           "kind": "source",
           "matchedTerms": [
             "annotation",
@@ -40055,26 +39894,6 @@
             "annotation",
             "highlight",
             "annotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "highlight",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "highlight",
-            "annotation",
-            "pdfannotation"
           ]
         },
         {
@@ -40418,7 +40237,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 63
+      "candidateReferenceCount": 59
     },
     {
       "id": "pdf.20.annotation.subtype-006",
@@ -40603,28 +40422,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "underline",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "underline",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Rendering/AnnotationAppearancePolicy.cs",
           "kind": "source",
           "matchedTerms": [
@@ -40699,26 +40496,6 @@
         },
         {
           "path": "Excise.Core.Tests/Document/PdfAnnotationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "underline",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "underline",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotation",
@@ -40878,7 +40655,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 32
+      "candidateReferenceCount": 28
     },
     {
       "id": "pdf.20.annotation.subtype-007",
@@ -41063,28 +40840,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "strikeout",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "strikeout",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Rendering/AnnotationAppearancePolicy.cs",
           "kind": "source",
           "matchedTerms": [
@@ -41159,26 +40914,6 @@
         },
         {
           "path": "Excise.Core.Tests/Document/PdfAnnotationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "strikeout",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "strikeout",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotation",
@@ -41319,7 +41054,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 30
+      "candidateReferenceCount": 26
     },
     {
       "id": "pdf.20.annotation.subtype-008",
@@ -41504,28 +41239,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "squiggly",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "squiggly",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Rendering/AnnotationAppearancePolicy.cs",
           "kind": "source",
           "matchedTerms": [
@@ -41600,26 +41313,6 @@
         },
         {
           "path": "Excise.Core.Tests/Document/PdfAnnotationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "squiggly",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "squiggly",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotation",
@@ -41760,7 +41453,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 30
+      "candidateReferenceCount": 26
     },
     {
       "id": "pdf.20.annotation.subtype-009",
@@ -41947,28 +41640,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "square",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "square",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Rendering/AnnotationAppearancePolicy.cs",
           "kind": "source",
           "matchedTerms": [
@@ -42039,26 +41710,6 @@
             "annotation",
             "pdfannotation",
             "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "square",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "square",
-            "annotation",
-            "pdfannotation"
           ]
         },
         {
@@ -42399,7 +42050,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 51
+      "candidateReferenceCount": 47
     },
     {
       "id": "pdf.20.annotation.subtype-010",
@@ -42577,28 +42228,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "circle",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "circle",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core/Text/MatchingNormalization.cs",
           "kind": "source",
           "matchedTerms": [
@@ -42679,26 +42308,6 @@
             "annotation",
             "pdfannotation",
             "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "circle",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "circle",
-            "annotation",
-            "pdfannotation"
           ]
         },
         {
@@ -42910,7 +42519,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 38
+      "candidateReferenceCount": 34
     },
     {
       "id": "pdf.20.annotation.subtype-011",
@@ -43235,28 +42844,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "line",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "line",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core/Operations/PdfDocumentMerger.cs",
           "kind": "source",
           "matchedTerms": [
@@ -43566,6 +43153,16 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.UnsavedChanges.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "line",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -43741,26 +43338,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "line",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "line",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -43839,9 +43416,39 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "line",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "line",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/HarakatNiqqudRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "line",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 158
+      "candidateReferenceCount": 156
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -44033,28 +43640,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "polygon",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "polygon",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Rendering/AnnotationAppearancePolicy.cs",
           "kind": "source",
           "matchedTerms": [
@@ -44144,26 +43729,6 @@
             "annotation",
             "pdfannotation",
             "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "polygon",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "polygon",
-            "annotation",
-            "pdfannotation"
           ]
         },
         {
@@ -44346,7 +43911,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 36
+      "candidateReferenceCount": 32
     },
     {
       "id": "pdf.20.annotation.subtype-013",
@@ -44538,28 +44103,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "polyline",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "polyline",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Rendering/AnnotationAppearancePolicy.cs",
           "kind": "source",
           "matchedTerms": [
@@ -44649,26 +44192,6 @@
             "annotation",
             "pdfannotation",
             "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "polyline",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "polyline",
-            "annotation",
-            "pdfannotation"
           ]
         },
         {
@@ -44830,7 +44353,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 34
+      "candidateReferenceCount": 30
     },
     {
       "id": "pdf.20.annotation.subtype-014",
@@ -45114,28 +44637,6 @@
             "annotation",
             "ink",
             "annotation"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation",
-            "pdfannotation",
-            "redact"
           ]
         },
         {
@@ -45525,26 +45026,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -45761,9 +45242,46 @@
             "ink",
             "annotation"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/CheckboxAppearanceStateTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/CorpusAppearanceStreamTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation"
+          ]
         }
       ],
-      "candidateReferenceCount": 125
+      "candidateReferenceCount": 121
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -45850,28 +45368,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "popup",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "popup",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core/Text/TextExtractor.cs",
           "kind": "source",
           "matchedTerms": [
@@ -45902,26 +45398,6 @@
             "annotation",
             "pdfannotation",
             "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "popup",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "popup",
-            "annotation",
-            "pdfannotation"
           ]
         },
         {
@@ -46030,7 +45506,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 20
+      "candidateReferenceCount": 16
     },
     {
       "id": "pdf.20.annotation.subtype-016",
@@ -46166,28 +45642,6 @@
             "annotation",
             "fileattachment",
             "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "fileattachment",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "fileattachment",
-            "annotation",
-            "pdfannotation",
             "redact"
           ]
         },
@@ -46332,7 +45786,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 20
+      "candidateReferenceCount": 18
     },
     {
       "id": "pdf.20.annotation.subtype-017",
@@ -46538,28 +45992,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "stamp",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "stamp",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core/README.md",
           "kind": "source",
           "matchedTerms": [
@@ -46714,26 +46146,6 @@
         },
         {
           "path": "Excise.Core.Tests/Document/PdfAnnotationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "stamp",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "stamp",
-            "annotation",
-            "pdfannotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotation",
@@ -46929,9 +46341,19 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "tests/unwired-api-baseline.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 46
+      "candidateReferenceCount": 43
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -47027,28 +46449,6 @@
         },
         {
           "path": "Excise.Core/Document/PdfAnnotationParser.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "caret",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "caret",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
           "kind": "source",
           "matchedTerms": [
             "annotation",
@@ -47197,7 +46597,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 18
+      "candidateReferenceCount": 16
     },
     {
       "id": "pdf.20.annotation.subtype-019",
@@ -47414,28 +46814,6 @@
             "annotation",
             "redact",
             "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "redact",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "redact",
-            "annotation",
-            "pdfannotation",
             "redact"
           ]
         },
@@ -47725,6 +47103,16 @@
         },
         {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Permissions.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "redact",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.UnsavedChanges.cs",
           "kind": "source",
           "matchedTerms": [
             "annotation",
@@ -48109,6 +47497,16 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "redact",
+            "annotation",
+            "redact"
+          ]
         }
       ],
       "candidateReferenceCount": 121
@@ -48231,28 +47629,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "sound",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "sound",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -48305,7 +47681,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 9
+      "candidateReferenceCount": 7
     },
     {
       "id": "pdf.20.annotation.subtype-021",
@@ -48411,28 +47787,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "movie",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "movie",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -48482,7 +47836,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 9
+      "candidateReferenceCount": 7
     },
     {
       "id": "pdf.20.annotation.subtype-022",
@@ -48628,28 +47982,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "screen",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "screen",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core/Redaction/PdfPageRedactionExtensions.cs",
           "kind": "source",
           "matchedTerms": [
@@ -48696,6 +48028,16 @@
             "screen",
             "annotation",
             "pdfannotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation",
             "redact"
           ]
         },
@@ -48850,7 +48192,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 28
+      "candidateReferenceCount": 27
     },
     {
       "id": "pdf.20.annotation.subtype-023",
@@ -48956,28 +48298,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "watermark",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "watermark",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Document/OrphanedWidgetPageResolutionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -49047,7 +48367,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 11
+      "candidateReferenceCount": 9
     },
     {
       "id": "pdf.20.annotation.subtype-024",
@@ -49563,22 +48883,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "groups",
-            "model"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "groups",
-            "model"
-          ]
-        },
-        {
           "path": "Excise.Core/README.md",
           "kind": "source",
           "matchedTerms": [
@@ -49696,12 +49000,12 @@
           "matchedTerms": [
             "alpha",
             "blend",
-            "compositing",
             "masks",
             "modes",
             "soft",
             "transparency",
-            "blendmode"
+            "blendmode",
+            "softmask"
           ]
         },
         {
@@ -49776,11 +49080,11 @@
             "alpha",
             "blend",
             "compositing",
-            "groups",
             "masks",
             "modes",
             "soft",
-            "transparency"
+            "transparency",
+            "blendmode"
           ]
         },
         {
@@ -49853,14 +49157,6 @@
           ]
         },
         {
-          "path": "Excise.App/Services/RecentFilesService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "model",
-            "soft"
-          ]
-        },
-        {
           "path": "Excise.App/Services/RedactionService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -49901,6 +49197,22 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "model",
+            "soft"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Bates.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "model",
+            "soft"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
           "kind": "source",
           "matchedTerms": [
@@ -49910,6 +49222,14 @@
         },
         {
           "path": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "model",
+            "soft"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.DragDrop.cs",
           "kind": "source",
           "matchedTerms": [
             "model",
@@ -49999,6 +49319,14 @@
         },
         {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Typewriter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "model",
+            "soft"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.UnsavedChanges.cs",
           "kind": "source",
           "matchedTerms": [
             "model",
@@ -50188,20 +49516,6 @@
           "matchedTerms": [
             "compositing",
             "modes"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/SoftMaskIndependenceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "alpha",
-            "blend",
-            "masks",
-            "soft",
-            "transparency",
-            "blendmode",
-            "softmask",
-            "transparency"
           ]
         },
         {
@@ -50779,6 +50093,14 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/BatesNumberingWorkflowTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "preview"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/GoldenPathTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -50920,7 +50242,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 73
+      "candidateReferenceCount": 74
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -51305,32 +50627,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "annotations",
-            "flags",
-            "geometry",
-            "subtypes",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotation",
-            "annotations",
-            "flags",
-            "geometry",
-            "subtypes",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
           "path": "Excise.Core/README.md",
           "kind": "source",
           "matchedTerms": [
@@ -51684,6 +50980,17 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.UnsavedChanges.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "geometry",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -51896,30 +51203,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "annotations",
-            "flags",
-            "geometry",
-            "subtypes",
-            "annotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "annotations",
-            "flags",
-            "geometry",
-            "subtypes",
-            "annotation"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -52011,9 +51294,44 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "annotations",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/IncrementalRedactionRegressionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "annotations",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/RedactionCarrierAuditTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "annotations",
+            "geometry",
+            "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 157
+      "candidateReferenceCount": 155
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -52759,6 +52077,17 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/UnsavedChangesOnCloseTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/VisualPolishAuditTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -52868,7 +52197,6 @@
           "matchedTerms": [
             "annotations",
             "redaction",
-            "acroform",
             "action",
             "annotation",
             "redact"
@@ -52898,7 +52226,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 71
+      "candidateReferenceCount": 72
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -53166,6 +52494,17 @@
         },
         {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "redaction",
+            "review",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
           "kind": "source",
           "matchedTerms": [
             "redaction",
@@ -53787,7 +53126,6 @@
           "matchedTerms": [
             "redaction",
             "review",
-            "acroform",
             "action",
             "annotation",
             "redact"
@@ -53814,20 +53152,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "docs/architecture/system-design.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "redaction",
-            "review",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 80
+      "candidateReferenceCount": 81
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -54759,15 +54086,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "appearances",
-            "forms",
-            "annotation"
-          ]
-        },
-        {
           "path": "Excise.Core/Document/PdfDocument.cs",
           "kind": "source",
           "matchedTerms": [
@@ -54834,28 +54152,6 @@
             "forms",
             "policy",
             "action",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "fields",
-            "forms",
-            "widgets",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "fields",
-            "forms",
-            "widgets",
             "annotation",
             "redact"
           ]
@@ -55383,24 +54679,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "fields",
-            "forms",
-            "annotation"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "fields",
-            "forms",
-            "annotation"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -55544,9 +54822,58 @@
             "action",
             "redact"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/AnnotationAppearancePolicyTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "fields",
+            "policy",
+            "annotation"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "appearances",
+            "policy",
+            "annotation"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Corpus/RoundTripTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "forms",
+            "xfa",
+            "action"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "appearances",
+            "policy",
+            "action",
+            "annotation"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "acroform",
+            "appearances",
+            "policy",
+            "acroform",
+            "action",
+            "annotation"
+          ]
         }
       ],
-      "candidateReferenceCount": 127
+      "candidateReferenceCount": 122
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -56474,7 +55801,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 112
+      "candidateReferenceCount": 113
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -56732,30 +56059,6 @@
           "matchedTerms": [
             "annotations",
             "screen"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotations",
-            "movie",
-            "screen",
-            "sound",
-            "movie",
-            "sound"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotations",
-            "movie",
-            "screen",
-            "sound",
-            "movie",
-            "sound"
           ]
         },
         {
@@ -57400,6 +56703,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/UnsavedChangesOnCloseTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/VisualPolishAuditTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -57408,9 +56720,18 @@
             "screen",
             "media"
           ]
+        },
+        {
+          "path": "Excise.App.Tests/Unit/AnnotationWorkflowServiceTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media"
+          ]
         }
       ],
-      "candidateReferenceCount": 88
+      "candidateReferenceCount": 87
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -57680,14 +57001,6 @@
             "annotations",
             "media",
             "media"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "rich"
           ]
         },
         {
@@ -58004,6 +57317,15 @@
             "media",
             "media",
             "threed"
+          ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/UnsavedChangesOnCloseTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media"
           ]
         },
         {
@@ -58491,24 +57813,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "class",
-            "structure"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "attributes",
-            "class",
-            "interchange",
-            "structure"
-          ]
-        },
-        {
           "path": "Excise.Core/Graphics/PdfGraphics.cs",
           "kind": "source",
           "matchedTerms": [
@@ -58887,9 +58191,25 @@
             "class",
             "maps"
           ]
+        },
+        {
+          "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "class",
+            "maps"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/SkiaRenderer.Images.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "class",
+            "maps"
+          ]
         }
       ],
-      "candidateReferenceCount": 316
+      "candidateReferenceCount": 314
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -59075,23 +58395,6 @@
           "matchedTerms": [
             "data",
             "dictionaries"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "data",
-            "dictionaries"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "data",
-            "dictionaries",
-            "interchange"
           ]
         },
         {
@@ -59451,22 +58754,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "data",
-            "dictionaries"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "data",
-            "dictionaries"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -59618,9 +58905,41 @@
             "coordinate",
             "data"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Corpus/RedactionRegressionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "coordinate",
+            "data"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "coordinate",
+            "data"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/CcittEndOfBlockTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "data",
+            "measurement"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "data",
+            "dictionaries"
+          ]
         }
       ],
-      "candidateReferenceCount": 144
+      "candidateReferenceCount": 140
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -59867,23 +59186,6 @@
           "matchedTerms": [
             "byte",
             "ranges"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "byte",
-            "dictionaries"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "byte",
-            "dictionaries",
-            "interchange"
           ]
         },
         {
@@ -60295,22 +59597,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Forms/FdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "dictionaries"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "byte",
-            "dictionaries"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Graphics/PdfColorTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -60368,9 +59654,43 @@
             "validation",
             "metadata"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "byte",
+            "permissions",
+            "validation",
+            "metadata"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/CidCMapParserTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "byte",
+            "ranges"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/OcgMembershipExtractionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "byte",
+            "dictionaries"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "byte",
+            "ranges"
+          ]
         }
       ],
-      "candidateReferenceCount": 151
+      "candidateReferenceCount": 147
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -61012,23 +60332,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "data",
-            "private"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "data",
-            "interchange",
-            "private"
-          ]
-        },
-        {
           "path": "Excise.Core/Graphics/PdfFont.cs",
           "kind": "source",
           "matchedTerms": [
@@ -61154,9 +60457,27 @@
             "metadata",
             "structuretree"
           ]
+        },
+        {
+          "path": "Excise.Core/Redaction/FormXObjectFlattener.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "data",
+            "private"
+          ]
+        },
+        {
+          "path": "Excise.Core/Redaction/GlyphRemover.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "data",
+            "metadata",
+            "private",
+            "metadata"
+          ]
         }
       ],
-      "candidateReferenceCount": 467
+      "candidateReferenceCount": 470
     },
     {
       "id": "pdf.20.extension.developer",
@@ -61412,15 +60733,6 @@
           ]
         },
         {
-          "path": "Excise.App/Services/RecentFilesService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "extension",
-            "extensions",
-            "version"
-          ]
-        },
-        {
           "path": "Excise.App/Services/RedactionService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -61500,6 +60812,22 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Bates.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
           "kind": "source",
           "matchedTerms": [
@@ -61514,6 +60842,14 @@
             "extension",
             "extensions",
             "version"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.DragDrop.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
           ]
         },
         {
@@ -61602,6 +60938,14 @@
         },
         {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Typewriter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.UnsavedChanges.cs",
           "kind": "source",
           "matchedTerms": [
             "extension",
@@ -61777,6 +61121,16 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AttachmentsPanelTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "extension",
+            "extensions",
+            "version",
+            "pdfa"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/DocumentPermissionEnforcementTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -61823,43 +61177,9 @@
             "extension",
             "extensions"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions",
-            "version",
-            "pdfa"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/SignedDocumentEditWarningTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/StartupActivationWorkflowTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/ThumbnailWindowLifecycleTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions"
-          ]
         }
       ],
-      "candidateReferenceCount": 116
+      "candidateReferenceCount": 119
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -63755,6 +63075,7 @@
           "matchedTerms": [
             "pdfe",
             "redaction",
+            "review",
             "redaction"
           ]
         },
@@ -64314,9 +63635,21 @@
       },
       "candidateReferences": [
         {
+          "path": "Excise.Core/Automation/PdfCommandIds.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "copy",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
           "kind": "source",
           "matchedTerms": [
+            "attachment",
             "copy",
             "metadata",
             "ocr",
@@ -64431,14 +63764,6 @@
           "matchedTerms": [
             "copy",
             "metadata"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "attachment",
-            "copy"
           ]
         },
         {
@@ -64586,6 +63911,14 @@
           ]
         },
         {
+          "path": "Excise.App/Models/AttachmentEntry.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "pdfe"
+          ]
+        },
+        {
           "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -64613,6 +63946,35 @@
             "pdfe",
             "redaction",
             "security"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "copy",
+            "stripping"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "copy",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "copy",
+            "pdfe",
+            "redaction"
           ]
         },
         {
@@ -64650,6 +64012,23 @@
           "matchedTerms": [
             "copy",
             "metadata"
+          ]
+        },
+        {
+          "path": "Excise.App/Views/AttachmentsDialog.axaml.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "stripping"
+          ]
+        },
+        {
+          "path": "Excise.App/Views/MacNativeMenuBuilder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "copy",
+            "redaction"
           ]
         },
         {
@@ -64920,6 +64299,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AttachmentsPanelTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "copy",
+            "stripping"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -64998,78 +64386,9 @@
             "redaction",
             "security"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/SignatureVerificationServiceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "copy",
-            "pdfe",
-            "security"
-          ]
-        },
-        {
-          "path": "Excise.Cli.Tests/BatchAutomationCommandTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "copy",
-            "pdfe",
-            "redaction",
-            "security"
-          ]
-        },
-        {
-          "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "metadata",
-            "pdfe"
-          ]
-        },
-        {
-          "path": "Excise.Cli.Tests/EncryptDecryptCommandTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "metadata",
-            "pdfe",
-            "stripping",
-            "security"
-          ]
-        },
-        {
-          "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "metadata",
-            "pdfe",
-            "security"
-          ]
-        },
-        {
-          "path": "Excise.Cli.Tests/PermissionEnforcementTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "copy",
-            "metadata",
-            "pdfe",
-            "redaction",
-            "security"
-          ]
-        },
-        {
-          "path": "Excise.Cli.Tests/RedactCommandTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "copy",
-            "metadata",
-            "pdfe",
-            "ocr",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 90
+      "candidateReferenceCount": 98
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -65167,6 +64486,15 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.UnsavedChanges.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "activation",
+            "safe",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/SecurityDialogViewModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -65190,6 +64518,15 @@
           "matchedTerms": [
             "pdfe",
             "safe"
+          ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/UnsavedChangesOnCloseTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "activation",
+            "safe",
+            "redaction"
           ]
         },
         {
@@ -65253,7 +64590,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 13
+      "candidateReferenceCount": 15
     },
     {
       "id": "pdfe.product.security.attachments",
@@ -65275,10 +64612,12 @@
       ],
       "registeredEvidence": [],
       "registeredVerification": {
-        "status": "planned",
+        "status": "executable",
         "requiredModes": [
           "parse",
-          "preserve"
+          "preserve",
+          "extract",
+          "mutate"
         ],
         "checks": [
           {
@@ -65294,10 +64633,55 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::OpeningADocumentWithAttachments_ListsThem",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::SaveAttachment_WritesTheOriginalBytesToDisk",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "unit",
+            "ref": "Excise.App.Tests/UI/AttachmentsPanelTests.cs::StripThenSave_RemovesTheAttachment_VerifiedByQpdf",
+            "modes": [
+              "mutate"
+            ]
           }
         ]
       },
       "candidateReferences": [
+        {
+          "path": "Excise.Core/Automation/PdfCommandIds.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "save",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "save",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
         {
           "path": "Excise.Core/Document/PdfDocument.cs",
           "kind": "source",
@@ -65364,14 +64748,6 @@
             "save",
             "stripping",
             "security"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "attachment",
-            "save"
           ]
         },
         {
@@ -65444,6 +64820,16 @@
           ]
         },
         {
+          "path": "Excise.App/Models/AttachmentEntry.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "pdfe",
+            "save"
+          ]
+        },
+        {
           "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -65473,6 +64859,39 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "disclosure",
+            "save",
+            "stripping"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "save",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "pdfe",
+            "save",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
           "kind": "source",
           "matchedTerms": [
@@ -65499,6 +64918,26 @@
             "pdfe",
             "save",
             "security"
+          ]
+        },
+        {
+          "path": "Excise.App/Views/AttachmentsDialog.axaml.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "save",
+            "stripping"
+          ]
+        },
+        {
+          "path": "Excise.App/Views/MacNativeMenuBuilder.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "save",
+            "redaction"
           ]
         },
         {
@@ -65778,6 +65217,17 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/AttachmentsPanelTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "disclosure",
+            "save",
+            "stripping"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -65931,6 +65381,18 @@
           ]
         },
         {
+          "path": "tests/gui-interaction-registry.json",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "save",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "tests/redaction-bench-design.json",
           "kind": "test",
           "matchedTerms": [
@@ -65948,6 +65410,7 @@
             "attachment",
             "attachments",
             "pdfe",
+            "save",
             "ocr",
             "redaction"
           ]
@@ -65965,7 +65428,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 69
+      "candidateReferenceCount": 78
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -66999,22 +66462,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Forms/FdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "exportable",
-            "log"
-          ]
-        },
-        {
-          "path": "Excise.Core/Forms/XfdfSerializer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "exportable",
-            "local"
-          ]
-        },
-        {
           "path": "Excise.Core/Parsing/PdfLexer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -67126,14 +66573,6 @@
           ]
         },
         {
-          "path": "Excise.App/App.axaml.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log"
-          ]
-        },
-        {
           "path": "Excise.App/Services/AppPaths.cs",
           "kind": "source",
           "matchedTerms": [
@@ -67207,6 +66646,14 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "local",
+            "log"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
           "kind": "source",
           "matchedTerms": [
@@ -67224,6 +66671,14 @@
             "log",
             "pdfe",
             "redaction"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.DragDrop.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "local",
+            "log"
           ]
         },
         {
@@ -67363,14 +66818,6 @@
         },
         {
           "path": "Excise.Core.Tests/Document/PdfOutlineParserDestinationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "local",
-            "log"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Forms/XfdfSerializerTests.cs",
           "kind": "test",
           "matchedTerms": [
             "local",
@@ -67638,9 +67085,29 @@
             "log",
             "redaction"
           ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/DialogInputInteractionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "log",
+            "pdfe",
+            "ocr",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "log",
+            "pdfe",
+            "redaction",
+            "security"
+          ]
         }
       ],
-      "candidateReferenceCount": 109
+      "candidateReferenceCount": 107
     },
     {
       "id": "pdfe.product.platform.printing",

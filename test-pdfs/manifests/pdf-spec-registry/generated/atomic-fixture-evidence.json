@@ -9270,7 +9270,7 @@
       "capability": "pdfe.product.security.attachments",
       "section": "product-capabilities",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9286,7 +9286,7 @@
       "capability": "pdfe.product.security.attachments",
       "section": "product-capabilities",
       "mode": "mutate",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },

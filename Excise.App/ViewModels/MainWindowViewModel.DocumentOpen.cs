@@ -36,6 +36,13 @@ public partial class MainWindowViewModel
     {
         _logger.LogInformation("Open file command triggered");
 
+        // #1233: replacing the open document discards its unsaved edits just
+        // as surely as closing the window does. Ask BEFORE the picker, so a
+        // user who decides to keep the current document isn't made to choose a
+        // file first and then be told it was pointless.
+        if (!await ConfirmDiscardUnsavedChangesAsync("open a different document"))
+            return;
+
         var storageProvider = GetStorageProvider();
         if (storageProvider == null)
         {
@@ -254,6 +261,21 @@ public partial class MainWindowViewModel
         this.RaisePropertyChanged(nameof(IsDocumentLoaded));
 
         AddToRecentFiles(filePath);
+
+        // #1414: attachments are invisible in the page view, so a document can
+        // carry a full XML copy of itself (ZUGFeRD/Factur-X) with nothing on
+        // screen to say so. List them on open and WARN, per the capability's
+        // "warn when their presence is not otherwise obvious".
+        RefreshAttachments();
+        if (HasAttachments)
+        {
+            _toastService.ShowWarning(
+                "Document has attachments",
+                Attachments.Count == 1
+                    ? "1 embedded file travels with this PDF. Open Tools ▸ Attachments to review it."
+                    : $"{Attachments.Count} embedded files travel with this PDF. Open Tools ▸ Attachments to review them.");
+        }
+
         await RestoreDocumentStateAsync(filePath);
 
         if (OperationStatus == "Opening PDF…")

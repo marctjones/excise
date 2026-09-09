@@ -15,13 +15,17 @@ namespace Excise.App.Services;
 /// overloads raise, and avoids the runtime <c>NotSupportedException</c> the
 /// reflection path can throw once the metadata is trimmed.
 ///
-/// WriteIndented matches the previous hand-rolled options for the two types we
-/// write (WindowSettings, RecentFilesData); the license manifest is read-only.
+/// WriteIndented matches the previous hand-rolled options for the type we
+/// write (WindowSettings); the license manifest is read-only.
 /// See docs/NATIVE_AOT_INVESTIGATION.md.
+///
+/// RecentFilesData was registered here until #1307 retired
+/// RecentFilesService. Recent files are NOT stored as JSON: the shipping
+/// implementation lives in MainWindowViewModel and writes newline-delimited
+/// text to AppPaths.RecentFilesPath.
 /// </summary>
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(WindowSettings))]
-[JsonSerializable(typeof(RecentFilesService.RecentFilesData))]
 [JsonSerializable(typeof(LicenseManifest))]
 [JsonSerializable(typeof(DocumentOpenResponsivenessReport))]
 internal partial class ExciseJsonContext : JsonSerializerContext

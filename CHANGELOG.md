@@ -158,6 +158,77 @@ Milestone **P1.6 — Writer output validity: what save destroys or invalidates**
   `RedactionService` write-back and the `/Contents`-array structure (still
   collapsed to a single stream on write) are not covered.
 
+Milestone **P1.4 — "wired to nothing"**: capabilities that existed, were
+tested, and had no way for a user to reach them — plus one that lost data
+silently.
+
+### Fixed
+- **Closing, quitting, Ctrl+W, or opening another file discarded unsaved
+  changes with no prompt** (#1233). `MainWindow.Closing` persisted window
+  geometry and returned; it never read `FileState.HasUnsavedChanges` and never
+  set `e.Cancel` — there was no `e.Cancel` anywhere in `Excise.App`. Every
+  pending redaction, page edit, form value, typewriter box and annotation was
+  lost with no prompt, toast or log line. Now a Save / Discard / Cancel prompt
+  guards the native close, Cmd/Ctrl+W, application quit, File ▸ Open, Recent
+  Files, macOS Finder file activation, and drag-drop. **Save writes a COPY** —
+  it reuses the existing save routing, so an original with pending redactions
+  goes through the redacted-copy workflow and an original with any other edit
+  through Save As; the source is never overwritten. A cancelled picker, a
+  declined signed-document warning and a failed write all leave the document
+  open and still dirty, because "we tried to save and couldn't" is exactly
+  where proceeding destroys the most work. Verified against the unmodified
+  code first: 8 of 11 new tests failed, including one where the window closed
+  after the user asked to save and then backed out of the picker.
+- **Ctrl+Z / Ctrl+Y / Ctrl+Shift+C were menu labels with nothing behind them**
+  (#1170). In Avalonia a `MenuItem.InputGesture` is display text only, and
+  these three had no branch in `MainWindow_KeyDown` — the menus advertised
+  shortcuts that did nothing on Windows/Linux (macOS was fine; its native menu
+  carries real gestures). Ctrl+Shift+C is ordered before the Ctrl+C copy
+  branch, which did not exclude Shift, so the view toggle cannot be swallowed
+  in text-selection mode; all three skip a focused text box so a window-level
+  Ctrl+Z never steals the search field's own undo.
+
+### Added
+- **Drag a PDF onto the window to open it** (#1002). The feature did not exist
+  — zero references to `DragDrop`/`AllowDrop`/`DragEventArgs` in the whole GUI.
+  The file-selection rule is now shared with the command-line and macOS
+  file-association paths rather than copied, so a mixed selection behaves the
+  same however it arrives.
+- **Attachments panel** (#1414) — Document ▸ Attachments… lists files embedded
+  in the PDF (name, decoded size, description), saves one to a chosen path, and
+  strips them all. A warning appears on open when a document carries
+  attachments, because they are invisible on the page and can hold a full copy
+  of the document's data (ZUGFeRD/Factur-X). excise never opens or runs an
+  attachment. Stripping is a pending edit, so the original is preserved by the
+  normal save routing. Removal is confirmed by `qpdf --list-attachments`, not by
+  excise reading its own output.
+- **Bates numbering reached the UI** (#1306) — Document ▸ Bates Numbering…
+  stamps a sequential number on every page (prefix, suffix, start, padding,
+  position, size, with a live preview). README had advertised this for a long
+  time while the service had no command, menu item or CLI verb behind it. The
+  stamped numbers are read back by `pdftotext`, and page 1 is asserted not to
+  contain page 2's number, so a stamp that wrote one number everywhere cannot
+  pass.
+
+### Removed
+- **`RecentFilesService`** (#1307), a dormant duplicate. Recent files ships from
+  `MainWindowViewModel`; the service was a second implementation writing the
+  *same* `recent.txt` in an incompatible format (JSON vs newline-delimited
+  text). The only thing it added was pinning, which was advertised nowhere.
+- **`FdfSerializer` / `XfdfSerializer`** (#921), 1,782 lines reachable from no
+  shipping surface. The issue's case for wiring rather than deleting assumed
+  they carried AcroForm field *data* ("fill a form, export the data rather
+  than a flattened copy") — they don't; both serializers handle annotations
+  only, and the FDF `/Fields` form-data section is explicitly out of scope in
+  their own docstrings. What's left is an annotation *importer*, which is
+  frozen: annotation authoring has taken no new creation surface since v3.8.0
+  (all 15 types already reachable from the Annotate menu), and FDF/XFDF
+  import exists only to create new annotations from an external file. There
+  is also no independent tool on this machine that reads FDF/XFDF to oracle a
+  round-trip against — the issue's own acceptance criterion. Also removed:
+  `PdfAnnotationAuthoring.AttachImported`, an internal helper with no other
+  caller.
+
 ## [3.9.4] - 2026-09-09
 
 **Corrects [3.9.3]'s "Closed as not-reproducing" entry below for
