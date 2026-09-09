@@ -42,11 +42,17 @@ namespace Excise.Rendering.Tests;
 /// <see cref="Minification_IsDoneByTheDecoder_NotBySkiasBitmapDraw"/> -- the
 /// bare <c>DrawBitmap</c> with no <see cref="SKSamplingOptions"/> looks like
 /// the cause and is not); and it is therefore CODEC-SPECIFIC, because the
-/// decoders do not agree -- <c>RawSampleImageDecoder</c> (raw/Flate, what this
-/// fixture uses) and <c>JpxImageDecoder</c> subsample nearest, deliberately,
-/// for the Indexed-palette reason given in #1403, while
-/// <c>DctImageDecoder</c> resizes with a linear+mipmap filter. Do not
-/// generalise this file's downscale numbers to a JPEG scan.
+/// decoders READ as if they do not agree -- <c>RawSampleImageDecoder</c>
+/// (raw/Flate, what this fixture uses) and <c>JpxImageDecoder</c> subsample
+/// nearest, deliberately, for the Indexed-palette reason given in #1403, while
+/// <c>DctImageDecoder.Resize</c> passes <c>SKSamplingOptions(Linear, Linear)</c>.
+///
+/// ⚠️ That difference is NOT observable end to end, and this file asserted the
+/// opposite from the code alone until #1438 measured it. Over nine scales in
+/// <see cref="MinificationKernel_IsTheSameForRawAndDct_MeasuredAcrossScales"/>
+/// the raw and DCT renders of the same image agree at every one. JPX stays
+/// unmeasured -- no JPEG 2000 encoder here -- and is labelled so rather than
+/// asserted from its source.
 /// </summary>
 public class FullPageImageRenderFidelityTests
 {
@@ -241,6 +247,149 @@ public class FullPageImageRenderFidelityTests
             "an averaging downsample would turn every 2x2 checkerboard cell grey; measured output has none, " +
             "so minification is point-sampled and discards half the source rows and columns");
         (blacks + whites).Should().Be(total);
+    }
+
+    /// <summary>
+    /// #1438 — the per-codec minification kernel, MEASURED end to end rather
+    /// than read off the code. The measurement does not agree with the code
+    /// reading, and the code reading is the one that was wrong.
+    ///
+    /// <para>#1438's table says raw/Flate and JPX subsample nearest while DCT
+    /// "resizes linear + mipmap", and predicts that "the same scanned page
+    /// renders differently at a reduced DPI depending only on how it was
+    /// compressed". <b>It does not.</b> Measured over nine scales from 1:1 down
+    /// to about 1:12, on 20 px flat bands, the raw/Flate and DCT renders of the
+    /// same image produce the SAME count of between-tone pixels at every scale,
+    /// and that count is a per-scale edge artefact rather than band-boundary
+    /// blending — zero wherever the output grid divides evenly, a fraction of
+    /// one row where it does not:</para>
+    ///
+    /// <code>
+    ///   dpi  output     raw   dct    of
+    ///   300  300x400      0     0  120000   (1:1)
+    ///   250  250x334    116   116   83500
+    ///   200  200x267    106   106   53400
+    ///   150  150x200      0     0   30000
+    ///   100  100x134     46    46   13400
+    ///    75   75x100      0     0    7500
+    ///    50    50x67     26    26    3350
+    ///    36    36x48      0     0    1728   (the ThumbnailCacheService DPI)
+    ///    24    24x32      0     0     768
+    /// </code>
+    ///
+    /// <para>A linear kernel cannot produce those numbers. At 200 dpi the
+    /// fixture has 14 band boundaries over 267 rows, so interpolation would
+    /// leave thousands of between-tone pixels; 106 is two orders of magnitude
+    /// below that, and identical to the nearest-subsampled path to the pixel.
+    /// So <c>DctImageDecoder.Resize</c>'s <c>SKSamplingOptions(Linear, Linear)</c>
+    /// is NOT observably engaged on this path — which is exactly why #1438
+    /// called its own table unmeasured and asked for this first.</para>
+    ///
+    /// <para>⚠️ What this does NOT establish is the MECHANISM. "Both codecs
+    /// point-sample end to end" is measured; "libjpeg's own scaling reaches the
+    /// target before Resize can filter" is a hypothesis and is deliberately not
+    /// asserted. And JPXDecode is not measured at all: its
+    /// <c>MapTargetToSource</c> is a character-for-character sibling of
+    /// <c>RawSampleImageDecoder</c>'s, so it is nearest BY INSPECTION — but
+    /// inspection is the thing this test replaces, and confirming it needs a
+    /// JPEG 2000 encoder, which this machine does not have. Unmeasured, and
+    /// labelled unmeasured.</para>
+    ///
+    /// <para>The nearest subsample is deliberate (#1403: an Indexed sample is a
+    /// PALETTE INDEX, and averaging two indices lands on an unrelated entry), so
+    /// none of this is a defect claim. It is the answer to "do the codecs
+    /// diverge at reduced size": measured, they do not.</para>
+    /// </summary>
+    [Fact]
+    public void MinificationKernel_IsTheSameForRawAndDct_MeasuredAcrossScales()
+    {
+        const int bandWidth = 20;
+        const byte dark = 24;
+        const byte light = 200;
+
+        byte Tone(int x) => (x / bandWidth % 2) == 0 ? dark : light;
+
+        var rgb = new byte[ImageWidth * ImageHeight * 3];
+        using var source = new SKBitmap(ImageWidth, ImageHeight, SKColorType.Rgba8888, SKAlphaType.Opaque);
+        for (var y = 0; y < ImageHeight; y++)
+        {
+            for (var x = 0; x < ImageWidth; x++)
+            {
+                var v = Tone(x);
+                var i = ((y * ImageWidth) + x) * 3;
+                rgb[i] = rgb[i + 1] = rgb[i + 2] = v;
+                source.SetPixel(x, y, new SKColor(v, v, v));
+            }
+        }
+
+        using var encoded = SKImage.FromBitmap(source).Encode(SKEncodedImageFormat.Jpeg, 100);
+        var jpeg = encoded.ToArray();
+
+        var rawPdf = BuildImagePdf(
+            PageWidthPoints, PageHeightPoints,
+            $"/Width {ImageWidth} /Height {ImageHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8",
+            rgb);
+        var dctPdf = BuildImagePdf(
+            PageWidthPoints, PageHeightPoints,
+            $"/Width {ImageWidth} /Height {ImageHeight} /ColorSpace /DeviceRGB " +
+            "/BitsPerComponent 8 /Filter /DCTDecode",
+            jpeg);
+
+        _output.WriteLine("JPXDecode: unmeasured - no JPEG 2000 encoder on this machine");
+
+        // 36 is ThumbnailCacheService's own DPI, so the thumbnail case #1438
+        // worries about is inside the sweep rather than argued from it.
+        foreach (var dpi in new[] { 300, 250, 200, 150, 100, 75, 50, 36, 24 })
+        {
+            using var raw = Render(rawPdf, dpi: dpi);
+            using var dct = Render(dctPdf, dpi: dpi);
+
+            var rawBetween = PixelsBetweenTheTones(raw, dark, light);
+            var dctBetween = PixelsBetweenTheTones(dct, dark, light);
+            _output.WriteLine(
+                $"dpi={dpi} out={raw.Width}x{raw.Height} raw={rawBetween} dct={dctBetween} " +
+                $"of {raw.Width * raw.Height}");
+
+            dctBetween.Should().Be(rawBetween,
+                $"at {dpi} dpi the DCT and raw/Flate renders of the SAME image must " +
+                "agree. #1438 predicted they would not - that a page renders " +
+                "differently at reduced size depending only on how it was " +
+                "compressed. Measured, they agree at every scale; if this ever " +
+                "fails, that prediction has become true and the asymmetry is real");
+
+            // What a linear kernel would have to leave behind: every band
+            // boundary blends across the full height. Two orders of magnitude
+            // above anything measured.
+            var boundaries = (ImageWidth / bandWidth) - 1;
+            var linearFloor = boundaries * raw.Height / 4;
+            if (raw.Width < ImageWidth)
+            {
+                dctBetween.Should().BeLessThan(Math.Max(linearFloor, 1),
+                    $"a filtering minification of {boundaries} band boundaries over " +
+                    $"{raw.Height} rows cannot leave only {dctBetween} between-tone " +
+                    "pixels; DctImageDecoder.Resize's linear sampling is not " +
+                    "observably engaged on this path");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Pixels whose grey level is neither band tone — the signature of a kernel
+    /// that averages. The margin absorbs JPEG's own few units of error without
+    /// absorbing a real blend between tones 176 apart.
+    /// </summary>
+    private static int PixelsBetweenTheTones(SKBitmap bitmap, byte dark, byte light)
+    {
+        const int margin = 24;
+        var between = 0;
+        foreach (var p in bitmap.Pixels)
+        {
+            var v = (p.Red + p.Green + p.Blue) / 3;
+            if (Math.Abs(v - dark) > margin && Math.Abs(v - light) > margin)
+                between++;
+        }
+
+        return between;
     }
 
     /// <summary>
