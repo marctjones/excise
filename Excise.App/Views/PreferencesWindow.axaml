@@ -89,7 +89,7 @@
                         CornerRadius="8"
                         Padding="20">
                     <StackPanel Spacing="15">
-                        <TextBlock Text="Redaction — Non-displayed Text"
+                        <TextBlock Text="Redaction"
                                    FontSize="14"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -100,6 +100,19 @@
                                    TextWrapping="Wrap"/>
 
                         <Separator/>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Match Rule" FontWeight="Medium"/>
+                            <CheckBox x:Name="RedactionWholeWordCheckBox"
+                                      Content="Whole words only"
+                                      IsChecked="{Binding RedactionWholeWord}"
+                                      AutomationProperties.Name="Whole Word Redaction"
+                                      AutomationProperties.HelpText="Require the redacted term to be bounded by a non-word character on both sides."/>
+                            <TextBlock Text="Off (default): the term matches anywhere, so redacting 'Lee' also removes it from 'Sleeman' — right for a case number inside a longer citation, wrong for a name. On: the term must stand alone. Applies to page text and to metadata, outlines and link targets alike."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Link URLs" FontWeight="Medium"/>

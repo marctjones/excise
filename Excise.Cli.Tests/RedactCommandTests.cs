@@ -728,6 +728,42 @@ public class RedactCommandTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_Redact_WholeWordFlag_EndToEnd_SparesTheLongerWord()
+    {
+        // #1052 through the real CLI path: option registration -> request ->
+        // RedactionOptions.WholeWord -> FindTextMatches. A transposed argument
+        // would pass every unit test while --whole-word silently gutted
+        // "Sleeman" -- exactly the "plumbing exists but is mis-wired" gap worth
+        // pinning on a redaction tool.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("Sleeman met Lee"));
+
+        var prevOut = Console.Out;
+        var captured = new StringWriter();
+        Console.SetOut(captured);
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "Lee", "--whole-word"
+            });
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+        }
+
+        exitCode.Should().Be(0);
+        using var redacted = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(outputPath));
+        var text = redacted.GetPage(1).Text;
+        text.Should().Contain("Sleeman", "whole-word matching spares the longer word");
+        captured.ToString().Should().Contain("whole-word matching",
+            "#1052: the rule that ran must be visible in the result");
+    }
+
+    [Fact]
     public void TryParseCarrierPolicy_LeavesUnnamedCarriersAtStrip()
     {
         RedactCommand.TryParseCarrierPolicy(

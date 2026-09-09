@@ -71,6 +71,15 @@ internal static class RedactCommand
             Description = "Create a fresh image-only PDF: rasterize every page, OCR the requested visible term, black out its pixels, and discard all original PDF carriers. Requires tesseract; intentionally removes selectable text, forms, links, and metadata.",
             DefaultValueFactory = _ => false,
         };
+        var wholeWordOption = new Option<bool>("--whole-word")
+        {
+            Description = "Match whole words only: the term must be bounded by a non-word " +
+                "character (or the start/end of the run) on both sides. Default is substring " +
+                "matching, which is right for a case number inside a longer citation and wrong " +
+                "for 'Lee' inside 'Sleeman' -- the tool does not guess, you choose (#1052). " +
+                "Applies to page content AND the document-level carrier scrub.",
+            DefaultValueFactory = _ => false,
+        };
         var carrierPolicyOption = new Option<string[]>("--carrier-policy")
         {
             Description = "How a document-level carrier holding the term is handled: " +
@@ -106,6 +115,7 @@ internal static class RedactCommand
             boxColorOption,
             ocrImageTextOption,
             flattenOcrOption,
+            wholeWordOption,
             carrierPolicyOption,
             progressOption,
         };
@@ -186,7 +196,8 @@ internal static class RedactCommand
                     boxColor,
                     ocrImageText,
                     flattenOcr,
-                    carrierPolicy),
+                    carrierPolicy,
+                    parseResult.GetValue(wholeWordOption)),
                     progress);
 
                 foreach (var diagnostic in result.Diagnostics)
@@ -195,7 +206,12 @@ internal static class RedactCommand
                 if (result.Flattened)
                     Console.WriteLine($"Flattened and redacted {result.Count} OCR occurrence(s) of '{result.Text}'");
                 else
-                    Console.WriteLine($"Redacted {result.Count} occurrence(s) of '{result.Text}'");
+                    // #1052: the rule that ran is part of the result. A user who
+                    // does not know whether 'Lee' could have matched inside
+                    // 'Sleeman' cannot reason about what was left behind.
+                    Console.WriteLine(
+                        $"Redacted {result.Count} occurrence(s) of '{result.Text}'" +
+                        (result.WholeWord ? " (whole-word matching)" : ""));
 
                 foreach (var note in result.CarrierNotes)
                     Console.WriteLine($"  note: {note}");

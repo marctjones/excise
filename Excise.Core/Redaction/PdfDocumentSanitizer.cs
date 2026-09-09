@@ -94,7 +94,7 @@ public static class PdfDocumentSanitizer
     /// </remarks>
     public static CarrierScrubOutcome ScrubTerms(
         PdfDocument document, IEnumerable<string> terms, bool caseSensitive,
-        RedactionCarriers carriers, CarrierScrubPolicy policy)
+        RedactionCarriers carriers, CarrierScrubPolicy policy, bool wholeWord = false)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(terms);
@@ -129,7 +129,7 @@ public static class PdfDocumentSanitizer
                 return;
             }
 
-            var scrub = new CarrierScrub(actionable, caseSensitive, mode);
+            var scrub = new CarrierScrub(actionable, caseSensitive, mode, wholeWord);
             var stageChanged = run(scrub);
             changed |= stageChanged;
             if (stageChanged) invalidation |= scope;
@@ -169,12 +169,16 @@ public static class PdfDocumentSanitizer
     {
         private readonly IReadOnlyList<string> _terms;
         private readonly bool _caseSensitive;
+        private readonly bool _wholeWord;
 
-        internal CarrierScrub(IReadOnlyList<string> terms, bool caseSensitive, CarrierScrubMode mode)
+        internal CarrierScrub(
+            IReadOnlyList<string> terms, bool caseSensitive, CarrierScrubMode mode,
+            bool wholeWord = false)
         {
             _terms = terms;
             _caseSensitive = caseSensitive;
             Mode = mode;
+            _wholeWord = wholeWord;
         }
 
         internal CarrierScrubMode Mode { get; }
@@ -197,7 +201,7 @@ public static class PdfDocumentSanitizer
             if (string.IsNullOrEmpty(value)) return false;
             foreach (var term in _terms)
             {
-                if (!Contains(value, term, _caseSensitive)) continue;
+                if (IndexOfTerm(value, term, _caseSensitive, _wholeWord, 0) < 0) continue;
                 TermFound = true;
                 return true;
             }
@@ -221,9 +225,7 @@ public static class PdfDocumentSanitizer
             if (Mode == CarrierScrubMode.Strip)
             {
                 Hits(value);
-                var scrubbed = trim
-                    ? Excise(value, _terms, _caseSensitive)
-                    : ExciseNoTrim(value, _terms, _caseSensitive);
+                var scrubbed = ExciseCore(value, _terms, _caseSensitive, _wholeWord, trim);
                 if (scrubbed == value) return false;
                 replacement = scrubbed;
                 return true;
@@ -896,14 +898,65 @@ public static class PdfDocumentSanitizer
     }
 
     private static string Excise(string value, IReadOnlyList<string> terms, bool caseSensitive)
+        => ExciseCore(value, terms, caseSensitive, wholeWord: false, trim: true);
+
+    /// <summary>
+    /// Cut every occurrence of <paramref name="terms"/> out of
+    /// <paramref name="value"/>, honouring the #1052 whole-word rule.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ The carrier path MUST use the same match rule as page content. #896's
+    /// lesson is exactly this: a safe option that existed only in the GUI meant
+    /// every other caller silently got the unsafe one. If page content matches
+    /// whole-word-only and metadata still matched by substring, redacting "Lee"
+    /// whole-word would leave the page intact and gut "Sleeman" in /Info.
+    /// </remarks>
+    private static string ExciseCore(
+        string value, IReadOnlyList<string> terms, bool caseSensitive, bool wholeWord, bool trim)
     {
-        var comparison = caseSensitive
-            ? StringComparison.Ordinal
-            : StringComparison.OrdinalIgnoreCase;
         var result = value;
         foreach (var term in terms)
-            result = result.Replace(term, string.Empty, comparison);
-        return result.Trim();
+        {
+            if (string.IsNullOrEmpty(term)) continue;
+            var from = 0;
+            while (from <= result.Length - term.Length)
+            {
+                var at = IndexOfTerm(result, term, caseSensitive, wholeWord, from);
+                if (at < 0) break;
+                result = result.Remove(at, term.Length);
+                from = at;
+            }
+        }
+        return trim ? result.Trim() : result;
+    }
+
+    /// <summary>
+    /// Index of the next occurrence of <paramref name="term"/> at or after
+    /// <paramref name="startIndex"/>, or -1. Under <paramref name="wholeWord"/>
+    /// an occurrence only counts when a non-word character (or the string edge)
+    /// bounds it on both sides — the same <c>\w</c> rule the page matcher uses.
+    /// </summary>
+    private static int IndexOfTerm(
+        string value, string term, bool caseSensitive, bool wholeWord, int startIndex)
+    {
+        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
+
+        var at = startIndex;
+        while (at <= value.Length - term.Length)
+        {
+            var found = value.IndexOf(term, at, comparison);
+            if (found < 0) return -1;
+            if (!wholeWord) return found;
+
+            var end = found + term.Length - 1;
+            var boundedLeft = found == 0 || !IsWordChar(value[found - 1]);
+            var boundedRight = end + 1 >= value.Length || !IsWordChar(value[end + 1]);
+            if (boundedLeft && boundedRight) return found;
+
+            at = found + 1;
+        }
+        return -1;
     }
 
     /// <summary>
@@ -913,11 +966,5 @@ public static class PdfDocumentSanitizer
     /// second scrub pass cannot mutate an already-cut value.
     /// </summary>
     private static string ExciseNoTrim(string value, IReadOnlyList<string> terms, bool caseSensitive)
-    {
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        var result = value;
-        foreach (var term in terms)
-            result = result.Replace(term, string.Empty, comparison);
-        return result;
-    }
+        => ExciseCore(value, terms, caseSensitive, wholeWord: false, trim: false);
 }

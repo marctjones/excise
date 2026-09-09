@@ -71,6 +71,14 @@ public sealed class RedactionReport
     public required IReadOnlyList<CarrierResult> Carriers { get; init; }
 
     /// <summary>
+    /// Whether this run matched WHOLE WORDS only (#1052). Recorded because the
+    /// rule that ran is part of the result: a user who does not know whether
+    /// "Lee" could have matched inside "Sleeman" cannot reason about what was
+    /// left behind — the same principle as #1045's width decision.
+    /// </summary>
+    public bool WholeWord { get; init; }
+
+    /// <summary>
     /// Images whose term region was blacked out in place, preserving the rest of
     /// the image (#1195). Informational.
     /// </summary>
@@ -113,6 +121,7 @@ public sealed class RedactionReport
     public override string ToString()
     {
         var parts = new List<string> { $"{VerifiedRemovals} removed" };
+        if (WholeWord) parts.Add("whole-word matching");
         if (Survived > 0) parts.Add($"{Survived} STILL PRESENT");
         if (ImagesDroppedWhole > 0)
             parts.Add($"{ImagesDroppedWhole} whole image(s) removed (region redaction unavailable)");

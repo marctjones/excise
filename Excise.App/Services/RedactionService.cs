@@ -146,11 +146,18 @@ public class RedactionService
     /// Unverified result never blocks; it's surfaced in
     /// <see cref="TextRedactionResult.Warnings"/> instead.
     /// </param>
+    /// <param name="wholeWord">
+    /// #1052 — require the match to be bounded by a non-word character on both
+    /// sides. Default false (substring, the #1000 decision). The rule that ran
+    /// is echoed back in <see cref="TextRedactionResult.WholeWord"/>.
+    /// </param>
     public TextRedactionResult RedactText(
         string inputPath, string outputPath, string textToRedact, bool caseSensitive = false,
-        bool allowLowConfidence = false)
+        bool allowLowConfidence = false, bool wholeWord = false)
     {
-        _logger.LogInformation("RedactText: '{Text}' in {Input}", textToRedact, inputPath);
+        _logger.LogInformation(
+            "RedactText: '{Text}' in {Input} (wholeWord={WholeWord})",
+            textToRedact, inputPath, wholeWord);
 
         try
         {
@@ -171,7 +178,11 @@ public class RedactionService
 
             // #1089: VerifiedRemovals, not the located count. The old int was
             // an attempt counter and reported a term that survived as success.
-            var redaction = doc.RedactText(textToRedact, caseSensitive);
+            var redaction = doc.RedactText(textToRedact, new Excise.Core.Text.Segmentation.RedactionOptions
+            {
+                CaseSensitive = caseSensitive,
+                WholeWord = wholeWord,   // #1052
+            });
             int totalMatches = redaction.VerifiedRemovals;
             // #643: this path opens without a password, so only empty-user-
             // password encrypted sources reach here — their redacted output
@@ -182,8 +193,10 @@ public class RedactionService
                 ? new[] { BuildConfidenceWarning(confidence) }
                 : null;
 
-            _logger.LogInformation("Redacted {Count} occurrence(s) of '{Text}'", totalMatches, textToRedact);
-            return TextRedactionResult.Succeeded(totalMatches, warnings);
+            _logger.LogInformation(
+                "Redacted {Count} occurrence(s) of '{Text}' (wholeWord={WholeWord})",
+                totalMatches, textToRedact, wholeWord);
+            return TextRedactionResult.Succeeded(totalMatches, warnings, wholeWord);
         }
         catch (Exception ex)
         {

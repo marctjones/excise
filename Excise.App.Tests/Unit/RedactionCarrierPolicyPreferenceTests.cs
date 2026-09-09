@@ -87,6 +87,28 @@ public class RedactionCarrierPolicyPreferenceTests
     }
 
     [Fact]
+    public void WholeWord_DefaultsOff_AndRoundTripsThroughPreferences()
+    {
+        // #1052: the toggle exists in the GUI, defaults to the #1000 substring
+        // behaviour, and reaches the engine's carrier scrub.
+        var main = MainWindowViewModelTestFactory.Create();
+        main.RedactionWholeWord.Should().BeFalse("#1000 kept substring as the default");
+        main.BuildRedactedCopySafetyOptions().WholeWord.Should().BeFalse();
+
+        var prefs = new PreferencesViewModel();
+        prefs.LoadFromMainViewModel(main);
+        prefs.RedactionWholeWord.Should().BeFalse();
+
+        prefs.RedactionWholeWord = true;
+        prefs.SaveToMainViewModel(main);
+
+        main.RedactionWholeWord.Should().BeTrue();
+        main.BuildRedactedCopySafetyOptions().WholeWord.Should().BeTrue(
+            "a toggle that does not reach PdfDocumentSanitizer is a setting the " +
+            "user believes in and does not have");
+    }
+
+    [Fact]
     public void PreferencesRoundTrip_PreservesBothChoices()
     {
         var main = MainWindowViewModelTestFactory.Create();

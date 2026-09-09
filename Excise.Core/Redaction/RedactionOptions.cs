@@ -44,15 +44,40 @@ public enum WidthPolicy
 ///   and <see cref="CarrierPolicy"/> (mode). The App's own
 ///   <c>RemoveAllMetadata</c> remains a separate, blunter wholesale strip that
 ///   needs no term.</description></item>
-///   <item><term>Whole-word / sub-3-char match</term><description>#1052 / carrier
-///   policy — not implemented as a boundary rule (word boundaries were decided
-///   NOT to be the fix, 2026-08-10), so no field yet.</description></item>
+///   <item><term>Sub-3-char carrier match</term><description>the carrier policy's
+///   3-character scrub floor is REPORTED, not configurable — a term below it is
+///   surfaced in <see cref="RedactionReport.Carriers"/>. (Whole-word matching
+///   IS here now: see <see cref="WholeWord"/>. The 2026-08-10 decision that
+///   "word boundaries are not the fix" was about unmatched CARRIERS — the fix
+///   there is to report them — and is compatible with #1052's explicit,
+///   user-selected match rule for page content.)</description></item>
 /// </list>
 /// </summary>
 public sealed record RedactionOptions
 {
     /// <summary>Match the term case-sensitively. Default false. Enforced by: Core.</summary>
     public bool CaseSensitive { get; init; } = false;
+
+    /// <summary>
+    /// Require the match to be bounded by a non-word character (or the start/end
+    /// of the run) on both sides. Default false — substring matching, the #1000
+    /// decision. Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// <para>#1052. #1000 established that no single rule can be right:
+    /// substring is correct for a case number inside a longer citation and
+    /// wrong for <c>Lee</c> inside <c>Sleeman</c>. The tool must not guess —
+    /// the person redacting knows which they mean — so the default stays
+    /// substring and the strict reading is an explicit choice.</para>
+    /// <para>⚠️ Whichever way this is set must be VISIBLE IN THE RESULT, not
+    /// just at the moment of clicking: <see cref="RedactionReport.WholeWord"/>
+    /// carries it. A user who does not know which rule ran cannot reason about
+    /// what was left behind.</para>
+    /// <para>The rule applies to page content AND to the document-level carrier
+    /// scrub, together. #896 is the lesson: a safe option that existed only in
+    /// one front end meant every other caller silently got the unsafe one.</para>
+    /// </remarks>
+    public bool WholeWord { get; init; } = false;
 
     /// <summary>Which glyph/image overlap rule selects content for removal.
     /// Default <see cref="GlyphRemovalStrategy.AnyOverlap"/>. Enforced by: Core.</summary>

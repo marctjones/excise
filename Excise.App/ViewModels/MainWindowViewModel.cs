@@ -66,6 +66,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Excise.Core.Operations.CarrierScrubMode.Strip;
     private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
         Excise.Core.Operations.CarrierScrubMode.Strip;
+    private bool _redactionWholeWord;
     private bool _isRedactionMode;
     private PdfPageRect? _currentRedactionPageArea;
     // Whether the user has already confirmed editing a signed document this
@@ -296,6 +297,24 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Match whole words only when redacting text (#1052). Default false —
+    /// substring matching, the #1000 decision.
+    /// </summary>
+    /// <remarks>
+    /// #1000 decided substring stays the default because no single rule is
+    /// right: it is correct for a case number inside a longer citation and
+    /// wrong for <c>Lee</c> inside <c>Sleeman</c>. This is the explicit
+    /// alternative that makes that default safe. It reaches the scripted
+    /// text-redaction path AND the document-carrier scrub together — a rule
+    /// honoured in one path and not another is #896.
+    /// </remarks>
+    public bool RedactionWholeWord
+    {
+        get => _redactionWholeWord;
+        set => this.RaiseAndSetIfChanged(ref _redactionWholeWord, value);
+    }
+
+    /// <summary>
     /// The redacted-copy scrub options the user's per-carrier choices describe
     /// (#1188/#1169). All-default unless a policy was changed, so the redaction
     /// path is byte-identical to before the option existed.
@@ -312,6 +331,7 @@ public partial class MainWindowViewModel : ViewModelBase
         return Excise.Core.Text.Segmentation.RedactedCopySafetyOptions.Default with
         {
             CarrierPolicy = policy,
+            WholeWord = RedactionWholeWord,   // #1052
         };
     }
 

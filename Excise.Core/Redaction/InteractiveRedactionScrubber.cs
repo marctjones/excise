@@ -53,7 +53,9 @@ internal static class InteractiveRedactionScrubber
     /// leak-safe move) only when the appearance is not text-extractable — a
     /// subsetted font with no ToUnicode, the #637 limitation.</para>
     /// </summary>
-    public static bool ScrubTerm(PdfPage page, PdfRectangle area, string term, bool caseSensitive)
+    public static bool ScrubTerm(
+        PdfPage page, PdfRectangle area, string term, bool caseSensitive,
+        bool wholeWord = false)   // #1052
     {
         if (string.IsNullOrEmpty(term)) return ScrubArea(page, area);
 
@@ -61,7 +63,7 @@ internal static class InteractiveRedactionScrubber
         var changed = false;
         var pruneCandidates = new HashSet<int>();
 
-        changed |= ScrubFormFields(page, area, pruneCandidates, term, caseSensitive);
+        changed |= ScrubFormFields(page, area, pruneCandidates, term, caseSensitive, wholeWord);
         changed |= RemoveIntersectingAnnotations(page, area, pruneCandidates);
 
         if (pruneCandidates.Count > 0)
@@ -77,13 +79,15 @@ internal static class InteractiveRedactionScrubber
     /// <paramref name="value"/> with every occurrence of <paramref name="term"/>
     /// cut out, or null when it contains none.
     /// </summary>
-    private static string? WithoutTerm(string value, string term, bool caseSensitive)
+    private static string? WithoutTerm(
+        string value, string term, bool caseSensitive, bool wholeWord = false)
     {
-        var comparison = caseSensitive
-            ? StringComparison.Ordinal
-            : StringComparison.OrdinalIgnoreCase;
-
-        var at = value.IndexOf(term, comparison);
+        // #1052: the same \w boundary rule the page matcher uses. A field value
+        // must not be cut by a looser rule than the one that found the match —
+        // whole-word "Lee" would otherwise still turn "Sleeman" into "Sman"
+        // here, which is the #896 failure (a safe option honoured in one path
+        // and silently not in another).
+        var at = IndexOfTerm(value, term, caseSensitive, wholeWord, 0);
         if (at < 0) return null;
 
         var sb = new System.Text.StringBuilder(value.Length);
@@ -92,10 +96,39 @@ internal static class InteractiveRedactionScrubber
         {
             sb.Append(value, from, at - from);
             from = at + term.Length;
-            at = value.IndexOf(term, from, comparison);
+            at = IndexOfTerm(value, term, caseSensitive, wholeWord, from);
         }
         sb.Append(value, from, value.Length - from);
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Next occurrence of <paramref name="term"/> at or after
+    /// <paramref name="startIndex"/>, or -1. Under <paramref name="wholeWord"/>
+    /// it must be bounded by a non-word character (or the string edge) on both
+    /// sides (#1052).
+    /// </summary>
+    private static int IndexOfTerm(
+        string value, string term, bool caseSensitive, bool wholeWord, int startIndex)
+    {
+        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
+
+        var at = startIndex;
+        while (at <= value.Length - term.Length)
+        {
+            var found = value.IndexOf(term, at, comparison);
+            if (found < 0) return -1;
+            if (!wholeWord) return found;
+
+            var end = found + term.Length - 1;
+            if ((found == 0 || !IsWordChar(value[found - 1])) &&
+                (end + 1 >= value.Length || !IsWordChar(value[end + 1])))
+                return found;
+
+            at = found + 1;
+        }
+        return -1;
     }
 
     /// <summary>
@@ -109,13 +142,14 @@ internal static class InteractiveRedactionScrubber
         string key,
         string term,
         bool caseSensitive,
-        HashSet<int> pruneCandidates)
+        HashSet<int> pruneCandidates,
+        bool wholeWord = false)
     {
         var raw = dictionary.GetOptional(key);
         if (raw == null) return false;
         if (document.Resolve(raw) is not PdfString str) return false;
 
-        var redacted = WithoutTerm(str.Value, term, caseSensitive);
+        var redacted = WithoutTerm(str.Value, term, caseSensitive, wholeWord);
         if (redacted == null) return false;
 
         // The old value may be its own indirect object still holding the term.
@@ -136,7 +170,8 @@ internal static class InteractiveRedactionScrubber
         PdfDictionary field,
         string term,
         bool caseSensitive,
-        HashSet<int> pruneCandidates)
+        HashSet<int> pruneCandidates,
+        bool wholeWord = false)
     {
         var raw = field.GetOptional("Opt");
         if (raw == null) return false;
@@ -148,7 +183,7 @@ internal static class InteractiveRedactionScrubber
             switch (document.Resolve(options[i]))
             {
                 case PdfString entry:
-                    if (WithoutTerm(entry.Value, term, caseSensitive) is { } cut)
+                    if (WithoutTerm(entry.Value, term, caseSensitive, wholeWord) is { } cut)
                     {
                         options[i] = new PdfString(cut);
                         changed = true;
@@ -159,7 +194,7 @@ internal static class InteractiveRedactionScrubber
                     for (var j = 0; j < pair.Count; j++)
                     {
                         if (document.Resolve(pair[j]) is PdfString s2 &&
-                            WithoutTerm(s2.Value, term, caseSensitive) is { } cut2)
+                            WithoutTerm(s2.Value, term, caseSensitive, wholeWord) is { } cut2)
                         {
                             pair[j] = new PdfString(cut2);
                             changed = true;
@@ -179,7 +214,8 @@ internal static class InteractiveRedactionScrubber
         PdfRectangle area,
         HashSet<int> pruneCandidates,
         string? term = null,
-        bool caseSensitive = false)
+        bool caseSensitive = false,
+        bool wholeWord = false)
     {
         IReadOnlyList<PdfField> fields;
         try { fields = page.GetFormFields(); }
@@ -228,15 +264,15 @@ internal static class InteractiveRedactionScrubber
                 // #1038: cut the term out, keep the rest of the value. See
                 // ScrubTerm for what deleting it instead cost on a real file.
                 changed |= RedactStringEntry(
-                    page.Document, field.RawDictionary, "V", term, caseSensitive, pruneCandidates);
+                    page.Document, field.RawDictionary, "V", term, caseSensitive, pruneCandidates, wholeWord);
                 changed |= RedactStringEntry(
-                    page.Document, field.RawDictionary, "DV", term, caseSensitive, pruneCandidates);
+                    page.Document, field.RawDictionary, "DV", term, caseSensitive, pruneCandidates, wholeWord);
                 // #1098: rewrite the appearance to remove the term's GLYPHS so
                 // the field still renders its remaining text in readers that
                 // ignore /NeedAppearances. Drops /AP (leak-safe) only if the
                 // rewrite can't be done.
                 changed |= RewriteOrDropAppearance(
-                    page, field.RawDictionary, defaultResources, term, caseSensitive, processedAp);
+                    page, field.RawDictionary, defaultResources, term, caseSensitive, processedAp, wholeWord);
             }
             else
             {
@@ -259,14 +295,14 @@ internal static class InteractiveRedactionScrubber
             if (field.FieldType == PdfFieldType.Choice)
                 changed |= term != null
                     ? RedactOptionList(
-                        page.Document, field.RawDictionary, term, caseSensitive, pruneCandidates)
+                        page.Document, field.RawDictionary, term, caseSensitive, pruneCandidates, wholeWord)
                     : field.RawDictionary.Remove("Opt");
 
             foreach (var widget in field.WidgetDictionaries)
             {
                 CaptureObjectGraph(page.Document, widget.GetOptional("AP"), pruneCandidates);
                 changed |= term != null
-                    ? RewriteOrDropAppearance(page, widget, defaultResources, term, caseSensitive, processedAp)
+                    ? RewriteOrDropAppearance(page, widget, defaultResources, term, caseSensitive, processedAp, wholeWord)
                     : widget.Remove("AP");
             }
         }
@@ -295,13 +331,13 @@ internal static class InteractiveRedactionScrubber
     /// </summary>
     private static bool RewriteOrDropAppearance(
         PdfPage page, PdfDictionary holder, PdfDictionary? defaultResources,
-        string term, bool caseSensitive, HashSet<PdfDictionary> processedAp)
+        string term, bool caseSensitive, HashSet<PdfDictionary> processedAp, bool wholeWord = false)
     {
         if (page.Document.Resolve(holder.GetOptional("AP") ?? PdfNull.Instance) is not PdfDictionary ap)
             return false;   // nothing to touch
         if (!processedAp.Add(ap))
             return false;   // already handled via the merged field/widget dict
-        if (AppearanceStreamRedactor.RedactTerm(page, ap, defaultResources, term, caseSensitive))
+        if (AppearanceStreamRedactor.RedactTerm(page, ap, defaultResources, term, caseSensitive, wholeWord))
             return true;    // rewritten in place, kept
         return holder.Remove("AP");   // couldn't rewrite -> drop
     }

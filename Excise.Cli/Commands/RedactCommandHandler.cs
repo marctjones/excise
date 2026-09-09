@@ -101,6 +101,7 @@ internal static class RedactCommandHandler
         var redaction = document.RedactText(request.Text, new RedactionOptions
         {
             CaseSensitive = request.CaseSensitive,
+            WholeWord = request.WholeWord,   // #1052
             DrawBox = request.DrawBox,
             Width = request.CloseWidth
                 ? WidthPolicy.CloseGap
@@ -167,7 +168,8 @@ internal static class RedactCommandHandler
             redaction.VerifiedRemovals,
             Flattened: false,
             carrierNotes,
-            diagnostics);
+            diagnostics,
+            redaction.WholeWord);
     }
 
     private static void Validate(RedactCommandRequest request)
@@ -220,7 +222,8 @@ internal readonly record struct RedactCommandRequest(
     (double R, double G, double B)? BoxColor = null,
     bool OcrImageText = false,
     bool FlattenOcr = false,
-    Excise.Core.Operations.CarrierScrubPolicy? CarrierPolicy = null);   // #1188/#1169
+    Excise.Core.Operations.CarrierScrubPolicy? CarrierPolicy = null,   // #1188/#1169
+    bool WholeWord = false);   // #1052
 
 internal sealed record RedactCommandResult(
     string InputPath,
@@ -229,7 +232,8 @@ internal sealed record RedactCommandResult(
     int Count,
     bool Flattened,
     IReadOnlyList<string> CarrierNotes,
-    IReadOnlyList<string> Diagnostics);
+    IReadOnlyList<string> Diagnostics,
+    bool WholeWord = false);   // #1052 — the match rule is part of the result
 
 /// <summary>
 /// A typed refusal lets automation translate confidence failures without

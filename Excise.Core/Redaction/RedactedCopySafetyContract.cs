@@ -73,6 +73,13 @@ public sealed record RedactedCopySafetyOptions
     public Operations.RedactionCarriers Carriers { get; init; }
         = Operations.RedactionCarriers.All;
 
+    /// <summary>
+    /// Match whole words only in the term scrub (#1052). Default false —
+    /// substring, the #1000 decision. Must agree with how the caller matched
+    /// page content: two different rules in one redaction is the #896 failure.
+    /// </summary>
+    public bool WholeWord { get; init; }
+
     public static RedactedCopySafetyOptions Default { get; } = new();
 }
 

@@ -106,7 +106,8 @@ public static class PdfDocumentRedactionExtensions
             options.BoxColor,
             options.Carriers,
             progress,
-            options.CarrierPolicy);
+            options.CarrierPolicy,
+            options.WholeWord);
     }
 
     public static RedactionReport RedactText(
@@ -122,7 +123,8 @@ public static class PdfDocumentRedactionExtensions
         Excise.Core.Operations.RedactionCarriers carriers
             = Excise.Core.Operations.RedactionCarriers.All,  // #1188 — per-carrier scrub scope
         Action<int, int>? progress = null,
-        Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy = null)  // #1188/#1169 — per-carrier MODE
+        Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy = null,  // #1188/#1169 — per-carrier MODE
+        bool wholeWord = false)   // #1052 — opt-in whole-word matching
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
@@ -136,6 +138,7 @@ public static class PdfDocumentRedactionExtensions
                 Term = text ?? "",
                 Pages = pageResults,
                 Carriers = carrierResults,
+                WholeWord = wholeWord,
             };
 
         int totalMatches = 0;
@@ -172,7 +175,7 @@ public static class PdfDocumentRedactionExtensions
                 if (searchLetters.Count == 0) break;
 
                 var searchTextSnapshot = string.Concat(searchLetters.Select(l => l.Value));
-                var matches = FindTextMatches(searchLetters, text, caseSensitive);
+                var matches = FindTextMatches(searchLetters, text, caseSensitive, wholeWord);
                 if (matches.Count == 0) break;
 
                 // #1090: a stalled page STOPS. It used to fall back to
@@ -241,7 +244,7 @@ public static class PdfDocumentRedactionExtensions
                             // whole field value; on issue18036.pdf that was 545
                             // of 568 characters to remove one word.
                             InteractiveRedactionScrubber.ScrubTerm(
-                                page, bbox, text, caseSensitive);
+                                page, bbox, text, caseSensitive, wholeWord);
                         else
                         {
                             contentAreas.Add(strategy == GlyphRemovalStrategy.FullyContained
@@ -285,7 +288,7 @@ public static class PdfDocumentRedactionExtensions
             // findable. This is the difference between "excise tried" and
             // "excise checked", and the whole reason the old int return was a
             // lie: it reported attempts.
-            var remaining = CountOccurrences(page, text, caseSensitive, includeHiddenLayers);
+            var remaining = CountOccurrences(page, text, caseSensitive, includeHiddenLayers, wholeWord);
             pageResults.Add(new PageRedactionResult(
                 pageNum,
                 pageLocated,
@@ -338,7 +341,7 @@ public static class PdfDocumentRedactionExtensions
             {
                 var policy = carrierPolicy ?? Excise.Core.Operations.CarrierScrubPolicy.Default;
                 var outcome = Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(
-                    document, new[] { text }, caseSensitive, carriers, policy);
+                    document, new[] { text }, caseSensitive, carriers, policy, wholeWord);
 
                 // #1188/#1169: the report says WHICH POLICY RAN on each carrier,
                 // not just "scrubbed". A ReportOnly carrier still holds the term
@@ -386,6 +389,7 @@ public static class PdfDocumentRedactionExtensions
             Term = text,
             Pages = pageResults,
             Carriers = carrierResults,
+            WholeWord = wholeWord,
             ImageRegionsRedacted = imageCounts.RegionEdited,
             ImagesDroppedWhole = imageCounts.RemovedWhole,
         };
@@ -417,7 +421,8 @@ public static class PdfDocumentRedactionExtensions
     /// needs an independent extractor -- #1094.</para>
     /// </summary>
     private static int CountOccurrences(
-        PdfPage page, string text, bool caseSensitive, bool includeHiddenLayers)
+        PdfPage page, string text, bool caseSensitive, bool includeHiddenLayers,
+        bool wholeWord = false)
     {
         try
         {
@@ -425,7 +430,10 @@ public static class PdfDocumentRedactionExtensions
             var searchLetters = includeHiddenLayers
                 ? letters
                 : letters.Where(l => !l.IsInHiddenOptionalContent).ToList();
-            return FindTextMatches(searchLetters, text, caseSensitive).Count;
+            // #1052: the verification pass MUST use the same match rule as the
+            // removal pass. A stricter re-read would report "gone" for a match
+            // the removal never made.
+            return FindTextMatches(searchLetters, text, caseSensitive, wholeWord).Count;
         }
         catch
         {
@@ -518,7 +526,8 @@ public static class PdfDocumentRedactionExtensions
     /// non-overlapping — greedy left-to-right.
     /// </remarks>
     internal static List<List<Letter>> FindTextMatches(
-        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive)
+        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive,
+        bool wholeWord = false)   // #1052
     {
         var matches = new List<List<Letter>>();
         if (string.IsNullOrEmpty(searchText) || letters.Count == 0)
@@ -624,6 +633,19 @@ public static class PdfDocumentRedactionExtensions
                     endIndex++;
                 }
 
+                // #1052: whole-word matching, when the user asked for it. #1000
+                // decided substring stays the DEFAULT — it is right for a case
+                // number inside a longer citation — precisely because the
+                // alternative would be an explicit choice rather than a silent
+                // global rule. This is that choice: a match must be bounded by a
+                // non-word character (or the start/end of the run) on BOTH sides,
+                // so redacting "Lee" no longer guts "Sleeman".
+                if (wholeWord && !IsWholeWordMatch(fullText, i, endIndex))
+                {
+                    i++;
+                    continue;
+                }
+
                 if (endIndex >= i && endIndex < characterToLetter.Count)
                 {
                     var firstLetter = characterToLetter[i];
@@ -651,6 +673,25 @@ public static class PdfDocumentRedactionExtensions
         }
 
         return matches;
+    }
+
+    /// <summary>
+    /// #1052 — is the span <c>[start, end]</c> of <paramref name="text"/> bounded
+    /// by a non-word character (or the start/end of the text) on both sides?
+    /// </summary>
+    /// <remarks>
+    /// "Word character" is letter, digit or underscore — the ordinary <c>\w</c>
+    /// rule. Underscore counts, so whole-word <c>SECRET</c> does not match inside
+    /// <c>SECRET_KEY</c>; the point of the option is that the user gets the strict
+    /// reading when they ask for it.
+    /// </remarks>
+    private static bool IsWholeWordMatch(string text, int start, int end)
+    {
+        static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
+
+        if (start > 0 && IsWordChar(text[start - 1])) return false;
+        if (end + 1 < text.Length && IsWordChar(text[end + 1])) return false;
+        return true;
     }
 
     /// <summary>

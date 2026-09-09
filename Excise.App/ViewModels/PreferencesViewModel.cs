@@ -21,6 +21,7 @@ public class PreferencesViewModel : ViewModelBase
         Excise.Core.Operations.CarrierScrubMode.Strip;
     private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
         Excise.Core.Operations.CarrierScrubMode.Strip;
+    private bool _redactionWholeWord;
 
     public PreferencesViewModel()
     {
@@ -117,6 +118,13 @@ public class PreferencesViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _metadataCarrierPolicy, value);
     }
 
+    /// <summary>Whole-word matching for text redaction (#1052).</summary>
+    public bool RedactionWholeWord
+    {
+        get => _redactionWholeWord;
+        set => this.RaiseAndSetIfChanged(ref _redactionWholeWord, value);
+    }
+
     // Commands
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
@@ -149,6 +157,7 @@ public class PreferencesViewModel : ViewModelBase
         SelectedWhitespaceMode = Excise.Core.Text.WhitespaceMode.Smart;
         SelectedLinkUriCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.Strip;
         SelectedMetadataCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.Strip;
+        RedactionWholeWord = false;
     }
 
     private void CloseWindow()
@@ -162,6 +171,7 @@ public class PreferencesViewModel : ViewModelBase
         SelectedWhitespaceMode = mainViewModel.WhitespaceMode;
         SelectedLinkUriCarrierPolicy = mainViewModel.LinkUriCarrierPolicy;
         SelectedMetadataCarrierPolicy = mainViewModel.MetadataCarrierPolicy;
+        RedactionWholeWord = mainViewModel.RedactionWholeWord;
     }
 
     public void SaveToMainViewModel(MainWindowViewModel mainViewModel)
@@ -170,5 +180,6 @@ public class PreferencesViewModel : ViewModelBase
         mainViewModel.WhitespaceMode = SelectedWhitespaceMode;
         mainViewModel.LinkUriCarrierPolicy = SelectedLinkUriCarrierPolicy;
         mainViewModel.MetadataCarrierPolicy = SelectedMetadataCarrierPolicy;
+        mainViewModel.RedactionWholeWord = RedactionWholeWord;
     }
 }

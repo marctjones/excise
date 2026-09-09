@@ -114,7 +114,8 @@ public static class RedactedCopySafetyPolicy
             try
             {
                 var outcome = PdfDocumentSanitizer.ScrubTerms(
-                    document, terms, caseSensitive: false, options.Carriers, options.CarrierPolicy);
+                    document, terms, caseSensitive: false, options.Carriers, options.CarrierPolicy,
+                    options.WholeWord);
 
                 // #1169: a carrier the user set to ReportOnly still holds the
                 // term, and a refused mode did nothing at all. Both are the
