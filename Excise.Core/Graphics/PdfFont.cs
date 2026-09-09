@@ -199,6 +199,16 @@ public class PdfFont
     internal virtual bool PreferIndirectFontDictionary => false;
 
     /// <summary>
+    /// Declare that <paramref name="text"/>'s glyphs may be drawn from this font
+    /// by something OTHER than our own content-stream writer — so a subsetting
+    /// font must keep them even though <see cref="EncodeString"/> never sees
+    /// them. Used for AcroForm default-appearance (<c>/DA</c>) fonts, whose
+    /// glyphs are chosen by the viewer when it generates a field's appearance
+    /// from typed input (#1435). No-op for non-subsetting fonts.
+    /// </summary>
+    internal virtual void ReserveGlyphs(string text) { }
+
+    /// <summary>
     /// Creates a PDF font dictionary for embedding in resources.
     /// </summary>
     public PdfDictionary CreateFontDictionary()
