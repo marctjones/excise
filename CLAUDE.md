@@ -1078,7 +1078,7 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
-    ├── MutoolReferenceRenderer.cs        # 290 uses in Differential tests
+    ├── MutoolReferenceRenderer.cs        # 300 uses in Differential tests
     ├── GhostscriptReferenceRenderer.cs   #  88
     ├── PdftocairoReferenceRenderer.cs    #  76
     ├── PdftoppmReferenceRenderer.cs      #  18
