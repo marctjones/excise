@@ -38,7 +38,16 @@ internal partial class RenderContext
             return;
         }
 
-        var bitsPerComponent = imageStream.GetInt("BitsPerComponent", 8);
+        // ISO 32000-2 §8.9.6.2: an /ImageMask true image dictionary's
+        // /BitsPerComponent "shall not be specified" -- implicitly 1. Real
+        // producers commonly omit it (it's the norm, not an edge case), and
+        // GetInt's default-to-8 for the missing key meant CreateBitmapFromRawData's
+        // `bitsPerComponent == 1 && isImageMask` check never triggered for a
+        // spec-conformant stencil mask: it fell through into the non-mask
+        // decode path and rendered as a blank page, silently. Force 1 for
+        // ImageMask regardless of what the key says (or doesn't).
+        var isImageMaskForBpc = imageStream.GetBool("ImageMask");
+        var bitsPerComponent = isImageMaskForBpc ? 1 : imageStream.GetInt("BitsPerComponent", 8);
         var colorSpace = ResolveImageColorSpaceFamilyName(imageStream);
 
         SKBitmap? mutableBitmap = null;

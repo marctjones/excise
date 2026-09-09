@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1020,
-  "indexedContentSha256": "e3f9bdde25711dc8f3a81bf002d800069f2387158be888b09b59a86c7f569c41",
+  "indexedContentSha256": "5a498847380eeca58a7053fe615b8eea3ef382337e8cdfb53ac2a6022b5bcf78",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -29563,6 +29563,13 @@
           {
             "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::StencilImageMask_PaintsSameRegionMutoolDoes",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::StencilImageMask_WithNoExplicitBitsPerComponent_StillPaintsSameRegionMutoolDoes",
             "modes": [
               "render"
             ]

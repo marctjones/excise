@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-09T02:33:59.572576+00:00",
-  "gitRevision": "c8c7425574f123e8d0a1ae0e6f68898e1d7bc33d",
+  "recordedAt": "2026-09-09T02:45:05.802297+00:00",
+  "gitRevision": "bda291a3a9e2e5bedbed03ab69d851b0cbab879f",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -501,6 +501,11 @@
       "path": "/tmp/trx-integration/core.trx",
       "modifiedAt": "2026-09-09T02:33:55.647780+00:00",
       "sha256": "7fa7fb3d6946f23d51a6c7f89650efcc4c29a520e1dc026ae91e2ed5aaa251a6"
+    },
+    {
+      "path": "/tmp/trx-imgmask/imgmask.trx",
+      "modifiedAt": "2026-09-09T02:45:05.717926+00:00",
+      "sha256": "86606a21ad1812ba2c2e5d798a464e40ad55b1d7753a394c9b5226bc4f179bb2"
     }
   ],
   "outcomes": [
@@ -53859,10 +53864,18 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.StencilImageMask_PaintsSameRegionMutoolDoes",
       "outcome": "Passed",
-      "duration": "00:00:00.0341959",
-      "trx": "/tmp/trx-integration/agents.trx",
-      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
-      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+      "duration": "00:00:00.1428582",
+      "trx": "/tmp/trx-imgmask/imgmask.trx",
+      "resultModifiedAt": "2026-09-09T02:45:05.717926+00:00",
+      "trxSha256": "86606a21ad1812ba2c2e5d798a464e40ad55b1d7753a394c9b5226bc4f179bb2"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.StencilImageMask_WithNoExplicitBitsPerComponent_StillPaintsSameRegionMutoolDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0243529",
+      "trx": "/tmp/trx-imgmask/imgmask.trx",
+      "resultModifiedAt": "2026-09-09T02:45:05.717926+00:00",
+      "trxSha256": "86606a21ad1812ba2c2e5d798a464e40ad55b1d7753a394c9b5226bc4f179bb2"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.TiffPredictorFlateGradient_MatchesMutoolDecode",
@@ -69402,12 +69415,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 99,
-    "tests": 8612,
+    "trxFiles": 100,
+    "tests": 8613,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7685
+      "Passed": 7686
     },
     "status": "recorded"
   }

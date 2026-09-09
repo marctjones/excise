@@ -1902,6 +1902,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::StencilImageMask_WithNoExplicitBitsPerComponent_StillPaintsSameRegionMutoolDoes",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },

@@ -366,6 +366,48 @@ public class ImageRequirementVerificationDifferentialTests
         finally { TryDelete(path); }
     }
 
+    /// <summary>
+    /// Same fixture as <see cref="StencilImageMask_PaintsSameRegionMutoolDoes"/>
+    /// but with NO /BitsPerComponent key at all -- the spec-conformant,
+    /// common-in-the-wild case (ISO 32000-2 §8.9.6.2: /BitsPerComponent
+    /// "shall not be specified" for an /ImageMask true image, implicitly 1).
+    /// <c>RenderImageXObject</c> used to default the missing key to 8 before
+    /// checking /ImageMask, so <c>CreateBitmapFromRawData</c>'s
+    /// <c>bitsPerComponent == 1 &amp;&amp; isImageMask</c> gate never
+    /// triggered and the stencil rendered as a blank page -- caught by
+    /// comparing against mutool, which paints it correctly either way.
+    /// </summary>
+    [Fact]
+    public void StencilImageMask_WithNoExplicitBitsPerComponent_StillPaintsSameRegionMutoolDoes()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        var maskData = new byte[] { 0x70, 0xF0, 0xF0, 0xF0 };
+        var pdf = BuildStencilMaskPdf(40, 40, "1 0 0 rg", maskData, includeBitsPerComponent: false);
+
+        var path = WriteTempPdf(pdf);
+        using var mutool = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        try
+        {
+            Assert.SkipWhen(mutool == null, "mutool failed to render the stencil-mask fixture");
+
+            var mutoolRedFraction = RedFraction(mutool!, new SKRectI(0, 0, 10, 10));
+            mutoolRedFraction.Should().BeGreaterThan(0.9,
+                "oracle sanity: mutool must paint the top-left quadrant red per §8.9.6.2's default Decode, "
+                + "with or without an explicit /BitsPerComponent");
+
+            using var doc = PdfDocument.Open(path);
+            using var excise = new SkiaRenderer().RenderPage(doc.GetPage(1),
+                new RenderOptions { Dpi = Dpi, AntiAlias = false, BackgroundColor = SKColors.White });
+
+            RedFraction(excise, new SKRectI(0, 0, 10, 10)).Should().BeGreaterThan(0.9,
+                "excise must paint the stencil even when /BitsPerComponent is absent -- the pre-fix "
+                + "default-to-8 made this render as a fully blank page instead");
+            RedFraction(excise, new SKRectI(10, 10, 40, 40)).Should().BeLessThan(0.05,
+                "excise must leave the same region unpainted mutool leaves unpainted");
+        }
+        finally { TryDelete(path); }
+    }
+
     // ── image-dictionary:SMask (requirement-020) ────────────────────────────
 
     /// <summary>
@@ -610,9 +652,11 @@ public class ImageRequirementVerificationDifferentialTests
     /// drawing the /ImageMask XObject, which paints in the current colour
     /// wherever the mask says to paint.
     /// </summary>
-    private static byte[] BuildStencilMaskPdf(int pageW, int pageH, string fillOp, byte[] maskData)
+    private static byte[] BuildStencilMaskPdf(int pageW, int pageH, string fillOp, byte[] maskData,
+        bool includeBitsPerComponent = true)
     {
         var content = $"{fillOp} q {pageW} 0 0 {pageH} 0 0 cm /Im0 Do Q";
+        var bpcEntry = includeBitsPerComponent ? "/BitsPerComponent 1 " : "";
         var objects = new[]
         {
             "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
@@ -621,7 +665,7 @@ public class ImageRequirementVerificationDifferentialTests
             "/Resources << /XObject << /Im0 5 0 R >> >> >>\nendobj\n",
             $"4 0 obj\n<< /Length {content.Length} >>\nstream\n{content}\nendstream\nendobj\n",
             $"5 0 obj\n<< /Type /XObject /Subtype /Image /ImageMask true /Width 4 /Height 4 " +
-            $"/BitsPerComponent 1 /Length {maskData.Length} >>\nstream\n",
+            $"{bpcEntry}/Length {maskData.Length} >>\nstream\n",
         };
         return AssemblePdf(objects, ("/Subtype /Image", maskData));
     }

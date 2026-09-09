@@ -72961,6 +72961,13 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::StencilImageMask_WithNoExplicitBitsPerComponent_StillPaintsSameRegionMutoolDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
@@ -111062,8 +111069,8 @@
     "gradeImplemented": 670,
     "gradeVerified": 209,
     "gradeUnknown": 19,
-    "testMethods": 6422,
-    "testMethodsWithCapabilityCandidate": 4009,
+    "testMethods": 6423,
+    "testMethodsWithCapabilityCandidate": 4010,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
