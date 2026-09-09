@@ -2650,6 +2650,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3013,6 +3020,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3120,6 +3134,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3226,6 +3247,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+            "modes": [
+              "render"
             ]
           }
         ]
