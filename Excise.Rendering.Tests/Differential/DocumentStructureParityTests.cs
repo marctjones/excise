@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
 using Xunit;
 
@@ -227,6 +228,128 @@ public class DocumentStructureParityTests
         finally
         {
             try { File.Delete(output); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public void RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner()
+    {
+        // The existing #608 evidence for this (NonPageCarrierRedactionLeakTests)
+        // asserts with SavedPdfLeakScanner -- excise's OWN carrier-agnostic byte
+        // scanner. It is a real, useful check (generic, decompress-aware, not
+        // page.Text), but it is still excise's code reading excise's output.
+        // This asks qpdf to decode the saved file's object strings instead --
+        // an independent reader, so a shared blind spot in excise's scanner
+        // and excise's redactor can't both agree and both be wrong.
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        const string canary = "OUTLINEQPDFCANARY7Q2K";
+
+        byte[] pdf;
+        using (var doc = PdfDocument.Open(CreateMinimalPdf()))
+        {
+            doc.AddOutlineItem(canary, pageNumber: 1);
+            pdf = doc.SaveToBytes();
+        }
+
+        var before = Path.Combine(Path.GetTempPath(), $"excise-outline-before-{Guid.NewGuid():N}.pdf");
+        var after = Path.Combine(Path.GetTempPath(), $"excise-outline-after-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            File.WriteAllBytes(before, pdf);
+            QpdfContainsString(before, canary).Should().BeTrue(
+                "guard: qpdf must independently confirm the canary is present before redaction, " +
+                "or a clean result afterward would prove nothing");
+
+            using (var doc = PdfDocument.Open(pdf))
+            {
+                doc.RedactText(canary);
+                File.WriteAllBytes(after, doc.SaveToBytes());
+            }
+
+            QpdfContainsString(after, canary).Should().BeFalse(
+                "the outline title must be gone from every object qpdf can decode -- not just " +
+                "absent from excise's own page.Text or its own leak scanner's view of the file");
+        }
+        finally
+        {
+            try { File.Delete(before); } catch { /* best effort */ }
+            try { File.Delete(after); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public void AddOutlineItem_ProducesAnOutlineQpdfIndependentlyReadsBack()
+    {
+        // AddOutlineItem_SurvivesASaveAndReload (PdfOutlineAuthoringTests)
+        // proves excise's writer and excise's PdfOutlineParser agree with
+        // each other -- the self-oracle shape called out for AcroForm parse
+        // earlier this conversation. This asks qpdf, independently, whether
+        // the authored item is reachable and carries the right title and
+        // destination page.
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        const string title = "AUTHOREDOUTLINEQPDFCANARY";
+
+        byte[] pdf;
+        using (var doc = PdfDocument.Open(CreateTwoPagePdf()))
+        {
+            doc.AddOutlineItem(title, pageNumber: 2);
+            pdf = doc.SaveToBytes();
+        }
+
+        var output = Path.Combine(Path.GetTempPath(), $"excise-authored-outline-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            File.WriteAllBytes(output, pdf);
+            QpdfContainsString(output, title).Should().BeTrue(
+                "qpdf must independently find the authored outline item's title in the saved file");
+            QpdfReachableOutlineCount(output).Should().Be(1,
+                "qpdf's own /First-/Next walk from /Outlines must reach exactly the one item " +
+                "excise authored -- not merely find the title string somewhere unreachable");
+        }
+        finally
+        {
+            try { File.Delete(output); } catch { /* best effort */ }
+        }
+    }
+
+    private static byte[] CreateTwoPagePdf() =>
+        Excise.Core.Authoring.PdfDocumentBuilder.Create()
+            .Paragraph("Page one").PageBreak().Paragraph("Page two")
+            .SaveToBytes();
+
+    private static byte[] CreateMinimalPdf() =>
+        Excise.Core.Authoring.PdfDocumentBuilder.Create().Paragraph("Body text").SaveToBytes();
+
+    /// <summary>qpdf's JSON dump decodes every object's strings (including
+    /// ones packed into a compressed /ObjStm), so a substring search over
+    /// its output is a carrier-agnostic, independent presence check -- the
+    /// same principle as SavedPdfLeakScanner, using a different reader.</summary>
+    private static bool QpdfContainsString(string pdfPath, string term)
+    {
+        if (!QpdfJsonObjects(pdfPath, out var objects)) return false;
+        foreach (var obj in objects.Values)
+        {
+            if (ContainsStringRecursive(obj, term)) return true;
+        }
+        return false;
+    }
+
+    private static bool ContainsStringRecursive(System.Text.Json.JsonElement element, string term)
+    {
+        switch (element.ValueKind)
+        {
+            case System.Text.Json.JsonValueKind.String:
+                return (element.GetString() ?? "").Contains(term, StringComparison.Ordinal);
+            case System.Text.Json.JsonValueKind.Object:
+                foreach (var prop in element.EnumerateObject())
+                    if (ContainsStringRecursive(prop.Value, term)) return true;
+                return false;
+            case System.Text.Json.JsonValueKind.Array:
+                foreach (var item in element.EnumerateArray())
+                    if (ContainsStringRecursive(item, term)) return true;
+                return false;
+            default:
+                return false;
         }
     }
 

@@ -20848,10 +20848,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -20877,10 +20884,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -20906,10 +20920,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::AddOutlineItem_ProducesAnOutlineQpdfIndependentlyReadsBack",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -77571,6 +77592,24 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.AddOutlineItem_ProducesAnOutlineQpdfIndependentlyReadsBack",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/EncryptedCorpusPasswordCoverageTests.cs::was.EveryEncryptedFixture_EitherOpensFreely_OrHasAKnownPassword",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -78041,24 +78080,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs::ExtractionParityTests.GenerateExtractionParityReport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs::ExtractionParityTests.AdversarialCorpus_ExciseDoesNotCatastrophicallyUnderExtractRelativeToMutool",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/FlattenOcrRedactionTests.cs::FlattenOcrRedactionTests.FlattenOcr_RemovesImageBakedTerm_FromIndependentTextAndVisualOracles",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -110266,11 +110287,11 @@
     "modesWithExplicitContracts": 879,
     "modesWithPassingExplicitContracts": 878,
     "modesWithRecordedPassingCandidate": 644,
-    "gradeImplemented": 772,
-    "gradeVerified": 107,
+    "gradeImplemented": 769,
+    "gradeVerified": 110,
     "gradeUnknown": 19,
-    "testMethods": 6355,
-    "testMethodsWithCapabilityCandidate": 3941,
+    "testMethods": 6357,
+    "testMethodsWithCapabilityCandidate": 3943,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

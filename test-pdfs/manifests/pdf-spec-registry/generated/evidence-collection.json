@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1013,
-  "indexedContentSha256": "52c071f8361242de9eb6a52aeb0da70e79d764a30f7f3bffffaa50a0aa6ca605",
+  "indexedContentSha256": "1419da71659f295328d4e7a2d766aa611dbf1645fdd3506b32c8b783192b02eb",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -3943,8 +3943,23 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner",
+            "modes": [
+              "mutate",
+              "write"
+            ]
+          },
+          {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/PdfOutlineAuthoringTests.cs::AddOutlineItem_SurvivesASaveAndReload",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::AddOutlineItem_ProducesAnOutlineQpdfIndependentlyReadsBack",
             "modes": [
               "author"
             ]
@@ -8169,7 +8184,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 212
+      "candidateReferenceCount": 213
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -52830,6 +52845,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "including",
+            "uri",
+            "acroform",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -52906,19 +52932,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "actions",
-            "uri",
-            "action",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 110
+      "candidateReferenceCount": 111
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -53044,7 +53060,10 @@
           "kind": "test",
           "matchedTerms": [
             "groups",
-            "optional-content"
+            "optional-content",
+            "acroform",
+            "action",
+            "redact"
           ]
         },
         {
@@ -59549,6 +59568,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "editing",
+            "redaction",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -59859,19 +59888,9 @@
             "redaction",
             "security"
           ]
-        },
-        {
-          "path": "tests/format-compatibility-suite.json",
-          "kind": "test",
-          "matchedTerms": [
-            "editing",
-            "pdfe",
-            "redaction",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 88
+      "candidateReferenceCount": 89
     },
     {
       "id": "pdfe.product.redaction.review-panel",

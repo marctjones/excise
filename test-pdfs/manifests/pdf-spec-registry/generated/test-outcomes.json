@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-09T01:37:06.415297+00:00",
-  "gitRevision": "f1090a5f0414b9b48e198bc175b269cb144844f4",
+  "recordedAt": "2026-09-09T01:44:58.748545+00:00",
+  "gitRevision": "26243bbbca652993111bf77430a1dfce2568cd06",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -471,6 +471,16 @@
       "path": "/tmp/trx-merge4/structparity.trx",
       "modifiedAt": "2026-09-09T01:37:06.352123+00:00",
       "sha256": "a24f7ad1edc17720f3d650ab37c22638730f5b27c2aea547075d2f410b10e57f"
+    },
+    {
+      "path": "/tmp/trx-merge5/structparity2.trx",
+      "modifiedAt": "2026-09-09T01:41:50.296700+00:00",
+      "sha256": "ec7137cc0539225cadb29bd608b223498781087d3d2710ef87a72815e57d0227"
+    },
+    {
+      "path": "/tmp/trx-merge6/structparity3.trx",
+      "modifiedAt": "2026-09-09T01:44:58.666255+00:00",
+      "sha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
     }
   ],
   "outcomes": [
@@ -52307,68 +52317,84 @@
       "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
     },
     {
+      "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.AddOutlineItem_ProducesAnOutlineQpdfIndependentlyReadsBack",
+      "outcome": "Passed",
+      "duration": "00:00:00.0439603",
+      "trx": "/tmp/trx-merge6/structparity3.trx",
+      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
+      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+    },
+    {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.OcgCount_MatchesQpdf(relativePath: \"test-pdfs/poppler/unittestcases/NestedLayers.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0132380",
-      "trx": "/tmp/trx-merge4/structparity.trx",
-      "resultModifiedAt": "2026-09-09T01:37:06.352123+00:00",
-      "trxSha256": "a24f7ad1edc17720f3d650ab37c22638730f5b27c2aea547075d2f410b10e57f"
+      "duration": "00:00:00.0247686",
+      "trx": "/tmp/trx-merge6/structparity3.trx",
+      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
+      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.OcgCount_SurvivesAnOpenSaveRoundTrip(relativePath: \"test-pdfs/poppler/unittestcases/NestedLayers.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0238567",
-      "trx": "/tmp/trx-merge4/structparity.trx",
-      "resultModifiedAt": "2026-09-09T01:37:06.352123+00:00",
-      "trxSha256": "a24f7ad1edc17720f3d650ab37c22638730f5b27c2aea547075d2f410b10e57f"
+      "duration": "00:00:00.0459891",
+      "trx": "/tmp/trx-merge6/structparity3.trx",
+      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
+      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.OutlineItemCount_MatchesQpdf(relativePath: \"test-pdfs/local-real-world/foss-primer.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0270376",
-      "trx": "/tmp/trx-merge4/structparity.trx",
-      "resultModifiedAt": "2026-09-09T01:37:06.352123+00:00",
-      "trxSha256": "a24f7ad1edc17720f3d650ab37c22638730f5b27c2aea547075d2f410b10e57f"
+      "duration": "00:00:00.0430419",
+      "trx": "/tmp/trx-merge6/structparity3.trx",
+      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
+      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.OutlineItemCount_SurvivesAnOpenSaveRoundTrip(relativePath: \"test-pdfs/local-real-world/foss-primer.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0552371",
-      "trx": "/tmp/trx-merge4/structparity.trx",
-      "resultModifiedAt": "2026-09-09T01:37:06.352123+00:00",
-      "trxSha256": "a24f7ad1edc17720f3d650ab37c22638730f5b27c2aea547075d2f410b10e57f"
+      "duration": "00:00:00.0922714",
+      "trx": "/tmp/trx-merge6/structparity3.trx",
+      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
+      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.PageCount_MatchesQpdf(relativePath: \"test-pdfs/local-real-world/foss-primer.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0134000",
-      "trx": "/tmp/trx-merge4/structparity.trx",
-      "resultModifiedAt": "2026-09-09T01:37:06.352123+00:00",
-      "trxSha256": "a24f7ad1edc17720f3d650ab37c22638730f5b27c2aea547075d2f410b10e57f"
+      "duration": "00:00:00.0239963",
+      "trx": "/tmp/trx-merge6/structparity3.trx",
+      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
+      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.PageCount_MatchesQpdf(relativePath: \"test-pdfs/local-real-world/producingoss.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0232109",
-      "trx": "/tmp/trx-merge4/structparity.trx",
-      "resultModifiedAt": "2026-09-09T01:37:06.352123+00:00",
-      "trxSha256": "a24f7ad1edc17720f3d650ab37c22638730f5b27c2aea547075d2f410b10e57f"
+      "duration": "00:00:00.0347589",
+      "trx": "/tmp/trx-merge6/structparity3.trx",
+      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
+      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.RedactText_RemovesOutlineTitle_ConfirmedByQpdfNotExcisesOwnScanner",
+      "outcome": "Passed",
+      "duration": "00:00:00.0826535",
+      "trx": "/tmp/trx-merge6/structparity3.trx",
+      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
+      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.StructElementCount_MatchesQpdf(relativePath: \"test-pdfs/pdfium/tagged_nested.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0116030",
-      "trx": "/tmp/trx-merge4/structparity.trx",
-      "resultModifiedAt": "2026-09-09T01:37:06.352123+00:00",
-      "trxSha256": "a24f7ad1edc17720f3d650ab37c22638730f5b27c2aea547075d2f410b10e57f"
+      "duration": "00:00:00.0251655",
+      "trx": "/tmp/trx-merge6/structparity3.trx",
+      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
+      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.DocumentStructureParityTests.StructElementCount_SurvivesAnOpenSaveRoundTrip(relativePath: \"test-pdfs/pdfium/tagged_nested.pdf\")",
       "outcome": "Passed",
-      "duration": "00:00:00.0727877",
-      "trx": "/tmp/trx-merge4/structparity.trx",
-      "resultModifiedAt": "2026-09-09T01:37:06.352123+00:00",
-      "trxSha256": "a24f7ad1edc17720f3d650ab37c22638730f5b27c2aea547075d2f410b10e57f"
+      "duration": "00:00:00.1104195",
+      "trx": "/tmp/trx-merge6/structparity3.trx",
+      "resultModifiedAt": "2026-09-09T01:44:58.666255+00:00",
+      "trxSha256": "3d3e4028d33bd2bf7280f778d650a8680a84446aa6b987be290f9532f2446ccc"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.EncryptedCorpusPasswordCoverageTests.EveryEncryptedFixture_EitherOpensFreely_OrHasAKnownPassword",
@@ -68724,12 +68750,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 93,
-    "tests": 8531,
+    "trxFiles": 95,
+    "tests": 8533,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7604
+      "Passed": 7606
     },
     "status": "recorded"
   }

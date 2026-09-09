@@ -152,6 +152,7 @@
         "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs",
         "Excise.Core.Tests/Parsing/XRefRecoveryRegressionTests.cs",
         "Excise.Core.Tests/Text/Segmentation/UnterminatedTextObjectRedactionTests.cs",
+        "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
         "Excise.Rendering.Tests/Differential/EncryptedCorpusPasswordCoverageTests.cs",
         "Excise.Rendering.Tests/Differential/EncryptedRedactionOutputIntegrityTests.cs",
         "Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs",
@@ -251,6 +252,7 @@
         "Excise.Core.Tests/Parsing/StreamDecompressorTests.cs",
         "Excise.Core.Tests/Security/PdfPermissionsTests.cs",
         "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs",
+        "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
         "Excise.Rendering.Tests/Differential/EncryptedCorpusPasswordCoverageTests.cs",
         "Excise.Rendering.Tests/Differential/EncryptedRedactionOutputIntegrityTests.cs",
         "Excise.Rendering.Tests/Differential/QpdfReferenceToolTests.cs",
@@ -308,6 +310,7 @@
       "owner": "PDF capability registry",
       "consumerReferences": [
         "Excise.App.Tests/UI/TextSelectionAlignmentTests.cs",
+        "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
         "Excise.Rendering.Tests/Differential/GlyphWidthAccuracyTests.cs",
         "tests/corpora.tsv",
         "tests/redaction-hard-cases.tsv"
