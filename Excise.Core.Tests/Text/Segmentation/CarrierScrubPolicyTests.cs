@@ -119,7 +119,52 @@ public sealed class CarrierScrubPolicyTests
         });
 
         var row = report.Carriers.Single(c => c.Carrier == "link /A /URI");
-        row.RefusedReason.Should().Contain("term not present");
+        row.Scrubbed.Should().BeFalse("nothing needed scrubbing");
+        row.RefusedReason.Should().BeNull(
+            "a ReportOnly carrier that does not hold the term is a CLEAN outcome; " +
+            "flagging it would report a leak-free run as unclean");
+        report.IsCleanSuccess.Should().BeTrue(
+            "nothing survived and no carrier was refused");
+    }
+
+    [Fact]
+    public void RefusalOnAnUnnamedCarrier_StillReachesTheReport()
+    {
+        // #1188: RedactText names five carriers in its summary. A mode refused
+        // on one of the others (here XFA, which has no RemoveWhole) must not be
+        // dropped just because the carrier is absent from that list — silently
+        // skipping it is exactly what the carrier policy forbids.
+        var xfaPdf = Build(
+            "<< /Type /Catalog /Pages 2 0 R /AcroForm << /XFA 6 0 R >> >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>",
+            Stream("", "BT ET"),
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+            Stream("", "<xdp><field>yourself</field></xdp>"));
+
+        using var doc = PdfDocument.Open(xfaPdf);
+        var report = doc.RedactText(Term, RedactionOptions.Default with
+        {
+            CarrierPolicy = CarrierScrubPolicy.Uniform(CarrierScrubMode.RemoveWhole),
+        });
+
+        report.Carriers.Should().Contain(c => c.RefusedReason != null && c.RefusedReason.Contains("XFA"),
+            "the refusal is surfaced even though XFA is not one of the five named carriers");
+        report.IsCleanSuccess.Should().BeFalse("a refused carrier is not a clean success");
+    }
+
+    [Fact]
+    public void NoRefusalRow_ForACarrierTheDocumentDoesNotHave()
+    {
+        // The other half: a refusal on a carrier that is not present is noise,
+        // and noise is what trains people to ignore refusal rows.
+        using var doc = PdfDocument.Open(LinkedPdf());   // no XFA
+        var report = doc.RedactText(Term, RedactionOptions.Default with
+        {
+            CarrierPolicy = CarrierScrubPolicy.Uniform(CarrierScrubMode.RemoveWhole),
+        });
+
+        report.Carriers.Should().NotContain(c => c.RefusedReason != null && c.RefusedReason.Contains("XFA"));
     }
 
     [Fact]
@@ -185,7 +230,15 @@ public sealed class CarrierScrubPolicyTests
         // The carrier policy: surface, don't guess. An XFA packet is one XML
         // form; there is no "the value the term was in" to drop, so the mode is
         // refused out loud rather than quietly executed as Strip.
-        using var doc = PdfDocument.Open(LinkedPdf());
+        var xfaPdf = Build(
+            "<< /Type /Catalog /Pages 2 0 R /AcroForm << /XFA 6 0 R >> >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>",
+            Stream("", "BT ET"),
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+            Stream("", "<xdp><field>yourself</field></xdp>"));
+
+        using var doc = PdfDocument.Open(xfaPdf);
         var outcome = PdfDocumentSanitizer.ScrubTerms(
             doc, new[] { Term }, caseSensitive: false, RedactionCarriers.All,
             CarrierScrubPolicy.Default.With(RedactionCarriers.Xfa, CarrierScrubMode.RemoveWhole));

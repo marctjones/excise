@@ -335,6 +335,25 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Apply the persisted redaction-policy preferences on startup
+    /// (#1052/#1169/#1189). Unparseable values fall back to the defaults, which
+    /// are the pre-option behaviour — never to a stricter or looser policy the
+    /// user did not choose.
+    /// </summary>
+    public void ApplyRedactionPolicyPreferences(
+        bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy)
+    {
+        RedactionWholeWord = wholeWord;
+
+        if (Enum.TryParse<Excise.Core.Text.Segmentation.WidthPolicy>(widthPolicy, out var width))
+            RedactionWidthPolicy = width;
+        if (Enum.TryParse<Excise.Core.Operations.CarrierScrubMode>(linkUriPolicy, out var uri))
+            LinkUriCarrierPolicy = uri;
+        if (Enum.TryParse<Excise.Core.Operations.CarrierScrubMode>(metadataPolicy, out var meta))
+            MetadataCarrierPolicy = meta;
+    }
+
+    /// <summary>
     /// The redacted-copy scrub options the user's per-carrier choices describe
     /// (#1188/#1169). All-default unless a policy was changed, so the redaction
     /// path is byte-identical to before the option existed.

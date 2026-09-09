@@ -87,6 +87,13 @@ public partial class MainWindow : Window
                 _windowSettings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
                 _windowSettings.ReadingOrderStrategy = viewModel.ReadingOrderStrategy.ToString();
                 _windowSettings.WhitespaceMode = viewModel.WhitespaceMode.ToString();
+                // #1052/#1169/#1189: redaction policy is a preference like any
+                // other. A security choice that silently resets to the less-safe
+                // default on every launch is worse than no choice at all.
+                _windowSettings.RedactionWholeWord = viewModel.RedactionWholeWord;
+                _windowSettings.RedactionWidthPolicy = viewModel.RedactionWidthPolicy.ToString();
+                _windowSettings.LinkUriCarrierPolicy = viewModel.LinkUriCarrierPolicy.ToString();
+                _windowSettings.MetadataCarrierPolicy = viewModel.MetadataCarrierPolicy.ToString();
             }
             _windowSettings.CaptureFrom(this);
             _windowSettings.Save();
@@ -121,6 +128,11 @@ public partial class MainWindow : Window
             if (Enum.TryParse<Excise.Core.Text.WhitespaceMode>(
                     _windowSettings.WhitespaceMode, out var whitespaceMode))
                 viewModel.ApplyWhitespaceModePreference(whitespaceMode);
+            viewModel.ApplyRedactionPolicyPreferences(
+                _windowSettings.RedactionWholeWord,
+                _windowSettings.RedactionWidthPolicy,
+                _windowSettings.LinkUriCarrierPolicy,
+                _windowSettings.MetadataCarrierPolicy);
             SchedulePlatformMenuConfigure();
 
             // Subscribe to toast notifications

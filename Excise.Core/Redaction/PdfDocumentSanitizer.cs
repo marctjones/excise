@@ -116,13 +116,19 @@ public static class PdfDocumentSanitizer
             RedactionCarriers carrier,
             Func<CarrierScrub, bool> run,
             PdfDocumentDerivedStateScope scope = PdfDocumentDerivedStateScope.None,
-            string? unsupportedRemoveWholeReason = null)
+            string? unsupportedRemoveWholeReason = null,
+            Func<bool>? carrierPresent = null)
         {
             if ((carriers & carrier) == 0) return;
 
             var mode = policy.ModeFor(carrier);
             if (mode == CarrierScrubMode.RemoveWhole && unsupportedRemoveWholeReason != null)
             {
+                // Nothing to refuse when the document does not have this carrier
+                // at all — a refusal row there is noise that trains people to
+                // ignore refusal rows.
+                if (carrierPresent != null && !carrierPresent()) return;
+
                 // Never silently downgrade to a mode the caller did not ask for.
                 rows.Add(new CarrierScrubResult(carrier, mode, TermFound: false,
                     Modified: false, RefusedReason: unsupportedRemoveWholeReason));
@@ -144,7 +150,8 @@ public static class PdfDocumentSanitizer
             // in" to remove without re-deciding the XML semantics. Refuse and say
             // so (the carrier policy: surface, don't guess).
             unsupportedRemoveWholeReason:
-                "RemoveWhole is not defined for the XFA packet — dropping it destroys the whole form; use Strip or ReportOnly");
+                "RemoveWhole is not defined for the XFA packet — dropping it destroys the whole form; use Strip or ReportOnly",
+            carrierPresent: () => XfaXmlCarrier.CountUnexaminedPackets(document, null) > 0);
         Stage(RedactionCarriers.Outlines, s => ScrubOutlines(document, s));
         Stage(RedactionCarriers.Annotations, s => ScrubAnnotationContents(document, s));
         Stage(RedactionCarriers.FormFields, s => ScrubFormFieldNames(document, s));

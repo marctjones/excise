@@ -134,6 +134,42 @@ public class RedactionCarrierPolicyPreferenceTests
     }
 
     [Fact]
+    public void RedactionPolicyPreferences_SurviveARestart()
+    {
+        // A SECURITY preference that silently resets to the less-safe default on
+        // every launch is worse than no preference at all — the user believes
+        // they configured something they no longer have.
+        var settings = new Excise.App.Models.WindowSettings();
+        settings.RedactionWholeWord.Should().BeFalse("defaults are the pre-option behaviour");
+        settings.RedactionWidthPolicy.Should().Be("CollapsePreserveLayout");
+        settings.LinkUriCarrierPolicy.Should().Be("Strip");
+        settings.MetadataCarrierPolicy.Should().Be("Strip");
+
+        var main = MainWindowViewModelTestFactory.Create();
+        main.ApplyRedactionPolicyPreferences(
+            wholeWord: true,
+            widthPolicy: "OvershootPreserveLayout",
+            linkUriPolicy: "RemoveWhole",
+            metadataPolicy: "ReportOnly");
+
+        main.RedactionWholeWord.Should().BeTrue();
+        main.RedactionWidthPolicy.Should().Be(WidthPolicy.OvershootPreserveLayout);
+        main.LinkUriCarrierPolicy.Should().Be(CarrierScrubMode.RemoveWhole);
+        main.MetadataCarrierPolicy.Should().Be(CarrierScrubMode.ReportOnly);
+    }
+
+    [Fact]
+    public void UnparseablePersistedPolicy_FallsBackToTheDefault_NotToSomethingElse()
+    {
+        var main = MainWindowViewModelTestFactory.Create();
+        main.ApplyRedactionPolicyPreferences(false, "Nonsense", "Nonsense", null);
+
+        main.RedactionWidthPolicy.Should().Be(WidthPolicy.CollapsePreserveLayout);
+        main.LinkUriCarrierPolicy.Should().Be(CarrierScrubMode.Strip);
+        main.MetadataCarrierPolicy.Should().Be(CarrierScrubMode.Strip);
+    }
+
+    [Fact]
     public void PreferencesRoundTrip_PreservesBothChoices()
     {
         var main = MainWindowViewModelTestFactory.Create();

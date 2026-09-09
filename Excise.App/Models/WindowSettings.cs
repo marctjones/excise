@@ -42,6 +42,27 @@ public class WindowSettings
     public string WhitespaceMode { get; set; } = "Smart";
 
     /// <summary>
+    /// Whole-word matching for text redaction (#1052). Default false — the
+    /// substring behaviour #1000 decided on.
+    /// </summary>
+    public bool RedactionWholeWord { get; set; }
+
+    /// <summary>
+    /// Redaction width / covering-box policy (#1189). Persisted as a string;
+    /// parsed back to <see cref="Excise.Core.Text.Segmentation.WidthPolicy"/>.
+    /// </summary>
+    public string RedactionWidthPolicy { get; set; } = "CollapsePreserveLayout";
+
+    /// <summary>
+    /// How a link's <c>/A /URI</c> holding the redacted term is handled (#1169).
+    /// Parsed back to <see cref="Excise.Core.Operations.CarrierScrubMode"/>.
+    /// </summary>
+    public string LinkUriCarrierPolicy { get; set; } = "Strip";
+
+    /// <summary>The same for /Info and the XMP packet (#1169).</summary>
+    public string MetadataCarrierPolicy { get; set; } = "Strip";
+
+    /// <summary>
     /// Per-document state: file path -> (zoom level, last page index, timestamp).
     /// Limited to 50 most recent documents to avoid unbounded growth.
     /// </summary>

@@ -373,14 +373,37 @@ public static class PdfDocumentRedactionExtensions
                     var mode = row?.Mode ?? Excise.Core.Operations.CarrierScrubMode.Strip;
                     if (mode == Excise.Core.Operations.CarrierScrubMode.ReportOnly)
                     {
+                        // A ReportOnly carrier that does NOT hold the term is a
+                        // clean outcome and must carry no RefusedReason:
+                        // IsCleanSuccess keys off that field, so flagging it
+                        // would report a leak-free run as unclean and train the
+                        // user to ignore the one field that matters.
                         carrierResults.Add(new CarrierResult(carrier, false,
                             row is { TermFound: true }
                                 ? "ReportOnly (#1169): this carrier HOLDS THE TERM and was deliberately left unchanged"
-                                : "ReportOnly (#1169): examined, term not present, nothing changed"));
+                                : null));
                         continue;
                     }
 
                     carrierResults.Add(new CarrierResult(carrier, true, null));
+                }
+
+                // #1188: a carrier this report does not name individually can
+                // still REFUSE a requested mode, or hold the term under
+                // ReportOnly. Dropping those rows because the carrier is absent
+                // from the summary list is exactly the silent skip the carrier
+                // policy exists to prevent — append whatever needs attention.
+                var named = DocumentCarriers.Aggregate(
+                    Excise.Core.Operations.RedactionCarriers.None,
+                    (acc, c) => acc | c.Flag);
+                foreach (var extra in outcome.NeedingAttention)
+                {
+                    if ((extra.Carrier & named) != 0) continue;
+                    carrierResults.Add(new CarrierResult(
+                        $"/{extra.Carrier}",
+                        false,
+                        extra.RefusedReason
+                            ?? $"{extra.Mode} (#1169): this carrier HOLDS THE TERM and was deliberately left unchanged"));
                 }
             }
         }
