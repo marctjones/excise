@@ -1173,7 +1173,16 @@ internal sealed class ContentStreamWalker
         }
         else
         {
-            _tm_e -= (adj / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
+            // tx is a TEXT-SPACE distance and must be composed through the
+            // matrix's linear part exactly like the §9.4.4 glyph advance above
+            // — `e -= tx` is correct only for an unscaled, unrotated Tm. #1391
+            // is the §9.4.3 survivor of the same defect #942 fixed for §9.4.2:
+            // under the ubiquitous `/F1 1 Tf` + scaled-`Tm` idiom every TJ
+            // kern was applied at 1/scale of its true size, and under a
+            // rotated matrix it moved the wrong AXIS entirely.
+            var tx = -(adj / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
+            _tm_e += tx * _tm_a;
+            _tm_f += tx * _tm_b;
         }
 
         sink.OnTjAdjustment(adj);

@@ -350,7 +350,9 @@ composition to the raw `e += tx` reddened 2 of its tests before the
 consolidation and **zero** after, while `TextMatrixLineSteppingTests` — a
 property gate, not a twin gate — caught it either way. What replaces it:
 
-- `TextMatrixLineSteppingTests` — §9.4.2 against the spec.
+- `TextMatrixLineSteppingTests` — §9.4.2 line stepping AND §9.4.3 TJ
+  adjustments against the spec (§9.4.3 was the branch the §9.4.2 fix missed,
+  live until #1391; both are corroborated with mutool on the same bytes).
 - `GraphicsStateTextParameterTests` — Table 52 as a spec property (#983).
 - `GraphicsStateTextParameterOracleTests` — the same, against mutool (#983).
 - `ExtGStateFontTests` — Table 58 `/Font`, both sinks (#990).
@@ -949,6 +951,22 @@ and cost real planning time.
    bbox, and GlyphRemover faithfully removed what the geometry told it.
    Pinned by `TextMatrixLineSteppingTests` and the corpus-wide
    `RedactionCollateralHarness` ratchet.
+
+   ⚠️ **The same defect had a SECOND branch, and this entry hid it for weeks.**
+   §9.4.2 was fixed; §9.4.3 — the TJ array adjustment — kept applying its
+   offset raw (`e -= tx`, no `·a`, no effect on `f`) until #1391, three lines
+   below an already-correct §9.4.4 advance in the same method. Because this
+   entry said "the cause was seven lines of §9.4.2 arithmetic" and named a
+   test that pins only §9.4.2, the docs read as *this class of defect is
+   closed* while one branch was still live on every TJ-kerned document — i.e.
+   most professionally typeset PDFs. Measured on a scaled-`Tm` fixture against
+   mutool: excise placed the kerned glyphs at 26.2/32.4 where mutool (and the
+   spec) says 17.22/14.44 — wrong by the `_tm_a` factor AND marching in the
+   opposite direction; under a rotated matrix it moved the wrong AXIS.
+   **The lesson is about the fix, not the arithmetic:** a defect fixed at one
+   call site was recorded as a fixed CLASS, and nobody swept the sibling
+   branches. `TextMatrixLineSteppingTests` now covers §9.4.3 under scaled,
+   rotated and flipped matrices too.
 
    ⚠️ **A green gate means "no worse than the checked-in floors", NOT "no
    blindness".** Floors were set at whatever the behaviour was.

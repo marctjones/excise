@@ -97,6 +97,99 @@ public class TextMatrixLineSteppingTests
             "trusts its bboxes — both copies must compose through the matrix");
     }
 
+    // ── §9.4.3: the TJ array adjustment is the same class of defect (#1391) ──
+    //
+    // A TJ number is a TEXT-SPACE displacement in thousandths of a unit:
+    //   tx = −(adj∕1000)·Tfs·Th,  then  e += tx·a;  f += tx·b
+    // exactly like the §9.4.4 glyph advance. Applying it raw (`e -= tx`) is
+    // correct only for an unscaled, unrotated Tm — the identical shape #942
+    // fixed for §9.4.2 line stepping, which survived here until #1391.
+    //
+    // Every fixture below is `/F1 1 Tf` + a scaled Tm, the ubiquitous producer
+    // idiom. Helvetica 'H' advances 722∕1000 = 0.722 text units; each
+    // adjustment is 1000∕1000 = 1.0 text unit. So each glyph steps
+    // 0.722 − 1.0 = −0.278 text units, which the matrix scales by 10.
+    //
+    // The expected values are derived from the spec formula AND independently
+    // confirmed with mutool (`mutool draw -F stext`) on these exact bytes —
+    // excise must not be its own oracle for text placement.
+
+    [Fact]
+    public void TjAdjustment_UnderScaledTextMatrix_ScalesWithTheMatrix()
+    {
+        // mutool on these bytes: x = 20.00, 17.22, 14.44 — it marches LEFT,
+        // because a 1.0-unit kern outweighs the 0.722-unit advance. The raw
+        // bug subtracted 1.0 POINT instead of 10, so excise marched RIGHT
+        // (20.0, 26.2, 32.4) — wrong by the _tm_a factor and in the opposite
+        // direction.
+        using var doc = Open(Fixture(
+            "BT /F1 1 Tf 10 0 0 10 20 50 Tm [(H)1000(H)1000(H)]TJ ET"));
+        var letters = doc.GetPage(1).Letters;
+
+        letters.Should().HaveCount(3);
+        letters[0].StartX.Should().BeApproximately(20.00, 0.05);
+        letters[1].StartX.Should().BeApproximately(17.22, 0.05,
+            "(0.722 − 1.0)·10 = −2.78pt per step; applying the adjustment raw " +
+            "moves it −1.0pt and reverses the direction of travel (#1391)");
+        letters[2].StartX.Should().BeApproximately(14.44, 0.05);
+    }
+
+    [Fact]
+    public void TjAdjustment_UnderRotatedTextMatrix_MovesTheROTATEDAxis()
+    {
+        // The decisive case: with Tm = [0 10 −10 0], text runs UP the page, so
+        // a horizontal-writing kern must move Y and leave X alone. The raw bug
+        // moved X — the wrong axis entirely — which no amount of scale-factor
+        // tuning would catch. mutool: x stays 300, y = 400.00, 397.22, 394.44.
+        using var doc = Open(Fixture(
+            "BT /F1 1 Tf 0 10 -10 0 300 400 Tm [(H)1000(H)1000(H)]TJ ET"));
+        var letters = doc.GetPage(1).Letters;
+
+        letters.Should().HaveCount(3);
+        letters.Select(l => l.StartX).Should().AllSatisfy(x =>
+            x.Should().BeApproximately(300.00, 0.05,
+                "with a = 0 the adjustment contributes nothing to X"));
+        letters[1].StartY.Should().BeApproximately(397.22, 0.05,
+            "tx·b = −0.278·10: under a rotated matrix the kern moves Y (#1391)");
+        letters[2].StartY.Should().BeApproximately(394.44, 0.05);
+    }
+
+    [Fact]
+    public void TjAdjustment_UnderHorizontallyFlippedMatrix_ReversesDirection()
+    {
+        // With a negative, the same negative text-space step becomes a
+        // POSITIVE page-space one — the #899 signature applied to §9.4.3.
+        // mutool: x = 400.00, 402.78, 405.56.
+        using var doc = Open(Fixture(
+            "BT /F1 1 Tf -10 0 0 10 400 300 Tm [(H)1000(H)1000(H)]TJ ET"));
+        var letters = doc.GetPage(1).Letters;
+
+        letters.Should().HaveCount(3);
+        letters[1].StartX.Should().BeApproximately(402.78, 0.05,
+            "tx·a = (−0.278)·(−10) = +2.78: a flipped matrix reverses the kern, " +
+            "and the raw form walks the wrong way (#1391/#899)");
+        letters[2].StartX.Should().BeApproximately(405.56, 0.05);
+    }
+
+    [Fact]
+    public void TjAdjustment_OperatorBoundingBoxes_FollowTheSameComposition()
+    {
+        // The other sink. ContentStreamParser's operator bounds are the
+        // geometry GlyphRemover removes on, so a mis-scaled kern there is a
+        // redaction-collateral defect, not a display one: the TJ's box must
+        // span the true 20.00 → 14.44+7.22 extent, not the raw-bug 20.0 → 39.6.
+        using var doc = Open(Fixture(
+            "BT /F1 1 Tf 10 0 0 10 20 50 Tm [(H)1000(H)1000(H)]TJ ET"));
+        var box = doc.GetPage(1).GetContentStream().Operators
+            .Single(o => o.Name == "TJ" && o.BoundingBox != null)
+            .BoundingBox!.Value.Normalize();
+
+        box.Left.Should().BeApproximately(14.44, 0.6,
+            "the run marches LEFT, so its left edge is the LAST glyph's origin");
+        box.Right.Should().BeApproximately(27.22, 0.6,
+            "and its right edge is the first glyph's origin + advance");
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private static Excise.Core.Text.Letter FirstLetterOf(PdfDocument doc, string word)

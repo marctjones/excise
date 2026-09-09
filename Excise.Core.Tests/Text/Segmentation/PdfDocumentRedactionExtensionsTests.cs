@@ -321,9 +321,25 @@ public class PdfDocumentRedactionExtensionsTests
 
         using var doc = PdfDocument.Open(Path.Combine(dir!.FullName, "test-pdfs", "pdfjs", "freeculture.pdf"));
         var letters = doc.GetPage(201).Letters;
+
+        // 244.70 (was 243.02 before #1391). The old number was excise's own
+        // pre-fix output, and it was WRONG: this page kerns with TJ under a
+        // scaled Tm, so the §9.4.3 raw-adjustment defect displaced it by
+        // 1.68pt. Re-derived from mutool rather than from excise's new output,
+        // because a coordinate baseline re-recorded from the tool under test
+        // proves only that the tool is self-consistent.
+        //
+        // mutool reads 11 occurrences of "that" on this page and so does
+        // excise; every pair agrees to 0.02pt once the page-box origin is
+        // accounted for (mutool reports CropBox-relative, excise
+        // MediaBox-relative, and this page's CropBox is l=41.76):
+        //     mutool 202.90 + 41.76 = 244.66   ← this occurrence
+        //     mutool 270.89 + 41.76 = 312.65, 162.92 → 204.68, … all 11 match.
+        // The old 243.02 would require a mutool x of 201.26, which mutool does
+        // not report anywhere on the page.
         PdfDocumentRedactionExtensions.FindTextMatches(letters, "that", false)
             .Should().Contain(match => match.Count == 4 &&
-                Math.Abs(match[0].StartX - 243.02) < 0.1,
+                Math.Abs(match[0].StartX - 244.70) < 0.1,
                 "the visible word is split across text operators but has no word break (#1198)");
     }
 
