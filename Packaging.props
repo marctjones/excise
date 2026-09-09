@@ -24,5 +24,32 @@
     <!-- Deterministic, path-normalized builds on CI. -->
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     <Deterministic>true</Deterministic>
+    <!--
+      Ship the XML doc file in the .nupkg so /// comments actually reach a
+      consumer's IntelliSense. Until this was set, every /// comment in these
+      three projects was dead weight: the compiler never emitted the .xml
+      file, and never even VALIDATED doc-comment syntax, so no NuGet consumer
+      (e.g. PromptResponse) ever saw one, no matter how well (or how badly)
+      a given member was documented in source (see #1440).
+
+      Turning this on for real surfaced two separate problems, not one:
+      CS1591 is ~38% of Excise.Core's public members having no /// at all;
+      CS1570/CS1572/CS1573/CS1574/CS1587/CS0419/CS1734 are ~200 EXISTING doc
+      comments that are actually malformed (misplaced: primary-constructor
+      parameters commented individually inside the parameter list is not a
+      valid place for a doc comment; also unmatched param tags, unresolvable
+      see-cref references, etc.) and were never checked before this property
+      existed.
+      All are suppressed here rather than left to fail a real build, since
+      fixing ~200 broken comments and writing ~745 missing ones (Excise.Core
+      alone; Rendering/Avalonia not yet counted) is separate, larger, tracked
+      work (#1440), not something to block this on.
+
+      Remove this suppression once #1440 lands, so a NEW undocumented or
+      malformed public doc comment starts failing the build instead of
+      silently shipping broken or absent.
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591;CS1570;CS1572;CS1573;CS1574;CS1587;CS0419;CS1734</NoWarn>
   </PropertyGroup>
 </Project>
