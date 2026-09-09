@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1013,
-  "indexedContentSha256": "dd76222d0e4137a4e07f82ce216252c995eda5e5f6eed22ab331df9731998fce",
+  "indexedFileCount": 1020,
+  "indexedContentSha256": "e3f9bdde25711dc8f3a81bf002d800069f2387158be888b09b59a86c7f569c41",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -47,6 +47,27 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs::Pdf15Save_LinearizedInputSavesToCompressedOutput",
+            "modes": [
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::HeaderVersion_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::HeaderVersion_SurvivesOpenSaveRoundTrip_PerQpdf",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs::RunMerge_ProducesAStructurallyValidPdf_PerQpdf",
             "modes": [
               "write"
             ]
@@ -393,6 +414,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "header",
+            "syntax",
+            "xref"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -473,7 +503,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 47
+      "candidateReferenceCount": 48
     },
     {
       "id": "pdf.17.syntax.objects",
@@ -533,6 +563,20 @@
             "modes": [
               "mutate",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::PageCount_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::PageCount_SurvivesOpenSaveRoundTrip_PerQpdf",
+            "modes": [
+              "preserve"
             ]
           }
         ]
@@ -1310,7 +1354,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 131
+      "candidateReferenceCount": 133
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -1348,6 +1392,27 @@
             "modes": [
               "parse",
               "preserve",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_MatchesQpdfIndependentDecompression",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_SurvivesOpenSaveRoundTrip_PerQpdfIndependentDecompression",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::ExciseAuthoredCompressedObjectStream_IsIndependentlyDecodableByQpdf",
+            "modes": [
               "write"
             ]
           }
@@ -2032,15 +2097,17 @@
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
           "kind": "test",
           "matchedTerms": [
             "decode",
-            "filters"
+            "filters",
+            "syntax",
+            "xref"
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
             "decode",
@@ -2049,7 +2116,7 @@
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs",
+          "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
           "kind": "test",
           "matchedTerms": [
             "decode",
@@ -2057,7 +2124,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 86
+      "candidateReferenceCount": 88
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -2785,6 +2852,24 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "filters",
+            "syntax",
+            "xref"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "filters",
+            "xref"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -2896,27 +2981,9 @@
             "encryption",
             "permissions"
           ]
-        },
-        {
-          "path": "Excise.Cli.Tests/EncryptionCommandTestDriver.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "encryption",
-            "permissions"
-          ]
-        },
-        {
-          "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "encryption",
-            "permissions"
-          ]
         }
       ],
-      "candidateReferenceCount": 92
+      "candidateReferenceCount": 94
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -3852,7 +3919,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 113
+      "candidateReferenceCount": 116
     },
     {
       "id": "pdf.17.document.navigation",
@@ -4833,6 +4900,29 @@
             "modes": [
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::HandAuthoredMetadata_ParsedByExcise_MatchesQpdfsIndependentRead",
+            "modes": [
+              "parse",
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::Metadata_SurvivesExciseRoundTrip_QpdfConfirmsPreservation",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::ScrubMetadata_ThenSave_QpdfConfirmsMetadataIsGone",
+            "modes": [
+              "mutate",
+              "write"
+            ]
           }
         ]
       },
@@ -5437,6 +5527,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "metadata",
+            "xmp",
+            "catalog",
+            "metadata",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/GuiWorkflowCoverageMatrixTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -5577,7 +5678,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 72
+      "candidateReferenceCount": 73
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -5640,6 +5741,42 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/PdfEmbeddedFileAuthoringTests.cs::AddEmbeddedFile_WithDescription_SurvivesASaveAndReload",
+            "modes": [
+              "author"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::EmbeddedFile_AuthoredByQpdf_IsParsedByExciseWithExactBytes",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::EmbeddedFile_ExtractedBytes_MatchQpdfsIndependentExtraction",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::EmbeddedFile_SurvivesExciseRoundTrip_QpdfConfirmsPreservation",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::ScrubEmbeddedFiles_ThenSave_QpdfConfirmsAttachmentIsGone",
+            "modes": [
+              "mutate",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::AddEmbeddedFile_ThenSave_IsSeenByQpdfsIndependentParser",
             "modes": [
               "author"
             ]
@@ -6047,6 +6184,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "collections",
+            "embedded",
+            "catalog",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -6080,6 +6227,17 @@
           "matchedTerms": [
             "collections",
             "embedded"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "embedded",
+            "embedded-files",
+            "catalog",
+            "metadata",
+            "pdfdocument"
           ]
         },
         {
@@ -6256,7 +6414,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 64
+      "candidateReferenceCount": 66
     },
     {
       "id": "pdf.17.graphics.state",
@@ -6650,6 +6808,13 @@
             "ref": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs::AuthoredAnnotation_HasTheRequestedSubtype",
             "modes": [
               "author"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::PathFillObstruction_IsGoneFromAnIndependentRender_TextElsewhereSurvives",
+            "modes": [
+              "mutate"
             ]
           }
         ]
@@ -7357,7 +7522,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 443
+      "candidateReferenceCount": 449
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8184,7 +8349,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 213
+      "candidateReferenceCount": 218
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -8228,6 +8393,13 @@
             "modes": [
               "parse",
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -8359,6 +8531,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Text/Segmentation/ImageRedactorTests.cs::ProcessOperations_FullyContainedImage_Removed",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ScannedRasterRedactionLeakTests.cs::ScannedInk_IsDeletedFromTheRaster_NotCoveredByABox",
             "modes": [
               "mutate"
             ]
@@ -9107,7 +9286,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 151
+      "candidateReferenceCount": 153
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -9565,6 +9744,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Fonts/PdfFontResolver.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "fonts",
+            "glyph",
+            "metrics",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering/Fonts/ResolvedRenderFont.cs",
           "kind": "source",
           "matchedTerms": [
@@ -9935,20 +10124,9 @@
             "fonts",
             "glyph"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/RegisteredCMapTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "cmaps",
-            "encodings",
-            "fonts",
-            "glyph",
-            "metrics"
-          ]
         }
       ],
-      "candidateReferenceCount": 155
+      "candidateReferenceCount": 158
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -10502,6 +10680,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "scan",
+            "renderpage"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/GroupBAnnotationMeaningTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -10517,6 +10704,28 @@
           "matchedTerms": [
             "color",
             "colour",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "scan",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "scan",
             "renderpage",
             "skiarenderer"
           ]
@@ -10549,6 +10758,16 @@
             "color",
             "scan",
             "renderpage"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "conversion",
+            "renderpage",
+            "skiarenderer"
           ]
         },
         {
@@ -10679,48 +10898,9 @@
             "renderpage",
             "skiarenderer"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "scan",
-            "renderpage",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/PageGroupBackdropTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "renderpage",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "conversion"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/RenderingInvariantTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "conversion",
-            "scan",
-            "renderpage",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 109
+      "candidateReferenceCount": 113
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -11145,6 +11325,41 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
             "modes": [
               "mutate"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AdvanceParityTests.cs::PerGlyphAdvanceParity_AgainstMutool",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_SurvivesOpenSaveRoundTrip_PerQpdfIndependentDecompression",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_MatchesQpdfIndependentDecompression",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RtlRedactionDifferentialTests.cs::RedactedRtlWord_IsNotRecoverableByAnIndependentExtractor",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs::RunMerge_ProducesAStructurallyValidPdf_PerQpdf",
+            "modes": [
+              "write"
             ]
           }
         ]
@@ -11880,7 +12095,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 108
+      "candidateReferenceCount": 109
     },
     {
       "id": "pdf.20.content.operators",
@@ -12724,7 +12939,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 101
+      "candidateReferenceCount": 105
     },
     {
       "id": "pdf.17.content.text-state",
@@ -12843,6 +13058,13 @@
             "ref": "Excise.Rendering.Tests/Differential/RtlType0RedactionDifferentialTests.cs::Type0Rtl_Redaction_LeavesNoTextForAnIndependentExtractor",
             "modes": [
               "mutate"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AdvanceParityTests.cs::PerGlyphAdvanceParity_AgainstMutool",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -13132,6 +13354,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "character",
+            "showing"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs",
           "kind": "test",
           "matchedTerms": [
@@ -13167,7 +13397,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 32
+      "candidateReferenceCount": 33
     },
     {
       "id": "pdf.17.content.marked",
@@ -13809,11 +14039,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::LineCap_J_RoundExtendsPastButt_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-005",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-006",
@@ -13995,11 +14242,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::DashPattern_D_ReducesStrokeInkVsSolid_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-008",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-009",
@@ -14677,11 +14941,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::DashPattern_D_ReducesStrokeInkVsSolid_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-019",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-020",
@@ -14801,11 +15082,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::NonzeroFill_F_DonutIsSolid_MatchesIndependentRenderers",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-021",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-022",
@@ -14925,11 +15223,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::EvenOddFill_FStar_DonutHasHole_MatchesIndependentRenderers",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-023",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-024",
@@ -15297,11 +15612,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Clip_W_NonzeroWindingConfinesSubsequentFill_MatchesIndependentRenderers",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-029",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-030",
@@ -15359,11 +15691,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Clip_WStar_EvenOddConfinesSubsequentFill_MatchesIndependentRenderers",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-030",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-031",
@@ -15421,11 +15770,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-031",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-032",
@@ -15483,11 +15849,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-032",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-033",
@@ -15545,11 +15928,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-033",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-034",
@@ -15608,6 +16008,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -15649,9 +16056,18 @@
             "contentstreamparser",
             "operatorcoveragetests"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "scn",
+            "operatorcoveragetests"
+          ]
         }
       ],
-      "candidateReferenceCount": 4
+      "candidateReferenceCount": 5
     },
     {
       "id": "pdf.20.content.operator-035",
@@ -15709,11 +16125,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-035",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-036",
@@ -15772,6 +16205,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -15813,9 +16253,19 @@
             "contentstreamparser",
             "operatorcoveragetests"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-036",
+            "scn",
+            "operatorcoveragetests"
+          ]
         }
       ],
-      "candidateReferenceCount": 4
+      "candidateReferenceCount": 5
     },
     {
       "id": "pdf.20.content.operator-037",
@@ -15873,11 +16323,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-037",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-038",
@@ -15935,11 +16402,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-038",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-039",
@@ -15997,11 +16481,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-039",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-040",
@@ -16059,11 +16560,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-040",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-041",
@@ -16245,11 +16763,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-043",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-044",
@@ -16744,8 +17279,18 @@
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-051",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-052",
@@ -16803,11 +17348,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::HorizontalScaling_Tz_HalvesWidth_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-052",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-053",
@@ -16865,11 +17427,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-053",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-054",
@@ -16989,11 +17568,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::TextRenderMode_Tr3Invisible_PaintsNoInk_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-055",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-056",
@@ -17299,11 +17895,28 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "content-stream",
+            "operator-060",
+            "operatorcoveragetests"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.content.operator-061",
@@ -17609,6 +18222,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_MissingWidthsWxAdvance_MatchesGhostscript",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -17668,6 +18288,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_Type3Font_d1ImageMaskXObjectGlyph_PaintsInTextFillColor",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1BBoxClip_MatchesPdftocairo",
             "modes": [
               "render"
             ]
@@ -18393,9 +19020,17 @@
             "pdf20",
             "syntax"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "syntax"
+          ]
         }
       ],
-      "candidateReferenceCount": 1
+      "candidateReferenceCount": 2
     },
     {
       "id": "pdf.20.renderer.requirement-002",
@@ -18492,6 +19127,24 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "streams",
+            "syntax"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "requirement-002",
+            "streams",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs",
           "kind": "test",
           "matchedTerms": [
@@ -18516,7 +19169,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 9
+      "candidateReferenceCount": 11
     },
     {
       "id": "pdf.20.renderer.requirement-003",
@@ -18578,6 +19231,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "tree"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/PdfViewerHeadlessRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -18587,7 +19248,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 2
+      "candidateReferenceCount": 3
     },
     {
       "id": "pdf.20.renderer.requirement-004",
@@ -19156,11 +19817,39 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "pdf20"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/IccBasedOverprintDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
             "color",
             "colour",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "requirement-006",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "spaces",
             "skiarenderer"
           ]
         },
@@ -19392,7 +20081,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 76
+      "candidateReferenceCount": 79
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -19808,6 +20497,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "streams"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs",
           "kind": "test",
           "matchedTerms": [
@@ -19824,7 +20521,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 3
+      "candidateReferenceCount": 4
     },
     {
       "id": "pdf.20.renderer.requirement-014",
@@ -20018,6 +20715,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "appearance-stream",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/PdfViewerHeadlessRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -20043,7 +20749,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 6
+      "candidateReferenceCount": 7
     },
     {
       "id": "pdf.20.renderer.requirement-017",
@@ -20099,7 +20805,24 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "preservation",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "preservation"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotations",
@@ -20140,7 +20863,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 7
+      "candidateReferenceCount": 9
     },
     {
       "id": "pdf.20.renderer.requirement-018",
@@ -20279,6 +21002,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "synthesis",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -20390,7 +21122,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 21
+      "candidateReferenceCount": 22
     },
     {
       "id": "pdf.20.renderer.requirement-019",
@@ -20687,6 +21419,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::SaveRestore_RestoresFillColorAfterQ_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -20734,6 +21473,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::SaveRestore_RestoresFillColorAfterQ_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -20778,6 +21524,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Translation_cm_Operator",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::Translation_cm_MovesRect_MatchesIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -20875,6 +21628,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RoundLineCap_ExtendsInkPastEndpoints_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -20919,6 +21679,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_RoundLineJoin_DrawsRoundJoins",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RoundLineJoin_StaysBoundedUnlikeAMiterSpike_AgreesWithIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -20969,6 +21736,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::MiterLimit_ForcesBevelWhenRatioExceedsLimit_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -21013,6 +21787,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_DashedLine_RendersDashPattern",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::DashPattern_LeavesGapsInStroke_AgreesWithIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -21204,6 +21985,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -21248,6 +22036,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -21345,6 +22140,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -21392,6 +22194,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -21436,6 +22245,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -21533,6 +22349,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::StrokeOnly_S_LeavesInteriorUnpainted_MatchesIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -21624,6 +22447,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillOnly_f_Operator",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::FillOnly_f_PaintsSolidInterior_MatchesIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -21719,6 +22549,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillEvenOdd_fStar_Operator",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::FillEvenOdd_StarFixture_LeavesCenterUnpaintedUnlikeNonzero_AgreesWithIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -21959,6 +22796,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::ClipNonzero_W_ConfinesPaintToNonzeroStarRegion_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -22003,6 +22847,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_W_NonzeroWinding",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::ClipNonzero_W_ConfinesPaintToNonzeroStarRegion_AgreesWithIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -22051,6 +22902,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_WStar_EvenOddRule",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::ClipEvenOdd_WStar_ExcludesCenterHoleUnlikeNonzeroClip_AgreesWithIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -22385,6 +23243,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::GrayscaleFillAndStroke_PixelValuesMatchIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -22429,6 +23294,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_GrayscaleFillOperator_g_ShowsGrayPixel",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::GrayscaleFillAndStroke_PixelValuesMatchIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -22479,6 +23351,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RgbFillAndStroke_PixelValuesMatchIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -22523,6 +23402,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RgbFillAndStroke_PixelValuesMatchIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -24117,6 +25003,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::AsciiHexEncodedRedImage_MatchesMutoolDecode",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -24198,6 +25091,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "asciihexdecode",
+            "image",
+            "requirement-001",
+            "stream-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -24238,7 +25143,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 11
+      "candidateReferenceCount": 12
     },
     {
       "id": "pdf.20.image.requirement-002",
@@ -24287,6 +25192,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::Ascii85EncodedRedImage_RendersSolidRed",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::Ascii85EncodedRedImage_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -24371,6 +25283,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ascii85decode",
+            "image",
+            "requirement-002",
+            "stream-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -24382,7 +25306,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 8
+      "candidateReferenceCount": 9
     },
     {
       "id": "pdf.20.image.requirement-003",
@@ -24431,6 +25355,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FlateWrappedDctImage_DecodesTerminalJpegBytes",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::PlainFlateEncodedGradient_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -24620,6 +25551,27 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "requirement-003",
+            "stream-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -24669,7 +25621,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 23
+      "candidateReferenceCount": 25
     },
     {
       "id": "pdf.20.image.requirement-004",
@@ -24722,6 +25674,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::TiffPredictorFlateGradient_MatchesMutoolDecode",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -24909,6 +25868,28 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "predictor-tiff",
+            "requirement-004",
+            "stream-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -24959,7 +25940,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 23
+      "candidateReferenceCount": 25
     },
     {
       "id": "pdf.20.image.requirement-005",
@@ -25009,6 +25990,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::PngPredictorFlateImage_RendersTheGradient",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::PngPredictorFlateGradient_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -25209,6 +26197,28 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "predictor-png",
+            "requirement-005",
+            "stream-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -25269,7 +26279,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 25
+      "candidateReferenceCount": 27
     },
     {
       "id": "pdf.20.image.requirement-006",
@@ -25318,6 +26328,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxImageInFilterChain_Decodes_NotBlank",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::PlainLzwEncodedGradient_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -25431,6 +26448,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lzwdecode",
+            "requirement-006",
+            "stream-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -25452,7 +26481,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 12
+      "candidateReferenceCount": 13
     },
     {
       "id": "pdf.20.image.requirement-007",
@@ -25616,6 +26645,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lzwdecode",
+            "stream-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -25638,7 +26678,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 12
+      "candidateReferenceCount": 13
     },
     {
       "id": "pdf.20.image.requirement-008",
@@ -25695,6 +26735,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::LzwWithTiffPredictorImage_RendersTheGradient",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::LzwWithTiffPredictorGradient_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -25811,6 +26858,19 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lzwdecode",
+            "predictors",
+            "requirement-008",
+            "stream-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -25833,7 +26893,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 12
+      "candidateReferenceCount": 13
     },
     {
       "id": "pdf.20.image.requirement-009",
@@ -25882,6 +26942,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_RunLengthOpaqueSoftMaskRendersImageOpaque",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::RunLengthEncodedSolidGray_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -25968,6 +27035,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "requirement-009",
+            "runlengthdecode",
+            "stream-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -25999,7 +27078,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 10
+      "candidateReferenceCount": 11
     },
     {
       "id": "pdf.20.image.requirement-010",
@@ -26154,6 +27233,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "image-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -26182,7 +27271,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 12
+      "candidateReferenceCount": 13
     },
     {
       "id": "pdf.20.image.requirement-011",
@@ -26449,6 +27538,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "decodeparms",
+            "image",
+            "image-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -26490,7 +27590,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 23
+      "candidateReferenceCount": 24
     },
     {
       "id": "pdf.20.image.requirement-012",
@@ -26539,6 +27639,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FlateWrappedDctImage_DecodesTerminalJpegBytes",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::DctEncodedSolidColor_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -26645,6 +27752,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dctdecode",
+            "image",
+            "image-filter",
+            "requirement-012",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RefusedImageDiagnosticTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -26703,7 +27822,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 15
+      "candidateReferenceCount": 16
     },
     {
       "id": "pdf.20.image.requirement-013",
@@ -26867,6 +27986,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dctdecode",
+            "image",
+            "image-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RefusedImageDiagnosticTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -26925,7 +28055,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 15
+      "candidateReferenceCount": 16
     },
     {
       "id": "pdf.20.image.requirement-014",
@@ -26981,6 +28111,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/JpxSoftMaskRenderTests.cs::JpxImageInFilterChain_Decodes_NotBlank",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::JpxEncodedSolidColor_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -27129,6 +28266,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "image-filter",
+            "jpxdecode",
+            "requirement-014",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -27158,7 +28307,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 16
+      "candidateReferenceCount": 17
     },
     {
       "id": "pdf.20.image.requirement-015",
@@ -27385,6 +28534,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "image-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -27466,7 +28625,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 24
+      "candidateReferenceCount": 25
     },
     {
       "id": "pdf.20.image.requirement-016",
@@ -27764,6 +28923,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "image-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -27847,7 +29016,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 29
+      "candidateReferenceCount": 30
     },
     {
       "id": "pdf.20.image.requirement-017",
@@ -27896,6 +29065,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/ImageFilterRenderTests.cs::CryptIdentityFilteredImage_RendersTheRawPixels",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::CryptIdentityFilteredImage_MatchesMutoolDecode",
             "modes": [
               "render"
             ]
@@ -28118,6 +29294,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "image",
+            "requirement-017",
+            "stream-filter",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -28232,7 +29420,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 34
+      "candidateReferenceCount": 35
     },
     {
       "id": "pdf.20.image.requirement-018",
@@ -28290,6 +29478,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::Ascii85ThenFlateFilterChain_MatchesMutoolDecode",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -28305,9 +29500,20 @@
             "jpx",
             "pdfimage"
           ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "requirement-018",
+            "stream-filter-arrays",
+            "image",
+            "jpx"
+          ]
         }
       ],
-      "candidateReferenceCount": 1
+      "candidateReferenceCount": 2
     },
     {
       "id": "pdf.20.image.requirement-019",
@@ -28352,6 +29558,13 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::StencilImageMask_PaintsSameRegionMutoolDoes",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -28450,6 +29663,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "image-dictionary",
+            "imagemask",
+            "requirement-019",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -28488,7 +29713,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 13
+      "candidateReferenceCount": 14
     },
     {
       "id": "pdf.20.image.requirement-020",
@@ -28533,6 +29758,13 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::SoftMaskAlphaRamp_CompositesSameAsMutool",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -28622,6 +29854,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "image-dictionary",
+            "requirement-020",
+            "smask",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -28652,7 +29896,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 11
+      "candidateReferenceCount": 12
     },
     {
       "id": "pdf.20.image.requirement-021",
@@ -28697,6 +29941,13 @@
             "ref": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::CcittImageWithExplicitStencilMask_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::ExplicitMaskStream_PaintsSameRegionMutoolDoes",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -28966,6 +30217,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "image-dictionary",
+            "mask",
+            "requirement-021",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -29126,7 +30389,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 44
+      "candidateReferenceCount": 45
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -29173,6 +30436,14 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ColorKeyMaskDifferentialTests.cs::ColorKeyMaskedIndexedImage_LeavesNoBlackWhereMutoolLeavesNone",
+            "modes": [
+              "parse",
+              "render"
+            ]
           }
         ]
       },
@@ -29443,6 +30714,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "image-dictionary",
+            "mask",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -29603,7 +30885,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 44
+      "candidateReferenceCount": 45
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -30394,6 +31676,26 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "decode",
+            "image",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "decode",
+            "image",
+            "image-dictionary",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -30402,28 +31704,9 @@
             "image",
             "jbig2"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/PdftocairoOutlierClassificationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "image",
-            "image",
-            "jbig2"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "image",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 111
+      "candidateReferenceCount": 113
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -30763,6 +32046,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bitspercomponent",
+            "image",
+            "image-dictionary",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ScannedRasterRedactionLeakTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -30892,7 +32186,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 43
+      "candidateReferenceCount": 44
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -30996,6 +32290,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "image-dictionary",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-pdfium.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -31006,7 +32310,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 7
+      "candidateReferenceCount": 8
     },
     {
       "id": "pdf.20.image.requirement-026",
@@ -31291,6 +32595,34 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image",
+            "jpx"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/UndecodableImageFabricationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31367,7 +32699,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 32
+      "candidateReferenceCount": 35
     },
     {
       "id": "pdf.20.image.requirement-027",
@@ -31650,6 +32982,33 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image",
+            "jpx"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "requirement-027"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ScannedRasterRedactionLeakTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31780,7 +33139,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 38
+      "candidateReferenceCount": 41
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -33001,6 +34360,25 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -33008,6 +34386,15 @@
             "lab",
             "image",
             "jbig2"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
           ]
         },
         {
@@ -33280,36 +34667,9 @@
             "image",
             "jpx"
           ]
-        },
-        {
-          "path": "tests/format-compatibility-suite.json",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
-        },
-        {
-          "path": "tests/gui-interaction-registry.json",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
-        },
-        {
-          "path": "tests/redaction-bench-design.json",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 83
+      "candidateReferenceCount": 86
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -33682,6 +35042,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::ScaledAndTranslatedImage_BoundingBoxMatchesMutool",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -33914,6 +35281,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image-placement",
+            "requirement-034",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionVisualGoldSetTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34055,7 +35434,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 39
+      "candidateReferenceCount": 40
     },
     {
       "id": "pdf.20.image.requirement-035",
@@ -38972,6 +40351,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "square",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/AnnotationVisibilityToggleTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -39046,6 +40434,17 @@
             "annotation",
             "square",
             "annotation"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "square",
+            "annotation",
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -39198,7 +40597,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 49
+      "candidateReferenceCount": 51
     },
     {
       "id": "pdf.20.annotation.subtype-010",
@@ -40612,7 +42011,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 156
+      "candidateReferenceCount": 157
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -42434,6 +43833,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -42479,19 +43887,9 @@
             "ink",
             "annotation"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 122
+      "candidateReferenceCount": 123
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -42666,6 +44064,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "popup",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/AppearanceStreamDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -42742,7 +44149,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 19
+      "candidateReferenceCount": 20
     },
     {
       "id": "pdf.20.annotation.subtype-016",
@@ -43673,6 +45080,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -43774,6 +45188,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "caret",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -43851,7 +45274,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 17
+      "candidateReferenceCount": 18
     },
     {
       "id": "pdf.20.annotation.subtype-019",
@@ -44751,7 +46174,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 119
+      "candidateReferenceCount": 120
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -44989,6 +46412,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -45058,6 +46488,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "movie",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -45078,7 +46517,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 8
+      "candidateReferenceCount": 9
     },
     {
       "id": "pdf.20.annotation.subtype-022",
@@ -45135,6 +46574,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -45326,6 +46772,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/CheckboxAppearanceStateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -45416,7 +46871,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 27
+      "candidateReferenceCount": 28
     },
     {
       "id": "pdf.20.annotation.subtype-023",
@@ -45473,6 +46928,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -45563,6 +47025,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "watermark",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -45583,7 +47054,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 10
+      "candidateReferenceCount": 11
     },
     {
       "id": "pdf.20.annotation.subtype-024",
@@ -46674,6 +48145,26 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "groups",
+            "model"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "alpha",
+            "blend",
+            "compositing",
+            "masks",
+            "soft",
+            "softmask"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -46696,6 +48187,14 @@
           "matchedTerms": [
             "groups",
             "model"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "compositing",
+            "modes"
           ]
         },
         {
@@ -46757,37 +48256,9 @@
             "soft",
             "blendmode"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "alpha",
-            "blend"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/RenderingInvariantTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "alpha",
-            "blend"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "alpha",
-            "blend",
-            "soft",
-            "transparency",
-            "softmask",
-            "transparency"
-          ]
         }
       ],
-      "candidateReferenceCount": 136
+      "candidateReferenceCount": 139
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -47593,6 +49064,21 @@
             "ref": "Excise.Rendering.Tests/Differential/StickyNoteIconTests.cs::DegenerateRect_StillDrawsAMarker_AsMutoolDoes",
             "modes": [
               "author"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::HandAuthoredAnnotation_ParsedByExcise_MatchesQpdfsIndependentParser",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::RedactText_ScrubsAnnotationContents_QpdfConfirmsRemoval",
+            "modes": [
+              "mutate",
+              "write"
             ]
           }
         ]
@@ -48518,7 +50004,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 154
+      "candidateReferenceCount": 156
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -49099,6 +50585,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/StructuralInventory.cs",
           "kind": "test",
           "matchedTerms": [
@@ -49385,7 +50882,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 70
+      "candidateReferenceCount": 71
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -50840,6 +52337,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/PdfiumOracleSmokeTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -51015,7 +52522,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 54
+      "candidateReferenceCount": 55
     },
     {
       "id": "pdf.17.interactive.forms",
@@ -52012,7 +53519,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 125
+      "candidateReferenceCount": 126
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -52908,6 +54415,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "including",
+            "uri",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Fonts/CidGlyphSelectionMatrixTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -52926,22 +54443,9 @@
             "action",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/AnnotateAndDialogCommandTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "actions",
-            "goto",
-            "launch",
-            "uri",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 111
+      "candidateReferenceCount": 112
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -53585,6 +55089,18 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "movie",
+            "screen",
+            "media",
+            "movie"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -53632,6 +55148,15 @@
         },
         {
           "path": "Excise.Rendering.Tests/Differential/ShapeAnnotationSynthesisTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotations",
@@ -53854,27 +55379,9 @@
             "media",
             "media"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/RedactedCopySafetyPolicyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "media",
-            "media"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/Unit/RevealHiddenTextTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "media",
-            "screen",
-            "media"
-          ]
         }
       ],
-      "candidateReferenceCount": 85
+      "candidateReferenceCount": 87
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -54267,6 +55774,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media",
+            "movie"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -54313,6 +55830,15 @@
         },
         {
           "path": "Excise.Rendering.Tests/Differential/ShapeAnnotationSynthesisTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotations",
@@ -54511,7 +56037,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 66
+      "candidateReferenceCount": 68
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
@@ -55323,7 +56849,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 309
+      "candidateReferenceCount": 311
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -56798,7 +58324,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 150
+      "candidateReferenceCount": 151
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -57584,7 +59110,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 460
+      "candidateReferenceCount": 465
     },
     {
       "id": "pdf.20.extension.developer",
@@ -58129,6 +59655,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "extension",
+            "version"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Visual/VisualAssertions.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58277,17 +59811,9 @@
             "extension",
             "extensions"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/VisualAssertions.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions"
-          ]
         }
       ],
-      "candidateReferenceCount": 115
+      "candidateReferenceCount": 116
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -61292,6 +62818,24 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "copy",
+            "stripping"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "copy",
+            "metadata",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/StructuralInventory.cs",
           "kind": "test",
           "matchedTerms": [
@@ -61466,27 +63010,9 @@
             "redaction",
             "security"
           ]
-        },
-        {
-          "path": "tests/annotation-support-matrix.json",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "copy",
-            "redaction",
-            "security"
-          ]
-        },
-        {
-          "path": "tests/annotation-synthesis-policy.json",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "copy"
-          ]
         }
       ],
-      "candidateReferenceCount": 88
+      "candidateReferenceCount": 90
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -62118,6 +63644,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "save",
+            "stripping"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -62136,6 +63670,16 @@
             "ocr",
             "redaction",
             "security"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "save",
+            "redaction"
           ]
         },
         {
@@ -62363,7 +63907,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 67
+      "candidateReferenceCount": 69
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -63063,6 +64607,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "documents",
+            "ocr",
+            "scanned",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -63268,7 +64823,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 54
+      "candidateReferenceCount": 55
     },
     {
       "id": "pdfe.product.security.audit-log",

@@ -1457,10 +1457,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::HeaderVersion_MatchesQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "open"
       ]
@@ -2919,10 +2926,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::HeaderVersion_SurvivesOpenSaveRoundTrip_PerQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "open"
       ]
@@ -4381,10 +4395,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs::RunMerge_ProducesAStructurallyValidPdf_PerQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "open"
       ]
@@ -5843,10 +5864,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::PageCount_MatchesQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "save"
       ]
@@ -7305,10 +7333,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::PageCount_SurvivesOpenSaveRoundTrip_PerQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "save"
       ]
@@ -10261,10 +10296,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_MatchesQpdfIndependentDecompression",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -10290,10 +10332,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_SurvivesOpenSaveRoundTrip_PerQpdfIndependentDecompression",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -10319,10 +10368,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::ExciseAuthoredCompressedObjectStream_IsIndependentlyDecodableByQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -20957,10 +21013,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::HandAuthoredMetadata_ParsedByExcise_MatchesQpdfsIndependentRead",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "save"
       ]
@@ -22423,10 +22486,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::Metadata_SurvivesExciseRoundTrip_QpdfConfirmsPreservation",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "save"
       ]
@@ -22455,10 +22525,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::HandAuthoredMetadata_ParsedByExcise_MatchesQpdfsIndependentRead",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "save"
       ]
@@ -23921,10 +23998,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::ScrubMetadata_ThenSave_QpdfConfirmsMetadataIsGone",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "save"
       ]
@@ -25387,10 +25471,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::ScrubMetadata_ThenSave_QpdfConfirmsMetadataIsGone",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "save"
       ]
@@ -25418,10 +25509,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::EmbeddedFile_AuthoredByQpdf_IsParsedByExciseWithExactBytes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -25447,10 +25545,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::EmbeddedFile_SurvivesExciseRoundTrip_QpdfConfirmsPreservation",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -25476,10 +25581,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::EmbeddedFile_ExtractedBytes_MatchQpdfsIndependentExtraction",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -25505,10 +25617,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::ScrubEmbeddedFiles_ThenSave_QpdfConfirmsAttachmentIsGone",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -25534,10 +25653,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::ScrubEmbeddedFiles_ThenSave_QpdfConfirmsAttachmentIsGone",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -25563,10 +25689,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::AddEmbeddedFile_ThenSave_IsSeenByQpdfsIndependentParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -35869,10 +36002,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::PathFillObstruction_IsGoneFromAnIndependentRender_TextElsewhereSurvives",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -37380,6 +37520,15 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::OperatorVerificationParityTests.AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -37842,6 +37991,15 @@
       "mode": "render",
       "currentState": "partial",
       "testCandidates": [
+        {
+          "test": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::OperatorVerificationParityTests.AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
         {
           "test": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
           "mappingSources": [
@@ -38329,6 +38487,15 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::OperatorVerificationParityTests.AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -38792,6 +38959,15 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::OperatorVerificationParityTests.AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -39213,10 +39389,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -43696,10 +43879,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ScannedRasterRedactionLeakTests.cs::ScannedInk_IsDeletedFromTheRaster_NotCoveredByABox",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -49960,10 +50150,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AdvanceParityTests.cs::PerGlyphAdvanceParity_AgainstMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -49991,10 +50188,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_SurvivesOpenSaveRoundTrip_PerQpdfIndependentDecompression",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -51498,6 +51702,15 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs::WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Rendering.Tests/PdfStringEscapeTests.cs::PdfStringEscapeTests.Decodes_StandardEscapes",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -51550,10 +51763,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_MatchesQpdfIndependentDecompression",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -53012,10 +53232,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RtlRedactionDifferentialTests.cs::RedactedRtlWord_IsNotRecoverableByAnIndependentExtractor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -54474,10 +54701,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs::RunMerge_ProducesAStructurallyValidPdf_PerQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "render"
       ]
@@ -54492,6 +54726,15 @@
           "test": "Excise.Core.Tests/Content/OperatorCoverageTests.cs::OperatorCoverageTests.AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "mappingSources": [
             "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs::WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer",
+          "mappingSources": [
+            "keyword-facet-candidate"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -54550,10 +54793,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AdvanceParityTests.cs::PerGlyphAdvanceParity_AgainstMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "search"
       ]
@@ -54595,6 +54845,15 @@
       "mode": "render",
       "currentState": "partial",
       "testCandidates": [
+        {
+          "test": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs::WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
         {
           "test": "Excise.Rendering.Tests/PdfStringEscapeTests.cs::PdfStringEscapeTests.Decodes_StandardEscapes",
           "mappingSources": [
@@ -54701,6 +54960,15 @@
           "test": "Excise.Core.Tests/Text/TextExtractionTests.cs::TextExtractionTests.TextExtraction_TjOperator_ExtractsText",
           "mappingSources": [
             "registry-verification-contract"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs::WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer",
+          "mappingSources": [
+            "keyword-facet-candidate"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -55443,10 +55711,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::LineCap_J_RoundExtendsPastButt_MatchesMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -55824,10 +56099,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::DashPattern_D_ReducesStrokeInkVsSolid_MatchesMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -57221,10 +57503,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::DashPattern_D_ReducesStrokeInkVsSolid_MatchesMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -57475,10 +57764,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::NonzeroFill_F_DonutIsSolid_MatchesIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -57729,10 +58025,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::EvenOddFill_FStar_DonutHasHole_MatchesIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58491,10 +58794,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Clip_W_NonzeroWindingConfinesSubsequentFill_MatchesIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58618,10 +58928,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Clip_WStar_EvenOddConfinesSubsequentFill_MatchesIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58745,10 +59062,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58872,10 +59196,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -58999,10 +59330,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59126,10 +59464,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59253,10 +59598,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59380,10 +59732,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59507,10 +59866,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59634,10 +60000,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59761,10 +60134,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -59888,10 +60268,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -60269,10 +60656,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -61412,10 +61806,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::HorizontalScaling_Tz_HalvesWidth_MatchesMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -61539,10 +61940,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -61793,10 +62201,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::TextRenderMode_Tr3Invisible_PaintsNoInk_MatchesMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -62428,10 +62843,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -63063,10 +63485,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_MissingWidthsWxAdvance_MatchesGhostscript",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -63190,10 +63619,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs::Type3_d1BBoxClip_MatchesPdftocairo",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -65372,10 +65808,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::SaveRestore_RestoresFillColorAfterQ_AgreesWithIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -65449,10 +65892,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::SaveRestore_RestoresFillColorAfterQ_AgreesWithIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -65526,10 +65976,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::Translation_cm_MovesRect_MatchesIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -65680,10 +66137,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RoundLineCap_ExtendsInkPastEndpoints_AgreesWithIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -65757,10 +66221,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RoundLineJoin_StaysBoundedUnlikeAMiterSpike_AgreesWithIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -65834,10 +66305,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::MiterLimit_ForcesBevelWhenRatioExceedsLimit_AgreesWithIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -65911,10 +66389,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::DashPattern_LeavesGapsInStroke_AgreesWithIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66219,10 +66704,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66296,10 +66788,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66450,10 +66949,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66527,10 +67033,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66604,10 +67117,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66758,10 +67278,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::StrokeOnly_S_LeavesInteriorUnpainted_MatchesIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -66912,10 +67439,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::FillOnly_f_PaintsSolidInterior_MatchesIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67066,10 +67600,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::FillEvenOdd_StarFixture_LeavesCenterUnpaintedUnlikeNonzero_AgreesWithIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67451,10 +67992,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::ClipNonzero_W_ConfinesPaintToNonzeroStarRegion_AgreesWithIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67528,10 +68076,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::ClipNonzero_W_ConfinesPaintToNonzeroStarRegion_AgreesWithIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -67605,10 +68160,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::ClipEvenOdd_WStar_ExcludesCenterHoleUnlikeNonzeroClip_AgreesWithIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68144,10 +68706,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::GrayscaleFillAndStroke_PixelValuesMatchIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68221,10 +68790,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::GrayscaleFillAndStroke_PixelValuesMatchIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68298,10 +68874,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RgbFillAndStroke_PixelValuesMatchIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -68375,10 +68958,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RgbFillAndStroke_PixelValuesMatchIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -70898,10 +71488,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::AsciiHexEncodedRedImage_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -70965,10 +71562,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::Ascii85EncodedRedImage_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71042,10 +71646,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::PlainFlateEncodedGradient_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71119,10 +71730,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::TiffPredictorFlateGradient_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71196,10 +71814,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::PngPredictorFlateGradient_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71263,10 +71888,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::PlainLzwEncodedGradient_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71414,10 +72046,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::LzwWithTiffPredictorGradient_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71491,10 +72130,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::RunLengthEncodedSolidGray_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71719,10 +72365,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::DctEncodedSolidColor_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71877,10 +72530,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::JpxEncodedSolidColor_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72120,10 +72780,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::CryptIdentityFilteredImage_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72213,10 +72880,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::Ascii85ThenFlateFilterChain_MatchesMutoolDecode",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72280,10 +72954,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::StencilImageMask_PaintsSameRegionMutoolDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72347,10 +73028,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::SoftMaskAlphaRamp_CompositesSameAsMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72414,10 +73102,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::ExplicitMaskStream_PaintsSameRegionMutoolDoes",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72462,10 +73157,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ColorKeyMaskDifferentialTests.cs::ColorKeyMaskedIndexedImage_LeavesNoBlackWhereMutoolLeavesNone",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72481,10 +73183,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ColorKeyMaskDifferentialTests.cs::ColorKeyMaskedIndexedImage_LeavesNoBlackWhereMutoolLeavesNone",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -73350,10 +74059,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs::ScaledAndTranslatedImage_BoundingBoxMatchesMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76080,10 +76796,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76410,10 +77133,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76506,10 +77236,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76602,10 +77339,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -77212,6 +77956,33 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::AnnotationStructuralOracleTests.EverySubtypeCoreCanAuthor_IsAlsoJudgedByTheIndependentOracle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::AnnotationSubtypeVerificationDifferentialTests.AuthoredSubtypeAppearance_IsDrawnByMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::AnnotationSubtypeVerificationDifferentialTests.AuthoredSubtypeAppearance_IsDrawnByPdftocairo",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs::AnnotationSubtypeVerificationDifferentialTests.ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -78053,33 +78824,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_R4_WrongPassword_FailsToExtract",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Ghostscript_R4_EmptyPassword_RendersIdenticallyToUnencryptedBaseline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Ghostscript_R4_OwnerPassword_RendersIdenticallyToUnencryptedBaseline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/ExtractionParityTests.cs::ExtractionParityTests.PageTextOrderStrategy_KnownFormAndTablePages_RemainRawStream",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -79572,10 +80316,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::HandAuthoredAnnotation_ParsedByExcise_MatchesQpdfsIndependentParser",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -84005,10 +84756,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::RedactText_ScrubsAnnotationContents_QpdfConfirmsRemoval",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -84060,6 +84818,13 @@
         {
           "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs::ExciseAndReferenceRenderer_AgreeOnAuthoredStampInk",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs::RedactText_ScrubsAnnotationContents_QpdfConfirmsRemoval",
           "recordedOutcomes": [
             "Passed"
           ]
@@ -110294,11 +111059,11 @@
     "modesWithExplicitContracts": 879,
     "modesWithPassingExplicitContracts": 878,
     "modesWithRecordedPassingCandidate": 644,
-    "gradeImplemented": 768,
-    "gradeVerified": 111,
+    "gradeImplemented": 670,
+    "gradeVerified": 209,
     "gradeUnknown": 19,
-    "testMethods": 6358,
-    "testMethodsWithCapabilityCandidate": 3944,
+    "testMethods": 6422,
+    "testMethodsWithCapabilityCandidate": 4009,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

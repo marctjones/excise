@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-09T01:49:10.949907+00:00",
-  "gitRevision": "0f9813359c96f98c65658d5845f84df0539e4fec",
+  "recordedAt": "2026-09-09T02:33:59.572576+00:00",
+  "gitRevision": "c8c7425574f123e8d0a1ae0e6f68898e1d7bc33d",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -486,6 +486,21 @@
       "path": "/tmp/trx-merge7/structparity4.trx",
       "modifiedAt": "2026-09-09T01:49:10.878309+00:00",
       "sha256": "5b1cd7bcea63850a880123d5485e5871195339258e13275dde0ed19d130bc84f"
+    },
+    {
+      "path": "/tmp/trx-integration/agents.trx",
+      "modifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "sha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "path": "/tmp/trx-integration/cli.trx",
+      "modifiedAt": "2026-09-09T02:33:51.461289+00:00",
+      "sha256": "94514d2bb085cbe2e0129fc1537b8100743a4e740ce5ecd8653df53a86ac59c1"
+    },
+    {
+      "path": "/tmp/trx-integration/core.trx",
+      "modifiedAt": "2026-09-09T02:33:55.647780+00:00",
+      "sha256": "7fa7fb3d6946f23d51a6c7f89650efcc4c29a520e1dc026ae91e2ed5aaa251a6"
     }
   ],
   "outcomes": [
@@ -13036,58 +13051,58 @@
     {
       "testName": "Excise.Cli.Tests.PageAssemblyCorrectnessTests.DocumentAssemblyHandler_CancelledMerge_DoesNotOpenOrWriteOutput",
       "outcome": "Passed",
-      "duration": "00:00:00.0026285",
-      "trx": "/tmp/trx-merge2/cli.trx",
-      "resultModifiedAt": "2026-09-09T01:16:02.005934+00:00",
-      "trxSha256": "263917e2aa50b433ea0faeb77db45e80d94fd2497a6928773c634bdff6634b98"
+      "duration": "00:00:00.0049376",
+      "trx": "/tmp/trx-integration/cli.trx",
+      "resultModifiedAt": "2026-09-09T02:33:51.461289+00:00",
+      "trxSha256": "94514d2bb085cbe2e0129fc1537b8100743a4e740ce5ecd8653df53a86ac59c1"
     },
     {
       "testName": "Excise.Cli.Tests.PageAssemblyCorrectnessTests.Merge_SameInputAndOutputPath_DetachesSourceBeforeSaving",
       "outcome": "Passed",
-      "duration": "00:00:00.0151162",
-      "trx": "/tmp/trx-merge2/cli.trx",
-      "resultModifiedAt": "2026-09-09T01:16:02.005934+00:00",
-      "trxSha256": "263917e2aa50b433ea0faeb77db45e80d94fd2497a6928773c634bdff6634b98"
+      "duration": "00:00:00.0221010",
+      "trx": "/tmp/trx-integration/cli.trx",
+      "resultModifiedAt": "2026-09-09T02:33:51.461289+00:00",
+      "trxSha256": "94514d2bb085cbe2e0129fc1537b8100743a4e740ce5ecd8653df53a86ac59c1"
     },
     {
       "testName": "Excise.Cli.Tests.PageAssemblyCorrectnessTests.RunAsync_MergeMissingInput_PreservesTextErrorAndExitCode",
       "outcome": "Passed",
-      "duration": "00:00:00.0098767",
-      "trx": "/tmp/trx-merge2/cli.trx",
-      "resultModifiedAt": "2026-09-09T01:16:02.005934+00:00",
-      "trxSha256": "263917e2aa50b433ea0faeb77db45e80d94fd2497a6928773c634bdff6634b98"
+      "duration": "00:00:00.0160592",
+      "trx": "/tmp/trx-integration/cli.trx",
+      "resultModifiedAt": "2026-09-09T02:33:51.461289+00:00",
+      "trxSha256": "94514d2bb085cbe2e0129fc1537b8100743a4e740ce5ecd8653df53a86ac59c1"
     },
     {
       "testName": "Excise.Cli.Tests.PageAssemblyCorrectnessTests.RunMerge_ConcatenatesEveryInputPageInOrder_PerIndependentOracle",
       "outcome": "Passed",
-      "duration": "00:00:00.0412787",
-      "trx": "/tmp/trx-merge2/cli.trx",
-      "resultModifiedAt": "2026-09-09T01:16:02.005934+00:00",
-      "trxSha256": "263917e2aa50b433ea0faeb77db45e80d94fd2497a6928773c634bdff6634b98"
+      "duration": "00:00:00.0801903",
+      "trx": "/tmp/trx-integration/cli.trx",
+      "resultModifiedAt": "2026-09-09T02:33:51.461289+00:00",
+      "trxSha256": "94514d2bb085cbe2e0129fc1537b8100743a4e740ce5ecd8653df53a86ac59c1"
     },
     {
       "testName": "Excise.Cli.Tests.PageAssemblyCorrectnessTests.RunMerge_ProducesAStructurallyValidPdf_PerQpdf",
       "outcome": "Passed",
-      "duration": "00:00:00.0112175",
-      "trx": "/tmp/trx-merge2/cli.trx",
-      "resultModifiedAt": "2026-09-09T01:16:02.005934+00:00",
-      "trxSha256": "263917e2aa50b433ea0faeb77db45e80d94fd2497a6928773c634bdff6634b98"
+      "duration": "00:00:00.0181363",
+      "trx": "/tmp/trx-integration/cli.trx",
+      "resultModifiedAt": "2026-09-09T02:33:51.461289+00:00",
+      "trxSha256": "94514d2bb085cbe2e0129fc1537b8100743a4e740ce5ecd8653df53a86ac59c1"
     },
     {
       "testName": "Excise.Cli.Tests.PageAssemblyCorrectnessTests.RunSplit_Fragments_AreStructurallyValid_PerQpdf",
       "outcome": "Passed",
-      "duration": "00:00:00.0646936",
-      "trx": "/tmp/trx-merge2/cli.trx",
-      "resultModifiedAt": "2026-09-09T01:16:02.005934+00:00",
-      "trxSha256": "263917e2aa50b433ea0faeb77db45e80d94fd2497a6928773c634bdff6634b98"
+      "duration": "00:00:00.1091632",
+      "trx": "/tmp/trx-integration/cli.trx",
+      "resultModifiedAt": "2026-09-09T02:33:51.461289+00:00",
+      "trxSha256": "94514d2bb085cbe2e0129fc1537b8100743a4e740ce5ecd8653df53a86ac59c1"
     },
     {
       "testName": "Excise.Cli.Tests.PageAssemblyCorrectnessTests.RunSplit_ToSinglePages_BurstsOnePdfPerPageWithTheRightContent_PerIndependentOracle",
       "outcome": "Passed",
-      "duration": "00:00:00.0705387",
-      "trx": "/tmp/trx-merge2/cli.trx",
-      "resultModifiedAt": "2026-09-09T01:16:02.005934+00:00",
-      "trxSha256": "263917e2aa50b433ea0faeb77db45e80d94fd2497a6928773c634bdff6634b98"
+      "duration": "00:00:00.1332437",
+      "trx": "/tmp/trx-integration/cli.trx",
+      "resultModifiedAt": "2026-09-09T02:33:51.461289+00:00",
+      "trxSha256": "94514d2bb085cbe2e0129fc1537b8100743a4e740ce5ecd8653df53a86ac59c1"
     },
     {
       "testName": "Excise.Cli.Tests.PdfDocumentLifetimeTests.OpenInputForOutput_SamePathCanBeSavedBackToSource",
@@ -42524,26 +42539,26 @@
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.InlineImageRedactionEndToEndTests.HiddenTextDetector_FlagsTextHiddenUnderInlineImage",
       "outcome": "Passed",
-      "duration": "00:00:00.0327705",
-      "trx": "/tmp/new10-trx/core2.trx",
-      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
-      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
+      "duration": "00:00:00.0562266",
+      "trx": "/tmp/trx-integration/core.trx",
+      "resultModifiedAt": "2026-09-09T02:33:55.647780+00:00",
+      "trxSha256": "7fa7fb3d6946f23d51a6c7f89650efcc4c29a520e1dc026ae91e2ed5aaa251a6"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.InlineImageRedactionEndToEndTests.RedactArea_AwayFromInlineImage_PreservesBytesOnRoundTrip",
       "outcome": "Passed",
-      "duration": "00:00:00.0094397",
-      "trx": "/tmp/new10-trx/core2.trx",
-      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
-      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
+      "duration": "00:00:00.0158935",
+      "trx": "/tmp/trx-integration/core.trx",
+      "resultModifiedAt": "2026-09-09T02:33:55.647780+00:00",
+      "trxSha256": "7fa7fb3d6946f23d51a6c7f89650efcc4c29a520e1dc026ae91e2ed5aaa251a6"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.InlineImageRedactionEndToEndTests.RedactArea_OverInlineImage_RemovesEmbeddedBytesFromSavedPdf",
       "outcome": "Passed",
-      "duration": "00:00:00.0012815",
-      "trx": "/tmp/new10-trx/core2.trx",
-      "resultModifiedAt": "2026-09-08T06:45:43.026356+00:00",
-      "trxSha256": "7b5e76c1a437c6e1cae6ee69503e2139ac4aa59c81d24da6b2e7b9bea09e014c"
+      "duration": "00:00:00.0019266",
+      "trx": "/tmp/trx-integration/core.trx",
+      "resultModifiedAt": "2026-09-09T02:33:55.647780+00:00",
+      "trxSha256": "7fa7fb3d6946f23d51a6c7f89650efcc4c29a520e1dc026ae91e2ed5aaa251a6"
     },
     {
       "testName": "Excise.Core.Tests.Text.Segmentation.InvisibleSeparatorRedactionTests.RedactText_NeedleWithPlainSpace_RemovesNonBreakingSpaceText",
@@ -51034,6 +51049,102 @@
       "trxSha256": "e23d92da88d45d8c89e611c06f8087dcc367db699cf640dcca18d28315d36e19"
     },
     {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.AuthoredSubtypeAppearance_IsDrawnByMutool(subtype: \"Caret\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0208912",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.AuthoredSubtypeAppearance_IsDrawnByMutool(subtype: \"Movie\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0204061",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.AuthoredSubtypeAppearance_IsDrawnByMutool(subtype: \"Screen\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0415442",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.AuthoredSubtypeAppearance_IsDrawnByMutool(subtype: \"Watermark\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0266894",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.AuthoredSubtypeAppearance_IsDrawnByPdftocairo(subtype: \"Caret\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0333809",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.AuthoredSubtypeAppearance_IsDrawnByPdftocairo(subtype: \"Movie\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0344948",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.AuthoredSubtypeAppearance_IsDrawnByPdftocairo(subtype: \"Screen\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0556607",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.AuthoredSubtypeAppearance_IsDrawnByPdftocairo(subtype: \"Watermark\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0482254",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk(subtype: \"Caret\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0448117",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk(subtype: \"Movie\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0838807",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk(subtype: \"Screen\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0228859",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.AnnotationSubtypeVerificationDifferentialTests.ExciseAndReferenceRenderer_AgreeOnAuthoredSubtypeAppearanceInk(subtype: \"Watermark\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0326025",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
       "testName": "Excise.Rendering.Tests.Differential.AnnotationSynthesisPolicyGateTests.EveryRow_MatchesWhatExciseDraws",
       "outcome": "Passed",
       "duration": "00:00:00.6867273",
@@ -53250,6 +53361,102 @@
       "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
     },
     {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.ExciseAuthoredCompressedObjectStream_IsIndependentlyDecodableByQpdf",
+      "outcome": "Passed",
+      "duration": "00:00:00.0278178",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.FlateDecodedContentStream_MatchesQpdfIndependentDecompression",
+      "outcome": "Passed",
+      "duration": "00:00:00.1460030",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.FlateDecodedContentStream_SurvivesOpenSaveRoundTrip_PerQpdfIndependentDecompression",
+      "outcome": "Passed",
+      "duration": "00:00:00.4019762",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.HeaderVersion_MatchesQpdf(relativePath: \"test-pdfs/pdf20/ascii85-image.pdf\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0414900",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.HeaderVersion_MatchesQpdf(relativePath: \"test-pdfs/sample-pdfs/acc-global-compensation-repo\"\u00b7\u00b7\u00b7)",
+      "outcome": "Passed",
+      "duration": "00:00:00.1268184",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.HeaderVersion_SurvivesOpenSaveRoundTrip_PerQpdf(relativePath: \"test-pdfs/pdf20/ascii85-image.pdf\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0573615",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.HeaderVersion_SurvivesOpenSaveRoundTrip_PerQpdf(relativePath: \"test-pdfs/sample-pdfs/acc-global-compensation-repo\"\u00b7\u00b7\u00b7)",
+      "outcome": "Passed",
+      "duration": "00:00:00.6068436",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.PageCount_MatchesQpdf(relativePath: \"test-pdfs/pdf20/ascii85-image.pdf\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0170161",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.PageCount_MatchesQpdf(relativePath: \"test-pdfs/sample-pdfs/acc-global-compensation-repo\"\u00b7\u00b7\u00b7)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0404773",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.PageCount_SurvivesOpenSaveRoundTrip_PerQpdf(relativePath: \"test-pdfs/pdf20/ascii85-image.pdf\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0603708",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.PageCount_SurvivesOpenSaveRoundTrip_PerQpdf(relativePath: \"test-pdfs/sample-pdfs/acc-global-compensation-repo\"\u00b7\u00b7\u00b7)",
+      "outcome": "Passed",
+      "duration": "00:00:00.4696030",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.PathFillObstruction_IsGoneFromAnIndependentRender_TextElsewhereSurvives",
+      "outcome": "Passed",
+      "duration": "00:00:00.1826099",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
       "testName": "Excise.Rendering.Tests.Differential.GroupBAnnotationMeaningTests.AVisibleAnnotation_DoesDrawSomething",
       "outcome": "Passed",
       "duration": "00:00:00.0208736",
@@ -53538,6 +53745,134 @@
       "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
     },
     {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.Ascii85EncodedRedImage_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0351330",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.Ascii85ThenFlateFilterChain_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0228182",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.AsciiHexEncodedRedImage_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0218434",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.CryptIdentityFilteredImage_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0200518",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.DctEncodedSolidColor_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0546392",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.ExplicitMaskStream_PaintsSameRegionMutoolDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0451079",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.JpxEncodedSolidColor_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.1830021",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.LzwWithTiffPredictorGradient_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0374029",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.PlainFlateEncodedGradient_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0486552",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.PlainLzwEncodedGradient_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0324416",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.PngPredictorFlateGradient_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0259842",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.RunLengthEncodedSolidGray_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0302179",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.ScaledAndTranslatedImage_BoundingBoxMatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0274203",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.SoftMaskAlphaRamp_CompositesSameAsMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0404881",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.StencilImageMask_PaintsSameRegionMutoolDoes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0341959",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.ImageRequirementVerificationDifferentialTests.TiffPredictorFlateGradient_MatchesMutoolDecode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0199405",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
       "testName": "Excise.Rendering.Tests.Differential.Issue891SymbolicCmapCorpusTests.Bug1027533_ArialBoldSubset_RendersInk_NotBlank",
       "outcome": "Passed",
       "duration": "00:00:00.0553393",
@@ -53640,6 +53975,102 @@
       "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
       "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
       "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.AxialShading_Sh_GradientDirection_MatchesIndependentRenderers",
+      "outcome": "Passed",
+      "duration": "00:00:00.0705533",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.Clip_WStar_EvenOddConfinesSubsequentFill_MatchesIndependentRenderers",
+      "outcome": "Passed",
+      "duration": "00:00:00.0883821",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.Clip_W_NonzeroWindingConfinesSubsequentFill_MatchesIndependentRenderers",
+      "outcome": "Passed",
+      "duration": "00:00:00.0864181",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.DashPattern_D_ReducesStrokeInkVsSolid_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0717369",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.EvenOddFill_FStar_DonutHasHole_MatchesIndependentRenderers",
+      "outcome": "Passed",
+      "duration": "00:00:00.1059831",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.FillColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+      "outcome": "Passed",
+      "duration": "00:00:00.0987953",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.HorizontalScaling_Tz_HalvesWidth_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.2733193",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0501308",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.LineCap_J_RoundExtendsPastButt_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.0620722",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.NonzeroFill_F_DonutIsSolid_MatchesIndependentRenderers",
+      "outcome": "Passed",
+      "duration": "00:00:00.0806520",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.StrokeColorOperators_G_RG_Cs_Sc_Scn_MatchIndependentRendererPixelColor",
+      "outcome": "Passed",
+      "duration": "00:00:00.1795989",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.TextRenderMode_Tr3Invisible_PaintsNoInk_MatchesMutool",
+      "outcome": "Passed",
+      "duration": "00:00:00.1671837",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OracleCropBoxParityTests.Ghostscript_RasterisesTheCropBox_NotTheMediaBox",
@@ -62834,6 +63265,118 @@
       "trxSha256": "0e45acb893a5f46366bca5d765cc3ad23205ca6e256f250b252d16ed075010de"
     },
     {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.ClipEvenOdd_WStar_ExcludesCenterHoleUnlikeNonzeroClip_AgreesWithIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.3597855",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.ClipNonzero_W_ConfinesPaintToNonzeroStarRegion_AgreesWithIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.1769336",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.DashPattern_LeavesGapsInStroke_AgreesWithIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.1840072",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.FillEvenOdd_StarFixture_LeavesCenterUnpaintedUnlikeNonzero_AgreesWithIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.1737855",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.FillOnly_f_PaintsSolidInterior_MatchesIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.1665076",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.GrayscaleFillAndStroke_PixelValuesMatchIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.0545265",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.MiterLimit_ForcesBevelWhenRatioExceedsLimit_AgreesWithIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.2257682",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.3100296",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.RgbFillAndStroke_PixelValuesMatchIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.0248599",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.RoundLineCap_ExtendsInkPastEndpoints_AgreesWithIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.5438944",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.RoundLineJoin_StaysBoundedUnlikeAMiterSpike_AgreesWithIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.5724175",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.SaveRestore_RestoresFillColorAfterQ_AgreesWithIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.0246267",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.StrokeOnly_S_LeavesInteriorUnpainted_MatchesIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.0949636",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.RendererRequirementVerificationOperatorTests.Translation_cm_MovesRect_MatchesIndependentRenderer",
+      "outcome": "Passed",
+      "duration": "00:00:00.1450112",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
       "testName": "Excise.Rendering.Tests.Differential.ResidueContextPriorTests.ContextPrior_CannotRescueAWidthExcludedCandidate",
       "outcome": "Passed",
       "duration": "00:00:00.0009200",
@@ -63176,6 +63719,86 @@
       "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
       "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
       "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.SmallSectionsVerificationTests.AddEmbeddedFile_ThenSave_IsSeenByQpdfsIndependentParser",
+      "outcome": "Passed",
+      "duration": "00:00:00.0399841",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.SmallSectionsVerificationTests.EmbeddedFile_AuthoredByQpdf_IsParsedByExciseWithExactBytes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0301670",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.SmallSectionsVerificationTests.EmbeddedFile_ExtractedBytes_MatchQpdfsIndependentExtraction",
+      "outcome": "Passed",
+      "duration": "00:00:00.0632215",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.SmallSectionsVerificationTests.EmbeddedFile_SurvivesExciseRoundTrip_QpdfConfirmsPreservation",
+      "outcome": "Passed",
+      "duration": "00:00:00.0902563",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.SmallSectionsVerificationTests.HandAuthoredAnnotation_ParsedByExcise_MatchesQpdfsIndependentParser",
+      "outcome": "Passed",
+      "duration": "00:00:00.0404145",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.SmallSectionsVerificationTests.HandAuthoredMetadata_ParsedByExcise_MatchesQpdfsIndependentRead",
+      "outcome": "Passed",
+      "duration": "00:00:00.1602667",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.SmallSectionsVerificationTests.Metadata_SurvivesExciseRoundTrip_QpdfConfirmsPreservation",
+      "outcome": "Passed",
+      "duration": "00:00:00.1006690",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.SmallSectionsVerificationTests.RedactText_ScrubsAnnotationContents_QpdfConfirmsRemoval",
+      "outcome": "Passed",
+      "duration": "00:00:00.2212518",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.SmallSectionsVerificationTests.ScrubEmbeddedFiles_ThenSave_QpdfConfirmsAttachmentIsGone",
+      "outcome": "Passed",
+      "duration": "00:00:00.1199586",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.SmallSectionsVerificationTests.ScrubMetadata_ThenSave_QpdfConfirmsMetadataIsGone",
+      "outcome": "Passed",
+      "duration": "00:00:00.1734725",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.StickyNoteIconTests.DegenerateRect_StillDrawsAMarker_AsMutoolDoes",
@@ -63816,6 +64439,22 @@
       "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
       "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
       "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer(withWidthsArray: False)",
+      "outcome": "Passed",
+      "duration": "00:00:00.1440951",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+    },
+    {
+      "testName": "Excise.Rendering.Tests.Differential.WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer(withWidthsArray: True)",
+      "outcome": "Passed",
+      "duration": "00:00:00.1676696",
+      "trx": "/tmp/trx-integration/agents.trx",
+      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
+      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.XRayBadRedactionTests.ExciseAudit_AgreesWithXRay_OnTheFakeAndTheRealRedaction",
@@ -68763,12 +69402,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 96,
-    "tests": 8534,
+    "trxFiles": 99,
+    "tests": 8612,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7607
+      "Passed": 7685
     },
     "status": "recorded"
   }
