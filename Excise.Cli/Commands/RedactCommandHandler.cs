@@ -101,11 +101,15 @@ internal static class RedactCommandHandler
         var redaction = document.RedactText(request.Text, new RedactionOptions
         {
             CaseSensitive = request.CaseSensitive,
+            WholeWord = request.WholeWord,   // #1052
             DrawBox = request.DrawBox,
-            Width = request.CloseWidth
-                ? WidthPolicy.CloseGap
+            Width = request.CloseWidth ? WidthPolicy.CloseGap
+                : request.OvershootBox ? WidthPolicy.OvershootPreserveLayout   // #1189
                 : WidthPolicy.CollapsePreserveLayout,
             BoxColor = request.BoxColor,
+            // #1188/#1169: per-carrier mode. Null keeps the all-Strip default.
+            CarrierPolicy = request.CarrierPolicy
+                ?? Excise.Core.Operations.CarrierScrubPolicy.Default,
         }, guardedProgress);
 
         // #916/#905: collect carriers the surgical CLI term policy could not
@@ -176,7 +180,8 @@ internal static class RedactCommandHandler
             redaction.VerifiedRemovals,
             Flattened: false,
             carrierNotes,
-            diagnostics);
+            diagnostics,
+            redaction.WholeWord);
     }
 
     private static void Validate(RedactCommandRequest request)
@@ -228,7 +233,10 @@ internal readonly record struct RedactCommandRequest(
     bool DrawBox = true,
     (double R, double G, double B)? BoxColor = null,
     bool OcrImageText = false,
-    bool FlattenOcr = false);
+    bool FlattenOcr = false,
+    Excise.Core.Operations.CarrierScrubPolicy? CarrierPolicy = null,   // #1188/#1169
+    bool WholeWord = false,   // #1052
+    bool OvershootBox = false);   // #1189
 
 internal sealed record RedactCommandResult(
     string InputPath,
@@ -237,7 +245,8 @@ internal sealed record RedactCommandResult(
     int Count,
     bool Flattened,
     IReadOnlyList<string> CarrierNotes,
-    IReadOnlyList<string> Diagnostics);
+    IReadOnlyList<string> Diagnostics,
+    bool WholeWord = false);   // #1052 — the match rule is part of the result
 
 /// <summary>
 /// A typed refusal lets automation translate confidence failures without

@@ -926,7 +926,10 @@ public partial class PdfViewerControl : UserControl
     {
         input.TabIndex = tabIndex;
         input.IsEnabled = input.IsEnabled && !field.IsReadOnly;
-        ToolTip.SetTip(input, field.FullName);
+        // #1205: the field's fully-qualified NAME is an identifier the document
+        // supplies and the tooltip is where the user reads it. Display only —
+        // the field is still addressed and written by its real name.
+        ToolTip.SetTip(input, Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(field.FullName));
 
         input.GotFocus += (_, _) => SetFormFieldFocusChrome(input, focused: true);
         input.LostFocus += (_, _) => SetFormFieldFocusChrome(input, focused: false);

@@ -20,6 +20,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using PdfCoreDocument = Excise.Core.Document.PdfDocument;
 
+using Excise.Core.Text;
+
 namespace Excise.App.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
@@ -62,6 +64,13 @@ public partial class MainWindowViewModel : ViewModelBase
         Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
     private Excise.Core.Text.WhitespaceMode _whitespaceMode =
         Excise.Core.Text.WhitespaceMode.Smart;
+    private Excise.Core.Operations.CarrierScrubMode _linkUriCarrierPolicy =
+        Excise.Core.Operations.CarrierScrubMode.Strip;
+    private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
+        Excise.Core.Operations.CarrierScrubMode.Strip;
+    private bool _redactionWholeWord;
+    private Excise.Core.Text.Segmentation.WidthPolicy _redactionWidthPolicy =
+        Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout;
     private bool _isRedactionMode;
     private PdfPageRect? _currentRedactionPageArea;
     // Whether the user has already confirmed editing a signed document this
@@ -259,6 +268,112 @@ public partial class MainWindowViewModel : ViewModelBase
     public void ApplyWhitespaceModePreference(Excise.Core.Text.WhitespaceMode mode)
     {
         WhitespaceMode = mode;
+    }
+
+    /// <summary>
+    /// How a link's <c>/A /URI</c> that contains the redacted text is handled
+    /// (#1169). Default <see cref="Excise.Core.Operations.CarrierScrubMode.Strip"/>,
+    /// which is the pre-option behaviour.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ This is a SECURITY choice, not a tidiness one. Cutting the term out of
+    /// a URL whose shape is public knowledge can hand it straight back:
+    /// <c>https://www.irs.gov/your-account</c> minus <c>your</c> is
+    /// <c>https://www.irs.gov/-account</c>. RemoveWhole drops the whole link
+    /// target; ReportOnly changes nothing and puts the carrier in the
+    /// redacted-copy report for the user to judge.
+    /// </remarks>
+    public Excise.Core.Operations.CarrierScrubMode LinkUriCarrierPolicy
+    {
+        get => _linkUriCarrierPolicy;
+        set => this.RaiseAndSetIfChanged(ref _linkUriCarrierPolicy, value);
+    }
+
+    /// <summary>
+    /// The same choice for document metadata (<c>/Info</c> and the XMP packet),
+    /// where a templated field's surrounding structure narrows the removed value
+    /// the same way a known URL does (#1169).
+    /// </summary>
+    public Excise.Core.Operations.CarrierScrubMode MetadataCarrierPolicy
+    {
+        get => _metadataCarrierPolicy;
+        set => this.RaiseAndSetIfChanged(ref _metadataCarrierPolicy, value);
+    }
+
+    /// <summary>
+    /// Match whole words only when redacting text (#1052). Default false —
+    /// substring matching, the #1000 decision.
+    /// </summary>
+    /// <remarks>
+    /// #1000 decided substring stays the default because no single rule is
+    /// right: it is correct for a case number inside a longer citation and
+    /// wrong for <c>Lee</c> inside <c>Sleeman</c>. This is the explicit
+    /// alternative that makes that default safe. It reaches the scripted
+    /// text-redaction path AND the document-carrier scrub together — a rule
+    /// honoured in one path and not another is #896.
+    /// </remarks>
+    public bool RedactionWholeWord
+    {
+        get => _redactionWholeWord;
+        set => this.RaiseAndSetIfChanged(ref _redactionWholeWord, value);
+    }
+
+    /// <summary>
+    /// How the removed run's WIDTH is handled (#1189). Default
+    /// <see cref="Excise.Core.Text.Segmentation.WidthPolicy.CollapsePreserveLayout"/>.
+    /// </summary>
+    /// <remarks>
+    /// A layout choice and a SECURITY choice at once. The default box is drawn
+    /// to the exact extent of the removed run, which makes it a ruler for the
+    /// removed string's length (#1140). Overshoot rounds the box width up so
+    /// similar-length candidates stop being separable by measuring it; CloseGap
+    /// removes the advance entirely — the only option that also closes the
+    /// content-stream channel — and reflows the line.
+    /// </remarks>
+    public Excise.Core.Text.Segmentation.WidthPolicy RedactionWidthPolicy
+    {
+        get => _redactionWidthPolicy;
+        set => this.RaiseAndSetIfChanged(ref _redactionWidthPolicy, value);
+    }
+
+    /// <summary>
+    /// Apply the persisted redaction-policy preferences on startup
+    /// (#1052/#1169/#1189). Unparseable values fall back to the defaults, which
+    /// are the pre-option behaviour — never to a stricter or looser policy the
+    /// user did not choose.
+    /// </summary>
+    public void ApplyRedactionPolicyPreferences(
+        bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy)
+    {
+        RedactionWholeWord = wholeWord;
+
+        if (Enum.TryParse<Excise.Core.Text.Segmentation.WidthPolicy>(widthPolicy, out var width))
+            RedactionWidthPolicy = width;
+        if (Enum.TryParse<Excise.Core.Operations.CarrierScrubMode>(linkUriPolicy, out var uri))
+            LinkUriCarrierPolicy = uri;
+        if (Enum.TryParse<Excise.Core.Operations.CarrierScrubMode>(metadataPolicy, out var meta))
+            MetadataCarrierPolicy = meta;
+    }
+
+    /// <summary>
+    /// The redacted-copy scrub options the user's per-carrier choices describe
+    /// (#1188/#1169). All-default unless a policy was changed, so the redaction
+    /// path is byte-identical to before the option existed.
+    /// </summary>
+    internal Excise.Core.Text.Segmentation.RedactedCopySafetyOptions BuildRedactedCopySafetyOptions()
+    {
+        var policy = Excise.Core.Operations.CarrierScrubPolicy.Default
+            .With(Excise.Core.Operations.RedactionCarriers.ActionUris, LinkUriCarrierPolicy)
+            .With(
+                Excise.Core.Operations.RedactionCarriers.Info
+                    | Excise.Core.Operations.RedactionCarriers.Xmp,
+                MetadataCarrierPolicy);
+
+        return Excise.Core.Text.Segmentation.RedactedCopySafetyOptions.Default with
+        {
+            CarrierPolicy = policy,
+            WholeWord = RedactionWholeWord,   // #1052
+        };
     }
 
     public bool ContinuousScrollPreference => _viewportSession.ContinuousScrollPreference;
@@ -613,7 +728,10 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         if (node.PageNumber == null)
         {
-            _logger.LogInformation("JumpToOutline: '{Title}' has no resolvable page", node.Title);
+            // #1205: log lines are read in terminals and log viewers, which
+            // honour bidi controls exactly as a UI label does.
+            _logger.LogInformation("JumpToOutline: '{Title}' has no resolvable page",
+                UnicodeTextSafety.EscapeForDisplay(node.Title));
             return;
         }
         var idx = node.PageNumber.Value - 1;
@@ -622,7 +740,8 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogWarning("JumpToOutline: page {Page} out of range", node.PageNumber);
             return;
         }
-        _logger.LogInformation("JumpToOutline: '{Title}' → page {Page}", node.Title, node.PageNumber);
+        _logger.LogInformation("JumpToOutline: '{Title}' → page {Page}",
+            UnicodeTextSafety.EscapeForDisplay(node.Title), node.PageNumber);
         CurrentPageIndex = idx;
     }
 
@@ -2416,25 +2535,35 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private async Task OpenExternalLinkAsync(string uri)
     {
-        _logger.LogInformation("External link clicked: {Uri}", uri);
+        // #1205: the URI comes from the document, and this dialog is where the
+        // user makes a TRUST DECISION about it. A bidi override inside the host
+        // makes the displayed URL read as a different destination than the one
+        // actually opened -- precisely the phishing the confirmation exists to
+        // prevent. Escape for display; open the raw value.
+        var shownUri = UnicodeTextSafety.EscapeForDisplay(uri);
+        _logger.LogInformation("External link clicked: {Uri}", shownUri);
 
         if (!Uri.TryCreate(uri, UriKind.Absolute, out var parsed) ||
             !AllowedExternalLinkSchemes.Contains(parsed.Scheme))
         {
-            _logger.LogWarning("Refusing external link with disallowed/malformed scheme: {Uri}", uri);
+            _logger.LogWarning("Refusing external link with disallowed/malformed scheme: {Uri}", shownUri);
             await _dialogService.ShowMessageAsync(
                 "Link Blocked",
-                $"excise won't open this link — its scheme isn't one of the ones considered safe to navigate to automatically (http, https, mailto):\n\n{uri}");
+                $"excise won't open this link — its scheme isn't one of the ones considered safe to navigate to automatically (http, https, mailto):\n\n{shownUri}");
             return;
         }
 
         var confirmed = await _dialogService.ShowConfirmAsync(
             "Open Link?",
-            $"This will open the following link in your default browser:\n\n{uri}\n\n" +
+            $"This will open the following link in your default browser:\n\n{shownUri}\n\n" +
+            (UnicodeTextSafety.ContainsBidiControl(uri)
+                ? "\u26a0 This link contains text-direction control characters, which can make " +
+                  "a URL display differently from where it actually leads. Treat it as untrusted.\n\n"
+                : "") +
             "Only continue if you trust this destination — PDFs are a common phishing vector.");
         if (!confirmed)
         {
-            _logger.LogInformation("User declined to open external link: {Uri}", uri);
+            _logger.LogInformation("User declined to open external link: {Uri}", shownUri);
             return;
         }
 
@@ -2451,14 +2580,18 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private async Task ShowDangerousLinkRefusalAsync(string actionType)
     {
-        _logger.LogWarning("Refused dangerous link action: {ActionType}", actionType);
+        _logger.LogWarning("Refused dangerous link action: {ActionType}",
+            UnicodeTextSafety.EscapeForDisplay(actionType));
         var reason = actionType switch
         {
             "Launch" => "it launches an external application or file",
             "GoToE" => "it navigates into an embedded file",
             "GoToR" => "it navigates into a remote file",
+            // #1205: this substring is cut from the raw document URI, so it can
+            // carry controls exactly as the whole URL can.
             _ when actionType.StartsWith("URI:", StringComparison.Ordinal) =>
-                $"its link scheme ('{actionType["URI:".Length..]}') isn't one excise considers safe to open automatically",
+                $"its link scheme ('{UnicodeTextSafety.EscapeForDisplay(actionType["URI:".Length..])}') " +
+                "isn't one excise considers safe to open automatically",
             _ => "it's a link action type excise doesn't run automatically",
         };
         await _dialogService.ShowMessageAsync(
@@ -2467,8 +2600,14 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>Status-bar hover feedback for the link under the pointer, or null when not hovering one (#625).</summary>
+    /// <remarks>
+    /// #1205: the hover target is how a user checks where a link goes BEFORE
+    /// clicking it -- a security display in the plainest sense -- so invisible
+    /// and direction-changing controls are made explicit here.
+    /// </remarks>
     public void SetHoveredLinkTarget(string? target)
     {
+        target = target == null ? null : UnicodeTextSafety.EscapeForDisplay(target);
         if (_hoveredLinkTarget == target) return;
         _hoveredLinkTarget = target;
         this.RaisePropertyChanged(nameof(StatusBarText));
@@ -2480,6 +2619,9 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public void SetHoveredAnnotationInfo(string? info)
     {
+        // #1205: this string carries the annotation AUTHOR (/T) -- an identity
+        // claim made by the document -- alongside its prose body.
+        info = info == null ? null : UnicodeTextSafety.EscapeForDisplay(info);
         if (_hoveredAnnotationInfo == info) return;
         _hoveredAnnotationInfo = info;
         this.RaisePropertyChanged(nameof(StatusBarText));

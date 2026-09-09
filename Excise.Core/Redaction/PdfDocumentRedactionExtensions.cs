@@ -105,7 +105,10 @@ public static class PdfDocumentRedactionExtensions
             options.CloseWidth,
             options.BoxColor,
             options.Carriers,
-            progress);
+            progress,
+            options.CarrierPolicy,
+            options.WholeWord,
+            options.Width == WidthPolicy.OvershootPreserveLayout);
     }
 
     public static RedactionReport RedactText(
@@ -120,7 +123,10 @@ public static class PdfDocumentRedactionExtensions
         (double R, double G, double B)? boxColor = null,   // #1158 — covering-box fill, RGB 0..1; null = black
         Excise.Core.Operations.RedactionCarriers carriers
             = Excise.Core.Operations.RedactionCarriers.All,  // #1188 — per-carrier scrub scope
-        Action<int, int>? progress = null)
+        Action<int, int>? progress = null,
+        Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy = null,  // #1188/#1169 — per-carrier MODE
+        bool wholeWord = false,   // #1052 — opt-in whole-word matching
+        bool overshootBox = false)   // #1189 — widen the box so it stops measuring the run
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
@@ -135,6 +141,7 @@ public static class PdfDocumentRedactionExtensions
                 Term = text ?? "",
                 Pages = pageResults,
                 Carriers = carrierResults,
+                WholeWord = wholeWord,
             };
 
         int totalMatches = 0;
@@ -171,7 +178,7 @@ public static class PdfDocumentRedactionExtensions
                 if (searchLetters.Count == 0) break;
 
                 var searchTextSnapshot = string.Concat(searchLetters.Select(l => l.Value));
-                var matches = FindTextMatches(searchLetters, text, caseSensitive);
+                var matches = FindTextMatches(searchLetters, text, caseSensitive, wholeWord);
                 if (matches.Count == 0) break;
 
                 // #1090: a stalled page STOPS. It used to fall back to
@@ -240,7 +247,7 @@ public static class PdfDocumentRedactionExtensions
                             // whole field value; on issue18036.pdf that was 545
                             // of 568 characters to remove one word.
                             InteractiveRedactionScrubber.ScrubTerm(
-                                page, bbox, text, caseSensitive);
+                                page, bbox, text, caseSensitive, wholeWord);
                         else
                         {
                             contentAreas.Add(strategy == GlyphRemovalStrategy.FullyContained
@@ -248,7 +255,12 @@ public static class PdfDocumentRedactionExtensions
                                 : CenterlineBoxOf(matchLetters));
                             imageAreas.Add(bbox); // full height for the image pass (#1195)
                         }
-                        markerAreas.Add(bbox);
+                        // #1189: under the overshoot policy the covering box is
+                        // widened out toward the surviving neighbours, so its
+                        // width stops being a ruler for the removed string.
+                        markerAreas.Add(overshootBox
+                            ? OvershootBoxFor(bbox, matchLetters, searchLetters, cropWindow)
+                            : bbox);
                     }
 
                     if (contentAreas.Count > 0)
@@ -291,7 +303,7 @@ public static class PdfDocumentRedactionExtensions
             hyphenCandidates.AddRange(
                 FindHyphenWrappedCandidates(page.Letters, text, caseSensitive, pageNum));
 
-            var remaining = CountOccurrences(page, text, caseSensitive, includeHiddenLayers);
+            var remaining = CountOccurrences(page, text, caseSensitive, includeHiddenLayers, wholeWord);
             pageResults.Add(new PageRedactionResult(
                 pageNum,
                 pageLocated,
@@ -342,13 +354,65 @@ public static class PdfDocumentRedactionExtensions
             }
             else
             {
-                Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(
-                    document, new[] { text }, caseSensitive, carriers);
+                var policy = carrierPolicy ?? Excise.Core.Operations.CarrierScrubPolicy.Default;
+                var outcome = Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(
+                    document, new[] { text }, caseSensitive, carriers, policy, wholeWord);
+
+                // #1188/#1169: the report says WHICH POLICY RAN on each carrier,
+                // not just "scrubbed". A ReportOnly carrier still holds the term
+                // — reporting it as scrubbed would be the "reported success
+                // anyway" failure this report type exists to end.
                 foreach (var (carrier, flag) in DocumentCarriers)
-                    carrierResults.Add((carriers & flag) != 0
-                        ? new CarrierResult(carrier, true, null)
-                        : new CarrierResult(carrier, false,
+                {
+                    if ((carriers & flag) == 0)
+                    {
+                        carrierResults.Add(new CarrierResult(carrier, false,
                             "carrier disabled via RedactionOptions.Carriers (#1188)"));
+                        continue;
+                    }
+
+                    var row = outcome.For(flag);
+                    if (row?.RefusedReason != null)
+                    {
+                        carrierResults.Add(new CarrierResult(carrier, false, row.RefusedReason));
+                        continue;
+                    }
+
+                    var mode = row?.Mode ?? Excise.Core.Operations.CarrierScrubMode.Strip;
+                    if (mode == Excise.Core.Operations.CarrierScrubMode.ReportOnly)
+                    {
+                        // A ReportOnly carrier that does NOT hold the term is a
+                        // clean outcome and must carry no RefusedReason:
+                        // IsCleanSuccess keys off that field, so flagging it
+                        // would report a leak-free run as unclean and train the
+                        // user to ignore the one field that matters.
+                        carrierResults.Add(new CarrierResult(carrier, false,
+                            row is { TermFound: true }
+                                ? "ReportOnly (#1169): this carrier HOLDS THE TERM and was deliberately left unchanged"
+                                : null));
+                        continue;
+                    }
+
+                    carrierResults.Add(new CarrierResult(carrier, true, null));
+                }
+
+                // #1188: a carrier this report does not name individually can
+                // still REFUSE a requested mode, or hold the term under
+                // ReportOnly. Dropping those rows because the carrier is absent
+                // from the summary list is exactly the silent skip the carrier
+                // policy exists to prevent — append whatever needs attention.
+                var named = DocumentCarriers.Aggregate(
+                    Excise.Core.Operations.RedactionCarriers.None,
+                    (acc, c) => acc | c.Flag);
+                foreach (var extra in outcome.NeedingAttention)
+                {
+                    if ((extra.Carrier & named) != 0) continue;
+                    carrierResults.Add(new CarrierResult(
+                        $"/{extra.Carrier}",
+                        false,
+                        extra.RefusedReason
+                            ?? $"{extra.Mode} (#1169): this carrier HOLDS THE TERM and was deliberately left unchanged"));
+                }
             }
         }
         else
@@ -363,6 +427,7 @@ public static class PdfDocumentRedactionExtensions
             Term = text,
             Pages = pageResults,
             Carriers = carrierResults,
+            WholeWord = wholeWord,
             ImageRegionsRedacted = imageCounts.RegionEdited,
             ImagesDroppedWhole = imageCounts.RemovedWhole,
             HyphenatedCandidates = hyphenCandidates,
@@ -395,7 +460,8 @@ public static class PdfDocumentRedactionExtensions
     /// needs an independent extractor -- #1094.</para>
     /// </summary>
     private static int CountOccurrences(
-        PdfPage page, string text, bool caseSensitive, bool includeHiddenLayers)
+        PdfPage page, string text, bool caseSensitive, bool includeHiddenLayers,
+        bool wholeWord = false)
     {
         try
         {
@@ -403,7 +469,10 @@ public static class PdfDocumentRedactionExtensions
             var searchLetters = includeHiddenLayers
                 ? letters
                 : letters.Where(l => !l.IsInHiddenOptionalContent).ToList();
-            return FindTextMatches(searchLetters, text, caseSensitive).Count;
+            // #1052: the verification pass MUST use the same match rule as the
+            // removal pass. A stricter re-read would report "gone" for a match
+            // the removal never made.
+            return FindTextMatches(searchLetters, text, caseSensitive, wholeWord).Count;
         }
         catch
         {
@@ -594,7 +663,8 @@ public static class PdfDocumentRedactionExtensions
     /// non-overlapping — greedy left-to-right.
     /// </remarks>
     internal static List<List<Letter>> FindTextMatches(
-        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive)
+        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive,
+        bool wholeWord = false)   // #1052
     {
         var matches = new List<List<Letter>>();
         if (string.IsNullOrEmpty(searchText) || letters.Count == 0)
@@ -700,6 +770,19 @@ public static class PdfDocumentRedactionExtensions
                     endIndex++;
                 }
 
+                // #1052: whole-word matching, when the user asked for it. #1000
+                // decided substring stays the DEFAULT — it is right for a case
+                // number inside a longer citation — precisely because the
+                // alternative would be an explicit choice rather than a silent
+                // global rule. This is that choice: a match must be bounded by a
+                // non-word character (or the start/end of the run) on BOTH sides,
+                // so redacting "Lee" no longer guts "Sleeman".
+                if (wholeWord && !IsWholeWordMatch(fullText, i, endIndex))
+                {
+                    i++;
+                    continue;
+                }
+
                 if (endIndex >= i && endIndex < characterToLetter.Count)
                 {
                     var firstLetter = characterToLetter[i];
@@ -727,6 +810,114 @@ public static class PdfDocumentRedactionExtensions
         }
 
         return matches;
+    }
+
+    /// <summary>
+    /// #1189 — the covering box for one match, WIDENED so its width no longer
+    /// measures the removed string.
+    /// </summary>
+    /// <remarks>
+    /// <para>A box drawn to the exact extent of the removed run is a ruler
+    /// (#1140): given a candidate list, the reader measures the box and discards
+    /// every candidate whose rendered width differs. Rounding the box width UP
+    /// to a whole em blurs that measurement — candidates whose widths fall in
+    /// the same bucket become indistinguishable, which is exactly the case an
+    /// attacker separating similar names is in.</para>
+    /// <para><b>Measured, not assumed:</b> the first design here grew the box to
+    /// fill the gap between the surviving neighbours. That does almost nothing
+    /// in running text — the following words SHIFT with the secret's length, so
+    /// the gap scales with the very quantity being hidden. The oracle test
+    /// caught it (223 px apart on two secrets that should have matched).</para>
+    /// <para>The bound is the surviving text itself: the box grows only into the
+    /// gap between the nearest kept glyph on each side, minus a margin, and
+    /// never past the page window. Eating a neighbour would destroy content the
+    /// user did not ask to redact — the collateral this project has repeatedly
+    /// been bitten by (#942, #1038). <b>Where that slack is smaller than the
+    /// rounding needs, the box grows as far as it can and the bucket is NOT
+    /// reached</b>; the residue is then only partly blurred. That limit is real
+    /// and is pinned by a test rather than papered over.</para>
+    /// <para>⚠️ It does NOT close the width channel in the FILE. Preserving
+    /// layout means one TJ adjustment equal to the removed advance survives in
+    /// the content stream. See <see cref="WidthPolicy.OvershootPreserveLayout"/>.
+    /// </para>
+    /// </remarks>
+    internal static PdfRectangle OvershootBoxFor(
+        PdfRectangle bbox,
+        IReadOnlyList<Letter> matchLetters,
+        IReadOnlyList<Letter> allLetters,
+        PdfRectangle window)
+    {
+        var box = bbox.Normalize();
+        var height = box.Top - box.Bottom;
+        var width = box.Right - box.Left;
+        if (height <= 0 || width <= 0) return bbox;
+
+        // The bucket size. One em of the removed text: coarse enough that names
+        // of similar length collapse together, small enough to fit in the slack
+        // an ordinary word gap provides.
+        var em = matchLetters.Count > 0 ? matchLetters.Max(l => l.FontSize) : height;
+        if (!(em > 0)) return bbox;
+
+        var midY = (box.Bottom + box.Top) / 2.0;
+        var win = window.Normalize();
+
+        // Reference identity: the match letters are the same objects as in the
+        // page's letter list, and two glyphs can legitimately compare equal.
+        var removed = new HashSet<Letter>(matchLetters, ReferenceEqualityComparer.Instance);
+
+        // How far can the box grow before it touches surviving text on this
+        // line? Start at the page window and pull in for every kept neighbour.
+        // Whitespace glyphs are not neighbours — their space IS the slack.
+        var leftLimit = win.Left;
+        var rightLimit = win.Right;
+        foreach (var letter in allLetters)
+        {
+            if (removed.Contains(letter)) continue;
+            if (string.IsNullOrWhiteSpace(letter.Value)) continue;
+
+            var r = letter.GlyphRectangle.Normalize();
+            if (Math.Abs((r.Bottom + r.Top) / 2.0 - midY) > height / 2.0) continue;   // same line only
+
+            if (r.Right <= box.Left) leftLimit = Math.Max(leftLimit, r.Right);
+            else if (r.Left >= box.Right) rightLimit = Math.Min(rightLimit, r.Left);
+        }
+
+        // Leave a hairline so the box abuts rather than overlaps its neighbour.
+        var margin = height * 0.05;
+        var leftSlack = Math.Max(0, box.Left - (leftLimit + margin));
+        var rightSlack = Math.Max(0, (rightLimit - margin) - box.Right);
+        var slack = leftSlack + rightSlack;
+        if (slack <= 0) return bbox;
+
+        // Round the width UP to the next whole em, as far as the slack allows.
+        var target = Math.Ceiling(width / em) * em;
+        var grow = Math.Min(target - width, slack);
+        if (grow <= 0) return bbox;
+
+        // Grow right first, then left — an asymmetric box is fine; only its
+        // WIDTH is the measurement being blurred.
+        var growRight = Math.Min(grow, rightSlack);
+        var growLeft = Math.Min(grow - growRight, leftSlack);
+        return new PdfRectangle(box.Left - growLeft, box.Bottom, box.Right + growRight, box.Top);
+    }
+
+    /// <summary>
+    /// #1052 — is the span <c>[start, end]</c> of <paramref name="text"/> bounded
+    /// by a non-word character (or the start/end of the text) on both sides?
+    /// </summary>
+    /// <remarks>
+    /// "Word character" is letter, digit or underscore — the ordinary <c>\w</c>
+    /// rule. Underscore counts, so whole-word <c>SECRET</c> does not match inside
+    /// <c>SECRET_KEY</c>; the point of the option is that the user gets the strict
+    /// reading when they ask for it.
+    /// </remarks>
+    private static bool IsWholeWordMatch(string text, int start, int end)
+    {
+        static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
+
+        if (start > 0 && IsWordChar(text[start - 1])) return false;
+        if (end + 1 < text.Length && IsWordChar(text[end + 1])) return false;
+        return true;
     }
 
     /// <summary>

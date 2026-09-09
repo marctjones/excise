@@ -23,8 +23,20 @@ public sealed record TextRedactionResult(
     /// </summary>
     public IReadOnlyList<string> Warnings { get; init; } = System.Array.Empty<string>();
 
-    public static TextRedactionResult Succeeded(int count, IReadOnlyList<string>? warnings = null) =>
-        new(true, count) { Warnings = warnings ?? System.Array.Empty<string>() };
+    /// <summary>
+    /// Whether whole-word matching ran (#1052). Part of the RESULT, not just the
+    /// request: a user who does not know which rule ran cannot reason about what
+    /// was left behind.
+    /// </summary>
+    public bool WholeWord { get; init; }
+
+    public static TextRedactionResult Succeeded(
+        int count, IReadOnlyList<string>? warnings = null, bool wholeWord = false) =>
+        new(true, count)
+        {
+            Warnings = warnings ?? System.Array.Empty<string>(),
+            WholeWord = wholeWord,
+        };
 
     public static TextRedactionResult Failed(string error) => new(false, 0, error);
 }

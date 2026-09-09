@@ -6,8 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
-Milestone **P1.1 — Redaction correctness: geometry, leaks, and fail-open
-safety**.
+Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
+safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Fixed
 - **The TJ array adjustment was applied raw instead of composed through the
@@ -58,6 +58,68 @@ safety**.
   inverted-box 0/8 — was a test-harness defect fixed by #1361; re-measured
   2026-09-09 the channel recovers occluded 16/16 and inverted-box 8/8, against
   the x-ray reference's 8/32 overall.
+
+### Added
+- **Per-carrier redaction scrub scope and mode** (#1188, #1169). A PDF
+  restates page text in carriers you never see, and one policy is wrong for
+  all of them: cutting the redacted term out of a KNOWN string can REVEAL
+  it — strip `your` from `https://www.irs.gov/your-account` and the
+  leftover `https://www.irs.gov/-account` tells anyone who knows the site
+  what was removed. Each carrier now takes a mode: `Strip` (the default and
+  the previous behaviour), `RemoveWhole` (drop the entire value, leaving no
+  surrounding structure to infer from), or `ReportOnly` (change nothing and
+  report the hit). CLI: `--carrier-policy <carrier>=<mode>`, repeatable; an
+  unrecognised carrier or mode is an error, never an ignored spec. GUI:
+  Preferences → Redaction, for link URLs and document metadata. A
+  `ReportOnly` carrier that holds the term is reported as holding it, and
+  the run is not a clean success.
+  ⚠️ **The safety default is deliberately NOT flipped.** #1169 argues URLs
+  and structured metadata should default to `RemoveWhole`; #1187 requires
+  defaults to reproduce prior behaviour. That conflict is a product
+  decision, not something this change makes silently.
+- **Whole-word matching as an explicit option** (#1052, `--whole-word`,
+  Preferences → Redaction → Match Rule). #1000 decided substring matching
+  stays the default because no single rule can be right — it is correct for
+  a case number inside a longer citation and wrong for `Lee` inside
+  `Sleeman`. The alternative is now an explicit choice, applied to page
+  content AND the document-carrier scrub together, and the rule that ran is
+  reported in the result rather than only known at the moment of clicking.
+- **`WidthPolicy.OvershootPreserveLayout`** (#1189, `--overshoot-box`,
+  Preferences → Redaction → Covering Box Width). A covering box drawn to
+  the exact extent of the removed run is a ruler for the removed string's
+  length. Overshoot rounds the box width up to a whole em, growing into the
+  space beside it without covering neighbouring text, so similar-length
+  candidates stop being separable by measuring it.
+  ⚠️ This blurs only the RENDERED width. Preserving layout means the
+  content stream still carries the removed run's advance, so a reader of
+  the FILE can still measure it; `--close-width` is what destroys that, at
+  the cost of reflowing the line. Both limits are pinned by tests against
+  an independent renderer rather than described and hoped for.
+- **Unicode control diagnostics at every identifier display** (#1205).
+  `UnicodeTextSafety` moved from `Excise.App` to `Excise.Core.Text` so the
+  CLI and the reusable viewer control can use the same policy instead of
+  growing their own. Invisible and text-direction control characters are
+  now made explicit — as `[U+XXXX]` — wherever excise shows document-authored
+  text as a name a user acts on: bookmark labels, the open-link
+  confirmation and link hover target, annotation authors, form-field name
+  tooltips, signature and signer identity, CLI `info` metadata output, and
+  security-relevant log lines. The open-link dialog and the signer summary
+  additionally raise an explicit warning when a bidi control is present,
+  because those are where a trust decision is made. Page text, search
+  results, redaction previews, annotation note bodies and copied values are
+  left byte-exact: this is a display policy, never a normalisation.
+
+### Fixed
+- **The `Annotations` carrier was silently overriding the `ActionUris`
+  carrier.** A link annotation's `/A /URI` was scrubbed under the
+  annotation carrier's scope and mode (a leftover from #1155 that #1168's
+  complete URI walk made redundant). Turning the URI carrier off still
+  stripped the URI while the report claimed it was disabled, and setting it
+  to a different mode did nothing. Found while building #1169; reverting
+  the fix reddens four tests.
+- **Redaction policy preferences now persist across launches.** A security
+  preference that silently reset to the less-safe default on every launch
+  is worse than no preference at all.
 
 ## [3.9.4] - 2026-09-09
 

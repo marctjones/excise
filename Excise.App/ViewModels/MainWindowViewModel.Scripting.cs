@@ -353,7 +353,10 @@ public partial class MainWindowViewModel
                     _logger.LogInformation("[SCRIPT] Redacting '{Text}' ({Current}/{Total})",
                         text, i + 1, _pendingTextRedactions.Count);
 
-                    var result = _redactionService.RedactText(currentInput, currentOutput, text, caseSensitive: false);
+                    var result = _redactionService.RedactText(
+                        currentInput, currentOutput, text, caseSensitive: false,
+                        allowLowConfidence: false, wholeWord: RedactionWholeWord,   // #1052
+                        width: RedactionWidthPolicy);                               // #1189
 
                     if (!result.Success)
                     {
@@ -361,8 +364,10 @@ public partial class MainWindowViewModel
                         throw new InvalidOperationException($"Redaction failed for '{text}': {result.ErrorMessage}");
                     }
 
-                    _logger.LogInformation("[SCRIPT] Redacted {Count} occurrences of '{Text}'",
-                        result.RedactionCount, text);
+                    // #1052: log WHICH RULE RAN, not just the count.
+                    _logger.LogInformation(
+                        "[SCRIPT] Redacted {Count} occurrences of '{Text}' (wholeWord={WholeWord})",
+                        result.RedactionCount, text, result.WholeWord);
                     foreach (var warning in result.Warnings)
                         _logger.LogWarning("[SCRIPT] Redaction warning for '{Text}': {Warning}", text, warning);
 
@@ -385,7 +390,9 @@ public partial class MainWindowViewModel
                                     redaction.PageNumber,
                                     redaction.PageArea,
                                     redaction.PreviewText))
-                                .ToArray()));
+                                .ToArray(),
+                            skippedRedactionAreaCount: 0,
+                            BuildRedactedCopySafetyOptions()));   // #1188/#1169/#1052
                     // #643: keep an encrypted source's protection on the final
                     // scripted output (the intermediate files carried it too —
                     // see RedactionService.RedactText).

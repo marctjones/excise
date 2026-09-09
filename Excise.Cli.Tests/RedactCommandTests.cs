@@ -709,6 +709,144 @@ public class RedactCommandTests : IDisposable
         error.Should().NotBeNullOrEmpty();
     }
 
+    [Theory]
+    [InlineData("uri=remove-whole", Excise.Core.Operations.RedactionCarriers.ActionUris,
+        Excise.Core.Operations.CarrierScrubMode.RemoveWhole)]
+    [InlineData("INFO=Report-Only", Excise.Core.Operations.RedactionCarriers.Info,
+        Excise.Core.Operations.CarrierScrubMode.ReportOnly)]
+    [InlineData("outlines=strip", Excise.Core.Operations.RedactionCarriers.Outlines,
+        Excise.Core.Operations.CarrierScrubMode.Strip)]
+    public void TryParseCarrierPolicy_AcceptsCarrierEqualsMode(
+        string spec,
+        Excise.Core.Operations.RedactionCarriers carrier,
+        Excise.Core.Operations.CarrierScrubMode mode)
+    {
+        RedactCommand.TryParseCarrierPolicy(new[] { spec }, out var policy, out var error)
+            .Should().BeTrue();
+        error.Should().BeNull();
+        policy.ModeFor(carrier).Should().Be(mode);
+    }
+
+    [Theory]
+    [InlineData("--close-width")]
+    [InlineData("--no-box")]
+    public async Task RunAsync_Redact_OvershootBox_RejectsContradictoryFlags(string other)
+    {
+        // #1189: --close-width draws no box (#1140) and --no-box draws no box,
+        // so there is nothing to widen. A redaction tool must never silently
+        // ignore a flag the user passed.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET"));
+
+        var prevErr = Console.Error;
+        Console.SetError(new StringWriter());
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--overshoot-box", other
+            });
+        }
+        finally
+        {
+            Console.SetError(prevErr);
+        }
+
+        exitCode.Should().Be(1);
+        File.Exists(outputPath).Should().BeFalse("the run was rejected before writing");
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_OvershootBox_EndToEnd_StillRemovesTheText()
+    {
+        // The full CLI path for --overshoot-box. The box policy is cosmetic;
+        // glyph removal is unconditional and must stay so.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRET WORLD"));
+
+        var prevOut = Console.Out;
+        Console.SetOut(new StringWriter());
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--overshoot-box"
+            });
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+        }
+
+        exitCode.Should().Be(0);
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "SECRET").Should().BeEmpty();
+        AppendedFillBoxColors(outputPath).Should().NotBeEmpty("overshoot still draws a box");
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_WholeWordFlag_EndToEnd_SparesTheLongerWord()
+    {
+        // #1052 through the real CLI path: option registration -> request ->
+        // RedactionOptions.WholeWord -> FindTextMatches. A transposed argument
+        // would pass every unit test while --whole-word silently gutted
+        // "Sleeman" -- exactly the "plumbing exists but is mis-wired" gap worth
+        // pinning on a redaction tool.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("Sleeman met Lee"));
+
+        var prevOut = Console.Out;
+        var captured = new StringWriter();
+        Console.SetOut(captured);
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "Lee", "--whole-word"
+            });
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+        }
+
+        exitCode.Should().Be(0);
+        using var redacted = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(outputPath));
+        var text = redacted.GetPage(1).Text;
+        text.Should().Contain("Sleeman", "whole-word matching spares the longer word");
+        captured.ToString().Should().Contain("whole-word matching",
+            "#1052: the rule that ran must be visible in the result");
+    }
+
+    [Fact]
+    public void TryParseCarrierPolicy_LeavesUnnamedCarriersAtStrip()
+    {
+        RedactCommand.TryParseCarrierPolicy(
+            new[] { "uri=remove-whole" }, out var policy, out _).Should().BeTrue();
+        policy.ModeFor(Excise.Core.Operations.RedactionCarriers.Info)
+            .Should().Be(Excise.Core.Operations.CarrierScrubMode.Strip,
+                "only the carrier the user named changes");
+    }
+
+    [Theory]
+    [InlineData("uri")]                 // no '='
+    [InlineData("bookmarks=strip")]     // unknown carrier
+    [InlineData("uri=delete")]          // unknown mode
+    [InlineData("uri=remove-whole=x")]  // malformed
+    public void TryParseCarrierPolicy_RejectsBadSpec_RatherThanIgnoringIt(string spec)
+    {
+        // A silently ignored spec is a leak the user cannot see: they believe
+        // they asked for remove-whole and got the revealing strip residue.
+        RedactCommand.TryParseCarrierPolicy(new[] { spec }, out _, out var error)
+            .Should().BeFalse();
+        error.Should().NotBeNullOrEmpty();
+    }
+
     [Fact]
     public async Task RunAsync_Redact_NoBoxFlag_EndToEnd_RemovesTextAndDrawsNoBox()
     {

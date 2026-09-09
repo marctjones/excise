@@ -82,6 +82,86 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Redaction carrier policy (#1188/#1169) -->
+                <Border Background="{DynamicResource SecondaryBackgroundBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="20">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="Redaction"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+                        <TextBlock Text="A PDF repeats page text in places you never see — link targets and document metadata. Cutting the redacted word out of one of those can REVEAL it: remove 'your' from https://www.irs.gov/your-account and the leftover https://www.irs.gov/-account tells anyone who knows the site what was removed."
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap"/>
+
+                        <Separator/>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Match Rule" FontWeight="Medium"/>
+                            <CheckBox x:Name="RedactionWholeWordCheckBox"
+                                      Content="Whole words only"
+                                      IsChecked="{Binding RedactionWholeWord}"
+                                      AutomationProperties.Name="Whole Word Redaction"
+                                      AutomationProperties.HelpText="Require the redacted term to be bounded by a non-word character on both sides."/>
+                            <TextBlock Text="Off (default): the term matches anywhere, so redacting 'Lee' also removes it from 'Sleeman' — right for a case number inside a longer citation, wrong for a name. On: the term must stand alone. Applies to page text and to metadata, outlines and link targets alike."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Covering Box Width" FontWeight="Medium"/>
+                            <ComboBox x:Name="RedactionWidthPolicyComboBox"
+                                      ItemsSource="{Binding WidthPolicyOptions}"
+                                      SelectedItem="{Binding SelectedRedactionWidthPolicy}"
+                                      HorizontalAlignment="Stretch"
+                                      AutomationProperties.Name="Redaction Width Policy"
+                                      AutomationProperties.HelpText="How the removed text's width is handled."/>
+                            <TextBlock Text="Applies to text redaction (search/scripted); an area redaction draws the box you dragged. CollapsePreserveLayout (default): the box matches the removed text exactly and the page does not reflow — but the box's width then measures how long the removed text was. OvershootPreserveLayout: round the box wider so similar-length words can't be told apart by measuring it. CloseGap: remove the space entirely and draw no box; the only option that also removes the width from the file itself, at the cost of reflowing the line."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Link URLs" FontWeight="Medium"/>
+                            <ComboBox x:Name="LinkUriCarrierPolicyComboBox"
+                                      ItemsSource="{Binding CarrierScrubModeOptions}"
+                                      SelectedItem="{Binding SelectedLinkUriCarrierPolicy}"
+                                      HorizontalAlignment="Stretch"
+                                      AutomationProperties.Name="Link URL Redaction Policy"
+                                      AutomationProperties.HelpText="How a link target containing the redacted text is handled."/>
+                            <TextBlock Text="Strip (default): cut the word out of the URL, leaving the rest. RemoveWhole: drop the entire link target, so no surrounding text survives to infer the word from. ReportOnly: change nothing and list the link in the redaction report for you to decide."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Document Metadata" FontWeight="Medium"/>
+                            <ComboBox x:Name="MetadataCarrierPolicyComboBox"
+                                      ItemsSource="{Binding CarrierScrubModeOptions}"
+                                      SelectedItem="{Binding SelectedMetadataCarrierPolicy}"
+                                      HorizontalAlignment="Stretch"
+                                      AutomationProperties.Name="Metadata Redaction Policy"
+                                      AutomationProperties.HelpText="How document metadata containing the redacted text is handled."/>
+                            <TextBlock Text="Applies to the /Info fields (Title, Author, Subject…) and the XMP packet. A templated field narrows a removed value the same way a known URL does."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="⚠ ReportOnly leaves the redacted text in the document. The redaction report will say so — act on it before sharing the file."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
             </StackPanel>
         </ScrollViewer>
 

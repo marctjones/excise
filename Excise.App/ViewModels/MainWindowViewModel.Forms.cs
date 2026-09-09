@@ -211,7 +211,8 @@ public partial class MainWindowViewModel
         SyncFormFieldValueToServiceDocument(fieldName, newValue);
         FileState.FormFieldEditsCount++;
         NotifyFormDirtyStateChanged();
-        _logger.LogInformation("Form field '{Field}' set to '{Value}'", fieldName, newValue);
+        _logger.LogInformation("Form field '{Field}' set to '{Value}'",
+            Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(fieldName), newValue);
     }
 
     /// <summary>
@@ -341,7 +342,8 @@ public partial class MainWindowViewModel
         }
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
         {
-            _logger.LogWarning(ex, "Failed to synchronize form field '{Field}' to save document", fieldName);
+            _logger.LogWarning(ex, "Failed to synchronize form field '{Field}' to save document",
+                Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(fieldName));
         }
     }
 
