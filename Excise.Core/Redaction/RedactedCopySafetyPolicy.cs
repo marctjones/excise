@@ -113,7 +113,20 @@ public static class RedactedCopySafetyPolicy
         {
             try
             {
-                PdfDocumentSanitizer.ScrubTerms(document, terms);
+                var outcome = PdfDocumentSanitizer.ScrubTerms(
+                    document, terms, caseSensitive: false, options.Carriers, options.CarrierPolicy);
+
+                // #1169: a carrier the user set to ReportOnly still holds the
+                // term, and a refused mode did nothing at all. Both are the
+                // user's decision to make and neither may pass silently — the
+                // whole point of the option is that the human is told.
+                foreach (var row in outcome.NeedingAttention)
+                {
+                    warnings.Add(row.RefusedReason != null
+                        ? $"Carrier {row.Carrier}: {row.RefusedReason} — the redacted text was NOT removed from it."
+                        : $"Carrier {row.Carrier}: set to {row.Mode} and it CONTAINS the redacted text — " +
+                          "left unchanged on purpose; review it before sharing this copy.");
+                }
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {

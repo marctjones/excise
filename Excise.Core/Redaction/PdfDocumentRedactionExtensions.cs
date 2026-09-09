@@ -105,7 +105,8 @@ public static class PdfDocumentRedactionExtensions
             options.CloseWidth,
             options.BoxColor,
             options.Carriers,
-            progress);
+            progress,
+            options.CarrierPolicy);
     }
 
     public static RedactionReport RedactText(
@@ -120,7 +121,8 @@ public static class PdfDocumentRedactionExtensions
         (double R, double G, double B)? boxColor = null,   // #1158 — covering-box fill, RGB 0..1; null = black
         Excise.Core.Operations.RedactionCarriers carriers
             = Excise.Core.Operations.RedactionCarriers.All,  // #1188 — per-carrier scrub scope
-        Action<int, int>? progress = null)
+        Action<int, int>? progress = null,
+        Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy = null)  // #1188/#1169 — per-carrier MODE
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
@@ -334,13 +336,42 @@ public static class PdfDocumentRedactionExtensions
             }
             else
             {
-                Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(
-                    document, new[] { text }, caseSensitive, carriers);
+                var policy = carrierPolicy ?? Excise.Core.Operations.CarrierScrubPolicy.Default;
+                var outcome = Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(
+                    document, new[] { text }, caseSensitive, carriers, policy);
+
+                // #1188/#1169: the report says WHICH POLICY RAN on each carrier,
+                // not just "scrubbed". A ReportOnly carrier still holds the term
+                // — reporting it as scrubbed would be the "reported success
+                // anyway" failure this report type exists to end.
                 foreach (var (carrier, flag) in DocumentCarriers)
-                    carrierResults.Add((carriers & flag) != 0
-                        ? new CarrierResult(carrier, true, null)
-                        : new CarrierResult(carrier, false,
+                {
+                    if ((carriers & flag) == 0)
+                    {
+                        carrierResults.Add(new CarrierResult(carrier, false,
                             "carrier disabled via RedactionOptions.Carriers (#1188)"));
+                        continue;
+                    }
+
+                    var row = outcome.For(flag);
+                    if (row?.RefusedReason != null)
+                    {
+                        carrierResults.Add(new CarrierResult(carrier, false, row.RefusedReason));
+                        continue;
+                    }
+
+                    var mode = row?.Mode ?? Excise.Core.Operations.CarrierScrubMode.Strip;
+                    if (mode == Excise.Core.Operations.CarrierScrubMode.ReportOnly)
+                    {
+                        carrierResults.Add(new CarrierResult(carrier, false,
+                            row is { TermFound: true }
+                                ? "ReportOnly (#1169): this carrier HOLDS THE TERM and was deliberately left unchanged"
+                                : "ReportOnly (#1169): examined, term not present, nothing changed"));
+                        continue;
+                    }
+
+                    carrierResults.Add(new CarrierResult(carrier, true, null));
+                }
             }
         }
         else

@@ -106,6 +106,9 @@ internal static class RedactCommandHandler
                 ? WidthPolicy.CloseGap
                 : WidthPolicy.CollapsePreserveLayout,
             BoxColor = request.BoxColor,
+            // #1188/#1169: per-carrier mode. Null keeps the all-Strip default.
+            CarrierPolicy = request.CarrierPolicy
+                ?? Excise.Core.Operations.CarrierScrubPolicy.Default,
         }, guardedProgress);
 
         // #916/#905: collect carriers the surgical CLI term policy could not
@@ -216,7 +219,8 @@ internal readonly record struct RedactCommandRequest(
     bool DrawBox = true,
     (double R, double G, double B)? BoxColor = null,
     bool OcrImageText = false,
-    bool FlattenOcr = false);
+    bool FlattenOcr = false,
+    Excise.Core.Operations.CarrierScrubPolicy? CarrierPolicy = null);   // #1188/#1169
 
 internal sealed record RedactCommandResult(
     string InputPath,

@@ -127,7 +127,8 @@ public partial class MainWindowViewModel
                 RedactionWorkflow.PendingRedactions,
                 TypewriterTextOperations,
                 saveFilePath,
-                _documentService.GetReEncryptionOptions());
+                _documentService.GetReEncryptionOptions(),
+                BuildRedactedCopySafetyOptions());   // #1188/#1169 per-carrier policy
             var result = _redactionWorkflowService.CreateRedactedCopy(request);
             await PublishRedactedCopySuccessAsync(result);
         }

@@ -71,6 +71,18 @@ internal static class RedactCommand
             Description = "Create a fresh image-only PDF: rasterize every page, OCR the requested visible term, black out its pixels, and discard all original PDF carriers. Requires tesseract; intentionally removes selectable text, forms, links, and metadata.",
             DefaultValueFactory = _ => false,
         };
+        var carrierPolicyOption = new Option<string[]>("--carrier-policy")
+        {
+            Description = "How a document-level carrier holding the term is handled: " +
+                "'<carrier>=<mode>', repeatable. Carriers: info, xmp, xfa, outlines, annotations, " +
+                "form-fields, struct-tree, javascript, embedded-files, uri, all. " +
+                "Modes: strip (default; cut the term out), remove-whole (drop the entire value), " +
+                "report-only (change nothing and report it). " +
+                "Use remove-whole where the surrounding text is KNOWN -- stripping 'your' from " +
+                "https://www.irs.gov/your-account leaves a residue that reveals the removed word (#1169).",
+            Arity = ArgumentArity.ZeroOrMore,
+            AllowMultipleArgumentsPerToken = true,
+        };
         var progressOption = new Option<bool>("--progress")
         {
             Description = "Write page-based overall completion to stderr (0% through 100%).",
@@ -94,6 +106,7 @@ internal static class RedactCommand
             boxColorOption,
             ocrImageTextOption,
             flattenOcrOption,
+            carrierPolicyOption,
             progressOption,
         };
 
@@ -137,6 +150,13 @@ internal static class RedactCommand
                 return 1;
             }
 
+            var carrierPolicySpecs = parseResult.GetValue(carrierPolicyOption) ?? Array.Empty<string>();
+            if (!TryParseCarrierPolicy(carrierPolicySpecs, out var carrierPolicy, out var policyError))
+            {
+                Console.Error.WriteLine($"Invalid --carrier-policy: {policyError}");
+                return 1;
+            }
+
             (double R, double G, double B)? boxColor = null;
             if (boxColorSpec != null && !TryParseBoxColor(boxColorSpec, out boxColor, out var colorError))
             {
@@ -165,7 +185,8 @@ internal static class RedactCommand
                     DrawBox: !noBox,
                     boxColor,
                     ocrImageText,
-                    flattenOcr),
+                    flattenOcr,
+                    carrierPolicy),
                     progress);
 
                 foreach (var diagnostic in result.Diagnostics)
@@ -189,6 +210,96 @@ internal static class RedactCommand
         });
 
         return command;
+    }
+
+    /// <summary>
+    /// Parse repeated <c>carrier=mode</c> specs into a
+    /// <see cref="Excise.Core.Operations.CarrierScrubPolicy"/> (#1188/#1169).
+    /// An unrecognised carrier or mode is an ERROR, never a silently ignored
+    /// spec: a user who thinks they asked for remove-whole and got strip has a
+    /// leak they cannot see.
+    /// </summary>
+    internal static bool TryParseCarrierPolicy(
+        IReadOnlyList<string> specs,
+        out Excise.Core.Operations.CarrierScrubPolicy policy,
+        out string? error)
+    {
+        policy = Excise.Core.Operations.CarrierScrubPolicy.Default;
+        error = null;
+
+        foreach (var raw in specs)
+        {
+            var spec = (raw ?? "").Trim();
+            if (spec.Length == 0) continue;
+
+            var parts = spec.Split('=');
+            if (parts.Length != 2)
+            {
+                error = $"'{spec}' is not '<carrier>=<mode>'";
+                return false;
+            }
+
+            if (!TryParseCarrierName(parts[0].Trim(), out var carriers))
+            {
+                error = $"unknown carrier '{parts[0].Trim()}' (info, xmp, xfa, outlines, annotations, " +
+                    "form-fields, struct-tree, javascript, embedded-files, uri, all)";
+                return false;
+            }
+
+            if (!TryParseCarrierMode(parts[1].Trim(), out var mode))
+            {
+                error = $"unknown mode '{parts[1].Trim()}' (strip, remove-whole, report-only)";
+                return false;
+            }
+
+            policy = policy.With(carriers, mode);
+        }
+
+        return true;
+    }
+
+    private static bool TryParseCarrierName(
+        string name, out Excise.Core.Operations.RedactionCarriers carriers)
+    {
+        var c = Excise.Core.Operations.RedactionCarriers.None;
+        switch (name.ToLowerInvariant())
+        {
+            case "info": c = Excise.Core.Operations.RedactionCarriers.Info; break;
+            case "xmp": c = Excise.Core.Operations.RedactionCarriers.Xmp; break;
+            case "xfa": c = Excise.Core.Operations.RedactionCarriers.Xfa; break;
+            case "outlines": c = Excise.Core.Operations.RedactionCarriers.Outlines; break;
+            case "annotations": c = Excise.Core.Operations.RedactionCarriers.Annotations; break;
+            case "form-fields": c = Excise.Core.Operations.RedactionCarriers.FormFields; break;
+            case "struct-tree": c = Excise.Core.Operations.RedactionCarriers.StructTree; break;
+            case "javascript": c = Excise.Core.Operations.RedactionCarriers.JavaScript; break;
+            case "embedded-files": c = Excise.Core.Operations.RedactionCarriers.EmbeddedFiles; break;
+            case "uri":
+            case "action-uris": c = Excise.Core.Operations.RedactionCarriers.ActionUris; break;
+            case "all": c = Excise.Core.Operations.RedactionCarriers.All; break;
+        }
+
+        carriers = c;
+        return c != Excise.Core.Operations.RedactionCarriers.None;
+    }
+
+    private static bool TryParseCarrierMode(
+        string name, out Excise.Core.Operations.CarrierScrubMode mode)
+    {
+        switch (name.ToLowerInvariant())
+        {
+            case "strip":
+                mode = Excise.Core.Operations.CarrierScrubMode.Strip;
+                return true;
+            case "remove-whole":
+                mode = Excise.Core.Operations.CarrierScrubMode.RemoveWhole;
+                return true;
+            case "report-only":
+                mode = Excise.Core.Operations.CarrierScrubMode.ReportOnly;
+                return true;
+            default:
+                mode = Excise.Core.Operations.CarrierScrubMode.Strip;
+                return false;
+        }
     }
 
     /// <summary>Parse a box color into PDF <c>rg</c> components (0..1).</summary>

@@ -62,6 +62,10 @@ public partial class MainWindowViewModel : ViewModelBase
         Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
     private Excise.Core.Text.WhitespaceMode _whitespaceMode =
         Excise.Core.Text.WhitespaceMode.Smart;
+    private Excise.Core.Operations.CarrierScrubMode _linkUriCarrierPolicy =
+        Excise.Core.Operations.CarrierScrubMode.Strip;
+    private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
+        Excise.Core.Operations.CarrierScrubMode.Strip;
     private bool _isRedactionMode;
     private PdfPageRect? _currentRedactionPageArea;
     // Whether the user has already confirmed editing a signed document this
@@ -259,6 +263,56 @@ public partial class MainWindowViewModel : ViewModelBase
     public void ApplyWhitespaceModePreference(Excise.Core.Text.WhitespaceMode mode)
     {
         WhitespaceMode = mode;
+    }
+
+    /// <summary>
+    /// How a link's <c>/A /URI</c> that contains the redacted text is handled
+    /// (#1169). Default <see cref="Excise.Core.Operations.CarrierScrubMode.Strip"/>,
+    /// which is the pre-option behaviour.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ This is a SECURITY choice, not a tidiness one. Cutting the term out of
+    /// a URL whose shape is public knowledge can hand it straight back:
+    /// <c>https://www.irs.gov/your-account</c> minus <c>your</c> is
+    /// <c>https://www.irs.gov/-account</c>. RemoveWhole drops the whole link
+    /// target; ReportOnly changes nothing and puts the carrier in the
+    /// redacted-copy report for the user to judge.
+    /// </remarks>
+    public Excise.Core.Operations.CarrierScrubMode LinkUriCarrierPolicy
+    {
+        get => _linkUriCarrierPolicy;
+        set => this.RaiseAndSetIfChanged(ref _linkUriCarrierPolicy, value);
+    }
+
+    /// <summary>
+    /// The same choice for document metadata (<c>/Info</c> and the XMP packet),
+    /// where a templated field's surrounding structure narrows the removed value
+    /// the same way a known URL does (#1169).
+    /// </summary>
+    public Excise.Core.Operations.CarrierScrubMode MetadataCarrierPolicy
+    {
+        get => _metadataCarrierPolicy;
+        set => this.RaiseAndSetIfChanged(ref _metadataCarrierPolicy, value);
+    }
+
+    /// <summary>
+    /// The redacted-copy scrub options the user's per-carrier choices describe
+    /// (#1188/#1169). All-default unless a policy was changed, so the redaction
+    /// path is byte-identical to before the option existed.
+    /// </summary>
+    internal Excise.Core.Text.Segmentation.RedactedCopySafetyOptions BuildRedactedCopySafetyOptions()
+    {
+        var policy = Excise.Core.Operations.CarrierScrubPolicy.Default
+            .With(Excise.Core.Operations.RedactionCarriers.ActionUris, LinkUriCarrierPolicy)
+            .With(
+                Excise.Core.Operations.RedactionCarriers.Info
+                    | Excise.Core.Operations.RedactionCarriers.Xmp,
+                MetadataCarrierPolicy);
+
+        return Excise.Core.Text.Segmentation.RedactedCopySafetyOptions.Default with
+        {
+            CarrierPolicy = policy,
+        };
     }
 
     public bool ContinuousScrollPreference => _viewportSession.ContinuousScrollPreference;

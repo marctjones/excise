@@ -74,57 +74,191 @@ public static class PdfDocumentSanitizer
     public static bool ScrubTerms(
         PdfDocument document, IEnumerable<string> terms, bool caseSensitive,
         RedactionCarriers carriers)
+        => ScrubTerms(document, terms, caseSensitive, carriers, CarrierScrubPolicy.Default).Changed;
+
+    /// <summary>
+    /// As the other overloads, but with a per-carrier <see cref="CarrierScrubMode"/>
+    /// (#1188/#1169) and a per-carrier report of what actually ran.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="CarrierScrubPolicy.Default"/> is <see cref="CarrierScrubMode.Strip"/>
+    /// on every carrier, which is byte-for-byte the pre-#1188 behaviour — the
+    /// bool-returning overloads above are this method with that policy.
+    /// </para>
+    /// <para>
+    /// ⚠️ The returned rows are the ONLY way a caller can tell a scrubbed
+    /// carrier from a <see cref="CarrierScrubMode.ReportOnly"/> one that still
+    /// holds the term. Ignoring them turns an opt-in policy into a silent leak.
+    /// </para>
+    /// </remarks>
+    public static CarrierScrubOutcome ScrubTerms(
+        PdfDocument document, IEnumerable<string> terms, bool caseSensitive,
+        RedactionCarriers carriers, CarrierScrubPolicy policy)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(terms);
+        ArgumentNullException.ThrowIfNull(policy);
 
         var actionable = terms
             .Where(t => !string.IsNullOrWhiteSpace(t) && t.Length >= MinTermLength)
             .Distinct(caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        if (actionable.Count == 0) return false;
-
-        bool On(RedactionCarriers c) => (carriers & c) != 0;
+        if (actionable.Count == 0) return CarrierScrubOutcome.Empty;
 
         var changed = false;
         var invalidation = PdfDocumentDerivedStateScope.None;
+        var rows = new List<CarrierScrubResult>();
 
-        void Record(bool stageChanged, PdfDocumentDerivedStateScope scope = PdfDocumentDerivedStateScope.None)
+        // One carrier stage: build its scrub context, run it, record the row.
+        void Stage(
+            RedactionCarriers carrier,
+            Func<CarrierScrub, bool> run,
+            PdfDocumentDerivedStateScope scope = PdfDocumentDerivedStateScope.None,
+            string? unsupportedRemoveWholeReason = null)
         {
+            if ((carriers & carrier) == 0) return;
+
+            var mode = policy.ModeFor(carrier);
+            if (mode == CarrierScrubMode.RemoveWhole && unsupportedRemoveWholeReason != null)
+            {
+                // Never silently downgrade to a mode the caller did not ask for.
+                rows.Add(new CarrierScrubResult(carrier, mode, TermFound: false,
+                    Modified: false, RefusedReason: unsupportedRemoveWholeReason));
+                return;
+            }
+
+            var scrub = new CarrierScrub(actionable, caseSensitive, mode);
+            var stageChanged = run(scrub);
             changed |= stageChanged;
-            if (stageChanged)
-                invalidation |= scope;
+            if (stageChanged) invalidation |= scope;
+            rows.Add(new CarrierScrubResult(carrier, mode, scrub.TermFound, stageChanged));
         }
 
-        if (On(RedactionCarriers.Info))
-            Record(ScrubInfo(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.Metadata);
-        if (On(RedactionCarriers.Xmp))
-            Record(ScrubXmpMetadata(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.Metadata);
-        if (On(RedactionCarriers.Xfa))
-            Record(XfaXmlCarrier.ScrubTerms(document, actionable, caseSensitive).Changed);
-        if (On(RedactionCarriers.Outlines))
-            Record(ScrubOutlines(document, actionable, caseSensitive));
-        if (On(RedactionCarriers.Annotations))
-            Record(ScrubAnnotationContents(document, actionable, caseSensitive));
-        if (On(RedactionCarriers.FormFields))
-            Record(ScrubFormFieldNames(document, actionable, caseSensitive));
-        if (On(RedactionCarriers.StructTree))
-            Record(ScrubStructTree(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.StructureAndTagging); // #1151
-        if (On(RedactionCarriers.JavaScript))
-            Record(ScrubJavaScript(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1151
-        if (On(RedactionCarriers.EmbeddedFiles))
-            Record(ScrubEmbeddedFiles(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.Attachments); // #1151
-        if (On(RedactionCarriers.ActionUris))
-            Record(ScrubActionUris(document, actionable, caseSensitive), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1168
+        Stage(RedactionCarriers.Info, s => ScrubInfo(document, s), PdfDocumentDerivedStateScope.Metadata);
+        Stage(RedactionCarriers.Xmp, s => ScrubXmpMetadata(document, s), PdfDocumentDerivedStateScope.Metadata);
+        Stage(RedactionCarriers.Xfa, s => ScrubXfa(document, s), PdfDocumentDerivedStateScope.None,
+            // An XFA packet is one XML form: dropping it wholesale destroys the
+            // form rather than one value, and there is no "the value the term was
+            // in" to remove without re-deciding the XML semantics. Refuse and say
+            // so (the carrier policy: surface, don't guess).
+            unsupportedRemoveWholeReason:
+                "RemoveWhole is not defined for the XFA packet — dropping it destroys the whole form; use Strip or ReportOnly");
+        Stage(RedactionCarriers.Outlines, s => ScrubOutlines(document, s));
+        Stage(RedactionCarriers.Annotations, s => ScrubAnnotationContents(document, s));
+        Stage(RedactionCarriers.FormFields, s => ScrubFormFieldNames(document, s));
+        Stage(RedactionCarriers.StructTree, s => ScrubStructTree(document, s), PdfDocumentDerivedStateScope.StructureAndTagging); // #1151
+        Stage(RedactionCarriers.JavaScript, s => ScrubJavaScript(document, s), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1151
+        Stage(RedactionCarriers.EmbeddedFiles, s => ScrubEmbeddedFiles(document, s), PdfDocumentDerivedStateScope.Attachments); // #1151
+        Stage(RedactionCarriers.ActionUris, s => ScrubActionUris(document, s), PdfDocumentDerivedStateScope.CatalogActionsAndNames); // #1168
 
         if (invalidation != PdfDocumentDerivedStateScope.None)
             document.InvalidateDerivedState(invalidation);
 
-        return changed;
+        return new CarrierScrubOutcome(changed, rows);
     }
 
-    private static bool ScrubInfo(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    /// <summary>
+    /// The per-carrier scrub decision, in one place (#1188). Each carrier walker
+    /// asks this what to write instead of calling <c>Excise</c> directly, so
+    /// <see cref="CarrierScrubMode"/> cannot be honoured in one carrier and
+    /// forgotten in another.
+    /// </summary>
+    private sealed class CarrierScrub
+    {
+        private readonly IReadOnlyList<string> _terms;
+        private readonly bool _caseSensitive;
+
+        internal CarrierScrub(IReadOnlyList<string> terms, bool caseSensitive, CarrierScrubMode mode)
+        {
+            _terms = terms;
+            _caseSensitive = caseSensitive;
+            Mode = mode;
+        }
+
+        internal CarrierScrubMode Mode { get; }
+
+        /// <summary>True once any value in this carrier was seen to hold a term.</summary>
+        internal bool TermFound { get; private set; }
+
+        /// <summary>
+        /// Record a hit a carrier detected its own way (XFA parses XML rather
+        /// than reading string-keyed values).
+        /// </summary>
+        internal void MarkTermFound() => TermFound = true;
+
+        internal IReadOnlyList<string> Terms => _terms;
+        internal bool CaseSensitive => _caseSensitive;
+
+        /// <summary>Does <paramref name="value"/> hold a term? Records the hit.</summary>
+        internal bool Hits(string? value)
+        {
+            if (string.IsNullOrEmpty(value)) return false;
+            foreach (var term in _terms)
+            {
+                if (!Contains(value, term, _caseSensitive)) continue;
+                TermFound = true;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// What should replace <paramref name="value"/>? False means write
+        /// nothing — either no match, or the mode forbids modifying.
+        /// <paramref name="replacement"/> is empty when the whole value goes;
+        /// each call site already knows what "empty" means for its key (remove
+        /// it, or substitute a placeholder).
+        /// </summary>
+        internal bool TryApply(string? value, out string replacement, bool trim = true)
+        {
+            replacement = value ?? string.Empty;
+            if (string.IsNullOrEmpty(value)) return false;
+
+            // Strip keeps its exact pre-#1188 shape, including Excise's trim:
+            // computing the replacement first is what decides "changed".
+            if (Mode == CarrierScrubMode.Strip)
+            {
+                Hits(value);
+                var scrubbed = trim
+                    ? Excise(value, _terms, _caseSensitive)
+                    : ExciseNoTrim(value, _terms, _caseSensitive);
+                if (scrubbed == value) return false;
+                replacement = scrubbed;
+                return true;
+            }
+
+            if (!Hits(value)) return false;
+            if (Mode == CarrierScrubMode.ReportOnly) return false;
+
+            replacement = string.Empty;   // RemoveWhole
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// XFA is XML, not a string-keyed dictionary, so it cannot go through
+    /// <see cref="CarrierScrub.TryApply"/> per value. Strip rewrites the packet;
+    /// ReportOnly only counts packets holding the term. (RemoveWhole is refused
+    /// upstream.)
+    /// </summary>
+    private static bool ScrubXfa(PdfDocument document, CarrierScrub scrub)
+    {
+        if (scrub.Mode == CarrierScrubMode.ReportOnly)
+        {
+            if (XfaXmlCarrier.CountUnexaminedPackets(document, scrub.Terms, scrub.CaseSensitive) > 0)
+                scrub.MarkTermFound();   // record the hit without touching the packet
+            return false;
+        }
+
+        var result = XfaXmlCarrier.ScrubTerms(document, scrub.Terms, scrub.CaseSensitive);
+        if (result.Changed || result.UnexaminedPacketCount > 0)
+            scrub.MarkTermFound();
+        return result.Changed;
+    }
+
+    private static bool ScrubInfo(PdfDocument document, CarrierScrub scrub)
     {
         var info = document.Info;
         if (info == null) return false;
@@ -133,10 +267,7 @@ public static class PdfDocumentSanitizer
         foreach (var key in InfoKeys)
         {
             var value = ResolveStringOrNull(document, info, key);
-            if (string.IsNullOrEmpty(value)) continue;
-
-            var scrubbed = Excise(value, terms, caseSensitive);
-            if (scrubbed == value) continue;
+            if (!scrub.TryApply(value, out var scrubbed)) continue;
 
             if (scrubbed.Length == 0)
                 info.Remove(key);
@@ -148,7 +279,7 @@ public static class PdfDocumentSanitizer
         return changed;
     }
 
-    private static bool ScrubXmpMetadata(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    private static bool ScrubXmpMetadata(PdfDocument document, CarrierScrub scrub)
     {
         // #1129: EVERY reachable /Metadata packet, not just the catalog's.
         // §14.3.2 permits XMP on any object; a real CDC PDF kept the redacted
@@ -161,8 +292,10 @@ public static class PdfDocumentSanitizer
             // pdf:Keywords, or a custom schema we have never heard of, and a
             // text-level excision catches all of them.
             var xmp = Encoding.UTF8.GetString(stream.DecodedData);
-            var scrubbed = Excise(xmp, terms, caseSensitive);
-            if (scrubbed == xmp) continue;
+            // RemoveWhole empties the packet rather than cutting the term out of
+            // it: an XMP packet is one value, and a shredded packet's surviving
+            // schema is exactly the structure #1169 says can reveal the term.
+            if (!scrub.TryApply(xmp, out var scrubbed)) continue;
 
             // Write through the ENCODED bytes, not the decoded ones. The writer
             // serializes EncodedData; SetDecodedData only populates the decode
@@ -195,7 +328,7 @@ public static class PdfDocumentSanitizer
     /// over form fidelity). This is document-level and runs once, so it covers
     /// every field, not only those over a redaction box.</para>
     /// </summary>
-    private static bool ScrubFormFieldNames(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    private static bool ScrubFormFieldNames(PdfDocument document, CarrierScrub scrub)
     {
         // Walk the raw /AcroForm/Fields tree, recursing through /Kids. The
         // leaking /T is often on a NON-TERMINAL parent field (< /Kids [...]
@@ -220,8 +353,7 @@ public static class PdfDocumentSanitizer
             {
                 if (document.Resolve(node.GetOptional(key) ?? PdfNull.Instance) is not PdfString str)
                     continue;
-                var scrubbed = Excise(str.Value, terms, caseSensitive);
-                if (scrubbed == str.Value) continue;
+                if (!scrub.TryApply(str.Value, out var scrubbed)) continue;
                 node.SetString(key, scrubbed);
                 changed = true;
             }
@@ -236,8 +368,7 @@ public static class PdfDocumentSanitizer
             {
                 if (document.Resolve(node.GetOptional(key) ?? PdfNull.Instance) is not PdfString str)
                     continue;
-                var scrubbed = ExciseNoTrim(str.Value, terms, caseSensitive);
-                if (scrubbed == str.Value) continue;
+                if (!scrub.TryApply(str.Value, out var scrubbed, trim: false)) continue;
                 node.SetString(key, scrubbed);
                 changed = true;
             }
@@ -255,7 +386,7 @@ public static class PdfDocumentSanitizer
     /// document-level, term-based one RedactText was missing — walk /StructTreeRoot
     /// through /K and cut the term from those three keys.
     /// </summary>
-    private static bool ScrubStructTree(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    private static bool ScrubStructTree(PdfDocument document, CarrierScrub scrub)
     {
         if (document.Resolve(document.Catalog?.GetOptional("StructTreeRoot") ?? PdfNull.Instance)
             is not PdfDictionary root)
@@ -273,8 +404,7 @@ public static class PdfDocumentSanitizer
             {
                 if (document.Resolve(node.GetOptional(key) ?? PdfNull.Instance) is not PdfString str)
                     continue;
-                var scrubbed = Excise(str.Value, terms, caseSensitive);
-                if (scrubbed == str.Value) continue;
+                if (!scrub.TryApply(str.Value, out var scrubbed)) continue;
                 node.SetString(key, scrubbed);
                 changed = true;
             }
@@ -291,7 +421,7 @@ public static class PdfDocumentSanitizer
     /// and catalog <c>/AA</c>, can restate a redacted string; cut it out (the
     /// source is plain text, unlike an embedded binary).
     /// </summary>
-    private static bool ScrubJavaScript(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    private static bool ScrubJavaScript(PdfDocument document, CarrierScrub scrub)
     {
         var changed = false;
         var visited = new HashSet<PdfDictionary>();
@@ -309,10 +439,11 @@ public static class PdfDocumentSanitizer
             if (obj is PdfDictionary node)
             {
                 if (!visited.Add(node)) continue;
-                if (document.Resolve(node.GetOptional("JS") ?? PdfNull.Instance) is PdfString js)
+                if (document.Resolve(node.GetOptional("JS") ?? PdfNull.Instance) is PdfString js
+                    && scrub.TryApply(js.Value, out var scrubbedJs))
                 {
-                    var scrubbed = Excise(js.Value, terms, caseSensitive);
-                    if (scrubbed != js.Value) { node.SetString("JS", scrubbed); changed = true; }
+                    node.SetString("JS", scrubbedJs);
+                    changed = true;
                 }
                 // Name-tree nodes (/Names, /Kids) and action chains (/Next).
                 foreach (var key in new[] { "Names", "Kids", "Next" })
@@ -334,7 +465,15 @@ public static class PdfDocumentSanitizer
     /// the wholesale strip <c>RemoveAllMetadata</c> does. Matches on the decoded
     /// content, so an unrelated attachment survives.
     /// </summary>
-    private static bool ScrubEmbeddedFiles(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    /// <remarks>
+    /// ⚠️ <see cref="CarrierScrubMode.Strip"/> and
+    /// <see cref="CarrierScrubMode.RemoveWhole"/> are the SAME thing here, and
+    /// that is a property of the carrier, not a silent downgrade: an attachment
+    /// is opaque bytes plus its name and description — there is no substring to
+    /// cut without risking corruption, so a hit always removes the whole file.
+    /// <see cref="CarrierScrubMode.ReportOnly"/> detects and leaves it.
+    /// </remarks>
+    private static bool ScrubEmbeddedFiles(PdfDocument document, CarrierScrub scrub)
     {
         var files = document.GetEmbeddedFiles();
         if (files.Count == 0) return false;
@@ -347,20 +486,21 @@ public static class PdfDocumentSanitizer
             {
                 var latin1 = Encoding.Latin1.GetString(bytes);
                 var utf8 = Encoding.UTF8.GetString(bytes);
-                hit = terms.Any(t => Contains(latin1, t, caseSensitive) || Contains(utf8, t, caseSensitive));
+                hit = scrub.Hits(latin1) || scrub.Hits(utf8);
             }
             // #1428: the payload wasn't the only carrier -- an attachment whose
             // /Desc or filename (/F, /UF, read via FileName) carries the term but
             // whose bytes don't was never flagged for removal at all, regardless
             // of whether it came from the catalog or an annotation's own /FS.
             if (!hit && !string.IsNullOrEmpty(f.Description))
-                hit = terms.Any(t => Contains(f.Description, t, caseSensitive));
+                hit = scrub.Hits(f.Description);
             if (!hit && !string.IsNullOrEmpty(f.FileName))
-                hit = terms.Any(t => Contains(f.FileName, t, caseSensitive));
+                hit = scrub.Hits(f.FileName);
             if (hit)
                 remove.Add(f.RawDictionary);
         }
         if (remove.Count == 0) return false;
+        if (scrub.Mode == CarrierScrubMode.ReportOnly) return false;   // hit recorded, file kept
 
         var changed = false;
         if (document.Resolve(document.Catalog?.GetOptional("Names") ?? PdfNull.Instance) is PdfDictionary names
@@ -473,7 +613,7 @@ public static class PdfDocumentSanitizer
     private static string? ResolveStringOrNull(PdfDocument document, PdfDictionary dict, string key) =>
         document.Resolve(dict.GetOptional(key) ?? PdfNull.Instance) is PdfString s ? s.Value : null;
 
-    private static bool ScrubOutlines(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    private static bool ScrubOutlines(PdfDocument document, CarrierScrub scrub)
     {
         if (document.Resolve(document.Catalog.GetOptional("Outlines") ?? PdfNull.Instance) is not PdfDictionary outlines)
             return false;
@@ -489,17 +629,16 @@ public static class PdfDocumentSanitizer
                 if (!visited.Add(item)) return;   // guard against malformed cyclic /Next chains
 
                 var title = ResolveStringOrNull(document, item, "Title");
-                if (!string.IsNullOrEmpty(title))
+                if (scrub.TryApply(title, out var scrubbed))
                 {
-                    var scrubbed = Excise(title, terms, caseSensitive);
-                    if (scrubbed != title)
-                    {
-                        // An emptied bookmark keeps its destination but loses its
-                        // label; removing the node entirely would renumber the
-                        // outline tree and orphan its children.
-                        item["Title"] = new PdfString(scrubbed.Length == 0 ? "[redacted]" : scrubbed);
-                        changed = true;
-                    }
+                    // An emptied bookmark keeps its destination but loses its
+                    // label; removing the node entirely would renumber the
+                    // outline tree and orphan its children. RemoveWhole arrives
+                    // here with an empty replacement, so it lands on the same
+                    // "[redacted]" placeholder — the whole label is gone and no
+                    // residue is left to infer the term from.
+                    item["Title"] = new PdfString(scrubbed.Length == 0 ? "[redacted]" : scrubbed);
+                    changed = true;
                 }
 
                 Walk(item.GetOptional("First"));   // descend into children
@@ -511,7 +650,7 @@ public static class PdfDocumentSanitizer
         return changed;
     }
 
-    private static bool ScrubAnnotationContents(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    private static bool ScrubAnnotationContents(PdfDocument document, CarrierScrub scrub)
     {
         var changed = false;
 
@@ -541,10 +680,7 @@ public static class PdfDocumentSanitizer
                 foreach (var key in new[] { "Contents", "T", "RC", "Subj", "OverlayText" })
                 {
                     var value = ResolveStringOrNull(document, annot, key);
-                    if (string.IsNullOrEmpty(value)) continue;
-
-                    var scrubbed = Excise(value, terms, caseSensitive);
-                    if (scrubbed == value) continue;
+                    if (!scrub.TryApply(value, out var scrubbed)) continue;
 
                     if (scrubbed.Length == 0)
                         annot.Remove(key);
@@ -563,9 +699,7 @@ public static class PdfDocumentSanitizer
                     foreach (var capKey in new[] { "CA", "AC", "RC" })
                     {
                         var cap = (document.Resolve(mk.GetOptional(capKey) ?? PdfNull.Instance) as PdfString)?.Value;
-                        if (string.IsNullOrEmpty(cap)) continue;
-                        var scrubbedCap = Excise(cap, terms, caseSensitive);
-                        if (scrubbedCap == cap) continue;
+                        if (!scrub.TryApply(cap, out var scrubbedCap)) continue;
                         mk[capKey] = new PdfString(scrubbedCap);
                         changed = true;
                     }
@@ -588,30 +722,37 @@ public static class PdfDocumentSanitizer
                         var item = document.Resolve(opt[oi]);
                         if (item is PdfString os)
                         {
-                            var so = Excise(os.Value, terms, caseSensitive);
-                            if (so != os.Value) { opt[oi] = new PdfString(so); changed = true; }
+                            if (scrub.TryApply(os.Value, out var so)) { opt[oi] = new PdfString(so); changed = true; }
                         }
                         else if (item is PdfArray pair)   // [export, display]
                         {
                             for (var pi = 0; pi < pair.Count; pi++)
-                                if (document.Resolve(pair[pi]) is PdfString ps)
+                                if (document.Resolve(pair[pi]) is PdfString ps
+                                    && scrub.TryApply(ps.Value, out var sp))
                                 {
-                                    var sp = Excise(ps.Value, terms, caseSensitive);
-                                    if (sp != ps.Value) { pair[pi] = new PdfString(sp); changed = true; }
+                                    pair[pi] = new PdfString(sp);
+                                    changed = true;
                                 }
                         }
                     }
                 }
 
-                // #1155: a link annotation's URI action carries the same string
-                // as its /Contents (irs-1040-instructions restated
-                // "https://www.irs.gov/your-account" in both). The loop above
-                // excised /Contents and left /A /URI holding the term — an
-                // intra-annotation asymmetry, and exactly the kind the carrier
-                // policy calls a leak (the page and /Contents matched by
-                // substring; the URI must too). Scrub the /URI with identical
-                // semantics.
-                changed |= ScrubUriAction(document, annot.GetOptional("A"), terms, caseSensitive);
+                // #1155 scrubbed the link annotation's /A /URI from HERE, because
+                // a link restates its /Contents in its URI and the two must not
+                // diverge. #1168 then gave URI actions their own complete walk
+                // (ScrubActionUris), which reaches every annotation's /A as well
+                // — so this call had become a duplicate.
+                //
+                // #1188/#1169 makes the duplicate actively WRONG rather than
+                // merely redundant: scrubbing the URI under the ANNOTATIONS
+                // carrier's scrub context applied the Annotations carrier's mode
+                // and scope to a URI. Setting ActionUris to RemoveWhole or
+                // ReportOnly (the whole point of #1169 — a known URL's residue
+                // reveals the term) was silently overridden by Annotations=Strip,
+                // and turning ActionUris OFF still stripped the URI while the
+                // report said the carrier was disabled. The ActionUris stage now
+                // owns every /URI, so its flag and its mode both mean what they
+                // say.
             }
         }
 
@@ -624,7 +765,7 @@ public static class PdfDocumentSanitizer
     /// reached too. The action may be an indirect reference or an array of them.
     /// </summary>
     private static bool ScrubUriAction(
-        PdfDocument document, PdfObject? actionObj, IReadOnlyList<string> terms, bool caseSensitive)
+        PdfDocument document, PdfObject? actionObj, CarrierScrub scrub)
     {
         var changed = false;
         var visited = new HashSet<PdfDictionary>();
@@ -641,18 +782,19 @@ public static class PdfDocumentSanitizer
             }
             if (resolved is not PdfDictionary action || !visited.Add(action)) continue;
 
+            // #1169: this is the carrier where Strip can REVEAL the term --
+            // https://www.irs.gov/your-account minus "your" reads back as
+            // https://www.irs.gov/-account to anyone who knows the site. Under
+            // RemoveWhole the whole /URI goes instead, leaving no surrounding
+            // structure to reconstruct from.
             var uri = ResolveStringOrNull(document, action, "URI");
-            if (!string.IsNullOrEmpty(uri))
+            if (scrub.TryApply(uri, out var scrubbed))
             {
-                var scrubbed = Excise(uri, terms, caseSensitive);
-                if (scrubbed != uri)
-                {
-                    if (scrubbed.Length == 0)
-                        action.Remove("URI");
-                    else
-                        action["URI"] = new PdfString(scrubbed);
-                    changed = true;
-                }
+                if (scrubbed.Length == 0)
+                    action.Remove("URI");
+                else
+                    action["URI"] = new PdfString(scrubbed);
+                changed = true;
             }
 
             stack.Push(action.GetOptional("Next"));
@@ -675,28 +817,28 @@ public static class PdfDocumentSanitizer
     /// (the term is gone), so this owns the complete set without the two methods
     /// having to agree on annotation enumeration.
     /// </summary>
-    private static bool ScrubActionUris(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    private static bool ScrubActionUris(PdfDocument document, CarrierScrub scrub)
     {
         var changed = false;
         var catalog = document.Catalog;
 
         // Catalog-level: /OpenAction (may instead be a destination array, which
         // has no /URI — ScrubUriAction ignores it) and document /AA.
-        changed |= ScrubUriAction(document, catalog?.GetOptional("OpenAction"), terms, caseSensitive);
-        changed |= ScrubAdditionalActions(document, catalog?.GetOptional("AA"), terms, caseSensitive);
+        changed |= ScrubUriAction(document, catalog?.GetOptional("OpenAction"), scrub);
+        changed |= ScrubAdditionalActions(document, catalog?.GetOptional("AA"), scrub);
 
         // Every page and its annotations.
         for (int i = 1; i <= document.PageCount; i++)
         {
             var page = document.GetPage(i);
-            changed |= ScrubAdditionalActions(document, page.Dictionary.GetOptional("AA"), terms, caseSensitive);
+            changed |= ScrubAdditionalActions(document, page.Dictionary.GetOptional("AA"), scrub);
 
             if (document.Resolve(page.Dictionary.GetOptional("Annots") ?? PdfNull.Instance) is PdfArray annots)
                 foreach (var annotObj in annots)
                     if (document.Resolve(annotObj) is PdfDictionary annot)
                     {
-                        changed |= ScrubUriAction(document, annot.GetOptional("A"), terms, caseSensitive);
-                        changed |= ScrubAdditionalActions(document, annot.GetOptional("AA"), terms, caseSensitive);
+                        changed |= ScrubUriAction(document, annot.GetOptional("A"), scrub);
+                        changed |= ScrubAdditionalActions(document, annot.GetOptional("AA"), scrub);
                     }
         }
 
@@ -712,8 +854,8 @@ public static class PdfDocumentSanitizer
             while (fieldStack.Count > 0 && guard++ < 100_000)
             {
                 if (document.Resolve(fieldStack.Pop()) is not PdfDictionary field || !visitedFields.Add(field)) continue;
-                changed |= ScrubUriAction(document, field.GetOptional("A"), terms, caseSensitive);
-                changed |= ScrubAdditionalActions(document, field.GetOptional("AA"), terms, caseSensitive);
+                changed |= ScrubUriAction(document, field.GetOptional("A"), scrub);
+                changed |= ScrubAdditionalActions(document, field.GetOptional("AA"), scrub);
                 if (document.Resolve(field.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
                     foreach (var k in kids) fieldStack.Push(k);
             }
@@ -730,7 +872,7 @@ public static class PdfDocumentSanitizer
             while (stack.Count > 0 && guard++ < 100_000)
             {
                 if (document.Resolve(stack.Pop()) is not PdfDictionary item || !visited.Add(item)) continue;
-                changed |= ScrubUriAction(document, item.GetOptional("A"), terms, caseSensitive);
+                changed |= ScrubUriAction(document, item.GetOptional("A"), scrub);
                 if (item.GetOptional("Next") is { } next) stack.Push(next);
                 if (item.GetOptional("First") is { } child) stack.Push(child);
             }
@@ -744,12 +886,12 @@ public static class PdfDocumentSanitizer
     /// trigger names (<c>/E</c>, <c>/X</c>, <c>/WC</c>, …) to action dictionaries.
     /// Scrub the URI of each entry's action (and its <c>/Next</c> chain).
     /// </summary>
-    private static bool ScrubAdditionalActions(PdfDocument document, PdfObject? aaObj, IReadOnlyList<string> terms, bool caseSensitive)
+    private static bool ScrubAdditionalActions(PdfDocument document, PdfObject? aaObj, CarrierScrub scrub)
     {
         if (document.Resolve(aaObj ?? PdfNull.Instance) is not PdfDictionary aa) return false;
         var changed = false;
         foreach (var key in aa.Keys)
-            changed |= ScrubUriAction(document, aa.GetOptional(key.Value), terms, caseSensitive);
+            changed |= ScrubUriAction(document, aa.GetOptional(key.Value), scrub);
         return changed;
     }
 

@@ -80,7 +80,8 @@ internal sealed class RedactionWorkflowService
             request.Document,
             RedactedCopySafetyRequest.ForAreas(
                 request.Redactions.Select(ToSafetyArea).ToArray(),
-                skippedCount));
+                skippedCount,
+                request.SafetyOptions));
 
         foreach (var failedStage in safetyReport.FailedStages)
         {
@@ -135,12 +136,19 @@ internal sealed record RedactionAreaTransaction(
 internal sealed record RedactionApplicationRequest(
     PdfDocument Document,
     IReadOnlyList<RedactionAreaTransaction> Redactions,
-    IReadOnlyList<PdfTypewriterTextOperation> TypewriterOperations)
+    IReadOnlyList<PdfTypewriterTextOperation> TypewriterOperations,
+    // #1188/#1169: which carriers the term scrub touches and HOW. Defaults
+    // reproduce the pre-option behaviour exactly.
+    RedactedCopySafetyOptions? SafetyOptionsOverride = null)
 {
+    public RedactedCopySafetyOptions SafetyOptions =>
+        SafetyOptionsOverride ?? RedactedCopySafetyOptions.Default;
+
     public static RedactionApplicationRequest Capture(
         PdfDocument document,
         IEnumerable<PendingRedaction> pendingRedactions,
-        IEnumerable<PdfTypewriterTextOperation> typewriterOperations)
+        IEnumerable<PdfTypewriterTextOperation> typewriterOperations,
+        RedactedCopySafetyOptions? safetyOptions = null)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(pendingRedactions);
@@ -148,7 +156,8 @@ internal sealed record RedactionApplicationRequest(
         return new(
             document,
             pendingRedactions.Select(RedactionAreaTransaction.FromPending).ToArray(),
-            typewriterOperations.ToArray());
+            typewriterOperations.ToArray(),
+            safetyOptions);
     }
 }
 
@@ -168,12 +177,14 @@ internal sealed record RedactedCopyRequest(
         IEnumerable<PendingRedaction> pendingRedactions,
         IEnumerable<PdfTypewriterTextOperation> typewriterOperations,
         string outputPath,
-        PdfEncryptionOptions? encryptionOptions) =>
+        PdfEncryptionOptions? encryptionOptions,
+        RedactedCopySafetyOptions? safetyOptions = null) =>
         new(
             RedactionApplicationRequest.Capture(
                 document,
                 pendingRedactions,
-                typewriterOperations),
+                typewriterOperations,
+                safetyOptions),
             outputPath,
             encryptionOptions);
 }

@@ -17,6 +17,10 @@ public class PreferencesViewModel : ViewModelBase
         Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
     private Excise.Core.Text.WhitespaceMode _whitespaceMode =
         Excise.Core.Text.WhitespaceMode.Smart;
+    private Excise.Core.Operations.CarrierScrubMode _linkUriCarrierPolicy =
+        Excise.Core.Operations.CarrierScrubMode.Strip;
+    private Excise.Core.Operations.CarrierScrubMode _metadataCarrierPolicy =
+        Excise.Core.Operations.CarrierScrubMode.Strip;
 
     public PreferencesViewModel()
     {
@@ -96,6 +100,23 @@ public class PreferencesViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _whitespaceMode, value);
     }
 
+    // Per-carrier redaction policy (#1188/#1169). The same AOT-safe
+    // Enum.GetValues<T>() form as the two above.
+    public Excise.Core.Operations.CarrierScrubMode[] CarrierScrubModeOptions { get; } =
+        System.Enum.GetValues<Excise.Core.Operations.CarrierScrubMode>();
+
+    public Excise.Core.Operations.CarrierScrubMode SelectedLinkUriCarrierPolicy
+    {
+        get => _linkUriCarrierPolicy;
+        set => this.RaiseAndSetIfChanged(ref _linkUriCarrierPolicy, value);
+    }
+
+    public Excise.Core.Operations.CarrierScrubMode SelectedMetadataCarrierPolicy
+    {
+        get => _metadataCarrierPolicy;
+        set => this.RaiseAndSetIfChanged(ref _metadataCarrierPolicy, value);
+    }
+
     // Commands
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
@@ -126,6 +147,8 @@ public class PreferencesViewModel : ViewModelBase
         OcrDenoiseRadius = 0.8;
         SelectedReadingOrderStrategy = Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
         SelectedWhitespaceMode = Excise.Core.Text.WhitespaceMode.Smart;
+        SelectedLinkUriCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.Strip;
+        SelectedMetadataCarrierPolicy = Excise.Core.Operations.CarrierScrubMode.Strip;
     }
 
     private void CloseWindow()
@@ -137,11 +160,15 @@ public class PreferencesViewModel : ViewModelBase
     {
         SelectedReadingOrderStrategy = mainViewModel.ReadingOrderStrategy;
         SelectedWhitespaceMode = mainViewModel.WhitespaceMode;
+        SelectedLinkUriCarrierPolicy = mainViewModel.LinkUriCarrierPolicy;
+        SelectedMetadataCarrierPolicy = mainViewModel.MetadataCarrierPolicy;
     }
 
     public void SaveToMainViewModel(MainWindowViewModel mainViewModel)
     {
         mainViewModel.ReadingOrderStrategy = SelectedReadingOrderStrategy;
         mainViewModel.WhitespaceMode = SelectedWhitespaceMode;
+        mainViewModel.LinkUriCarrierPolicy = SelectedLinkUriCarrierPolicy;
+        mainViewModel.MetadataCarrierPolicy = SelectedMetadataCarrierPolicy;
     }
 }

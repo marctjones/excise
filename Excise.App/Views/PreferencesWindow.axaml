@@ -82,6 +82,59 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Redaction carrier policy (#1188/#1169) -->
+                <Border Background="{DynamicResource SecondaryBackgroundBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="20">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="Redaction — Non-displayed Text"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+                        <TextBlock Text="A PDF repeats page text in places you never see — link targets and document metadata. Cutting the redacted word out of one of those can REVEAL it: remove 'your' from https://www.irs.gov/your-account and the leftover https://www.irs.gov/-account tells anyone who knows the site what was removed."
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap"/>
+
+                        <Separator/>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Link URLs" FontWeight="Medium"/>
+                            <ComboBox x:Name="LinkUriCarrierPolicyComboBox"
+                                      ItemsSource="{Binding CarrierScrubModeOptions}"
+                                      SelectedItem="{Binding SelectedLinkUriCarrierPolicy}"
+                                      HorizontalAlignment="Stretch"
+                                      AutomationProperties.Name="Link URL Redaction Policy"
+                                      AutomationProperties.HelpText="How a link target containing the redacted text is handled."/>
+                            <TextBlock Text="Strip (default): cut the word out of the URL, leaving the rest. RemoveWhole: drop the entire link target, so no surrounding text survives to infer the word from. ReportOnly: change nothing and list the link in the redaction report for you to decide."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Document Metadata" FontWeight="Medium"/>
+                            <ComboBox x:Name="MetadataCarrierPolicyComboBox"
+                                      ItemsSource="{Binding CarrierScrubModeOptions}"
+                                      SelectedItem="{Binding SelectedMetadataCarrierPolicy}"
+                                      HorizontalAlignment="Stretch"
+                                      AutomationProperties.Name="Metadata Redaction Policy"
+                                      AutomationProperties.HelpText="How document metadata containing the redacted text is handled."/>
+                            <TextBlock Text="Applies to the /Info fields (Title, Author, Subject…) and the XMP packet. A templated field narrows a removed value the same way a known URL does."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="⚠ ReportOnly leaves the redacted text in the document. The redaction report will say so — act on it before sharing the file."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
             </StackPanel>
         </ScrollViewer>
 

@@ -39,9 +39,11 @@ public enum WidthPolicy
 ///   <item><term>Flatten-OCR mode</term><description>rasterise + OCR + paint —
 ///   needs Excise.Rendering + Excise.Ocr; defined by #1186 at the orchestration
 ///   layer.</description></item>
-///   <item><term>Scorched-earth carrier scrub</term><description><c>RemoveAllMetadata</c>
-///   — App-level today (RedactionService); the engine-level per-carrier surface
-///   is #1188.</description></item>
+///   <item><term>Scorched-earth carrier scrub</term><description>the engine-level
+///   per-carrier surface SHIPPED with #1188 — see <see cref="Carriers"/> (scope)
+///   and <see cref="CarrierPolicy"/> (mode). The App's own
+///   <c>RemoveAllMetadata</c> remains a separate, blunter wholesale strip that
+///   needs no term.</description></item>
 ///   <item><term>Whole-word / sub-3-char match</term><description>#1052 / carrier
 ///   policy — not implemented as a boundary rule (word boundaries were decided
 ///   NOT to be the fix, 2026-08-10), so no field yet.</description></item>
@@ -85,6 +87,22 @@ public sealed record RedactionOptions
     /// off only for the #1169 reveal-risk case). Enforced by: Core.</summary>
     public Operations.RedactionCarriers Carriers { get; init; }
         = Operations.RedactionCarriers.All;
+
+    /// <summary>
+    /// HOW each in-scope carrier is scrubbed (#1188/#1169): cut the term out
+    /// (<see cref="Operations.CarrierScrubMode.Strip"/>, the default), drop the
+    /// whole value it was found in, or change nothing and report the hit.
+    /// Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ Orthogonal to <see cref="Carriers"/>: that says WHETHER a carrier is
+    /// looked at, this says what happens when the term is there. A carrier that
+    /// is off is not examined at all; a carrier set to
+    /// <see cref="Operations.CarrierScrubMode.ReportOnly"/> is examined, still
+    /// holds the term, and says so in <see cref="RedactionReport.Carriers"/>.
+    /// </remarks>
+    public Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
+        = Operations.CarrierScrubPolicy.Default;
 
     /// <summary>The all-defaults options — reproduces pre-#1187 behaviour.</summary>
     public static RedactionOptions Default { get; } = new();

@@ -49,6 +49,30 @@ public sealed record RedactedCopySafetyOptions
     public bool RunHiddenTextAudit { get; init; } = true;
     public bool RunRasterRedactionAudit { get; init; } = true;
 
+    /// <summary>
+    /// Per-carrier scrub MODE for the <see cref="ScrubRequestedTerms"/> pass
+    /// (#1188/#1169). Default: <see cref="Operations.CarrierScrubMode.Strip"/>
+    /// everywhere, unchanged from before the option existed.
+    /// </summary>
+    /// <remarks>
+    /// This is the delivery surface #1169 asks for: on a carrier whose value is
+    /// a KNOWN string (a URL, a templated metadata field), cutting the term out
+    /// leaves a hole the surrounding text can be read around, so the user can
+    /// choose to drop the whole value or be told and decide. A
+    /// <see cref="Operations.CarrierScrubMode.ReportOnly"/> carrier that holds
+    /// the term is surfaced in <see cref="RedactedCopySafetyReport.Warnings"/> —
+    /// it must never pass silently.
+    /// </remarks>
+    public Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
+        = Operations.CarrierScrubPolicy.Default;
+
+    /// <summary>
+    /// Which carriers the term scrub examines at all (#1188). Orthogonal to
+    /// <see cref="CarrierPolicy"/>: this is scope, that is mode.
+    /// </summary>
+    public Operations.RedactionCarriers Carriers { get; init; }
+        = Operations.RedactionCarriers.All;
+
     public static RedactedCopySafetyOptions Default { get; } = new();
 }
 
