@@ -199,6 +199,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -1433,15 +1442,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -1668,6 +1668,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -2902,15 +2911,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -3137,6 +3137,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -4371,15 +4380,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -4606,6 +4606,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -5840,15 +5849,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -6094,6 +6094,15 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -7315,15 +7324,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NameWithSpace_HexEncoded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -7419,6 +7419,15 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -8785,15 +8794,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_FlattensTextIntoPageContentAndMarksApplied",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -9026,6 +9026,15 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -10241,15 +10250,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithAllEscapeTypes_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NameWithSpace_HexEncoded",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -16492,6 +16492,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -17732,15 +17741,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -17953,6 +17953,15 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -19201,15 +19210,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -19474,6 +19474,15 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CapturesTransformAtEveryPathConstructionOperator",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -20716,15 +20725,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_MultilineFlag_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -21107,6 +21107,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -22462,15 +22471,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.WithTextAndBounds_PreserveOperationIdentity",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_FlattensTextIntoPageContentAndMarksApplied",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -22619,6 +22619,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -23974,15 +23983,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.WithTextAndBounds_PreserveOperationIdentity",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_FlattensTextIntoPageContentAndMarksApplied",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -24092,6 +24092,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -25447,15 +25456,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.WithTextAndBounds_PreserveOperationIdentity",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_FlattensTextIntoPageContentAndMarksApplied",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -25808,6 +25808,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -27132,15 +27141,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -27311,6 +27311,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -28635,15 +28644,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -28785,6 +28785,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -30109,15 +30118,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -30245,6 +30245,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -31569,15 +31578,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -31712,6 +31712,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -33036,15 +33045,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -33215,6 +33215,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -34539,15 +34548,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -34689,6 +34689,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -36013,15 +36022,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -36156,6 +36156,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -37480,15 +37489,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -48935,6 +48935,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -50259,15 +50268,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -50456,6 +50456,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -51780,15 +51789,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -52031,6 +52031,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -53355,15 +53364,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -53500,6 +53500,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -54824,15 +54833,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayEiOperator_WithoutBiContext_IsIgnored",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamTests.cs::ContentStreamParserTests.Parse_StrayIdOperator_WithoutBiContext_IsIgnored",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -107219,6 +107219,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -108570,15 +108579,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.WithTextAndBounds_PreserveOperationIdentity",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_FlattensTextIntoPageContentAndMarksApplied",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -108679,6 +108679,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.TransformPoint_AppliesTheOffDiagonalTermsToTheRightCoordinate",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -110030,15 +110039,6 @@
         },
         {
           "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.WithTextAndBounds_PreserveOperationIdentity",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Editing/PdfTypewriterTextOperationTests.cs::PdfTypewriterTextOperationTests.Apply_FlattensTextIntoPageContentAndMarksApplied",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -114708,8 +114708,8 @@
     "gradeImplemented": 197,
     "gradeVerified": 682,
     "gradeUnknown": 19,
-    "testMethods": 6430,
-    "testMethodsWithCapabilityCandidate": 4017,
+    "testMethods": 6431,
+    "testMethodsWithCapabilityCandidate": 4018,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
