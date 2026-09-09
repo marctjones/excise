@@ -90,7 +90,12 @@ internal partial class RenderContext
                     DrawFormContent,
                     paint,
                     layerBounds,
-                    seedBackdrop: group?.GetBool("I") == false);
+                    seedBackdrop: group?.GetBool("I") == false,
+                    // DrawFormContent draws the group at full alpha; the
+                    // group's own /ca belongs to the composite of the finished
+                    // group (§11.6.6), so it goes on the layer. Every other
+                    // caller has its alpha in the content already (#1393).
+                    layerAlpha: invocationState.FillAlpha);
             }
             finally
             {
@@ -105,6 +110,28 @@ internal partial class RenderContext
             return;
         }
 
+        // ⚠️ This layer is ISOLATED, and §11.6.6 says it should not be: /I
+        // defaults to FALSE, so a group is non-isolated unless it says
+        // otherwise, and a /BM used inside it must act on the group's backdrop.
+        // Skia's SaveLayer starts fully transparent, so it does not. That is
+        // #1394, and it is still OPEN.
+        //
+        // Do NOT "fix" it by painting the backdrop into the layer the way the
+        // soft-mask branch above does. That was tried and measured (2026-09-09)
+        // and it overshoots, because seeding without §11.4.6's backdrop-REMOVAL
+        // step leaves the backdrop's own contribution inside the group result.
+        // On pdf.js issue13520 (20 explicit /I false groups), warm-pale pixel
+        // count in the test region:
+        //
+        //     mutool 887 · ghostscript 762   <- the target, two oracles agreeing
+        //     pdftocairo 3048                <- outlier, shares excise's defect
+        //     excise seeded              71  <- overshot BELOW both
+        //     excise isolated (today)  4079  <- overshoots ABOVE both
+        //
+        // A synthetic probe does NOT catch this: with a group that paints an
+        // opaque rect over the sample point, removal is a no-op and seeding
+        // looks exactly right (it matched gs and mutool on four such probes).
+        // The fix needs real backdrop removal, not a seed.
         _canvas.SaveLayer(bounds, paint);
         try
         {

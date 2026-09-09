@@ -936,11 +936,13 @@ internal partial class RenderContext
         Excise.Core.Primitives.PdfStream maskStream,
         int targetWidth,
         int targetHeight,
-        SKRect? maskBounds = null)
+        SKRect? maskBounds = null,
+        Excise.Core.Primitives.PdfDictionary? maskDictionary = null)
     {
         if (string.Equals(maskStream.GetNameOrNull("Subtype"), "Form", StringComparison.Ordinal))
             return maskBounds.HasValue
-                ? RenderFormSoftMaskBitmap(maskStream, targetWidth, targetHeight, maskBounds.Value)
+                ? RenderFormSoftMaskBitmap(
+                    maskStream, targetWidth, targetHeight, maskBounds.Value, maskDictionary)
                 : null;
 
         var width = maskStream.GetInt("Width", 0);
@@ -952,11 +954,31 @@ internal partial class RenderContext
         return alpha != null ? CreateSoftMaskLumaBitmap(alpha) : null;
     }
 
+    /// <summary>
+    /// Rasterise a soft mask's <c>/G</c> transparency group into a luminance
+    /// bitmap.
+    ///
+    /// <para><b>§11.6.5.2: the mask group is rendered INDEPENDENTLY of the
+    /// caller.</b> The caller's blend mode and constant alpha belong to the
+    /// composite of the masked object, not to the production of the mask, so
+    /// they are reset here (#1393). Leaving them in place applied them twice
+    /// and, for <c>/BM /Multiply</c> against the mask group's black backdrop,
+    /// drove the luminosity to zero — the mask erased exactly the content it
+    /// was supposed to reveal.</para>
+    ///
+    /// <para><b>The backdrop is <c>/BC</c>, not always black.</b> Its
+    /// components are in the group's own colour space; the default is black in
+    /// that space, which is what a luminosity mask wants when nothing is
+    /// painted (fully masked out). A <c>/BC</c> of white inverts that meaning,
+    /// so ignoring the entry renders a mask as its own photographic
+    /// negative.</para>
+    /// </summary>
     private SKBitmap? RenderFormSoftMaskBitmap(
         Excise.Core.Primitives.PdfStream maskStream,
         int targetWidth,
         int targetHeight,
-        SKRect maskBounds)
+        SKRect maskBounds,
+        Excise.Core.Primitives.PdfDictionary? maskDictionary = null)
     {
         if (targetWidth <= 0 || targetHeight <= 0 || maskBounds.Width <= 0 || maskBounds.Height <= 0)
             return null;
@@ -971,7 +993,7 @@ internal partial class RenderContext
         try
         {
             using var canvas = new SKCanvas(bitmap);
-            canvas.Clear(SKColors.Black);
+            canvas.Clear(ResolveSoftMaskBackdropColor(maskStream, maskDictionary));
 
             var scaleX = targetWidth / maskBounds.Width;
             var scaleY = targetHeight / maskBounds.Height;
@@ -990,6 +1012,13 @@ internal partial class RenderContext
             child._resourcesStack.Push(_page.Resources);
             child._state = _state.Clone();
             child._state.SoftMask = null;
+            // §11.6.5.2 — the caller's compositing parameters are NOT part of
+            // producing the mask (#1393). Same reset the form-group path
+            // already does in SkiaRenderer.XObjects.cs's DrawFormContent.
+            child._state.BlendMode = SKBlendMode.SrcOver;
+            child._state.FillAlpha = 1;
+            child._state.StrokeAlpha = 1;
+
             try
             {
                 child.RenderFormXObject(maskStream);
@@ -1006,6 +1035,71 @@ internal partial class RenderContext
         {
             bitmap.Dispose();
             return null;
+        }
+    }
+
+    /// <summary>
+    /// The initial backdrop a luminosity soft mask's group is composited
+    /// against (§11.6.5.2 <c>/BC</c>). Components are in the <c>/G</c> group's
+    /// own colour space (<c>/Group /CS</c>); the default when <c>/BC</c> is
+    /// absent is black in that space, which for every device space is
+    /// <see cref="SKColors.Black"/> — a fully masked-out backdrop, so anything
+    /// the group does not paint stays hidden.
+    ///
+    /// <para>Anything unparseable falls back to black, i.e. to the behaviour
+    /// before <c>/BC</c> was read at all. A mask defaulting to "hide" is the
+    /// safe direction: it cannot reveal content the document meant to
+    /// mask.</para>
+    /// </summary>
+    private SKColor ResolveSoftMaskBackdropColor(
+        Excise.Core.Primitives.PdfStream maskStream,
+        Excise.Core.Primitives.PdfDictionary? maskDictionary)
+    {
+        // §11.6.5.2: "This entry shall be consulted only if the subtype S is
+        // Luminosity." An /Alpha mask has no backdrop colour.
+        if (maskDictionary == null ||
+            !string.Equals(maskDictionary.GetNameOrNull("S"), "Luminosity", StringComparison.Ordinal))
+        {
+            return SKColors.Black;
+        }
+
+        var backdropObj = maskDictionary.GetOptional("BC");
+        if (backdropObj == null)
+            return SKColors.Black;
+
+        if (_page.Document.Resolve(backdropObj) is not Excise.Core.Primitives.PdfArray components ||
+            components.Count == 0)
+        {
+            return SKColors.Black;
+        }
+
+        var values = new double[components.Count];
+        for (var i = 0; i < components.Count; i++)
+        {
+            if (!TryGetResolvedNumber(_page.Document.Resolve(components[i]), out var v))
+                return SKColors.Black;
+            values[i] = v;
+        }
+
+        var groupObj = maskStream.GetOptional("Group");
+        var group = groupObj != null
+            ? _page.Document.Resolve(groupObj) as Excise.Core.Primitives.PdfDictionary
+            : null;
+        var colorSpaceObj = group?.GetOptional("CS");
+
+        try
+        {
+            var colorSpace = colorSpaceObj != null
+                ? ResolveImageColorSpace(colorSpaceObj)
+                : (values.Length >= 4 ? PdfColorSpace.DeviceCMYK
+                    : values.Length >= 3 ? PdfColorSpace.DeviceRGB
+                    : PdfColorSpace.DeviceGray);
+            var (r, g, b) = colorSpace.ToRgb(values);
+            return RgbToColor(r, g, b);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return SKColors.Black;
         }
     }
 
