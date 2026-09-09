@@ -2008,6 +2008,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::SaveRestore_RestoresFillColorAfterQ_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -2097,6 +2104,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::SaveRestore_RestoresFillColorAfterQ_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -2183,6 +2197,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_Translation_cm_Operator",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::Translation_cm_MovesRect_MatchesIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -2364,6 +2385,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RoundLineCap_ExtendsInkPastEndpoints_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -2450,6 +2478,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_RoundLineJoin_DrawsRoundJoins",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RoundLineJoin_StaysBoundedUnlikeAMiterSpike_AgreesWithIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -2542,6 +2577,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::MiterLimit_ForcesBevelWhenRatioExceedsLimit_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -2628,6 +2670,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_DashedLine_RendersDashPattern",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::DashPattern_LeavesGapsInStroke_AgreesWithIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -2987,6 +3036,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3073,6 +3129,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -3254,6 +3317,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3343,6 +3413,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3429,6 +3506,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_PathConstructionPrimitives_m_l_v_y_h_Operator",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::PathConstructionPrimitives_ClosedPathViaLVYH_MatchesIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -3610,6 +3694,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::StrokeOnly_S_LeavesInteriorUnpainted_MatchesIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3788,6 +3879,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::FillOnly_f_PaintsSolidInterior_MatchesIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -3963,6 +4061,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_FillEvenOdd_fStar_Operator",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::FillEvenOdd_StarFixture_LeavesCenterUnpaintedUnlikeNonzero_AgreesWithIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -4411,6 +4516,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::ClipNonzero_W_ConfinesPaintToNonzeroStarRegion_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -4500,6 +4612,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::ClipNonzero_W_ConfinesPaintToNonzeroStarRegion_AgreesWithIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -4586,6 +4705,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_ClippingPath_WStar_EvenOddRule",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::ClipEvenOdd_WStar_ExcludesCenterHoleUnlikeNonzeroClip_AgreesWithIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -5212,6 +5338,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::GrayscaleFillAndStroke_PixelValuesMatchIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -5298,6 +5431,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_GrayscaleFillOperator_g_ShowsGrayPixel",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::GrayscaleFillAndStroke_PixelValuesMatchIndependentRenderer",
             "modes": [
               "render"
             ]
@@ -5390,6 +5530,13 @@
             "modes": [
               "render"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RgbFillAndStroke_PixelValuesMatchIndependentRenderer",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -5476,6 +5623,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Rendering.Tests/SkiaRendererCoverageTests.cs::RenderPage_RgbFillOperator_rg_ShowsRedGreenBlue",
+            "modes": [
+              "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs::RgbFillAndStroke_PixelValuesMatchIndependentRenderer",
             "modes": [
               "render"
             ]
