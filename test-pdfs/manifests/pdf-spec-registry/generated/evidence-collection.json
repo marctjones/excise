@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1012,
-  "indexedContentSha256": "6db5094c4e61445b09eca165645e60ded6cf10f2e989fa2d0014895451da0ac5",
+  "indexedContentSha256": "4679cda16a65aa2324bf49afafeb20336102e445c4a8d5ec2c5143b324ac30e0",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -3754,7 +3754,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 111
+      "candidateReferenceCount": 112
     },
     {
       "id": "pdf.17.document.navigation",
@@ -5407,7 +5407,9 @@
           "matchedTerms": [
             "metadata",
             "xmp",
-            "metadata"
+            "catalog",
+            "metadata",
+            "pdfdocument"
           ]
         },
         {
@@ -42498,7 +42500,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -42735,9 +42737,19 @@
             "fileattachment",
             "annotation"
           ]
+        },
+        {
+          "path": "tests/redaction-bench-design.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "fileattachment",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 19
+      "candidateReferenceCount": 20
     },
     {
       "id": "pdf.20.annotation.subtype-017",
@@ -43361,7 +43373,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -43597,7 +43609,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -44497,7 +44509,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -44677,7 +44689,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -44824,7 +44836,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -45162,7 +45174,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -48200,7 +48212,7 @@
           "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs"
         },
         {
-          "kind": "corpus",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip"
         }
       ],
@@ -48221,7 +48233,7 @@
             ]
           },
           {
-            "kind": "corpus",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve",
@@ -48969,6 +48981,18 @@
           ]
         },
         {
+          "path": "tests/redaction-bench-design.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
+            "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -49027,7 +49051,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 69
+      "candidateReferenceCount": 70
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -49869,6 +49893,18 @@
           ]
         },
         {
+          "path": "tests/redaction-bench-design.json",
+          "kind": "test",
+          "matchedTerms": [
+            "redaction",
+            "review",
+            "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -49937,7 +49973,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 79
+      "candidateReferenceCount": 80
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -50053,7 +50089,7 @@
             ]
           },
           {
-            "kind": "corpus",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
             "modes": [
               "render",
@@ -59458,7 +59494,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 87
+      "candidateReferenceCount": 88
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -60243,7 +60279,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 109
+      "candidateReferenceCount": 110
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -61890,6 +61926,17 @@
           ]
         },
         {
+          "path": "tests/redaction-bench-design.json",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "pdfe",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "tests/unwired-api-baseline.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -61913,7 +61960,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 66
+      "candidateReferenceCount": 67
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -62776,6 +62823,17 @@
           ]
         },
         {
+          "path": "tests/redaction-bench-design.json",
+          "kind": "test",
+          "matchedTerms": [
+            "documents",
+            "ocr",
+            "pdfe",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "tests/redaction-visual-gold-set.json",
           "kind": "test",
           "matchedTerms": [
@@ -62807,7 +62865,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 53
+      "candidateReferenceCount": 54
     },
     {
       "id": "pdfe.product.security.audit-log",
@@ -63554,7 +63612,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 107
+      "candidateReferenceCount": 108
     },
     {
       "id": "pdfe.product.platform.printing",
@@ -63988,6 +64046,7 @@
           "kind": "test",
           "matchedTerms": [
             "forms",
+            "pdfe",
             "research",
             "subset",
             "ocr",

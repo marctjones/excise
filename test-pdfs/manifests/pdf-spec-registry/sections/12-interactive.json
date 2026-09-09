@@ -199,7 +199,7 @@
           "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs"
         },
         {
-          "kind": "corpus",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip"
         }
       ],
@@ -220,7 +220,7 @@
             ]
           },
           {
-            "kind": "corpus",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve",
@@ -542,7 +542,7 @@
             ]
           },
           {
-            "kind": "corpus",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
             "modes": [
               "render",

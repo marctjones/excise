@@ -75510,7 +75510,7 @@
       "testCandidates": [],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
           "recordedOutcomes": [
             "Passed"
@@ -75518,7 +75518,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75796,7 +75796,7 @@
       "testCandidates": [],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
           "recordedOutcomes": [
             "Passed"
@@ -75804,7 +75804,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -75892,7 +75892,7 @@
       "testCandidates": [],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
           "recordedOutcomes": [
             "Passed"
@@ -75900,7 +75900,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76009,7 +76009,7 @@
       "testCandidates": [],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
           "recordedOutcomes": [
             "Passed"
@@ -76017,7 +76017,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76126,7 +76126,7 @@
       "testCandidates": [],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
           "recordedOutcomes": [
             "Passed"
@@ -76134,7 +76134,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76222,7 +76222,7 @@
       "testCandidates": [],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
           "recordedOutcomes": [
             "Passed"
@@ -76230,7 +76230,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -76318,7 +76318,7 @@
       "testCandidates": [],
       "explicitContracts": [
         {
-          "kind": "unit",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
           "recordedOutcomes": [
             "Passed"
@@ -76326,7 +76326,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -86722,7 +86722,7 @@
       ],
       "explicitContracts": [
         {
-          "kind": "corpus",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
           "recordedOutcomes": [
             "Passed"
@@ -86730,7 +86730,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -89655,7 +89655,7 @@
       "testCandidates": [],
       "explicitContracts": [
         {
-          "kind": "corpus",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
           "recordedOutcomes": [
             "Passed"
@@ -89663,7 +89663,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -89836,7 +89836,7 @@
           ]
         },
         {
-          "kind": "corpus",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
           "recordedOutcomes": [
             "Passed"
@@ -89844,7 +89844,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "redact"
       ]
@@ -91008,6 +91008,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenCatalogLevelAttachmentAlsoPresent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -91286,15 +91293,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_AsciiNeedle_RemovesFullwidthText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -91313,7 +91311,7 @@
           ]
         },
         {
-          "kind": "corpus",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
           "recordedOutcomes": [
             "Passed"
@@ -92485,6 +92483,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenCatalogLevelAttachmentAlsoPresent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -92763,15 +92768,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_AsciiNeedle_RemovesFullwidthText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -92804,7 +92800,7 @@
           ]
         },
         {
-          "kind": "corpus",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
           "recordedOutcomes": [
             "Passed"
@@ -93976,6 +93972,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenCatalogLevelAttachmentAlsoPresent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94254,15 +94257,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_AsciiNeedle_RemovesFullwidthText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -94316,7 +94310,7 @@
           ]
         },
         {
-          "kind": "corpus",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
           "recordedOutcomes": [
             "Passed"
@@ -95495,6 +95489,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::CanaryInjectionLeakTests.RedactText_RemovesAnnotationFileAttachment_WhenCatalogLevelAttachmentAlsoPresent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95773,15 +95774,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs::FullwidthFormsRedactionTests.RedactText_AsciiNeedle_RemovesFullwidthText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -95835,7 +95827,7 @@
           ]
         },
         {
-          "kind": "corpus",
+          "kind": "differential",
           "ref": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs::RedactedWordIsNotRecoverableByAnIndependentExtractor",
           "recordedOutcomes": [
             "Passed"
@@ -109902,11 +109894,11 @@
     "modesWithExplicitContracts": 879,
     "modesWithPassingExplicitContracts": 879,
     "modesWithRecordedPassingCandidate": 644,
-    "gradeImplemented": 808,
-    "gradeVerified": 71,
+    "gradeImplemented": 798,
+    "gradeVerified": 81,
     "gradeUnknown": 19,
-    "testMethods": 6347,
-    "testMethodsWithCapabilityCandidate": 3931,
+    "testMethods": 6348,
+    "testMethodsWithCapabilityCandidate": 3932,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

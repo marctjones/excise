@@ -2318,7 +2318,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -2610,7 +2610,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -2717,7 +2717,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -2845,7 +2845,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -2973,7 +2973,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -3080,7 +3080,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
@@ -3187,7 +3187,7 @@
             ]
           },
           {
-            "kind": "unit",
+            "kind": "differential",
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
