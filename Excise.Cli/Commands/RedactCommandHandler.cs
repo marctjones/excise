@@ -131,6 +131,18 @@ internal static class RedactCommandHandler
                 "Do not treat this file as redacted.");
         }
 
+        // #1372: occurrences split across a line by a hyphen are structurally
+        // invisible to the matcher, so they are STILL PRESENT in the output.
+        // Saying so is the point — the reason this leak class went unnoticed is
+        // that excise reported plain success over it.
+        foreach (var candidate in redaction.HyphenatedCandidates)
+        {
+            carrierNotes.Add(
+                $"NOT REMOVED (hyphen-wrapped): page {candidate.PageNumber} reads {candidate} — " +
+                $"'{request.Text}' is split across a line break, so excise could not match it. " +
+                "It is still readable in the output by tools that rejoin hyphenated words.");
+        }
+
         foreach (var carrier in redaction.Carriers)
         {
             if (!carrier.Scrubbed)

@@ -125,6 +125,7 @@ public static class PdfDocumentRedactionExtensions
         if (document == null) throw new ArgumentNullException(nameof(document));
 
         var pageResults = new List<PageRedactionResult>();
+        var hyphenCandidates = new List<HyphenatedTermCandidate>();
         var carrierResults = new List<CarrierResult>();
         var imageCounts = default(ImageRedactionCounts);   // #1187/#1195 surfacing
 
@@ -283,6 +284,13 @@ public static class PdfDocumentRedactionExtensions
             // findable. This is the difference between "excise tried" and
             // "excise checked", and the whole reason the old int return was a
             // lie: it reported attempts.
+            // #1372: an occurrence the matcher structurally CANNOT see —
+            // split across a line by a hyphen. Detected after removal so it
+            // describes what is still in the output, and reported rather than
+            // joined (joining is #942; see HyphenatedTermCandidate).
+            hyphenCandidates.AddRange(
+                FindHyphenWrappedCandidates(page.Letters, text, caseSensitive, pageNum));
+
             var remaining = CountOccurrences(page, text, caseSensitive, includeHiddenLayers);
             pageResults.Add(new PageRedactionResult(
                 pageNum,
@@ -357,6 +365,7 @@ public static class PdfDocumentRedactionExtensions
             Carriers = carrierResults,
             ImageRegionsRedacted = imageCounts.RegionEdited,
             ImagesDroppedWhole = imageCounts.RemovedWhole,
+            HyphenatedCandidates = hyphenCandidates,
         };
     }
 
@@ -472,6 +481,104 @@ public static class PdfDocumentRedactionExtensions
         ops.Add(ContentOperator.Fill());
         ops.Add(ContentOperator.RestoreState());
         page.SetContentStream(new ContentStream(ops));
+    }
+
+    /// <summary>
+    /// Find occurrences of <paramref name="searchText"/> that a LINE-END HYPHEN
+    /// splits across two lines, which <see cref="FindTextMatches"/> therefore
+    /// never matches and redaction never removes (#1372).
+    /// </summary>
+    /// <remarks>
+    /// <para>Detection only — nothing is removed and no match geometry is
+    /// produced. See <see cref="HyphenatedTermCandidate"/>: joining across the
+    /// break makes a match span two lines, and its removal box then covers
+    /// everything between them, which is #942.</para>
+    ///
+    /// <para>A hyphen only counts as a WRAP when the next letter is on a
+    /// different line, using the same baseline test the inferred-word-gap logic
+    /// above uses (half the larger font size). A hyphen inside a line is
+    /// content: <c>well-known</c> must never be reported as <c>wellknown</c>.
+    /// </para>
+    /// </remarks>
+    internal static List<HyphenatedTermCandidate> FindHyphenWrappedCandidates(
+        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, int pageNumber)
+    {
+        var found = new List<HyphenatedTermCandidate>();
+        var needle = NormalizeText(searchText).Trim();
+        if (needle.Length < 2 || letters.Count == 0) return found;
+
+        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        var (view, _, _) = CollapseOverprintedGlyphs(letters);
+
+        for (var h = 0; h < view.Count; h++)
+        {
+            if (!IsHyphen(view[h].Value)) continue;
+
+            // The continuation is the next non-blank letter; it must be on a
+            // DIFFERENT line for this to be a wrap rather than content.
+            var next = h + 1;
+            while (next < view.Count && string.IsNullOrWhiteSpace(view[next].Value)) next++;
+            if (next >= view.Count || !OnDifferentLines(view[h], view[next])) continue;
+
+            // Take up to needle-length of same-line context on each side. More
+            // than that cannot participate in a match that CROSSES the break.
+            var before = SameLineRun(view, h - 1, needle.Length, forward: false, out var beforeText);
+            var after = SameLineRun(view, next, needle.Length, forward: true, out var afterText);
+            if (before == 0 || after == 0) continue;
+
+            // The join must produce the needle AND the needle must actually
+            // straddle the break — a term wholly inside one line is already
+            // matched by FindTextMatches and is not a candidate.
+            var joined = NormalizeText(beforeText + afterText);
+            var idx = joined.IndexOf(needle, comparison);
+            if (idx < 0) continue;
+            if (idx + needle.Length <= beforeText.Length) continue;   // ends before the break
+            if (idx >= beforeText.Length) continue;                   // starts after the break
+
+            found.Add(new HyphenatedTermCandidate(
+                pageNumber,
+                beforeText.Substring(idx),
+                afterText.Substring(0, Math.Min(afterText.Length, idx + needle.Length - beforeText.Length))));
+        }
+
+        return found;
+    }
+
+    private static bool IsHyphen(string value) =>
+        value == "-" || value == "‐" || value == "­";
+
+    /// <summary>Baseline separation test — the same rule the word-gap logic uses.</summary>
+    private static bool OnDifferentLines(Letter a, Letter b)
+    {
+        var ra = a.GlyphRectangle.Normalize();
+        var rb = b.GlyphRectangle.Normalize();
+        return Math.Abs((ra.Bottom + ra.Top) / 2 - (rb.Bottom + rb.Top) / 2)
+            > 0.5 * Math.Max(a.FontSize, b.FontSize);
+    }
+
+    /// <summary>
+    /// Up to <paramref name="max"/> letters from <paramref name="start"/>, all
+    /// on the same line as it, stopping at a blank. Returns the count and the
+    /// text in reading order.
+    /// </summary>
+    private static int SameLineRun(
+        IReadOnlyList<Letter> view, int start, int max, bool forward, out string text)
+    {
+        text = "";
+        if (start < 0 || start >= view.Count) return 0;
+
+        var anchor = view[start];
+        var taken = new List<string>();
+        var step = forward ? 1 : -1;
+        for (var i = start; i >= 0 && i < view.Count && taken.Count < max; i += step)
+        {
+            if (string.IsNullOrWhiteSpace(view[i].Value)) break;
+            if (OnDifferentLines(anchor, view[i])) break;
+            taken.Add(view[i].Value);
+        }
+        if (!forward) taken.Reverse();
+        text = string.Concat(taken);
+        return taken.Count;
     }
 
     /// <summary>

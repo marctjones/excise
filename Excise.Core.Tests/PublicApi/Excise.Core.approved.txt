@@ -1915,6 +1915,14 @@ namespace Excise.Core.Text.Segmentation
         public int PageNumber { get; init; }
         public string Text { get; init; }
     }
+    public sealed class HyphenatedTermCandidate : System.IEquatable<Excise.Core.Text.Segmentation.HyphenatedTermCandidate>
+    {
+        public HyphenatedTermCandidate(int PageNumber, string BeforeBreak, string AfterBreak) { }
+        public string AfterBreak { get; init; }
+        public string BeforeBreak { get; init; }
+        public int PageNumber { get; init; }
+        public override string ToString() { }
+    }
     public class LetterFinder
     {
         public LetterFinder() { }
@@ -2107,6 +2115,7 @@ namespace Excise.Core.Text.Segmentation
     {
         public RedactionReport() { }
         public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierResult> Carriers { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.HyphenatedTermCandidate> HyphenatedCandidates { get; init; }
         public int ImageRegionsRedacted { get; init; }
         public int ImagesDroppedWhole { get; init; }
         public bool IsCleanSuccess { get; }

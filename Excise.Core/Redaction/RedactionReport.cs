@@ -37,6 +37,42 @@ public sealed record PageRedactionResult(
     RedactionOutcome Outcome);
 
 /// <summary>
+/// An occurrence of the term that a line-end hyphen splits across two lines —
+/// the page really reads <c>Ander-</c> / <c>son</c> — so excise never forms a
+/// match and never removes it (#1372).
+/// </summary>
+/// <remarks>
+/// <para><b>Reported, never silently removed.</b> Matching across the hyphen is
+/// easy and was tried; the removal geometry for a match spanning two lines then
+/// covers everything between the end of one line and the start of the next, and
+/// that regressed 7 <c>RedactionCollateralHarness</c> fixtures plus
+/// <c>RedactingATerm_DestroysNothingRemoteFromAnyMatch</c> — #942, the defect
+/// that destroyed 5–36% of a document per term. Trading a missed word for
+/// destroyed content is strictly worse, so the join was reverted. A real fix
+/// needs a wrapped match to produce TWO removal boxes, one per line, which is a
+/// change to how a match's geometry is built and is feature-sized.</para>
+///
+/// <para>Until then this is the project's "surface, don't guess" carrier policy
+/// applied to a matcher gap: the reviewer is TOLD the occurrence is there and
+/// still present, rather than excise reporting success over it. That silence is
+/// what let this class of leak sit undetected — excise and mutool both keep the
+/// real hyphen and never form the match, so a single-extractor check called the
+/// document clean while Poppler's de-hyphenating reflow read the term straight
+/// out of it.</para>
+///
+/// <para>A hyphen INSIDE a line is content, not a wrap: <c>well-known</c> must
+/// never be reported as <c>wellknown</c>.</para>
+/// </remarks>
+public sealed record HyphenatedTermCandidate(
+    int PageNumber,
+    string BeforeBreak,
+    string AfterBreak)
+{
+    /// <summary>How the page reads, e.g. <c>"Ander-" / "son"</c>.</summary>
+    public override string ToString() => $"\"{BeforeBreak}-\" / \"{AfterBreak}\"";
+}
+
+/// <summary>
 /// The result of <c>RedactText</c> — #1089.
 ///
 /// <para><b>Why this replaced an <c>int</c>.</b> The old return counted matches
@@ -69,6 +105,16 @@ public sealed class RedactionReport
 
     /// <summary>Document-level carriers and what happened to each.</summary>
     public required IReadOnlyList<CarrierResult> Carriers { get; init; }
+
+    /// <summary>
+    /// Occurrences split across a line by a hyphen, which excise did NOT match
+    /// and did NOT remove (#1372). Surfaced so a reviewer is not told the
+    /// document is clean when a readable occurrence remains — see
+    /// <see cref="HyphenatedTermCandidate"/> for why these are reported rather
+    /// than joined.
+    /// </summary>
+    public IReadOnlyList<HyphenatedTermCandidate> HyphenatedCandidates { get; init; }
+        = Array.Empty<HyphenatedTermCandidate>();
 
     /// <summary>
     /// Images whose term region was blacked out in place, preserving the rest of
@@ -107,7 +153,9 @@ public sealed class RedactionReport
     /// refused. Anything else needs a human to read the detail.
     /// </summary>
     public bool IsCleanSuccess =>
-        Survived == 0 && Carriers.All(c => c.RefusedReason == null);
+        Survived == 0 &&
+        Carriers.All(c => c.RefusedReason == null) &&
+        HyphenatedCandidates.Count == 0;
 
     /// <summary>A one-line summary safe to print. States the gap when there is one.</summary>
     public override string ToString()
@@ -118,6 +166,8 @@ public sealed class RedactionReport
             parts.Add($"{ImagesDroppedWhole} whole image(s) removed (region redaction unavailable)");
         foreach (var c in Carriers.Where(c => c.RefusedReason != null))
             parts.Add($"{c.Carrier} NOT scrubbed ({c.RefusedReason})");
+        if (HyphenatedCandidates.Count > 0)
+            parts.Add($"{HyphenatedCandidates.Count} hyphen-wrapped occurrence(s) NOT removed");
         return string.Join("; ", parts);
     }
 }
