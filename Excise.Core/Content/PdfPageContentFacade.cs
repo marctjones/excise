@@ -199,22 +199,40 @@ public partial class PdfPage
     /// Get the content stream as a parsed ContentStream object.
     /// </summary>
     public Excise.Core.Content.ContentStream GetContentStream()
+        => GetContentStream(trackSourceSpans: false);
+
+    /// <summary>
+    /// Parse the page content, optionally recording the source span of every
+    /// operator so a later <see cref="SetContentStream"/> can re-emit the
+    /// untouched ones VERBATIM instead of re-serializing the whole stream
+    /// (#1093). Editing paths pass true; read-only callers pay nothing.
+    /// </summary>
+    internal Excise.Core.Content.ContentStream GetContentStream(bool trackSourceSpans)
     {
         var bytes = GetContentStreamBytes();
         if (bytes.Length == 0)
             return new Excise.Core.Content.ContentStream();
 
-        var parser = new Excise.Core.Content.ContentStreamParser(bytes, this);
+        var parser = new Excise.Core.Content.ContentStreamParser(bytes, this)
+        {
+            TrackSourceSpans = trackSourceSpans,
+        };
         return parser.Parse();
     }
 
     /// <summary>
-    /// Set the content stream from a ContentStream object.
+    /// Set the content stream from a ContentStream object. When the stream
+    /// carries the bytes it was parsed from
+    /// (<see cref="Excise.Core.Content.ContentStream.SourceBytes"/>), every
+    /// operator that was neither replaced nor mutated keeps its original bytes
+    /// rather than being re-serialized (#1093).
     /// </summary>
     public void SetContentStream(Excise.Core.Content.ContentStream content)
     {
         var writer = new Excise.Core.Content.ContentStreamWriter();
-        var bytes = writer.Write(content);
+        var bytes = content.SourceBytes is { } source
+            ? writer.Write(content, source)
+            : writer.Write(content);
         SetContentStreamBytes(bytes);
     }
 }

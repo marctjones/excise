@@ -96,6 +96,15 @@ public class ContentOperator
     /// </summary>
     internal int SourceStart { get; set; } = -1;
 
+    /// <summary>
+    /// The exact byte array <see cref="SourceStart"/> indexes into. The writer
+    /// requires reference identity with the array it is splicing against, so an
+    /// operator that came from a DIFFERENT parse — a form XObject's own content
+    /// stream inlined into a page, say — can never have bytes copied out of the
+    /// wrong array at the right offsets. Null when no span was recorded.
+    /// </summary>
+    internal byte[]? SourceArray { get; set; }
+
     /// <inheritdoc cref="SourceStart"/>
     internal int SourceEnd { get; set; } = -1;
 
@@ -114,7 +123,7 @@ public class ContentOperator
     internal UInt128 SourceFingerprint { get; set; }
 
     /// <summary>Whether a usable source span was recorded for this operator.</summary>
-    internal bool HasSourceSpan => SourceStart >= 0 && SourceEnd >= SourceStart;
+    internal bool HasSourceSpan => SourceStart >= 0 && SourceEnd >= SourceStart && SourceArray != null;
 
     /// <summary>
     /// Creates a new content operator.

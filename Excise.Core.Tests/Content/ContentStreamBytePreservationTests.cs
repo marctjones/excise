@@ -174,6 +174,28 @@ public class ContentStreamBytePreservationTests
         Encoding.Latin1.GetString(written).Should().Contain("(x) Tj");
     }
 
+    /// <summary>
+    /// Spans are only meaningful against the array they were measured in. A
+    /// form XObject's operators get inlined into a page stream, so an operator
+    /// list can legitimately mix parses; applying one parse's offsets to
+    /// another's bytes would copy arbitrary content into the page.
+    /// </summary>
+    [Fact]
+    public void SpansFromADifferentParse_AreNotCopiedIntoThisStream()
+    {
+        var source = AwkwardSource();
+        var content = ParseTracked(source);
+
+        // Same TEXT, different array — byte-equal but not the same object.
+        var lookalike = (byte[])source.Clone();
+
+        var written = new ContentStreamWriter().Write(content, lookalike);
+
+        written.Should().Equal(new ContentStreamWriter().Write(content),
+            "an operator whose span was measured in another array must be re-serialized, "
+            + "not indexed into this one (#1093)");
+    }
+
     [Fact]
     public void OperatorsWithoutTrackedSpans_FallBackToSerialization()
     {

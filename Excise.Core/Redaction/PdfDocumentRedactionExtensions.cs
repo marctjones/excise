@@ -463,7 +463,9 @@ public static class PdfDocumentRedactionExtensions
     private static void AppendBlackRectangle(PdfPage page, PdfRectangle rect, (double R, double G, double B)? boxColor = null)
     {
         var (r, g, b) = boxColor ?? (0.0, 0.0, 0.0);
-        var content = page.GetContentStream();
+        // Tracked spans: this appends five operators, so re-serializing the
+        // whole page to do it is exactly the round-trip risk #1093 removes.
+        var content = page.GetContentStream(trackSourceSpans: true);
         var ops = content.Operators.ToList();
         ops.Add(ContentOperator.SaveState());
         ops.Add(ContentOperator.SetFillRgb(r, g, b));
@@ -471,7 +473,7 @@ public static class PdfDocumentRedactionExtensions
             rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom));
         ops.Add(ContentOperator.Fill());
         ops.Add(ContentOperator.RestoreState());
-        page.SetContentStream(new ContentStream(ops));
+        page.SetContentStream(new ContentStream(ops) { SourceBytes = content.SourceBytes });
     }
 
     /// <summary>

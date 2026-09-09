@@ -118,6 +118,10 @@ public class ContentStreamWriter
 
     private static bool CanCopyVerbatim(ContentOperator op, byte[] source) =>
         op.HasSourceSpan
+        // Reference identity, not just bounds: an operator parsed from some
+        // OTHER stream — a form XObject inlined into a page — would otherwise
+        // have its offsets applied to the wrong array (#1093).
+        && ReferenceEquals(op.SourceArray, source)
         && op.SourceEnd <= source.Length
         && Fingerprint(op) == op.SourceFingerprint;
 

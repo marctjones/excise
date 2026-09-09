@@ -226,6 +226,7 @@ public class ContentStreamParser
             return;
         }
 
+        op.SourceArray = _content;
         op.SourceStart = _spanCursor;
         op.SourceEnd = end;
         op.SourceFingerprint = ContentStreamWriter.Fingerprint(op);
