@@ -99,6 +99,41 @@ public class MisleadingImageFallbackTests
     }
 
     /// <summary>
+    /// #1396 — a JBIG2 stream excise cannot decode must produce NO image, never
+    /// its own compressed bytes rasterised as one-bit samples.
+    ///
+    /// <para>The oracles do not agree on this fuzz page and cannot settle it —
+    /// measured at 150 dpi, mutool paints all 185,724 pixels black and
+    /// pdftocairo paints all of them white. What is settled is that excise must
+    /// not paint the CODESTREAM: before the fix it inked 184,589 black pixels
+    /// plus a band of noise, which is neither oracle's answer and is content
+    /// the file never described.</para>
+    /// </summary>
+    [Fact]
+    public void UndecodableJbig2_DrawsNothingAndNamesTheCause()
+    {
+        var path = Path.Combine(FindRepoRoot(), "test-pdfs", "pdfium", "pixel", "bug_867501.pdf");
+        Assert.SkipUnless(File.Exists(path), "corpus fixture not present: pdfium/pixel/bug_867501.pdf");
+
+        var diagnostics = new List<string>();
+        using var doc = PdfDocument.Open(path);
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1), new RenderOptions { Dpi = 150, Diagnostics = diagnostics });
+
+        InkedPixels(bitmap).Should().Be(0,
+            "a JBIG2 decode excise could not finish must draw nothing. Handing the " +
+            "still-compressed codestream back as image samples got it painted — " +
+            "184,589 black pixels and a band of noise, which is not what any " +
+            "reference renderer produces (#1396)");
+
+        diagnostics.Should().Contain(d => d.Contains("JBIG2Decode"),
+            "the refusal must name the filter that refused, and say whether the " +
+            "cause was an unimplemented feature (excise's gap) or corrupt data " +
+            "(the file's) — a silent refusal is the same invisibility as the " +
+            "fabrication it replaced");
+    }
+
+    /// <summary>
     /// Component count from the JPEG's own SOF marker, parsed here rather than
     /// through any excise decoder, so the premise is independent of the code
     /// under test. Returns -1 when no SOF is found.

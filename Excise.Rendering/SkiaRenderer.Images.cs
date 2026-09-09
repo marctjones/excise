@@ -537,6 +537,19 @@ internal partial class RenderContext
                 return bitmap;
             }
 
+            // #1396 — a filter that attempted this stream and refused says why,
+            // and that reason must reach the user. Without it the refusal
+            // arrives as a bare "not decoded", indistinguishable from a stream
+            // nothing has got to yet, and an unimplemented JBIG2 feature (our
+            // gap) reads the same as a corrupt codestream (the file's).
+            if (imageStream.DecodeFailureReason is { } reason)
+            {
+                AddDiagnostic(
+                    $"recovered malformation: {reason} — no image drawn " +
+                    $"({width}x{height}, {bitsPerComponent} bpc, {colorSpace}) (#1396)");
+                return null;
+            }
+
             return CreateBitmapFromRawData(
                 imageStream.DecodedData,
                 width,

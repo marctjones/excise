@@ -143,6 +143,9 @@ internal sealed class Jbig2FilterDecoder : AliasedFilterDecoder
 
     public override byte[] Decode(byte[] data, PdfFilterDecodeContext context)
     {
+        // No stream context and no dimensions mean no decode was ATTEMPTED —
+        // the bytes pass through unchanged, as they always have (this is the
+        // StreamDecompressor.ApplyFilter shape, which has no stream at all).
         var stream = context.Stream;
         if (stream == null)
             return data;
@@ -158,7 +161,35 @@ internal sealed class Jbig2FilterDecoder : AliasedFilterDecoder
         }
         catch (Exception ex) when (IsExpectedCodecFallback(ex))
         {
-            return data;
+            // #1396 — an ATTEMPTED decode that failed must FAIL, not hand back
+            // its own input.
+            //
+            // Returning `data` here marked the stream decoded and gave the
+            // image path the still-compressed JBIG2 codestream as one-bit image
+            // SAMPLES, which it rasterised: visual noise presented as page
+            // content, with nothing anywhere saying so. Nothing downstream
+            // recognises a JBIG2 codestream, unlike the DCT and JPX
+            // pass-throughs, where the image layer decodes the codestream
+            // itself (see PdfFilterDecodeException's remarks).
+            //
+            // #878's guard caught only the extreme shape of this — it refuses a
+            // buffer supplying under HALF the required samples, which is what
+            // 189 bytes of 103,680 looks like. A codestream that compresses
+            // poorly, or a small image, clears that bar and gets painted. This
+            // removes the guess.
+            //
+            // It is reachable from LEGAL input, not just corrupt input:
+            // Jbig2SymbolDictionaryDecoder still throws NotSupportedException
+            // for symbol-dictionary context retention, so a conforming file
+            // using a feature excise lacks took this path too. The two are
+            // reported distinctly because only one of them is our bug.
+            throw new PdfFilterDecodeException(
+                "JBIG2Decode",
+                ex is NotSupportedException
+                    ? PdfFilterDecodeFailureKind.Unimplemented
+                    : PdfFilterDecodeFailureKind.CorruptInput,
+                ex.Message,
+                ex);
         }
     }
 
