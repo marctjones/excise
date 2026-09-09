@@ -151,6 +151,24 @@
           "research": "Cat1-top7",
           "note": "annotation /Contents or /RC"
         },
+        "annotation-subj": {
+          "target": 1,
+          "source": "synth",
+          "research": "excise-1427",
+          "note": "annotation /Subj, isolated from /Contents /RC /AP (scarce real; a producer rarely sets Subj without Contents) -- excise-owned leak, PdfDocumentSanitizer.ScrubAnnotationContents missed this key"
+        },
+        "redact-overlaytext": {
+          "target": 1,
+          "source": "synth",
+          "research": "excise-1427",
+          "note": "/Redact annotation /OverlayText, isolated from /Contents (scarce real; review-draft Redact annotations are themselves rare in public corpora) -- excise-owned leak, same fix as annotation-subj"
+        },
+        "annotation-file-attachment": {
+          "target": 1,
+          "source": "synth",
+          "research": "excise-1428",
+          "note": "annotation-level /FileAttachment /FS with NO /Catalog/Names/EmbeddedFiles or /AF registration (scarce real; the embedded-file category above is catalog-level only) -- excise-owned leak, PdfEmbeddedFileParser never walked annotation-level attachments"
+        },
         "acroform-value": {
           "target": 7,
           "source": "real",

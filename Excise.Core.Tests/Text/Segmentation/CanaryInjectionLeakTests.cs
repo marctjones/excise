@@ -323,6 +323,62 @@ public class CanaryInjectionLeakTests
             "the unrelated attachment must survive — removal is selective, not wholesale");
     }
 
+    [Fact]
+    public void RedactText_RemovesAnnotationFileAttachment_WhenCatalogLevelAttachmentAlsoPresent()
+    {
+        // #1428 regression guard: ParseEmbeddedFiles originally had
+        // `if (result.Count > 0) return result;` after the catalog-level walk,
+        // which silently skipped the annotation-level /FileAttachment walk
+        // whenever the document ALSO had a /Catalog/Names/EmbeddedFiles entry
+        // -- the common case a real document mixes both in. None of the other
+        // #1428 tests exercise catalog-level and annotation-level attachments
+        // coexisting on the same document, so this scenario had no direct pin
+        // beyond the code-reading that caught it.
+        var content = "BT /F1 14 Tf 72 700 Td (Body text) Tj ET\n";
+        var body = Encoding.Latin1.GetBytes(content);
+        var keep = "unrelated catalog-level attachment\n";
+        var secret = $"note: {Canary}\n";
+        var pdf = Encoding.Latin1.GetBytes(
+            "%PDF-1.7\n" +
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R /Names << /EmbeddedFiles 6 0 R >> >>\nendobj\n" +
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> >> /Annots [11 0 R] >>\nendobj\n" +
+            $"4 0 obj\n<< /Length {body.Length} >>\nstream\n{content}endstream\nendobj\n" +
+            "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n" +
+            "6 0 obj\n<< /Names [(keep.txt) 7 0 R] >>\nendobj\n" +
+            "7 0 obj\n<< /Type /Filespec /F (keep.txt) /EF << /F 8 0 R >> >>\nendobj\n" +
+            $"8 0 obj\n<< /Type /EmbeddedFile /Length {keep.Length} >>\nstream\n{keep}endstream\nendobj\n" +
+            "11 0 obj\n<< /Type /Annot /Subtype /FileAttachment /Rect [72 600 92 620] " +
+            "/FS 12 0 R >>\nendobj\n" +
+            "12 0 obj\n<< /Type /Filespec /F (secret.txt) /EF << /F 13 0 R >> >>\nendobj\n" +
+            $"13 0 obj\n<< /Type /EmbeddedFile /Length {secret.Length} >>\nstream\n{secret}endstream\nendobj\n" +
+            "trailer\n<< /Root 1 0 R /Size 14 >>\n%%EOF\n");
+
+        using (var probe = PdfDocument.Open(pdf))
+        {
+            probe.GetEmbeddedFiles().Should().HaveCount(2,
+                "guard: both the catalog-level and annotation-level attachments must be discovered before redaction");
+        }
+        SavedPdfLeakScanner.FindTerm(pdf, Canary).Should().NotBeEmpty(
+            "guard: the fixture must contain the canary before redaction");
+
+        byte[] saved;
+        using (var doc = PdfDocument.Open(pdf))
+        {
+            doc.RedactText(Canary);
+            using var ms = new MemoryStream();
+            doc.Save(ms);
+            saved = ms.ToArray();
+        }
+
+        SavedPdfLeakScanner.FindTerm(saved, Canary).Should().BeEmpty(
+            "the annotation-level attachment carrying the term must be removed even when a catalog-level attachment also exists");
+        using var reopened = PdfDocument.Open(saved);
+        reopened.GetEmbeddedFiles().Should().ContainSingle(f => f.FileName == "keep.txt",
+            "the unrelated catalog-level attachment must survive — removal is selective, not wholesale");
+    }
+
     // ── fixture assembly ────────────────────────────────────────────────────
 
     /// <summary>

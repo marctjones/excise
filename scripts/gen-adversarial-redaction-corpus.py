@@ -150,6 +150,57 @@ def c_annotation(t):
     return objs
 
 
+def c_annotation_subj(t):
+    # Secret ONLY in a Highlight annotation's /Subj -- not /Contents, /RC, or
+    # /AP. Isolates the #1427 leak: PdfDocumentSanitizer.ScrubAnnotationContents
+    # scrubbed Contents/T/RC but not Subj, so a tool that only checks those
+    # (the c_annotation fixture puts the secret in all three at once, masking
+    # a Subj-only miss) would report clean while /Subj still carried the term.
+    annot = b("<< /Type /Annot /Subtype /Highlight /Rect [72 690 372 710] "
+              "/Subj (%s) /QuadPoints [72 710 372 710 72 690 372 690] >>" % t)
+    objs = base("BT /F1 12 Tf 72 730 Td (Highlighted region below) Tj ET\n",
+                extra_objs=[annot])
+    objs[2] = b("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+                "/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R "
+                "/Annots [6 0 R] >>")
+    return objs
+
+
+def c_redact_overlaytext(t):
+    # Secret ONLY in a /Redact annotation's /OverlayText -- not /Contents.
+    # Isolates the second #1427 carrier: the review-draft text a reviewer
+    # sees before the redaction is applied, which the pre-fix scrubber missed
+    # entirely (only Contents/T/RC were in the hardcoded key array).
+    annot = b("<< /Type /Annot /Subtype /Redact /Rect [72 690 372 710] "
+              "/OverlayText (%s) /QuadPoints [72 710 372 710 72 690 372 690] >>" % t)
+    objs = base("BT /F1 12 Tf 72 730 Td (Marked for redaction below) Tj ET\n",
+                extra_objs=[annot])
+    objs[2] = b("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+                "/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R "
+                "/Annots [6 0 R] >>")
+    return objs
+
+
+def c_annotation_file_attachment(t):
+    # Secret ONLY inside an annotation-level /FileAttachment's /FS -- no
+    # /Catalog/Names/EmbeddedFiles or /AF registration at all. Isolates the
+    # #1428 leak: PdfEmbeddedFileParser only ever walked the two document-
+    # level attachment locations before this fix, so an annotation-only
+    # attachment (a common producer pattern -- "attach this note to this
+    # spot on the page") was invisible to GetEmbeddedFiles() and RedactText.
+    data = b("attachment payload: %s\n" % t)
+    ef = (b"<< /Type /EmbeddedFile /Length %d >>\nstream\n" % len(data)) + data + b"\nendstream"
+    filespec = b("<< /Type /Filespec /F (note.txt) /EF << /F 8 0 R >> >>")
+    annot = b("<< /Type /Annot /Subtype /FileAttachment /Rect [72 690 92 710] "
+              "/FS 7 0 R >>")
+    objs = base("BT /F1 12 Tf 72 730 Td (See attached note) Tj ET\n",
+                extra_objs=[annot, filespec, ef])
+    objs[2] = b("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+                "/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R "
+                "/Annots [6 0 R] >>")
+    return objs
+
+
 def c_acroform(t):
     ap = (b"<< /Type /XObject /Subtype /Form /BBox [0 0 300 20] "
           b"/Resources << /Font << /F1 5 0 R >> >>")
@@ -352,6 +403,9 @@ CARRIERS = {
     "rotated-text":        ("ROTATEDSECRET",     c_rotated),
     "form-xobject":        ("XOBJECTSECRET",     c_formxobject),
     "annotation-contents": ("ANNOTCARRIERSECRET", c_annotation),
+    "annotation-subj":     ("SUBJCARRIERSECRET", c_annotation_subj),
+    "redact-overlaytext":  ("OVERLAYCARRIERSECRET", c_redact_overlaytext),
+    "annotation-file-attachment": ("ANNOTFILECARRIERSECRET", c_annotation_file_attachment),
     "acroform-value":      ("FORMFIELDSECRET",   c_acroform),
     "actualtext":          ("ACTUALTEXTSECRET",  c_actualtext),
     "xmp-metadata":        ("XMPCARRIERSECRET",  c_xmp),
