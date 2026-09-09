@@ -45,6 +45,11 @@ public class BlankPageRecoveryTests
         // fixture (relative to test-pdfs), min ink fraction of the oracle, max
         { "pdfium/bug_602650.pdf", 0.70, 1.30 },
         { "pdfium/363015187.pdf", 0.50, 1.50 },
+        // #1381: a FreeText with /Border [0 0 0] and a UTF-16BE /Contents whose
+        // Polish "ł" is above U+00FF. Border suppressed + text suppressed = an
+        // annotation that vanished, on a page with no /Contents and empty
+        // /Resources, so the whole page was blank.
+        { "pdfjs/bug1865341.pdf", 0.60, 1.40 },
     };
 
     [Theory]
@@ -64,20 +69,26 @@ public class BlankPageRecoveryTests
         using var ours = new SkiaRenderer().RenderPage(doc.GetPage(1), new RenderOptions { Dpi = dpi });
         var ourInk = InkedPixels(ours);
 
+        // An oracle that rasterized a DIFFERENT PAGE BOX gets no vote — its
+        // pixels address a different part of the page, so its ink count is not
+        // comparable (#932's rule in the corpus scan). pdftocairo renders the
+        // /MediaBox where excise and mutool render the /CropBox, and on
+        // bug1865341 that is 1275x1650 against 478x206.
         var oracleInk = new List<(string Name, long Ink)>();
         if (MutoolReferenceRenderer.IsAvailable)
         {
             using var m = MutoolReferenceRenderer.RenderPage(path, 1, dpi);
-            if (m != null) oracleInk.Add(("mutool", InkedPixels(m)));
+            if (SameBox(m, ours)) oracleInk.Add(("mutool", InkedPixels(m!)));
         }
 
         if (PdftocairoReferenceRenderer.IsAvailable)
         {
             using var c = PdftocairoReferenceRenderer.RenderPage(path, 1, dpi);
-            if (c != null) oracleInk.Add(("pdftocairo", InkedPixels(c)));
+            if (SameBox(c, ours)) oracleInk.Add(("pdftocairo", InkedPixels(c!)));
         }
 
-        Assert.SkipWhen(oracleInk.Count == 0, "no oracle could render the fixture");
+        Assert.SkipWhen(oracleInk.Count == 0,
+            "no oracle rendered the fixture on the same page box");
 
         var inking = oracleInk.Where(o => o.Ink > 0).ToList();
         inking.Should().NotBeEmpty(
@@ -118,6 +129,115 @@ public class BlankPageRecoveryTests
             "unresolved name becomes '\\0' and the glyph is not drawn at all");
         unicode.Should().Be(expected);
     }
+
+    /// <summary>
+    /// #1382's policy half, measured on a purpose-built fixture rather than on
+    /// the two corpus pages the issue wrongly attributed to it.
+    ///
+    /// A file that shows text with no enclosing <c>BT</c>/<c>ET</c> is
+    /// non-conformant (§9.4.1) and ISO 32000-2 does not require rendering it.
+    /// excise recovers it because its OWN extractor already did — the walker
+    /// never gated on BT — so refusing in the renderer was a divergence inside
+    /// excise, not a conformance stance.
+    ///
+    /// The second case is the one that matters for regressions: a well-formed
+    /// stream that sets text state BETWEEN text objects must be completely
+    /// unaffected, or the implicit open would fire on ordinary pages.
+    /// </summary>
+    [Theory]
+    [InlineData(false, "20 50 Td\n/F1 24 Tf\n(Hello, world!) Tj\n")]
+    [InlineData(true, "/F1 24 Tf\n0 g\nBT\n20 50 Td\n(Hello, world!) Tj\nET\n/F1 24 Tf\n2 Tc\n")]
+    public void TextOperatorsOutsideATextObject_DrawWhatTheOraclesDraw(
+        bool wellFormed, string contentStream)
+    {
+        Assert.SkipUnless(
+            MutoolReferenceRenderer.IsAvailable || PdftocairoReferenceRenderer.IsAvailable,
+            "no independent renderer installed (mutool or pdftocairo)");
+
+        var pdf = BuildHelveticaPage(contentStream);
+        var path = Path.Combine(Path.GetTempPath(), $"excise-1382-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, pdf);
+        try
+        {
+            using var doc = PdfDocument.Open(pdf);
+            using var ours = new SkiaRenderer().RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 150 });
+            var ourInk = InkedPixels(ours);
+
+            var oracles = new List<(string Name, long Ink)>();
+            if (MutoolReferenceRenderer.IsAvailable)
+            {
+                using var m = MutoolReferenceRenderer.RenderPage(path, 1, 150);
+                if (m != null) oracles.Add(("mutool", InkedPixels(m)));
+            }
+
+            if (PdftocairoReferenceRenderer.IsAvailable)
+            {
+                using var c = PdftocairoReferenceRenderer.RenderPage(path, 1, 150);
+                if (c != null) oracles.Add(("pdftocairo", InkedPixels(c)));
+            }
+
+            var inking = oracles.Where(o => o.Ink > 0).ToList();
+            Assert.SkipWhen(inking.Count == 0, "no oracle inked the fixture");
+
+            var mean = inking.Average(o => (double)o.Ink);
+            var why = wellFormed
+                ? "a well-formed BT/ET page with text state set outside the text " +
+                  "object must be untouched by the implicit-open lenience"
+                : "text shown with no enclosing BT/ET rendered as a BLANK PAGE " +
+                  "before #1382, while excise's own text extractor returned the " +
+                  "string — the renderer was diverging from the one state machine";
+
+            (ourInk / mean).Should().BeInRange(0.85, 1.15,
+                $"{why}. excise inked {ourInk} px against an oracle mean of {mean:F0} " +
+                $"({string.Join(", ", inking.Select(o => $"{o.Name}={o.Ink}"))})");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    private static byte[] BuildHelveticaPage(string contentStream)
+    {
+        var content = System.Text.Encoding.ASCII.GetBytes(contentStream);
+        var objects = new List<byte[]>
+        {
+            System.Text.Encoding.ASCII.GetBytes("<< /Type /Catalog /Pages 2 0 R >>"),
+            System.Text.Encoding.ASCII.GetBytes("<< /Type /Pages /Count 1 /Kids [3 0 R] >>"),
+            System.Text.Encoding.ASCII.GetBytes(
+                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 120] " +
+                "/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>"),
+            System.Text.Encoding.ASCII
+                .GetBytes($"<< /Length {content.Length} >>\nstream\n")
+                .Concat(content)
+                .Concat(System.Text.Encoding.ASCII.GetBytes("endstream"))
+                .ToArray(),
+            System.Text.Encoding.ASCII.GetBytes(
+                "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"),
+        };
+
+        using var ms = new MemoryStream();
+        void Write(string s) => ms.Write(System.Text.Encoding.ASCII.GetBytes(s));
+        Write("%PDF-1.4\n");
+        var offsets = new List<long>();
+        for (var i = 0; i < objects.Count; i++)
+        {
+            offsets.Add(ms.Position);
+            Write($"{i + 1} 0 obj ");
+            ms.Write(objects[i]);
+            Write("\nendobj\n");
+        }
+
+        var xref = ms.Position;
+        Write($"xref\n0 {objects.Count + 1}\n0000000000 65535 f \n");
+        foreach (var o in offsets)
+            Write($"{o:D10} 00000 n \n");
+        Write($"trailer << /Size {objects.Count + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+        return ms.ToArray();
+    }
+
+    private static bool SameBox(SKBitmap? oracle, SKBitmap ours) =>
+        oracle != null && oracle.Width == ours.Width && oracle.Height == ours.Height;
 
     private static long InkedPixels(SKBitmap bmp)
     {

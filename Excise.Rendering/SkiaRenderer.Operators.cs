@@ -309,8 +309,49 @@ internal partial class RenderContext
         }
     }
 
+    /// <summary>
+    /// The text-positioning and text-showing operators, which §9.4.1 permits
+    /// only inside a <c>BT</c> … <c>ET</c> text object — and which a
+    /// non-conformant file nonetheless emits outside one.
+    /// </summary>
+    private static bool RequiresTextObject(ContentOperatorKind kind) => kind is
+        ContentOperatorKind.MoveText or
+        ContentOperatorKind.MoveTextAndSetLeading or
+        ContentOperatorKind.SetTextMatrix or
+        ContentOperatorKind.MoveToNextTextLine or
+        ContentOperatorKind.ShowText or
+        ContentOperatorKind.ShowTextArray or
+        ContentOperatorKind.MoveToNextLineAndShowText or
+        ContentOperatorKind.SetSpacingMoveAndShowText;
+
     private void ExecuteTextOperator(ContentOperatorKind kind, IReadOnlyList<PdfObject> operands)
     {
+        // #1382 — open an implicit text object when a positioning or showing
+        // operator arrives outside one. §9.4.1 defines a text object as
+        // BT … ET and such a file is NON-CONFORMANT, so drawing nothing was
+        // defensible; but the author's intent is unambiguous (every operand is
+        // present, nothing is invented), mutool and Poppler both recover it,
+        // and excise's OWN text extractor already does — ContentStreamWalker
+        // never gated on BT, so `excise text` returned the strings for a page
+        // the renderer left blank. Measured on a minimal no-BT/ET fixture at
+        // 150 dpi: excise 0 inked px, mutool 3557, pdftocairo 3668, while
+        // `excise text` printed the string the whole time. Closing that gap
+        // makes the renderer agree with the one state machine rather than
+        // diverging from it.
+        //
+        // Deliberately NOT triggered by Tf/Tc/Tw/Tz/TL/Tr/Ts: those legally
+        // appear BETWEEN text objects in well-formed files and must stay inert,
+        // or every ordinary page would open a spurious block. Triggering on Td
+        // (not only on Tj) is load-bearing — the operand order in the wild is
+        // "Td, Tf, Tj", and opening at Tj would reset the text matrix §9.4.1
+        // requires BT to reset, discarding the offset the file just set.
+        //
+        // This is structural lenience only. It changes no buffer arithmetic and
+        // no component count, which is what keeps it safe; lenience about
+        // geometry is how recovery turns into a memory-safety bug (#1383).
+        if (!_inTextBlock && RequiresTextObject(kind))
+            BeginText();
+
         switch (kind)
         {
             case ContentOperatorKind.BeginText:
