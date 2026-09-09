@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "2da99220ad217dcfa83e915b7137f4257dae2c5e500e39dc67d49b6279eb5c65",
+  "sourceFingerprint": "25abcb67a95041ce6ed67a0a1df2a23911cf12b396030450ab584d59dcc0acdd",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -8334,6 +8334,45 @@
       "method": "ExciseDoesNotDrawWhereNoIndependentRendererDraws",
       "line": 295,
       "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/HyphenWrappedRedactionReportingTests.cs::HyphenWrappedRedactionReportingTests.AHyphenWrappedTerm_SurvivesRedaction_AndIsReportedRatherThanCalledClean",
+      "path": "Excise.Rendering.Tests/Differential/HyphenWrappedRedactionReportingTests.cs",
+      "class": "HyphenWrappedRedactionReportingTests",
+      "method": "AHyphenWrappedTerm_SurvivesRedaction_AndIsReportedRatherThanCalledClean",
+      "line": 48,
+      "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
         "differential-rendering"
@@ -36768,11 +36807,11 @@
     }
   ],
   "summary": {
-    "testMethods": 1016,
+    "testMethods": 1017,
     "facets": {
       "content-streams": 306,
       "content-strings-and-text": 6,
-      "differential-rendering": 517,
+      "differential-rendering": 518,
       "fonts": 180,
       "functions-and-shadings": 47,
       "graphics-state-and-paths": 314,
@@ -36785,7 +36824,7 @@
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 6,
       "pdf.17.content.streams:parse": 312,
-      "pdf.17.content.streams:render": 656,
+      "pdf.17.content.streams:render": 657,
       "pdf.17.content.text-state:extract": 6,
       "pdf.17.content.text-state:parse": 6,
       "pdf.17.content.text-state:render": 6,
@@ -36793,10 +36832,10 @@
       "pdf.17.graphics.color:render": 47,
       "pdf.17.graphics.fonts:extract": 180,
       "pdf.17.graphics.fonts:parse": 180,
-      "pdf.17.graphics.fonts:render": 646,
+      "pdf.17.graphics.fonts:render": 647,
       "pdf.17.graphics.images:extract": 152,
       "pdf.17.graphics.images:parse": 152,
-      "pdf.17.graphics.images:render": 621,
+      "pdf.17.graphics.images:render": 622,
       "pdf.17.graphics.paths-painting:parse": 314,
       "pdf.17.graphics.paths-painting:render": 314,
       "pdf.17.graphics.patterns-shadings:parse": 47,
@@ -36804,7 +36843,7 @@
       "pdf.17.graphics.state:parse": 314,
       "pdf.17.graphics.state:render": 314,
       "pdf.17.transparency.model:parse": 53,
-      "pdf.17.transparency.model:render": 547
+      "pdf.17.transparency.model:render": 548
     },
     "unclassified": 23,
     "allTestsMapped": true
