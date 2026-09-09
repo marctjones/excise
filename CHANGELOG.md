@@ -8,7 +8,7 @@ semantic versioning.
 
 Nothing yet.
 
-## [3.10.0] - 2026-09-09
+## [3.9.3] - 2026-09-09
 
 **Read this before upgrading from any 3.9.x build.** The `v3.9.2` git tag
 sits on a lineage that is not an ancestor of `develop` — the two histories
@@ -17,7 +17,7 @@ issues #1431/#1432/#1434 (below). Nobody currently knows why or how the
 divergence happened; it predates this release. If you consumed a package
 built from `v3.9.2` (or any earlier `v3.x` tag) and hit a regression, a
 rebuild from `v3.9.2` will still show it — the fix is here, on `develop`,
-not on that lineage. `v3.10.0` is cut directly from current `develop`.
+not on that lineage. `v3.9.3` is cut directly from current `develop`.
 
 ### Fixed — security
 - **Four real redaction-content-carrier leaks**, each independently
