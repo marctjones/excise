@@ -149,9 +149,11 @@ SavedPdfLeakScanner.FindTerm(saved, "REDACTED_TEXT").Should().BeEmpty();
 //    /ActualText — the carrier #636 was filed for — is packed into a
 //    Flate-compressed /ObjStm and is invisible to the raw scan.
 //    Note the writer deliberately keeps /Title, /Author, /Subject, /Keywords,
-//    /Creator, /Producer and /Contents OUT of object streams so they stay
-//    greppable (ContainsDocumentCarrierText) — but that list is not the same
-//    list the scrubber handles, so do not rely on it. Use the scanner (#1049).
+//    /Creator, /Producer and /Contents (ContainsDocumentCarrierText), plus
+//    AcroForm field/widget dicts and font resource dicts (IsFormFieldOrFontResource,
+//    #1431/#1432/#1434) OUT of object streams so they stay greppable — but
+//    that list is not the same list the scrubber handles, so do not rely on
+//    it. Use the scanner (#1049).
 
 // 2. INDEPENDENT EXTRACTOR — a tool that is not excise.
 MutoolTextExtractor.ExtractPage(path, page).Should().NotContain("REDACTED_TEXT");

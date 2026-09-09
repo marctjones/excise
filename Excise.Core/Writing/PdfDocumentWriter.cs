@@ -376,7 +376,8 @@ public class PdfDocumentWriter
         if (item.Object is PdfStream) return false;
         if (item.ObjectNumber == rootRef.ObjectNum) return false;
         if (item.Object is PdfDictionary dict
-            && (ContainsDocumentCarrierText(dict) || ContainsSignatureData(dict))) return false;
+            && (ContainsDocumentCarrierText(dict) || ContainsSignatureData(dict)
+                || IsFormFieldOrFontResource(dict))) return false;
         return true;
     }
 
@@ -388,6 +389,21 @@ public class PdfDocumentWriter
            || dict.GetStringOrNull("Creator") != null
            || dict.GetStringOrNull("Producer") != null
            || dict.GetStringOrNull("Contents") != null;
+
+    /// <summary>
+    /// AcroForm field/widget dictionaries (carrying <c>/TU</c>, <c>/T</c>) and
+    /// font resource dictionaries (carrying <c>/BaseFont</c>, <c>/FontName</c>)
+    /// are, like the Info-dict carriers above, exactly the content a caller
+    /// or QA tool most often inspects by scanning the saved bytes directly
+    /// rather than through a PDF parser -- see #1431/#1432/#1434, all one
+    /// root cause: these dictionaries started landing in a compressed
+    /// <c>/ObjStm</c> the moment #923 turned on object-stream compression,
+    /// and a raw-byte scan can't see into one.
+    /// </summary>
+    private static bool IsFormFieldOrFontResource(PdfDictionary dict)
+        => dict.GetNameOrNull("Subtype") == "Widget"
+           || dict.GetOptional("FT") != null
+           || dict.GetNameOrNull("Type") is "Font" or "FontDescriptor";
 
     private static bool ContainsSignatureData(PdfDictionary dict)
         => dict.GetOptional("ByteRange") != null

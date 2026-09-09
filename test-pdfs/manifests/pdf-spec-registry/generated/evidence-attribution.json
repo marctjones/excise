@@ -194,14 +194,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -1659,14 +1663,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -3124,14 +3132,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -4589,14 +4601,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -6081,14 +6097,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -7402,14 +7422,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -9005,14 +9029,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -16459,14 +16487,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -17924,14 +17956,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -19441,14 +19477,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -21062,14 +21102,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -22570,14 +22614,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -24039,14 +24087,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -25751,14 +25803,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -27250,14 +27306,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -28720,14 +28780,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -30176,14 +30240,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -31639,14 +31707,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -33138,14 +33210,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -34608,14 +34684,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -36071,14 +36151,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -44370,49 +44454,63 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_ThreeComponentUnderscoreName_ConcatenatesAll",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithUnknownComponent_ReturnsNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithDotSuffix_StripsSuffixFirstThenSplits",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_GlyphNameLiterallyCalledUnderscore_StillDirectMapsToUnderscoreChar",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_SingleUnderscoreWithNoComponents_ReturnsNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_DirectLigatureNames_StillMapToPrecomposedCodepoints",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
@@ -45846,49 +45944,63 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_ThreeComponentUnderscoreName_ConcatenatesAll",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithUnknownComponent_ReturnsNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithDotSuffix_StripsSuffixFirstThenSplits",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_GlyphNameLiterallyCalledUnderscore_StillDirectMapsToUnderscoreChar",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_SingleUnderscoreWithNoComponents_ReturnsNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_DirectLigatureNames_StillMapToPrecomposedCodepoints",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
@@ -47304,49 +47416,63 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_ThreeComponentUnderscoreName_ConcatenatesAll",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithUnknownComponent_ReturnsNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_UnderscoreNameWithDotSuffix_StripsSuffixFirstThenSplits",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_GlyphNameLiterallyCalledUnderscore_StillDirectMapsToUnderscoreChar",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_SingleUnderscoreWithNoComponents_ReturnsNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/AdobeGlyphListTests.cs::AdobeGlyphListTests.ToUnicode_DirectLigatureNames_StillMapToPrecomposedCodepoints",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Fonts/Cff2RefusalTests.cs::Cff2RefusalTests.FlippingOnlyTheMajorVersion_TurnsAGoodFontIntoARefusal",
@@ -48804,14 +48930,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -50321,14 +50451,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -51892,14 +52026,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -53357,14 +53495,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -95619,7 +95761,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
@@ -97094,7 +97238,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
@@ -98583,7 +98729,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
@@ -100100,7 +100248,9 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs::CanonicalAccentRedactionTests.RedactText_PrecomposedNeedle_RemovesDecomposedWord",
@@ -101805,6 +101955,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs::ObjectStreamGreppabilityTests.WidgetAndFieldDicts_StayOutOfObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.App.Tests/UI/FileOpsCommandTests.cs::FileOpsCommandTests.SaveFlattenedFormCopyCommand_Execute_StubbedDialog_BakesValueAndDropsAcroForm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -101878,15 +102037,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::PageOrganizationSavePersistenceTests.RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormAuthoringDrag_RealPointer_FiresFormFieldRectDrawnWithFlippedRect",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103309,6 +103459,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs::ObjectStreamGreppabilityTests.WidgetAndFieldDicts_StayOutOfObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.App.Tests/UI/FileOpsCommandTests.cs::FileOpsCommandTests.SaveFlattenedFormCopyCommand_Execute_StubbedDialog_BakesValueAndDropsAcroForm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103382,15 +103541,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::PageOrganizationSavePersistenceTests.RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormAuthoringDrag_RealPointer_FiresFormFieldRectDrawnWithFlippedRect",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -104834,6 +104984,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs::ObjectStreamGreppabilityTests.WidgetAndFieldDicts_StayOutOfObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.App.Tests/UI/FileOpsCommandTests.cs::FileOpsCommandTests.SaveFlattenedFormCopyCommand_Execute_StubbedDialog_BakesValueAndDropsAcroForm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104907,15 +105066,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::PageOrganizationSavePersistenceTests.RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormAuthoringDrag_RealPointer_FiresFormFieldRectDrawnWithFlippedRect",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -106299,6 +106449,15 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs::ObjectStreamGreppabilityTests.WidgetAndFieldDicts_StayOutOfObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.App.Tests/UI/FileOpsCommandTests.cs::FileOpsCommandTests.SaveFlattenedFormCopyCommand_Execute_StubbedDialog_BakesValueAndDropsAcroForm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -106372,15 +106531,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/PageOrganizationSavePersistenceTests.cs::PageOrganizationSavePersistenceTests.RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/PointerInteractionTests.cs::shows.FormAuthoringDrag_RealPointer_FiresFormFieldRectDrawnWithFlippedRect",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -107064,14 +107214,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -108520,14 +108674,18 @@
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.FullParse_CmOperatorItself_CarriesThePreCmCtm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
-          "recordedOutcomes": []
+          "recordedOutcomes": [
+            "Passed"
+          ]
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
@@ -114550,8 +114708,8 @@
     "gradeImplemented": 197,
     "gradeVerified": 682,
     "gradeUnknown": 19,
-    "testMethods": 6428,
-    "testMethodsWithCapabilityCandidate": 4015,
+    "testMethods": 6430,
+    "testMethodsWithCapabilityCandidate": 4017,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

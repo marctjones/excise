@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1020,
-  "indexedContentSha256": "2376d1892892fa063b1a52d090efdb7eeb32d5460b915c43c0dc11bfa231e088",
+  "indexedFileCount": 1021,
+  "indexedContentSha256": "b260414594364f9d9ab546759b05f082c5cb0f83c4d67ea1cf2697d2bb7cf7da",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -6601,6 +6601,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Writing/PdfDocumentWriter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "dictionaries",
+            "resource"
+          ]
+        },
+        {
           "path": "Excise.Rendering/ContentOperatorRoute.cs",
           "kind": "source",
           "matchedTerms": [
@@ -6653,6 +6661,14 @@
         },
         {
           "path": "Excise.Core.Tests/Text/TextExtractorTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dictionaries",
+            "resource"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs",
           "kind": "test",
           "matchedTerms": [
             "dictionaries",
@@ -6722,7 +6738,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 24
+      "candidateReferenceCount": 26
     },
     {
       "id": "pdf.17.graphics.paths-painting",
@@ -12121,6 +12137,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "form",
+            "streams"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -12138,17 +12162,9 @@
             "xobjects",
             "contentstream"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Corpus/IsartorRoundTripTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "form",
-            "streams"
-          ]
         }
       ],
-      "candidateReferenceCount": 112
+      "candidateReferenceCount": 113
     },
     {
       "id": "pdf.20.content.operators",
@@ -37665,6 +37681,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "widget",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/AnnotationAppearanceExecutionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37848,7 +37873,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 70
+      "candidateReferenceCount": 71
     },
     {
       "id": "pdf.20.annotation.subtype-002",
@@ -51853,7 +51878,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 156
+      "candidateReferenceCount": 157
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -54900,6 +54925,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Writing/PdfDocumentWriter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "acroform",
+            "fields",
+            "acroform",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering/DctImageDecoder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -55371,18 +55406,9 @@
             "policy",
             "annotation"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/AnnotationAppearanceStreamRenderTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "appearances",
-            "policy",
-            "annotation"
-          ]
         }
       ],
-      "candidateReferenceCount": 126
+      "candidateReferenceCount": 127
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -59019,6 +59045,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Writing/PdfDocumentWriter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "data",
+            "dictionaries",
+            "metadata"
+          ]
+        },
+        {
           "path": "Excise.Core/Writing/PdfObjectWriter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -59394,6 +59429,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Writing/ObjectStreamGreppabilityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "data",
+            "dictionaries"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -59425,25 +59468,9 @@
             "coordinate",
             "data"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Corpus/RedactionRegressionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "coordinate",
-            "data"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "coordinate",
-            "data"
-          ]
         }
       ],
-      "candidateReferenceCount": 141
+      "candidateReferenceCount": 143
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -59803,6 +59830,7 @@
           "kind": "source",
           "matchedTerms": [
             "byte",
+            "dictionaries",
             "permissions",
             "metadata"
           ]
@@ -60191,7 +60219,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 151
+      "candidateReferenceCount": 152
     },
     {
       "id": "pdf.17.interchange.accessibility",
