@@ -88,6 +88,13 @@
             "modes": [
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -229,6 +236,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -386,6 +400,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -541,6 +562,13 @@
             "ref": "Excise.Rendering.Tests/Differential/AnnotationStructuralOracleTests.cs::SynthesizedAppearance_HasABBoxSizedToItsRect_AsQpdfReadsIt",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -704,6 +732,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -875,6 +910,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -1042,6 +1084,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -1211,6 +1260,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -1372,6 +1428,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -1532,6 +1595,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -1707,6 +1777,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -1885,6 +1962,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -2059,6 +2143,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -2235,6 +2326,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -2336,6 +2434,13 @@
             "ref": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs::ASubtypeExciseCannotAuthor_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -2469,6 +2574,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -2641,6 +2753,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -2761,6 +2880,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -2897,6 +3023,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -3032,6 +3165,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -3152,6 +3292,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -3274,6 +3421,13 @@
             "modes": [
               "extract"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       },
@@ -3394,6 +3548,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs::RedactingTheCanary_RemovesItFromEveryCarrier_ConfirmedByQpdf",
             "modes": [
               "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]

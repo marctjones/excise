@@ -222,6 +222,13 @@
               "mutate",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
+            ]
           }
         ]
       }
@@ -300,6 +307,13 @@
             "ref": "Excise.App.Tests/UI/AnnotationDisplayControlTests.cs::RedactAnnotations_AreReportedAndNeverApplied",
             "modes": [
               "render"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]
@@ -475,6 +489,13 @@
             "ref": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs::TypedButUnauthorableSubtype_SurvivesASaveAndReload_Unchanged",
             "modes": [
               "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs::Parse_AllAnnotationSubtypes_ConfirmedByQpdf",
+            "modes": [
+              "parse"
             ]
           }
         ]

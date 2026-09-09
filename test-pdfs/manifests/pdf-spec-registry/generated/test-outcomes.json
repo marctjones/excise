@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-09T03:59:58.782670+00:00",
-  "gitRevision": "d0d743425a7944025aaabd519981520db7bc7839",
+  "recordedAt": "2026-09-09T04:11:07.509266+00:00",
+  "gitRevision": "c31fbbc2acadfd4cb3100bc6924c80a466961f6c",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -516,6 +516,11 @@
       "path": "/tmp/trx-canary/canary.trx",
       "modifiedAt": "2026-09-09T03:59:58.729796+00:00",
       "sha256": "2ca0d0c476ff58c0e5233f33993665b62b63a6996df26157ade2bebee0c5d257"
+    },
+    {
+      "path": "/tmp/trx-annotparse/ap.trx",
+      "modifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "sha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
     }
   ],
   "outcomes": [
@@ -22646,6 +22651,190 @@
       "trx": "/tmp/annotation-fixes-trx/annotation-fixes.trx",
       "resultModifiedAt": "2026-09-08T22:05:39.973991+00:00",
       "trxSha256": "7fb150759e7b0ba66e2524e2cf5f4ae8d75879137ea29b51e093c59a463b6f28"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Caret\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0110477",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Circle\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0125866",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"FileAttachment\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0135491",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"FreeText\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0114904",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Highlight\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0122367",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Ink\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0114718",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Line\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0116133",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Link\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0119234",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Movie\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0110525",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"PolyLine\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0123232",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Polygon\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0110338",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Popup\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0110043",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Redact\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0113169",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Screen\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0120598",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Sound\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0112599",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Square\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0114271",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Squiggly\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0117233",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Stamp\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0112881",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"StrikeOut\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0115509",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Text\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0120061",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Underline\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0279053",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Watermark\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0113119",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
+    },
+    {
+      "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AllAnnotationSubtypes_ConfirmedByQpdf(subtypeName: \"Widget\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0111739",
+      "trx": "/tmp/trx-annotparse/ap.trx",
+      "resultModifiedAt": "2026-09-09T04:11:07.456764+00:00",
+      "trxSha256": "621f7c6710d8db9d9f501de20905d77b5438d1783840a2158171d72b3e7bfd75"
     },
     {
       "testName": "Excise.Core.Tests.Document.PdfAnnotationParserTests.Parse_AnnotWithMissingRect_SkipsIt",
@@ -69633,12 +69822,12 @@
     }
   ],
   "summary": {
-    "trxFiles": 102,
-    "tests": 8639,
+    "trxFiles": 103,
+    "tests": 8662,
     "outcomes": {
       "Failed": 3,
       "NotExecuted": 924,
-      "Passed": 7712
+      "Passed": 7735
     },
     "status": "recorded"
   }

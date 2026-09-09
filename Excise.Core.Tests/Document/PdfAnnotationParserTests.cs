@@ -223,6 +223,111 @@ public class PdfAnnotationParserTests
         result[0].Subtype.Should().Be(expectedSubtype);
     }
 
+    /// <summary>
+    /// The differential counterpart to <see cref="Parse_AllAnnotationSubtypes"/>:
+    /// that test is excise's own <see cref="PdfAnnotationParser"/> reading a
+    /// fixture and checking its own typed result -- self-oracled. This asks
+    /// qpdf's independent JSON object dump whether an object with
+    /// <c>/Type /Annot /Subtype /{name}</c> exists at all, confirming excise
+    /// recognized a real, independently-readable subtype name rather than
+    /// excise's parser and excise's fixture builder simply agreeing with
+    /// each other on a string neither validated against anything else.
+    /// </summary>
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("Link")]
+    [InlineData("FreeText")]
+    [InlineData("Line")]
+    [InlineData("Square")]
+    [InlineData("Circle")]
+    [InlineData("Polygon")]
+    [InlineData("PolyLine")]
+    [InlineData("Highlight")]
+    [InlineData("Underline")]
+    [InlineData("Squiggly")]
+    [InlineData("StrikeOut")]
+    [InlineData("Stamp")]
+    [InlineData("Caret")]
+    [InlineData("Ink")]
+    [InlineData("Popup")]
+    [InlineData("FileAttachment")]
+    [InlineData("Sound")]
+    [InlineData("Movie")]
+    [InlineData("Widget")]
+    [InlineData("Screen")]
+    [InlineData("Watermark")]
+    [InlineData("Redact")]
+    public void Parse_AllAnnotationSubtypes_ConfirmedByQpdf(string subtypeName)
+    {
+        var qpdf = FindQpdf();
+        Assert.SkipUnless(qpdf is not null, "qpdf not on PATH");
+
+        var annotsDef = $@"[<< /Type /Annot /Subtype /{subtypeName} /Rect [0 0 100 20] >>]";
+        var pdf = MakePdfWithAnnots(annotsDef);
+
+        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        var result = PdfAnnotationParser.Parse(doc, doc.GetPage(1).Dictionary, new(), null);
+        result.Should().HaveCount(1, "guard: excise's own parser must find exactly one annotation");
+
+        QpdfSeesAnnotSubtype(qpdf!, pdf, subtypeName).Should().BeTrue(
+            $"qpdf's own decoded view of the fixture must also show a /Annot with /Subtype /{subtypeName} " +
+            "-- confirming the fixture (and so excise's recognition of it) is genuine, not merely " +
+            "self-consistent with excise's own parser");
+    }
+
+    private static string? FindQpdf()
+    {
+        var envPath = System.Environment.GetEnvironmentVariable("PATH") ?? "";
+        foreach (var dir in envPath.Split(System.IO.Path.PathSeparator))
+        {
+            var candidate = System.IO.Path.Combine(dir, "qpdf");
+            if (System.IO.File.Exists(candidate)) return candidate;
+        }
+        return null;
+    }
+
+    /// <summary>Whether qpdf's own decompressed QDF-mode view of the file
+    /// contains both <c>/Type /Annot</c> and <c>/Subtype /{subtypeName}</c>.
+    /// Text-substring, not object-tree JSON walking: the fixture nests the
+    /// annotation dictionary INLINE in the page's /Annots array rather than
+    /// as its own indirect object (confirmed directly -- qpdf's
+    /// <c>--json=1 --json-key=objects</c> mode only enumerates top-level
+    /// indirect objects and reported zero matches for every subtype on the
+    /// first draft of this test, including the simplest cases, which is
+    /// what surfaced this), so an object-by-object walk of that JSON never
+    /// sees it; --qdf's plain-text dump renders inline values too.</summary>
+    private static bool QpdfSeesAnnotSubtype(string qpdfPath, byte[] pdfBytes, string subtypeName)
+    {
+        var tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"excise-annotparse-qpdf-{System.Guid.NewGuid():N}.pdf");
+        System.IO.File.WriteAllBytes(tempFile, pdfBytes);
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo(qpdfPath)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            psi.ArgumentList.Add("--qdf");
+            psi.ArgumentList.Add("--object-streams=disable");
+            psi.ArgumentList.Add(tempFile);
+            psi.ArgumentList.Add("-");
+
+            using var proc = System.Diagnostics.Process.Start(psi)!;
+            var stdout = proc.StandardOutput.ReadToEnd();
+            proc.StandardError.ReadToEnd();
+            proc.WaitForExit(30_000);
+
+            return stdout.Contains("/Type /Annot", System.StringComparison.Ordinal) &&
+                   stdout.Contains($"/Subtype /{subtypeName}", System.StringComparison.Ordinal);
+        }
+        finally
+        {
+            try { System.IO.File.Delete(tempFile); } catch { /* best effort */ }
+        }
+    }
+
     [Fact]
     public void Parse_UnknownSubtype_ParsedAsUnknown()
     {
