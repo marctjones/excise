@@ -4,6 +4,61 @@ All notable changes to excise are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [Unreleased]
+
+Milestone **P1.1 — Redaction correctness: geometry, leaks, and fail-open
+safety**.
+
+### Fixed
+- **The TJ array adjustment was applied raw instead of composed through the
+  text matrix** (#1391) — §9.4.3's horizontal branch did `_tm_e -= tx` with no
+  `·_tm_a` and no effect on `_tm_f`, three lines below an already-correct
+  §9.4.4 glyph advance. This is the surviving branch of the defect #942 fixed
+  for §9.4.2 line stepping, and because `ContentStreamWalker` is the single
+  state machine behind both sinks, it displaced the letter stream `RedactText`
+  matches on and the operator bounds `GlyphRemover` removes on together.
+  Every TJ-kerned document under a scaled `Tm` — most professionally typeset
+  PDFs — had systematically misplaced letters. Measured against mutool on a
+  scale-10 fixture: excise placed the kerned glyphs at 26.2/32.4 where mutool
+  and the spec say 17.22/14.44, wrong by the matrix factor and marching in the
+  opposite direction; under a rotated matrix it moved the wrong axis entirely.
+  Extraction parity holds at 100.0% aggregate over 332 pages and the
+  collateral ratchets are unchanged.
+- **The saved-PDF leak scanner scanned the trailer `/ID`** (#1295) — a random
+  16-byte file identifier written as uppercase hex, which no page text can
+  leak into, so a short ASCII needle collided with it and made short-term
+  redaction assertions intermittently red (observed four times with a provably
+  clean redacted page). The exclusion existed before and #1049's migration
+  dropped it; it is now one shared policy applied by both scanner entry
+  points, scoped to the `/ID` array only so a hex string in a content stream
+  is still scanned.
+
+### Added
+- **Safe-redacted-copy refusal for unresolved `/Redact` annotations** (#1430)
+  — the `redactionReviewDrafts.safeRedactedCopy` product-policy rule was
+  unimplemented, so excise would produce output treated as safely redacted
+  while content a reviewer had explicitly flagged was still fully present.
+  Enforced in the shared `RedactedCopySafetyPolicy` — the one place the GUI,
+  scripting and CLI surfaces all route through — as a typed refusal, so a
+  surface added later cannot fail open. The check runs before the policy
+  mutates anything, so a refusal never leaves a half-scrubbed document.
+- **Hyphen-wrapped occurrences are now reported instead of silently missed**
+  (#1372) — a term wrapped across a line (`Ander-` / `son`) is never matched
+  and never removed, and excise used to report a clean success over it. It is
+  now surfaced in `RedactionReport` and printed by the CLI, and
+  `IsCleanSuccess` is false while any remain. Removal behaviour is unchanged:
+  the redacted output is byte-identical to before. **This does not close the
+  leak** — joining across the break makes a match span two lines and its
+  removal box destroy everything between them (#942), so a real fix needs a
+  wrapped match to produce two boxes, one per line. #1372 stays open.
+
+### Notes
+- #1180 (unredact certain channel missing visible-but-readable failed
+  redactions) does not reproduce and was closed. Its reopened symptom —
+  inverted-box 0/8 — was a test-harness defect fixed by #1361; re-measured
+  2026-09-09 the channel recovers occluded 16/16 and inverted-box 8/8, against
+  the x-ray reference's 8/32 overall.
+
 ## [3.9.4] - 2026-09-09
 
 **Corrects [3.9.3]'s "Closed as not-reproducing" entry below for
