@@ -4,7 +4,53 @@ All notable changes to excise are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
-## [Unreleased]
+## [3.9.4] - 2026-09-09
+
+**Corrects [3.9.3]'s "Closed as not-reproducing" entry below for
+#1431/#1432/#1434.** Those three genuinely do not reproduce on the `v3.9.3`
+*sample* that was checked before closing — but that check used a lower-level
+API entry point than the one the actual failing tests exercise. Reopened
+after re-verification against a package built from `v3.9.3` itself (not the
+orphaned `v3.9.2` lineage) using the exact call pattern the original reports
+used, and this time it reproduced. Root cause and fix below. If you're
+reading the [3.9.3] entry first: skip its "Closed as not-reproducing" note
+for these three, the entry here is the current, accurate one.
+
+### Fixed
+- **`/TU` tooltip, embedded font name, and `/Widget` annotations invisible
+  to a raw-byte scan of the saved file** (#1431/#1432/#1434, one root
+  cause). #923 (this changelog's own [3.9.2] era) turned on PDF
+  object-stream compression by default for any PDF 1.5+, unencrypted,
+  non-PDF/A-1 save, and already carved out `/Title`/`/Author`/`/Subject`/
+  etc. so those stay out of a compressed `/ObjStm` and remain findable by a
+  plain grep — but did not extend that carve-out to AcroForm field/widget
+  dictionaries or font dictionaries, so those started landing in a
+  compressed container. Not a data-loss bug — `qpdf --qdf` always showed
+  the data — but invisible to exactly the kind of raw-byte inspection a
+  downstream consumer's own test suite (and any external QA tooling) is
+  liable to do. Fixed in two passes: first by dictionary type/subtype
+  markers, then hardened to match by carrier key presence (`/T`, `/TU`,
+  `/BaseFont`, `/FontName`) after that first pass was found to still miss a
+  non-terminal AcroForm field-tree node (§12.7.3.2 — real, not
+  hypothetical: 30 such nodes in the `irs-1040.pdf` smoke fixture alone)
+  and a font dictionary lacking `/Type /Font`.
+- **The size-budget gate didn't watch its own worst case.**
+  `Pdf15Save_SmokeCorpusCompressedOutputStaysUnderSourceSizeBudget` held
+  three fixtures to a 1.20 compressed/source-size ratio, but the fixture
+  most affected by the fix above — `irs-1040.pdf`, the corpus's most
+  form-heavy document — wasn't in the list, and had silently reached 1.33×
+  once the AcroForm carve-out landed. Added to the gate with its own,
+  wider 1.40 budget (a form-heavy document costing more for greppability
+  is accepted; both budgets stay far below the 2.05×–2.79× inflation #923
+  itself measured pre-compression).
+- **No packable project shipped its XML doc file.** `Excise.Core`,
+  `Excise.Rendering`, and `Excise.Avalonia` now set
+  `GenerateDocumentationFile`, so a `///` comment actually reaches a NuGet
+  consumer's IntelliSense instead of being silently dropped at compile
+  time. Turning this on for real surfaced ~200 pre-existing malformed doc
+  comments and ~745 missing ones in `Excise.Core` alone (mostly
+  `///`-on-a-primary-constructor-parameter, never a valid placement) —
+  suppressed for now, tracked as #1440, not fixed in this release.
 
 ### Added
 - **`ContentTransform.TransformPoint(x, y)` is public** (#1436), a follow-up to
@@ -12,6 +58,20 @@ semantic versioning.
   that applies the matrix was `internal`, so every caller resolving page-space
   coordinates from `ContentOperator.GraphicsTransform` had to reimplement
   `(x·A + y·C + E, x·B + y·D + F)` itself.
+
+### Investigated, no code change
+- **#1437** (direct embedded-image extraction, for OCR input) — measured
+  rather than assumed: `SkiaRenderer.RenderPage()` is bit-exact at a scanned
+  page's native resolution (120,000/120,000 pixels identical, max
+  per-channel delta 0, across RGB/1-bpc-bilevel/DCT fixtures), and that
+  resolution is derivable from existing public API
+  (`page.GetXObject(name).GetInt("Width")`). A separate extraction API
+  would return bytes `RenderPage()` already returns. Closed as moot, with
+  the derivation recipe and pinning tests
+  (`FullPageImageRenderFidelityTests`) so a future regression here fails
+  loudly. Below 1:1 the pipeline point-samples rather than resamples, and
+  that minification behavior differs by image codec — filed separately as
+  #1438, not a regression, not yet a confirmed defect.
 
 ## [3.9.3] - 2026-09-09
 
