@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "9b4b551d591dc58a36fd5bc8dce33cd8465f7793b581120085f3f114e7ddf48d",
+  "sourceFingerprint": "2da99220ad217dcfa83e915b7137f4257dae2c5e500e39dc67d49b6279eb5c65",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -20611,6 +20611,144 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs::FullPageImageRenderFidelityTests.FullPageRgbImage_RenderedAtItsNativeResolution_IsPixelIdenticalToTheSourceBytes",
+      "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
+      "class": "FullPageImageRenderFidelityTests",
+      "method": "FullPageRgbImage_RenderedAtItsNativeResolution_IsPixelIdenticalToTheSourceBytes",
+      "line": 99,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs::FullPageImageRenderFidelityTests.FullPageBilevelImage_RenderedAtItsNativeResolution_IsPixelIdenticalToTheSourceBytes",
+      "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
+      "class": "FullPageImageRenderFidelityTests",
+      "method": "FullPageBilevelImage_RenderedAtItsNativeResolution_IsPixelIdenticalToTheSourceBytes",
+      "line": 127,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs::FullPageImageRenderFidelityTests.FullPageImage_RenderedBelowItsNativeResolution_IsPointSampled_NotAveraged",
+      "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
+      "class": "FullPageImageRenderFidelityTests",
+      "method": "FullPageImage_RenderedBelowItsNativeResolution_IsPointSampled_NotAveraged",
+      "line": 200,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs::FullPageImageRenderFidelityTests.FullPageJpegImage_RenderedAtItsNativeResolution_AddsNothingOnTopOfTheDecode",
+      "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
+      "class": "FullPageImageRenderFidelityTests",
+      "method": "FullPageJpegImage_RenderedAtItsNativeResolution_AddsNothingOnTopOfTheDecode",
+      "line": 261,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs::FullPageImageRenderFidelityTests.Minification_IsDoneByTheDecoder_NotBySkiasBitmapDraw",
+      "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
+      "class": "FullPageImageRenderFidelityTests",
+      "method": "Minification_IsDoneByTheDecoder_NotBySkiasBitmapDraw",
+      "line": 347,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs::FullPageImageRenderFidelityTests.NativePixelSize_IsDiscoverableThroughPublicApi_AndYieldsTheBitExactRender",
+      "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
+      "class": "FullPageImageRenderFidelityTests",
+      "method": "NativePixelSize_IsDiscoverableThroughPublicApi_AndYieldsTheBitExactRender",
+      "line": 401,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/GlyphOutlineCacheTests.cs::GlyphOutlineCacheTests.RepeatedGlyphsAreTessellatedOnceAndReused",
       "path": "Excise.Rendering.Tests/GlyphOutlineCacheTests.cs",
       "class": "GlyphOutlineCacheTests",
@@ -36630,7 +36768,7 @@
     }
   ],
   "summary": {
-    "testMethods": 1010,
+    "testMethods": 1016,
     "facets": {
       "content-streams": 306,
       "content-strings-and-text": 6,
@@ -36638,7 +36776,7 @@
       "fonts": 180,
       "functions-and-shadings": 47,
       "graphics-state-and-paths": 314,
-      "images": 146,
+      "images": 152,
       "page-group-backdrop": 3,
       "renderer-integration-general": 23,
       "renderer-performance-and-lifetime": 12,
@@ -36656,9 +36794,9 @@
       "pdf.17.graphics.fonts:extract": 180,
       "pdf.17.graphics.fonts:parse": 180,
       "pdf.17.graphics.fonts:render": 646,
-      "pdf.17.graphics.images:extract": 146,
-      "pdf.17.graphics.images:parse": 146,
-      "pdf.17.graphics.images:render": 615,
+      "pdf.17.graphics.images:extract": 152,
+      "pdf.17.graphics.images:parse": 152,
+      "pdf.17.graphics.images:render": 621,
       "pdf.17.graphics.paths-painting:parse": 314,
       "pdf.17.graphics.paths-painting:render": 314,
       "pdf.17.graphics.patterns-shadings:parse": 47,
