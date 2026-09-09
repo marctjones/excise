@@ -377,7 +377,7 @@ public class PdfDocumentWriter
         if (item.ObjectNumber == rootRef.ObjectNum) return false;
         if (item.Object is PdfDictionary dict
             && (ContainsDocumentCarrierText(dict) || ContainsSignatureData(dict)
-                || IsFormFieldOrFontResource(dict))) return false;
+                || ContainsFormFieldOrFontCarrierText(dict))) return false;
         return true;
     }
 
@@ -391,7 +391,7 @@ public class PdfDocumentWriter
            || dict.GetStringOrNull("Contents") != null;
 
     /// <summary>
-    /// AcroForm field/widget dictionaries (carrying <c>/TU</c>, <c>/T</c>) and
+    /// AcroForm field/widget dictionaries (carrying <c>/T</c>, <c>/TU</c>) and
     /// font resource dictionaries (carrying <c>/BaseFont</c>, <c>/FontName</c>)
     /// are, like the Info-dict carriers above, exactly the content a caller
     /// or QA tool most often inspects by scanning the saved bytes directly
@@ -399,9 +399,56 @@ public class PdfDocumentWriter
     /// root cause: these dictionaries started landing in a compressed
     /// <c>/ObjStm</c> the moment #923 turned on object-stream compression,
     /// and a raw-byte scan can't see into one.
+    ///
+    /// <para>Matched by CARRIER KEY PRESENCE, deliberately mirroring
+    /// <see cref="ContainsDocumentCarrierText"/>, rather than by the
+    /// dictionary's <c>/Type</c>/<c>/Subtype</c>/<c>/FT</c> structural markers.
+    /// Matching on type markers alone misses two shapes that occur in real
+    /// documents, both verified by reproduction:</para>
+    /// <list type="bullet">
+    /// <item>A NON-TERMINAL AcroForm field node. ISO 32000-2 §12.7.3.2 puts the
+    /// field type on the terminal leaf and lets ancestors inherit it, so a
+    /// parent node legitimately carries <c>/T</c> and <c>/TU</c> alongside
+    /// <c>/Kids</c> with no <c>/FT</c> and no <c>/Subtype /Widget</c>. Measured
+    /// on the smoke corpus: 6 such nodes in irs-w4, 4 in irs-w9, 30 in
+    /// irs-1040, 2 in state-ds11, 4 in state-ds82.
+    /// <see cref="Redaction.PdfDocumentSanitizer"/> walks <c>/Kids</c> by hand
+    /// for this same shape, for the same reason.</item>
+    /// <item>A font dictionary with no <c>/Type /Font</c>. The key is routinely
+    /// absent in permissive real-world files, leaving <c>/BaseFont</c> as the
+    /// only font identity in the dictionary.</item>
+    /// </list>
+    ///
+    /// <para>Bare <c>/T</c> is matched even though the key is overloaded, in
+    /// two other places. §12.5.6.2 Table 170 gives every MARKUP annotation a
+    /// <c>/T</c> title, but those are already excluded by
+    /// <see cref="ContainsDocumentCarrierText"/> because they carry
+    /// <c>/Contents</c> too, so they cost nothing new. §14.7.2 Table 355 also
+    /// gives a STRUCTURE ELEMENT an optional <c>/T</c> title, and those do NOT
+    /// carry <c>/Contents</c> — so they are genuinely newly excluded here.
+    /// Measured, that is still cheap: irs-1040-instructions.pdf (tagged) is
+    /// byte-for-byte unchanged by this predicate (ratio 1.1261 before and
+    /// after), i.e. titled structure elements are rare in practice. A heavily
+    /// titled tagged PDF would pay more; keeping StructElems greppable is
+    /// arguably a bonus, since the structure tree is the #636 /ActualText
+    /// carrier. Overall, bare <c>/T</c> excludes only 5 dictionaries (~220 B)
+    /// beyond a field-scoped variant on irs-w4, the tightest size-budget
+    /// fixture. Over-excluding costs
+    /// uncompressed bytes and nothing else -- greppability is a convenience for
+    /// external inspection, not a security boundary -- so the simpler
+    /// key-presence rule wins over a narrower one that has to guess at what
+    /// "looks like" a field node. The byte cost is pinned by
+    /// <c>Pdf15Save_SmokeCorpusCompressedOutputStaysUnderSourceSizeBudget</c>.</para>
     /// </summary>
-    private static bool IsFormFieldOrFontResource(PdfDictionary dict)
-        => dict.GetNameOrNull("Subtype") == "Widget"
+    private static bool ContainsFormFieldOrFontCarrierText(PdfDictionary dict)
+        => dict.GetOptional("T") != null
+           || dict.GetOptional("TU") != null
+           || dict.GetOptional("BaseFont") != null
+           || dict.GetOptional("FontName") != null
+           // Structural markers as well, so a widget with neither /T nor /TU,
+           // or a descriptor whose /FontName is an indirect reference, is still
+           // kept out. These are what #1431/#1432/#1434 originally shipped.
+           || dict.GetNameOrNull("Subtype") == "Widget"
            || dict.GetOptional("FT") != null
            || dict.GetNameOrNull("Type") is "Font" or "FontDescriptor";
 

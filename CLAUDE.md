@@ -150,10 +150,16 @@ SavedPdfLeakScanner.FindTerm(saved, "REDACTED_TEXT").Should().BeEmpty();
 //    Flate-compressed /ObjStm and is invisible to the raw scan.
 //    Note the writer deliberately keeps /Title, /Author, /Subject, /Keywords,
 //    /Creator, /Producer and /Contents (ContainsDocumentCarrierText), plus
-//    AcroForm field/widget dicts and font resource dicts (IsFormFieldOrFontResource,
-//    #1431/#1432/#1434) OUT of object streams so they stay greppable — but
-//    that list is not the same list the scrubber handles, so do not rely on
-//    it. Use the scanner (#1049).
+//    AcroForm field/widget dicts and font dicts — matched by CARRIER KEY
+//    presence: /T, /TU, /BaseFont, /FontName, with /FT, /Subtype /Widget and
+//    /Type /Font|/FontDescriptor as extra structural catches
+//    (ContainsFormFieldOrFontCarrierText, #1431/#1432/#1434) — OUT of object
+//    streams so they stay greppable. Key presence, not type markers: a
+//    NON-TERMINAL field node (§12.7.3.2 — /T+/TU+/Kids, no /FT, no
+//    /Subtype /Widget; 6 of them in irs-w4, 30 in irs-1040) and a font dict
+//    with no /Type both slip a type-marker test. But that list is not the
+//    same list the scrubber handles, so do not rely on it. Use the scanner
+//    (#1049).
 
 // 2. INDEPENDENT EXTRACTOR — a tool that is not excise.
 MutoolTextExtractor.ExtractPage(path, page).Should().NotContain("REDACTED_TEXT");
