@@ -633,17 +633,35 @@ public class PdfDocumentWriterTests
         reopened.GetPage(1).Text.Should().NotBeNullOrWhiteSpace();
     }
 
+    /// <summary>
+    /// #1439: the budget used to hold every gated fixture to the same 1.20
+    /// line, but that line was chosen looking at a fixture set that happened
+    /// not to include the corpus's most form-heavy document. irs-1040.pdf
+    /// carries 30 non-terminal AcroForm field nodes (the shape #1431's fix
+    /// keeps out of /ObjStm for greppability, ISO 32000-2 §12.7.3.2) and sits
+    /// at ~1.33x -- already over 1.20 -- entirely unwatched, because it
+    /// wasn't in the array. A form-heavy document paying more for the
+    /// greppability carve-out is an accepted, deliberate tradeoff (#1431's
+    /// commit message: "greppability... costs uncompressed bytes and
+    /// nothing else"), not a bug to chase back down -- so it gets its own,
+    /// wider budget rather than either silently going unwatched or forcing
+    /// the general 1.20 line up for every fixture. Both budgets stay far
+    /// below the pre-#923 baseline this gate exists to guard against: #923
+    /// itself measured irs-1040.pdf at 2.05x before object-stream
+    /// compression existed at all.
+    /// </summary>
+    private static readonly (string Fixture, double Budget)[] SmokeCorpusSizeBudgetFixtures =
+    [
+        ("../../../../test-pdfs/smoke/irs-w4.pdf", 1.20),
+        ("../../../../test-pdfs/smoke/irs-w9.pdf", 1.20),
+        ("../../../../test-pdfs/smoke/scotus-trump-v-anderson.pdf", 1.20),
+        ("../../../../test-pdfs/smoke/irs-1040.pdf", 1.40),
+    ];
+
     [Fact]
     public void Pdf15Save_SmokeCorpusCompressedOutputStaysUnderSourceSizeBudget()
     {
-        var fixtures = new[]
-        {
-            "../../../../test-pdfs/smoke/irs-w4.pdf",
-            "../../../../test-pdfs/smoke/irs-w9.pdf",
-            "../../../../test-pdfs/smoke/scotus-trump-v-anderson.pdf",
-        };
-
-        foreach (var fixture in fixtures)
+        foreach (var (fixture, budget) in SmokeCorpusSizeBudgetFixtures)
         {
             Assert.SkipWhen(!File.Exists(fixture), $"smoke fixture not available: {fixture}");
             using var source = PdfDocument.Open(fixture);
@@ -652,7 +670,7 @@ public class PdfDocumentWriterTests
             var ratio = saved.Length / (double)new FileInfo(fixture).Length;
 
             Encoding.Latin1.GetString(saved).Should().Contain("/Type /ObjStm");
-            ratio.Should().BeLessThan(1.20,
+            ratio.Should().BeLessThan(budget,
                 $"{Path.GetFileName(fixture)} should not regress toward the pre-#923 daily-driver file-size inflation");
         }
     }
