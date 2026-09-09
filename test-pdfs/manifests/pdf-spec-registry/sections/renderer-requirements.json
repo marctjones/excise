@@ -1679,8 +1679,22 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::StructElementCount_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::ExtractedLetters_CarryTheMcidOfTheirMarkedContentSpan",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::StructElementCount_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
             ]

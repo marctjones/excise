@@ -1039,6 +1039,20 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OcgCount_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OcgCount_SurvivesAnOpenSaveRoundTrip",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
             "kind": "corpus",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
             "modes": [

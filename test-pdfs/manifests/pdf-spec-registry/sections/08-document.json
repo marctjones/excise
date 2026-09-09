@@ -107,6 +107,13 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::PageCount_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::InheritedRotateAndResources_SurviveASaveAndReparse_StillResolveOnLeaves",
             "modes": [
@@ -246,6 +253,20 @@
             "ref": "Excise.Core.Tests/Document/NamedDestinationTests.cs::GetNamedDestinations_OldFormDests_ParsesCorrectly",
             "modes": [
               "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OutlineItemCount_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OutlineItemCount_SurvivesAnOpenSaveRoundTrip",
+            "modes": [
+              "preserve"
             ]
           },
           {

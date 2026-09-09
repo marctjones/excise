@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1012,
-  "indexedContentSha256": "497b568e3a51b7cd91a62c8a4211eacee98fa75d1ce5297c19365cfea3b724b3",
+  "indexedFileCount": 1013,
+  "indexedContentSha256": "52c071f8361242de9eb6a52aeb0da70e79d764a30f7f3bffffaa50a0aa6ca605",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -2962,6 +2962,13 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::PageCount_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::InheritedRotateAndResources_SurviveASaveAndReparse_StillResolveOnLeaves",
             "modes": [
@@ -3886,6 +3893,20 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OutlineItemCount_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OutlineItemCount_SurvivesAnOpenSaveRoundTrip",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/NamedDestinationTests.cs::GetNamedDestinations_RoundTrip_LegacyDests_SurvivesSaveAndReopen",
             "modes": [
@@ -4407,6 +4428,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "navigation",
+            "outlines",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
           "kind": "test",
           "matchedTerms": [
@@ -4721,20 +4751,9 @@
             "viewer",
             "catalog"
           ]
-        },
-        {
-          "path": "tests/corpus-expectations-pdfium.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "labels",
-            "named",
-            "outlines",
-            "viewer",
-            "catalog"
-          ]
         }
       ],
-      "candidateReferenceCount": 88
+      "candidateReferenceCount": 89
     },
     {
       "id": "pdf.17.document.metadata",
@@ -7323,7 +7342,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 442
+      "candidateReferenceCount": 443
     },
     {
       "id": "pdf.17.graphics.color",
@@ -20394,8 +20413,22 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::StructElementCount_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::ExtractedLetters_CarryTheMcidOfTheirMarkedContentSpan",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::StructElementCount_SurvivesAnOpenSaveRoundTrip",
             "modes": [
               "preserve"
             ]
@@ -52927,6 +52960,20 @@
             ]
           },
           {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OcgCount_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OcgCount_SurvivesAnOpenSaveRoundTrip",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
             "kind": "corpus",
             "ref": "Excise.Rendering.Tests/SkiaRendererTests.cs::RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
             "modes": [
@@ -52993,6 +53040,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "groups",
+            "optional-content"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -53013,7 +53068,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 7
+      "candidateReferenceCount": 8
     },
     {
       "id": "pdf.17.multimedia.media",
@@ -55242,7 +55297,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 308
+      "candidateReferenceCount": 309
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -57503,7 +57558,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 459
+      "candidateReferenceCount": 460
     },
     {
       "id": "pdf.20.extension.developer",

@@ -17694,10 +17694,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::PageCount_MatchesQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": [
         "open"
       ]
@@ -20708,10 +20715,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OutlineItemCount_MatchesQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -20750,6 +20764,13 @@
       ],
       "explicitContracts": [
         {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OutlineItemCount_SurvivesAnOpenSaveRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "kind": "unit",
           "ref": "Excise.Core.Tests/Document/NamedDestinationTests.cs::GetNamedDestinations_RoundTrip_LegacyDests_SurvivesSaveAndReopen",
           "recordedOutcomes": [
@@ -20772,7 +20793,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -65152,10 +65173,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::StructElementCount_MatchesQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -65181,10 +65209,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::StructElementCount_SurvivesAnOpenSaveRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -77473,6 +77508,69 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.PageCount_MatchesQpdf",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.OutlineItemCount_MatchesQpdf",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.OutlineItemCount_SurvivesAnOpenSaveRoundTrip",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.OcgCount_MatchesQpdf",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.OcgCount_SurvivesAnOpenSaveRoundTrip",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.StructElementCount_MatchesQpdf",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.StructElementCount_SurvivesAnOpenSaveRoundTrip",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/EncryptedCorpusPasswordCoverageTests.cs::was.EveryEncryptedFixture_EitherOpensFreely_OrHasAKnownPassword",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -77961,69 +78059,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/FlattenOcrRedactionTests.cs::FlattenOcrRedactionTests.FlattenOcr_RemovesImageBakedTerm_FromIndependentTextAndVisualOracles",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FormOutputFidelityTests.FlattenedTextField_ValueIsBakedIntoPageContent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FormOutputFidelityTests.FlattenedTextField_RendersInGhostscriptToo",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FormOutputFidelityTests.FlattenedCheckbox_CheckmarkIsVisible",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FormOutputFidelityTests.InteractiveFilledTextField_IsShownByViewersThatHonorNeedAppearances",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs::FormOutputFidelityTests.FlattenedMultilineValue_StaysInsideItsFieldBox",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs::FreeTextContentSynthesisTests.FreeTextWithDa_DrawsItsContentsText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs::FreeTextContentSynthesisTests.FreeTextWithDa_TextIsMoreThanJustTheBorder",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -102162,10 +102197,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OcgCount_MatchesQpdf",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -102186,6 +102228,13 @@
       ],
       "explicitContracts": [
         {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::OcgCount_SurvivesAnOpenSaveRoundTrip",
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
           "kind": "unit",
           "ref": "Excise.Core.Tests/Document/PdfOcgTests.cs::OptionalContentGroupConfig_SurvivesASaveAndReloadUnchanged",
           "recordedOutcomes": [
@@ -102194,7 +102243,7 @@
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -110217,11 +110266,11 @@
     "modesWithExplicitContracts": 879,
     "modesWithPassingExplicitContracts": 878,
     "modesWithRecordedPassingCandidate": 644,
-    "gradeImplemented": 779,
-    "gradeVerified": 100,
+    "gradeImplemented": 772,
+    "gradeVerified": 107,
     "gradeUnknown": 19,
-    "testMethods": 6348,
-    "testMethodsWithCapabilityCandidate": 3934,
+    "testMethods": 6355,
+    "testMethodsWithCapabilityCandidate": 3941,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
