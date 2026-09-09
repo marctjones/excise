@@ -48,7 +48,14 @@ internal partial class RenderContext
                 ExecuteGraphicsStateOperator(route.Kind, op);
                 break;
             case ContentOperatorFamily.Color:
-                ExecuteColorOperator(route.Kind, op.Operands);
+                // Inside an uncoloured (PaintType 2) tiling pattern the cell
+                // has no colour of its own (§8.7.3.3) -- the tint from the
+                // selecting `scn` is already in the state, and any colour
+                // operator the cell emits is a spec violation that gs and
+                // mutool both ignore. See GraphicsState.SuppressColorOperators
+                // (#1373).
+                if (!_state.SuppressColorOperators)
+                    ExecuteColorOperator(route.Kind, op.Operands);
                 break;
             case ContentOperatorFamily.Path:
                 ExecutePathOperator(route.Kind, op.Operands);

@@ -21,6 +21,28 @@ internal class GraphicsState
     public string FillColorSpace { get; set; } = "DeviceGray";
     public string StrokeColorSpace { get; set; } = "DeviceGray";
     public string? FillPatternName { get; set; }
+
+    /// <summary>
+    /// Set while the content stream of an UNCOLOURED (PaintType 2) tiling
+    /// pattern is executing. ISO 32000-2 §8.7.3.3: "The pattern's content
+    /// stream shall not explicitly specify any colours" — the colour comes
+    /// from the operands of the <c>scn</c> that selected the pattern, in the
+    /// Pattern space's underlying colour space. Real producers violate that
+    /// "shall not" anyway (veraPDF 6-2-4-3-t02-pass-d sets
+    /// <c>/DeviceCMYK cs 0.6875 0.765625 0.8671875 0 sc</c> inside the cell),
+    /// so a reader that honours those operators paints the pattern's own
+    /// colour instead of the tint. Ghostscript and mutool both ignore them;
+    /// excise and pdftocairo did not, which is what made that page render
+    /// brown where the tint says cyan (#1373).
+    ///
+    /// Lives on the graphics state rather than on the render context so it
+    /// survives the cell content's own <c>q</c>/<c>Q</c> (Clone copies it),
+    /// reaches the child context that records a repeated cell
+    /// (<c>RenderRepeatedComposedTilingPatternCell</c> clones this state),
+    /// and clears itself when <c>RenderTilingPattern</c> restores the state
+    /// it saved before entering the pattern.
+    /// </summary>
+    public bool SuppressColorOperators { get; set; }
     // Overprint control (ISO 32000-1 §8.6.7, ExtGState /OP, /op, /OPM — #634).
     // OP gates strokes, op gates fills; OPM 1 ("nonzero overprint mode") makes
     // a zero DeviceCMYK source component leave that colorant of the backdrop
@@ -62,6 +84,7 @@ internal class GraphicsState
             FillColorSpace = FillColorSpace,
             StrokeColorSpace = StrokeColorSpace,
             FillPatternName = FillPatternName,
+            SuppressColorOperators = SuppressColorOperators,
             StrokeOverprint = StrokeOverprint,
             FillOverprint = FillOverprint,
             OverprintMode = OverprintMode,

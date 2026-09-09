@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-reference-tool-evidence.py",
   "policy": "This records executable/version availability only. It does not run PDFs, establish conformance, or turn a reference renderer into an oracle without a named fixture/test contract.",
-  "recordedAt": "2026-09-09T19:12:41.468822+00:00",
+  "recordedAt": "2026-09-09T19:29:11.899969+00:00",
   "tools": [
     {
       "id": "mupdf-mutool",
@@ -128,10 +128,10 @@
       "limitations": [
         "needs a real JRE; the macOS system java stub reports 'Unable to locate a Java Runtime' even though `which java` resolves"
       ],
-      "status": "available",
-      "exitCode": 0,
-      "version": "Manifest-Version: 1.0",
-      "output": "Manifest-Version: 1.0\nBuild-Jdk-Spec: 1.8\nBundle-Description: The Apache Software Foundation provides support fo\n r the Apache community of open-source software projects.    The Apach\n e projects are characterized by a collaborative, consensus based deve\n lopment process, an open and    pragmatic software license, and a des\n ire to create high quality software that leads the way in its field. \n    We consider ourselves not simply a group of projects sharing a ser\n ver, but rather a community of developers    and users.\nBundle-DocURL: https://www.apache.org/pdfbox-parent/pdfbox-app/\nBundle-License: https://www.apache.org/licenses/LICENSE-2.0.txt\nBundle-ManifestVersion: 2\nBundle-Name: Apache PDFBox application\nBundle-SymbolicName: org.apache.pdfbox.app\nBundle-Vendor: The Apache Software Foundation\nBundle-Version: 3.0.3\nCreated-By: Apache Maven Bundle Plugin 5.1.9\nEmbed-Dependency: *;scope=provided;inline=org/apache/**|org/bouncycast\n le/**|picocli/**|META-INF/services/**\nEmbed-Transitive: true\nExport-Package: org.apache.pdfbox;version=\"3.0.3\";uses:=\"org.apache.pd\n fbox.io,org.apache.pdfbox.pdmodel,org.apache.pdfbox.pdmodel.fdf\",org.\n apache.pdfbox.contentstream;version=\"3.0.3\";uses:=\"org.apache.pdfbox.\n contentstream.operator,org.apache.pdfbox.cos,org.apache.pdfbox.io,org\n .apache.pdfbox.pdmodel,org.apache.pdfbox.pdmodel.common,org.apache.pd\n fbox.pdmodel.font,org.apache.pdfbox.pdmodel.graphics.color,org.apache\n .pdfbox.pdmodel.graphics.form,org.apache.pdfbox.pdmodel.graphics.imag\n e,org.apache.pdfbox.pdmodel.graphics.pattern,org.apache.pdfbox.pdmode\n l.graphics.state,org.apache.pdfbox.pdmodel.interactive.annotation,org\n .apache.pdfbox.util\",org.apache.pdfbox.contentstream.operator;version\n =\"3.0.3\";uses:=\"org.apache.pdfbox.contentstream,org.apache.pdfbox.cos\n \",org.apache.pdfbox.contentstream.operator.color;version=\"3.0.3\";uses\n :=\"org.apache.pdfbox.contentstream,org.apache.pdfbox.contentstream.op\n erator,org.apache.pdfbox.cos,org.apache.pdfbox.pdmodel.graphics.color"
+      "status": "version-command-failed",
+      "exitCode": 9,
+      "version": null,
+      "output": ""
     },
     {
       "id": "pdfium",
@@ -146,10 +146,10 @@
         "never loaded in-process outside the host it is spawned in",
         "API is not thread-safe; every call is serialised on one lock"
       ],
-      "status": "available",
-      "exitCode": 0,
-      "version": "MAJOR=153",
-      "output": "MAJOR=153\nMINOR=0\nBUILD=7999\nPATCH=0"
+      "status": "version-command-failed",
+      "exitCode": 1,
+      "version": "cat: tools/vendor/pdfium/VERSION: No such file or directory",
+      "output": "cat: tools/vendor/pdfium/VERSION: No such file or directory"
     },
     {
       "id": "verapdf",
@@ -174,7 +174,7 @@
       "declaredAvailability": "available-local",
       "command": "tools/vendor/xray-venv/bin/python",
       "versionCommand": "tools/vendor/xray-venv/bin/python -c \"import pymupdf; print(pymupdf.VersionBind)\"",
-      "resolvedExecutable": "tools/vendor/xray-venv/bin/python",
+      "resolvedExecutable": null,
       "observations": [
         "independent rendering",
         "redaction API behavior",
@@ -183,16 +183,15 @@
       "limitations": [
         "a competitor being graded by the redaction bench, not a corroborating oracle for excise's own correctness"
       ],
-      "status": "available",
-      "exitCode": 0,
-      "version": "1.24.14",
-      "output": "1.24.14"
+      "status": "not-installed",
+      "version": null,
+      "output": null
     }
   ],
   "summary": {
     "registered": 10,
-    "available": 10,
-    "notInstalled": 0,
-    "unhealthy": 0
+    "available": 7,
+    "notInstalled": 1,
+    "unhealthy": 2
   }
 }

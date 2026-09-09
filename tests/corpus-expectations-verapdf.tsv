@@ -896,7 +896,7 @@ veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour 
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-b.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-c.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-d.pdf	1	PASS_ONE
+veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-d.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-e.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-f.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-fail-a.pdf	1	PASS
@@ -1887,7 +1887,7 @@ veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibra
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-b.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-c.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-d.pdf	1	PASS_ONE
+veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-d.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-e.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-f.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-g.pdf	1	PASS

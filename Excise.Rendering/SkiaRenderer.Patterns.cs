@@ -119,6 +119,11 @@ internal partial class RenderContext
                 _state.FillColor = savedState.FillColor;
                 _state.StrokeAlpha = savedState.FillAlpha;
                 _state.FillAlpha = savedState.FillAlpha;
+                // §8.7.3.3: an uncoloured pattern's cell carries no colour of
+                // its own. Any colour operator inside it is a violation the
+                // reference renderers ignore; honouring them paints the cell's
+                // colour instead of the tint (#1373).
+                _state.SuppressColorOperators = true;
             }
 
             var clip = _canvas.LocalClipBounds;
