@@ -103,6 +103,27 @@
             "modes": [
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::HeaderVersion_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::HeaderVersion_SurvivesOpenSaveRoundTrip_PerQpdf",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs::RunMerge_ProducesAStructurallyValidPdf_PerQpdf",
+            "modes": [
+              "write"
+            ]
           }
         ]
       }
@@ -222,6 +243,20 @@
               "mutate",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::PageCount_MatchesQpdf",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::PageCount_SurvivesOpenSaveRoundTrip_PerQpdf",
+            "modes": [
+              "preserve"
+            ]
           }
         ]
       }
@@ -313,6 +348,27 @@
             "modes": [
               "parse",
               "preserve",
+              "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_MatchesQpdfIndependentDecompression",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_SurvivesOpenSaveRoundTrip_PerQpdfIndependentDecompression",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::ExciseAuthoredCompressedObjectStream_IsIndependentlyDecodableByQpdf",
+            "modes": [
               "write"
             ]
           }

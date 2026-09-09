@@ -122,6 +122,41 @@
             "modes": [
               "mutate"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AdvanceParityTests.cs::PerGlyphAdvanceParity_AgainstMutool",
+            "modes": [
+              "parse"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_SurvivesOpenSaveRoundTrip_PerQpdfIndependentDecompression",
+            "modes": [
+              "preserve"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::FlateDecodedContentStream_MatchesQpdfIndependentDecompression",
+            "modes": [
+              "extract"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/RtlRedactionDifferentialTests.cs::RedactedRtlWord_IsNotRecoverableByAnIndependentExtractor",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Cli.Tests/PageAssemblyCorrectnessTests.cs::RunMerge_ProducesAStructurallyValidPdf_PerQpdf",
+            "modes": [
+              "write"
+            ]
           }
         ]
       },
@@ -445,6 +480,13 @@
             "ref": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs::RedactArea_FormWithTwoStrings_RemovesInsideKeepsOutside",
             "modes": [
               "mutate"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/AdvanceParityTests.cs::PerGlyphAdvanceParity_AgainstMutool",
+            "modes": [
+              "parse"
             ]
           }
         ]

@@ -266,6 +266,13 @@
             "modes": [
               "author"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs::PathFillObstruction_IsGoneFromAnIndependentRender_TextElsewhereSurvives",
+            "modes": [
+              "mutate"
+            ]
           }
         ]
       },
@@ -574,6 +581,13 @@
               "parse",
               "preserve"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ShadingPatternMeshDifferentialTests.cs::Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn",
+            "modes": [
+              "render"
+            ]
           }
         ]
       }
@@ -684,6 +698,13 @@
           {
             "kind": "unit",
             "ref": "Excise.Core.Tests/Text/Segmentation/ImageRedactorTests.cs::ProcessOperations_FullyContainedImage_Removed",
+            "modes": [
+              "mutate"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/ScannedRasterRedactionLeakTests.cs::ScannedInk_IsDeletedFromTheRaster_NotCoveredByABox",
             "modes": [
               "mutate"
             ]
