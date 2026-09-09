@@ -1960,6 +1960,14 @@ namespace Excise.Core.Text.Segmentation
         public int PageNumber { get; init; }
         public string Text { get; init; }
     }
+    public sealed class HyphenatedTermCandidate : System.IEquatable<Excise.Core.Text.Segmentation.HyphenatedTermCandidate>
+    {
+        public HyphenatedTermCandidate(int PageNumber, string BeforeBreak, string AfterBreak) { }
+        public string AfterBreak { get; init; }
+        public string BeforeBreak { get; init; }
+        public int PageNumber { get; init; }
+        public override string ToString() { }
+    }
     public class LetterFinder
     {
         public LetterFinder() { }
@@ -2041,12 +2049,14 @@ namespace Excise.Core.Text.Segmentation
         ContentVerification = 5,
         HiddenTextAudit = 6,
         RasterRedactionAudit = 7,
+        UnresolvedRedactAnnotationInspection = 8,
     }
     public sealed class RedactedCopySafetyOptions : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyOptions>
     {
         public RedactedCopySafetyOptions() { }
         public Excise.Core.Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
         public Excise.Core.Operations.RedactionCarriers Carriers { get; init; }
+        public bool RefuseOnUnresolvedRedactAnnotations { get; init; }
         public bool RunCarrierAudit { get; init; }
         public bool RunHiddenTextAudit { get; init; }
         public bool RunRasterRedactionAudit { get; init; }
@@ -2081,7 +2091,8 @@ namespace Excise.Core.Text.Segmentation
                     Excise.Core.Text.Segmentation.RedactedContentVerificationStatus RasterRedactionAuditStatus,
                     int RemainingRasterOverlapCount,
                     System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedCopySafetyFailureStage> FailedStages,
-                    System.Collections.Generic.IReadOnlyList<string> Warnings) { }
+                    System.Collections.Generic.IReadOnlyList<string> Warnings,
+                    int UnresolvedRedactAnnotationCount = 0) { }
         public bool AttachmentsScrubbed { get; init; }
         public int CheckedTermCount { get; init; }
         public Excise.Core.Text.Segmentation.RedactedContentVerificationStatus ContentVerificationStatus { get; init; }
@@ -2100,6 +2111,7 @@ namespace Excise.Core.Text.Segmentation
         public int RequestedTermCount { get; init; }
         public int SkippedRedactionAreaCount { get; init; }
         public int SkippedShortTermCount { get; init; }
+        public int UnresolvedRedactAnnotationCount { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
     }
     public sealed class RedactedCopySafetyRequest : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyRequest>
@@ -2153,6 +2165,7 @@ namespace Excise.Core.Text.Segmentation
     {
         public RedactionReport() { }
         public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierResult> Carriers { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.HyphenatedTermCandidate> HyphenatedCandidates { get; init; }
         public int ImageRegionsRedacted { get; init; }
         public int ImagesDroppedWhole { get; init; }
         public bool IsCleanSuccess { get; }
@@ -2189,6 +2202,11 @@ namespace Excise.Core.Text.Segmentation
     {
         public TextSegmenter() { }
         public System.Collections.Generic.List<Excise.Core.Text.Segmentation.TextSegment> BuildSegments(string text, Excise.Core.Document.PdfRectangle operationBounds, System.Collections.Generic.List<Excise.Core.Text.Segmentation.LetterMatch> letterMatches, Excise.Core.Document.PdfRectangle redactionArea, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+    }
+    public sealed class UnresolvedRedactAnnotationsException : System.InvalidOperationException
+    {
+        public UnresolvedRedactAnnotationsException(int annotationCount) { }
+        public int AnnotationCount { get; }
     }
     public enum WidthPolicy
     {
