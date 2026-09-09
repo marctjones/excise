@@ -749,8 +749,59 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Ctrl+Z: Undo. The Edit menu advertises InputGesture="Ctrl+Z", which in
+        // Avalonia is DISPLAY TEXT ONLY — every working shortcut in this window
+        // is duplicated here by hand, and these three never were, so the menu
+        // named a key that did nothing. Same defect class as #827's Ctrl+E /
+        // Ctrl+, / Enter. (#1170)
+        //
+        // Guarded on a focused text editor and deliberately NOT marked handled
+        // in that case: a window-level Ctrl+Z would otherwise swallow the
+        // TextBox's own native undo in the search box and every dialog field.
+        if (e.Key == Key.Z && e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
+            !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            if (FocusManager.GetFocusedElement() is TextBox)
+                return;
+
+            viewModel.UndoCommand?.Execute().Subscribe();
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+Y: Redo (the gesture the Edit menu advertises on Windows/Linux;
+        // macOS uses Cmd+Shift+Z through the native menu). (#1170)
+        if (e.Key == Key.Y && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            if (FocusManager.GetFocusedElement() is TextBox)
+                return;
+
+            viewModel.RedoCommand?.Execute().Subscribe();
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+Shift+C: toggle continuous scroll. (#1170)
+        //
+        // MUST precede the plain Ctrl+C branch below, which does not exclude
+        // Shift — the same ordering hazard #369 documents at the top of this
+        // handler for Ctrl+Shift+O vs Ctrl+O. The Ctrl+C branch now excludes
+        // Shift explicitly as well, so the two cannot fight over the key even
+        // if one is later moved.
+        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
+            e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            if (FocusManager.GetFocusedElement() is TextBox)
+                return;
+
+            viewModel.ToggleContinuousViewCommand?.Execute().Subscribe();
+            e.Handled = true;
+            return;
+        }
+
         // Ctrl+C: Copy text
-        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
+            !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
         {
             if (viewModel.IsTextSelectionMode)
             {
