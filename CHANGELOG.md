@@ -6,6 +6,7 @@ semantic versioning.
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
@@ -120,6 +121,43 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 - **Redaction policy preferences now persist across launches.** A security
   preference that silently reset to the less-safe default on every launch
   is worse than no preference at all.
+
+Milestone **P1.6 — Writer output validity: what save destroys or invalidates**.
+
+### Fixed
+- **A form field made a `PdfA()` document non-conformant by embedding no font
+  for its own appearance** (#1435). A widget's `/DA` default-appearance string
+  named the base-14 `/Helv` unconditionally, so every AcroForm field carried a
+  non-embedded `/BaseFont /Helvetica` dictionary — including in a document that
+  called `PdfA()` and embedded its body font. A viewer generates the field's
+  appearance from that string, so the file's PDF/A claim was false for anything
+  typed into it. `PdfDocumentBuilder.DefaultFont` now flows into the widget
+  `/DA` the same way it already flows into every other text block, `/Helv` is
+  added to `/DR` only when a `/DA` actually names it, and the `/DR` entry shares
+  the page's font object so the program is embedded once. The subset keeps
+  printable ASCII and Latin-1 as well, because a `/DA` font's glyphs are chosen
+  by the viewer from typed input rather than by our writer.
+  ⚠️ `PdfA()` plus a form field is still not PDF/A for three other reasons the
+  veraPDF profile does report — the widget has no `/AP`, no `/F`, and
+  `NeedAppearances` is true (#1444).
+
+### Changed
+- **Redaction no longer rewrites the operators it did not touch** (#1093).
+  Editing one operator used to put the WHOLE content stream back through
+  `ContentStreamWriter` — its string escaping, its number formatting, its
+  inline-image reconstruction. Each of those has silently corrupted content an
+  edit never targeted (#354, #762, PDFDocEncoding octal escapes), and each was
+  found by a leak rather than by a gate. The parser now records the contiguous
+  source span of every operator and the writer copies those bytes back
+  verbatim, serializing only what actually changed; an unedited stream
+  round-trips byte-identically. Wired into the Core redaction write-backs
+  (`RedactArea`/`RedactAreas`, the covering box, the obstruction stripper).
+  ⚠️ A span is copied only when the operator still hashes to what it hashed to
+  at parse time, so an operand mutated in place — as the marked-content carrier
+  scrubber does when it removes an `/ActualText`, #636's leak carrier — is
+  re-serialized rather than restored from the original bytes. The GUI's own
+  `RedactionService` write-back and the `/Contents`-array structure (still
+  collapsed to a single stream on write) are not covered.
 
 ## [3.9.4] - 2026-09-09
 

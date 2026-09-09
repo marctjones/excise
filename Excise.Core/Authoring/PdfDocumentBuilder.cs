@@ -393,7 +393,8 @@ public sealed class PdfDocumentBuilder
         // readers announce the field even when no explicit tooltip is given.
         TagFormField(_document.AddTextField(_currentPageNumber, rect, fieldName,
             defaultValue: defaultValue, multiline: multiline, required: required,
-            tooltip: tooltip ?? label, maxLength: maxLength, comb: comb));
+            tooltip: tooltip ?? label, maxLength: maxLength, comb: comb,
+            appearanceFont: _defaultFont));
 
         _cursorY -= TextStyle.Body.SpaceAfter;
         return this;
@@ -421,7 +422,8 @@ public sealed class PdfDocumentBuilder
         var rect = ReserveBox(boxHeight);
         DrawBoxBorder(rect);
         TagFormField(_document.AddDateField(_currentPageNumber, rect, fieldName,
-            format: format, required: required, tooltip: tooltip ?? $"{label} ({format})"));
+            format: format, required: required, tooltip: tooltip ?? $"{label} ({format})",
+            appearanceFont: _defaultFont));
 
         _cursorY -= TextStyle.Body.SpaceAfter;
         return this;
@@ -484,7 +486,8 @@ public sealed class PdfDocumentBuilder
         var rect = ReserveBox(boxHeight);
         DrawBoxBorder(rect);
         TagFormField(_document.AddChoiceField(_currentPageNumber, rect, fieldName, options,
-            defaultValue: defaultValue, tooltip: tooltip ?? label));
+            defaultValue: defaultValue, tooltip: tooltip ?? label,
+            appearanceFont: _defaultFont));
 
         _cursorY -= TextStyle.Body.SpaceAfter;
         return this;
@@ -607,13 +610,15 @@ public sealed class PdfDocumentBuilder
                     case FillableCellKind.Choice:
                         var choiceRect = new PdfRectangle(fLeft, fBottom, fRight, fTop);
                         TagFormField(_document.AddChoiceField(_currentPageNumber, choiceRect, cell.FieldName,
-                            cell.Options ?? Array.Empty<string>(), defaultValue: cell.Value, tooltip: cell.Tooltip));
+                            cell.Options ?? Array.Empty<string>(), defaultValue: cell.Value,
+                            tooltip: cell.Tooltip, appearanceFont: _defaultFont));
                         break;
 
                     default:
                         var textRect = new PdfRectangle(fLeft, fBottom, fRight, fTop);
                         TagFormField(_document.AddTextField(_currentPageNumber, textRect, cell.FieldName,
-                            defaultValue: cell.Value, tooltip: cell.Tooltip));
+                            defaultValue: cell.Value, tooltip: cell.Tooltip,
+                            appearanceFont: _defaultFont));
                         break;
                 }
             }

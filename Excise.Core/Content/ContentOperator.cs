@@ -82,6 +82,50 @@ public class ContentOperator
     public byte[]? InlineImageData { get; internal set; }
 
     /// <summary>
+    /// Where this operator came from in the source bytes: <c>[SourceStart,
+    /// SourceEnd)</c>, or <c>SourceStart &lt; 0</c> when unknown (an operator
+    /// built synthetically, or parsed without
+    /// <see cref="ContentStreamParser.TrackSourceSpans"/>).
+    ///
+    /// <para>Spans are CONTIGUOUS: one operator's span begins exactly where the
+    /// previous one's ended, so it carries the whitespace and comments that
+    /// preceded it. Concatenating every span of an unedited stream reproduces
+    /// the source byte for byte, which is what lets
+    /// <see cref="ContentStreamWriter"/> re-emit untouched operators verbatim
+    /// instead of re-serializing them (#1093).</para>
+    /// </summary>
+    internal int SourceStart { get; set; } = -1;
+
+    /// <summary>
+    /// The exact byte array <see cref="SourceStart"/> indexes into. The writer
+    /// requires reference identity with the array it is splicing against, so an
+    /// operator that came from a DIFFERENT parse — a form XObject's own content
+    /// stream inlined into a page, say — can never have bytes copied out of the
+    /// wrong array at the right offsets. Null when no span was recorded.
+    /// </summary>
+    internal byte[]? SourceArray { get; set; }
+
+    /// <inheritdoc cref="SourceStart"/>
+    internal int SourceEnd { get; set; } = -1;
+
+    /// <summary>
+    /// A hash of this operator's serialized form, taken when the span above was
+    /// recorded. The writer re-computes it and re-serializes on any mismatch,
+    /// so an operator whose operands were mutated IN PLACE after parsing can
+    /// never have its pre-mutation bytes copied back into the file.
+    ///
+    /// <para>This is not defensive decoration. <c>MarkedContentCarrierScrubber</c>
+    /// removes an <c>/ActualText</c> carrier by calling <c>Remove</c> on a
+    /// parsed <c>BDC</c> operand dictionary — the #636 leak carrier. Copying
+    /// that operator's original bytes would put the scrubbed text straight back
+    /// into the redacted file (#1093).</para>
+    /// </summary>
+    internal UInt128 SourceFingerprint { get; set; }
+
+    /// <summary>Whether a usable source span was recorded for this operator.</summary>
+    internal bool HasSourceSpan => SourceStart >= 0 && SourceEnd >= SourceStart && SourceArray != null;
+
+    /// <summary>
     /// Creates a new content operator.
     /// </summary>
     public ContentOperator(string name, IReadOnlyList<PdfObject> operands)

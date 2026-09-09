@@ -76,6 +76,20 @@ internal sealed class PdfTrueTypeFont : PdfFont
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Keep <paramref name="text"/>'s glyphs in the subset even though nothing
+    /// encodes them into a content stream we write — a viewer generating a form
+    /// field's appearance from the field's <c>/DA</c> font picks the glyphs
+    /// itself, and a subset built only from what WE drew would leave those
+    /// characters as .notdef (#1435).
+    /// </summary>
+    internal override void ReserveGlyphs(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        foreach (var cp in Codepoints(text))
+            _usedGids.Add(_ttf.GidForCodepoint(cp) & 0xFFFF);
+    }
+
     internal override PdfDictionary BuildFontDictionary(PdfDocument document)
     {
         double toGlyphSpace = 1000.0 / _ttf.UnitsPerEm;   // PDF glyph space = 1000/em
