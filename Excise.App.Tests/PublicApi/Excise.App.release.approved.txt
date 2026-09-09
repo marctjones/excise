@@ -94,8 +94,9 @@ namespace Excise.App.Models
         public int RedactionCount { get; init; }
         public bool Success { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
+        public bool WholeWord { get; init; }
         public static Excise.App.Models.TextRedactionResult Failed(string error) { }
-        public static Excise.App.Models.TextRedactionResult Succeeded(int count, System.Collections.Generic.IReadOnlyList<string>? warnings = null) { }
+        public static Excise.App.Models.TextRedactionResult Succeeded(int count, System.Collections.Generic.IReadOnlyList<string>? warnings = null, bool wholeWord = false) { }
     }
     public class WindowSettings
     {
@@ -104,7 +105,11 @@ namespace Excise.App.Models
         public System.Collections.Generic.List<Excise.App.Models.WindowSettings.DocumentState> DocumentStates { get; set; }
         public double Height { get; set; }
         public bool IsMaximized { get; set; }
+        public string LinkUriCarrierPolicy { get; set; }
+        public string MetadataCarrierPolicy { get; set; }
         public string ReadingOrderStrategy { get; set; }
+        public bool RedactionWholeWord { get; set; }
+        public string RedactionWidthPolicy { get; set; }
         public string WhitespaceMode { get; set; }
         public double Width { get; set; }
         public double X { get; set; }
@@ -369,7 +374,7 @@ namespace Excise.App.Services
         public void RedactArea(Excise.Core.Document.PdfPage page, Avalonia.Rect area, int renderDpi = 72) { }
         public void RedactAreas(Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfPageRect> areas) { }
         public void RedactAreas(Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Avalonia.Rect> areas, int renderDpi = 150) { }
-        public Excise.App.Models.TextRedactionResult RedactText(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false, bool allowLowConfidence = false) { }
+        public Excise.App.Models.TextRedactionResult RedactText(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false, bool allowLowConfidence = false, bool wholeWord = false, Excise.Core.Text.Segmentation.WidthPolicy width = 0) { }
         public Excise.App.Models.TextRedactionResult RedactTextFlattenOcr(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false) { }
         public void RedactWithOptions(Excise.Core.Document.PdfDocument document, Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfPageRect> areas, Excise.App.Services.RedactionOptions options) { }
         public void RedactWithOptions(Excise.Core.Document.PdfDocument document, Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Avalonia.Rect> areas, Excise.App.Services.RedactionOptions options, int renderDpi = 150) { }
@@ -496,13 +501,6 @@ namespace Excise.App.Services
             Error = 2,
             Success = 3,
         }
-    }
-    public static class UnicodeTextSafety
-    {
-        public static bool ContainsBidiControl(string? text) { }
-        public static bool ContainsPotentiallyMisleadingControl(string? text) { }
-        public static string EscapeForDisplay(string? text) { }
-        public static bool IsBidiControl(char c) { }
     }
 }
 namespace Excise.App.Threading
@@ -667,9 +665,11 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<Excise.App.Models.OutlineNode, System.Reactive.Unit> JumpToOutlineCommand { get; }
         public ReactiveUI.ReactiveCommand<Excise.App.Models.SearchMatch, System.Reactive.Unit>? JumpToSearchMatchCommand { get; }
         public Excise.App.ViewModels.DocumentOpenTiming? LastDocumentOpenTiming { get; }
+        public Excise.Core.Operations.CarrierScrubMode LinkUriCarrierPolicy { get; set; }
         public int LoadDocumentTimeoutSeconds { get; set; }
         public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> LoadRecentFileCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MakeSearchableCommand { get; }
+        public Excise.Core.Operations.CarrierScrubMode MetadataCarrierPolicy { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveCurrentPageEarlierCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveCurrentPageLaterCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveSelectedPagesEarlierCommand { get; }
@@ -692,6 +692,8 @@ namespace Excise.App.ViewModels
         public System.Collections.ObjectModel.ObservableCollection<string> RecentFiles { get; set; }
         public int RedactAnnotationCount { get; }
         public string? RedactAnnotationNotice { get; }
+        public bool RedactionWholeWord { get; set; }
+        public Excise.Core.Text.Segmentation.WidthPolicy RedactionWidthPolicy { get; set; }
         public Excise.App.ViewModels.RedactionWorkflowManager RedactionWorkflow { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RedoCommand { get; }
         public string RedoMenuHeader { get; }
@@ -789,6 +791,7 @@ namespace Excise.App.ViewModels
         public System.Threading.Tasks.Task AddUnderlineAnnotationFromSelectionAsync() { }
         public void ApplyContinuousScrollPreference(bool enabled) { }
         public void ApplyReadingOrderStrategyPreference(Excise.Core.Text.ReadingOrderStrategy strategy) { }
+        public void ApplyRedactionPolicyPreferences(bool wholeWord, string? widthPolicy, string? linkUriPolicy, string? metadataPolicy) { }
         public System.Threading.Tasks.Task ApplyRedactionsCommand() { }
         public void ApplyWhitespaceModePreference(Excise.Core.Text.WhitespaceMode mode) { }
         public int AutoDetectAndApplyFormFields() { }
@@ -880,6 +883,7 @@ namespace Excise.App.ViewModels
     {
         public PreferencesViewModel() { }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CancelCommand { get; }
+        public Excise.Core.Operations.CarrierScrubMode[] CarrierScrubModeOptions { get; }
         public bool DialogResult { get; }
         public int OcrBaseDpi { get; set; }
         public bool OcrBinarize { get; set; }
@@ -889,11 +893,16 @@ namespace Excise.App.ViewModels
         public double OcrLowConfidence { get; set; }
         public bool OcrPreprocess { get; set; }
         public Excise.Core.Text.ReadingOrderStrategy[] ReadingOrderStrategyOptions { get; }
+        public bool RedactionWholeWord { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ResetToDefaultsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveCommand { get; }
+        public Excise.Core.Operations.CarrierScrubMode SelectedLinkUriCarrierPolicy { get; set; }
+        public Excise.Core.Operations.CarrierScrubMode SelectedMetadataCarrierPolicy { get; set; }
         public Excise.Core.Text.ReadingOrderStrategy SelectedReadingOrderStrategy { get; set; }
+        public Excise.Core.Text.Segmentation.WidthPolicy SelectedRedactionWidthPolicy { get; set; }
         public Excise.Core.Text.WhitespaceMode SelectedWhitespaceMode { get; set; }
         public Excise.Core.Text.WhitespaceMode[] WhitespaceModeOptions { get; }
+        public Excise.Core.Text.Segmentation.WidthPolicy[] WidthPolicyOptions { get; }
         public void LoadFromMainViewModel(Excise.App.ViewModels.MainWindowViewModel mainViewModel) { }
         public void SaveToMainViewModel(Excise.App.ViewModels.MainWindowViewModel mainViewModel) { }
     }

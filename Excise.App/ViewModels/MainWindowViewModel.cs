@@ -20,6 +20,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using PdfCoreDocument = Excise.Core.Document.PdfDocument;
 
+using Excise.Core.Text;
+
 namespace Excise.App.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
@@ -726,7 +728,10 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         if (node.PageNumber == null)
         {
-            _logger.LogInformation("JumpToOutline: '{Title}' has no resolvable page", node.Title);
+            // #1205: log lines are read in terminals and log viewers, which
+            // honour bidi controls exactly as a UI label does.
+            _logger.LogInformation("JumpToOutline: '{Title}' has no resolvable page",
+                UnicodeTextSafety.EscapeForDisplay(node.Title));
             return;
         }
         var idx = node.PageNumber.Value - 1;
@@ -735,7 +740,8 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogWarning("JumpToOutline: page {Page} out of range", node.PageNumber);
             return;
         }
-        _logger.LogInformation("JumpToOutline: '{Title}' → page {Page}", node.Title, node.PageNumber);
+        _logger.LogInformation("JumpToOutline: '{Title}' → page {Page}",
+            UnicodeTextSafety.EscapeForDisplay(node.Title), node.PageNumber);
         CurrentPageIndex = idx;
     }
 
@@ -2529,25 +2535,35 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private async Task OpenExternalLinkAsync(string uri)
     {
-        _logger.LogInformation("External link clicked: {Uri}", uri);
+        // #1205: the URI comes from the document, and this dialog is where the
+        // user makes a TRUST DECISION about it. A bidi override inside the host
+        // makes the displayed URL read as a different destination than the one
+        // actually opened -- precisely the phishing the confirmation exists to
+        // prevent. Escape for display; open the raw value.
+        var shownUri = UnicodeTextSafety.EscapeForDisplay(uri);
+        _logger.LogInformation("External link clicked: {Uri}", shownUri);
 
         if (!Uri.TryCreate(uri, UriKind.Absolute, out var parsed) ||
             !AllowedExternalLinkSchemes.Contains(parsed.Scheme))
         {
-            _logger.LogWarning("Refusing external link with disallowed/malformed scheme: {Uri}", uri);
+            _logger.LogWarning("Refusing external link with disallowed/malformed scheme: {Uri}", shownUri);
             await _dialogService.ShowMessageAsync(
                 "Link Blocked",
-                $"excise won't open this link — its scheme isn't one of the ones considered safe to navigate to automatically (http, https, mailto):\n\n{uri}");
+                $"excise won't open this link — its scheme isn't one of the ones considered safe to navigate to automatically (http, https, mailto):\n\n{shownUri}");
             return;
         }
 
         var confirmed = await _dialogService.ShowConfirmAsync(
             "Open Link?",
-            $"This will open the following link in your default browser:\n\n{uri}\n\n" +
+            $"This will open the following link in your default browser:\n\n{shownUri}\n\n" +
+            (UnicodeTextSafety.ContainsBidiControl(uri)
+                ? "\u26a0 This link contains text-direction control characters, which can make " +
+                  "a URL display differently from where it actually leads. Treat it as untrusted.\n\n"
+                : "") +
             "Only continue if you trust this destination — PDFs are a common phishing vector.");
         if (!confirmed)
         {
-            _logger.LogInformation("User declined to open external link: {Uri}", uri);
+            _logger.LogInformation("User declined to open external link: {Uri}", shownUri);
             return;
         }
 
@@ -2564,14 +2580,18 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private async Task ShowDangerousLinkRefusalAsync(string actionType)
     {
-        _logger.LogWarning("Refused dangerous link action: {ActionType}", actionType);
+        _logger.LogWarning("Refused dangerous link action: {ActionType}",
+            UnicodeTextSafety.EscapeForDisplay(actionType));
         var reason = actionType switch
         {
             "Launch" => "it launches an external application or file",
             "GoToE" => "it navigates into an embedded file",
             "GoToR" => "it navigates into a remote file",
+            // #1205: this substring is cut from the raw document URI, so it can
+            // carry controls exactly as the whole URL can.
             _ when actionType.StartsWith("URI:", StringComparison.Ordinal) =>
-                $"its link scheme ('{actionType["URI:".Length..]}') isn't one excise considers safe to open automatically",
+                $"its link scheme ('{UnicodeTextSafety.EscapeForDisplay(actionType["URI:".Length..])}') " +
+                "isn't one excise considers safe to open automatically",
             _ => "it's a link action type excise doesn't run automatically",
         };
         await _dialogService.ShowMessageAsync(
@@ -2580,8 +2600,14 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>Status-bar hover feedback for the link under the pointer, or null when not hovering one (#625).</summary>
+    /// <remarks>
+    /// #1205: the hover target is how a user checks where a link goes BEFORE
+    /// clicking it -- a security display in the plainest sense -- so invisible
+    /// and direction-changing controls are made explicit here.
+    /// </remarks>
     public void SetHoveredLinkTarget(string? target)
     {
+        target = target == null ? null : UnicodeTextSafety.EscapeForDisplay(target);
         if (_hoveredLinkTarget == target) return;
         _hoveredLinkTarget = target;
         this.RaisePropertyChanged(nameof(StatusBarText));
@@ -2593,6 +2619,9 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public void SetHoveredAnnotationInfo(string? info)
     {
+        // #1205: this string carries the annotation AUTHOR (/T) -- an identity
+        // claim made by the document -- alongside its prose body.
+        info = info == null ? null : UnicodeTextSafety.EscapeForDisplay(info);
         if (_hoveredAnnotationInfo == info) return;
         _hoveredAnnotationInfo = info;
         this.RaisePropertyChanged(nameof(StatusBarText));

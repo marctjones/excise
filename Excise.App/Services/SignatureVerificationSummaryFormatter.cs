@@ -17,17 +17,27 @@ public sealed class SignatureVerificationSummaryFormatter
                 summary.AppendLine();
             }
 
-            summary.AppendLine($"Signature: {ValueOrUnknown(result.SignatureName)}");
+            // #1205: the signature field name and the signer DN are both
+            // document-supplied identity claims, and this summary is where a
+            // user decides whether to trust the signature. A bidi override in a
+            // Subject DN can make an untrusted signer read as a trusted one.
+            summary.AppendLine($"Signature: {Safe(ValueOrUnknown(result.SignatureName))}");
             summary.AppendLine($"Overall: {FormatOverallState(result.State)}");
             summary.AppendLine($"CMS signature check: {(result.IsValid ? "passed" : "failed")} (CMS bytes and ByteRange digest only)");
-            summary.AppendLine($"Signer: {ValueOrUnknown(result.SignedBy)}");
+            summary.AppendLine($"Signer: {Safe(ValueOrUnknown(result.SignedBy))}");
+            if (Excise.Core.Text.UnicodeTextSafety.ContainsBidiControl(result.SignedBy))
+            {
+                summary.AppendLine(
+                    "  \u26a0 The signer name contains text-direction control characters, " +
+                    "which can make an identity display differently from what it is.");
+            }
             summary.AppendLine(result.SigningTime == default
                 ? "Signing time: not extracted"
                 : $"Signing time: {result.SigningTime:g}");
 
             if (!string.IsNullOrWhiteSpace(result.StatusMessage))
             {
-                summary.AppendLine($"Details: {result.StatusMessage}");
+                summary.AppendLine($"Details: {Safe(result.StatusMessage)}");
             }
 
             summary.AppendLine($"ByteRange structure: {FormatByteRangeStructureStatus(result)}");
@@ -64,11 +74,17 @@ public sealed class SignatureVerificationSummaryFormatter
             "could not be verified (malformed or unsupported signature)"
     };
 
+    /// <summary>#1205 — make invisible/bidi controls explicit on a trust display.</summary>
+    private static string Safe(string? value) =>
+        Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(value);
+
     private static string FormatTrustStatus(SignatureVerificationResult result)
     {
+        // #1205: TrustDetails is built from the certificate chain's Subject
+        // DNs — document-embedded identity text on a trust display.
         var details = string.IsNullOrWhiteSpace(result.TrustDetails)
             ? string.Empty
-            : $" — {result.TrustDetails}";
+            : $" — {Safe(result.TrustDetails)}";
 
         return result.TrustStatus switch
         {

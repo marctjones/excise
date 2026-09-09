@@ -129,7 +129,7 @@ public sealed record RedactionCarrierAudit(
         foreach (var term in TermsBelowScrubFloor)
         {
             lines.Add(
-                $"'{term}' is shorter than {ScrubFloor} characters, so document metadata was not " +
+                $"'{Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(term)}' is shorter than {ScrubFloor} characters, so document metadata was not " +
                 "scrubbed for it. Page content was still redacted.");
         }
 

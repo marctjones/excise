@@ -1236,6 +1236,43 @@ namespace Excise.Core.Graphics
 }
 namespace Excise.Core.Operations
 {
+    public enum CarrierScrubMode
+    {
+        Strip = 0,
+        RemoveWhole = 1,
+        ReportOnly = 2,
+    }
+    public sealed class CarrierScrubOutcome : System.IEquatable<Excise.Core.Operations.CarrierScrubOutcome>
+    {
+        public CarrierScrubOutcome(bool Changed, System.Collections.Generic.IReadOnlyList<Excise.Core.Operations.CarrierScrubResult> Carriers) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Operations.CarrierScrubResult> Carriers { get; init; }
+        public bool Changed { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Operations.CarrierScrubResult> NeedingAttention { get; }
+        public static Excise.Core.Operations.CarrierScrubOutcome Empty { get; }
+        public Excise.Core.Operations.CarrierScrubResult? For(Excise.Core.Operations.RedactionCarriers carrier) { }
+    }
+    public sealed class CarrierScrubPolicy : System.IEquatable<Excise.Core.Operations.CarrierScrubPolicy>
+    {
+        public static readonly System.Collections.Generic.IReadOnlyList<Excise.Core.Operations.RedactionCarriers> AllCarriers;
+        public static Excise.Core.Operations.CarrierScrubPolicy Default { get; }
+        public bool Equals(Excise.Core.Operations.CarrierScrubPolicy? other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public bool IsUniform(Excise.Core.Operations.CarrierScrubMode mode) { }
+        public Excise.Core.Operations.CarrierScrubMode ModeFor(Excise.Core.Operations.RedactionCarriers carrier) { }
+        public override string ToString() { }
+        public Excise.Core.Operations.CarrierScrubPolicy With(Excise.Core.Operations.RedactionCarriers carriers, Excise.Core.Operations.CarrierScrubMode mode) { }
+        public static Excise.Core.Operations.CarrierScrubPolicy Uniform(Excise.Core.Operations.CarrierScrubMode mode) { }
+    }
+    public sealed class CarrierScrubResult : System.IEquatable<Excise.Core.Operations.CarrierScrubResult>
+    {
+        public CarrierScrubResult(Excise.Core.Operations.RedactionCarriers Carrier, Excise.Core.Operations.CarrierScrubMode Mode, bool TermFound, bool Modified, string? RefusedReason = null) { }
+        public Excise.Core.Operations.RedactionCarriers Carrier { get; init; }
+        public Excise.Core.Operations.CarrierScrubMode Mode { get; init; }
+        public bool Modified { get; init; }
+        public string? RefusedReason { get; init; }
+        public bool TermFound { get; init; }
+    }
     public static class PdfDocumentMerger
     {
         public static System.Collections.Generic.IReadOnlyList<string> CatalogEntriesNotConserved(Excise.Core.Document.PdfDocument source) { }
@@ -1247,6 +1284,7 @@ namespace Excise.Core.Operations
     {
         public static bool ScrubTerms(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms, bool caseSensitive = false) { }
         public static bool ScrubTerms(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms, bool caseSensitive, Excise.Core.Operations.RedactionCarriers carriers) { }
+        public static Excise.Core.Operations.CarrierScrubOutcome ScrubTerms(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms, bool caseSensitive, Excise.Core.Operations.RedactionCarriers carriers, Excise.Core.Operations.CarrierScrubPolicy policy, bool wholeWord = false) { }
     }
     public static class PdfDocumentSplitter
     {
@@ -1849,6 +1887,13 @@ namespace Excise.Core.Text
             public int Low { get; init; }
         }
     }
+    public static class UnicodeTextSafety
+    {
+        public static bool ContainsBidiControl(string? text) { }
+        public static bool ContainsPotentiallyMisleadingControl(string? text) { }
+        public static string EscapeForDisplay(string? text) { }
+        public static bool IsBidiControl(char c) { }
+    }
     public enum WhitespaceMode
     {
         Smart = 0,
@@ -1964,7 +2009,7 @@ namespace Excise.Core.Text.Segmentation
         public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true, bool closeWidth = false, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
                 "R",
                 "G",
-                "B"})] System.ValueTuple<double, double, double>? boxColor = default, Excise.Core.Operations.RedactionCarriers carriers = 1023, System.Action<int, int>? progress = null) { }
+                "B"})] System.ValueTuple<double, double, double>? boxColor = default, Excise.Core.Operations.RedactionCarriers carriers = 1023, System.Action<int, int>? progress = null, Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy = null, bool wholeWord = false, bool overshootBox = false) { }
     }
     public static class PdfPageRedactionExtensions
     {
@@ -2000,6 +2045,8 @@ namespace Excise.Core.Text.Segmentation
     public sealed class RedactedCopySafetyOptions : System.IEquatable<Excise.Core.Text.Segmentation.RedactedCopySafetyOptions>
     {
         public RedactedCopySafetyOptions() { }
+        public Excise.Core.Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
+        public Excise.Core.Operations.RedactionCarriers Carriers { get; init; }
         public bool RunCarrierAudit { get; init; }
         public bool RunHiddenTextAudit { get; init; }
         public bool RunRasterRedactionAudit { get; init; }
@@ -2007,6 +2054,7 @@ namespace Excise.Core.Text.Segmentation
         public bool ScrubMetadata { get; init; }
         public bool ScrubRequestedTerms { get; init; }
         public bool VerifyRequestedTerms { get; init; }
+        public bool WholeWord { get; init; }
         public static Excise.Core.Text.Segmentation.RedactedCopySafetyOptions Default { get; }
     }
     public static class RedactedCopySafetyPolicy
@@ -2084,12 +2132,14 @@ namespace Excise.Core.Text.Segmentation
                 "G",
                 "B"})]
         public System.ValueTuple<double, double, double>? BoxColor { get; init; }
+        public Excise.Core.Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
         public Excise.Core.Operations.RedactionCarriers Carriers { get; init; }
         public bool CaseSensitive { get; init; }
         public bool DrawBox { get; init; }
         public bool IncludeHiddenLayers { get; init; }
         public bool ScrubDocumentCarriers { get; init; }
         public Excise.Core.Text.Segmentation.GlyphRemovalStrategy Strategy { get; init; }
+        public bool WholeWord { get; init; }
         public Excise.Core.Text.Segmentation.WidthPolicy Width { get; init; }
         public static Excise.Core.Text.Segmentation.RedactionOptions Default { get; }
     }
@@ -2111,6 +2161,7 @@ namespace Excise.Core.Text.Segmentation
         public int Survived { get; }
         public required string Term { get; init; }
         public int VerifiedRemovals { get; }
+        public bool WholeWord { get; init; }
         public override string ToString() { }
     }
     public class TextSegment
@@ -2143,6 +2194,7 @@ namespace Excise.Core.Text.Segmentation
     {
         CollapsePreserveLayout = 0,
         CloseGap = 1,
+        OvershootPreserveLayout = 2,
     }
 }
 namespace Excise.Core.Validation

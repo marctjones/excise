@@ -86,11 +86,17 @@ internal static class InfoCommand
         Console.WriteLine($"Encrypted: {result.Encrypted}");
         Console.WriteLine();
 
-        if (result.Metadata.Title != null) Console.WriteLine($"Title: {result.Metadata.Title}");
-        if (result.Metadata.Author != null) Console.WriteLine($"Author: {result.Metadata.Author}");
-        if (result.Metadata.Subject != null) Console.WriteLine($"Subject: {result.Metadata.Subject}");
-        if (result.Metadata.Creator != null) Console.WriteLine($"Creator: {result.Metadata.Creator}");
-        if (result.Metadata.Producer != null) Console.WriteLine($"Producer: {result.Metadata.Producer}");
+        // #1205: every one of these is document-authored text printed to a
+        // terminal, which honours bidi controls. A /Title carrying U+202E makes
+        // the printed metadata read as something other than what the file holds.
+        // Escaped only HERE, in the human display -- the --json path stays
+        // byte-faithful (System.Text.Json escapes non-ASCII to \uXXXX already).
+        static string Safe(string v) => Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(v);
+        if (result.Metadata.Title != null) Console.WriteLine($"Title: {Safe(result.Metadata.Title)}");
+        if (result.Metadata.Author != null) Console.WriteLine($"Author: {Safe(result.Metadata.Author)}");
+        if (result.Metadata.Subject != null) Console.WriteLine($"Subject: {Safe(result.Metadata.Subject)}");
+        if (result.Metadata.Creator != null) Console.WriteLine($"Creator: {Safe(result.Metadata.Creator)}");
+        if (result.Metadata.Producer != null) Console.WriteLine($"Producer: {Safe(result.Metadata.Producer)}");
 
         Console.WriteLine();
         Console.WriteLine("=== Pages ===");

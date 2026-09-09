@@ -1198,8 +1198,25 @@ This redaction implementation:
   (#608 + #1155, `PdfDocumentSanitizer`, `SanitizeMetadata = true`; indirect
   string carriers are resolved before reading — the #1155 gap); `RemoveAllMetadata`
   strips them wholesale. ⚠️ #1168 tracks the remaining URI-action locations
-  (outline `/A`, catalog `/OpenAction`, `/AA`); #1169 tracks the per-carrier
-  policy UX (stripping a term from a known URL can REVEAL it).
+  (outline `/A`, catalog `/OpenAction`, `/AA`).
+- ✅ **Per-carrier scrub SCOPE and MODE** (#1188 + #1169,
+  `RedactionOptions.Carriers` / `.CarrierPolicy`). Scope says whether a carrier
+  is examined; mode says what happens when the term is there —
+  `Strip` (cut the substring, the default and the pre-option behaviour),
+  `RemoveWhole` (drop the entire value), `ReportOnly` (change nothing, report
+  it). The reason this is not one policy: stripping a term from a KNOWN string
+  can REVEAL it — `https://www.irs.gov/your-account` minus `your` reads back as
+  `https://www.irs.gov/-account` to anyone who knows the site. Surfaced as
+  `--carrier-policy <carrier>=<mode>` and in Preferences → Redaction.
+  ⚠️ A `ReportOnly` carrier STILL HOLDS THE TERM; `RedactionReport.Carriers`
+  says so and `IsCleanSuccess` goes false. ⚠️ **The safety default has NOT been
+  flipped**: #1169 argues URLs and structured metadata should default to
+  `RemoveWhole`, #1187 requires defaults to reproduce prior behaviour, and that
+  conflict is a product decision left to a human.
+- ✅ **Whole-word matching is an explicit option** (#1052,
+  `RedactionOptions.WholeWord`, `--whole-word`), off by default per #1000.
+  It applies to page content and the carrier scrub together (#896), and the
+  rule that ran is recorded in `RedactionReport.WholeWord`.
 - ✅ Scrubs the structure tree (`/ActualText`, `/Alt`, `/E`) (#636 + #1155)
 - ✅ Scrubs embedded files/attachments **by default** in the GUI redaction-copy
   flow — `RedactedCopySafetyService` (`ScrubAttachments = true`) →

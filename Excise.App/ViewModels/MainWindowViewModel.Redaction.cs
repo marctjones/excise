@@ -34,7 +34,9 @@ public partial class MainWindowViewModel
 
         var mark = _redactionWorkflowService.CaptureMark(
             new RedactionMarkRequest(_currentFilePath, CurrentPageIndex, pageArea));
-        _logger.LogInformation("Preview text extracted: '{Text}'", mark.PreviewText);
+        // #1205: extracted page text echoed into a log line.
+        _logger.LogInformation("Preview text extracted: '{Text}'",
+            Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(mark.PreviewText));
 
         RedactionWorkflow.MarkArea(mark.PageArea, mark.PreviewText);
         FileState.PendingRedactionsCount = RedactionWorkflow.PendingCount;
