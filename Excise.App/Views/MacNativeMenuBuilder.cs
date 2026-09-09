@@ -163,6 +163,7 @@ internal static class MacNativeMenuBuilder
                     // project's primary platform — which is exactly the
                     // "wired to nothing" failure this work is about.
                     TrackDocumentItem(CommandItem("Attachments...", _viewModel.AttachmentsCommand)),
+                    TrackDocumentItem(CommandItem("Bates Numbering...", _viewModel.BatesNumberingCommand)),
                     TrackDocumentItem(_revealHiddenTextItem),
                     TrackDocumentItem(_revealRasterizedHiddenItem)));
 

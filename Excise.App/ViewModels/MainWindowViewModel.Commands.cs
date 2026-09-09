@@ -91,6 +91,8 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> SecurityCommand { get; private set; } = null!;
     /// <summary>#1414 — view, save, or strip embedded files.</summary>
     public ReactiveCommand<Unit, Unit> AttachmentsCommand { get; private set; } = null!;
+    /// <summary>#1306 — stamp sequential Bates numbers on every page.</summary>
+    public ReactiveCommand<Unit, Unit> BatesNumberingCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, int> AutoDetectFieldsCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> SaveFlattenedFormCopyCommand { get; private set; } = null!;
     /// <summary>#1308 — apply a digital signature to the saved file.</summary>
@@ -264,6 +266,7 @@ public partial class MainWindowViewModel
             _logger.LogError(ex, "MakeSearchableCommand threw exception"));
         SecurityCommand = ReactiveCommand.CreateFromTask(ShowSecurityDialogAsync);
         AttachmentsCommand = ReactiveCommand.CreateFromTask(ShowAttachmentsDialogAsync);
+        BatesNumberingCommand = ReactiveCommand.CreateFromTask(ApplyBatesNumberingAsync);
         SecurityCommand.ThrownExceptions.Subscribe(ex =>
             _logger.LogError(ex, "SecurityCommand threw exception"));
         AutoDetectFieldsCommand = ReactiveCommand.Create(() => AutoDetectAndApplyFormFields());

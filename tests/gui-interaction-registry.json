@@ -4,15 +4,15 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "a405e5e95fdcf14e3b46f09c35267d9d19f8ef4f",
+  "sourceRevision": "b7bab5e3358ef27372ca384bc634719ffbc718af",
   "summary": {
-    "interactions": 148,
-    "menuItems": 94,
+    "interactions": 149,
+    "menuItems": 95,
     "buttons": 45,
     "mouseGestures": 9,
     "keyboardShortcuts": 28,
-    "declaredCommandIds": 99,
-    "commandIdsReachableFromTheGui": 90,
+    "declaredCommandIds": 100,
+    "commandIdsReachableFromTheGui": 91,
     "commandIdsWithNoGuiPath": 0,
     "cliOnlyCommandIds": 9,
     "controlsWithNoCommandId": 0,
@@ -712,6 +712,15 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "document.attachments"
+    },
+    {
+      "kind": "menu",
+      "path": "Document > Bates Numbering...",
+      "label": "Bates Numbering...",
+      "command": "BatesNumberingCommand",
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "document.batesNumbering"
     },
     {
       "kind": "menu",

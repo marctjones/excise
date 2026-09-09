@@ -17,7 +17,6 @@
 # 25 test references, zero production callers, so CFF fonts ship unsubsetted)
 # and #896 (RedactWithOptions, same shape, and the CLI leaked redacted terms
 # into /Info and XMP for exactly as long as nothing called the safe path).
-Excise.App	nowhere	ApplyBatesNumbers	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	ConvertBack	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	DisplayName	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	IsReplaying	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
@@ -30,7 +29,7 @@ Excise.App	nowhere	SetCommandId	triage:app surface likely XAML/framework binding
 Excise.App	nowhere	SetShowToolTip	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	nowhere	TypeIndicator	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
 Excise.App	tests-only	AddPagesFromPdf	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	ApplyBatesNumbersToSet	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	ApplyBatesNumbersToSet	triage:#1306 wired the SINGLE-document Bates path (ApplyBatesNumbers) to the GUI; this multi-file batch entry point stays deliberately unwired - it stamps a continuing sequence across files on disk and writes new ones, which is a CLI/batch shape, and Excise.Cli cannot reference Excise.App
 Excise.App	tests-only	CalculateNextNumber	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	CurrentPageText	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ExecuteFileAsync	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability

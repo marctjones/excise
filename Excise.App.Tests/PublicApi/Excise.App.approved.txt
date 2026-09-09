@@ -543,6 +543,21 @@ namespace Excise.App.ViewModels
         public string ProjectUrl { get; }
         public string Tagline { get; }
     }
+    public sealed class BatesNumberingDialogViewModel : ReactiveUI.ReactiveObject
+    {
+        public BatesNumberingDialogViewModel() { }
+        public bool Confirmed { get; }
+        public double FontSize { get; set; }
+        public int NumberOfDigits { get; set; }
+        public Excise.App.Services.BatesPosition Position { get; set; }
+        public string Prefix { get; set; }
+        public string Preview { get; }
+        public int StartNumber { get; set; }
+        public string Suffix { get; set; }
+        public static System.Collections.Generic.IReadOnlyList<Excise.App.Services.BatesPosition> Positions { get; }
+        public void Confirm() { }
+        public Excise.App.Services.BatesOptions ToOptions() { }
+    }
     public class CurrentDocumentInfo
     {
         public CurrentDocumentInfo(Excise.Core.Document.PdfDocument? document, string filePath, int pageCount) { }
@@ -615,6 +630,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AttachmentsCommand { get; }
         public string AttachmentsSummary { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, int> AutoDetectFieldsCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> BatesNumberingCommand { get; }
         public bool CanMoveSelectedPagesEarlier { get; }
         public bool CanMoveSelectedPagesLater { get; }
         public bool CanRedo { get; }
@@ -1038,6 +1054,12 @@ namespace Excise.App.Views
     public class AttachmentsDialog : Avalonia.Controls.Window
     {
         public AttachmentsDialog() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class BatesNumberingDialog : Avalonia.Controls.Window
+    {
+        public BatesNumberingDialog() { }
         [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public void InitializeComponent(bool loadXaml = true) { }
     }
