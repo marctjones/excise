@@ -63,6 +63,19 @@ silently.
   `MainWindowViewModel`; the service was a second implementation writing the
   *same* `recent.txt` in an incompatible format (JSON vs newline-delimited
   text). The only thing it added was pinning, which was advertised nowhere.
+- **`FdfSerializer` / `XfdfSerializer`** (#921), 1,782 lines reachable from no
+  shipping surface. The issue's case for wiring rather than deleting assumed
+  they carried AcroForm field *data* ("fill a form, export the data rather
+  than a flattened copy") — they don't; both serializers handle annotations
+  only, and the FDF `/Fields` form-data section is explicitly out of scope in
+  their own docstrings. What's left is an annotation *importer*, which is
+  frozen: annotation authoring has taken no new creation surface since v3.8.0
+  (all 15 types already reachable from the Annotate menu), and FDF/XFDF
+  import exists only to create new annotations from an external file. There
+  is also no independent tool on this machine that reads FDF/XFDF to oracle a
+  round-trip against — the issue's own acceptance criterion. Also removed:
+  `PdfAnnotationAuthoring.AttachImported`, an internal helper with no other
+  caller.
 
 ## [3.9.4] - 2026-09-09
 

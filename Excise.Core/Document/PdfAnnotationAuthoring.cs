@@ -1508,20 +1508,11 @@ public static class PdfAnnotationAuthoring
         var parentRef = document.GetReferenceTo(parent.RawDictionary)
             ?? throw new InvalidOperationException(
                 "The parent annotation is not an indirect object of this document yet " +
-                "— attach it first (Add*Annotation, or an XFDF/FDF import).");
+                "— attach it first with one of the Add*Annotation methods.");
 
         reply.RawDictionary["IRT"] = parentRef;
         reply.RawDictionary.SetName("RT", replyType);
     }
-
-    /// <summary>
-    /// Attach a fully-built annotation dictionary to a page — the shared
-    /// /P + /Annots plumbing, reused by the XFDF importer
-    /// (<c>Excise.Core.Forms.XfdfSerializer</c>) for subtypes that have no
-    /// dedicated authoring method (#626).
-    /// </summary>
-    internal static PdfAnnotation AttachImported(PdfDocument document, int pageNumber, PdfDictionary annot)
-        => AttachAnnotation(document, pageNumber, annot);
 
     private static PdfAnnotation AddShapeAnnotation(
         PdfDocument document,

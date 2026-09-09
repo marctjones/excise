@@ -58,7 +58,6 @@ Excise.Core	tests-only	DocumentJavaScriptActions	triage:public library/domain AP
 Excise.Core	tests-only	Dropdown	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	EndBaseLine	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ExtractWords	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	FdfSerializer	issue:#921 FDF/XFDF shipping surface remains open
 Excise.Core	tests-only	FillEvenOdd	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FindText	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FlyOpaqueRectangle	triage:public library/domain API; tests exercise contract; external callers may use it
