@@ -36,6 +36,13 @@ public partial class MainWindowViewModel
     {
         _logger.LogInformation("Open file command triggered");
 
+        // #1233: replacing the open document discards its unsaved edits just
+        // as surely as closing the window does. Ask BEFORE the picker, so a
+        // user who decides to keep the current document isn't made to choose a
+        // file first and then be told it was pointless.
+        if (!await ConfirmDiscardUnsavedChangesAsync("open a different document"))
+            return;
+
         var storageProvider = GetStorageProvider();
         if (storageProvider == null)
         {

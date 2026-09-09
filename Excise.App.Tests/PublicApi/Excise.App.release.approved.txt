@@ -150,6 +150,7 @@ namespace Excise.App.Services
         public System.Threading.Tasks.Task<string?> PromptTextAsync(string title, string message, string? defaultValue = null) { }
         public System.Threading.Tasks.Task<bool> ShowConfirmAsync(string title, string message) { }
         public System.Threading.Tasks.Task ShowMessageAsync(string title, string message) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.UnsavedChangesDecision> ShowUnsavedChangesAsync(string title, string message, string saveActionText) { }
     }
     public class BatesDocumentResult
     {
@@ -250,6 +251,7 @@ namespace Excise.App.Services
         System.Threading.Tasks.Task<string?> PromptTextAsync(string title, string message, string? defaultValue = null);
         System.Threading.Tasks.Task<bool> ShowConfirmAsync(string title, string message);
         System.Threading.Tasks.Task ShowMessageAsync(string title, string message);
+        System.Threading.Tasks.Task<Excise.App.Services.UnsavedChangesDecision> ShowUnsavedChangesAsync(string title, string message, string saveActionText);
     }
     public sealed class PageOperationDiagnostics : System.IEquatable<Excise.App.Services.PageOperationDiagnostics>
     {
@@ -504,6 +506,12 @@ namespace Excise.App.Services
         public static string EscapeForDisplay(string? text) { }
         public static bool IsBidiControl(char c) { }
     }
+    public enum UnsavedChangesDecision
+    {
+        Cancel = 0,
+        Save = 1,
+        Discard = 2,
+    }
 }
 namespace Excise.App.Threading
 {
@@ -642,6 +650,7 @@ namespace Excise.App.ViewModels
         public bool HasRecentFiles { get; }
         public bool HasSelectedPages { get; }
         public bool HasTextSelection { get; }
+        public bool HasUnsavedDocumentChanges { get; }
         public System.Collections.ObjectModel.ObservableCollection<Excise.Avalonia.Controls.HiddenTextHighlight> HiddenTextHighlights { get; }
         public bool IgnoreDocumentPermissions { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesAfterCurrentCommand { get; }
@@ -792,6 +801,7 @@ namespace Excise.App.ViewModels
         public System.Threading.Tasks.Task ApplyRedactionsCommand() { }
         public void ApplyWhitespaceModePreference(Excise.Core.Text.WhitespaceMode mode) { }
         public int AutoDetectAndApplyFormFields() { }
+        public System.Threading.Tasks.Task<bool> ConfirmDiscardUnsavedChangesAsync(string actionDescription) { }
         public void DiscardPendingTypewriterEdits() { }
         public System.Threading.Tasks.Task EnsureThumbnailLoadedAsync(int pageIndex, System.Threading.CancellationToken cancellationToken = default) { }
         public System.Threading.Tasks.Task ExportCurrentPageToImageAsync(string outputPath, int dpi = 150) { }

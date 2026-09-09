@@ -2101,6 +2101,19 @@ public partial class MainWindowViewModel : ViewModelBase
         await Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Ctrl+W / File ▸ Close Document. Prompts first when the document has
+    /// unsaved changes (#1233) — before this it discarded every pending edit
+    /// silently, exactly like the window-close path did.
+    /// </summary>
+    private async Task CloseDocumentAsync()
+    {
+        if (!await ConfirmDiscardUnsavedChangesAsync("close this document"))
+            return;
+
+        CloseDocument();
+    }
+
     private void CloseDocument()
     {
         _logger.LogInformation("Close document command triggered");
@@ -2167,16 +2180,32 @@ public partial class MainWindowViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(SaveButtonText));
     }
 
-    private void Exit()
+    /// <summary>
+    /// File ▸ Exit. Asks about unsaved changes before quitting (#1233).
+    /// </summary>
+    /// <remarks>
+    /// The prompt is issued HERE rather than relying on the window's
+    /// <c>Closing</c> handler to catch it. <c>IControlledApplicationLifetime
+    /// .Shutdown()</c> is the non-cancellable overload — Avalonia's own docs
+    /// reserve cancellation for <c>TryShutdown()</c> — so a quit that went
+    /// through <c>Shutdown()</c> could tear the window down regardless of what
+    /// <c>Closing</c> decided. Asking first makes the answer independent of
+    /// that framework detail, and <c>TryShutdown</c> then keeps the window's
+    /// own guard meaningful as a second line rather than a contradiction.
+    /// </remarks>
+    private async Task ExitAsync()
     {
         _logger.LogInformation("Exit command triggered");
+
+        if (!await ConfirmDiscardUnsavedChangesAsync("quit excise"))
+            return;
 
         var lifetime = global::Avalonia.Application.Current?.ApplicationLifetime
             as global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
 
         if (lifetime != null)
         {
-            lifetime.Shutdown();
+            lifetime.TryShutdown();
         }
     }
 
@@ -2195,6 +2224,10 @@ public partial class MainWindowViewModel : ViewModelBase
             RemoveFromRecentFiles(filePath);
             return;
         }
+
+        // #1233: same document-replacement hazard as File ▸ Open.
+        if (!await ConfirmDiscardUnsavedChangesAsync("open a different document"))
+            return;
 
         await LoadDocumentAsync(filePath);
     }

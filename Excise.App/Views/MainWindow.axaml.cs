@@ -79,21 +79,8 @@ public partial class MainWindow : Window
         _windowSettings = WindowSettings.Load();
         _windowSettings.ApplyTo(this);
 
-        // Save settings on close
-        this.Closing += (s, e) =>
-        {
-            if (DataContext is MainWindowViewModel viewModel)
-            {
-                _windowSettings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
-                _windowSettings.ReadingOrderStrategy = viewModel.ReadingOrderStrategy.ToString();
-                _windowSettings.WhitespaceMode = viewModel.WhitespaceMode.ToString();
-            }
-            _windowSettings.CaptureFrom(this);
-            _windowSettings.Save();
-            // Cancel any pending toast auto-dismiss so nothing is left queued on
-            // the dispatcher when the window/test tears down.
-            _toastTimer?.Stop();
-        };
+        // Save settings on close, and guard unsaved document changes (#1233)
+        this.Closing += OnWindowClosing;
 
         // Add keyboard handler for Ctrl+C
         this.KeyDown += MainWindow_KeyDown;
@@ -105,6 +92,70 @@ public partial class MainWindow : Window
             _isNativeWindowOpened = true;
             SchedulePlatformMenuConfigure();
         };
+    }
+
+    /// <summary>
+    /// Set once the user has answered the unsaved-changes prompt and chosen to
+    /// proceed, so the programmatic re-close does not ask again. Without it the
+    /// re-issued <see cref="Window.Close"/> would re-enter this handler and
+    /// prompt forever.
+    /// </summary>
+    private bool _closeApproved;
+
+    /// <summary>
+    /// #1233. <see cref="Window.Closing"/> is synchronous and the prompt is
+    /// not, so the only workable shape is: cancel this close, ask, and re-issue
+    /// the close if the answer allows it.
+    /// </summary>
+    /// <remarks>
+    /// This stays in code-behind because cancelling a routed window event and
+    /// re-invoking <c>Close()</c> is view mechanics that a ViewModel has no
+    /// handle on. Every DECISION — whether anything is dirty, how a save is
+    /// routed so an original is preserved, what a failed save means — belongs
+    /// to <see cref="MainWindowViewModel.ConfirmDiscardUnsavedChangesAsync"/>
+    /// and is tested there.
+    /// </remarks>
+    private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
+    {
+        if (!_closeApproved &&
+            DataContext is MainWindowViewModel guardViewModel &&
+            guardViewModel.HasUnsavedDocumentChanges)
+        {
+            e.Cancel = true;
+
+            // Fire-and-forget deliberately: the handler must return
+            // synchronously with Cancel set, and the continuation re-enters
+            // Close() on the UI thread once the user has answered.
+            _ = PromptThenCloseAsync(guardViewModel);
+            return;
+        }
+
+        PersistWindowStateOnClose();
+    }
+
+    private async System.Threading.Tasks.Task PromptThenCloseAsync(MainWindowViewModel viewModel)
+    {
+        var proceed = await viewModel.ConfirmDiscardUnsavedChangesAsync("close this window");
+        if (!proceed)
+            return;
+
+        _closeApproved = true;
+        Close();
+    }
+
+    private void PersistWindowStateOnClose()
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            _windowSettings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
+            _windowSettings.ReadingOrderStrategy = viewModel.ReadingOrderStrategy.ToString();
+            _windowSettings.WhitespaceMode = viewModel.WhitespaceMode.ToString();
+        }
+        _windowSettings.CaptureFrom(this);
+        _windowSettings.Save();
+        // Cancel any pending toast auto-dismiss so nothing is left queued on
+        // the dispatcher when the window/test tears down.
+        _toastTimer?.Stop();
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)

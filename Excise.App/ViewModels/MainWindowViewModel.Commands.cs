@@ -268,8 +268,10 @@ public partial class MainWindowViewModel
         SignDocumentCommand = ReactiveCommand.CreateFromTask(SignDocumentAsync);
 
         SaveAsCommand = ReactiveCommand.CreateFromTask(SaveAsAsync);
-        CloseDocumentCommand = ReactiveCommand.Create(CloseDocument);
-        ExitCommand = ReactiveCommand.Create(Exit);
+        // #1233: both of these destroy unsaved edits, so both are async now —
+        // they have to await the unsaved-changes prompt before proceeding.
+        CloseDocumentCommand = ReactiveCommand.CreateFromTask(CloseDocumentAsync);
+        ExitCommand = ReactiveCommand.CreateFromTask(ExitAsync);
         LoadRecentFileCommand = ReactiveCommand.CreateFromTask<string>(LoadRecentFileAsync);
 
         ExportCurrentPageCommand = ReactiveCommand.CreateFromTask(ExportCurrentPageAsync);
