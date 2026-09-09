@@ -339,25 +339,6 @@ namespace Excise.App.Services
         public string ExtractTextFromPage(string pdfPath, int pageIndex) { }
         public string ExtractTextFromPage(System.IO.Stream pdfStream, int pageIndex, string sourceName = "PDF") { }
     }
-    public class RecentFilesService
-    {
-        public RecentFilesService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.RecentFilesService> logger) { }
-        public void AddOrUpdate(string filePath, System.Collections.ObjectModel.ObservableCollection<Excise.App.Services.RecentFilesService.RecentFileEntry> entries) { }
-        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Services.RecentFilesService.RecentFileEntry> Load() { }
-        public void Remove(string filePath, System.Collections.ObjectModel.ObservableCollection<Excise.App.Services.RecentFilesService.RecentFileEntry> entries) { }
-        public void Save(System.Collections.Generic.IEnumerable<Excise.App.Services.RecentFilesService.RecentFileEntry> entries) { }
-        public void TogglePin(string filePath, System.Collections.ObjectModel.ObservableCollection<Excise.App.Services.RecentFilesService.RecentFileEntry> entries) { }
-        public class RecentFileEntry
-        {
-            public RecentFileEntry() { }
-            [System.Text.Json.Serialization.JsonPropertyName("isPinned")]
-            public bool IsPinned { get; set; }
-            [System.Text.Json.Serialization.JsonPropertyName("lastAccessedUtc")]
-            public System.DateTime LastAccessedUtc { get; set; }
-            [System.Text.Json.Serialization.JsonPropertyName("path")]
-            public string Path { get; set; }
-        }
-    }
     public class RedactionOptions
     {
         public RedactionOptions() { }
