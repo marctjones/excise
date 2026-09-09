@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-test-outcomes.py --merge",
   "policy": "A named test is evidence of intent, not proof of a current result. Import TRX output from a recorded local or CI run; results retain run provenance and never overwrite the capability contract.",
-  "recordedAt": "2026-09-09T04:33:55.867336+00:00",
-  "gitRevision": "c20c5dac9756607b32f79ded01aa6a38ee55d269",
+  "recordedAt": "2026-09-09T04:44:32.381450+00:00",
+  "gitRevision": "84a03446ce22c20236d591549c74c39690278270",
   "dotnetVersion": "10.0.400",
   "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
   "resultFiles": [
@@ -526,6 +526,11 @@
       "path": "/tmp/trx-imgpreserve/ip.trx",
       "modifiedAt": "2026-09-09T04:33:53.154940+00:00",
       "sha256": "3c0715bf1bda25a19596d31012c7a4812558ed324e9abd4bb845841cbfac379c"
+    },
+    {
+      "path": "/tmp/trx-rewire/rw.trx",
+      "modifiedAt": "2026-09-09T04:44:28.518016+00:00",
+      "sha256": "b173122b2ddcb7afd7e80d9a747e8946d939e5a4c471f87af9617f19b55906ac"
     }
   ],
   "outcomes": [
@@ -53740,34 +53745,34 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.GraphicsStateTextParameterRenderingTests.FormXObject_Font_DoesNotSurviveTheDo",
       "outcome": "Passed",
-      "duration": "00:00:00.1093821",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0637535",
+      "trx": "/tmp/trx-rewire/rw.trx",
+      "resultModifiedAt": "2026-09-09T04:44:28.518016+00:00",
+      "trxSha256": "b173122b2ddcb7afd7e80d9a747e8946d939e5a4c471f87af9617f19b55906ac"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.GraphicsStateTextParameterRenderingTests.PostQ_ResolvedFont_MatchesIndependentRenderers",
       "outcome": "Passed",
-      "duration": "00:00:00.1331958",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.2015036",
+      "trx": "/tmp/trx-rewire/rw.trx",
+      "resultModifiedAt": "2026-09-09T04:44:28.518016+00:00",
+      "trxSha256": "b173122b2ddcb7afd7e80d9a747e8946d939e5a4c471f87af9617f19b55906ac"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.GraphicsStateTextParameterRenderingTests.PostQ_TextParameters_MatchIndependentRenderers",
       "outcome": "Passed",
-      "duration": "00:00:00.1145796",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0975616",
+      "trx": "/tmp/trx-rewire/rw.trx",
+      "resultModifiedAt": "2026-09-09T04:44:28.518016+00:00",
+      "trxSha256": "b173122b2ddcb7afd7e80d9a747e8946d939e5a4c471f87af9617f19b55906ac"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.GraphicsStateTextParameterRenderingTests.QQ_InsideATextObject_DoesNotRewindThePen",
       "outcome": "Passed",
-      "duration": "00:00:00.1049253",
-      "trx": "logs/test-tier_t1_20260907_191755/rendering-oracles.trx",
-      "resultModifiedAt": "2026-09-07T23:42:32.669019+00:00",
-      "trxSha256": "0d017965e2bbb9c1b289f1783528f2ded19f5094983941f163220fb37dbca15f"
+      "duration": "00:00:00.0606146",
+      "trx": "/tmp/trx-rewire/rw.trx",
+      "resultModifiedAt": "2026-09-09T04:44:28.518016+00:00",
+      "trxSha256": "b173122b2ddcb7afd7e80d9a747e8946d939e5a4c471f87af9617f19b55906ac"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.GraphicsSyntaxContentVerificationTests.ExciseAuthoredCompressedObjectStream_IsIndependentlyDecodableByQpdf",
@@ -54452,10 +54457,10 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.HorizontalScaling_Tz_HalvesWidth_MatchesMutool",
       "outcome": "Passed",
-      "duration": "00:00:00.2733193",
-      "trx": "/tmp/trx-integration/agents.trx",
-      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
-      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+      "duration": "00:00:00.2034323",
+      "trx": "/tmp/trx-rewire/rw.trx",
+      "resultModifiedAt": "2026-09-09T04:44:28.518016+00:00",
+      "trxSha256": "b173122b2ddcb7afd7e80d9a747e8946d939e5a4c471f87af9617f19b55906ac"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.Leading_TL_And_NextLine_TStar_ShiftsByLeadingAmount_MatchesMutool",
@@ -54492,10 +54497,10 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.OperatorVerificationParityTests.TextRenderMode_Tr3Invisible_PaintsNoInk_MatchesMutool",
       "outcome": "Passed",
-      "duration": "00:00:00.1671837",
-      "trx": "/tmp/trx-integration/agents.trx",
-      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
-      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+      "duration": "00:00:00.1022586",
+      "trx": "/tmp/trx-rewire/rw.trx",
+      "resultModifiedAt": "2026-09-09T04:44:28.518016+00:00",
+      "trxSha256": "b173122b2ddcb7afd7e80d9a747e8946d939e5a4c471f87af9617f19b55906ac"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.OracleCropBoxParityTests.Ghostscript_RasterisesTheCropBox_NotTheMediaBox",
@@ -64868,18 +64873,18 @@
     {
       "testName": "Excise.Rendering.Tests.Differential.WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer(withWidthsArray: False)",
       "outcome": "Passed",
-      "duration": "00:00:00.1440951",
-      "trx": "/tmp/trx-integration/agents.trx",
-      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
-      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+      "duration": "00:00:00.1072316",
+      "trx": "/tmp/trx-rewire/rw.trx",
+      "resultModifiedAt": "2026-09-09T04:44:28.518016+00:00",
+      "trxSha256": "b173122b2ddcb7afd7e80d9a747e8946d939e5a4c471f87af9617f19b55906ac"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.WordSpacingIntraStringRenderingTests.Tw_WidensAFourWordString_MatchesIndependentRenderer(withWidthsArray: True)",
       "outcome": "Passed",
-      "duration": "00:00:00.1676696",
-      "trx": "/tmp/trx-integration/agents.trx",
-      "resultModifiedAt": "2026-09-09T02:33:37.273668+00:00",
-      "trxSha256": "29e3dd440028c305ce4d21c02e573d7900b6ed9bdff6618cc513cbe5aa7a3817"
+      "duration": "00:00:00.2031743",
+      "trx": "/tmp/trx-rewire/rw.trx",
+      "resultModifiedAt": "2026-09-09T04:44:28.518016+00:00",
+      "trxSha256": "b173122b2ddcb7afd7e80d9a747e8946d939e5a4c471f87af9617f19b55906ac"
     },
     {
       "testName": "Excise.Rendering.Tests.Differential.XRayBadRedactionTests.ExciseAudit_AgreesWithXRay_OnTheFakeAndTheRealRedaction",
@@ -69827,7 +69832,7 @@
     }
   ],
   "summary": {
-    "trxFiles": 104,
+    "trxFiles": 105,
     "tests": 8662,
     "outcomes": {
       "Failed": 3,

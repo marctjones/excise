@@ -62332,10 +62332,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -62480,10 +62487,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -62628,10 +62642,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -62776,10 +62797,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs::Tw_WidensAFourWordString_MatchesIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -63234,10 +63262,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71826,10 +71861,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -71917,10 +71959,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72008,10 +72057,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72099,10 +72155,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs::Tw_WidensAFourWordString_MatchesIndependentRenderer",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72190,10 +72253,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::HorizontalScaling_Tz_HalvesWidth_MatchesMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72372,10 +72442,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -72463,10 +72540,17 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "kind": "differential",
+          "ref": "Excise.Rendering.Tests/Differential/OperatorVerificationParityTests.cs::TextRenderMode_Tr3Invisible_PaintsNoInk_MatchesMutool",
+          "recordedOutcomes": [
+            "Passed"
+          ]
         }
       ],
       "explicitContractStatus": "passing",
-      "grade": "implemented",
+      "grade": "verified",
       "benchmarkScenarios": []
     },
     {
@@ -114386,8 +114470,8 @@
     "modesWithExplicitContracts": 879,
     "modesWithPassingExplicitContracts": 878,
     "modesWithRecordedPassingCandidate": 644,
-    "gradeImplemented": 220,
-    "gradeVerified": 659,
+    "gradeImplemented": 208,
+    "gradeVerified": 671,
     "gradeUnknown": 19,
     "testMethods": 6428,
     "testMethodsWithCapabilityCandidate": 4015,

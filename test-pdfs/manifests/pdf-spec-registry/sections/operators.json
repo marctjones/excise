@@ -5843,6 +5843,13 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -5962,6 +5969,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -6083,6 +6097,13 @@
               "preserve",
               "write"
             ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+            "modes": [
+              "render"
+            ]
           }
         ]
       },
@@ -6202,6 +6223,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/WordSpacingIntraStringRenderingTests.cs::Tw_WidensAFourWordString_MatchesIndependentRenderer",
+            "modes": [
+              "render"
             ]
           }
         ]
@@ -6576,6 +6604,13 @@
               "parse",
               "preserve",
               "write"
+            ]
+          },
+          {
+            "kind": "differential",
+            "ref": "Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests.cs::PostQ_TextParameters_MatchIndependentRenderers",
+            "modes": [
+              "render"
             ]
           }
         ]
