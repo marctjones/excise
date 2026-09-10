@@ -21,7 +21,8 @@ Inputs
                           name status rc durationSeconds sha treeDirty config recorded and optionally
                           kind target filter log trx testsExecuted class knownIssue prereq reason
                           evidenceFrom evidenceFinished evidenceLog evidenceSha.
-                          status in PASS FAIL FAIL_ZERO_TESTS SKIP_CHECKPOINTED SKIPPED NO_RESULT.
+                          status in PASS FAIL FAIL_ZERO_TESTS SKIP_CHECKPOINTED
+                          SKIP_CHECKPOINTED_KNOWN SKIPPED NO_RESULT.
   tests/gates.tsv         only to (1) list every '#N' in the tier's plan for the STALE sweep and
                           (2) fill class/knownIssue for legacy rows (Foo.chunkNN resolves to Foo).
                           The sweep is PLAN-scoped: a #N the manifest cites on a row this plan does
@@ -32,6 +33,10 @@ Inputs
 
 Row verdicts
   PASS -> PASS; SKIP_CHECKPOINTED -> PASS 'from checkpoint <evidenceFinished>'.
+  SKIP_CHECKPOINTED_KNOWN -> KNOWN 'accepted failure from checkpoint <evidenceFinished>' (#1371 —
+  runner_checkpoint_known_failures in lib-runner.sh marks a FAILING row this way once ITS OWN prior
+  KNOWN verdict is on record, so a step whose failure is accepted is not silently re-run forever;
+  the STALE sweep below still applies to it exactly like any other row citing #N).
   FAIL / FAIL_ZERO_TESTS, class != GRADE: knownIssue '-' -> NEW; '#N' -> KNOWN while N is OPEN or
   unverified; '#N/Sub' -> KNOWN iff the qualifier matches (test/project/project-chunked rows: at
   least one and EVERY outcome="Failed" testName in the row's trx contains Sub; script rows: the
@@ -576,7 +581,7 @@ def row_paths(log_dir, led):
     name = led["name"]
     log = led.get("log")
     trx = led.get("trx")
-    if led.get("status") == "SKIP_CHECKPOINTED":
+    if led.get("status") in ("SKIP_CHECKPOINTED", "SKIP_CHECKPOINTED_KNOWN"):
         ev = led.get("evidenceLog")
         if ev:
             ev_dir = Path(ev).parent
@@ -651,6 +656,15 @@ def classify_rows(plan, ledger, manifest, verifier, log_dir, torn=()):
             row["verdict"] = "PASS"
             if status == "SKIP_CHECKPOINTED":
                 row["detail"] = f"from checkpoint {led.get('evidenceFinished') or '?'}"
+        elif status == "SKIP_CHECKPOINTED_KNOWN":
+            # A prior report classified this row's failure KNOWN and
+            # runner_checkpoint_known_failures marked it; this pass skipped
+            # re-running it. Verdict stays KNOWN, not PASS — it did not pass,
+            # it was not re-checked. The STALE sweep below still runs for n
+            # exactly as for a freshly-failing row, so an issue that closed
+            # since the checkpoint was written still surfaces here.
+            row["verdict"] = "KNOWN"
+            row["detail"] = f"accepted failure from checkpoint {led.get('evidenceFinished') or '?'} (not re-run this pass)"
         elif status == "SKIPPED":
             row["verdict"] = "SKIPPED"
             row["detail"] = led.get("reason") or "prerequisite missing (policy=skip)"
@@ -698,7 +712,7 @@ def classify_rows(plan, ledger, manifest, verifier, log_dir, torn=()):
                  "NOT RUN": "notRun", "PASS": "pass", "NO DATA": "noData", "INFO": "info"}
     for r in rows:
         counts[tally_key[r["verdict"]]] += 1
-        if r["status"] == "SKIP_CHECKPOINTED":
+        if r["status"] in ("SKIP_CHECKPOINTED", "SKIP_CHECKPOINTED_KNOWN"):
             counts["checkpointed"] += 1
     return rows, counts, issues
 
@@ -838,7 +852,7 @@ def _row_map(rows):
 def artifact_dir(rows_by, name, log_dir):
     """Where a row's artifacts live: the evidence directory for a checkpointed row, else LOG_DIR."""
     r = rows_by.get(name)
-    if r and r["status"] == "SKIP_CHECKPOINTED" and r.get("log"):
+    if r and r["status"] in ("SKIP_CHECKPOINTED", "SKIP_CHECKPOINTED_KNOWN") and r.get("log"):
         return Path(r["log"]).parent
     return Path(log_dir)
 
@@ -2034,6 +2048,22 @@ def _selftest_cases(t):
     (snap / "test-outcomes.json").write_text(json.dumps({"recordedAt": "2026-09-05T08:00:00+00:00"}))
     d = t.nd(); t.run_t0(d); t.run(d)
     t.grep("(16) a snapshot without a summary reads NO DATA, never zero tests", r"^  test evidence NO DATA — no committed test-outcomes snapshot with a summary")
+
+    # (17) SKIP_CHECKPOINTED_KNOWN (#1371 — runner_checkpoint_known_failures /
+    # lib-runner.sh): a row the runner skipped because ITS PRIOR report
+    # classified it KNOWN reads KNOWN here too, never PASS — it did not pass,
+    # it was not re-checked. The STALE sweep still applies: a checkpointed-
+    # known skip whose cited issue has since closed still fails, exactly like
+    # a freshly-failing row would.
+    d = t.nd(); t.mkplan(d, "t0", 2, 2, ["alpha", "beta"]); t.led(d, "alpha", "PASS", 0); t.led(d, "beta", "SKIP_CHECKPOINTED_KNOWN", 0); t.run(d)
+    t.rc_is("(17) SKIP_CHECKPOINTED_KNOWN citing OPEN #2 -> exit 0", 0)
+    t.grep("(17) row reads KNOWN, not PASS", r"^KNOWN +beta +BLOCK +#2 OPEN +accepted failure from checkpoint")
+    t.nogrep("(17) a checkpointed-known skip is never reported as PASS", r"^PASS +beta ")
+    t.grep("(17) VERDICT counts it under checkpointed", r"checkpointed 1")
+    d = t.nd(); t.mkplan(d, "full", 2, 2, ["alpha", "gamma"]); t.led(d, "alpha", "PASS", 0); t.led(d, "gamma", "SKIP_CHECKPOINTED_KNOWN", 0); t.run(d)
+    t.rc_is("(17) SKIP_CHECKPOINTED_KNOWN citing a now-CLOSED #1 -> STALE, exit 1", 1)
+    t.grep("(17) the STALE sweep overrides a checkpointed-known skip", r"^STALE +gamma +BLOCK +#1 CLOSED +KNOWN: accepted failure from checkpoint")
+    t.nogrep("(17) it is not reported as KNOWN once STALE", r"^KNOWN +gamma ")
 
 
 if __name__ == "__main__":

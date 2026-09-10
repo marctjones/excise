@@ -427,8 +427,13 @@ run_row() {
     # tree. The redaction gates are checkpoint=never in the manifest, so they
     # re-run here even on a resume — CLAUDE.md allows no flag that skips them.
     if [ "$RESUME" = "1" ] && ! runner_step_should_run "$name" "$hash"; then
-        say "${B}[$name]${N} SKIP - already passed (checkpointed)"
-        runner_ledger_record "$name" SKIP_CHECKPOINTED 0 0 "kind=$ROW_KIND" "target=$ROW_TARGET" "filter=$ROW_FILTER" \
+        local skip_status="SKIP_CHECKPOINTED" skip_label="already passed (checkpointed)"
+        if [ "$(runner_marker_value "$name" status)" = "KNOWN" ]; then
+            skip_status="SKIP_CHECKPOINTED_KNOWN"
+            skip_label="accepted failure (checkpointed)"
+        fi
+        say "${B}[$name]${N} SKIP - $skip_label"
+        runner_ledger_record "$name" "$skip_status" 0 0 "kind=$ROW_KIND" "target=$ROW_TARGET" "filter=$ROW_FILTER" \
             "class=$ROW_CLASS" "knownIssue=$ROW_KNOWN" "prereq=$ROW_PREREQ" \
             "evidenceFrom=$(runner_marker_path "$name")" "evidenceFinished=$(runner_marker_value "$name" finished)" \
             "evidenceLog=$(runner_marker_value "$name" log)" "evidenceSha=$(runner_marker_value "$name" sha)"
@@ -528,6 +533,9 @@ done < "$PLAN_FILE"
 # that never ran, 2 nothing to report.
 scripts/report-gates.sh "$LOG_DIR"
 rc=$?
+# Checkpoint any row report-gates.sh just classified KNOWN so a later --resume
+# skips an accepted failure instead of re-running it (#1371).
+runner_checkpoint_known_failures "$LOG_DIR"
 if [ "$rc" = 0 ] && [ "$PLANNED" = "$OF" ]; then
     runner_tier_base_record t2
 fi
