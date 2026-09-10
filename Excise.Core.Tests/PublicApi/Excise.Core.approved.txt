@@ -736,6 +736,7 @@ namespace Excise.Core.Document
         public string PartialName { get; }
         public Excise.Core.Primitives.PdfDictionary RawDictionary { get; }
         public Excise.Core.Document.PdfRectangle? Rect { get; }
+        public string? Tooltip { get; }
         public string? Value { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfFieldWidget> Widgets { get; }
         public void SetValue(string? value) { }
