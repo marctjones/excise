@@ -57,7 +57,11 @@ def json_text(value: dict[str, Any]) -> str:
 
 def write_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8", newline="\n")
+    # Path.write_text()'s newline= kwarg needs Python 3.10+; this machine's
+    # default `python3` is Apple's system 3.9.6. open()'s newline= has been
+    # supported since 3.0, so it works on any interpreter this ever runs on.
+    with path.open("w", encoding="utf-8", newline="\n") as f:
+        f.write(content)
 
 
 def staged_path(stage: Path, relative: Path) -> Path:

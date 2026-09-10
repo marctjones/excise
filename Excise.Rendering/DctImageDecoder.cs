@@ -55,9 +55,6 @@ internal static class DctImageDecoder
         Other,
     }
 
-    internal static SKBitmap? Decode(DctImageDecodeRequest request)
-        => Decode(request, out _);
-
     internal static SKBitmap? Decode(DctImageDecodeRequest request, out DctDecodeFailure failure)
     {
         failure = DctDecodeFailure.Other;

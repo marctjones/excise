@@ -26,7 +26,7 @@ public sealed class DctImageDecoderTests
             ResolvedColorSpace: PdfColorSpace.DeviceRGB,
             DecodeArray: null,
             ColorKeyMask: null,
-            CancellationToken: default));
+            CancellationToken: default), out _);
 
         decoded.Should().NotBeNull();
         decoded!.Width.Should().Be(2);
@@ -68,7 +68,7 @@ public sealed class DctImageDecoderTests
             ResolvedColorSpace: PdfColorSpace.DeviceRGB,
             DecodeArray: null,
             ColorKeyMask: null,
-            CancellationToken: cancellation.Token));
+            CancellationToken: cancellation.Token), out _);
 
         act.Should().Throw<OperationCanceledException>();
     }

@@ -600,10 +600,6 @@ public static class PdfDocumentSanitizer
         return changed;
     }
 
-    private static bool Contains(string haystack, string term, bool caseSensitive) =>
-        haystack.IndexOf(term, caseSensitive
-            ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase) >= 0;
-
     /// <summary>
     /// Read a string value, RESOLVING an indirect reference first — the load-
     /// bearing difference from <see cref="PdfDictionary.GetStringOrNull"/>, which
@@ -904,9 +900,6 @@ public static class PdfDocumentSanitizer
         return changed;
     }
 
-    private static string Excise(string value, IReadOnlyList<string> terms, bool caseSensitive)
-        => ExciseCore(value, terms, caseSensitive, wholeWord: false, trim: true);
-
     /// <summary>
     /// Cut every occurrence of <paramref name="terms"/> out of
     /// <paramref name="value"/>, honouring the #1052 whole-word rule.
@@ -966,12 +959,4 @@ public static class PdfDocumentSanitizer
         return -1;
     }
 
-    /// <summary>
-    /// #1151 — cut the term but preserve surrounding whitespace, for SEMANTIC
-    /// values (/V, /DV) where a trailing space is part of the value and #1038's
-    /// area path keeps it. Idempotent: no match leaves the string identical, so a
-    /// second scrub pass cannot mutate an already-cut value.
-    /// </summary>
-    private static string ExciseNoTrim(string value, IReadOnlyList<string> terms, bool caseSensitive)
-        => ExciseCore(value, terms, caseSensitive, wholeWord: false, trim: false);
 }
