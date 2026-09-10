@@ -79,8 +79,27 @@ else
 fi
 cp "$TMP_REG" "$ROOT/tests/corpora.tsv"
 
-# 5. remove refuses without --yes. Nothing is deleted by this selftest.
-expect_exit 2 "remove refuses without --yes" /bin/bash "$CORPUS" remove verapdf
+# 5. remove refuses without --yes. This must be hermetic (#1455): the guard
+#    is only reachable when `present()` sees a directory with a file in it,
+#    and asserting it against a REAL corpus (verapdf) means the assertion
+#    tests an unreachable branch — and silently passes over exit 0 instead —
+#    on any machine where that corpus has not been fetched. So this builds
+#    its own throwaway registry row and its own throwaway "fetched" directory
+#    under test-pdfs/ (gitignored, not the real corpus, deleted by this
+#    selftest), and points `remove` at that. Nothing belonging to a real
+#    corpus is deleted by this selftest.
+cp "$ROOT/tests/corpora.tsv" "$TMP_REG"
+GUARD_DIR="test-pdfs/.selftest-remove-guard"
+trap 'rm -f "$TMP_REG"; rm -rf "$ROOT/$GUARD_DIR"' EXIT
+mkdir -p "$ROOT/$GUARD_DIR"
+: > "$ROOT/$GUARD_DIR/placeholder.pdf"
+printf 'selftest-remove-guard\tcore\t%s\tdownload-test-pdfs.sh\t1M\tnone\thermetic remove guard (#1455)\n' "$GUARD_DIR" \
+    >> "$ROOT/tests/corpora.tsv"
+expect_exit 2 "remove refuses without --yes" /bin/bash "$CORPUS" remove selftest-remove-guard
+[ -e "$ROOT/$GUARD_DIR/placeholder.pdf" ] && ok "remove guard: nothing deleted without --yes" \
+    || bad "remove guard: placeholder was deleted despite missing --yes"
+rm -rf "$ROOT/$GUARD_DIR"
+cp "$TMP_REG" "$ROOT/tests/corpora.tsv"
 
 # 6. Anti-vacuity: the registry must actually contain rows, or every check
 #    above passes over an empty file.
