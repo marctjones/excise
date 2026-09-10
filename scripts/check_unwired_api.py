@@ -119,6 +119,13 @@ def source_index(root):
                 with open(full, encoding="utf-8", errors="ignore") as fh:
                     counts = defaultdict(int)
                     for line in fh:
+                        # #1447: an XML doc comment (<see cref="Foo"/>, <c>Foo</c>)
+                        # naming a dead API's identifier made it read as wired --
+                        # prose, not a call site. A doc-comment line is always
+                        # ///-prefixed in C# (no multi-line /** */ form here), so
+                        # skipping the whole line is exact, not a heuristic.
+                        if line.lstrip().startswith("///"):
+                            continue
                         # nameof(X) is a self-reference, not a use.
                         for m in word.findall(NAMEOF.sub(" ", line)):
                             counts[m] += 1
@@ -258,6 +265,28 @@ def self_test():
     assert dead == ["ReleaseOnlyMember"]
     assert only_tests == ["NewTestsOnlyMember"]
     print("PASS: unwired API checker normalizes configuration snapshots and detects tests-only API")
+
+    # #1447: a doc comment naming a dead identifier (<see cref="Foo"/>) must
+    # not read as a call site. XfdfSerializer had three of these while
+    # actually being reachable from nothing; a live sighting on #1306 showed
+    # the gate offering to delete a still-true baseline row for the same
+    # reason. Real file, real source_index() -- not the synthetic dicts above.
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        src_dir = os.path.join(tmp, "Excise.Core", "Forms")
+        os.makedirs(src_dir)
+        with open(os.path.join(src_dir, "Dead.cs"), "w", encoding="utf-8") as fh:
+            fh.write(
+                "namespace Excise.Core.Forms;\n"
+                "/// <summary>Sibling of <see cref=\"DeadOnlyNamedInDocs\"/> (#626).</summary>\n"
+                "public class DeadOnlyNamedInDocs { public void M() { } }\n"
+            )
+        prod, test, occ, _ = source_index(tmp)
+        assert occ.get("DeadOnlyNamedInDocs", 0) <= 1, (
+            "a /// doc comment naming the identifier must not count as a use; "
+            f"got occ={occ.get('DeadOnlyNamedInDocs')}"
+        )
+    print("PASS: unwired API checker does not count a doc-comment mention as a call site")
 
 
 def main():

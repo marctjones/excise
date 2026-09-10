@@ -31,21 +31,29 @@ Excise.App	nowhere	TypeIndicator	triage:app surface likely XAML/framework bindin
 Excise.App	tests-only	AddPagesFromPdf	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ApplyBatesNumbersToSet	triage:#1306 wired the SINGLE-document Bates path (ApplyBatesNumbers) to the GUI; this multi-file batch entry point stays deliberately unwired - it stamps a continuing sequence across files on disk and writes new ones, which is a CLI/batch shape, and Excise.Cli cannot reference Excise.App
 Excise.App	tests-only	CalculateNextNumber	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	CurrentDocument	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	CurrentPageText	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ExecuteFileAsync	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	GetCurrentDocumentAsStream	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	GetPageHeight	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	GetPageWidth	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	HasRecentFiles	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	JumpToOutlineCommand	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	PreferencesPath	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ShowInfo	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	SuggestPageSubsetFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	SuggestSafeRedactedFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ValidateScript	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.Core	nowhere	Failures	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
+Excise.Core	nowhere	FromFile	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
 Excise.Core	nowhere	PdfEmbeddedFileAuthoring	triage:public library AUTHORING API (#1413). #1414 shipped the attachments panel, but it only lists, saves and strips - excise has no UI that ADDS an attachment, so this stays tests-only by design
+Excise.Core	nowhere	PdfOutlineAuthoring	triage:public library AUTHORING API, same shape as #1413's embedded-file/AcroForm authoring rows below - no GUI surface creates outline entries yet
+Excise.Core	nowhere	RemainingHeight	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	nowhere	SetCreator	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
+Excise.Core	tests-only	AcroFormAuthoring	triage:public library AUTHORING API (#1413); tests exercise contract; external callers may use it
+Excise.Core	tests-only	AddChildOutlineItem	triage:public library AUTHORING API, same shape as #1413's embedded-file/AcroForm authoring rows - no GUI surface creates outline entries yet
 Excise.Core	tests-only	AddEmbeddedFile	triage:public library AUTHORING API (#1413). #1414 shipped the attachments panel, but it only lists, saves and strips - excise has no UI that ADDS an attachment, so this stays tests-only by design
+Excise.Core	tests-only	AddOutlineItem	triage:public library AUTHORING API, same shape as #1413's embedded-file/AcroForm authoring rows - no GUI surface creates outline entries yet
 Excise.Core	tests-only	AsItalic	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BeginPath	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BulletList	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -54,11 +62,13 @@ Excise.Core	tests-only	ContainsFoldable	triage:public library/domain API; tests 
 Excise.Core	tests-only	ContainsLigatures	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ContainsPresentationForms	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	DateField	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	Direction	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	DocumentJavaScriptActions	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	Dropdown	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	EndBaseLine	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ExtractWords	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FillEvenOdd	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	FillableTable	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FindText	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FlyOpaqueRectangle	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FlyScale	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -78,11 +88,15 @@ Excise.Core	tests-only	HasOverflow	triage:public library/domain API; tests exerc
 Excise.Core	tests-only	HorizontalRule	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	InvokeXObject	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsIndirect	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	IsJavaScript	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsNumber	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsPartialOverlap	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsRadioButton	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsTaggedPdf	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsTextMarkup	triage:public library/domain API; lost its only production caller (FdfSerializer/XfdfSerializer export filtering) when #921 retired FDF/XFDF; PdfAnnotation.IsTextMarkup is a basic subtype predicate, tests exercise contract; external callers may use it
+Excise.Core	tests-only	JavaScriptSource	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	KeyValue	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	Landscape	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	NamedActionName	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	NextActions	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	NumberedList	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -101,6 +115,8 @@ Excise.Core	tests-only	SetFillWhite	triage:public library/domain API; tests exer
 Excise.Core	tests-only	SetReplyTo	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	SetTabOrder	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	SourceOperation	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	Symmetric	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	TextField	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	TextPosition	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ThumbnailStream	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ToDoubleArray	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -109,6 +125,7 @@ Excise.Core	tests-only	ToIntArray	triage:public library/domain API; tests exerci
 Excise.Core	tests-only	Transition	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	TryGetString	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	TryParseIndirectObject	triage:public library/domain API; lost its only production caller (FdfSerializer's %FDF body-object parse) when #921 retired FDF/XFDF; PdfParser.TryParseIndirectObject is a basic parser primitive, tests exercise contract; external callers may use it
+Excise.Core	tests-only	UsedHeight	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	WasHexString	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	WithAlignment	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	WithColor	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -124,13 +141,17 @@ Excise.Rendering	tests-only	BBoxWidth	triage:#933 qpdf reference-oracle surface 
 Excise.Rendering	tests-only	EncryptR4	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	EndLineEnding	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	FallbackTolerancePt	#1146 residue CLI wires these
+Excise.Rendering	tests-only	HitsFound	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	InkStrokeCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	LayoutGapPreserved	#1146 residue CLI wires these
 Excise.Rendering	tests-only	ListAnnotations	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	MutoolReferenceRedactor	reference redactor, tests-only BY DESIGN like the other Differential reference tools; production must never redact via mutool
 Excise.Rendering	tests-only	NormalAppearance	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
 Excise.Rendering	tests-only	PdfBoxReferenceRedactor	reference redactor (#1042) — tests-only BY DESIGN, like the other Differential reference tools; production must never redact via PDFBox (two agreeing references are signal, one is an opinion)
 Excise.Rendering	tests-only	PdftoppmReferenceRenderer	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	PdftotextTextExtractor	#1372 a reference ORACLE, like MutoolTextExtractor: test-only by design. Production must never read a PDF through Poppler — that would make an external tool part of excise's behaviour. It exists so the redaction bench has a second text engine, because mutool is MuPDF and PyMuPDF (a measured redactor) is the same engine.
+Excise.Rendering	tests-only	QpdfReferenceTool	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	RequiresPassword	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	ShowEncryption	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	TryRenderPageWithOverprintSimulation	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	VeraPdfReferenceValidator	triage:external validator oracle (#1056) — tests-only BY DESIGN, like the other Differential reference tools; production must never depend on veraPDF being installed
