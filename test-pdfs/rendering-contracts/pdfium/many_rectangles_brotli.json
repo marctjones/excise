@@ -1,0 +1,28 @@
+{
+  "Path": "pdfium/many_rectangles_brotli.pdf",
+  "Source": "PDFium regression corpus",
+  "Owner": "rendering:quality",
+  "Issue": 1384,
+  "RootCause": "REFERENCE_MISSING_BROTLIDECODE_SUPPORT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "QualityReason": "pdfe implements /BrotliDecode (Excise.Core/Filters/PdfFilterRegistry.cs:91, PDF 2.0/ISO 32000-2). mutool and Ghostscript also decode it and draw the same rectangles pdfe does (diffFraction 3.1e-05 / 0.055 against pdfe). pdftocairo (Poppler) and PDFBox do not implement /BrotliDecode and render the page blank (diffFraction 0.831 / 0.867); the native pdfium oracle used by this scan shares Poppler's gap (0.831). Measured 2026-09-10 via a direct corpus-scan of test-pdfs/pdfium restricted to this fixture, --extra-oracles all, 150 dpi.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "EXCISE_BETTER_THAN_REFS",
+      "PixelAgreement": "MATCHES_SOME",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "REFERENCE_MISSING_BROTLIDECODE_SUPPORT",
+      "Target": {
+        "Mode": "REFERENCE_DISAGREEMENT",
+        "Primary": "mutool",
+        "Reason": "mutool and Ghostscript correctly decode /BrotliDecode and agree with pdfe; pdftocairo, the native pdfium oracle, and PDFBox lack Brotli support and render blank. The scan's 2-of-5 agreement (mutool, Ghostscript) reads as PASS_ONE by the majority rule, understating that the 3 disagreeing oracles are wrong, not pdfe (#1384)."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "Notes": "The larger of the two /BrotliDecode witnesses cited in #1384 Part B (see also rectangles_brotli.pdf). Filter support verified against FilterSupportMap.cs; pdfe is source-owned for this codec."
+    }
+  }
+}
