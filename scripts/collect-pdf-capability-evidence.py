@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -18,6 +19,21 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "test-pdfs/manifests/pdf-spec-registry"
 DEFAULT_OUTPUT = REGISTRY / "generated/evidence-collection.json"
 WORD = re.compile(r"[A-Za-z][A-Za-z0-9-]{2,}")
+
+
+def tracked_files() -> set[str]:
+    """Repo-relative paths git actually tracks (#1368): a filesystem walk also
+    picks up untracked build byproducts (beyond the manually excluded bin/obj)
+    and editor/scratch files, so the same commit indexes a different file
+    count in a fresh clone vs. a working tree that has ever been built or
+    edited there -- 988 vs 987 measured on this project. git ls-files is the
+    ground truth for "what does this commit actually contain."
+    """
+    out = subprocess.run(
+        ["git", "-C", str(ROOT), "ls-files"],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    return set(out.splitlines())
 
 
 def load(path: Path) -> dict:
@@ -49,6 +65,7 @@ def main() -> None:
     config = load(REGISTRY / "evidence-collection.json")
     index: list[tuple[str, str, str]] = []
     digest = hashlib.sha256()
+    tracked = tracked_files()
     for relative in config["sourceRoots"]:
         root = ROOT / relative
         if not root.exists():
@@ -57,10 +74,16 @@ def main() -> None:
         # manifest tests/gates.tsv says "redaction" in a note and is not test evidence.
         excluded = set(config.get("excludePaths", []))
         for path in sorted(candidate for candidate in root.rglob("*") if candidate.is_file() and candidate.suffix in config["extensions"] and "/bin/" not in str(candidate) and "/obj/" not in str(candidate)):
-            if str(path.relative_to(ROOT)) in excluded:
+            repo_path = str(path.relative_to(ROOT))
+            if repo_path not in tracked:
+                # #1368: a filesystem walk also finds untracked byproducts
+                # (build output beyond bin/obj, scratch/editor files), which
+                # made a fresh clone index a different file count than a
+                # working tree that has ever been built or edited here.
+                continue
+            if repo_path in excluded:
                 continue
             text = path.read_text(encoding="utf-8", errors="ignore").lower()
-            repo_path = str(path.relative_to(ROOT))
             digest.update(repo_path.encode()); digest.update(hashlib.sha256(text.encode()).digest())
             index.append((repo_path, kind(repo_path), text))
     rows = []
