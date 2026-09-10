@@ -45,3 +45,4 @@ full	Excise.Rendering	0.85	0.8749	dev machine, corpora + mutool/gs/pdftocairo, u
 full	Excise.App	0.76	0.787	dev machine, measured via Excise.App.Tests
 full	Excise.Avalonia	0.84	0.864	dev machine, measured via Excise.App.Tests
 full	Excise.Ocr	0.80	0.827	dev machine, measured via Excise.App.Tests; tesseract present
+full	Excise.Core	0.91	0.9337	dev machine, corpora present, measured via Excise.Core.Tests (#1359, restoring the deleted 93% ci-profile threshold at ~2 points below the full-profile measurement, matching every other row's convention)
