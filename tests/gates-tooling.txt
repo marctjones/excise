@@ -1,6 +1,6 @@
 # tests/gates-tooling.txt — every script under scripts/ that is deliberately NOT a row in tests/gates.tsv.
 # One per line with the reason. scripts/test-report-gates.sh fails when a script is in neither place,
-# so a new script must either become a gate or be justified here (skip-allowlist shape, #854).
+# so a new script must either become a gate or be justified here (declare-or-justify shape, #854/#1172).
 
 scripts/.run-full-conformance.sh   # tracked despite the dot; manual conformance dispatcher
 scripts/analyze-corpus-results.sh   # analysis helper over scan output

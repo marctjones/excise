@@ -131,8 +131,10 @@ echo "it was deleted, since search perf is covered by the perf-budget \"search\"
 echo "workflow on real PDFs and correctness by RealWorldSearchTests."
 echo
 echo "On a fully-provisioned machine the suite now skips ZERO tests. Skips you"
-echo "see on CI are environment-gated and enumerated in tests/skip-allowlist/"
-echo "with [requires: ...] markers (see #854) — those are expected: CI has"
-echo "neither the gitignored corpora nor the optional external tools."
+echo "see elsewhere are environment-gated IN CODE (Assert.SkipWhen/SkipUnless,"
+echo "[Fact(Skip = \"...\")], #1172) with a reason string — the skip-budget gate"
+echo "(scripts/check-skip-budget.sh) requires every one to carry a non-empty"
+echo "reason but does not care WHY it skipped: a missing corpus or tool on a"
+echo "less-provisioned machine is expected, not a finding."
 
 exit 0

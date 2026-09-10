@@ -1,27 +1,15 @@
 #!/usr/bin/env bash
 #
-# Regression test for #663.
+# Regression test for the #1172 skip-budget gate: every skip must carry a
+# declared, non-empty reason in the trx's <Output><ErrorInfo><Message>, and
+# the gate must never silently accept one that does not.
 #
-# scripts/check-skip-budget.sh --update is supposed to preserve each
-# allowlist entry's hand-written justification (the `# why` comment) across
-# a regeneration, comparing entries on NAME only. It didn't: the compound
-# command's `> "$ALLOWLIST"` redirection truncates the file before the loop
-# body's `grep ... "$ALLOWLIST"` runs, so the "old reason" lookup always saw
-# an empty file and every entry was rewritten to `# TODO: justify or fix`,
-# even for names that hadn't changed at all.
-#
-# This is a standalone reproduction script (no bats/shunit2 convention exists
-# in this repo for shell scripts) that runs the real script's --update path
-# against a synthetic allowlist + trx in an isolated temp directory, then
-# asserts the ORIGINAL reason text is still present verbatim afterward.
-#
-# Also covers a second bug found while verifying the #663 fix against the
-# real tests/skip-allowlist/Excise.App.Tests.txt: the reason-extraction sed
-# (`s/.*#.../`) is greedy and matches through to the LAST `#` on the line,
-# so a reason that itself references another issue number (a documented
-# convention in this codebase's justifications, e.g. "#653: ...") had
-# everything up to and including that inner `#` silently stripped too. Fixed
-# alongside #663 in the same edit (`s/[^#]*#.../`, matching the FIRST `#`).
+# Standalone reproduction script (no bats/shunit2 convention exists in this
+# repo for shell scripts) that runs the real script against synthetic trx
+# files in an isolated temp directory — real xunit.v3 skip reasons were
+# verified by hand against a live run (see the header comment in
+# check-skip-budget.sh) before writing these fixtures, so the XML shape here
+# is not invented.
 #
 # Usage: scripts/test-check-skip-budget.sh
 set -euo pipefail
@@ -30,418 +18,163 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-# Isolated repo skeleton: the script under test resolves its allowlist path
-# relative to its OWN location (ROOT="$(dirname .../..)"), so copying it
-# into $WORK/scripts/ with a sibling $WORK/tests/skip-allowlist/ is enough
-# to keep this test from touching the real tests/skip-allowlist/*.txt.
-mkdir -p "$WORK/scripts" "$WORK/tests/skip-allowlist"
+# The script under test resolves paths relative to its OWN location
+# (ROOT="$(dirname .../..)"), so it must live under a "scripts/" directory
+# for that resolution to land somewhere sane even in the branches this test
+# does not exercise (e.g. it would look for "$ROOT/scripts/assert-fresh.sh").
+mkdir -p "$WORK/scripts"
 cp "$HERE/check-skip-budget.sh" "$WORK/scripts/check-skip-budget.sh"
-# The gate sources lib-runner.sh (prerequisite resolver); the temp root needs it too.
-cp "$HERE/lib-runner.sh" "$WORK/scripts/lib-runner.sh"
 chmod +x "$WORK/scripts/check-skip-budget.sh"
-
-PROJECT="$WORK/Demo.Tests.csproj"
-touch "$PROJECT"
-ALLOWLIST="$WORK/tests/skip-allowlist/Demo.Tests.txt"
-
-cat > "$ALLOWLIST" <<'EOF'
-# Skips allow-listed for Demo.Tests. See scripts/check-skip-budget.sh (#619).
-# Every line is coverage we are NOT getting. Justify it or delete it.
-# Format:  TestName   # why
-#
-Demo.Tests.FooTests.Skip1   # real hand-written justification A
-# --- grouping note: the following are veraPDF-dependent (#668) ---
-# second line of the same hand-written comment block
-Demo.Tests.FooTests.Skip2   # real hand-written justification B
-Demo.Tests.FooTests.Skip3   # #123: references another issue, and (see #456) a second one too
-EOF
-
-BEFORE="$(cat "$ALLOWLIST")"
-
-# Synthetic trx reporting the SAME two skip names as the allowlist (names
-# unchanged from the prior run) — a correct --update must round-trip both
-# reasons verbatim. --trx lets us avoid actually running `dotnet test`.
-TRX="$WORK/r.trx"
-cat > "$TRX" <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Results>
-    <UnitTestResult testName="Demo.Tests.FooTests.Skip1" outcome="NotExecuted" />
-    <UnitTestResult testName="Demo.Tests.FooTests.Skip2" outcome="NotExecuted" />
-    <UnitTestResult testName="Demo.Tests.FooTests.Skip3" outcome="NotExecuted" />
-  </Results>
-</TestRun>
-EOF
-
-"$WORK/scripts/check-skip-budget.sh" "$PROJECT" --update --trx "$TRX" >"$WORK/update.log" 2>&1
-
-AFTER="$(cat "$ALLOWLIST")"
+GATE="$WORK/scripts/check-skip-budget.sh"
 
 FAIL=0
+PROJECT="$WORK/Demo.Tests.csproj"
+touch "$PROJECT"
 
-if ! grep -qF 'Demo.Tests.FooTests.Skip1   # real hand-written justification A' <<<"$AFTER"; then
-  echo "FAIL: Skip1's justification did not survive --update"
+# ---------------------------------------------------------------------------
+# 1. A skip with a declared, non-empty reason passes.
+# ---------------------------------------------------------------------------
+TRX_OK="$WORK/declared.trx"
+cat > "$TRX_OK" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo.Tests.A.NeedsTool" outcome="NotExecuted" executionId="e1">
+      <Output><ErrorInfo><Message>mutool not installed</Message></ErrorInfo></Output>
+    </UnitTestResult>
+    <UnitTestResult testName="Demo.Tests.A.StaticSkip" outcome="NotExecuted" executionId="e2">
+      <Output><ErrorInfo><Message>#1381: known renderer gap, see NarrowingPower</Message></ErrorInfo></Output>
+    </UnitTestResult>
+  </Results>
+</TestRun>
+EOF
+
+OUT1="$WORK/ok.log"
+RC1=0
+"$GATE" "$PROJECT" --trx "$TRX_OK" >"$OUT1" 2>&1 || RC1=$?
+if [[ "$RC1" -ne 0 ]]; then
+  echo "FAIL: gate rejected skips that DO carry a declared reason"
+  cat "$OUT1"
   FAIL=1
+fi
+grep -qF "2 skip(s)" "$OUT1" || { echo "FAIL: gate did not report the expected declared-skip count"; cat "$OUT1"; FAIL=1; }
+
+# ---------------------------------------------------------------------------
+# 2. A skip with NO <Output> at all (no reason ever recorded) fails, and is
+#    named in the output.
+# ---------------------------------------------------------------------------
+TRX_NONE="$WORK/no-output.trx"
+cat > "$TRX_NONE" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo.Tests.A.SilentSkip" outcome="NotExecuted" executionId="e1" />
+  </Results>
+</TestRun>
+EOF
+
+OUT2="$WORK/none.log"
+RC2=0
+"$GATE" "$PROJECT" --trx "$TRX_NONE" >"$OUT2" 2>&1 || RC2=$?
+[[ "$RC2" -ne 0 ]] || { echo "FAIL: gate accepted a skip with no <Output> at all"; FAIL=1; }
+grep -qF -- '+ Demo.Tests.A.SilentSkip' "$OUT2" || { echo "FAIL: gate did not name the undeclared skip"; cat "$OUT2"; FAIL=1; }
+
+# ---------------------------------------------------------------------------
+# 3. A skip whose <Message> is present but blank/whitespace-only fails —
+#    an empty string is not a reason.
+# ---------------------------------------------------------------------------
+TRX_BLANK="$WORK/blank.trx"
+cat > "$TRX_BLANK" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo.Tests.A.BlankReason" outcome="NotExecuted" executionId="e1">
+      <Output><ErrorInfo><Message>   </Message></ErrorInfo></Output>
+    </UnitTestResult>
+  </Results>
+</TestRun>
+EOF
+
+OUT3="$WORK/blank.log"
+RC3=0
+"$GATE" "$PROJECT" --trx "$TRX_BLANK" >"$OUT3" 2>&1 || RC3=$?
+[[ "$RC3" -ne 0 ]] || { echo "FAIL: gate accepted a skip whose reason is blank/whitespace-only"; FAIL=1; }
+grep -qF -- '+ Demo.Tests.A.BlankReason' "$OUT3" || { echo "FAIL: gate did not name the blank-reason skip"; cat "$OUT3"; FAIL=1; }
+
+# ---------------------------------------------------------------------------
+# 4. Mixed: one declared, one undeclared, in the SAME run — the declared one
+#    must not mask the undeclared one, and vice versa.
+# ---------------------------------------------------------------------------
+TRX_MIXED="$WORK/mixed.trx"
+cat > "$TRX_MIXED" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo.Tests.A.Good" outcome="NotExecuted" executionId="e1">
+      <Output><ErrorInfo><Message>needs poppler corpus</Message></ErrorInfo></Output>
+    </UnitTestResult>
+    <UnitTestResult testName="Demo.Tests.A.Bad" outcome="NotExecuted" executionId="e2" />
+  </Results>
+</TestRun>
+EOF
+
+OUT4="$WORK/mixed.log"
+RC4=0
+"$GATE" "$PROJECT" --trx "$TRX_MIXED" >"$OUT4" 2>&1 || RC4=$?
+[[ "$RC4" -ne 0 ]] || { echo "FAIL: mixed run (one declared, one not) was accepted"; FAIL=1; }
+grep -qF -- '+ Demo.Tests.A.Bad' "$OUT4" || { echo "FAIL: mixed run did not name the undeclared skip"; cat "$OUT4"; FAIL=1; }
+if grep -qF -- '+ Demo.Tests.A.Good' "$OUT4"; then
+  echo "FAIL: mixed run wrongly flagged the declared skip too"; FAIL=1
 fi
 
-if ! grep -qF 'Demo.Tests.FooTests.Skip2   # real hand-written justification B' <<<"$AFTER"; then
-  echo "FAIL: Skip2's justification did not survive --update"
-  FAIL=1
-fi
+# ---------------------------------------------------------------------------
+# 5. No trx produced at all is a hard FAIL, never silently "no skips". A
+#    --trx pointing at a file that does not exist reaches the same code
+#    path as a real run whose `dotnet test` never wrote a trx (crashed host,
+#    killed process): the `cp` is best-effort and produces nothing, so the
+#    later `ls "$TMP"/r*.trx` finds no files. Deterministic, no real build.
+# ---------------------------------------------------------------------------
+OUT5="$WORK/notrx.log"
+RC5=0
+"$GATE" "$PROJECT" --trx "$WORK/does-not-exist.trx" >"$OUT5" 2>&1 || RC5=$?
+[[ "$RC5" -ne 0 ]] || { echo "FAIL: a run that produced no trx silently reported success"; FAIL=1; }
+grep -qF "no trx produced" "$OUT5" || { echo "FAIL: the no-trx failure was not clearly diagnosed"; cat "$OUT5"; FAIL=1; }
 
-if ! grep -qF 'Demo.Tests.FooTests.Skip3   # #123: references another issue, and (see #456) a second one too' <<<"$AFTER"; then
-  echo "FAIL: Skip3's justification (which itself contains '#' characters) did not survive --update intact"
-  FAIL=1
-fi
+# ---------------------------------------------------------------------------
+# 6. --trx is repeatable and the results union across files (chunked runs).
+# ---------------------------------------------------------------------------
+TRX_A="$WORK/chunk-a.trx"
+TRX_B="$WORK/chunk-b.trx"
+cat > "$TRX_A" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo.Tests.A.ChunkAGood" outcome="NotExecuted" executionId="a1">
+      <Output><ErrorInfo><Message>needs corpus X</Message></ErrorInfo></Output>
+    </UnitTestResult>
+  </Results>
+</TestRun>
+EOF
+cat > "$TRX_B" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo.Tests.B.ChunkBBad" outcome="NotExecuted" executionId="b1" />
+  </Results>
+</TestRun>
+EOF
 
-if grep -q 'TODO: justify or fix' <<<"$AFTER"; then
-  echo "FAIL: an entry whose name was unchanged was rewritten to the TODO placeholder"
-  FAIL=1
-fi
-
-# #668: hand-written comment BLOCKS (not just per-entry reasons) must survive
-# --update, attached to the entry they precede.
-if ! grep -qF '# --- grouping note: the following are veraPDF-dependent (#668) ---' <<<"$AFTER"; then
-  echo "FAIL: a hand-written comment block was discarded by --update (#668)"
-  FAIL=1
-fi
-if ! grep -qF '# second line of the same hand-written comment block' <<<"$AFTER"; then
-  echo "FAIL: a multi-line hand-written comment block was only partially preserved (#668)"
-  FAIL=1
-fi
-# The preserved block must sit immediately before the entry it annotated (Skip2)
-# — checked portably (BSD grep has no -P): the two block lines then the entry,
-# consecutively.
-if ! printf '%s\n' "$AFTER" | awk '
-  /^# --- grouping note: the following are veraPDF-dependent \(#668\) ---$/ { s = 1; next }
-  s == 1 && /^# second line of the same hand-written comment block$/ { s = 2; next }
-  s == 2 && /^Demo\.Tests\.FooTests\.Skip2 / { ok = 1 }
-  { s = 0 }
-  END { exit ok ? 0 : 1 }'; then
-  echo "FAIL: the preserved comment block is not positioned immediately before its entry (#668)"
-  FAIL=1
-fi
+OUT6="$WORK/union.log"
+RC6=0
+"$GATE" "$PROJECT" --trx "$TRX_A" --trx "$TRX_B" >"$OUT6" 2>&1 || RC6=$?
+[[ "$RC6" -ne 0 ]] || { echo "FAIL: --trx union did not see the undeclared skip in the second file"; FAIL=1; }
+grep -qF -- '+ Demo.Tests.B.ChunkBBad' "$OUT6" || { echo "FAIL: --trx union missed chunk B's undeclared skip"; cat "$OUT6"; FAIL=1; }
 
 if [[ $FAIL -ne 0 ]]; then
-  echo
-  echo "--- allowlist BEFORE --update ---"
-  echo "$BEFORE"
-  echo "--- allowlist AFTER --update ---"
-  echo "$AFTER"
-  echo "--- script output ---"
-  cat "$WORK/update.log"
   exit 1
 fi
 
-echo "PASS: check-skip-budget.sh --update preserves justifications (#663), reasons that"
-echo "      contain '#' (#665), and hand-written comment blocks (#668)"
-
-# ===========================================================================
-# #854: per-entry prerequisite conditioning
-# ===========================================================================
-# The allowlist is calibrated for a corpus-less CI runner. Most entries gate on
-# a gitignored corpus or an optional tool, so on a corpus-equipped dev machine
-# those tests RUN and the reverse check ("allow-listed but no longer skipping")
-# fired on every local run — all three projects, both directions. A gate that
-# always fails locally is a gate nobody reads.
-#
-# The absent-prerequisite branch cannot be tested by running the gate here
-# (every prerequisite IS present) and must NOT be tested by hiding 888MB of
-# corpora. So test the RESOLVER: SKIP_BUDGET_FORCE_ABSENT makes a spec resolve
-# absent deterministically, with no filesystem changes.
-#
-# Contract, in full:
-#   conditioned + prereq present + not skipping -> silent   (the new behaviour)
-#   conditioned + prereq absent  + not skipping -> FAIL     (unchanged)
-#   unconditioned              + not skipping   -> FAIL     (unchanged)
-#   skipping but not allow-listed               -> FAIL     (forward check, never relaxed)
-#   --update must not DELETE a conditioned entry whose prereq is present
-
-P2="$WORK/Demo2.Tests.csproj"; touch "$P2"
-AL2="$WORK/tests/skip-allowlist/Demo2.Tests.txt"
-
-# A trx in which NOTHING skipped, so every allowlist entry is "no longer
-# skipping" and the reverse check is what decides each one's fate.
-EMPTY_TRX="$WORK/empty.trx"
-cat > "$EMPTY_TRX" <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Results />
-</TestRun>
-EOF
-
-cat > "$AL2" <<'EOF'
-#
-Demo2.Tests.A.CondPresent   # #999: needs a tool that exists [requires: tool:ls]
-Demo2.Tests.A.CondAbsent   # needs a tool that does not [requires: tool:excise-no-such-tool-xyz]
-Demo2.Tests.A.Uncond   # no marker at all
-Demo2.Tests.A.Theory(fixture: "a.pdf")   # a [Theory] display name CONTAINS A SPACE [requires: tool:ls]
-EOF
-
-OUT2="$WORK/cond.log"
-RC2=0
-"$WORK/scripts/check-skip-budget.sh" "$P2" --trx "$EMPTY_TRX" >"$OUT2" 2>&1 || RC2=$?
-
-F2=0
-[[ "$RC2" -ne 0 ]] || { echo "FAIL(#854): gate passed despite an unconditioned entry no longer skipping"; F2=1; }
-grep -qF -- '- Demo2.Tests.A.CondAbsent' "$OUT2" || { echo "FAIL(#854): conditioned entry with an ABSENT prereq was not reported by the reverse check"; F2=1; }
-grep -qF -- '- Demo2.Tests.A.Uncond' "$OUT2" || { echo "FAIL(#854): unconditioned entry was not reported by the reverse check"; F2=1; }
-if grep -qF -- '- Demo2.Tests.A.CondPresent' "$OUT2"; then
-  echo "FAIL(#854): conditioned entry whose prereq is PRESENT was reported as a failure"; F2=1
-fi
-# A [Theory] display name contains a space. The requires-parser used to capture
-# the name as "everything up to the first space", so such an entry could be
-# allow-listed (the forward check strips from '#') but NEVER conditioned —
-# reporting "no longer skipping" on every run of any machine that had the
-# prerequisite. Silent, permanent, and in the direction that rots the gate.
-if grep -qF -- '- Demo2.Tests.A.Theory(fixture: "a.pdf")' "$OUT2"; then
-  echo "FAIL(#854): a conditioned [Theory] entry (name contains a space) was reported"
-  echo "            as a failure despite its prerequisite being present"; F2=1
-fi
-
-# Same allowlist, but force the present tool to resolve absent: now ALL THREE
-# must be reported. This is the CI-side branch.
-OUT3="$WORK/cond-absent.log"
-RC3=0
-SKIP_BUDGET_FORCE_ABSENT="tool:ls" \
-  "$WORK/scripts/check-skip-budget.sh" "$P2" --trx "$EMPTY_TRX" >"$OUT3" 2>&1 || RC3=$?
-[[ "$RC3" -ne 0 ]] || { echo "FAIL(#854): gate passed with every prerequisite absent"; F2=1; }
-grep -qF -- '- Demo2.Tests.A.CondPresent' "$OUT3" || {
-  echo "FAIL(#854): with its prereq forced ABSENT, the conditioned entry was still exempted"
-  echo "            — conditioning is unconditional, i.e. it silently weakened the gate"; F2=1; }
-
-# Only a satisfied conditioned entry -> the gate must be clean.
-cat > "$AL2" <<'EOF'
-#
-Demo2.Tests.A.CondPresent   # needs a tool that exists [requires: tool:ls]
-EOF
-OUT4="$WORK/cond-clean.log"
-RC4=0
-"$WORK/scripts/check-skip-budget.sh" "$P2" --trx "$EMPTY_TRX" >"$OUT4" 2>&1 || RC4=$?
-[[ "$RC4" -eq 0 ]] || { echo "FAIL(#854): gate did not pass when the only entry's prereq is satisfied"; cat "$OUT4"; F2=1; }
-
-# The FORWARD check is never relaxed: a skip that is not allow-listed fails
-# even in an allowlist made entirely of satisfied conditioned entries.
-NEW_TRX="$WORK/newskip.trx"
-cat > "$NEW_TRX" <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Results>
-    <UnitTestResult testName="Demo2.Tests.A.BrandNewSkip" outcome="NotExecuted" />
-  </Results>
-</TestRun>
-EOF
-OUT5="$WORK/forward.log"
-RC5=0
-"$WORK/scripts/check-skip-budget.sh" "$P2" --trx "$NEW_TRX" >"$OUT5" 2>&1 || RC5=$?
-[[ "$RC5" -ne 0 ]] || { echo "FAIL(#854): forward check was relaxed — an un-allow-listed skip passed"; F2=1; }
-grep -qF -- '+ Demo2.Tests.A.BrandNewSkip' "$OUT5" || { echo "FAIL(#854): un-allow-listed skip was not reported"; F2=1; }
-
-# --update must not DELETE a conditioned entry that is running here. Otherwise
-# running --update on a corpus-equipped machine strips the entries CI needs —
-# turning the flag from "won't add" into "removes what you had".
-"$WORK/scripts/check-skip-budget.sh" "$P2" --update --trx "$EMPTY_TRX" >"$WORK/cond-update.log" 2>&1
-AFTER2="$(cat "$AL2")"
-grep -qF 'Demo2.Tests.A.CondPresent' <<<"$AFTER2" || {
-  echo "FAIL(#854): --update DELETED a conditioned entry whose prerequisite is present"; F2=1; }
-grep -qF '[requires: tool:ls]' <<<"$AFTER2" || {
-  echo "FAIL(#854): --update dropped the [requires: ...] marker"; F2=1; }
-
-if [[ $F2 -ne 0 ]]; then
-  echo
-  echo "--- conditioned (prereq present) ---"; cat "$OUT2"
-  echo "--- conditioned (prereq forced absent) ---"; cat "$OUT3"
-  echo "--- allowlist after --update ---"; echo "$AFTER2"
-  exit 1
-fi
-
-echo "PASS: per-entry [requires: ...] conditioning relaxes ONLY the reverse check and"
-echo "      only when the prerequisite is present; forward check and --update are safe (#854)"
-
-# ─────────────────────────────────────────────────────────────────────────────
-# A [Theory] allow-listed PER ROW can never match, and the gate must say so.
-#
-# The script strips theory arguments from the names it observes, so an entry
-# written as `Method(param: "value")` is compared against a name that never has
-# arguments. It matches nothing, and BOTH halves of the gate fire at once: the
-# bare name looks un-allow-listed, and every per-row entry looks stale.
-#
-# This is a real mistake that reached CI (#933). What made it expensive was the
-# advice: the generic message says "these stopped skipping — good, delete them",
-# and deleting them just moves the failure to the forward check. So this asserts
-# the DIAGNOSIS, not merely the failure — a gate that fails with misleading
-# guidance is barely better than one that passes.
-#
-# It cannot be caught on a dev machine by running the real suite: the tools are
-# installed here, so the tests never skip and the broken path never executes.
-# A synthetic trx is the only way to exercise it locally.
-# ─────────────────────────────────────────────────────────────────────────────
-F3=0
-P3="$WORK/Demo3.Tests.csproj"
-touch "$P3"
-AL3="$WORK/tests/skip-allowlist/Demo3.Tests.txt"
-cat > "$AL3" <<'EOF'
-# Skips allow-listed for Demo3.Tests.
-Demo3.Tests.A.ThemeTest(colour: "red")   # per-ROW entry — cannot ever match
-Demo3.Tests.A.ThemeTest(colour: "blue")  # per-ROW entry — cannot ever match
-EOF
-
-# The trx reports theory rows individually, exactly as a real run does.
-THEORY_TRX="$WORK/theory.trx"
-cat > "$THEORY_TRX" <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Results>
-    <UnitTestResult testName="Demo3.Tests.A.ThemeTest(colour: &quot;red&quot;)" outcome="NotExecuted" />
-    <UnitTestResult testName="Demo3.Tests.A.ThemeTest(colour: &quot;blue&quot;)" outcome="NotExecuted" />
-  </Results>
-</TestRun>
-EOF
-
-OUT6="$WORK/theory.log"
-RC6=0
-"$WORK/scripts/check-skip-budget.sh" "$P3" --trx "$THEORY_TRX" >"$OUT6" 2>&1 || RC6=$?
-
-[[ "$RC6" -ne 0 ]] || { echo "FAIL(#933): a per-row theory allowlist entry was accepted"; F3=1; }
-
-grep -q 'contain theory arguments' "$OUT6" || {
-  echo "FAIL(#933): the gate did not identify per-row theory entries as the cause"; F3=1; }
-grep -q 'ONE entry per METHOD' "$OUT6" || {
-  echo "FAIL(#933): the gate did not say to use one entry per method"; F3=1; }
-grep -qF 'Demo3.Tests.A.ThemeTest' "$OUT6" || {
-  echo "FAIL(#933): the gate did not print the bare method name to use instead"; F3=1; }
-grep -q 'Do NOT simply delete' "$OUT6" || {
-  echo "FAIL(#933): the gate still advises deleting the entries, which moves the failure"; F3=1; }
-
-# And the bare one-entry-per-method form must be ACCEPTED. For a multi-row
-# skip, #937's count marker is part of that accepted form.
-cat > "$AL3" <<'EOF'
-# Skips allow-listed for Demo3.Tests.
-Demo3.Tests.A.ThemeTest   # one entry per method covers every row [skip-count: 2]
-EOF
-RC7=0
-"$WORK/scripts/check-skip-budget.sh" "$P3" --trx "$THEORY_TRX" >"$WORK/theory-fixed.log" 2>&1 || RC7=$?
-[[ "$RC7" -eq 0 ]] || {
-  echo "FAIL(#933/#937): the bare method entry with a skip-count marker was rejected"; F3=1; }
-
-if [[ $F3 -ne 0 ]]; then
-  echo
-  echo "--- per-row theory entries ---"; cat "$OUT6"
-  echo "--- bare method name ---"; cat "$WORK/theory-fixed.log"
-  exit 1
-fi
-
-echo "PASS: a per-row [Theory] allowlist entry fails AND is diagnosed by name;"
-echo "      one bare method entry with a skip-count marker is accepted (#933/#937)"
-
-# ─────────────────────────────────────────────────────────────────────────────
-# #937: a bare [Theory] method name is still not enough by itself. One skipped
-# row and all skipped rows both collapse to the same name, so the count becomes
-# the ratchet while the allowlist remains one entry per method.
-# ─────────────────────────────────────────────────────────────────────────────
-P4="$WORK/Demo4.Tests.csproj"
-touch "$P4"
-AL4="$WORK/tests/skip-allowlist/Demo4.Tests.txt"
-TRX4="$WORK/theory-count.trx"
-
-cat > "$AL4" <<'EOF'
-Demo4.Tests.A.Row   # two rows are expected to skip [skip-count: 2]
-EOF
-
-cat > "$TRX4" <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Results>
-    <UnitTestResult testName="Demo4.Tests.A.Row(value: 1)" outcome="NotExecuted" />
-    <UnitTestResult testName="Demo4.Tests.A.Row(value: 2)" outcome="NotExecuted" />
-  </Results>
-</TestRun>
-EOF
-
-"$WORK/scripts/check-skip-budget.sh" "$P4" --trx "$TRX4" >"$WORK/count-ok.log" 2>&1 \
-  || { echo "FAIL(#937): matching [skip-count: 2] marker was rejected"; cat "$WORK/count-ok.log"; exit 1; }
-
-cat > "$TRX4" <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Results>
-    <UnitTestResult testName="Demo4.Tests.A.Row(value: 1)" outcome="NotExecuted" />
-  </Results>
-</TestRun>
-EOF
-
-RC8=0
-"$WORK/scripts/check-skip-budget.sh" "$P4" --trx "$TRX4" >"$WORK/count-bad.log" 2>&1 || RC8=$?
-[[ "$RC8" -ne 0 ]] || { echo "FAIL(#937): changed theory skip count was accepted"; exit 1; }
-grep -qF "expected 2 skipped row(s), saw 1" "$WORK/count-bad.log" || {
-  echo "FAIL(#937): count mismatch did not name expected and actual rows"; cat "$WORK/count-bad.log"; exit 1; }
-
-cat > "$AL4" <<'EOF'
-Demo4.Tests.A.Row   # no explicit count defaults to one skipped row
-EOF
-
-cat > "$TRX4" <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Results>
-    <UnitTestResult testName="Demo4.Tests.A.Row(value: 1)" outcome="NotExecuted" />
-    <UnitTestResult testName="Demo4.Tests.A.Row(value: 2)" outcome="NotExecuted" />
-  </Results>
-</TestRun>
-EOF
-
-RC9=0
-"$WORK/scripts/check-skip-budget.sh" "$P4" --trx "$TRX4" >"$WORK/count-missing-marker.log" 2>&1 || RC9=$?
-[[ "$RC9" -ne 0 ]] || { echo "FAIL(#937): multi-row skip without [skip-count: N] was accepted"; exit 1; }
-grep -qF "expected 1 skipped row(s), saw 2" "$WORK/count-missing-marker.log" || {
-  echo "FAIL(#937): missing count marker did not default to one row"; cat "$WORK/count-missing-marker.log"; exit 1; }
-
-"$WORK/scripts/check-skip-budget.sh" "$P4" --update --trx "$TRX4" >"$WORK/count-update.log" 2>&1
-grep -qF "Demo4.Tests.A.Row   # no explicit count defaults to one skipped row [skip-count: 2]" "$AL4" || {
-  echo "FAIL(#937): --update did not preserve the reason and add [skip-count: 2]"; cat "$AL4"; exit 1; }
-
-echo "PASS: theory skip counts are ratcheted while the allowlist stays keyed by bare method name (#937)"
-
-# ─────────────────────────────────────────────────────────────────────────────
-# #937 × #854: the count pin only applies where the entry's prerequisites are
-# PRESENT. On a corpus-less runner a conditioned theory skips EVERY row, so
-# comparing that against the pinned partial count fired on all six conditioned
-# Core entries the first time Linux CI ever reached this gate (#956 had killed
-# the step ahead of it on every prior run). Unconditioned entries keep the
-# unconditional pin — that branch is asserted above (count-missing-marker).
-# ─────────────────────────────────────────────────────────────────────────────
-cat > "$AL4" <<'EOF'
-Demo4.Tests.A.Row   # one row skips when the tool is present [requires: tool:ls] [skip-count: 1]
-EOF
-
-cat > "$TRX4" <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Results>
-    <UnitTestResult testName="Demo4.Tests.A.Row(value: 1)" outcome="NotExecuted" />
-    <UnitTestResult testName="Demo4.Tests.A.Row(value: 2)" outcome="NotExecuted" />
-    <UnitTestResult testName="Demo4.Tests.A.Row(value: 3)" outcome="NotExecuted" />
-  </Results>
-</TestRun>
-EOF
-
-# Prerequisite ABSENT (forced): all three rows skipping is expected — the
-# count pin must NOT fire.
-RC10=0
-SKIP_BUDGET_FORCE_ABSENT="tool:ls" \
-  "$WORK/scripts/check-skip-budget.sh" "$P4" --trx "$TRX4" >"$WORK/count-cond-absent.log" 2>&1 || RC10=$?
-[[ "$RC10" -eq 0 ]] || {
-  echo "FAIL(#937/#854): with its prerequisite absent, a conditioned entry's full-theory"
-  echo "                 skip was failed against the prereq-present [skip-count: 1] pin"
-  cat "$WORK/count-cond-absent.log"; exit 1; }
-
-# Prerequisite PRESENT: the pin applies exactly as for unconditioned entries.
-RC11=0
-"$WORK/scripts/check-skip-budget.sh" "$P4" --trx "$TRX4" >"$WORK/count-cond-present.log" 2>&1 || RC11=$?
-[[ "$RC11" -ne 0 ]] || {
-  echo "FAIL(#937/#854): conditioning suppressed the count pin even though the"
-  echo "                 prerequisite is PRESENT — the pin silently stopped ratcheting"; exit 1; }
-grep -qF "expected 1 skipped row(s), saw 3" "$WORK/count-cond-present.log" || {
-  echo "FAIL(#937/#854): prereq-present count mismatch did not name expected and actual"; cat "$WORK/count-cond-present.log"; exit 1; }
-
-echo "PASS: the skip-count pin is environment-conditioned like the reverse check (#937 x #854)"
+echo "PASS: check-skip-budget.sh (#1172) accepts every skip with a declared,"
+echo "      non-empty in-code reason and fails on any that has none — no"
+echo "      <Output> at all, a blank <Message>, mixed in with a good one, or"
+echo "      missing entirely across a chunked (--trx, repeated) union."

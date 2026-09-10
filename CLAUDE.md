@@ -660,46 +660,37 @@ feedback; the unchunked `app-tests-unchunked-evidence` step is what counts as
 evidence. `check-skip-budget.sh` likewise needs whole-project runs and keeps
 its own unchunked steps.
 
-### The skip allowlist is environment-conditioned (#854)
+### Skips must carry a reason IN CODE, not in an external allowlist (#1172)
 
-`tests/skip-allowlist/*.txt` entries may declare what a test needs in order to
-run, inside the justification:
+A skipped test is invisible coverage loss — a whole file can stop running
+while other tests keep the same lines "covered", and neither the coverage
+floors nor the #894 test-count gate can see it happen. `scripts/check-skip-budget.sh`
+exists to catch that, but until #1172 it did so through
+`tests/skip-allowlist/*.txt` — an external file with a hand-rolled
+`[requires: corpus:X]` environment-conditioning syntax (#854) so a
+corpus-less CI runner and a corpus-equipped dev box could agree on what was
+allowed to skip. That machinery drifted, red-lit Linux CI for 8+ consecutive
+runs, and could not be re-synced from a macOS-only box. It is **gone**.
 
-```
-Some.Test.Name   # needs the poppler corpus [requires: corpus:poppler]
-```
+The replacement needs no external file and no conditioning, because the
+reason was always available where the skip happens: xUnit v3's
+`Assert.SkipWhen(condition, "reason")` / `Assert.SkipUnless(condition,
+"reason")` / `Assert.Skip("reason")`, and static `[Fact(Skip = "reason")]` /
+`[Theory(Skip = "reason")]`, all land in the trx identically —
+`<UnitTestResult outcome="NotExecuted">` with the reason in
+`<Output><ErrorInfo><Message>`. Verified by hand against a live run before
+writing the gate (#1172): a dynamic `Assert.SkipUnless` and a static
+`[Fact(Skip=...)]` produce the exact same XML shape.
 
-`tool:NAME` (on PATH), `corpus:NAME` (`test-pdfs/NAME` non-empty), `env:NAME`.
-All listed specs must be present.
-
-This exists because the allowlist was calibrated for a corpus-**less** CI runner.
-⚠️ That runner is GONE (GitHub Actions removed 2026-09-04). The conditioning
-mechanism is kept because it is still the right shape for a machine missing an
-optional tool or corpus, but the entries were tuned for an environment that no
-longer exists — expect to re-tune them against this machine, not to trust them.
-Most entries gate on a gitignored corpus or an optional tool, so on a
-corpus-equipped dev machine those tests *run* — and the reverse check
-("allow-listed skips are no longer skipping") fired on every local run, on all
-three projects. `t1` and `run-full-suite.sh` inherited a guaranteed failure. A
-gate that always fails locally is a gate people stop reading, and that is
-precisely how six un-allow-listed skips reddened `test-linux` for 8+ consecutive
-runs before anyone looked.
-
-Two invariants, both pinned by `scripts/test-check-skip-budget.sh`:
-
-- **The forward check is never relaxed.** A skip that is not allow-listed fails,
-  always, conditioning or not.
-- **Conditioning is not unconditional.** When a declared prerequisite is
-  *absent*, the reverse check fires exactly as before. The selftest forces a
-  spec absent (`SKIP_BUDGET_FORCE_ABSENT`) to prove this, because the CI-side
-  branch cannot be reproduced on a machine that has every corpus — and must not
-  be tested by moving 888 MB of fixtures around.
-
-`--update` keeps conditioned entries whose prerequisites are satisfied. Without
-that it would *delete* the entries CI depends on when run from a dev machine,
-turning the flag from "won't add the skip you need" into "removes the ones you
-had". An entry with no marker keeps the original unconditional behaviour, so
-"unconditioned" stays the safe default when a test's gate is unclear.
+So the gate now just reads that back: every `NotExecuted` result must carry a
+non-empty `<Message>`, or the gate fails and names the test. Give a new skip
+its reason in the test itself — `Assert.SkipWhen(cond, "why")` or
+`[Fact(Skip = "why")]` — and it needs no separate allowlist edit, no
+`[requires: ...]` marker, and works identically on every machine: a declared
+reason is a declared reason regardless of what corpus or tool is present.
+`scripts/test-check-skip-budget.sh` pins the gate's behaviour (declared skip
+passes, undeclared/blank skip fails, mixed and chunked-`--trx`-union cases)
+against synthetic trx fixtures.
 
 ## Common Development Workflows
 
@@ -1161,8 +1152,10 @@ no-self-oracle rule is for.
 
 So: use the rendering-tools CI job or a fully provisioned local checkout when
 renderer work needs the wider quorum. Do not restate either the count or the
-"changes nothing" claim from memory — check
-`Excise.Rendering.Tests/Differential/` and `tests/skip-allowlist/`.
+"changes nothing" claim from memory — check `Excise.Rendering.Tests/Differential/`,
+and whether the PDFium/PDFBox oracle tests actually run or skip on this
+machine (their in-code skip reason — `Assert.SkipWhen`/`SkipUnless`, #1172 —
+names exactly what is missing).
 
 ### Skia-origin differences are registered, not re-triaged (#1011)
 

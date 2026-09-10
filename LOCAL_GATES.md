@@ -368,7 +368,7 @@ jar is vendored — PDFBox is gated on the variable, not the file (#935).
 ## tests/gates-tooling.txt — the companion
 
 Every script under `scripts/` that is deliberately **not** a row is listed
-there, one per line with its reason (skip-allowlist shape, #854): bodies of
+there, one per line with its reason (declare-or-justify shape, #854/#1172): bodies of
 gates, download scripts, fixture generators, analysis helpers, the ad-hoc
 runners. `report-gates-selftest` fails when a script is in neither place, so a
 new script must either become a gate or be justified there ("Adding a gate").

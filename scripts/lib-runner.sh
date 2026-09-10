@@ -773,18 +773,22 @@ runner_marker_value() {
 }
 
 # ---------------------------------------------------------------------------
-# Prerequisites — the [requires:] vocabulary check-skip-budget.sh introduced
-# (#854), lifted here so every runner and gate resolves a spec the same way.
+# Prerequisites — the [requires:]/prereq vocabulary gates.tsv rows use for
+# their opt:/tool:/corpus:/env:/file: column, resolved the same way for
+# every runner and gate.
 #   tool:NAME    on PATH          corpus:NAME  test-pdfs/NAME non-empty
 #   env:NAME     variable set     file:GLOB    a repo-relative glob matches
 #   opt:NAME     the runner was invoked with --NAME (RUNNER_OPTS)
-# A typo resolves ABSENT on purpose. RUNNER_FORCE_ABSENT (or the older
-# SKIP_BUDGET_FORCE_ABSENT) forces a spec absent for selftests.
+# A typo resolves ABSENT on purpose. RUNNER_FORCE_ABSENT forces a spec absent
+# for selftests. (Originally introduced for the skip-budget gate's own
+# [requires: ...] allowlist markers, #854 — that allowlist is gone since
+# #1172, but this resolver is now general-purpose infrastructure other
+# gates/runners depend on; see runner_prereq_missing's callers.)
 # ---------------------------------------------------------------------------
 RUNNER_PREREQ_CACHE=""
 runner_prereq_present() {
     local spec="$1"
-    case ",${RUNNER_FORCE_ABSENT:-}${SKIP_BUDGET_FORCE_ABSENT:+,$SKIP_BUDGET_FORCE_ABSENT}," in *",$spec,"*) return 1 ;; esac
+    case ",${RUNNER_FORCE_ABSENT:-}," in *",$spec,"*) return 1 ;; esac
     [ -n "$RUNNER_PREREQ_CACHE" ] || RUNNER_PREREQ_CACHE="$(mktemp -d)"
     local key="$RUNNER_PREREQ_CACHE/${spec//[^A-Za-z0-9._-]/_}" cached
     if [ -f "$key" ]; then read -r cached < "$key"; [ "$cached" = "1" ]; return; fi

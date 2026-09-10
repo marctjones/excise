@@ -1,64 +1,48 @@
 #!/usr/bin/env bash
 #
-# Skip budget (#619).
+# Skip budget (#619, simplified #1172).
 #
-# A skipped test is invisible coverage loss. Ours do not just skip for missing
-# external tools — some skip on PROCESS-GLOBAL STATE, which means a test can stop
-# running because an unrelated test was added to the same class, and nothing
-# complains.
+# A skipped test is invisible coverage loss — a whole file can stop running
+# while other tests keep the same lines "covered", and neither the coverage
+# floors nor the #894 test-count gate can see it happen.
 #
-# That is not hypothetical:
+# The fix used to be an EXTERNAL, ENVIRONMENT-CONDITIONED ALLOWLIST
+# (tests/skip-allowlist/*.txt, `[requires: corpus:X]` markers, #854) that let
+# a corpus-less CI runner and a corpus-equipped dev box agree on what may
+# skip. That machinery drifted, red-lit Linux CI for days, and could not be
+# re-synced from a macOS-only box — see git history on this file before
+# #1172 for the full mechanism, now deleted.
 #
-#   MainWindowViewModelTests.HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan
-#     Assert.SkipWhen(IsAssemblyLoaded("Excise.Ocr"), ...)
+# #1172's replacement: every skip already carries its reason IN CODE. xUnit
+# v3's `Assert.SkipWhen(cond, "reason")` / `Assert.SkipUnless(cond, "reason")`
+# / `Assert.Skip("reason")` and `[Fact(Skip = "reason")]` /
+# `[Theory(Skip = "reason")]` all land in the trx identically:
 #
-#   It asserts that ordinary hidden-text reveal does NOT drag in the OCR
-#   assembly — a real privacy/dependency property. Whether it runs depends on
-#   which tests loaded Excise.Ocr earlier in the same process. On 2026-07-13,
-#   adding unrelated tests to that class silently turned it off. The suite went
-#   from 1 skip to 2 and stayed green.
+#   <UnitTestResult outcome="NotExecuted" testName="...">
+#     <Output><ErrorInfo><Message>reason</Message></ErrorInfo></Output>
+#   </UnitTestResult>
 #
-# So: enumerate the skips, and fail the build when the set CHANGES. A new skip
-# must be justified and added here on purpose. An allow-listed skip that stops
-# skipping must be removed from here — that is coverage coming BACK, and the
-# allowlist should not quietly hide it.
-#
-# Entries may declare what they depend on, so the same allowlist is correct both
-# on a corpus-less CI runner and on a corpus-equipped dev machine (#854):
-#
-#   Some.Test.Name   # needs the poppler corpus [requires: corpus:poppler]
-#
-#   tool:NAME    NAME on PATH        corpus:NAME  test-pdfs/NAME non-empty
-#   env:NAME     $NAME set non-empty  file:GLOB    repo-relative path/glob exists
-#
-# All listed specs must be present. Present => the test is expected to RUN here,
-# so the reverse check stays silent for it. Absent, or no marker at all, => the
-# original behaviour. The FORWARD check is never relaxed.
+# So the gate reads that back and fails on any skip whose reason is missing
+# or blank. No external allowlist file, no --update, no environment
+# conditioning: the reason travels with the test, is reviewed in the same
+# diff as the skip, and needs no re-syncing between runners — #854's failure
+# mode does not exist here, by construction, not by more machinery.
 #
 # Usage:
-#   scripts/check-skip-budget.sh <project.csproj> [--update]
+#   scripts/check-skip-budget.sh <project.csproj> [--trx <file>]...
 #
-#   --update   rewrite the allowlist from the current run (review the diff!)
-#              Keeps conditioned entries whose prerequisites are satisfied, so
-#              running it on a dev machine cannot strip the entries CI needs.
-#
-# Environment:
-#   SKIP_BUDGET_FORCE_ABSENT=spec[,spec]   force specs to resolve absent
-#                                          (used by test-check-skip-budget.sh)
+#   --trx <file>   reuse a trx from a run that already happened instead of
+#                  executing the whole suite a second time just to read
+#                  skips. May be REPEATED: the full-suite runner chunks the
+#                  big projects by test class, and the union of the chunk
+#                  trx files is exactly one unfiltered run.
 set -euo pipefail
 
-PROJECT="${1:?usage: check-skip-budget.sh <project.csproj> [--update] [--trx <file>]...}"
+PROJECT="${1:?usage: check-skip-budget.sh <project.csproj> [--trx <file>]...}"
 shift
-UPDATE=""
-# --trx reuses a trx from a run that already happened instead of executing the
-# whole suite a second time just to count skips. It may be REPEATED: the
-# full-suite runner chunks the big projects by test class, and the union of
-# the chunk trx files is exactly one unfiltered run ({TRXARGS:…} in
-# tests/gates.tsv). NotExecuted names are unioned across the files.
 EXISTING_TRX=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --update) UPDATE="--update" ;;
     --trx) EXISTING_TRX+=("${2:?--trx needs a file}"); shift ;;
     *) echo "check-skip-budget: unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -66,17 +50,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# Prerequisite specs ([requires: …]) resolve through lib-runner's
-# runner_prereq_present, the same resolver every runner uses for the
-# manifest's prereq column — one vocabulary, one implementation.
-RUNNER_ROOT="$ROOT"
-source "$ROOT/scripts/lib-runner.sh"
 NAME="$(basename "$PROJECT" .csproj)"
-ALLOWLIST="$ROOT/tests/skip-allowlist/$NAME.txt"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-
-mkdir -p "$(dirname "$ALLOWLIST")"
 
 if [[ ${#EXISTING_TRX[@]} -gt 0 ]]; then
   echo "==> reading skips from ${#EXISTING_TRX[@]} trx file(s) (no second test run)"
@@ -90,7 +66,7 @@ else
   echo "==> running $NAME to enumerate skips"
   # #1144: this re-runs the WHOLE suite (slow -- minutes). If a trx already
   # exists from a prior run (the coverage run, or a --logger trx you kept),
-  # skip it:  scripts/check-skip-budget.sh <proj> --update --trx <that.trx>
+  # reuse it:  scripts/check-skip-budget.sh <proj> --trx <that.trx>
   "$ROOT/scripts/assert-fresh.sh" --configuration Debug "$PROJECT"
   dotnet test "$PROJECT" --nologo --logger "trx;LogFileName=$TMP/r1.trx" >"$TMP/out.log" 2>&1 || true
 fi
@@ -101,340 +77,61 @@ if ! ls "$TMP"/r*.trx >/dev/null 2>&1; then
   exit 1
 fi
 
-# Skipped tests in a trx carry outcome="NotExecuted". Several trx files are
-# the chunks of one project: their union is the project.
-python3 - "$TMP/actual-counts.tsv" "$TMP"/r*.trx >"$TMP/actual.txt" <<'PY'
-import sys, xml.etree.ElementTree as ET
-from collections import Counter
-counts = Counter()
-for path in sys.argv[2:]:
+# Skipped tests in a trx carry outcome="NotExecuted". Several trx files may be
+# the chunks of one project run: read all of them. The reason (if any) lives
+# in <Output><ErrorInfo><Message> — the same element for a static
+# [Fact(Skip="...")] and for a dynamic Assert.SkipWhen/SkipUnless/Skip,
+# verified empirically against a real xunit.v3 + vstest-trx-logger run
+# (#1172): both land there identically.
+python3 - "$TMP"/r*.trx <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+
+undeclared = []
+declared = 0
+seen = set()
+
+for path in sys.argv[1:]:
     root = ET.parse(path).getroot()
-    for r in root.iter():
-        if r.tag.endswith("UnitTestResult") and r.get("outcome") == "NotExecuted":
-            name = r.get("testName", "").split("(")[0]   # strip Theory args
-            if name:
-                counts[name] += 1
-with open(sys.argv[1], "w", encoding="utf-8") as f:
-    for n in sorted(counts):
-        f.write(f"{n}\t{counts[n]}\n")
-for n in sorted(counts):
-    print(n)
+    for result in root.iter():
+        if not result.tag.endswith("UnitTestResult") or result.get("outcome") != "NotExecuted":
+            continue
+        name = result.get("testName", "")
+        exec_id = result.get("executionId", "")
+        key = (name, exec_id)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        message = ""
+        for output in result:
+            if not output.tag.endswith("Output"):
+                continue
+            for error_info in output:
+                if not error_info.tag.endswith("ErrorInfo"):
+                    continue
+                for msg in error_info:
+                    if msg.tag.endswith("Message"):
+                        message = (msg.text or "").strip()
+
+        if message:
+            declared += 1
+        else:
+            undeclared.append(name)
+
+if undeclared:
+    print()
+    print("FAIL: tests are skipping with no declared reason.")
+    print("      A skip with no reason is coverage loss with no audit trail — it cannot")
+    print("      be told apart from an accident, and nothing forces it to be revisited.")
+    print("      Give it one, in the test itself:")
+    print('        Assert.SkipWhen(condition, "why")')
+    print('        Assert.SkipUnless(condition, "why")')
+    print('        Assert.Skip("why")')
+    print('        [Fact(Skip = "why")]  /  [Theory(Skip = "why")]')
+    for n in sorted(set(undeclared)):
+        print(f"        + {n}")
+    sys.exit(1)
+
+print(f"==> skip budget OK ({declared} skip(s), every one with a declared in-code reason)")
 PY
-
-touch "$ALLOWLIST"
-
-# Entries may carry a justification:  TestName   # why it is skipped
-# Compare on the NAME only, but PRESERVE the reason across --update. An
-# allowlist without reasons is a dump, and a dump rots into "33 skips, shrug".
-grep -vE '^\s*(#|$)' "$ALLOWLIST" \
-  | sed -e 's/[[:space:]]*#.*$//' -e 's/[[:space:]]*$//' \
-  | LC_ALL=C sort -u > "$TMP/expected.txt" || true
-
-# Optional count ratchet (#937): the allowlist stays keyed by the bare method
-# name, but a [Theory] can skip 1 row or 13 rows under that same name. Entries
-# with no marker default to 1 skipped row; multi-row skips must say
-# [skip-count: N] in their justification.
-python3 - "$ALLOWLIST" > "$TMP/expected-counts.tsv" <<'PY'
-import re, sys
-for raw in open(sys.argv[1], encoding="utf-8", errors="replace"):
-    line = raw.strip()
-    if not line or line.startswith("#") or "#" not in line:
-        continue
-    name = line.split("#", 1)[0].rstrip()
-    if not name:
-        continue
-    m = re.search(r"\[skip-count:\s*(\d+)\]", line)
-    if m:
-        print(f"{name}\t{m.group(1)}")
-PY
-
-# comm needs BOTH sides in the same collation. Python sorts by codepoint;
-# `sort` uses locale collation. Mixing them makes comm report the same line
-# as both added AND removed. Force C collation on both sides.
-LC_ALL=C sort -u "$TMP/actual.txt" -o "$TMP/actual.txt"
-
-# ---------------------------------------------------------------------------
-# Per-entry prerequisite conditioning (#854)
-# ---------------------------------------------------------------------------
-# Most entries here are gated on something the CI runner does not have: a
-# gitignored corpus, or an optional external tool. Those tests skip on CI and
-# RUN on a corpus-equipped dev machine. With an unconditional allowlist that
-# made this gate un-greenable outside CI — it failed the reverse check on every
-# local run, on all three projects, in both directions. A gate that always fails
-# is a gate people stop reading, which is exactly how six un-allow-listed skips
-# reddened test-linux for 8+ consecutive runs.
-#
-# So an entry may declare what it needs, INSIDE its justification:
-#
-#   Some.Test.Name   # needs the poppler corpus [requires: corpus:poppler]
-#
-# The marker lives inside the reason deliberately: name extraction and
-# --update's reason preservation are untouched, and the marker travels with the
-# reason for free (#663/#665/#668 keep passing unmodified).
-#
-# Specs:  tool:NAME    -> NAME is on PATH
-#         corpus:NAME  -> test-pdfs/NAME exists and is non-empty
-#         env:NAME     -> environment variable NAME is set and non-empty
-#         file:GLOB    -> a repo-relative path (glob allowed) exists. Needed for
-#                         dependencies that are a downloaded FILE rather than a
-#                         tool on PATH or an env var -- e.g. the PDFBox jar,
-#                         which the renderer auto-discovers in tools/vendor/.
-# Multiple specs are space-separated and ALL must be present.
-#
-# Semantics — the FORWARD check is untouched. A skip that is not allow-listed
-# still fails, always. Only the REVERSE check ("allow-listed but no longer
-# skipping") is conditioned: if an entry declares prerequisites and they are
-# all present, the test is EXPECTED to run here, so its running is not a
-# finding. An entry with NO marker keeps today's exact behaviour, which makes
-# "unconditioned" the safe default for any entry whose gate is unclear.
-#
-# Map lines: NAME<TAB>spec spec ...
-#
-# The name capture MUST match the forward check's above (line ~98), which
-# strips from the first `#` and trims. It previously used `[^[:space:]#]*` —
-# everything up to the first SPACE — so any name containing one could be
-# allow-listed but never conditioned. That is every `[Theory]` case, whose
-# display name is `Method(param: "value")`.
-#
-# The failure was silent and permanent in the worst direction: the forward
-# check accepted the entry, the reverse check could not read its `[requires:]`
-# marker, so on any machine where the prerequisites WERE present the entry
-# reported "allow-listed skips are no longer skipping" on every single run.
-# A gate that always fails locally is a gate people stop reading — the exact
-# rot #854 was written to stop.
-grep -vE '^\s*(#|$)' "$ALLOWLIST" \
-  | sed -n 's/^\([^#]*[^[:space:]#]\)[[:space:]]*#.*\[requires:[[:space:]]*\([^]]*\)\].*$/\1\t\2/p' \
-  | LC_ALL=C sort -u > "$TMP/conditioned.txt" || true
-
-# SKIP_BUDGET_FORCE_ABSENT lets the selftest exercise the absent-prerequisite
-# branch deterministically. The CI environment cannot be simulated by hiding
-# 888MB of corpora, and testing the resolver beats testing the filesystem.
-# Resolution is MEMOISED in $TMP/spec-cache. Without it this is called once per
-# allow-listed entry — 200+ times on Excise.Rendering.Tests — and each corpus
-# check hit the filesystem again. The first version also used
-# `[[ -n "$(ls -A DIR)" ]]`, which slurps an entire directory listing into a
-# string; against test-pdfs/ghent (308MB) and altona (268MB), a few hundred
-# times over, that alone took the gate from ~6 minutes to 30+. Use a
-# short-circuiting find instead, and resolve each distinct spec exactly once.
-SPEC_CACHE_DIR="$TMP/spec-cache"
-mkdir -p "$SPEC_CACHE_DIR"
-
-# spec_present <spec> — kept as the name this file's callers use; the
-# resolver is lib-runner's (tool/corpus/env/file/opt, cached per spec,
-# SKIP_BUDGET_FORCE_ABSENT honoured for the selftest).
-RUNNER_PREREQ_CACHE="$SPEC_CACHE_DIR"
-spec_present() { runner_prereq_present "$1"; }
-
-# 0 (true) only if the entry declares prerequisites AND every one is present.
-entry_prereqs_present() {
-  local name="$1" specs spec
-  specs="$(awk -F'\t' -v n="$name" '$1 == n { print $2; exit }' "$TMP/conditioned.txt")"
-  [[ -n "$specs" ]] || return 1
-  for spec in $specs; do
-    spec_present "$spec" || return 1
-  done
-  return 0
-}
-
-if [[ "$UPDATE" == "--update" ]]; then
-  # --update writes the tests that are skipping NOW. On a machine where a
-  # conditioned entry's prerequisite is PRESENT, that test is running, so a
-  # naive rewrite would DELETE a correct CI entry — turning this flag from
-  # "won't add the skip you need" into "removes the ones you had". Keep any
-  # conditioned entry whose prerequisites are satisfied here (#854).
-  while IFS=$'\t' read -r cname _; do
-    [[ -n "$cname" ]] || continue
-    entry_prereqs_present "$cname" || continue
-    grep -qxF "$cname" "$TMP/actual.txt" || echo "$cname" >> "$TMP/actual.txt"
-  done < "$TMP/conditioned.txt"
-  LC_ALL=C sort -u "$TMP/actual.txt" -o "$TMP/actual.txt"
-
-  # Capture the OLD allowlist contents BEFORE opening the `> "$ALLOWLIST"`
-  # redirection below. Bash sets up a compound command's output redirection
-  # (which truncates $ALLOWLIST) before running any of the command's body, so
-  # a `grep ... "$ALLOWLIST"` *inside* the loop below would always see an
-  # empty file — reason would always be empty and every entry would fall
-  # through to "TODO: justify or fix" regardless of what was there (#663).
-  # Grepping against $OLD instead of the file sidesteps the ordering bug.
-  OLD="$(cat "$ALLOWLIST" 2>/dev/null || true)"
-
-  # Preserve hand-written comment BLOCKS across --update (#668). A comment block
-  # that precedes an entry is a human note about that skip (e.g. a
-  # "# --- veraPDF-dependent ---" grouping header). Previously --update emitted
-  # only the auto-header + entries, silently discarding those notes. Tag every
-  # hand-written comment line with the entry it immediately precedes, so notes
-  # travel with their test across the sort. The regenerated auto-header is
-  # filtered out so it can't accumulate. Map lines: NAME<TAB>comment.
-  printf '%s\n' "$OLD" | awk '
-    /^# (Skips allow-listed for|Every line is coverage we are NOT getting|Format:  TestName)/ { next }
-    /^#$/ { next }
-    /^[[:space:]]*#/ { buf[++n] = $0; next }        # hand-written comment
-    /^[[:space:]]*$/ { n = 0; next }                # blank line ends a block
-    {
-      name = $0; sub(/[[:space:]]*#.*$/, "", name); sub(/[[:space:]]*$/, "", name);
-      for (i = 1; i <= n; i++) printf "%s\t%s\n", name, buf[i];
-      n = 0;
-    }' > "$TMP/comment-map.txt"
-
-  {
-    echo "# Skips allow-listed for $NAME. See scripts/check-skip-budget.sh (#619)."
-    echo "# Every line is coverage we are NOT getting. Justify it or delete it."
-    echo "# Format:  TestName   # why"
-    echo "#"
-    while IFS= read -r name; do
-      # Re-emit any hand-written comment block that preceded this entry (#668).
-      awk -F'\t' -v n="$name" '$1 == n { sub(/^[^\t]*\t/, ""); print }' "$TMP/comment-map.txt"
-      # `|| true` is load-bearing: with `set -e -o pipefail`, a grep that finds
-      # nothing (the common case — a brand-new skip) returns 1 and would abort
-      # the script mid-write, leaving an allowlist containing only its header.
-      # `[^#]*#` (not `.*#`) matters: `.*` is greedy and matches through to
-      # the LAST `#` on the line, so a reason that itself references another
-      # issue (e.g. "#653: ...") would have everything up to and including
-      # that inner `#` stripped too. `[^#]*` stops at the FIRST `#`, which is
-      # the separator between the test name and the reason (discovered while
-      # verifying #663 against real reasons that cite other issue numbers).
-      reason="$( { printf '%s\n' "$OLD" | grep -E "^${name}([[:space:]]|#|\$)" 2>/dev/null || true; } \
-                | head -1 | sed -n 's/[^#]*#[[:space:]]*//p')"
-      if [[ -n "$reason" ]]; then
-        count="$(awk -F'\t' -v n="$name" '$1 == n { print $2; exit }' "$TMP/actual-counts.tsv")"
-        count="${count:-1}"
-        # Refresh the count marker while preserving the human-written reason.
-        reason="$(printf '%s\n' "$reason" | sed -E 's/[[:space:]]*\[skip-count:[[:space:]]*[0-9]+]//g')"
-        if [[ "$count" -gt 1 ]]; then
-          reason="$reason [skip-count: $count]"
-        fi
-        printf '%s   # %s\n' "$name" "$reason"
-      else
-        count="$(awk -F'\t' -v n="$name" '$1 == n { print $2; exit }' "$TMP/actual-counts.tsv")"
-        count="${count:-1}"
-        if [[ "$count" -gt 1 ]]; then
-          printf '%s   # TODO: justify or fix [skip-count: %s]\n' "$name" "$count"
-        else
-          printf '%s   # TODO: justify or fix\n' "$name"
-        fi
-      fi
-    done < "$TMP/actual.txt"
-  } > "$ALLOWLIST"
-  echo "==> allowlist rewritten: $ALLOWLIST"
-  echo "    REVIEW THE DIFF. Each new line is a test that stopped running."
-  exit 0
-fi
-
-NEW="$(comm -13 "$TMP/expected.txt" "$TMP/actual.txt" || true)"
-GONE="$(comm -23 "$TMP/expected.txt" "$TMP/actual.txt" || true)"
-
-STATUS=0
-if [[ -n "$NEW" ]]; then
-  echo
-  echo "FAIL: tests are skipping that are not allow-listed."
-  echo "      A test that silently stops running is coverage loss you cannot see."
-  echo "$NEW" | sed 's/^/        + /'
-  STATUS=1
-fi
-
-# Split the reverse check: an entry whose declared prerequisites are all
-# present here is EXPECTED to run, so it is reported as satisfied, not failed
-# (#854). Entries with no marker fall through to the original failure.
-# Accumulate into FILES, not shell strings. macOS ships bash 3.2, whose
-# ${var//pattern/} is pathologically slow on large values: stripping newlines
-# from the ~20KB accumulated list of 218 Rendering entries measured at 7m57s
-# on this machine (bash 3.2.57, arm64). Two such expansions turned a ~5-minute
-# gate into a ~20-minute one that looked like a hang. Files keep it O(n) and
-# make the "is it empty" test a stat instead of a full-string rewrite.
-GONE_REAL_FILE="$TMP/gone-real.txt"
-GONE_EXPECTED_FILE="$TMP/gone-expected.txt"
-: > "$GONE_REAL_FILE"
-: > "$GONE_EXPECTED_FILE"
-if [[ -n "$GONE" ]]; then
-  while IFS= read -r name; do
-    [[ -n "$name" ]] || continue
-    if entry_prereqs_present "$name"; then
-      echo "$name" >> "$GONE_EXPECTED_FILE"
-    else
-      echo "$name" >> "$GONE_REAL_FILE"
-    fi
-  done <<< "$GONE"
-fi
-
-if [[ -s "$GONE_EXPECTED_FILE" ]]; then
-  echo
-  echo "==> $(wc -l < "$GONE_EXPECTED_FILE" | tr -d ' ') allow-listed skip(s) are running here because their"
-  echo "    declared prerequisites are present. Expected — not a finding (#854)."
-fi
-
-if [[ -s "$GONE_REAL_FILE" ]]; then
-  echo
-  echo "FAIL: allow-listed skips are no longer skipping."
-  echo "      That is coverage coming BACK — good. Remove them from the allowlist"
-  echo "      so it cannot hide a future regression."
-  echo "      (If instead this is environment-dependent, declare what it needs:"
-  echo "       Test.Name   # why [requires: corpus:NAME] — see the header.)"
-  sed 's/^/        - /' "$GONE_REAL_FILE"
-
-  # A per-ROW theory entry can NEVER match, because the observed names above
-  # are stripped of their arguments (see the `.split("(")[0]` where actual.txt
-  # is built). Left to the generic advice, this failure tells you to delete an
-  # entry that is doing its job — and deleting it just moves the failure to the
-  # forward check. Name the real cause instead.
-  if grep -q '(' "$GONE_REAL_FILE"; then
-    echo
-    echo "      ^ Entries above contain theory arguments, e.g. Method(param: \"value\")."
-    echo "        Those can never match: this gate strips theory arguments from the"
-    echo "        names it observes, so a per-ROW entry is compared against a name"
-    echo "        that never has any. Use ONE entry per METHOD instead:"
-    echo
-    grep '(' "$GONE_REAL_FILE" | sed 's/(.*$//' | sort -u | sed 's/^/            /'
-    echo
-    echo "        Do NOT simply delete them — the test really is skipping, so the"
-    echo "        forward check would then fail on the bare name instead."
-  fi
-  STATUS=1
-fi
-
-COUNT_MISMATCH_FILE="$TMP/count-mismatch.txt"
-: > "$COUNT_MISMATCH_FILE"
-while IFS=$'\t' read -r name actual_count; do
-  [[ -n "$name" ]] || continue
-  grep -qxF "$name" "$TMP/expected.txt" || continue
-  # The [skip-count: N] marker pins the count in the environment its entry's
-  # prerequisites describe. When a declared prerequisite is ABSENT (the
-  # corpus-less CI runner), EVERY row of the theory is expected to skip, so
-  # comparing against the pinned partial count is meaningless — it fired on
-  # all six conditioned Core entries the first time Linux CI ever reached
-  # this gate (the oracle-provisioning step ahead of it had failed on every
-  # prior run, #956). Same conditioning rule as the reverse check (#854):
-  # only entries whose prerequisites are all present get their count pinned.
-  # (Unconditioned entries declare nothing and keep today's behaviour —
-  # entry_prereqs_present returns false for those too, so test "conditioned
-  # AND absent" explicitly rather than the bare helper.)
-  count_specs="$(awk -F'\t' -v n="$name" '$1 == n { print $2; exit }' "$TMP/conditioned.txt")"
-  if [[ -n "$count_specs" ]] && ! entry_prereqs_present "$name"; then
-    continue
-  fi
-  expected_count="$(awk -F'\t' -v n="$name" '$1 == n { print $2; exit }' "$TMP/expected-counts.tsv")"
-  expected_count="${expected_count:-1}"
-  if [[ "$actual_count" != "$expected_count" ]]; then
-    printf '%s\t%s\t%s\n' "$name" "$expected_count" "$actual_count" >> "$COUNT_MISMATCH_FILE"
-  fi
-done < "$TMP/actual-counts.tsv"
-
-if [[ -s "$COUNT_MISMATCH_FILE" ]]; then
-  echo
-  echo "FAIL: allow-listed skip counts changed."
-  echo "      The allowlist is keyed by bare method name, but [Theory] rows can"
-  echo "      skip independently. A name match alone cannot tell one skipped row"
-  echo "      from all rows skipped (#937)."
-  awk -F'\t' '{ printf "        - %s expected %s skipped row(s), saw %s\n", $1, $2, $3 }' "$COUNT_MISMATCH_FILE"
-  echo
-  echo "      To accept the new count, update the entry's [skip-count: N] marker"
-  echo "      with: scripts/check-skip-budget.sh $PROJECT --update"
-  STATUS=1
-fi
-
-if [[ $STATUS -eq 0 ]]; then
-  echo "==> skip budget OK ($(wc -l < "$TMP/actual.txt" | tr -d ' ') allow-listed skip(s))"
-else
-  echo
-  echo "To accept the current state: scripts/check-skip-budget.sh $PROJECT --update"
-fi
-exit $STATUS
