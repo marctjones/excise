@@ -145,7 +145,15 @@ internal static class MacNativeMenuBuilder
                     Separator(),
                     TrackDocumentItem(CommandItem("Export Current Page...", _viewModel.ExportCurrentPageCommand, Key.E)),
                     TrackDocumentItem(CommandItem("Export All Pages as Images...", _viewModel.ExportPagesCommand)),
-                    TrackDocumentItem(CommandItem("Print...", _viewModel.PrintCommand, Key.P))));
+                    TrackDocumentItem(CommandItem("Print...", _viewModel.PrintCommand, Key.P)),
+                    Separator(),
+                    // #1448. Listed here deliberately, same reasoning as #1414
+                    // above: on macOS the in-window menu bar is hidden
+                    // (MainWindow.axaml.cs), so a command that exists only in
+                    // MainWindow.axaml is unreachable on this project's
+                    // primary platform. Without this, setting/changing/
+                    // removing a document password is unreachable on macOS.
+                    TrackDocumentItem(CommandItem("Security...", _viewModel.SecurityCommand))));
 
             Add(menu,
                 Submenu("Redaction",

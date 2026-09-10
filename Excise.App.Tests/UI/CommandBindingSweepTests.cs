@@ -181,7 +181,8 @@ public class CommandBindingSweepTests
             "Add Sticky Note...",
             "Redaction Mode",
             "Apply Redaction",
-            "Verify Digital Signatures..."
+            "Verify Digital Signatures...",
+            "Security..."
         });
 
         var topLevelHeaders = menu.Items
