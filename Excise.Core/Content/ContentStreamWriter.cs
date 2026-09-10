@@ -96,6 +96,98 @@ public class ContentStreamWriter
     }
 
     /// <summary>
+    /// As <see cref="Write(ContentStream, byte[])"/>, but also tries to map
+    /// each ORIGINAL array-join offset in <paramref name="boundaries"/> (see
+    /// <see cref="ContentStream.SourceArrayBoundaries"/>) onto the equivalent
+    /// offset in the returned bytes, so a caller can split a multi-stream
+    /// <c>/Contents</c> array back into the same number of elements (#1449)
+    /// instead of collapsing it to one.
+    ///
+    /// <para>A boundary is mappable when it falls inside a verbatim-copied
+    /// operator's original span — per <see cref="ContentStreamParser.RecordSourceSpan"/>
+    /// an operator's span starts exactly where the previous one ended, so the
+    /// division always lands in some operator's LEADING whitespace, never
+    /// strictly between two spans. The offset then translates by the same
+    /// affine shift as everything else in that verbatim copy. A boundary whose
+    /// containing operator was rewritten or removed has no honest place to
+    /// cut — <paramref name="outputBoundaries"/> comes back null and the
+    /// caller falls back to the single-stream write.</para>
+    /// </summary>
+    internal byte[] Write(
+        ContentStream content,
+        byte[] source,
+        IReadOnlyList<int> boundaries,
+        out int[]? outputBoundaries)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(boundaries);
+
+        if (boundaries.Count == 0)
+        {
+            outputBoundaries = Array.Empty<int>();
+            return Write(content, source);
+        }
+
+        var ops = content.Operators;
+
+        if (IsUnmodifiedWholeStream(ops, source))
+        {
+            // Output IS the source, so every original offset maps to itself.
+            outputBoundaries = boundaries.ToArray();
+            return (byte[])source.Clone();
+        }
+
+        _sb.Clear();
+        var mapped = new int[boundaries.Count];
+        var nextBoundary = 0;
+
+        for (int i = 0; i < ops.Count; i++)
+        {
+            var op = ops[i];
+            var verbatim = CanCopyVerbatim(op, source);
+            var outputStart = _sb.Length;
+
+            // Resolve any boundaries that fall inside THIS operator's
+            // original span before appending it — only meaningful for a
+            // verbatim copy, since op.SourceStart otherwise has no relation
+            // to where this operator's bytes land in the output.
+            while (verbatim
+                   && nextBoundary < boundaries.Count
+                   && boundaries[nextBoundary] >= op.SourceStart
+                   && boundaries[nextBoundary] < op.SourceEnd)
+            {
+                mapped[nextBoundary] = outputStart + (boundaries[nextBoundary] - op.SourceStart);
+                nextBoundary++;
+            }
+
+            if (!verbatim)
+            {
+                WriteOperator(op);
+                continue;
+            }
+
+            _sb.Append(Encoding.Latin1.GetString(source, op.SourceStart, op.SourceEnd - op.SourceStart));
+
+            var next = i + 1 < ops.Count ? ops[i + 1] : null;
+            bool followsContiguously = next != null
+                && CanCopyVerbatim(next, source)
+                && next.SourceStart == op.SourceEnd;
+            if (!followsContiguously)
+                _sb.Append('\n');
+        }
+
+        // Source offsets and boundaries are both monotonically increasing, so
+        // once a boundary fails to resolve against the operator that should
+        // contain it (removed, rewritten, or reordered), no LATER operator
+        // can resolve it either — this catches every such case in one check.
+        outputBoundaries = nextBoundary == boundaries.Count
+            ? mapped
+            : null;
+
+        return Encoding.Latin1.GetBytes(_sb.ToString());
+    }
+
+    /// <summary>
     /// Whether every operator can be copied verbatim, in source order, with no
     /// gaps, starting at offset 0 — i.e. nothing was removed, added, reordered
     /// or modified.

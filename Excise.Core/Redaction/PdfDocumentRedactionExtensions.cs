@@ -551,7 +551,7 @@ public static class PdfDocumentRedactionExtensions
             rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom));
         ops.Add(ContentOperator.Fill());
         ops.Add(ContentOperator.RestoreState());
-        page.SetContentStream(new ContentStream(ops) { SourceBytes = content.SourceBytes });
+        page.SetContentStream(new ContentStream(ops) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
     }
 
     /// <summary>

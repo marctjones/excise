@@ -129,8 +129,20 @@ public class ContentStreamParser
         return new ContentStream(new List<ContentOperator>(_operators))
         {
             SourceBytes = TrackSourceSpans ? _content : null,
+            SourceArrayBoundaries = TrackSourceSpans ? ArrayBoundaries : null,
         };
     }
+
+    /// <summary>
+    /// Set by <c>PdfPage.GetContentStream(trackSourceSpans: true)</c> when
+    /// <see cref="_content"/> was concatenated from a multi-stream
+    /// <c>/Contents</c> array — see
+    /// <see cref="ContentStream.SourceArrayBoundaries"/>. Carried through
+    /// verbatim onto the parsed <see cref="ContentStream"/> so
+    /// <c>PdfPage.SetContentStream</c> can try to split the rewritten bytes
+    /// back at the same seams (#1449).
+    /// </summary>
+    internal IReadOnlyList<int>? ArrayBoundaries { get; set; }
 
     /// <summary>
     /// The walker's consumer. A STRUCT, dispatched through the walker's generic

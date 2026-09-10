@@ -157,7 +157,7 @@ public static class PdfPageRedactionExtensions
         if (FormXObjectFlattener.FlattenOverlapping(
                 page, content.Operators, area, out var flattened, out var inlinedForms))
         {
-            page.SetContentStream(new ContentStream(flattened) { SourceBytes = content.SourceBytes });
+            page.SetContentStream(new ContentStream(flattened) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
             content = page.GetContentStream(trackSourceSpans: true); // re-parse: bounds + letters now in page space
             // Drop the now-orphaned form objects so the writer can't re-emit
             // their content — flattening alone would leak the redacted text,
@@ -193,7 +193,7 @@ public static class PdfPageRedactionExtensions
             working, page, imageArea, strategy, out var imgRemoved, out var imgRegionEdited);
         ImageRedactor.PruneUnusedImageXObjects(page, working);
 
-        page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes });
+        page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
         return new ImageRedactionCounts(imgRegionEdited, imgRemoved);
     }
 
@@ -271,7 +271,7 @@ public static class PdfPageRedactionExtensions
                     page, content.Operators, area, out var flattened, out var inlinedForms))
                 continue;
 
-            page.SetContentStream(new ContentStream(flattened) { SourceBytes = content.SourceBytes });
+            page.SetContentStream(new ContentStream(flattened) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
             content = page.GetContentStream(trackSourceSpans: true);
             FormXObjectFlattener.PruneInlinedForms(page, content.Operators, inlinedForms);
             if (content.Operators.Count == 0) return default;
@@ -301,7 +301,7 @@ public static class PdfPageRedactionExtensions
         }
 
         ImageRedactor.PruneUnusedImageXObjects(page, working);
-        page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes });
+        page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
         return imageCounts;
     }
 }

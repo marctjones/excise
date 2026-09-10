@@ -29,6 +29,19 @@ public class ContentStream
     internal byte[]? SourceBytes { get; init; }
 
     /// <summary>
+    /// When <see cref="SourceBytes"/> was concatenated from a MULTI-STREAM
+    /// <c>/Contents</c> array (ISO 32000-2 §7.7.3.3), the offset within
+    /// <see cref="SourceBytes"/> at which each array element after the first
+    /// began — i.e. one entry per join point, so a single-element array (or a
+    /// stream <c>/Contents</c>) leaves this null. <c>PdfPage.SetContentStream</c>
+    /// uses these to write the spliced result back into the SAME number of
+    /// array elements instead of collapsing them into one (#1449), falling
+    /// back to the pre-#1449 single-stream write whenever a boundary no
+    /// longer falls at a clean operator seam.
+    /// </summary>
+    internal IReadOnlyList<int>? SourceArrayBoundaries { get; init; }
+
+    /// <summary>
     /// Creates a new content stream with the specified operators.
     /// </summary>
     public ContentStream(IEnumerable<ContentOperator> operators)

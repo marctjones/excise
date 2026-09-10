@@ -128,7 +128,7 @@ public static class ObstructionStripper
             }
         }
 
-        page.SetContentStream(new ContentStream(newOps) { SourceBytes = content.SourceBytes });
+        page.SetContentStream(new ContentStream(newOps) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
     }
 
     private static bool IsNearlyWhite(double r, double g, double b)
