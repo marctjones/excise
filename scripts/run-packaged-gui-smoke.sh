@@ -188,6 +188,23 @@ app_is_alive() {
 
 wait_for_pid() {
     local remaining="$TIMEOUT_SECONDS"
+    # direct-exec already knows its own $! pid. Trust it rather than
+    # re-discovering via a `ps` command-line grep, which (a) can miss a
+    # process that dies before the next 1s poll and (b) could in principle
+    # match a DIFFERENT already-running process at the same path — the
+    # opposite of #1284's "same PID/artifact" requirement.
+    local known_pid="$app_pid"
+    if [ -n "$known_pid" ]; then
+        if pid_is_live "$known_pid"; then
+            app_pid="$known_pid"
+            pid_seen_ms="$(now_ms)"
+            return 0
+        fi
+        # The known pid already exited (e.g. aborted before this check) —
+        # that is a launch failure, not a signal to fall back to a
+        # possibly-unrelated ps match.
+        return 1
+    fi
     while [ "$remaining" -gt 0 ]; do
         app_pid="$(find_app_pid)"
         if [ -n "$app_pid" ] && pid_is_live "$app_pid"; then
@@ -224,6 +241,9 @@ process_exit_detail() {
     crash_report="$(latest_crash_report_since_launch)"
     if [ -n "$crash_report" ]; then
         detail="$detail Latest crash report: $crash_report."
+    fi
+    if [ "$MODE" = "direct-exec" ]; then
+        detail="$detail Classification: $(classify_process_exit "$APP_LOG")."
     fi
     printf '%s' "$detail"
 }
@@ -267,6 +287,59 @@ start_display_wake_assertion() {
         record_row "display wake assertion" "WARN" "$MODE" "$LAUNCH_LOG" "caffeinate exited before launch; native render timer may fail if all displays are asleep."
         caffeinate_pid=""
     fi
+}
+
+# #1284 — a freshly built .app at a NEVER-BEFORE-SEEN filesystem path can
+# SIGABRT inside AppKit's ___RegisterApplication_block_invoke before any
+# managed code runs, when the harness execs Contents/MacOS/Excise.App
+# directly: macOS has not yet registered+relaunched the bundle through
+# Launch Services for that path. Re-running the identical artifact at the
+# same path then passes cleanly (macOS has since learned the path). Register
+# the exact artifact deterministically BEFORE any launch — for both modes,
+# since it is a metadata-only operation (no process spawned, no window
+# stolen) and cheap (tens of ms) — instead of relying on an incidental
+# `open` call (background-open mode) or a manual retry (direct-exec mode).
+LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+register_app_bundle() {
+    if [ ! -x "$LSREGISTER" ]; then
+        record_row "Launch Services registration" "WARN" "$MODE" "$LAUNCH_LOG" "lsregister not found at the expected CoreServices path; a fresh-path direct-exec launch may hit the #1284 pre-managed _RegisterApplication abort."
+        return
+    fi
+    {
+        echo "Registering with Launch Services: $LSREGISTER -f $APP"
+        "$LSREGISTER" -f "$APP"
+    } >> "$LAUNCH_LOG" 2>&1
+    local rc=$?
+    if [ "$rc" = "0" ]; then
+        record_row "Launch Services registration" "PASS" "$MODE" "$LAUNCH_LOG" "lsregister -f registered $APP before launch (#1284)."
+    else
+        record_row "Launch Services registration" "WARN" "$MODE" "$LAUNCH_LOG" "lsregister -f exited $rc; proceeding, but a fresh-path direct-exec launch may still hit the #1284 pre-managed abort."
+    fi
+}
+
+# #1284 classifier — was a direct-exec abort a PRE-MANAGED registration abort
+# (macOS killed the process before Excise.App's own code ran — nothing in
+# APP_LOG but the shell's own job-control trap notice) or a MANAGED startup
+# failure (the app logged its own startup sequence — DI container, "PDF
+# Editor Application Starting" — and THEN died, a real product bug)? Never
+# silently reclassify a managed crash as the benign case: it only returns
+# "pre-managed" when APP_LOG shows NO application log output at all before
+# the trap notice.
+classify_process_exit() {
+    local log="$1"
+    if [ ! -s "$log" ]; then
+        printf 'unknown (no log output captured)'
+        return
+    fi
+    if grep -qE '(Abort trap|Trace/BPT trap|Segmentation fault|Illegal instruction|Bus error)' "$log"; then
+        if grep -q "Excise.App.App\[0\]" "$log" || grep -q "Main window created successfully" "$log"; then
+            printf 'managed startup failure (app logging appeared before the crash)'
+        else
+            printf 'pre-managed abort (process signalled before any application log line appeared — matches the #1284 _RegisterApplication signature)'
+        fi
+        return
+    fi
+    printf 'unknown (process exited without a recognised signal trap in the log)'
 }
 
 wait_for_app_report() {
@@ -318,7 +391,7 @@ write_reports() {
     {
         printf '{\n'
         printf '  "schemaVersion": 1,\n'
-        printf '  "issues": ["#558", "#560", "#571"],\n'
+        printf '  "issues": ["#558", "#560", "#571", "#1284"],\n'
         printf '  "generatedUtc": "%s",\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
         printf '  "app": "%s",\n' "$(json_escape "$APP")"
         printf '  "pdf": "%s",\n' "$(json_escape "$PDF")"
@@ -359,7 +432,7 @@ write_reports() {
         printf '%s\n' "- App: \`$APP\`"
         printf '%s\n' "- PDF: \`$PDF\`"
         printf '%s\n' "- Mode: \`$MODE\`"
-        printf '%s\n\n' "- Issues: #558, #560, #571"
+        printf '%s\n\n' "- Issues: #558, #560, #571, #1284"
         printf '| Workflow | Status | Mode | Elapsed | Budget | Artifact | Detail |\n'
         printf '| --- | --- | --- | --- | --- | --- | --- |\n'
         while IFS="$MATRIX_DELIMITER" read -r workflow status row_mode artifact detail focused_control elapsed_ms pass_budget_ms warn_budget_ms; do
@@ -403,6 +476,7 @@ fi
 
 script_start_ms="$(now_ms)"
 start_display_wake_assertion
+register_app_bundle
 launch_start_ms="$(now_ms)"
 launch_start_epoch="$(date +%s)"
 mkdir -p "$(dirname "$RESPONSIVENESS_REQUEST_FILE")"
@@ -448,7 +522,10 @@ if wait_for_pid; then
     launch_status="$(budget_status "$launch_elapsed_ms" 3000 8000)"
     record_row "native packaged app launch" "$launch_status" "$MODE" "$LAUNCH_LOG" "Packaged app process started with pid $app_pid." "" "$launch_elapsed_ms" 3000 8000
 else
-    record_row "native packaged app launch" "FAIL" "$MODE" "$LAUNCH_LOG" "App process did not appear within ${TIMEOUT_SECONDS}s."
+    exit_log="$LAUNCH_LOG"
+    [ "$MODE" = "direct-exec" ] && exit_log="$APP_LOG"
+    exit_classification="$(classify_process_exit "$exit_log")"
+    record_row "native packaged app launch" "FAIL" "$MODE" "$LAUNCH_LOG" "App process did not appear within ${TIMEOUT_SECONDS}s (or exited immediately). Classification: ${exit_classification}. See $exit_log."
     clear_launch_environment
     write_reports
     exit 1
