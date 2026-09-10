@@ -38,10 +38,21 @@ public class RecoverablePdfRegressionTests
             .WithMessage("*circular reference*");
     }
 
+    // #1399: the two fixtures print their own decryption key in body text, so
+    // that string is an oracle for whether the page actually decoded rather
+    // than merely opening without throwing. A short-key regression here (the
+    // wrong padded key, or none) does not throw either -- it silently
+    // decrypts to garbage or an empty page -- so "opens, doesn't throw" alone
+    // passed on a completely blank page (measured by corrupting the content
+    // stream's key-dependent objects: opens fine, renders 1275x1650, 0.0000
+    // ink, both regression AND rendering tests stayed green).
+    private const string Issue19484_1_Key = "0x0446615747";
+    private const string Issue19484_2_Key = "0x02988E82AFF8";
+
     [Theory]
-    [InlineData(Issue19484_1)]
-    [InlineData(Issue19484_2)]
-    public void Open_AcrobatCompatibleV4R4ShortKeyPadding_DecodesFirstPage(string path)
+    [InlineData(Issue19484_1, Issue19484_1_Key)]
+    [InlineData(Issue19484_2, Issue19484_2_Key)]
+    public void Open_AcrobatCompatibleV4R4ShortKeyPadding_DecodesFirstPage(string path, string expectedKeyText)
     {
         Assert.SkipWhen(!File.Exists(path), "pdf.js regression fixture not available");
 
@@ -50,5 +61,10 @@ public class RecoverablePdfRegressionTests
         doc.PageCount.Should().BeGreaterThan(0);
         Action act = () => _ = doc.GetPage(1).GetContentStreamBytes();
         act.Should().NotThrow("V=4/R=4 short encryption keys are padded before object-key derivation");
+
+        var text = new TextExtractor(doc.GetPage(1)).ExtractText();
+        text.Should().Contain(expectedKeyText,
+            "the fixture prints its own decryption key in body text -- if the short-key padding " +
+            "silently derived the wrong key, the page decodes to garbage or emptiness rather than throwing");
     }
 }

@@ -21,5 +21,24 @@ public class RecoverablePdfRenderingTests
 
         bitmap.Width.Should().BeGreaterThan(0);
         bitmap.Height.Should().BeGreaterThan(0);
+        // #1399: width/height alone pass on a fully blank page (both fixtures
+        // are body-text pages, so a wrong short-key derivation renders
+        // nothing rather than throwing). Ink is the companion assertion to
+        // RecoverablePdfRegressionTests' text-content check.
+        InkFraction(bitmap).Should().BeGreaterThan(0.001,
+            "the page carries body text; a short-key regression decrypts to garbage/emptiness, not a throw");
+    }
+
+    private static double InkFraction(SkiaSharp.SKBitmap bmp)
+    {
+        if (bmp.Width == 0 || bmp.Height == 0) return 0;
+        int ink = 0;
+        for (int y = 0; y < bmp.Height; y++)
+        for (int x = 0; x < bmp.Width; x++)
+        {
+            var c = bmp.GetPixel(x, y);
+            if (c.Red + c.Green + c.Blue < 384) ink++;
+        }
+        return (double)ink / (bmp.Width * bmp.Height);
     }
 }
