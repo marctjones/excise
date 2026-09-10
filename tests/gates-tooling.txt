@@ -123,6 +123,7 @@ scripts/triage-corpus-nonpass.sh   # triage before pinning a scan result (CLAUDE
 scripts/update-corpus-expectations.sh   # writes the corpus expectation manifests after triage
 scripts/validate-all-categories.sh   # manual validation sweep
 scripts/validate_json_schema.py   # helper invoked by registry scripts
+scripts/watch-excise-memory.sh   # standing local RAM guard (kills any excise process over a threshold); deliberately never committed, run manually
 scripts/.run-full-conformance.sh   # tracked despite the dot; manual conformance dispatcher
 scripts/report-gates.sh   # the report reducer (every runner ends with it; it never runs a test)
 scripts/report_gates.py   # body of report-gates.sh
