@@ -385,6 +385,7 @@ partial class Program
                 renderMs = phases.render,
                 writeMs = phases.write,
                 runtimeMode = phases.runtimeMode,
+                cliBinaryShape = invocation.Value.Shape,
                 startupOverheadMs = phases.render is null
                     ? null
                     : Math.Max(0, sw.Elapsed.TotalMilliseconds - (phases.open ?? 0) - phases.render.Value - (phases.write ?? 0)),
@@ -423,11 +424,33 @@ partial class Program
         }
     }
 
-    private static (string FileName, IReadOnlyList<string> Arguments)? ResolveExciseCliInvocation()
+    // #1388: which BINARY SHAPE produced a run's numbers is not a rounding
+    // detail. Excise.Cli.csproj publishes with PublishReadyToRun; a plain
+    // `dotnet build` output never is. Measured: R2R vs build-output renderMs
+    // differs -46% on a trivial page and +22% on a multi-second one (R2R's
+    // lower-quality codegen vs. tier-1 JIT having time to warm up) -- an
+    // optimisation evaluated on one shape can be accepted or rejected on the
+    // wrong evidence if the report does not say which shape it measured.
+    // Shape is a label, not a guarantee of what the bytes actually are (an
+    // "override"/"explicit-cli-path" command could itself be anything); it
+    // states what selected the binary, which is what a baseline needs to
+    // decide whether it is comparable.
+    private static (string FileName, IReadOnlyList<string> Arguments, string Shape)? ResolveExciseCliInvocation()
     {
         var overrideCommand = Environment.GetEnvironmentVariable("EXCISE_BENCHMARK_CLI_COMMAND");
         if (!string.IsNullOrWhiteSpace(overrideCommand))
-            return (overrideCommand, Array.Empty<string>());
+            return (overrideCommand, Array.Empty<string>(), "override:EXCISE_BENCHMARK_CLI_COMMAND");
+
+        var explicitCliPath = Environment.GetEnvironmentVariable("EXCISE_BENCHMARK_CLI_PATH");
+        if (!string.IsNullOrWhiteSpace(explicitCliPath))
+        {
+            if (!File.Exists(explicitCliPath))
+                throw new FileNotFoundException(
+                    $"EXCISE_BENCHMARK_CLI_PATH was set to '{explicitCliPath}', which does not exist. " +
+                    "This is meant to point at a published (e.g. R2R) excise binary -- " +
+                    "dotnet publish Excise.Cli -c Release -r <rid> --self-contained -p:PublishReadyToRun=true");
+            return (explicitCliPath, Array.Empty<string>(), "explicit-cli-path:EXCISE_BENCHMARK_CLI_PATH");
+        }
 
         var root = FindRepositoryRoot();
         if (root is null)
@@ -457,8 +480,14 @@ partial class Program
         {
             var outputDir = Path.Combine(root, "Excise.Cli", "bin", configuration, "net10.0");
             var executable = Path.Combine(outputDir, OperatingSystem.IsWindows() ? "excise.exe" : "excise");
+            // #1388: this directory is `dotnet build` output. It is NEVER
+            // the PublishReadyToRun binary excise.sln actually ships --
+            // that only exists under bin/<config>/net10.0/<rid>/publish/,
+            // which `dotnet build` does not populate. Labelled "build-
+            // output" (not "shipping" or "release") so the report cannot be
+            // misread as having measured what ships.
             if (File.Exists(executable))
-                return (executable, Array.Empty<string>());
+                return (executable, Array.Empty<string>(), $"build-output:{configuration}");
 
             foreach (var candidate in new[]
                      {
@@ -467,7 +496,7 @@ partial class Program
                      })
             {
                 if (File.Exists(candidate))
-                    return ("dotnet", new[] { candidate });
+                    return ("dotnet", new[] { candidate }, $"build-output:{configuration}");
             }
         }
 
@@ -489,7 +518,7 @@ partial class Program
             "-c",
             fallbackConfiguration,
             "--",
-        });
+        }, $"dotnet-run:{fallbackConfiguration}");
     }
 
     private static string? FindRepositoryRoot()
@@ -1455,6 +1484,17 @@ partial class Program
         /// predates the field.
         /// </summary>
         public string? runtimeMode { get; set; }
+        /// <summary>
+        /// HOW ResolveExciseCliInvocation found this binary (#1388) --
+        /// "build-output:&lt;config&gt;", "dotnet-run:&lt;config&gt;",
+        /// "explicit-cli-path:...", or "override:...". Orthogonal to
+        /// runtimeMode (jit/aot): a "build-output" binary is never the
+        /// PublishReadyToRun shape Excise.Cli.csproj actually ships, and R2R
+        /// vs. plain-build renderMs differs -46% on a trivial page and +22%
+        /// on a multi-second one in opposite directions (measured). Null
+        /// means the binary predates the field.
+        /// </summary>
+        public string? cliBinaryShape { get; set; }
         public int? width { get; set; }
         public int? height { get; set; }
         public double? diffFraction { get; set; }
