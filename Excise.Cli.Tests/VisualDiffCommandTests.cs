@@ -102,9 +102,7 @@ public class VisualDiffCommandTests
                 ("a", oracleA),
                 ("b", oracleB),
                 ("c", oracleC),
-            },
-            maxDiffFraction: 0.001,
-            maxMae: 0.1);
+            });
 
         entry.oracleComparisonPairs.Should().Be(3);
         entry.oracleDisagreeingPairs.Should().Be(2);
@@ -112,6 +110,50 @@ public class VisualDiffCommandTests
         entry.oracleMaxMae.Should().BeGreaterThan(20);
         entry.oracleMeanDiffFraction.Should().BeGreaterThan(0);
         entry.oracleMeanMae.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public void OraclePairInkLocalityDisagrees_SparsePageWithLocalizedDifference_DisagreesDespiteTinyPageWideDiff()
+    {
+        // #1460(b): a 20x20 block on a 200x200 page is diffFraction ~0.01 --
+        // well under the 0.10 page-wide pass threshold ApplyOracleDisagreementMetrics
+        // used to use, so the old code would have called this "agreement".
+        // Two renderers genuinely differing about a real feature on an
+        // otherwise-sparse page (exactly the shape of most pdf20 conformance
+        // fixtures) is precisely what that threshold could not see.
+        using var oracleA = CreateSolidBitmap(200, 200, SKColors.White);
+        using var oracleB = CreateSolidBitmap(200, 200, SKColors.White);
+        FillRect(oracleA, 50, 50, 20, 20, SKColors.Black);
+
+        RenderProgram.OraclePairInkLocalityDisagrees(oracleA, oracleB).Should().BeTrue(
+            "a real, localized content difference must be visible regardless of how much blank page surrounds it");
+    }
+
+    [Fact]
+    public void OraclePairInkLocalityDisagrees_IdenticalSparseBitmaps_DoNotDisagree()
+    {
+        using var oracleA = CreateSolidBitmap(200, 200, SKColors.White);
+        using var oracleB = CreateSolidBitmap(200, 200, SKColors.White);
+        FillRect(oracleA, 50, 50, 20, 20, SKColors.Black);
+        FillRect(oracleB, 50, 50, 20, 20, SKColors.Black);
+
+        RenderProgram.OraclePairInkLocalityDisagrees(oracleA, oracleB).Should().BeFalse(
+            "identical content, sparse or not, must not read as disagreement");
+    }
+
+    [Fact]
+    public void OraclePairInkLocalityDisagrees_DifferentPageBox_ReturnsFalseRatherThanGuessing()
+    {
+        // A CropBox-vs-MediaBox style aspect-ratio mismatch: this check has no
+        // opinion about content when the two rasters address different page
+        // regions, matching HasComparableGeometry's existing contract for the
+        // excise-vs-majority ink locality check (bug1844576.pdf).
+        using var oracleA = CreateSolidBitmap(200, 200, SKColors.White);
+        using var oracleB = CreateSolidBitmap(600, 80, SKColors.White);
+        FillRect(oracleB, 10, 10, 20, 20, SKColors.Black);
+
+        RenderProgram.OraclePairInkLocalityDisagrees(oracleA, oracleB).Should().BeFalse(
+            "different page geometry is a page-box question, not a content disagreement this check can answer");
     }
 
     [Fact]

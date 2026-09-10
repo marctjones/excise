@@ -2158,9 +2158,26 @@ partial class Program
             var comparablePrimaries = CountComparableLocalityOracles(
                 exciseBmp,
                 new[] { mutoolBmp, cairoBmp, pdfiumBmp });
+
+            // #1460(c): the page-wide passX booleans above can be vacuously
+            // true -- huge-image-dimensions.pdf's mutool/pdfium both fabricate
+            // a solid fill from a truncated buffer, and that fill is small
+            // enough (~4% of the page) to land under maxDiffFraction/maxMae
+            // against excise's correct blank, so "primaries agree" reads true
+            // while two of the three are wrong. This is escalation-scoped ONLY
+            // -- it must NOT feed entry.agreeingOracles / the PASS verdict,
+            // which stays on passMutool/passCairo/passPdfiumPrimary exactly as
+            // before; it only decides whether Ghostscript/PDFBox get a vote.
+            var escalationMutoolDisagrees = PrimaryDisagreesWithExciseByLocality(exciseBmp, mutoolBmp);
+            var escalationCairoDisagrees = PrimaryDisagreesWithExciseByLocality(exciseBmp, cairoBmp);
+            var escalationPdfiumDisagrees = PrimaryDisagreesWithExciseByLocality(exciseBmp, pdfiumBmp);
+            var primariesAgreeForEscalation =
+                passMutool && passCairo && passPdfiumPrimary
+                && !escalationMutoolDisagrees && !escalationCairoDisagrees && !escalationPdfiumDisagrees;
+
             var shouldEscalate = extraOracles != CorpusExtraOracles.None &&
                 ShouldEscalateOracles(
-                    primariesAgree: passMutool && passCairo && passPdfiumPrimary,
+                    primariesAgree: primariesAgreeForEscalation,
                     comparableLocalityOracles: comparablePrimaries,
                     alwaysRunAllOracles: AlwaysRunAllOracles);
 
@@ -2256,9 +2273,7 @@ partial class Program
                     ("ghostscript", ghostscriptBmp),
                     ("pdfbox", pdfboxBmp),
                     ("pdfium", pdfiumBmp),
-                },
-                maxDiffFraction,
-                maxMae);
+                });
 
             // #1397(a): the headline is the WORST per-oracle disagreement, not
             // the best -- a minimum is a quorum of one, exactly what #932 ruled
@@ -3834,6 +3849,63 @@ partial class Program
            || comparableLocalityOracles < MinComparableOraclesForLocalityMajority;
 
     /// <summary>
+    /// A tile-locality disagreement between two RENDERS (#1460b) — not
+    /// excise-vs-oracle, and not the page-wide pass/fail threshold
+    /// <see cref="ApplyOracleDisagreementMetrics"/> used to use. The page-wide
+    /// diffFraction is a fraction of the WHOLE page, so on a sparse page (most
+    /// conformance fixtures: mostly-white with one small feature under test)
+    /// two renders can differ completely in the one region that matters and
+    /// still land under any page-wide threshold, because "agreeing that the
+    /// rest of the page is white" dominates the fraction. Reuses the same
+    /// per-tile ink comparison #883/#932 already proved out for
+    /// excise-vs-oracle-majority, just applied to an arbitrary pair.
+    ///
+    /// The "essentially none" x10 ratio (not "exactly none") guards against a
+    /// stray antialiasing pixel reading as a real difference; requiring at
+    /// least <see cref="MinAsymmetricTilesForPairDisagreement"/> tiles (not
+    /// just one) guards against a single edge/position-drift tile the way
+    /// <see cref="CompareInkLocalityByMajority"/>'s own doc comment measured
+    /// was too sensitive at 1 tile (160/685 pdf.js pages).
+    /// </summary>
+    private const int MinAsymmetricTilesForPairDisagreement = 2;
+
+    internal static bool OraclePairInkLocalityDisagrees(SkiaSharp.SKBitmap a, SkiaSharp.SKBitmap b)
+    {
+        if (!HasComparableGeometry(a, b))
+            return false; // Different page box -- not a content question this check can answer.
+
+        var tiles = ResolveInkTileGrid(Math.Min(a.Width, b.Width), Math.Min(a.Height, b.Height));
+        var gridA = ComputeInkTileFractions(a, tiles);
+        var gridB = ComputeInkTileFractions(b, tiles);
+        if (gridA == null || gridB == null)
+            return false;
+
+        var asymmetricTiles = 0;
+        for (var tile = 0; tile < tiles * tiles; tile++)
+        {
+            var fa = gridA[tile];
+            var fb = gridB[tile];
+            var aInked = fa >= InkTileThreshold;
+            var bInked = fb >= InkTileThreshold;
+            if (aInked && !bInked && fb * 10 < fa) asymmetricTiles++;
+            else if (bInked && !aInked && fa * 10 < fb) asymmetricTiles++;
+        }
+
+        return asymmetricTiles >= MinAsymmetricTilesForPairDisagreement;
+    }
+
+    /// <summary>
+    /// Null-safe wrapper for <see cref="OraclePairInkLocalityDisagrees"/> used
+    /// by the #1460(c) escalation check. A small standalone method rather than
+    /// an inline null-check keeps the containing corpus-scan page loop's
+    /// nullable-flow analysis simple (that method is large enough that Roslyn
+    /// measurably loses precision on unrelated nullable locals once more
+    /// branch-heavy expressions are added directly inside it).
+    /// </summary>
+    private static bool PrimaryDisagreesWithExciseByLocality(SkiaSharp.SKBitmap? excise, SkiaSharp.SKBitmap? oracle)
+        => excise != null && oracle != null && OraclePairInkLocalityDisagrees(excise, oracle);
+
+    /// <summary>
     /// Tiles per axis for a page of this size — <see cref="InkTileGrid"/> unless
     /// that would make tiles smaller than <see cref="MinInkTilePixels"/>.
     /// </summary>
@@ -4112,9 +4184,7 @@ partial class Program
 
     internal static void ApplyOracleDisagreementMetrics(
         CorpusScanEntry entry,
-        IReadOnlyList<(string Name, SkiaSharp.SKBitmap? Bitmap)> oracles,
-        double maxDiffFraction,
-        double maxMae)
+        IReadOnlyList<(string Name, SkiaSharp.SKBitmap? Bitmap)> oracles)
     {
         var rendered = oracles
             .Where(o => o.Bitmap != null)
@@ -4140,7 +4210,11 @@ partial class Program
                 sumMae += mae;
                 maxDiff = Math.Max(maxDiff, diff);
                 maxPairMae = Math.Max(maxPairMae, mae);
-                if (!IsPassing((diff, mae), maxDiffFraction, maxMae))
+                // #1460(b): tile-locality, not the page-wide pass/fail
+                // threshold -- see OraclePairInkLocalityDisagrees's doc
+                // comment for why the page-wide fraction is vacuous on a
+                // sparse page.
+                if (OraclePairInkLocalityDisagrees(rendered[i].Bitmap, rendered[j].Bitmap))
                     disagreeingPairs++;
             }
         }
