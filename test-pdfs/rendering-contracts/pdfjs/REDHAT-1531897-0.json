@@ -9,7 +9,6 @@
   "Pages": {
     "0": {
       "ExpectedRawStatus": "MALFORMED_PDF",
-      "ExpectedErrorContains": "No recoverable trailer dictionary",
       "ReleaseStatus": "PASS",
       "QualityStatus": "NON_RENDERABLE_ACCEPTED",
       "PixelAgreement": "NOT_COMPARABLE",

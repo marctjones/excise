@@ -9,7 +9,7 @@
   "QualityReason": "Cold 2026-07-03 verification raw-passes this page and fresh visual review shows pdfe matches MuPDF on the important isolated DeviceCMYK transparency semantics; Poppler is the visible outlier.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS",
+      "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_TARGET",

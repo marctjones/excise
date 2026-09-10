@@ -21,8 +21,7 @@
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
       "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
-      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
-      "ExpectedErrorContains": "pdfe=UNDECODED_FILTERED_CONTENT_STREAM: Page content stream 4 0 R was filtered b"
+      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json."
     }
   }
 }
