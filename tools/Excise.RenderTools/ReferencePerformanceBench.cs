@@ -325,6 +325,26 @@ partial class Program
             //
             // This is the no-self-oracle rule applied to speed: judge against tools
             // measured under the same conditions, not against our own past stopwatch.
+            // #1401: fixture NAME alone is not the measurement -- dpi and pageNumber are
+            // part of what renderMs measures, and both are already recorded per run.
+            // Editing fixtures.json to change a fixture's dpi (same id) would otherwise
+            // silently compare two different measurements and call the delta a
+            // regression. Refuse per-fixture, the same shape as the mode/shape
+            // refusals above but scoped to one fixture instead of the whole gate.
+            var (nowDpi, nowPage) = FixtureDpiPage(current, fixture);
+            var (beforeDpi, beforePage) = FixtureDpiPage(baseline.runs, fixture);
+            if (nowDpi is not null && beforeDpi is not null && (nowDpi != beforeDpi || nowPage != beforePage))
+            {
+                checks.Add(new ReferencePerformanceGateCheck
+                {
+                    name = $"{fixture}.excise-cli.render-vs-oracles [DPI/PAGE MISMATCH now={nowDpi}dpi/p{nowPage} "
+                         + $"baseline={beforeDpi}dpi/p{beforePage}]",
+                    actual = 0, threshold = maxTimeRatio, unit = "ratio", gated = true,
+                    passed = false,
+                });
+                continue;
+            }
+
             var nowRatio = ExciseToOracleRatio(current, fixture, comparableOracles);
             var beforeRatio = ExciseToOracleRatio(baseline.runs, fixture, comparableOracles);
             AddRatioCheck(checks, fixture + ".excise-cli.render-vs-oracles", nowRatio, beforeRatio, maxTimeRatio, "ratio", gated: true);
@@ -401,6 +421,15 @@ partial class Program
     /// Null when either side has no usable measurement, which makes the check skip rather
     /// than invent a verdict.
     /// </summary>
+    /// <summary>The (dpi, pageNumber) a fixture name was actually measured at in
+    /// this set of runs (#1401) -- both are recorded per run already; a fixture
+    /// NAME is not the measurement if fixtures.json changes either one.</summary>
+    private static (int? Dpi, int? PageNumber) FixtureDpiPage(IEnumerable<ReferencePerformanceRun> runs, string fixture)
+    {
+        var match = runs.FirstOrDefault(r => r.fixture == fixture && r.status == "OK");
+        return match is null ? (null, null) : (match.dpi, match.pageNumber);
+    }
+
     private static double? ExciseToOracleRatio(
         IEnumerable<ReferencePerformanceRun> runs, string fixture, IReadOnlySet<string>? onlyOracles = null)
     {
