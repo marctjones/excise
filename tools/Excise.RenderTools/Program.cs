@@ -2260,9 +2260,16 @@ partial class Program
                 maxDiffFraction,
                 maxMae);
 
-            var best = metrics.OrderBy(m => m.Diff).First();
-            entry.diffFraction = best.Diff;
-            entry.mae = best.Mae;
+            // #1397(a): the headline is the WORST per-oracle disagreement, not
+            // the best -- a minimum is a quorum of one, exactly what #932 ruled
+            // out for the verdict. best/bestOracle are kept for the gating logic
+            // below that intentionally wants the closest oracle.
+            var (best, worst) = SelectHeadlineOracleMetrics(metrics);
+            entry.diffFraction = worst.Diff;
+            entry.mae = worst.Mae;
+            entry.worstOracle = worst.Name;
+            entry.diffFractionBest = best.Diff;
+            entry.maeBest = best.Mae;
             entry.bestOracle = best.Name;
             var bestReference = best.Name switch
             {
@@ -3793,6 +3800,31 @@ partial class Program
     internal static bool OracleMajorityAgrees(int agreeingOracles, int comparedOracles)
         => comparedOracles >= 2 && agreeingOracles * 2 > comparedOracles;
 
+    /// <summary>
+    /// Splits per-oracle (excise vs one reference) metrics into the closest
+    /// oracle (used by PASS_ONE's reference-center gating, which wants "is
+    /// there SOME renderer excise agrees with") and the farthest (the
+    /// headline, #1397(a)). A minimum-over-oracles headline is a quorum of
+    /// one: adding a blank oracle that happens to resemble excise's own
+    /// omission can move the number to zero without excise changing at all.
+    /// </summary>
+    internal static ((string Name, double Diff, double Mae) Best, (string Name, double Diff, double Mae) Worst)
+        SelectHeadlineOracleMetrics(IReadOnlyList<(string Name, double Diff, double Mae)> metrics)
+    {
+        if (metrics.Count == 0)
+            throw new ArgumentException("At least one oracle metric is required.", nameof(metrics));
+
+        var best = metrics[0];
+        var worst = metrics[0];
+        foreach (var m in metrics)
+        {
+            if (m.Diff < best.Diff) best = m;
+            if (m.Diff > worst.Diff) worst = m;
+        }
+
+        return (best, worst);
+    }
+
     internal static bool ShouldEscalateOracles(
         bool primariesAgree,
         int comparableLocalityOracles,
@@ -4237,10 +4269,15 @@ partial class Program
         // missing or badly wrong content. The best direct comparison still
         // needs acceptable average color error and must be no worse than the
         // reference renderers' own average disagreement.
-        if (entry.mae > maxMae || entry.mae > oracleMeanMae)
+        //
+        // #1397(a): entry.mae/diffFraction are now the WORST per-oracle
+        // disagreement (the headline). This check intentionally wants the
+        // BEST one — the single oracle PASS_ONE is being justified against —
+        // so it reads diffFractionBest/maeBest, not the headline fields.
+        if (entry.maeBest > maxMae || entry.maeBest > oracleMeanMae)
             return false;
 
-        if (entry.diffFraction > Math.Max(maxDiffFraction, oracleMeanDiff))
+        if (entry.diffFractionBest > Math.Max(maxDiffFraction, oracleMeanDiff))
             return false;
 
         return exciseCenter <= oracleMeanCenter;
@@ -5310,10 +5347,17 @@ partial class Program
         public string? expectationFailure { get; set; }
         public string? expectedNote { get; set; }
         public int pageCount { get; set; }
-        // Best-of-two oracle metrics (excise vs whichever oracle excise
-        // agrees with most closely). Used by the gating logic.
+        // HEADLINE metrics: excise vs whichever oracle excise agrees with
+        // LEAST (#1397). A minimum-over-oracles headline is a quorum of one —
+        // the same thing #932 removed from the verdict — and can be moved by
+        // adding a blank oracle without excise changing at all. bestOracle /
+        // diffFractionBest / maeBest keep the closest-oracle values for the
+        // gating logic that intentionally wants them (IsReferenceCenterAgreement).
         public double diffFraction { get; set; }
         public double mae { get; set; }
+        public string? worstOracle { get; set; }
+        public double diffFractionBest { get; set; }
+        public double maeBest { get; set; }
         // Per-oracle metrics — null when that oracle refused. The
         // distinction between PASS (both agree) and PASS_ONE (one
         // agrees) lives here.

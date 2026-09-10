@@ -1651,6 +1651,45 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
+    public void SelectHeadlineOracleMetrics_ReturnsFarthestAsWorstAndNearestAsBest()
+    {
+        // #1397(a): the old headline took the MINIMUM per-oracle diff -- a
+        // quorum of one that adding a blank/degenerate oracle could move to
+        // zero without excise changing at all. The headline must be the
+        // FARTHEST oracle; the nearest is kept separately for the PASS_ONE
+        // reference-center gate, which genuinely wants "closest agreement".
+        var metrics = new[]
+        {
+            ("mutool", 0.02, 5.0),
+            ("pdftocairo", 0.0, 0.0),
+            ("ghostscript", 0.09, 40.0),
+        };
+
+        var (best, worst) = RenderProgram.SelectHeadlineOracleMetrics(metrics);
+
+        best.Name.Should().Be("pdftocairo", "it has the smallest diff");
+        best.Diff.Should().Be(0.0);
+        worst.Name.Should().Be("ghostscript", "it has the largest diff -- the headline the report shows");
+        worst.Diff.Should().Be(0.09);
+    }
+
+    [Fact]
+    public void SelectHeadlineOracleMetrics_AddingABlankOracleCannotLowerTheHeadline()
+    {
+        // Causal demonstration from the issue: adding an oracle that happens
+        // to render blank (agreeing with excise's own omission) must not be
+        // able to move the headline toward zero. Under min-selection it did.
+        var withoutBlankOracle = new[] { ("mutool", 0.05, 12.0) };
+        var withBlankOracleAdded = new[] { ("mutool", 0.05, 12.0), ("blank-oracle", 0.0, 0.0) };
+
+        var (_, worstBefore) = RenderProgram.SelectHeadlineOracleMetrics(withoutBlankOracle);
+        var (_, worstAfter) = RenderProgram.SelectHeadlineOracleMetrics(withBlankOracleAdded);
+
+        worstAfter.Diff.Should().Be(worstBefore.Diff,
+            "the worst-oracle headline is unmoved by adding an oracle that agrees with excise");
+    }
+
+    [Fact]
     public void ApplyInkLocalityVerdict_StarvedPool_RecordsHowSmallItWas()
     {
         // The 1-1 split reports (0, 0, 0) — no missing tiles, no inked
