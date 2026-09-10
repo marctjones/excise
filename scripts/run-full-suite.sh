@@ -573,11 +573,16 @@ run_one() {
     hash="$(runner_target_hash "$kind" "$target" "$filter")"
 
     if ! runner_step_should_run "$name" "$hash"; then
-        say "${D}[$IDX/$TOTAL] $name — SKIP (checkpointed)${N}"
+        local skip_status="SKIP_CHECKPOINTED" skip_label="checkpointed"
+        if [ "$(runner_marker_value "$name" status)" = "KNOWN" ]; then
+            skip_status="SKIP_CHECKPOINTED_KNOWN"
+            skip_label="checkpointed, accepted failure"
+        fi
+        say "${D}[$IDX/$TOTAL] $name — SKIP ($skip_label)${N}"
         # Record WHERE the evidence came from. "PASS" in a resumed run's summary
         # can mean "passed twenty minutes ago on this same commit", and until now
         # nothing wrote down which. The marker is the provenance, so quote it.
-        runner_ledger_record "$name" "SKIP_CHECKPOINTED" 0 0 \
+        runner_ledger_record "$name" "$skip_status" 0 0 \
             "kind=$kind" "target=$target" "filter=$filter" \
             "class=$class" "knownIssue=$known" "prereq=$prereq" \
             "evidenceFrom=$(runner_marker_path "$name")" \
@@ -765,6 +770,9 @@ fi
 say ""
 scripts/report-gates.sh "$LOG_DIR"
 rc=$?
+# Checkpoint any row report-gates.sh just classified KNOWN so a later --resume
+# skips an accepted failure instead of re-running it (#1371).
+runner_checkpoint_known_failures "$LOG_DIR"
 if [ "$rc" = 0 ] && [ "$PLANNED" = "$OF" ]; then
     runner_tier_base_record_chain full
 fi

@@ -2,6 +2,8 @@ using System;
 using Excise.App.Services;
 using ReactiveUI;
 
+using Excise.Core.Text;
+
 namespace Excise.App.Models;
 
 public class ClipboardEntry : ReactiveObject

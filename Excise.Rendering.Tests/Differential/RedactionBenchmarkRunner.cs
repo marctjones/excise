@@ -362,6 +362,27 @@ public sealed class RedactionBenchmarkRunner
         return dir?.FullName ?? AppContext.BaseDirectory;
     }
 
+    /// <summary>The commit this run's binaries were built from (#1400) --
+    /// lets a consumer refuse a stale results.jsonl whose commit no longer
+    /// matches HEAD, the same shape as the peer-tool-narrowing guard.</summary>
+    private static string GitHeadCommit(string root)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo("git", "rev-parse HEAD")
+            {
+                WorkingDirectory = root, RedirectStandardOutput = true, RedirectStandardError = true,
+            };
+            using var proc = System.Diagnostics.Process.Start(psi);
+            if (proc == null) return "";
+            var stdout = proc.StandardOutput.ReadToEnd();
+            proc.StandardError.ReadToEnd();
+            if (!proc.WaitForExit(10_000) || proc.ExitCode != 0) return "";
+            return stdout.Trim();
+        }
+        catch { return ""; }
+    }
+
     /// <summary>
     /// Corpora to sample, most real-world first. Real documents are weighted
     /// deliberately: the renderer-regression corpora are full of deliberately
@@ -1535,7 +1556,25 @@ public sealed class RedactionBenchmarkRunner
         Directory.CreateDirectory(dir);
         var path = Path.Combine(dir, "results.jsonl");
         var opts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        File.WriteAllLines(path, rows.Select(r => JsonSerializer.Serialize(r, opts)));
+        // #1400: stamp the run's actual measurement basis into the output
+        // itself -- a downstream consumer (archive-bench-run.sh) was
+        // inferring which leak engines produced this run's verdict from the
+        // ARCHIVING environment (is pdftotext on PATH right now), which is
+        // wrong the moment results.jsonl is copied to another machine or
+        // read later after pdftotext is installed/removed. Mirrors
+        // ReferencePerformanceBench's runtimeDescription/selectedOracles.
+        var leakEngines = new List<string> { "mutool" };
+        if (PdftotextTextExtractor.IsAvailable) leakEngines.Add("poppler");
+        var meta = new Dictionary<string, object?>
+        {
+            ["_meta"] = true,
+            ["commit"] = GitHeadCommit(root),
+            ["timestamp"] = DateTimeOffset.UtcNow.ToString("o"),
+            ["leakEngines"] = leakEngines,
+        };
+        var lines = new List<string> { JsonSerializer.Serialize(meta, opts) };
+        lines.AddRange(rows.Select(r => JsonSerializer.Serialize(r, opts)));
+        File.WriteAllLines(path, lines);
         _out.WriteLine($"rows → {path}");
 
         // #1123: turn the rows into the FAILURE TAXONOMY — named classes with a

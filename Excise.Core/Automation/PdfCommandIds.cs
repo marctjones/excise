@@ -79,6 +79,10 @@ public static class PdfCommandIds
     public const string ExportAllPages = "document.exportAllPages";
     public const string Print = "document.print";
     public const string Security = "document.security";
+    /// <summary>#1414 — view, save, or strip embedded files.</summary>
+    public const string Attachments = "document.attachments";
+    /// <summary>#1306 — stamp sequential Bates numbers on every page.</summary>
+    public const string BatesNumbering = "document.batesNumbering";
     public const string CombineDocuments = "document.combine";
     public const string SplitDocument = "document.split";
 

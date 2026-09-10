@@ -46,7 +46,8 @@ public static class AcroFormAuthoring
         bool required = false,
         string? tooltip = null,
         int? maxLength = null,
-        bool comb = false)
+        bool comb = false,
+        Graphics.PdfFont? appearanceFont = null)
     {
         ValidateName(fieldName);
 
@@ -72,9 +73,10 @@ public static class AcroFormAuthoring
             flags |= 0x1000000;
         if (flags != 0) widget.SetInt("Ff", flags);
 
-        // Default appearance: 10-point Helvetica, black. /Helv resolves
-        // through the AcroForm /DR resources we set up on first add.
-        widget.SetString("DA", "/Helv 10 Tf 0 g");
+        // Default appearance: black text in appearanceFont, or 10-point
+        // Helvetica when none is given. The font resource is registered in the
+        // AcroForm /DR so the /DA name resolves.
+        widget.SetString("DA", DefaultAppearance(document, pageNumber, appearanceFont));
 
         return AttachWidget(document, pageNumber, widget, fieldName);
     }
@@ -94,7 +96,8 @@ public static class AcroFormAuthoring
         string format = "yyyy-mm-dd",
         string? defaultValue = null,
         bool required = false,
-        string? tooltip = null)
+        string? tooltip = null,
+        Graphics.PdfFont? appearanceFont = null)
     {
         ValidateName(fieldName);
 
@@ -108,7 +111,7 @@ public static class AcroFormAuthoring
         int flags = 0;
         if (required) flags |= 0x2;
         if (flags != 0) widget.SetInt("Ff", flags);
-        widget.SetString("DA", "/Helv 10 Tf 0 g");
+        widget.SetString("DA", DefaultAppearance(document, pageNumber, appearanceFont));
 
         // /AA additional-actions: format (F) on display, keystroke (K) on input.
         var format1 = new PdfDictionary();
@@ -162,7 +165,8 @@ public static class AcroFormAuthoring
         IEnumerable<string> options,
         string? defaultValue = null,
         bool readOnly = false,
-        string? tooltip = null)
+        string? tooltip = null,
+        Graphics.PdfFont? appearanceFont = null)
     {
         ValidateName(fieldName);
         var optList = options?.ToList() ?? new List<string>();
@@ -192,7 +196,7 @@ public static class AcroFormAuthoring
         int flags = 1 << 17;
         if (readOnly) flags |= 0x1;
         widget.SetInt("Ff", flags);
-        widget.SetString("DA", "/Helv 10 Tf 0 g");
+        widget.SetString("DA", DefaultAppearance(document, pageNumber, appearanceFont));
 
         return AttachWidget(document, pageNumber, widget, fieldName);
     }
@@ -338,8 +342,152 @@ public static class AcroFormAuthoring
     }
 
     /// <summary>
-    /// Get-or-create /Catalog/AcroForm. Adds /Helv to /DR/Font so /DA strings
-    /// referencing /Helv resolve.
+    /// Build a widget's <c>/DA</c> (default appearance) string and register the
+    /// font it names in the AcroForm <c>/DR</c> so the name resolves.
+    ///
+    /// <para>With no <paramref name="font"/> this is the historical
+    /// <c>/Helv 10 Tf 0 g</c> — the non-embedded base-14 Helvetica. That is a
+    /// PDF/A violation waiting to happen: a viewer generates the field's
+    /// appearance from this string, so a document whose body text is embedded
+    /// still renders (and archives) its form fields with a font that is not in
+    /// the file (#1435). Passing the document's real font — which
+    /// <see cref="Authoring.PdfDocumentBuilder.DefaultFont"/> now does — keeps
+    /// the /DA on the embedded program instead.</para>
+    /// </summary>
+    private static string DefaultAppearance(PdfDocument document, int pageNumber, Graphics.PdfFont? font)
+    {
+        if (font == null || font.IsStandard14)
+        {
+            // /Helv is only added to /DR when a /DA actually names it, so a
+            // document whose fields all use an embedded font carries no
+            // non-embedded base-14 font dictionary at all.
+            EnsureHelvResource(document);
+            return "/Helv 10 Tf 0 g";
+        }
+
+        var name = RegisterAppearanceFont(document, pageNumber, font);
+        return $"/{name} {PdfNumberFormatter.Format(font.Size)} Tf 0 g";
+    }
+
+    /// <summary>
+    /// Register <paramref name="font"/> in the AcroForm <c>/DR/Font</c> and
+    /// return the resource name a <c>/DA</c> should use.
+    ///
+    /// <para>The font is added to the widget's PAGE first and the resulting
+    /// object shared into /DR, so an embedded font program is written to the
+    /// file ONCE rather than once per resource dictionary that names it.</para>
+    /// </summary>
+    private static string RegisterAppearanceFont(PdfDocument document, int pageNumber, Graphics.PdfFont font)
+    {
+        // A viewer generating the field appearance chooses glyphs from whatever
+        // the user types, not from what we drew, so the subset has to cover more
+        // than our own content streams asked for.
+        font.ReserveGlyphs(DefaultAppearanceGlyphReservation);
+
+        var page = document.GetPage(pageNumber);
+        var pageFontName = page.AddFont(font);
+        var pageFontObj = LookupPageFontObject(document, page, pageFontName);
+
+        var fonts = EnsureDrFonts(document, EnsureAcroForm(document));
+
+        // Reuse an identical existing /DR entry (repeated fields, same font).
+        foreach (var kvp in fonts)
+        {
+            if (pageFontObj != null && ReferenceEquals(kvp.Value, pageFontObj))
+                return kvp.Key.Value;
+            if (kvp.Value is PdfReference existingRef && pageFontObj is PdfReference pageRef
+                && existingRef.ObjectNumber == pageRef.ObjectNumber
+                && existingRef.GenerationNumber == pageRef.GenerationNumber)
+            {
+                return kvp.Key.Value;
+            }
+        }
+
+        // Prefer the page's own resource name; uniquify if /DR already uses it
+        // for a different font.
+        var name = pageFontName;
+        int counter = 1;
+        while (fonts.ContainsKey(name))
+            name = $"{pageFontName}_{counter++}";
+
+        fonts[name] = pageFontObj ?? font.BuildFontDictionary(document);
+        return name;
+    }
+
+    /// <summary>
+    /// The raw (unresolved) value of <paramref name="resourceName"/> in the
+    /// page's <c>/Resources/Font</c> — a <see cref="PdfReference"/> for embedded
+    /// fonts, so /DR and the page share one object.
+    /// </summary>
+    private static PdfObject? LookupPageFontObject(PdfDocument document, PdfPage page, string resourceName)
+    {
+        var resources = page.Resources;
+        if (resources == null) return null;
+        if (resources.GetOptional("Font") is not { } fontsObj) return null;
+        if (document.Resolve(fontsObj) is not PdfDictionary fonts) return null;
+        return fonts.TryGetValue(resourceName, out var value) ? value : null;
+    }
+
+    /// <summary>
+    /// Characters a viewer may need to render into a field appearance from the
+    /// <c>/DA</c> font: printable ASCII plus the Latin-1 supplement. A subsetting
+    /// font keeps these even though our own writer never encodes them (#1435).
+    /// </summary>
+    private static readonly string DefaultAppearanceGlyphReservation = BuildGlyphReservation();
+
+    private static string BuildGlyphReservation()
+    {
+        var sb = new System.Text.StringBuilder(0x7F - 0x20 + 0x100 - 0xA0);
+        for (int c = 0x20; c < 0x7F; c++) sb.Append((char)c);
+        for (int c = 0xA0; c < 0x100; c++) sb.Append((char)c);
+        return sb.ToString();
+    }
+
+    /// <summary>Get-or-create the AcroForm <c>/DR/Font</c> dictionary.</summary>
+    private static PdfDictionary EnsureDrFonts(PdfDocument document, PdfDictionary acroForm)
+    {
+        var drObj = acroForm.GetOptional("DR");
+        PdfDictionary dr;
+        if (drObj != null && document.Resolve(drObj) is PdfDictionary existingDr)
+        {
+            dr = existingDr;
+        }
+        else
+        {
+            dr = new PdfDictionary();
+            acroForm["DR"] = dr;
+        }
+
+        var fontObj = dr.GetOptional("Font");
+        if (fontObj != null && document.Resolve(fontObj) is PdfDictionary existingFonts)
+            return existingFonts;
+
+        var fonts = new PdfDictionary();
+        dr["Font"] = fonts;
+        return fonts;
+    }
+
+    /// <summary>
+    /// Add the base-14 Helvetica <c>/Helv</c> entry to <c>/DR/Font</c> — only
+    /// called when a <c>/DA</c> string names it.
+    /// </summary>
+    private static void EnsureHelvResource(PdfDocument document)
+    {
+        var fonts = EnsureDrFonts(document, EnsureAcroForm(document));
+        if (fonts.ContainsKey("Helv")) return;
+
+        var helv = new PdfDictionary();
+        helv.SetName("Type", "Font");
+        helv.SetName("Subtype", "Type1");
+        helv.SetName("BaseFont", "Helvetica");
+        helv.SetName("Encoding", "WinAnsiEncoding");
+        fonts["Helv"] = helv;
+    }
+
+    /// <summary>
+    /// Get-or-create /Catalog/AcroForm together with its <c>/DR/Font</c>
+    /// resource dictionary. The fonts a <c>/DA</c> names are added by
+    /// <see cref="DefaultAppearance"/>, not here.
     /// </summary>
     private static PdfDictionary EnsureAcroForm(PdfDocument document)
     {
@@ -356,40 +504,9 @@ public static class AcroFormAuthoring
             catalog["AcroForm"] = acroForm;
         }
 
-        // /DR (default resources) — Helvetica for default appearance.
-        var drObj = acroForm.GetOptional("DR");
-        PdfDictionary dr;
-        if (drObj != null && document.Resolve(drObj) is PdfDictionary existingDr)
-        {
-            dr = existingDr;
-        }
-        else
-        {
-            dr = new PdfDictionary();
-            acroForm["DR"] = dr;
-        }
-
-        var fontObj = dr.GetOptional("Font");
-        PdfDictionary fonts;
-        if (fontObj != null && document.Resolve(fontObj) is PdfDictionary existingFonts)
-        {
-            fonts = existingFonts;
-        }
-        else
-        {
-            fonts = new PdfDictionary();
-            dr["Font"] = fonts;
-        }
-
-        if (!fonts.ContainsKey("Helv"))
-        {
-            var helv = new PdfDictionary();
-            helv.SetName("Type", "Font");
-            helv.SetName("Subtype", "Type1");
-            helv.SetName("BaseFont", "Helvetica");
-            helv.SetName("Encoding", "WinAnsiEncoding");
-            fonts["Helv"] = helv;
-        }
+        // /DR (default resources) — the font dictionary exists even when empty;
+        // the fonts /DA strings name are registered on demand.
+        EnsureDrFonts(document, acroForm);
 
         return acroForm;
     }

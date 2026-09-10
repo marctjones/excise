@@ -157,4 +157,97 @@ public class SavedPdfLeakScannerTests
             .Should().Contain(h => h.Contains("UTF-16BE"),
                 "a term that is both compressed and UTF-16BE encoded is still a leak");
     }
+
+    // ── #1295: the trailer /ID is not a text carrier ─────────────────────────
+    //
+    // /ID (§14.4) is a random 16-byte file identifier written as uppercase
+    // hex. Scanning it makes every SHORT-needle absence assertion
+    // intermittently red — observed at least four times on
+    // FullwidthFormsRedactionTests with a provably clean redacted page.
+    // The fixtures below force the collision instead of waiting for it, so
+    // the exclusion is pinned deterministically in BOTH directions.
+
+    /// <summary>
+    /// A file whose ONLY occurrence of the needles is the trailer /ID.
+    /// <c>0x12 0x3A 0xBC</c> serialises as the hex digits <c>123ABC</c>,
+    /// reproducing both historically observed collisions ("123" and "ABC") in
+    /// one deterministic fixture.
+    /// </summary>
+    private static byte[] BytesWhoseOnlyHitIsTheTrailerId()
+        => Encoding.Latin1.GetBytes(
+            "%PDF-1.7\n"
+            + "1 0 obj\n<< /Type /Catalog >>\nendobj\n"
+            + "trailer\n<< /Size 2 /Root 1 0 R /ID [<123ABC0000000000000000000000DEAD>"
+            + "<123ABC0000000000000000000000DEAD>] >>\n%%EOF\n");
+
+    [Theory]
+    [InlineData("123")]
+    [InlineData("ABC")]
+    public void AShortTermOccurringOnlyInTheTrailerId_IsNotReportedAsALeak(string needle)
+    {
+        var saved = BytesWhoseOnlyHitIsTheTrailerId();
+
+        // Anti-vacuity: the collision is REAL in the bytes. Without this the
+        // test would pass on a fixture that never contained the needle at all.
+        Encoding.Latin1.GetString(saved).Should().Contain(needle,
+            "sanity: the fixture must actually contain the needle in its /ID, " +
+            "or the exclusion below is proving nothing");
+
+        SavedPdfLeakScanner.FindTerm(saved, needle).Should().BeEmpty(
+            "the /ID is a random, content-INDEPENDENT file identifier — no page " +
+            "text can leak into it, so a hit there is a false positive that makes " +
+            "short-needle redaction assertions flaky (#1295/#771/#800)");
+
+        SavedPdfLeakScanner.AllCarriersText(saved).Should().NotContain(needle,
+            "both scanner entry points must apply the same exclusion — #1049's " +
+            "migration fixed one view and left the other, which is how the flake " +
+            "came back");
+    }
+
+    [Theory]
+    [InlineData("123")]
+    [InlineData("ABC")]
+    public void TheSameTermInARealCarrier_IsStillFound(string needle)
+    {
+        // The counter-test, and the one that matters: narrowing the scanner
+        // must not have blinded it. Same needles, same file shape, but now the
+        // term is also genuine page text inside a /FlateDecode stream — the
+        // carrier that defeated the raw scan in #1040.
+        var body = Encoding.Latin1.GetBytes($"BT /F1 12 Tf 20 700 Td (Account {needle}) Tj ET\n");
+        using var compressed = new MemoryStream();
+        using (var z = new ZLibStream(compressed, CompressionLevel.Optimal, leaveOpen: true))
+            z.Write(body, 0, body.Length);
+        var deflated = compressed.ToArray();
+
+        using var file = new MemoryStream();
+        void Ascii(string s) { var b = Encoding.Latin1.GetBytes(s); file.Write(b, 0, b.Length); }
+        Ascii("%PDF-1.7\n4 0 obj\n<< /Length " + deflated.Length + " /Filter /FlateDecode >>\nstream\n");
+        file.Write(deflated, 0, deflated.Length);
+        Ascii("\nendstream\nendobj\n"
+            + "trailer\n<< /Size 2 /ID [<123ABC0000000000000000000000DEAD>"
+            + "<123ABC0000000000000000000000DEAD>] >>\n%%EOF\n");
+
+        SavedPdfLeakScanner.FindTerm(file.ToArray(), needle)
+            .Should().Contain(h => h.Contains("inflated stream"),
+                "excluding the /ID must narrow the scan to that array ONLY — a term " +
+                "in a compressed content stream is a REAL leak and must still be " +
+                "reported, and located by carrier");
+    }
+
+    [Fact]
+    public void AHexStringOutsideTheIdArray_IsStillScanned()
+    {
+        // Scope guard. The exclusion keys on the /ID ARRAY, not on hex-string
+        // syntax: a <...> in a content stream is how glyph codes are written,
+        // so blanking hex strings generally would blind the scanner to exactly
+        // the leaks it exists to catch.
+        var saved = Encoding.Latin1.GetBytes(
+            "%PDF-1.7\n4 0 obj\n<< /Length 30 >>\nstream\n"
+            + "BT <123ABC> Tj ET\nendstream\nendobj\n"
+            + "trailer\n<< /ID [<DEADBEEF0000000000000000DEADBEEF>] >>\n%%EOF\n");
+
+        SavedPdfLeakScanner.FindTerm(saved, "123ABC").Should().NotBeEmpty(
+            "a hex string in a CONTENT STREAM is a real text carrier; only the " +
+            "/ID array's own strings are content-independent");
+    }
 }

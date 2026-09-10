@@ -42,9 +42,6 @@ MainWindow/ComboBox:<unnamed>#2	C	no automation of any kind — needs a real-inp
 MainWindow/ComboBox:<unnamed>#3	C	no automation of any kind — needs a real-input test or a reviewed reason
 MainWindow/FlyoutButton:<unnamed>#1	C	no automation of any kind — needs a real-input test or a reviewed reason
 MainWindow/Gesture:Alt+F4	C	no automation of any kind — needs a real-input test or a reviewed reason
-MainWindow/Gesture:Ctrl+Shift+C	C	no automation of any kind — needs a real-input test or a reviewed reason
-MainWindow/Gesture:Ctrl+Y	C	no automation of any kind — needs a real-input test or a reviewed reason
-MainWindow/Gesture:Ctrl+Z	C	no automation of any kind — needs a real-input test or a reviewed reason
 MainWindow/MenuItem:AboutCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/MenuItem:AddCircleAnnotationFromDragCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/MenuItem:AddFreeTextAnnotationFromDragCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path

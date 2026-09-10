@@ -225,6 +225,92 @@ public class PdfDocumentRedactionExtensionsTests
 
         PdfDocumentRedactionExtensions.FindTextMatches(letters, "wellkn", caseSensitive: false)
             .Should().BeEmpty("a same-line hyphen is content and must keep its meaning");
+
+        // #1372's other half: it must not be REPORTED as a wrap either. The
+        // detector below exists to surface hyphen-WRAPPED occurrences, and a
+        // detector that also fires on ordinary hyphenated words would flood
+        // every report with noise until people stopped reading it.
+        PdfDocumentRedactionExtensions
+            .FindHyphenWrappedCandidates(letters, "wellkn", caseSensitive: false, pageNumber: 1)
+            .Should().BeEmpty("'well-known' is one line — there is no line break to rejoin across");
+    }
+
+    /// <summary>Two lines: "Ander-" wrapping onto "son", 14pt apart.</summary>
+    private static Letter[] HyphenWrappedAnderson()
+    {
+        Letter L(string v, double x, double y, double w) =>
+            new(v, new PdfRectangle(x, y, x + w, y + 12), 12, "F1", x, y, w, v[0]);
+
+        return
+        [
+            L("A", 100, 700, 8), L("n", 108, 700, 7), L("d", 115, 700, 7),
+            L("e", 122, 700, 7), L("r", 129, 700, 5), L("-", 134, 700, 4),
+            // next line, 14pt lower — more than 0.5 * fontSize, so a new line
+            L("s", 100, 686, 6), L("o", 106, 686, 7), L("n", 113, 686, 7),
+            L(" ", 120, 686, 4), L("v", 124, 686, 6),
+        ];
+    }
+
+    [Fact]
+    public void FindHyphenWrappedCandidates_ReportsAWordSplitAcrossALineBreak()
+    {
+        // The occurrence FindTextMatches structurally cannot see: the page
+        // really reads "Ander-" / "son", so no contiguous letter run spells
+        // "Anderson" and the term is never removed. Reported, not joined —
+        // joining makes the match span two lines and its removal box cover
+        // everything between them, which is #942.
+        var letters = HyphenWrappedAnderson();
+
+        PdfDocumentRedactionExtensions.FindTextMatches(letters, "Anderson", caseSensitive: false)
+            .Should().BeEmpty("sanity: this is precisely why the occurrence survives");
+
+        var candidates = PdfDocumentRedactionExtensions
+            .FindHyphenWrappedCandidates(letters, "Anderson", caseSensitive: false, pageNumber: 11);
+
+        candidates.Should().ContainSingle();
+        candidates[0].PageNumber.Should().Be(11);
+        candidates[0].BeforeBreak.Should().Be("Ander");
+        candidates[0].AfterBreak.Should().Be("son");
+        candidates[0].ToString().Should().Be("\"Ander-\" / \"son\"",
+            "the reviewer needs to see how the page actually reads");
+    }
+
+    [Fact]
+    public void FindHyphenWrappedCandidates_IgnoresATermThatDoesNotStraddleTheBreak()
+    {
+        // Anti-vacuity: the detector must key on the term crossing the break,
+        // not merely on a line-end hyphen being somewhere nearby. "son" lies
+        // wholly on the second line, so FindTextMatches already handles it and
+        // it is not an unmatched candidate.
+        var letters = HyphenWrappedAnderson();
+
+        PdfDocumentRedactionExtensions
+            .FindHyphenWrappedCandidates(letters, "son", caseSensitive: false, pageNumber: 1)
+            .Should().BeEmpty("a term contained in one line is matched normally, not a wrap candidate");
+    }
+
+    [Fact]
+    public void AHyphenWrappedOccurrence_MakesTheReportNotCleanSuccess()
+    {
+        // The behaviour that matters to a user. Before #1372 a document with a
+        // hyphen-wrapped occurrence reported plain success, which is how the
+        // leak class stayed invisible: excise and mutool both keep the real
+        // hyphen and never form the match, so a single-extractor check called
+        // the file clean while poppler's de-hyphenating reflow read the term.
+        var report = new RedactionReport
+        {
+            Term = "Anderson",
+            Pages = [new PageRedactionResult(11, 1, 0, RedactionOutcome.RemovedVerified)],
+            Carriers = [],
+            HyphenatedCandidates = [new HyphenatedTermCandidate(11, "Ander", "son")],
+        };
+
+        report.Survived.Should().Be(0, "the occurrences excise DID match were removed and verified");
+        report.IsCleanSuccess.Should().BeFalse(
+            "zero survived among matched occurrences is not 'clean' when a readable " +
+            "occurrence was never matched at all — that gap is exactly what excise " +
+            "used to report as success (#1372)");
+        report.ToString().Should().Contain("hyphen-wrapped occurrence(s) NOT removed");
     }
 
     [Fact]
@@ -321,9 +407,25 @@ public class PdfDocumentRedactionExtensionsTests
 
         using var doc = PdfDocument.Open(Path.Combine(dir!.FullName, "test-pdfs", "pdfjs", "freeculture.pdf"));
         var letters = doc.GetPage(201).Letters;
+
+        // 244.70 (was 243.02 before #1391). The old number was excise's own
+        // pre-fix output, and it was WRONG: this page kerns with TJ under a
+        // scaled Tm, so the §9.4.3 raw-adjustment defect displaced it by
+        // 1.68pt. Re-derived from mutool rather than from excise's new output,
+        // because a coordinate baseline re-recorded from the tool under test
+        // proves only that the tool is self-consistent.
+        //
+        // mutool reads 11 occurrences of "that" on this page and so does
+        // excise; every pair agrees to 0.02pt once the page-box origin is
+        // accounted for (mutool reports CropBox-relative, excise
+        // MediaBox-relative, and this page's CropBox is l=41.76):
+        //     mutool 202.90 + 41.76 = 244.66   ← this occurrence
+        //     mutool 270.89 + 41.76 = 312.65, 162.92 → 204.68, … all 11 match.
+        // The old 243.02 would require a mutool x of 201.26, which mutool does
+        // not report anywhere on the page.
         PdfDocumentRedactionExtensions.FindTextMatches(letters, "that", false)
             .Should().Contain(match => match.Count == 4 &&
-                Math.Abs(match[0].StartX - 243.02) < 0.1,
+                Math.Abs(match[0].StartX - 244.70) < 0.1,
                 "the visible word is split across text operators but has no word break (#1198)");
     }
 

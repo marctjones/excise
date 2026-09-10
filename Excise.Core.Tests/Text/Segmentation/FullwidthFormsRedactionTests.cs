@@ -45,7 +45,11 @@ public class FullwidthFormsRedactionTests
     {
         var pdf = RtlPdfFixtures.SingleTj(fullwidthScalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
-        RtlRedactionTests.PinDeterministicId(doc);
+        // Deliberately NOT pinning a deterministic /ID here. This is the theory
+        // that flaked (#1295), so it is the one that must run against a REAL
+        // random identifier — the shared scanner's exclusion is what makes it
+        // deterministic now, and pinning the ID locally would hide a
+        // regression in that exclusion behind a second, redundant mechanism.
 
         var storedText = string.Concat(fullwidthScalars.Select(char.ConvertFromUtf32));
 
@@ -185,12 +189,19 @@ public class FullwidthFormsRedactionTests
     /// ASCII (raw codes, hex carriers) + UTF-16BE (PDF Unicode text strings)
     /// + UTF-8 (XMP metadata).
     ///
-    /// Tests with short ASCII needles pin the trailer <c>/ID</c> before saving.
-    /// It is a random 16-byte identifier written as uppercase hex, so "123" or
-    /// "ABC" can occur there by chance even though no page text survived. A
-    /// deterministic all-zero ID removes only that content-independent source
-    /// of false positives; every real carrier (content streams, ToUnicode,
+    /// The trailer <c>/ID</c> is a random 16-byte identifier written as
+    /// uppercase hex, so a short needle like "123" or "ABC" can occur there by
+    /// chance even though no page text survived. That exclusion is now the
+    /// SHARED SCANNER's job (<see cref="SavedPdfLeakScanner.MaskFileIdentifier"/>),
+    /// not each test's — every real carrier (content streams, ToUnicode,
     /// /ActualText, XMP, annotations, and text strings) remains searchable.
+    ///
+    /// <para>⚠️ This docstring used to describe a per-test "pin the /ID before
+    /// saving" step that the body had stopped doing: #1049's migration to the
+    /// shared scanner dropped the exclusion, and the flake it had fixed came
+    /// straight back (#1295 — four observed failures with a provably clean
+    /// redacted page). Documentation that describes an intention rather than
+    /// the code is how a fix gets silently un-made.</para>
     /// </summary>
     private static string SearchableTextOf(byte[] saved)
     {
@@ -198,7 +209,8 @@ public class FullwidthFormsRedactionTests
         // /FlateDecode streams. The hand-rolled ASCII + UTF-16BE concatenation
         // this replaced could not see into a compressed stream, and excise
         // compresses on save — it declared #1040's leaking output clean.
-        // See SavedPdfLeakScannerTests for the proof of that blindness.
+        // See SavedPdfLeakScannerTests for the proof of that blindness, and
+        // for the /ID exclusion pinned in both directions (#1295).
         return SavedPdfLeakScanner.AllCarriersText(saved);
     }
 }

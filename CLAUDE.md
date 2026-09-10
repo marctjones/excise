@@ -350,7 +350,9 @@ composition to the raw `e += tx` reddened 2 of its tests before the
 consolidation and **zero** after, while `TextMatrixLineSteppingTests` — a
 property gate, not a twin gate — caught it either way. What replaces it:
 
-- `TextMatrixLineSteppingTests` — §9.4.2 against the spec.
+- `TextMatrixLineSteppingTests` — §9.4.2 line stepping AND §9.4.3 TJ
+  adjustments against the spec (§9.4.3 was the branch the §9.4.2 fix missed,
+  live until #1391; both are corroborated with mutool on the same bytes).
 - `GraphicsStateTextParameterTests` — Table 52 as a spec property (#983).
 - `GraphicsStateTextParameterOracleTests` — the same, against mutool (#983).
 - `ExtGStateFontTests` — Table 58 `/Font`, both sinks (#990).
@@ -941,6 +943,22 @@ and cost real planning time.
    Pinned by `TextMatrixLineSteppingTests` and the corpus-wide
    `RedactionCollateralHarness` ratchet.
 
+   ⚠️ **The same defect had a SECOND branch, and this entry hid it for weeks.**
+   §9.4.2 was fixed; §9.4.3 — the TJ array adjustment — kept applying its
+   offset raw (`e -= tx`, no `·a`, no effect on `f`) until #1391, three lines
+   below an already-correct §9.4.4 advance in the same method. Because this
+   entry said "the cause was seven lines of §9.4.2 arithmetic" and named a
+   test that pins only §9.4.2, the docs read as *this class of defect is
+   closed* while one branch was still live on every TJ-kerned document — i.e.
+   most professionally typeset PDFs. Measured on a scaled-`Tm` fixture against
+   mutool: excise placed the kerned glyphs at 26.2/32.4 where mutool (and the
+   spec) says 17.22/14.44 — wrong by the `_tm_a` factor AND marching in the
+   opposite direction; under a rotated matrix it moved the wrong AXIS.
+   **The lesson is about the fix, not the arithmetic:** a defect fixed at one
+   call site was recorded as a fixed CLASS, and nobody swept the sibling
+   branches. `TextMatrixLineSteppingTests` now covers §9.4.3 under scaled,
+   rotated and flipped matrices too.
+
    ⚠️ **A green gate means "no worse than the checked-in floors", NOT "no
    blindness".** Floors were set at whatever the behaviour was.
 
@@ -1051,9 +1069,9 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
-    ├── MutoolReferenceRenderer.cs        # 282 uses in Differential tests
-    ├── GhostscriptReferenceRenderer.cs   #  84
-    ├── PdftocairoReferenceRenderer.cs    #  70
+    ├── MutoolReferenceRenderer.cs        # 300 uses in Differential tests
+    ├── GhostscriptReferenceRenderer.cs   #  88
+    ├── PdftocairoReferenceRenderer.cs    #  76
     ├── PdftoppmReferenceRenderer.cs      #  18
     ├── MutoolTextExtractor.cs            # independent TEXT oracle (MuPDF)
     ├── PdftotextTextExtractor.cs         # SECOND text oracle (Poppler) — #1372
@@ -1191,8 +1209,25 @@ This redaction implementation:
   (#608 + #1155, `PdfDocumentSanitizer`, `SanitizeMetadata = true`; indirect
   string carriers are resolved before reading — the #1155 gap); `RemoveAllMetadata`
   strips them wholesale. ⚠️ #1168 tracks the remaining URI-action locations
-  (outline `/A`, catalog `/OpenAction`, `/AA`); #1169 tracks the per-carrier
-  policy UX (stripping a term from a known URL can REVEAL it).
+  (outline `/A`, catalog `/OpenAction`, `/AA`).
+- ✅ **Per-carrier scrub SCOPE and MODE** (#1188 + #1169,
+  `RedactionOptions.Carriers` / `.CarrierPolicy`). Scope says whether a carrier
+  is examined; mode says what happens when the term is there —
+  `Strip` (cut the substring, the default and the pre-option behaviour),
+  `RemoveWhole` (drop the entire value), `ReportOnly` (change nothing, report
+  it). The reason this is not one policy: stripping a term from a KNOWN string
+  can REVEAL it — `https://www.irs.gov/your-account` minus `your` reads back as
+  `https://www.irs.gov/-account` to anyone who knows the site. Surfaced as
+  `--carrier-policy <carrier>=<mode>` and in Preferences → Redaction.
+  ⚠️ A `ReportOnly` carrier STILL HOLDS THE TERM; `RedactionReport.Carriers`
+  says so and `IsCleanSuccess` goes false. ⚠️ **The safety default has NOT been
+  flipped**: #1169 argues URLs and structured metadata should default to
+  `RemoveWhole`, #1187 requires defaults to reproduce prior behaviour, and that
+  conflict is a product decision left to a human.
+- ✅ **Whole-word matching is an explicit option** (#1052,
+  `RedactionOptions.WholeWord`, `--whole-word`), off by default per #1000.
+  It applies to page content and the carrier scrub together (#896), and the
+  rule that ran is recorded in `RedactionReport.WholeWord`.
 - ✅ Scrubs the structure tree (`/ActualText`, `/Alt`, `/E`) (#636 + #1155)
 - ✅ Scrubs embedded files/attachments **by default** in the GUI redaction-copy
   flow — `RedactedCopySafetyService` (`ScrubAttachments = true`) →

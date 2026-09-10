@@ -963,7 +963,7 @@ public class CorpusScanClassificationTests
         {
             File.WriteAllText(path,
                 "path\tpageNumber\texpectedStatus\texpectedErrorContains\tnote\tresultStatus\tresultCategory\tresultReason\n" +
-                "pdfjs/semantic.pdf\t1\tPASS_ONE\t\taccepted by majority\tPASS\tPASS_ONE_SEMANTIC_OK\texcise matches semantic majority\n" +
+                "pdfjs/semantic.pdf\t1\tPASS_ONE\t\taccepted by majority\tPASS\tPASS_ONE_UNREVIEWED\texcise matches semantic majority\n" +
                 "pdfjs/legacy.pdf\t0\tMALFORMED_PDF\tbad xref\tlegacy note\n");
 
             var manifest = RenderProgram.LoadCorpusExpectationManifest(new FileInfo(path))!;
@@ -971,7 +971,7 @@ public class CorpusScanClassificationTests
             var semantic = manifest[new RenderProgram.CorpusPageKey("pdfjs/semantic.pdf", 1)];
             semantic.ExpectedStatus.Should().Be("PASS_ONE");
             semantic.ExpectedResultStatus.Should().Be("PASS");
-            semantic.ExpectedResultCategory.Should().Be("PASS_ONE_SEMANTIC_OK");
+            semantic.ExpectedResultCategory.Should().Be("PASS_ONE_UNREVIEWED");
             semantic.ExpectedResultReason.Should().Be("excise matches semantic majority");
 
             var legacy = manifest[new RenderProgram.CorpusPageKey("pdfjs/legacy.pdf", 0)];
@@ -1062,14 +1062,14 @@ public class CorpusScanClassificationTests
 
         entries[0].status.Should().Be("MALFORMED_PDF");
         entries[0].resultStatus.Should().Be("PASS");
-        entries[0].resultCategory.Should().Be("ACCEPTED_DEGENERATE_INPUT");
+        entries[0].resultCategory.Should().Be("NON_PASS_UNREVIEWED");
         entries[0].resultReason.Should().Be("accepted malformed fixture");
         entries[0].expectationResult.Should().Be("PASS");
         entries[1].status.Should().Be("PASS_ONE");
         entries[1].resultStatus.Should().Be("PASS");
         summary.statusCounts.Should().ContainKey("MALFORMED_PDF").WhoseValue.Should().Be(1);
         summary.resultStatusCounts.Should().ContainKey("PASS").WhoseValue.Should().Be(2);
-        summary.resultCategoryCounts.Should().ContainKey("ACCEPTED_DEGENERATE_INPUT").WhoseValue.Should().Be(1);
+        summary.resultCategoryCounts.Should().ContainKey("NON_PASS_UNREVIEWED").WhoseValue.Should().Be(1);
         summary.resultNonPassCount.Should().Be(0);
         summary.expectedPassCount.Should().Be(1);
     }
@@ -1128,7 +1128,7 @@ public class CorpusScanClassificationTests
                     "",
                     "accepted by semantic review",
                     "PASS",
-                    "PASS_ONE_SEMANTIC_OK",
+                    "PASS_ONE_UNREVIEWED",
                     "raw oracle class may vary by oracle set"),
         };
 
@@ -1138,7 +1138,7 @@ public class CorpusScanClassificationTests
         entries[0].expectedStatus.Should().Be("*");
         entries[0].expectationResult.Should().Be("PASS");
         entries[0].resultStatus.Should().Be("PASS");
-        entries[0].resultCategory.Should().Be("PASS_ONE_SEMANTIC_OK");
+        entries[0].resultCategory.Should().Be("PASS_ONE_UNREVIEWED");
     }
 
     [Fact]
@@ -1161,7 +1161,7 @@ public class CorpusScanClassificationTests
                     "",
                     "semantic pass",
                     "PASS",
-                    "PASS_ONE_SEMANTIC_OK",
+                    "PASS_ONE_UNREVIEWED",
                     "bare default pdf.js corpus path should still match"),
         };
 
@@ -1169,7 +1169,7 @@ public class CorpusScanClassificationTests
 
         entries[0].expectationResult.Should().Be("PASS");
         entries[0].resultStatus.Should().Be("PASS");
-        entries[0].resultCategory.Should().Be("PASS_ONE_SEMANTIC_OK");
+        entries[0].resultCategory.Should().Be("PASS_ONE_UNREVIEWED");
     }
 
     // ---- #907: a refusal is judged by the oracles, not by excise ------------
@@ -1648,6 +1648,45 @@ public class CorpusScanClassificationTests
         // would be manufacturing failures instead of verdicts.
         RenderProgram.OracleMajorityAgrees(agreeing, compared).Should().BeTrue(
             "escalation exists to decide who is right, not to change who wins");
+    }
+
+    [Fact]
+    public void SelectHeadlineOracleMetrics_ReturnsFarthestAsWorstAndNearestAsBest()
+    {
+        // #1397(a): the old headline took the MINIMUM per-oracle diff -- a
+        // quorum of one that adding a blank/degenerate oracle could move to
+        // zero without excise changing at all. The headline must be the
+        // FARTHEST oracle; the nearest is kept separately for the PASS_ONE
+        // reference-center gate, which genuinely wants "closest agreement".
+        var metrics = new[]
+        {
+            ("mutool", 0.02, 5.0),
+            ("pdftocairo", 0.0, 0.0),
+            ("ghostscript", 0.09, 40.0),
+        };
+
+        var (best, worst) = RenderProgram.SelectHeadlineOracleMetrics(metrics);
+
+        best.Name.Should().Be("pdftocairo", "it has the smallest diff");
+        best.Diff.Should().Be(0.0);
+        worst.Name.Should().Be("ghostscript", "it has the largest diff -- the headline the report shows");
+        worst.Diff.Should().Be(0.09);
+    }
+
+    [Fact]
+    public void SelectHeadlineOracleMetrics_AddingABlankOracleCannotLowerTheHeadline()
+    {
+        // Causal demonstration from the issue: adding an oracle that happens
+        // to render blank (agreeing with excise's own omission) must not be
+        // able to move the headline toward zero. Under min-selection it did.
+        var withoutBlankOracle = new[] { ("mutool", 0.05, 12.0) };
+        var withBlankOracleAdded = new[] { ("mutool", 0.05, 12.0), ("blank-oracle", 0.0, 0.0) };
+
+        var (_, worstBefore) = RenderProgram.SelectHeadlineOracleMetrics(withoutBlankOracle);
+        var (_, worstAfter) = RenderProgram.SelectHeadlineOracleMetrics(withBlankOracleAdded);
+
+        worstAfter.Diff.Should().Be(worstBefore.Diff,
+            "the worst-oracle headline is unmoved by adding an oracle that agrees with excise");
     }
 
     [Fact]

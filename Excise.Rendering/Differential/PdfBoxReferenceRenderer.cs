@@ -20,6 +20,13 @@ public static class PdfBoxReferenceRenderer
 
     public static bool IsAvailable => _invocation.Value != null;
 
+    /// <summary>
+    /// The static flags TryRenderPage invokes with (#1385) -- see
+    /// MutoolReferenceRenderer for why this must stay in sync with the args
+    /// built below.
+    /// </summary>
+    public const string InvocationSignature = "render -format=png";
+
     public static SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30_000)
         => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs).Bitmap;
 

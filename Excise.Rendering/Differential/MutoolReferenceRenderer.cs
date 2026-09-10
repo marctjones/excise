@@ -52,6 +52,15 @@ public static class MutoolReferenceRenderer
     public static bool IsAvailable => _available.Value;
 
     /// <summary>
+    /// The static flags TryRenderPage invokes with (#1385) -- everything
+    /// about this call the oracle render cache's key does NOT already cover
+    /// via (oracle name, path, page, dpi, password). Keep this literally in
+    /// sync with the ArgumentList.Add calls below: a flag added there and not
+    /// here is a stale cache waiting to happen, exactly what #1380 hit.
+    /// </summary>
+    public const string InvocationSignature = "draw -F png";
+
+    /// <summary>
     /// Render <paramref name="pageNumber"/> (1-based) of <paramref name="pdfPath"/>
     /// at <paramref name="dpi"/> via <c>mutool draw -F png</c>. Returns null on
     /// any failure (timeout, non-zero exit, missing output, decode failure).

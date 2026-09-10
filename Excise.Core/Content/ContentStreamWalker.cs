@@ -148,6 +148,22 @@ internal sealed class ContentStreamWalker
     public bool TrackState { get; set; } = true;
 
     /// <summary>
+    /// The tokenizer's byte offset into the content currently being walked.
+    /// Read from inside a sink callback it is the offset just PAST the token
+    /// that triggered the callback — which is what lets a sink record the
+    /// source span an operator occupied without tokenizing the bytes a second
+    /// time (#1093).
+    ///
+    /// <para>⚠️ Offsets are relative to the bytes the walker is walking RIGHT
+    /// NOW. <see cref="RunNested"/> swaps in a form XObject's bytes, so a sink
+    /// that follows nested walks (only <c>TextExtractor</c> does) must not
+    /// treat these as offsets into the outer stream.
+    /// <see cref="ContentStreamParser"/>, the sink that uses this, never
+    /// nests.</para>
+    /// </summary>
+    internal int SourcePosition => _pos;
+
+    /// <summary>
     /// Upper bound on an inline image's data scan when no <c>/L</c> length is
     /// declared (#347). Inline images are meant to be small (§8.9.7); this is
     /// far larger than any legitimate one and just bounds malicious input.
@@ -1173,7 +1189,16 @@ internal sealed class ContentStreamWalker
         }
         else
         {
-            _tm_e -= (adj / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
+            // tx is a TEXT-SPACE distance and must be composed through the
+            // matrix's linear part exactly like the §9.4.4 glyph advance above
+            // — `e -= tx` is correct only for an unscaled, unrotated Tm. #1391
+            // is the §9.4.3 survivor of the same defect #942 fixed for §9.4.2:
+            // under the ubiquitous `/F1 1 Tf` + scaled-`Tm` idiom every TJ
+            // kern was applied at 1/scale of its true size, and under a
+            // rotated matrix it moved the wrong AXIS entirely.
+            var tx = -(adj / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
+            _tm_e += tx * _tm_a;
+            _tm_f += tx * _tm_b;
         }
 
         sink.OnTjAdjustment(adj);

@@ -33,6 +33,12 @@ public static class RedactionScorecard
         {
             if (string.IsNullOrWhiteSpace(line)) continue;
             var m = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(line)!;
+            // #1400: the header line WriteReport prepends (commit, timestamp,
+            // leakEngines -- the run's actual measurement basis, not an
+            // environment probe run later) is not a benchmark row. Without
+            // this skip it silently became a bogus Row with every field
+            // defaulted to "" / false / 0, counted into Coverage/taxonomy.
+            if (m.ContainsKey("_meta")) continue;
             string S(string k) => m.TryGetValue(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : "";
             bool B(string k) => m.TryGetValue(k, out var v) && (v.ValueKind == JsonValueKind.True);
             double D(string k) => m.TryGetValue(k, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : 0;

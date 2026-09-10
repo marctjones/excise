@@ -30,15 +30,16 @@ internal static class AppearanceStreamRedactor
     /// </summary>
     public static bool RedactTerm(
         PdfPage page, PdfDictionary apDict, PdfDictionary? defaultResources,
-        string term, bool caseSensitive)
+        string term, bool caseSensitive, bool wholeWord = false)
     {
         if (page.Document.Resolve(apDict.GetOptional("N") ?? PdfNull.Instance) is not PdfStream ap)
             return false;   // a /N that is a dict of states (buttons) has no readable text
-        return RewriteStream(page, ap, defaultResources, term, caseSensitive);
+        return RewriteStream(page, ap, defaultResources, term, caseSensitive, wholeWord);
     }
 
     private static bool RewriteStream(
-        PdfPage page, PdfStream ap, PdfDictionary? defaultResources, string term, bool caseSensitive)
+        PdfPage page, PdfStream ap, PdfDictionary? defaultResources, string term, bool caseSensitive,
+        bool wholeWord = false)
     {
         byte[] content;
         try { content = ap.DecodedData; }
@@ -63,7 +64,7 @@ internal static class AppearanceStreamRedactor
         catch { return false; }
         if (parsed.Operators.Count == 0 || letters.Count == 0) return false;
 
-        var matches = PdfDocumentRedactionExtensions.FindTextMatches(letters, term, caseSensitive);
+        var matches = PdfDocumentRedactionExtensions.FindTextMatches(letters, term, caseSensitive, wholeWord);
         if (matches.Count == 0) return false;
 
         var areas = matches.Select(PdfDocumentRedactionExtensions.BoundingBoxOf).ToList();
@@ -87,7 +88,7 @@ internal static class AppearanceStreamRedactor
         {
             var after = new TextExtractor(page) { IncludeFormFieldValues = false }
                 .ExtractLettersFrom(newBytes, resources);
-            if (PdfDocumentRedactionExtensions.FindTextMatches(after, term, caseSensitive).Count >= matches.Count)
+            if (PdfDocumentRedactionExtensions.FindTextMatches(after, term, caseSensitive, wholeWord).Count >= matches.Count)
                 return false;
         }
         catch { return false; }

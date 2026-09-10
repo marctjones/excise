@@ -25,7 +25,49 @@ public enum RedactedCopySafetyFailureStage
     RequestedTermScrub,
     ContentVerification,
     HiddenTextAudit,
-    RasterRedactionAudit
+    RasterRedactionAudit,
+
+    /// <summary>
+    /// Incoming <c>/Redact</c> annotations could not be inspected, so whether
+    /// the document carries unresolved review marks is UNKNOWN. Surfaced
+    /// rather than assumed either way (#1430).
+    /// </summary>
+    UnresolvedRedactAnnotationInspection
+}
+
+/// <summary>
+/// Thrown instead of producing a safe-redacted copy of a document that still
+/// carries unresolved incoming <c>/Redact</c> annotations (#1430).
+///
+/// <para>A <c>/Redact</c> annotation is a reviewer's PROPOSAL: it marks content
+/// for removal and, until applied, that content is still entirely present. The
+/// product policy (<c>redactionReviewDrafts.safeRedactedCopy</c>) is therefore
+/// "refuse … rather than silently applying or deleting them", and the
+/// capability's stated rationale is that a review draft must be *impossible to
+/// confuse with a safe-redacted copy*. Applying someone else's marks is
+/// destructive and irreversible; deleting them destroys the review; producing
+/// the copy anyway ships a file labelled safe whose flagged content is intact.
+/// Refusing is the only option that loses nothing.</para>
+///
+/// <para>This is a THROW rather than a flag on the report deliberately. The
+/// three delivery surfaces (GUI redacted copy, scripting, CLI) all route
+/// through <c>RedactedCopySafetyPolicy.Evaluate</c>, and a flag would have to
+/// be re-checked by each of them — so a surface added later that forgot the
+/// check would fail OPEN, silently producing exactly the output this rule
+/// exists to prevent.</para>
+/// </summary>
+public sealed class UnresolvedRedactAnnotationsException : System.InvalidOperationException
+{
+    public UnresolvedRedactAnnotationsException(int annotationCount)
+        : base($"This document contains {annotationCount} unresolved redaction mark" +
+               (annotationCount == 1 ? "" : "s") +
+               " (/Redact annotations). excise will not produce a safe-redacted copy " +
+               "from it, because the marked content has NOT been removed. Apply or " +
+               "remove the marks deliberately first, or save an ordinary copy instead.")
+        => AnnotationCount = annotationCount;
+
+    /// <summary>How many unresolved <c>/Redact</c> annotations were found.</summary>
+    public int AnnotationCount { get; }
 }
 
 /// <summary>
@@ -48,6 +90,45 @@ public sealed record RedactedCopySafetyOptions
     public bool VerifyRequestedTerms { get; init; } = true;
     public bool RunHiddenTextAudit { get; init; } = true;
     public bool RunRasterRedactionAudit { get; init; } = true;
+
+    /// <summary>
+    /// Refuse to produce a safe-redacted copy of a document carrying unresolved
+    /// incoming <c>/Redact</c> annotations (#1430). On by default: this is a
+    /// safety rule, so opting out has to be a deliberate act by a caller that
+    /// is NOT claiming its output is safely redacted.
+    /// </summary>
+    public bool RefuseOnUnresolvedRedactAnnotations { get; init; } = true;
+
+    /// <summary>
+    /// Per-carrier scrub MODE for the <see cref="ScrubRequestedTerms"/> pass
+    /// (#1188/#1169). Default: <see cref="Operations.CarrierScrubMode.Strip"/>
+    /// everywhere, unchanged from before the option existed.
+    /// </summary>
+    /// <remarks>
+    /// This is the delivery surface #1169 asks for: on a carrier whose value is
+    /// a KNOWN string (a URL, a templated metadata field), cutting the term out
+    /// leaves a hole the surrounding text can be read around, so the user can
+    /// choose to drop the whole value or be told and decide. A
+    /// <see cref="Operations.CarrierScrubMode.ReportOnly"/> carrier that holds
+    /// the term is surfaced in <see cref="RedactedCopySafetyReport.Warnings"/> —
+    /// it must never pass silently.
+    /// </remarks>
+    public Operations.CarrierScrubPolicy CarrierPolicy { get; init; }
+        = Operations.CarrierScrubPolicy.Default;
+
+    /// <summary>
+    /// Which carriers the term scrub examines at all (#1188). Orthogonal to
+    /// <see cref="CarrierPolicy"/>: this is scope, that is mode.
+    /// </summary>
+    public Operations.RedactionCarriers Carriers { get; init; }
+        = Operations.RedactionCarriers.All;
+
+    /// <summary>
+    /// Match whole words only in the term scrub (#1052). Default false —
+    /// substring, the #1000 decision. Must agree with how the caller matched
+    /// page content: two different rules in one redaction is the #896 failure.
+    /// </summary>
+    public bool WholeWord { get; init; }
 
     public static RedactedCopySafetyOptions Default { get; } = new();
 }
@@ -101,7 +182,8 @@ public sealed record RedactedCopySafetyReport(
     RedactedContentVerificationStatus RasterRedactionAuditStatus,
     int RemainingRasterOverlapCount,
     IReadOnlyList<RedactedCopySafetyFailureStage> FailedStages,
-    IReadOnlyList<string> Warnings)
+    IReadOnlyList<string> Warnings,
+    int UnresolvedRedactAnnotationCount = 0)
 {
     public bool HasWarnings =>
         Warnings.Count > 0 ||

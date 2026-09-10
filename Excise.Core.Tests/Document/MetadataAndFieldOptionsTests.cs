@@ -78,7 +78,23 @@ public class MetadataAndFieldOptionsTests
 
         using var re = RoundTrip(doc);
         var field = re.GetAcroForm()!.FindField("name")!;
+        // #1443: PdfField.Tooltip is the typed accessor -- reading /TU used to
+        // require dropping out of the typed API into RawDictionary for a
+        // value the typed authoring API was happy to write. Keeping the raw
+        // assertion too proves both paths agree, not that the typed one
+        // replaced a check that was wrong.
+        field.Tooltip.Should().Be("Your full name");
         field.RawDictionary.GetStringOrNull("TU").Should().Be("Your full name");
+    }
+
+    [Fact]
+    public void Tooltip_NoTUEntry_IsNull()
+    {
+        var doc = BlankOnePage();
+        doc.AddTextField(1, new PdfRectangle(72, 700, 300, 720), "untitled");
+
+        using var re = RoundTrip(doc);
+        re.GetAcroForm()!.FindField("untitled")!.Tooltip.Should().BeNull();
     }
 
     [Fact]

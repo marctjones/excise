@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
-# The PDF-spec capability registry gate (#1357, #1366).
+# The PDF-spec capability registry gate (#1357, #1366, #1457).
 #
 #   (default)               t0 BLOCK — STRUCTURE. Regenerates every derived file
 #                           from COMMITTED inputs and diffs against the tree. The
 #                           test-outcomes snapshot is READ here, never regenerated:
 #                           until #1366 it was rebuilt from every trx under logs/,
 #                           so a full run's own results reddened the registry row
-#                           in the same run and every t0 after it.
+#                           in the same run and every t0 after it. Same reasoning,
+#                           #1457: reference-tool-evidence.json and
+#                           corpus-governance.json are READ here too, never
+#                           regenerated — they record this MACHINE's installed
+#                           tool versions and which gitignored corpora happen to
+#                           be present, so regenerating them in build_derived()
+#                           reddened t0 on a `brew upgrade` or a corpus fetch with
+#                           no source change.
 #   --refresh-outcomes DIR  full GRADE — EVIDENCE. Imports the trx of every test
 #                           row in DIR/ledger.jsonl (a resumed run's checkpointed
 #                           rows included, from their evidence directory), rebuilds
@@ -19,15 +26,28 @@
 #                           t0 row left structural drift for review, or an adoption
 #                           awaits its commit — because importing over either would
 #                           bundle it into "test evidence".
-#   --adopt DIR             copies DIR/registry-outcomes/* (minus the import summary)
-#                           into the tree for review and commit — that is how the
-#                           snapshot moves. The stash is pruned with the run dir.
+#   --refresh-evidence DIR  full GRADE — EVIDENCE (#1457). Re-probes installed
+#                           reference-tool versions (collect-pdf-reference-tool-
+#                           evidence.py) and re-scans the locally present corpora
+#                           (build-pdf-corpus-governance.py), rebuilds what depends
+#                           on them, stashes the regenerated files under
+#                           DIR/registry-outcomes/ and restores the tree on EVERY
+#                           exit path — same shape as --refresh-outcomes, but with
+#                           no ledger/trx precondition since neither builder reads
+#                           test evidence. Exit 0; exit 77 (SKIPPED) when the
+#                           generated files are already modified, or when
+#                           regenerating produced no change to adopt.
+#   --adopt DIR             copies DIR/registry-outcomes/* (minus the import and
+#                           evidence-refresh summaries) into the tree for review
+#                           and commit — that is how the snapshot moves. The
+#                           stash is pruned with the run dir.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 GEN=test-pdfs/manifests/pdf-spec-registry/generated
 IMPORT_SUMMARY=import-summary.json
+EVIDENCE_SUMMARY=evidence-refresh-summary.json
 
 # recordedAt and gitRevision are provenance stamped at generation time, so
 # they differ on EVERY run by construction (#1357). Diffing them made this
@@ -61,21 +81,32 @@ GENERATED=(
   $GEN/implementation-evidence-map.json
 )
 
-# Every builder except the outcomes import, in the order the gate always ran them.
+# Every builder except the outcomes import and the two machine-dependent
+# evidence probes, in the order the gate always ran them. #1457: neither
+# reference-tool-evidence.json nor corpus-governance.json is read as an INPUT
+# by any other builder here (confirmed by grep across scripts/*.py) — they are
+# leaf outputs of their own generators, so leaving their regeneration out of
+# the default path does not starve anything downstream of same-run freshness;
+# it reads the committed snapshot, exactly like test-outcomes.json already did
+# after #1366.
 build_derived() {
   python3 scripts/check-pdf-spec-registry.py --write-summary --write-verification-gaps "$GEN/verification-gaps.json"
-  python3 scripts/build-pdf-corpus-governance.py
   python3 scripts/collect-pdf-capability-evidence.py
   python3 scripts/build-renderer-test-evidence-map.py
   python3 scripts/build-pdf-evidence-maps.py
   python3 scripts/check-pdf-registry-test-refs.py
   python3 scripts/build-renderer-promotion-queue.py
   python3 scripts/build-pdf-evidence-deficiency-report.py
-  python3 scripts/collect-pdf-reference-tool-evidence.py
   python3 scripts/build-pdf-atomic-fixture-map.py
   python3 scripts/build-pdf-evidence-attribution.py
   python3 scripts/build-pdf-feature-cluster-scorecard.py
   python3 scripts/build-pdf-capability-scorecard.py
+}
+
+# The two machine-dependent evidence probes #1457 pulled out of build_derived().
+refresh_evidence_probes() {
+  python3 scripts/collect-pdf-reference-tool-evidence.py
+  python3 scripts/build-pdf-corpus-governance.py
 }
 
 mode="${1:-}"
@@ -171,17 +202,55 @@ print(f"{len(changed)} regenerated files stashed under {run_dir}/registry-outcom
 PY
     exit 0
     ;;
+  --refresh-evidence)
+    # #1457: same shape as --refresh-outcomes, but the two builders this
+    # refreshes (installed reference-tool versions, present-corpus scan) need
+    # no ledger/trx — they read only this machine's current state — so there
+    # is no "no trx to import" precondition, only the drift check and, after
+    # regenerating, an explicit "nothing changed" check.
+    [ -n "$dir" ] && [ -d "$dir" ] || { echo "usage: $0 --refresh-evidence LOG_DIR" >&2; exit 2; }
+    if ! git diff --quiet "${DIFF_IGNORE[@]}" -- "${GENERATED[@]}"; then
+      echo "SKIPPED: generated registry files are already modified — the t0 pdf-capability-registry row left drift for review, or an adoption awaits its commit; commit or restore them, then re-run (prerequisite missing)"
+      exit 77
+    fi
+    # From here every exit path restores the tree, success included.
+    trap 'git checkout -- "${GENERATED[@]}"' EXIT
+    refresh_evidence_probes
+    build_derived
+    out="$dir/registry-outcomes"
+    mkdir -p "$out"
+    changed=()
+    for f in "${GENERATED[@]}"; do
+      if ! git diff --quiet "${DIFF_IGNORE[@]}" -- "$f"; then
+        changed+=("$f")
+        cp "$f" "$out/"
+      fi
+    done
+    if [ ${#changed[@]} -eq 0 ]; then
+      echo "SKIPPED: re-probing reference tools and corpora produced no change vs the committed snapshot — nothing to adopt (prerequisite missing)"
+      exit 77
+    fi
+    python3 - "$out/$EVIDENCE_SUMMARY" "$dir" "${changed[@]}" <<'PY'
+import json, sys
+summary_path, run_dir, *changed = sys.argv[1:]
+json.dump({"changedFiles": changed, "runDir": run_dir}, open(summary_path, "w"), indent=2)
+print(f"reference-tool/corpus evidence refreshed: {len(changed)} file(s) changed vs the committed snapshot: {', '.join(changed)}")
+print(f"regenerated files stashed under {run_dir}/registry-outcomes (pruned with the run dir); "
+      f"adopt with: scripts/check-pdf-capability-registry.sh --adopt {run_dir}")
+PY
+    exit 0
+    ;;
   --adopt)
     [ -n "$dir" ] && [ -d "$dir/registry-outcomes" ] || { echo "usage: $0 --adopt LOG_DIR (needs LOG_DIR/registry-outcomes/)" >&2; exit 2; }
     for f in "$dir"/registry-outcomes/*; do
-      case "$(basename "$f")" in "$IMPORT_SUMMARY") continue ;; esac
+      case "$(basename "$f")" in "$IMPORT_SUMMARY"|"$EVIDENCE_SUMMARY") continue ;; esac
       cp "$f" "$GEN/$(basename "$f")"
     done
     git status --short -- "$GEN"
     echo "review the diff, then commit the snapshot with the run's evidence (#1366); t0 reads NEW until it is committed"
     ;;
   *)
-    echo "usage: $0 [--refresh-outcomes LOG_DIR | --adopt LOG_DIR]" >&2
+    echo "usage: $0 [--refresh-outcomes LOG_DIR | --refresh-evidence LOG_DIR | --adopt LOG_DIR]" >&2
     exit 2
     ;;
 esac

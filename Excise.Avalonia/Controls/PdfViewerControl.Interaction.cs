@@ -558,7 +558,13 @@ public partial class PdfViewerControl
         if (contents.Length > maxContents)
             contents = contents[..maxContents] + "…";
 
-        var author = (annot.Author ?? "").Trim();
+        // #1205: the AUTHOR is an identity claim made by the document, shown in
+        // the status bar next to the note's prose. Escape it so an embedded bidi
+        // control cannot make one person's comment appear to be another's. The
+        // note body above stays prose and is left alone beyond newline
+        // collapsing, per the issue's "preserve ordinary PDF prose" rule.
+        var author = Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(
+            (annot.Author ?? "").Trim());
         var subtype = annot.Subtype.ToString();
 
         if (author.Length > 0 && contents.Length > 0) return $"{subtype} — {author}: {contents}";

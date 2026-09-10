@@ -288,6 +288,28 @@ partial class Program
             };
         }
 
+        // #1388: a 'build-output' CLI (plain `dotnet build`) is never the
+        // PublishReadyToRun binary excise.sln ships, and R2R vs. build-output
+        // renderMs moves in OPPOSITE directions depending on fixture size
+        // (measured: -46% on a trivial page, +22% on a multi-second one) --
+        // an optimisation could be accepted or rejected on the wrong
+        // evidence with no signal that anything had changed.
+        var nowShape = DominantCliBinaryShape(current);
+        var beforeShape = DominantCliBinaryShape(baseline.runs);
+        if (nowShape is not null && beforeShape is not null && !string.Equals(nowShape, beforeShape, StringComparison.Ordinal))
+        {
+            return new ReferencePerformanceGate
+            {
+                passed = false,
+                checks = checks,
+                note = $"BINARY SHAPE MISMATCH — this run used '{nowShape}', the baseline was recorded with '{beforeShape}'. "
+                     + "A plain build and a published (e.g. R2R) excise binary generate different code and this ratio "
+                     + "would not mean anything. Re-record the baseline against the shape you intend to measure "
+                     + "(EXCISE_BENCHMARK_CLI_PATH to point at a published binary), or point the bench back at the "
+                     + "other shape.",
+            };
+        }
+
         foreach (var fixture in current.Select(r => r.fixture).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal))
         {
             // GATED: excise's in-process render time RELATIVE TO THE ORACLES IN THE SAME
@@ -303,6 +325,26 @@ partial class Program
             //
             // This is the no-self-oracle rule applied to speed: judge against tools
             // measured under the same conditions, not against our own past stopwatch.
+            // #1401: fixture NAME alone is not the measurement -- dpi and pageNumber are
+            // part of what renderMs measures, and both are already recorded per run.
+            // Editing fixtures.json to change a fixture's dpi (same id) would otherwise
+            // silently compare two different measurements and call the delta a
+            // regression. Refuse per-fixture, the same shape as the mode/shape
+            // refusals above but scoped to one fixture instead of the whole gate.
+            var (nowDpi, nowPage) = FixtureDpiPage(current, fixture);
+            var (beforeDpi, beforePage) = FixtureDpiPage(baseline.runs, fixture);
+            if (nowDpi is not null && beforeDpi is not null && (nowDpi != beforeDpi || nowPage != beforePage))
+            {
+                checks.Add(new ReferencePerformanceGateCheck
+                {
+                    name = $"{fixture}.excise-cli.render-vs-oracles [DPI/PAGE MISMATCH now={nowDpi}dpi/p{nowPage} "
+                         + $"baseline={beforeDpi}dpi/p{beforePage}]",
+                    actual = 0, threshold = maxTimeRatio, unit = "ratio", gated = true,
+                    passed = false,
+                });
+                continue;
+            }
+
             var nowRatio = ExciseToOracleRatio(current, fixture, comparableOracles);
             var beforeRatio = ExciseToOracleRatio(baseline.runs, fixture, comparableOracles);
             AddRatioCheck(checks, fixture + ".excise-cli.render-vs-oracles", nowRatio, beforeRatio, maxTimeRatio, "ratio", gated: true);
@@ -352,6 +394,17 @@ partial class Program
         return modes.Length switch { 0 => null, 1 => modes[0], _ => "mixed" };
     }
 
+    /// <summary>Same idea as <see cref="DominantRuntimeMode"/>, for #1388's
+    /// build-output-vs-published distinction.</summary>
+    private static string? DominantCliBinaryShape(IEnumerable<ReferencePerformanceRun> runs)
+    {
+        var shapes = runs.Select(r => r.exciseCli?.cliBinaryShape)
+                         .Where(s => !string.IsNullOrEmpty(s))
+                         .Distinct(StringComparer.Ordinal)
+                         .ToArray();
+        return shapes.Length switch { 0 => null, 1 => shapes[0], _ => "mixed" };
+    }
+
     private static void AddRatioCheck(List<ReferencePerformanceGateCheck> checks, string name, long? current, long? baseline, double threshold, string unit, bool gated = true)
         => AddRatioCheck(checks, name, (double?)current, (double?)baseline, threshold, unit, gated);
 
@@ -368,6 +421,15 @@ partial class Program
     /// Null when either side has no usable measurement, which makes the check skip rather
     /// than invent a verdict.
     /// </summary>
+    /// <summary>The (dpi, pageNumber) a fixture name was actually measured at in
+    /// this set of runs (#1401) -- both are recorded per run already; a fixture
+    /// NAME is not the measurement if fixtures.json changes either one.</summary>
+    private static (int? Dpi, int? PageNumber) FixtureDpiPage(IEnumerable<ReferencePerformanceRun> runs, string fixture)
+    {
+        var match = runs.FirstOrDefault(r => r.fixture == fixture && r.status == "OK");
+        return match is null ? (null, null) : (match.dpi, match.pageNumber);
+    }
+
     private static double? ExciseToOracleRatio(
         IEnumerable<ReferencePerformanceRun> runs, string fixture, IReadOnlySet<string>? onlyOracles = null)
     {
@@ -429,12 +491,21 @@ partial class Program
         // it, and a reader comparing two reports has no other way to know they were produced
         // by differently-compiled binaries (#1389).
         var mode = DominantRuntimeMode(report.runs);
+        var shape = DominantCliBinaryShape(report.runs);
         sb.AppendLine("- .NET: `" + report.configuration.runtimeDescription + "` from `"
             + report.configuration.dotnetRoot + "`");
         sb.AppendLine("- excise CLI codegen: `" + (mode ?? "unknown (binary predates runtimeMode)") + "`"
             + (mode == "aot"
                 ? " — Native AOT, built by `scripts/build-aot-cli.sh`. No tiered JIT and no dynamic PGO."
-                : mode == "jit" ? " — JIT/ReadyToRun, the default `dotnet build` output." : ""));
+                : mode == "jit" ? " — JIT (tiered)." : ""));
+        // #1388: separate from codegen mode above -- a "jit" binary from a plain
+        // `dotnet build` is NOT the PublishReadyToRun shape excise.sln ships, and the two
+        // measure differently in opposite directions depending on fixture size.
+        sb.AppendLine("- excise CLI binary shape: `" + (shape ?? "unknown (binary predates cliBinaryShape)") + "`"
+            + (shape is not null && shape.StartsWith("build-output", StringComparison.Ordinal)
+                ? " — plain `dotnet build` output, NOT the PublishReadyToRun shape excise.sln ships. "
+                  + "Point EXCISE_BENCHMARK_CLI_PATH at a published binary to measure the shipping shape."
+                : ""));
         sb.AppendLine("- Gate: `" + (report.regressionGate.passed ? "PASS" : "FAIL") + "` — " + report.regressionGate.note);
         sb.AppendLine();
         sb.AppendLine("| Fixture | Run | Renderer | Status | Wall ms | Render ms | Startup ms | CPU ms | Peak RSS MiB | Fidelity |");

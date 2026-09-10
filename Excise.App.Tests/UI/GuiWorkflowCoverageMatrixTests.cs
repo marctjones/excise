@@ -185,15 +185,15 @@ public class GuiWorkflowCoverageMatrixTests
                     "Avalonia.Headless's SetupWithoutStarting harness this suite uses. Covered instead by " +
                     "scripts/run-packaged-gui-smoke.sh --mode direct-exec, which spawns the real " +
                     "published binary. See #959, #979."),
-                Capability.Gap("open via drag-drop",
-                    "Not just untested — the FEATURE does not exist. Zero references to DragEventArgs / OnDrop " +
-                    "/ DragDrop. / AllowDrop anywhere in Excise.App or Excise.Avalonia (#959, re-checked by " +
-                    "#979). There is no Drop handler to drive, so this is a feature gap prior to being a test " +
-                    "gap — implementing drag-drop-to-open is out of scope for a coverage-depth pass. Filed as " +
-                    "#1002 to track the feature; once a Drop handler exists, Avalonia routed events "  +
-                    "(DragDrop.DropEvent) can very likely be raised directly against a control in the existing " +
-                    "headless harness the same way pointer/keyboard events already are in this suite — headless " +
-                    "drag-drop synthesis is expected to be possible, just currently moot."),
+                // #1002 implemented the feature and closed this gap. The
+                // expectation recorded here — that DragDrop.DropEvent could be
+                // raised directly against a control in this harness, "very
+                // likely" but never checked — turned out to be correct:
+                // Avalonia 12's DragEventArgs is publicly constructible and
+                // DragDropOpenTests raises a real one at the window, so the
+                // production handler runs. (The payload API did change: it is
+                // e.DataTransfer/IDataTransfer in 12, not 11.x's e.Data.)
+                Capability.Covered("open via drag-drop (#1002)", typeof(DragDropOpenTests), nameof(DragDropOpenTests.DroppingAPdfOnTheWindow_OpensIt)),
             ]),
         new("Navigate long PDFs, thumbnails, zoom, fit width/page",
             Modality.Mouse | Modality.Keyboard | Modality.Toolbar,

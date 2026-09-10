@@ -68,7 +68,7 @@
     "horizontal-band": "a line spanning the quad's width, a small fraction of its height"
   },
   "howToUpdate": "By hand, from the gate's failure message, which prints what it measured. There is deliberately no --update flag: this file records decisions and the evidence they rest on, and a regenerator would let a behaviour change rewrite its own justification. That is the failure mode scripts/update-corpus-expectations.sh has already caused twice.",
-  "rowCount": 45,
+  "rowCount": 46,
   "rows": [
     {
       "id": "link.explicit-width-positive",
@@ -4801,6 +4801,97 @@
         "blank": 5,
         "verdict": "blank"
       }
+    },
+    {
+      "id": "freetext.non-latin1-contents-without-border",
+      "subtype": "FreeText",
+      "state": null,
+      "condition": "/FreeText with /Border [0 0 0] and /Contents carrying a code point above U+00FF",
+      "decision": "draw",
+      "shape": "text-value-inside-rect",
+      "rendererSite": "RenderFreeTextDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /FreeText /F 4 /DA (/Helv 10 Tf 0 g) /Border [0 0 0] /Contents <FEFF005A0061014201050063007A006E0069006B> /Rect [50 100 150 150] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          100
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 212,
+          "bbox": [
+            50,
+            51,
+            92,
+            61
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 161,
+          "bbox": [
+            50,
+            52,
+            85,
+            61
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "abstention": "duplicate-engine",
+          "vote": "draws",
+          "inkedPixels": 163,
+          "bbox": [
+            50,
+            52,
+            84,
+            61
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 218,
+          "bbox": [
+            60,
+            54,
+            126,
+            63
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#1381",
+        "#1363"
+      ]
     }
   ]
 }

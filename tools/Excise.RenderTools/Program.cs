@@ -2016,6 +2016,7 @@ partial class Program
             progress?.Update("mutool", pageNumber, $"mutool render page {pageNumber}/{doc.PageCount}");
             var mutoolOutcome = RenderOracleWithCache(
                 oracleCache, "mutool", pdfPath, pageNumber, comparisonDpi, userPassword,
+                MutoolReferenceRenderer.InvocationSignature,
                 () => MutoolReferenceRenderer.TryRenderPage(
                     pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
             var mutoolResult = mutoolOutcome.Result;
@@ -2028,6 +2029,7 @@ partial class Program
             progress?.Update("pdftocairo", pageNumber, $"pdftocairo render page {pageNumber}/{doc.PageCount}");
             var cairoOutcome = RenderOracleWithCache(
                 oracleCache, "pdftocairo", pdfPath, pageNumber, comparisonDpi, userPassword,
+                PdftocairoReferenceRenderer.InvocationSignature,
                 () => PdftocairoReferenceRenderer.TryRenderPage(
                     pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
             var cairoResult = cairoOutcome.Result;
@@ -2096,6 +2098,7 @@ partial class Program
             // libpdfium, which scripts/download-pdfium.sh can actually fetch.
             var pdfiumOutcome = RenderOracleWithCache(
                 oracleCache, "pdfium", pdfPath, pageNumber, comparisonDpi, userPassword,
+                PdfiumNativeReferenceRenderer.InvocationSignature(renderAnnotations: true),
                 // #1020: renderAnnotations TRUE. excise draws annotations
                 // unconditionally and so do mutool, pdftocairo, pdftoppm,
                 // Ghostscript and PDFBox by default — pdfium was the only
@@ -2155,9 +2158,26 @@ partial class Program
             var comparablePrimaries = CountComparableLocalityOracles(
                 exciseBmp,
                 new[] { mutoolBmp, cairoBmp, pdfiumBmp });
+
+            // #1460(c): the page-wide passX booleans above can be vacuously
+            // true -- huge-image-dimensions.pdf's mutool/pdfium both fabricate
+            // a solid fill from a truncated buffer, and that fill is small
+            // enough (~4% of the page) to land under maxDiffFraction/maxMae
+            // against excise's correct blank, so "primaries agree" reads true
+            // while two of the three are wrong. This is escalation-scoped ONLY
+            // -- it must NOT feed entry.agreeingOracles / the PASS verdict,
+            // which stays on passMutool/passCairo/passPdfiumPrimary exactly as
+            // before; it only decides whether Ghostscript/PDFBox get a vote.
+            var escalationMutoolDisagrees = PrimaryDisagreesWithExciseByLocality(exciseBmp, mutoolBmp);
+            var escalationCairoDisagrees = PrimaryDisagreesWithExciseByLocality(exciseBmp, cairoBmp);
+            var escalationPdfiumDisagrees = PrimaryDisagreesWithExciseByLocality(exciseBmp, pdfiumBmp);
+            var primariesAgreeForEscalation =
+                passMutool && passCairo && passPdfiumPrimary
+                && !escalationMutoolDisagrees && !escalationCairoDisagrees && !escalationPdfiumDisagrees;
+
             var shouldEscalate = extraOracles != CorpusExtraOracles.None &&
                 ShouldEscalateOracles(
-                    primariesAgree: passMutool && passCairo && passPdfiumPrimary,
+                    primariesAgree: primariesAgreeForEscalation,
                     comparableLocalityOracles: comparablePrimaries,
                     alwaysRunAllOracles: AlwaysRunAllOracles);
 
@@ -2166,6 +2186,7 @@ partial class Program
                 progress?.Update("ghostscript", pageNumber, $"ghostscript render page {pageNumber}/{doc.PageCount}");
                 var ghostscriptOutcome = RenderOracleWithCache(
                     oracleCache, "ghostscript", pdfPath, pageNumber, comparisonDpi, userPassword,
+                    GhostscriptReferenceRenderer.InvocationSignature(overprintSimulate: false),
                     () => GhostscriptReferenceRenderer.TryRenderPage(
                         pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
                 var ghostscriptResult = ghostscriptOutcome.Result;
@@ -2190,6 +2211,7 @@ partial class Program
                 progress?.Update("pdfbox", pageNumber, $"pdfbox render page {pageNumber}/{doc.PageCount}");
                 var pdfboxOutcome = RenderOracleWithCache(
                     oracleCache, "pdfbox", pdfPath, pageNumber, comparisonDpi, userPassword,
+                    PdfBoxReferenceRenderer.InvocationSignature,
                     () => PdfBoxReferenceRenderer.TryRenderPage(
                         pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
                 var pdfboxResult = pdfboxOutcome.Result;
@@ -2251,13 +2273,18 @@ partial class Program
                     ("ghostscript", ghostscriptBmp),
                     ("pdfbox", pdfboxBmp),
                     ("pdfium", pdfiumBmp),
-                },
-                maxDiffFraction,
-                maxMae);
+                });
 
-            var best = metrics.OrderBy(m => m.Diff).First();
-            entry.diffFraction = best.Diff;
-            entry.mae = best.Mae;
+            // #1397(a): the headline is the WORST per-oracle disagreement, not
+            // the best -- a minimum is a quorum of one, exactly what #932 ruled
+            // out for the verdict. best/bestOracle are kept for the gating logic
+            // below that intentionally wants the closest oracle.
+            var (best, worst) = SelectHeadlineOracleMetrics(metrics);
+            entry.diffFraction = worst.Diff;
+            entry.mae = worst.Mae;
+            entry.worstOracle = worst.Name;
+            entry.diffFractionBest = best.Diff;
+            entry.maeBest = best.Mae;
             entry.bestOracle = best.Name;
             var bestReference = best.Name switch
             {
@@ -2384,9 +2411,10 @@ partial class Program
         int pageNumber,
         int dpi,
         string? userPassword,
+        string invocationSignature,
         Func<ReferenceRenderResult> render)
     {
-        return cache?.GetOrRender(oracleName, pdfPath, pageNumber, dpi, userPassword, render)
+        return cache?.GetOrRender(oracleName, pdfPath, pageNumber, dpi, userPassword, invocationSignature, render)
                ?? new OracleRenderOutcome(render(), CacheEnabled: false, CacheHit: false,
                    CachedRenderMs: null, CachedStatus: null, CachedErrorMessage: null);
     }
@@ -2466,7 +2494,11 @@ partial class Program
         var envDir = Environment.GetEnvironmentVariable("EXCISE_ORACLE_CACHE_DIR");
         return !string.IsNullOrWhiteSpace(envDir)
             ? new DirectoryInfo(envDir)
-            : new DirectoryInfo(Path.Combine(Path.GetTempPath(), "excise-oracle-cache-v1"));
+            // #1385: v2 alongside OracleRenderCache.CacheVersion bumping to
+            // v2 -- old v1 entries (no invocationSignature in their key) are
+            // simply orphaned on disk rather than reused, so a stale render
+            // survives at most as unused bytes in /tmp, never as a wrong answer.
+            : new DirectoryInfo(Path.Combine(Path.GetTempPath(), "excise-oracle-cache-v2"));
     }
 
     private static OracleRenderCache? CreateOracleRenderCache(DirectoryInfo? cacheDir)
@@ -2740,9 +2772,18 @@ partial class Program
         private static string GetMetadataPath(string cachePath) => cachePath + ".json";
     }
 
-    private sealed class OracleRenderCache
+    // internal (not private), and CacheVersion/GetCachePath below (#1385):
+    // OracleRenderCacheKeyTests asserts two different invocationSignature
+    // values over the same (oracle, path, page, dpi, password) produce two
+    // cache misses, not a false hit -- the acceptance criterion the issue
+    // names directly. InternalsVisibleTo("Excise.Cli.Tests") is already
+    // declared above.
+    internal sealed class OracleRenderCache
     {
-        private const string CacheVersion = "v1";
+        // #1385: bumped so every pre-fix cache entry (none of which have an
+        // invocationSignature) is invalidated once, on top of the real fix
+        // (the signature is now part of the key going forward).
+        private const string CacheVersion = "v2";
         private readonly System.Collections.Concurrent.ConcurrentDictionary<string, object> _locks = new(StringComparer.Ordinal);
         private long _hits;
         private long _misses;
@@ -2763,9 +2804,10 @@ partial class Program
             int pageNumber,
             int dpi,
             string? userPassword,
+            string invocationSignature,
             Func<ReferenceRenderResult> render)
         {
-            var cachePath = GetCachePath(oracleName, pdfPath, pageNumber, dpi, userPassword);
+            var cachePath = GetCachePath(oracleName, pdfPath, pageNumber, dpi, userPassword, invocationSignature);
             var gate = _locks.GetOrAdd(cachePath, _ => new object());
 
             lock (gate)
@@ -2806,7 +2848,8 @@ partial class Program
             string pdfPath,
             int pageNumber,
             int dpi,
-            string? userPassword)
+            string? userPassword,
+            string invocationSignature)
         {
             var fullPath = Path.GetFullPath(pdfPath);
             var info = new FileInfo(fullPath);
@@ -2818,7 +2861,13 @@ partial class Program
                 info.LastWriteTimeUtc.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 dpi.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                userPassword == null ? "<none>" : HashText(userPassword));
+                userPassword == null ? "<none>" : HashText(userPassword),
+                // #1385: the flags the oracle is actually invoked with. Without
+                // this, changing a renderer's ArgumentList (#1380 added
+                // -cropbox to pdftocairo) left every pre-change cached render
+                // valid as far as the cache was concerned -- a rescan reported
+                // "changed nothing" because it never re-rendered anything.
+                invocationSignature);
             var key = HashText(material);
             return Path.Combine(CacheDirectory, key[..2], key + ".png");
         }
@@ -2952,7 +3001,7 @@ partial class Program
             => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
     }
 
-    private sealed record OracleRenderOutcome(
+    internal sealed record OracleRenderOutcome(
         ReferenceRenderResult Result,
         bool CacheEnabled,
         bool CacheHit,
@@ -3497,6 +3546,7 @@ partial class Program
         {
             var mutool = RenderOracleWithCache(
                 oracleCache, "mutool", pdfPath, probePage, dpi, userPassword,
+                MutoolReferenceRenderer.InvocationSignature,
                 () => MutoolReferenceRenderer.TryRenderPage(
                     pdfPath, probePage, dpi, oracleTimeoutMs, userPassword));
             entry.mutoolStatus = mutool.Result.Status;
@@ -3506,6 +3556,7 @@ partial class Program
 
             var cairo = RenderOracleWithCache(
                 oracleCache, "pdftocairo", pdfPath, probePage, dpi, userPassword,
+                PdftocairoReferenceRenderer.InvocationSignature,
                 () => PdftocairoReferenceRenderer.TryRenderPage(
                     pdfPath, probePage, dpi, oracleTimeoutMs, userPassword));
             entry.cairoStatus = cairo.Result.Status;
@@ -3764,6 +3815,31 @@ partial class Program
     internal static bool OracleMajorityAgrees(int agreeingOracles, int comparedOracles)
         => comparedOracles >= 2 && agreeingOracles * 2 > comparedOracles;
 
+    /// <summary>
+    /// Splits per-oracle (excise vs one reference) metrics into the closest
+    /// oracle (used by PASS_ONE's reference-center gating, which wants "is
+    /// there SOME renderer excise agrees with") and the farthest (the
+    /// headline, #1397(a)). A minimum-over-oracles headline is a quorum of
+    /// one: adding a blank oracle that happens to resemble excise's own
+    /// omission can move the number to zero without excise changing at all.
+    /// </summary>
+    internal static ((string Name, double Diff, double Mae) Best, (string Name, double Diff, double Mae) Worst)
+        SelectHeadlineOracleMetrics(IReadOnlyList<(string Name, double Diff, double Mae)> metrics)
+    {
+        if (metrics.Count == 0)
+            throw new ArgumentException("At least one oracle metric is required.", nameof(metrics));
+
+        var best = metrics[0];
+        var worst = metrics[0];
+        foreach (var m in metrics)
+        {
+            if (m.Diff < best.Diff) best = m;
+            if (m.Diff > worst.Diff) worst = m;
+        }
+
+        return (best, worst);
+    }
+
     internal static bool ShouldEscalateOracles(
         bool primariesAgree,
         int comparableLocalityOracles,
@@ -3771,6 +3847,63 @@ partial class Program
         => alwaysRunAllOracles
            || !primariesAgree
            || comparableLocalityOracles < MinComparableOraclesForLocalityMajority;
+
+    /// <summary>
+    /// A tile-locality disagreement between two RENDERS (#1460b) — not
+    /// excise-vs-oracle, and not the page-wide pass/fail threshold
+    /// <see cref="ApplyOracleDisagreementMetrics"/> used to use. The page-wide
+    /// diffFraction is a fraction of the WHOLE page, so on a sparse page (most
+    /// conformance fixtures: mostly-white with one small feature under test)
+    /// two renders can differ completely in the one region that matters and
+    /// still land under any page-wide threshold, because "agreeing that the
+    /// rest of the page is white" dominates the fraction. Reuses the same
+    /// per-tile ink comparison #883/#932 already proved out for
+    /// excise-vs-oracle-majority, just applied to an arbitrary pair.
+    ///
+    /// The "essentially none" x10 ratio (not "exactly none") guards against a
+    /// stray antialiasing pixel reading as a real difference; requiring at
+    /// least <see cref="MinAsymmetricTilesForPairDisagreement"/> tiles (not
+    /// just one) guards against a single edge/position-drift tile the way
+    /// <see cref="CompareInkLocalityByMajority"/>'s own doc comment measured
+    /// was too sensitive at 1 tile (160/685 pdf.js pages).
+    /// </summary>
+    private const int MinAsymmetricTilesForPairDisagreement = 2;
+
+    internal static bool OraclePairInkLocalityDisagrees(SkiaSharp.SKBitmap a, SkiaSharp.SKBitmap b)
+    {
+        if (!HasComparableGeometry(a, b))
+            return false; // Different page box -- not a content question this check can answer.
+
+        var tiles = ResolveInkTileGrid(Math.Min(a.Width, b.Width), Math.Min(a.Height, b.Height));
+        var gridA = ComputeInkTileFractions(a, tiles);
+        var gridB = ComputeInkTileFractions(b, tiles);
+        if (gridA == null || gridB == null)
+            return false;
+
+        var asymmetricTiles = 0;
+        for (var tile = 0; tile < tiles * tiles; tile++)
+        {
+            var fa = gridA[tile];
+            var fb = gridB[tile];
+            var aInked = fa >= InkTileThreshold;
+            var bInked = fb >= InkTileThreshold;
+            if (aInked && !bInked && fb * 10 < fa) asymmetricTiles++;
+            else if (bInked && !aInked && fa * 10 < fb) asymmetricTiles++;
+        }
+
+        return asymmetricTiles >= MinAsymmetricTilesForPairDisagreement;
+    }
+
+    /// <summary>
+    /// Null-safe wrapper for <see cref="OraclePairInkLocalityDisagrees"/> used
+    /// by the #1460(c) escalation check. A small standalone method rather than
+    /// an inline null-check keeps the containing corpus-scan page loop's
+    /// nullable-flow analysis simple (that method is large enough that Roslyn
+    /// measurably loses precision on unrelated nullable locals once more
+    /// branch-heavy expressions are added directly inside it).
+    /// </summary>
+    private static bool PrimaryDisagreesWithExciseByLocality(SkiaSharp.SKBitmap? excise, SkiaSharp.SKBitmap? oracle)
+        => excise != null && oracle != null && OraclePairInkLocalityDisagrees(excise, oracle);
 
     /// <summary>
     /// Tiles per axis for a page of this size — <see cref="InkTileGrid"/> unless
@@ -4051,9 +4184,7 @@ partial class Program
 
     internal static void ApplyOracleDisagreementMetrics(
         CorpusScanEntry entry,
-        IReadOnlyList<(string Name, SkiaSharp.SKBitmap? Bitmap)> oracles,
-        double maxDiffFraction,
-        double maxMae)
+        IReadOnlyList<(string Name, SkiaSharp.SKBitmap? Bitmap)> oracles)
     {
         var rendered = oracles
             .Where(o => o.Bitmap != null)
@@ -4079,7 +4210,11 @@ partial class Program
                 sumMae += mae;
                 maxDiff = Math.Max(maxDiff, diff);
                 maxPairMae = Math.Max(maxPairMae, mae);
-                if (!IsPassing((diff, mae), maxDiffFraction, maxMae))
+                // #1460(b): tile-locality, not the page-wide pass/fail
+                // threshold -- see OraclePairInkLocalityDisagrees's doc
+                // comment for why the page-wide fraction is vacuous on a
+                // sparse page.
+                if (OraclePairInkLocalityDisagrees(rendered[i].Bitmap, rendered[j].Bitmap))
                     disagreeingPairs++;
             }
         }
@@ -4208,10 +4343,15 @@ partial class Program
         // missing or badly wrong content. The best direct comparison still
         // needs acceptable average color error and must be no worse than the
         // reference renderers' own average disagreement.
-        if (entry.mae > maxMae || entry.mae > oracleMeanMae)
+        //
+        // #1397(a): entry.mae/diffFraction are now the WORST per-oracle
+        // disagreement (the headline). This check intentionally wants the
+        // BEST one — the single oracle PASS_ONE is being justified against —
+        // so it reads diffFractionBest/maeBest, not the headline fields.
+        if (entry.maeBest > maxMae || entry.maeBest > oracleMeanMae)
             return false;
 
-        if (entry.diffFraction > Math.Max(maxDiffFraction, oracleMeanDiff))
+        if (entry.diffFractionBest > Math.Max(maxDiffFraction, oracleMeanDiff))
             return false;
 
         return exciseCenter <= oracleMeanCenter;
@@ -4937,13 +5077,19 @@ partial class Program
 
     private static string InferCorpusResultCategory(CorpusScanEntry entry)
     {
+        // #1384 Part A: the two prior names (PASS_ONE_SEMANTIC_OK,
+        // ACCEPTED_DEGENERATE_INPUT) both asserted a triage judgement this
+        // method never makes -- it relabels a raw status, nothing more. Two
+        // PDFium rows read as already-reviewed under the old names and turned
+        // out to be real defects (#1381, #1382). These names describe what
+        // the code actually did: classified the status, did not review it.
         if (string.Equals(entry.status, "PASS_ONE", StringComparison.Ordinal))
-            return "PASS_ONE_SEMANTIC_OK";
+            return "PASS_ONE_UNREVIEWED";
 
         if (IsPassingRawStatus(entry.status))
             return "PASS";
 
-        return "ACCEPTED_DEGENERATE_INPUT";
+        return "NON_PASS_UNREVIEWED";
     }
 
     internal static CorpusScanSummary BuildCorpusScanSummary(IReadOnlyList<CorpusScanEntry> entries)
@@ -5275,10 +5421,17 @@ partial class Program
         public string? expectationFailure { get; set; }
         public string? expectedNote { get; set; }
         public int pageCount { get; set; }
-        // Best-of-two oracle metrics (excise vs whichever oracle excise
-        // agrees with most closely). Used by the gating logic.
+        // HEADLINE metrics: excise vs whichever oracle excise agrees with
+        // LEAST (#1397). A minimum-over-oracles headline is a quorum of one —
+        // the same thing #932 removed from the verdict — and can be moved by
+        // adding a blank oracle without excise changing at all. bestOracle /
+        // diffFractionBest / maeBest keep the closest-oracle values for the
+        // gating logic that intentionally wants them (IsReferenceCenterAgreement).
         public double diffFraction { get; set; }
         public double mae { get; set; }
+        public string? worstOracle { get; set; }
+        public double diffFractionBest { get; set; }
+        public double maeBest { get; set; }
         // Per-oracle metrics — null when that oracle refused. The
         // distinction between PASS (both agree) and PASS_ONE (one
         // agrees) lives here.

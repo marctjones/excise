@@ -46,6 +46,22 @@ public static class RedactedCopySafetyPolicy
         var warnings = new List<string>();
         var failedStages = new List<RedactedCopySafetyFailureStage>();
         var options = request.Options;
+
+        // #1430 — FIRST, before anything below mutates the document.
+        //
+        // Ordering is the whole point, not a style choice: Evaluate scrubs
+        // metadata and embedded files in place. A refusal raised after that
+        // would have already destroyed the /Info dictionary and the
+        // attachments of a document we are declining to process — "refused"
+        // and "modified anyway" at the same time. The product policy
+        // (redactionReviewDrafts.safeRedactedCopy) says refuse RATHER THAN
+        // silently applying or deleting the marks, so nothing may have
+        // happened to the document when we do.
+        var unresolvedRedactMarks =
+            CountUnresolvedRedactAnnotations(document, warnings, failedStages);
+        if (options.RefuseOnUnresolvedRedactAnnotations && unresolvedRedactMarks > 0)
+            throw new UnresolvedRedactAnnotationsException(unresolvedRedactMarks);
+
         var terms = request.RedactionAreas
             .Select(area => area.CapturedText)
             .Concat(request.RequestedTerms)
@@ -113,7 +129,21 @@ public static class RedactedCopySafetyPolicy
         {
             try
             {
-                PdfDocumentSanitizer.ScrubTerms(document, terms);
+                var outcome = PdfDocumentSanitizer.ScrubTerms(
+                    document, terms, caseSensitive: false, options.Carriers, options.CarrierPolicy,
+                    options.WholeWord);
+
+                // #1169: a carrier the user set to ReportOnly still holds the
+                // term, and a refused mode did nothing at all. Both are the
+                // user's decision to make and neither may pass silently — the
+                // whole point of the option is that the human is told.
+                foreach (var row in outcome.NeedingAttention)
+                {
+                    warnings.Add(row.RefusedReason != null
+                        ? $"Carrier {row.Carrier}: {row.RefusedReason} — the redacted text was NOT removed from it."
+                        : $"Carrier {row.Carrier}: set to {row.Mode} and it CONTAINS the redacted text — " +
+                          "left unchanged on purpose; review it before sharing this copy.");
+                }
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
@@ -175,7 +205,48 @@ public static class RedactedCopySafetyPolicy
             RasterRedactionAuditStatus: rasterAuditStatus,
             RemainingRasterOverlapCount: remainingRasterOverlapCount,
             FailedStages: failedStages,
-            Warnings: warnings);
+            Warnings: warnings,
+            UnresolvedRedactAnnotationCount: unresolvedRedactMarks);
+    }
+
+    /// <summary>
+    /// Count incoming <c>/Redact</c> annotations (§12.5.6.23) — reviewer marks
+    /// proposing removal, whose content is still entirely present until
+    /// applied (#1430).
+    /// </summary>
+    /// <remarks>
+    /// An inspection failure is REPORTED, not treated as zero and not treated
+    /// as a refusal. Returning 0 would silently claim the document is clean on
+    /// exactly the malformed files where that is least knowable; refusing on
+    /// any unreadable annotation would block ordinary saves of documents that
+    /// have no marks at all. Surfacing it is the project's "surface, don't
+    /// guess" carrier policy, and it reaches the user because a failed stage
+    /// sets <see cref="RedactedCopySafetyReport.HasWarnings"/>.
+    /// </remarks>
+    private static int CountUnresolvedRedactAnnotations(
+        PdfDocument document,
+        List<string> warnings,
+        List<RedactedCopySafetyFailureStage> failedStages)
+    {
+        try
+        {
+            var count = 0;
+            for (var page = 1; page <= document.PageCount; page++)
+                foreach (var annotation in document.GetPage(page).GetAnnotations())
+                    if (annotation.Subtype == PdfAnnotationSubtype.Redact)
+                        count++;
+            return count;
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            AddFailure(
+                RedactedCopySafetyFailureStage.UnresolvedRedactAnnotationInspection,
+                "Incoming /Redact annotations could not be inspected, so whether this " +
+                "document carries unresolved redaction marks is unknown.",
+                warnings,
+                failedStages);
+            return 0;
+        }
     }
 
     private static RedactedContentVerificationStatus VerifyRequestedTerms(

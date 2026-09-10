@@ -46,6 +46,16 @@ public sealed class PdfField
     public string? DefaultValue => ResolveString(RawDictionary.GetOptional("DV"));
 
     /// <summary>
+    /// The field's alternate field name (/TU, §12.7.3.3) -- its accessible
+    /// name in every reader that exposes one, and the tooltip authoring
+    /// already writes via <c>AcroFormAuthoring.SetTooltip</c> / the
+    /// <c>tooltip:</c> parameters on <c>AddTextField</c> etc. (#1443).
+    /// Read-only: reading was the gap, the authoring path already covers
+    /// writing.
+    /// </summary>
+    public string? Tooltip => ResolveString(RawDictionary.GetOptional("TU"));
+
+    /// <summary>
     /// For choice fields, the list of available options (/Opt array).
     /// Each element is a string (the display/export value) or a 2-element
     /// array [exportValue, displayValue]. This property contains the

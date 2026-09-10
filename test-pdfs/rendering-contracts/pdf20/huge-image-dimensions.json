@@ -1,0 +1,28 @@
+{
+  "Path": "pdf20/huge-image-dimensions.pdf",
+  "Source": "Generated PDF 2.0 image fixture -- deliberate resource-limit probe, not feature coverage",
+  "Owner": "rendering:quality",
+  "Issue": 1398,
+  "RootCause": "FAIL_CLOSED_UNDERSPECIFIED_IMAGE_DATA",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "QualityReason": "Fixture declares a 10000x10000 8bpc DeviceGray image (100,000,000 required bytes) but supplies 1 byte of undecoded, unfiltered data. excise's #878 fail-closed guard (SkiaRenderer.Images.cs) refuses to paint from a buffer that cannot supply the declared pixels and draws nothing. mutool and the native pdfium oracle instead zero-pad the truncated buffer and paint a solid black fill (mutool's own stderr: 'padding truncated image'; pdfium's pixel histogram is pure black/white matching the diffFraction exactly) -- fabricated content, not decoded pixels. pdftocairo and Ghostscript agree with excise's refusal (diffFraction 0.0 / 0.0 vs excise). So the corpus scan's 2-of-3 primary majority (mutool, pdfium) reads excise's correct refusal as MISSING_CONTENT (36/36 tiles), while the 2 renderers that got it right (pdftocairo, Ghostscript) are outvoted. This is the safer behaviour, not a defect -- do not regenerate this fixture with a real payload; that would defeat the resource-limit probe it exists to be. #1451 argued the opposite (\"three oracles draw it\" => excise-side gap) and was reopened-then-closed as refuted with this exact per-oracle breakdown: see #1451's closing comment.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "MISSING_CONTENT",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "ACCEPTED_LIMITATION",
+      "PixelAgreement": "MATCHES_NONE",
+      "ReferenceSituation": "REFS_WRONG_OR_LOSSY",
+      "RootCause": "FAIL_CLOSED_UNDERSPECIFIED_IMAGE_DATA",
+      "Target": {
+        "Mode": "MALFORMED_INPUT_POLICY",
+        "Primary": null,
+        "Reason": "The fixture is intentionally underspecified: 1 byte of image data for a declared 100,000,000-byte image. mutool and pdfium fabricate pixels from the short buffer (zero-padding); pdftocairo and Ghostscript agree with excise's #878 fail-closed refusal."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "excise correctly refuses to paint from a buffer 1/100000000th the declared size (#878). Of the 3 comparable oracles, mutool and pdfium fabricate a fill from the truncated buffer (zero-padding, not decoding); pdftocairo agrees with excise exactly (diffFraction 0.0). Their 2-of-3 majority is not evidence excise is wrong -- it is 2 renderers sharing a decoder-permissiveness bug outvoting the 1 that behaved correctly, same shape as #1397's witness table."
+    }
+  }
+}

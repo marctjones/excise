@@ -2,10 +2,16 @@ using System;
 using System.Globalization;
 using System.Text;
 
-namespace Excise.App.Services;
+namespace Excise.Core.Text;
 
 /// <summary>
 /// Display-only handling for Unicode controls in untrusted document text.
+///
+/// <para>Lives in Core because the boundaries that need it are spread across
+/// every front end (#1205): the GUI's bookmark labels and link confirmations,
+/// the viewer control's hover text and field tooltips, and the CLI's <c>info</c>
+/// output. One policy, one place — a second copy would drift, and a boundary
+/// that used the looser copy would be exactly the gap this closes.</para>
 ///
 /// PDF text is prose, not an identifier namespace: callers must preserve it
 /// when extracting, selecting, copying, or redacting. This helper is for

@@ -4,6 +4,231 @@ All notable changes to excise are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [Unreleased]
+
+Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
+safety** and **P1.5 — Redaction policy and de-redaction side channels**.
+
+### Fixed
+- **The TJ array adjustment was applied raw instead of composed through the
+  text matrix** (#1391) — §9.4.3's horizontal branch did `_tm_e -= tx` with no
+  `·_tm_a` and no effect on `_tm_f`, three lines below an already-correct
+  §9.4.4 glyph advance. This is the surviving branch of the defect #942 fixed
+  for §9.4.2 line stepping, and because `ContentStreamWalker` is the single
+  state machine behind both sinks, it displaced the letter stream `RedactText`
+  matches on and the operator bounds `GlyphRemover` removes on together.
+  Every TJ-kerned document under a scaled `Tm` — most professionally typeset
+  PDFs — had systematically misplaced letters. Measured against mutool on a
+  scale-10 fixture: excise placed the kerned glyphs at 26.2/32.4 where mutool
+  and the spec say 17.22/14.44, wrong by the matrix factor and marching in the
+  opposite direction; under a rotated matrix it moved the wrong axis entirely.
+  Extraction parity holds at 100.0% aggregate over 332 pages and the
+  collateral ratchets are unchanged.
+- **The saved-PDF leak scanner scanned the trailer `/ID`** (#1295) — a random
+  16-byte file identifier written as uppercase hex, which no page text can
+  leak into, so a short ASCII needle collided with it and made short-term
+  redaction assertions intermittently red (observed four times with a provably
+  clean redacted page). The exclusion existed before and #1049's migration
+  dropped it; it is now one shared policy applied by both scanner entry
+  points, scoped to the `/ID` array only so a hex string in a content stream
+  is still scanned.
+
+### Added
+- **Safe-redacted-copy refusal for unresolved `/Redact` annotations** (#1430)
+  — the `redactionReviewDrafts.safeRedactedCopy` product-policy rule was
+  unimplemented, so excise would produce output treated as safely redacted
+  while content a reviewer had explicitly flagged was still fully present.
+  Enforced in the shared `RedactedCopySafetyPolicy` — the one place the GUI,
+  scripting and CLI surfaces all route through — as a typed refusal, so a
+  surface added later cannot fail open. The check runs before the policy
+  mutates anything, so a refusal never leaves a half-scrubbed document.
+- **Hyphen-wrapped occurrences are now reported instead of silently missed**
+  (#1372) — a term wrapped across a line (`Ander-` / `son`) is never matched
+  and never removed, and excise used to report a clean success over it. It is
+  now surfaced in `RedactionReport` and printed by the CLI, and
+  `IsCleanSuccess` is false while any remain. Removal behaviour is unchanged:
+  the redacted output is byte-identical to before. **This does not close the
+  leak** — joining across the break makes a match span two lines and its
+  removal box destroy everything between them (#942), so a real fix needs a
+  wrapped match to produce two boxes, one per line. #1372 stays open.
+
+### Notes
+- #1180 (unredact certain channel missing visible-but-readable failed
+  redactions) does not reproduce and was closed. Its reopened symptom —
+  inverted-box 0/8 — was a test-harness defect fixed by #1361; re-measured
+  2026-09-09 the channel recovers occluded 16/16 and inverted-box 8/8, against
+  the x-ray reference's 8/32 overall.
+
+### Added
+- **Per-carrier redaction scrub scope and mode** (#1188, #1169). A PDF
+  restates page text in carriers you never see, and one policy is wrong for
+  all of them: cutting the redacted term out of a KNOWN string can REVEAL
+  it — strip `your` from `https://www.irs.gov/your-account` and the
+  leftover `https://www.irs.gov/-account` tells anyone who knows the site
+  what was removed. Each carrier now takes a mode: `Strip` (the default and
+  the previous behaviour), `RemoveWhole` (drop the entire value, leaving no
+  surrounding structure to infer from), or `ReportOnly` (change nothing and
+  report the hit). CLI: `--carrier-policy <carrier>=<mode>`, repeatable; an
+  unrecognised carrier or mode is an error, never an ignored spec. GUI:
+  Preferences → Redaction, for link URLs and document metadata. A
+  `ReportOnly` carrier that holds the term is reported as holding it, and
+  the run is not a clean success.
+  ⚠️ **The safety default is deliberately NOT flipped.** #1169 argues URLs
+  and structured metadata should default to `RemoveWhole`; #1187 requires
+  defaults to reproduce prior behaviour. That conflict is a product
+  decision, not something this change makes silently.
+- **Whole-word matching as an explicit option** (#1052, `--whole-word`,
+  Preferences → Redaction → Match Rule). #1000 decided substring matching
+  stays the default because no single rule can be right — it is correct for
+  a case number inside a longer citation and wrong for `Lee` inside
+  `Sleeman`. The alternative is now an explicit choice, applied to page
+  content AND the document-carrier scrub together, and the rule that ran is
+  reported in the result rather than only known at the moment of clicking.
+- **`WidthPolicy.OvershootPreserveLayout`** (#1189, `--overshoot-box`,
+  Preferences → Redaction → Covering Box Width). A covering box drawn to
+  the exact extent of the removed run is a ruler for the removed string's
+  length. Overshoot rounds the box width up to a whole em, growing into the
+  space beside it without covering neighbouring text, so similar-length
+  candidates stop being separable by measuring it.
+  ⚠️ This blurs only the RENDERED width. Preserving layout means the
+  content stream still carries the removed run's advance, so a reader of
+  the FILE can still measure it; `--close-width` is what destroys that, at
+  the cost of reflowing the line. Both limits are pinned by tests against
+  an independent renderer rather than described and hoped for.
+- **Unicode control diagnostics at every identifier display** (#1205).
+  `UnicodeTextSafety` moved from `Excise.App` to `Excise.Core.Text` so the
+  CLI and the reusable viewer control can use the same policy instead of
+  growing their own. Invisible and text-direction control characters are
+  now made explicit — as `[U+XXXX]` — wherever excise shows document-authored
+  text as a name a user acts on: bookmark labels, the open-link
+  confirmation and link hover target, annotation authors, form-field name
+  tooltips, signature and signer identity, CLI `info` metadata output, and
+  security-relevant log lines. The open-link dialog and the signer summary
+  additionally raise an explicit warning when a bidi control is present,
+  because those are where a trust decision is made. Page text, search
+  results, redaction previews, annotation note bodies and copied values are
+  left byte-exact: this is a display policy, never a normalisation.
+
+### Fixed
+- **The `Annotations` carrier was silently overriding the `ActionUris`
+  carrier.** A link annotation's `/A /URI` was scrubbed under the
+  annotation carrier's scope and mode (a leftover from #1155 that #1168's
+  complete URI walk made redundant). Turning the URI carrier off still
+  stripped the URI while the report claimed it was disabled, and setting it
+  to a different mode did nothing. Found while building #1169; reverting
+  the fix reddens four tests.
+- **Redaction policy preferences now persist across launches.** A security
+  preference that silently reset to the less-safe default on every launch
+  is worse than no preference at all.
+
+Milestone **P1.6 — Writer output validity: what save destroys or invalidates**.
+
+### Fixed
+- **A form field made a `PdfA()` document non-conformant by embedding no font
+  for its own appearance** (#1435). A widget's `/DA` default-appearance string
+  named the base-14 `/Helv` unconditionally, so every AcroForm field carried a
+  non-embedded `/BaseFont /Helvetica` dictionary — including in a document that
+  called `PdfA()` and embedded its body font. A viewer generates the field's
+  appearance from that string, so the file's PDF/A claim was false for anything
+  typed into it. `PdfDocumentBuilder.DefaultFont` now flows into the widget
+  `/DA` the same way it already flows into every other text block, `/Helv` is
+  added to `/DR` only when a `/DA` actually names it, and the `/DR` entry shares
+  the page's font object so the program is embedded once. The subset keeps
+  printable ASCII and Latin-1 as well, because a `/DA` font's glyphs are chosen
+  by the viewer from typed input rather than by our writer.
+  ⚠️ `PdfA()` plus a form field is still not PDF/A for three other reasons the
+  veraPDF profile does report — the widget has no `/AP`, no `/F`, and
+  `NeedAppearances` is true (#1444).
+
+### Changed
+- **Redaction no longer rewrites the operators it did not touch** (#1093).
+  Editing one operator used to put the WHOLE content stream back through
+  `ContentStreamWriter` — its string escaping, its number formatting, its
+  inline-image reconstruction. Each of those has silently corrupted content an
+  edit never targeted (#354, #762, PDFDocEncoding octal escapes), and each was
+  found by a leak rather than by a gate. The parser now records the contiguous
+  source span of every operator and the writer copies those bytes back
+  verbatim, serializing only what actually changed; an unedited stream
+  round-trips byte-identically. Wired into the Core redaction write-backs
+  (`RedactArea`/`RedactAreas`, the covering box, the obstruction stripper).
+  ⚠️ A span is copied only when the operator still hashes to what it hashed to
+  at parse time, so an operand mutated in place — as the marked-content carrier
+  scrubber does when it removes an `/ActualText`, #636's leak carrier — is
+  re-serialized rather than restored from the original bytes. The GUI's own
+  `RedactionService` write-back and the `/Contents`-array structure (still
+  collapsed to a single stream on write) are not covered.
+
+Milestone **P1.4 — "wired to nothing"**: capabilities that existed, were
+tested, and had no way for a user to reach them — plus one that lost data
+silently.
+
+### Fixed
+- **Closing, quitting, Ctrl+W, or opening another file discarded unsaved
+  changes with no prompt** (#1233). `MainWindow.Closing` persisted window
+  geometry and returned; it never read `FileState.HasUnsavedChanges` and never
+  set `e.Cancel` — there was no `e.Cancel` anywhere in `Excise.App`. Every
+  pending redaction, page edit, form value, typewriter box and annotation was
+  lost with no prompt, toast or log line. Now a Save / Discard / Cancel prompt
+  guards the native close, Cmd/Ctrl+W, application quit, File ▸ Open, Recent
+  Files, macOS Finder file activation, and drag-drop. **Save writes a COPY** —
+  it reuses the existing save routing, so an original with pending redactions
+  goes through the redacted-copy workflow and an original with any other edit
+  through Save As; the source is never overwritten. A cancelled picker, a
+  declined signed-document warning and a failed write all leave the document
+  open and still dirty, because "we tried to save and couldn't" is exactly
+  where proceeding destroys the most work. Verified against the unmodified
+  code first: 8 of 11 new tests failed, including one where the window closed
+  after the user asked to save and then backed out of the picker.
+- **Ctrl+Z / Ctrl+Y / Ctrl+Shift+C were menu labels with nothing behind them**
+  (#1170). In Avalonia a `MenuItem.InputGesture` is display text only, and
+  these three had no branch in `MainWindow_KeyDown` — the menus advertised
+  shortcuts that did nothing on Windows/Linux (macOS was fine; its native menu
+  carries real gestures). Ctrl+Shift+C is ordered before the Ctrl+C copy
+  branch, which did not exclude Shift, so the view toggle cannot be swallowed
+  in text-selection mode; all three skip a focused text box so a window-level
+  Ctrl+Z never steals the search field's own undo.
+
+### Added
+- **Drag a PDF onto the window to open it** (#1002). The feature did not exist
+  — zero references to `DragDrop`/`AllowDrop`/`DragEventArgs` in the whole GUI.
+  The file-selection rule is now shared with the command-line and macOS
+  file-association paths rather than copied, so a mixed selection behaves the
+  same however it arrives.
+- **Attachments panel** (#1414) — Document ▸ Attachments… lists files embedded
+  in the PDF (name, decoded size, description), saves one to a chosen path, and
+  strips them all. A warning appears on open when a document carries
+  attachments, because they are invisible on the page and can hold a full copy
+  of the document's data (ZUGFeRD/Factur-X). excise never opens or runs an
+  attachment. Stripping is a pending edit, so the original is preserved by the
+  normal save routing. Removal is confirmed by `qpdf --list-attachments`, not by
+  excise reading its own output.
+- **Bates numbering reached the UI** (#1306) — Document ▸ Bates Numbering…
+  stamps a sequential number on every page (prefix, suffix, start, padding,
+  position, size, with a live preview). README had advertised this for a long
+  time while the service had no command, menu item or CLI verb behind it. The
+  stamped numbers are read back by `pdftotext`, and page 1 is asserted not to
+  contain page 2's number, so a stamp that wrote one number everywhere cannot
+  pass.
+
+### Removed
+- **`RecentFilesService`** (#1307), a dormant duplicate. Recent files ships from
+  `MainWindowViewModel`; the service was a second implementation writing the
+  *same* `recent.txt` in an incompatible format (JSON vs newline-delimited
+  text). The only thing it added was pinning, which was advertised nowhere.
+- **`FdfSerializer` / `XfdfSerializer`** (#921), 1,782 lines reachable from no
+  shipping surface. The issue's case for wiring rather than deleting assumed
+  they carried AcroForm field *data* ("fill a form, export the data rather
+  than a flattened copy") — they don't; both serializers handle annotations
+  only, and the FDF `/Fields` form-data section is explicitly out of scope in
+  their own docstrings. What's left is an annotation *importer*, which is
+  frozen: annotation authoring has taken no new creation surface since v3.8.0
+  (all 15 types already reachable from the Annotate menu), and FDF/XFDF
+  import exists only to create new annotations from an external file. There
+  is also no independent tool on this machine that reads FDF/XFDF to oracle a
+  round-trip against — the issue's own acceptance criterion. Also removed:
+  `PdfAnnotationAuthoring.AttachImported`, an internal helper with no other
+  caller.
+
 ## [3.9.4] - 2026-09-09
 
 **Corrects [3.9.3]'s "Closed as not-reproducing" entry below for

@@ -30,7 +30,8 @@ public static class ObstructionStripper
     public static void StripObstructions(PdfPage page)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
-        var content = page.GetContentStream();
+        // Tracked spans: everything kept keeps its original bytes (#1093).
+        var content = page.GetContentStream(trackSourceSpans: true);
         if (content.Operators.Count == 0) return;
 
         var newOps = new List<ContentOperator>(content.Operators.Count);
@@ -127,7 +128,7 @@ public static class ObstructionStripper
             }
         }
 
-        page.SetContentStream(new ContentStream(newOps));
+        page.SetContentStream(new ContentStream(newOps) { SourceBytes = content.SourceBytes });
     }
 
     private static bool IsNearlyWhite(double r, double g, double b)

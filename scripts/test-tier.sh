@@ -269,8 +269,10 @@ run_step() {
     # tree. Rows declared checkpoint=never (the redaction family, build) are
     # never skipped — t1 accepts no flag that skips them.
     if [ "$RESUME" = "1" ] && ! runner_step_should_run "$name" "$hash"; then
-        say "${B}[$name]${N} ${G}SKIP${N} - checkpointed"
-        runner_ledger_record "$name" SKIP_CHECKPOINTED 0 0 "kind=$kind" "target=$target" "filter=$filter" \
+        local skip_status="SKIP_CHECKPOINTED"
+        [ "$(runner_marker_value "$name" status)" = "KNOWN" ] && skip_status="SKIP_CHECKPOINTED_KNOWN"
+        say "${B}[$name]${N} ${G}SKIP${N} - checkpointed$([ "$skip_status" = "SKIP_CHECKPOINTED_KNOWN" ] && echo " (accepted failure)")"
+        runner_ledger_record "$name" "$skip_status" 0 0 "kind=$kind" "target=$target" "filter=$filter" \
             "class=$class" "knownIssue=$known" "prereq=$prereq" \
             "evidenceFrom=$(runner_marker_path "$name")" "evidenceFinished=$(runner_marker_value "$name" finished)" \
             "evidenceLog=$(runner_marker_value "$name" log)" "evidenceSha=$(runner_marker_value "$name" sha)"
@@ -369,6 +371,9 @@ run_tier "$TIER"
 # 3 a row that never ran, 2 nothing to report.
 scripts/report-gates.sh "$LOG_DIR"
 rc=$?
+# Checkpoint any row report-gates.sh just classified KNOWN so a later --resume
+# skips an accepted failure instead of re-running it (#1371).
+runner_checkpoint_known_failures "$LOG_DIR"
 if [ "$rc" = 0 ]; then
     runner_tier_base_record_chain "$TIER"
 fi

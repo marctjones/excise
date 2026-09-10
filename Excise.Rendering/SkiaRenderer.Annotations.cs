@@ -775,28 +775,75 @@ internal partial class RenderContext
         var firstLine = contents!.Split('\r', '\n')[0];
         if (firstLine.Length == 0) return;
 
-        // ⚠️ And only when the glyphs can actually be REPRESENTED. The text is
-        // handed to RenderText as Latin-1 bytes, exactly as a Tj operand would
-        // be, so anything outside Latin-1 becomes '?' and draws as a row of
-        // .notdef boxes.
+        // ⚠️ And only when the glyphs can actually be LAID OUT. Complex-script
+        // shaping (Arabic joining, Indic reordering) is out of scope — case 3
+        // above — so a string that needs it is left to the /Contents the reader
+        // can already reach, rather than drawn as a row of unjoined letters.
         //
         // Measured on pdf.js freetext_no_appearance.pdf (multi-line RTL Arabic
         // in a UTF-16BE /Contents) at 100 dpi: mutool shapes and draws the
-        // Arabic; the first cut of this fix drew a line of tofu. That is WORSE
-        // than the empty box it replaced — an empty box reads as "an annotation
-        // is here", tofu reads as "this document is corrupt".
+        // Arabic; an early cut drew a line of tofu instead. That is WORSE than
+        // the empty box it replaced — an empty box reads as "an annotation is
+        // here", tofu reads as "this document is corrupt".
         //
-        // Complex-script shaping is explicitly out of scope (case 3 above), so
-        // the box and border still draw and the text is left to the /Contents
-        // the reader can already reach. Revisit only with real shaping, not by
-        // widening this check.
-        foreach (var ch in firstLine)
-        {
-            if (ch > 0xFF) return;
-        }
+        // ⚠️ This test used to be `ch > 0xFF`, and #1381 is what that cost.
+        // The comment above it claimed "the box and border still draw", and
+        // with /Border [0 0 0] they do NOT — the border is legitimately
+        // suppressed twenty lines up. Two individually-correct behaviours
+        // composed into an annotation that vanished ENTIRELY: pdf.js
+        // bug1865341.pdf, whose /Contents is UTF-16BE "Załącznik", inked
+        // 0.00000 where the same fixture with "aécè" inked 0.00354. ONE
+        // character above U+00FF — the Polish ł — removed the whole
+        // annotation, and excise's own tests/annotation-synthesis-policy.json
+        // row freetext.without-color says "draw".
+        //
+        // Latin Extended (Polish, Czech, Turkish, Vietnamese), Greek, Cyrillic
+        // and CJK need no shaping and now draw. The Latin-1 byte round-trip
+        // that made them unrepresentable is gone from RenderTextFieldValue.
+        if (RequiresComplexShaping(firstLine))
+            return;
 
         RenderTextFieldValue(annot, rect, firstLine,
             useAcroFormDaFallback: false, topAlign: true);
+    }
+
+    /// <summary>
+    /// Whether a string contains any character from a script whose correct
+    /// display needs a shaping engine — cursive joining, reordering, or
+    /// mandatory ligature formation — rather than one glyph laid out per code
+    /// point (#1381).
+    /// </summary>
+    /// <remarks>
+    /// This is the narrow replacement for a blanket "any code point above
+    /// U+00FF" test. It is deliberately a SCRIPT question, not a coverage
+    /// question: a font that lacks a glyph draws .notdef, which is a visible,
+    /// honest "there is text here that I cannot show"; an unshaped Arabic run
+    /// draws plausible-looking WRONG text, which is not.
+    ///
+    /// The ranges are the shaping-required blocks, and nothing else: Hebrew and
+    /// Arabic (plus Syriac, Thaana, N'Ko and the Arabic presentation forms),
+    /// the Indic and Brahmi-derived blocks through Sinhala, and the South-East
+    /// Asian scripts with reordering vowels — Thai, Lao, Tibetan, Myanmar and
+    /// Khmer. Latin Extended, Greek, Cyrillic, Armenian, Georgian, CJK, Hangul
+    /// and Kana are all one-glyph-per-code-point and fall through to be drawn.
+    /// </remarks>
+    private static bool RequiresComplexShaping(string text)
+    {
+        foreach (var ch in text)
+        {
+            if (ch is (>= '\u0590' and <= '\u08FF')   // Hebrew, Arabic, Syriac, Thaana, N'Ko
+                   or (>= '\u0900' and <= '\u0DFF')   // Devanagari through Sinhala
+                   or (>= '\u0E00' and <= '\u0FFF')   // Thai, Lao, Tibetan
+                   or (>= '\u1000' and <= '\u109F')   // Myanmar
+                   or (>= '\u1780' and <= '\u17FF')   // Khmer
+                   or (>= '\uFB1D' and <= '\uFDFF')   // Hebrew/Arabic presentation forms A
+                   or (>= '\uFE70' and <= '\uFEFE'))  // Arabic presentation forms B
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -1615,11 +1662,33 @@ internal partial class RenderContext
                 _textState.LineMatrixF = textY;
                 _textState.FontSize = fontSize;
 
-                // Latin-1 round-trip into bytes — same shape as a Tj
-                // operand. RenderText then handles cmap / encoding for
-                // the resolved typeface.
-                var bytes = Encoding.Latin1.GetBytes(value);
-                RenderText(value, bytes);
+                // Latin-1 round-trip into bytes — same shape as a Tj operand.
+                // RenderText then handles cmap / encoding for the resolved
+                // typeface, and uses the bytes for the PDF-/Widths and
+                // byte→glyph-ID layout branches.
+                //
+                // ⚠️ Only while the value SURVIVES that round-trip (#1381).
+                // Encoding.Latin1 substitutes '?' for anything above U+00FF, so
+                // a Polish "Załącznik" reached RenderText as "Za?a?cznik" —
+                // the byte-indexed branches then laid out the substitutes, not
+                // the text. There is no PDF font encoding to honour here: this
+                // is a SYNTHESISED appearance and excise picked the typeface
+                // itself, so the string is the authority and the bytes are a
+                // lossy detour. Passing null makes RenderText take its Unicode
+                // branch, which draws the string and measures it with the same
+                // typeface.
+                //
+                // Restricted to values that actually need it so no widget whose
+                // value is Latin-1 changes layout at all — those keep the
+                // /Widths-driven positioning that was measured against mutool
+                // and pdftocairo in #584 and #1003.
+                var representable = true;
+                foreach (var ch in value)
+                {
+                    if (ch > 0xFF) { representable = false; break; }
+                }
+
+                RenderText(value, representable ? Encoding.Latin1.GetBytes(value) : null);
                 EndText();
             }
             finally

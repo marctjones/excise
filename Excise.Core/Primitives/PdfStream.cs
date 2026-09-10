@@ -152,6 +152,27 @@ public class PdfStream : PdfDictionary
     }
 
     /// <summary>
+    /// Why this stream's <c>/Filter</c> pipeline could not produce decoded
+    /// bytes, when a decoder attempted the decode and refused (#1396). Null
+    /// when the stream decoded, or when nothing tried.
+    /// </summary>
+    /// <remarks>
+    /// The reason has to be recorded HERE because of where it is needed. The
+    /// object store swallows decode failures on purpose — one unreadable image
+    /// must not fail the whole document open — so by the time a renderer asks
+    /// for the samples, the exception is long gone and all that remains is
+    /// "not decoded", which is indistinguishable from "nobody decoded it yet".
+    /// A refusal nobody can see is the same defect as the fabrication it
+    /// replaced, one step further along.
+    /// </remarks>
+    internal string? DecodeFailureReason { get; private set; }
+
+    internal void SetDecodeFailureReason(string reason)
+    {
+        DecodeFailureReason = reason;
+    }
+
+    /// <summary>
     /// Get the decoded data as a string (UTF-8).
     /// </summary>
     public string GetDecodedString() =>

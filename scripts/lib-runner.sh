@@ -308,6 +308,98 @@ runner_step_mark() {
     sync
 }
 
+# runner_step_mark_known <name> <target-hash> <knownIssue> — checkpoint a
+# FAILING step whose failure scripts/report_gates.py classified KNOWN (an
+# OPEN cited issue whose qualifier matched the failure). Written as a POST-
+# PASS by runner_checkpoint_known_failures, never by run_one itself: the
+# KNOWN verdict only exists once report_gates.py has classified the whole
+# run, so a single failing step cannot know at fail-time whether its own
+# failure will end up accepted (#1371 — a step that only ever gets a marker
+# on rc=0 re-runs its accepted failure on every --resume; measured at 2.5h
+# for render-quality-scan).
+runner_step_mark_known() {
+    local name="$1" target="$2" known="$3" log="${4:-}"
+    [ -n "$RUNNER_STATE_DIR" ] || return 0
+    [ -n "$known" ] && [ "$known" != "-" ] || return 0
+
+    local f tmp
+    f="$(runner_marker_path "$name")"
+    tmp="$f.tmp.$$"
+
+    {
+        echo "name=$name"
+        echo "sha=$RUNNER_SHA"
+        echo "config=$RUNNER_CONFIG"
+        echo "status=KNOWN"
+        echo "target=$target"
+        echo "knownIssue=$known"
+        echo "log=$log"
+        echo "finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "$RUNNER_SENTINEL"
+    } > "$tmp"
+
+    sync
+    mv -f "$tmp" "$f"
+    sync
+}
+
+# runner_ledger_row_fields <ledger.jsonl> <name> — "kind<TAB>target<TAB>filter"
+# for the last ledger line recording that step (SKIP_CHECKPOINTED lines carry
+# the same triple forward, so last-wins agrees with whatever actually ran).
+runner_ledger_row_fields() {
+    local ledger="$1" name="$2"
+    [ -s "$ledger" ] || return 0
+    awk -v want="$name" '
+        function field(key,    re, s) {
+            re = "\"" key "\":\"([^\"]*)\""
+            if (match($0, re)) {
+                s = substr($0, RSTART, RLENGTH)
+                sub("^\"" key "\":\"", "", s); sub("\"$", "", s)
+                return s
+            }
+            return ""
+        }
+        { if (field("name") == want) { k = field("kind"); t = field("target"); f = field("filter") } }
+        END { printf "%s\t%s\t%s\n", k, t, f }
+    ' "$ledger"
+}
+
+# runner_checkpoint_known_failures <log_dir> — call ONCE, immediately after
+# `scripts/report-gates.sh "$log_dir"` has written <log_dir>/report.json.
+# Walks the rows report-gates.sh classified KNOWN (a FAILING row whose
+# knownIssue cite is an OPEN GitHub issue and whose qualifier matched — see
+# report_gates.py classify_rows/_classify_failure) and checkpoints each one,
+# so the NEXT --resume skips an accepted failure instead of re-running it.
+# checkpoint=never rows are never marked: they must always re-run regardless
+# of acceptance (the redaction gates' guarantee).
+runner_checkpoint_known_failures() {
+    local log_dir="$1" report="$1/report.json"
+    [ -n "$RUNNER_STATE_DIR" ] || return 0
+    [ -s "$report" ] || return 0
+
+    local name known evlog
+    while IFS=$'\t' read -r name known evlog; do
+        [ -n "$name" ] || continue
+        runner_is_never_checkpointed "$name" && continue
+        [ -n "$known" ] && [ "$known" != "-" ] || continue
+
+        local kind target filter
+        IFS=$'\t' read -r kind target filter < <(runner_ledger_row_fields "$log_dir/ledger.jsonl" "$name")
+        [ -n "$kind" ] || continue
+
+        runner_step_mark_known "$name" "$(runner_target_hash "$kind" "$target" "$filter")" "$known" "$evlog"
+    done < <(python3 -c '
+import json, sys
+try:
+    report = json.load(open(sys.argv[1], encoding="utf-8"))
+except (OSError, ValueError):
+    sys.exit(0)
+for row in report.get("rows", []):
+    if row.get("verdict") == "KNOWN":
+        print("%s\t%s\t%s" % (row["name"], row.get("knownIssue") or "-", row.get("log") or ""))
+' "$report" 2>/dev/null)
+}
+
 # runner_step_should_run <name> [target-hash] — 0 (true) if the step must run.
 runner_step_should_run() {
     local name="$1"
@@ -330,6 +422,34 @@ runner_step_should_run() {
         local have
         have="$(sed -n 's/^target=//p' "$f" 2>/dev/null | head -1)"
         [ "$have" = "$2" ] || return 0
+    fi
+
+    # A KNOWN marker (an accepted failure, #1371 — see
+    # runner_checkpoint_known_failures) carries two live checks a PASS marker
+    # does not: the acceptance in tests/gates.tsv must still read exactly what
+    # was accepted (a knownIssue cell that changed since — narrowed, widened,
+    # or dropped — must re-run), and the cited issue must STILL be OPEN. Both
+    # checks are read-only: no gh call here. report_gates.py's own cache
+    # (logs/runner-state/known-issues/<N>.rec, refreshed by its IssueVerifier
+    # the run BEFORE this one, same sentinel/state vocabulary it writes for
+    # itself) is the single source of truth, so the runner never re-derives
+    # "is #N open" on its own. Anything absent, torn, or answering anything but
+    # OPEN means RE-RUN — checkpoints fail toward re-running, never skipping.
+    local mstatus
+    mstatus="$(sed -n 's/^status=//p' "$f" 2>/dev/null | head -1)"
+    if [ "$mstatus" = "KNOWN" ]; then
+        local mknown curknown n rec state
+        mknown="$(sed -n 's/^knownIssue=//p' "$f" 2>/dev/null | head -1)"
+        curknown="$(runner_manifest_field "$name" knownIssue 2>/dev/null)"
+        [ -n "$curknown" ] && [ "$mknown" = "$curknown" ] || return 0
+
+        n="$(printf '%s' "$mknown" | sed -n 's/^#\([0-9][0-9]*\).*/\1/p')"
+        [ -n "$n" ] || return 0
+        rec="$RUNNER_ROOT/logs/runner-state/known-issues/$n.rec"
+        [ -s "$rec" ] || return 0
+        [ "$(tail -n 1 "$rec" 2>/dev/null)" = "$RUNNER_SENTINEL" ] || return 0
+        state="$(sed -n 's/^state=//p' "$rec" 2>/dev/null | head -1)"
+        [ "$state" = "OPEN" ] || return 0
     fi
 
     # A marker from a DIFFERENT commit is still accepted, and this is a
@@ -727,6 +847,17 @@ runner_plan_expand_trx() {
 # runner_step_cmdline <name> <kind> <target> <filter> — the ONE place a row
 # becomes a command. Unfiltered project rows emit a trx: check-test-count.sh
 # (#894) only accepts an unfiltered trx by construction.
+#
+# A solution-wide target (excise.sln) runs one vstest invocation PER PROJECT
+# under the hood; a single fixed --logger trx;LogFileName= is one file every
+# project overwrites in turn, so only the last project's results survive
+# (#1368: measured 1121 of 1522 results kept from a 2026-09-05 run). Give a
+# .sln target its own results directory instead and let vstest auto-name each
+# project's trx inside it -- one file per project, nothing overwritten. Not
+# done for project/project-chunked targets: those already name a single
+# project, so the collision this guards against cannot happen there, and
+# check-test-count.sh's --no-build freshness/consumer code expects the exact
+# $LOG_DIR/$name.trx path for those kinds.
 runner_step_cmdline() {
     local name="$1" kind="$2" target="$3" filter="${4:--}" hang="${BLAME_HANG_TIMEOUT:-900000}"
     case "$kind" in
@@ -735,8 +866,13 @@ runner_step_cmdline() {
             printf 'dotnet test "%s" --no-build -c "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
                 "$target" "$CONFIG" "$hang" "$LOG_DIR" "$name" ;;
         test)
-            printf 'dotnet test "%s" --no-build -c "%s" --filter "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
-                "$target" "$CONFIG" "$filter" "$hang" "$LOG_DIR" "$name" ;;
+            if [ "${target%.sln}" != "$target" ]; then
+                printf 'dotnet test "%s" --no-build -c "%s" --filter "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx" --results-directory "%s/%s"\n' \
+                    "$target" "$CONFIG" "$filter" "$hang" "$LOG_DIR" "$name"
+            else
+                printf 'dotnet test "%s" --no-build -c "%s" --filter "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
+                    "$target" "$CONFIG" "$filter" "$hang" "$LOG_DIR" "$name"
+            fi ;;
     esac
 }
 

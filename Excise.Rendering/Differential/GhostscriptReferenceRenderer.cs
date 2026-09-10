@@ -56,6 +56,17 @@ public static class GhostscriptReferenceRenderer
     public static bool IsAvailable => _commandName.Value != null;
 
     /// <summary>
+    /// The static flags TryRenderPage invokes with (#1385) -- see
+    /// MutoolReferenceRenderer for why this must stay in sync with the
+    /// ArgumentList.Add calls below. Parameterized on the one flag that
+    /// actually varies per call.
+    /// </summary>
+    public static string InvocationSignature(bool overprintSimulate) =>
+        "-dBATCH -dNOPAUSE -dSAFER -dQUIET -sDEVICE=png16m -dUseCropBox " +
+        "-dTextAlphaBits=4 -dGraphicsAlphaBits=4"
+        + (overprintSimulate ? " -dOverprint=/simulate" : "");
+
+    /// <summary>
     /// Render <paramref name="pageNumber"/> (1-based) at <paramref name="dpi"/>
     /// via Ghostscript. Returns null on any failure.
     /// </summary>

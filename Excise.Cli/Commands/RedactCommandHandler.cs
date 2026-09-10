@@ -101,11 +101,15 @@ internal static class RedactCommandHandler
         var redaction = document.RedactText(request.Text, new RedactionOptions
         {
             CaseSensitive = request.CaseSensitive,
+            WholeWord = request.WholeWord,   // #1052
             DrawBox = request.DrawBox,
-            Width = request.CloseWidth
-                ? WidthPolicy.CloseGap
+            Width = request.CloseWidth ? WidthPolicy.CloseGap
+                : request.OvershootBox ? WidthPolicy.OvershootPreserveLayout   // #1189
                 : WidthPolicy.CollapsePreserveLayout,
             BoxColor = request.BoxColor,
+            // #1188/#1169: per-carrier mode. Null keeps the all-Strip default.
+            CarrierPolicy = request.CarrierPolicy
+                ?? Excise.Core.Operations.CarrierScrubPolicy.Default,
         }, guardedProgress);
 
         // #916/#905: collect carriers the surgical CLI term policy could not
@@ -129,6 +133,18 @@ internal static class RedactCommandHandler
                 $"WARNING: {redaction.Survived} occurrence(s) of '{request.Text}' are STILL PRESENT " +
                 "after redaction. excise located them and the removal did not land. " +
                 "Do not treat this file as redacted.");
+        }
+
+        // #1372: occurrences split across a line by a hyphen are structurally
+        // invisible to the matcher, so they are STILL PRESENT in the output.
+        // Saying so is the point — the reason this leak class went unnoticed is
+        // that excise reported plain success over it.
+        foreach (var candidate in redaction.HyphenatedCandidates)
+        {
+            carrierNotes.Add(
+                $"NOT REMOVED (hyphen-wrapped): page {candidate.PageNumber} reads {candidate} — " +
+                $"'{request.Text}' is split across a line break, so excise could not match it. " +
+                "It is still readable in the output by tools that rejoin hyphenated words.");
         }
 
         foreach (var carrier in redaction.Carriers)
@@ -164,7 +180,8 @@ internal static class RedactCommandHandler
             redaction.VerifiedRemovals,
             Flattened: false,
             carrierNotes,
-            diagnostics);
+            diagnostics,
+            redaction.WholeWord);
     }
 
     private static void Validate(RedactCommandRequest request)
@@ -216,7 +233,10 @@ internal readonly record struct RedactCommandRequest(
     bool DrawBox = true,
     (double R, double G, double B)? BoxColor = null,
     bool OcrImageText = false,
-    bool FlattenOcr = false);
+    bool FlattenOcr = false,
+    Excise.Core.Operations.CarrierScrubPolicy? CarrierPolicy = null,   // #1188/#1169
+    bool WholeWord = false,   // #1052
+    bool OvershootBox = false);   // #1189
 
 internal sealed record RedactCommandResult(
     string InputPath,
@@ -225,7 +245,8 @@ internal sealed record RedactCommandResult(
     int Count,
     bool Flattened,
     IReadOnlyList<string> CarrierNotes,
-    IReadOnlyList<string> Diagnostics);
+    IReadOnlyList<string> Diagnostics,
+    bool WholeWord = false);   // #1052 — the match rule is part of the result
 
 /// <summary>
 /// A typed refusal lets automation translate confidence failures without

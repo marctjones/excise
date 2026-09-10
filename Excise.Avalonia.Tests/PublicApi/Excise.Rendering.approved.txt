@@ -61,6 +61,7 @@ namespace Excise.Rendering.Differential
     public static class GhostscriptReferenceRenderer
     {
         public static bool IsAvailable { get; }
+        public static string InvocationSignature(bool overprintSimulate) { }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
@@ -86,6 +87,7 @@ namespace Excise.Rendering.Differential
     }
     public static class MutoolReferenceRenderer
     {
+        public const string InvocationSignature = "draw -F png";
         public static bool IsAvailable { get; }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
@@ -105,6 +107,7 @@ namespace Excise.Rendering.Differential
     }
     public static class PdfBoxReferenceRenderer
     {
+        public const string InvocationSignature = "render -format=png";
         public static bool IsAvailable { get; }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
@@ -115,6 +118,7 @@ namespace Excise.Rendering.Differential
     {
         public static bool IsAvailable { get; }
         public static string? UnavailableReason { get; }
+        public static string InvocationSignature(bool renderAnnotations) { }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null, bool renderAnnotations = false) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null, bool renderAnnotations = false) { }
     }
@@ -128,6 +132,7 @@ namespace Excise.Rendering.Differential
     }
     public static class PdftocairoReferenceRenderer
     {
+        public const string InvocationSignature = "-png -singlefile -cropbox";
         public static bool IsAvailable { get; }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }

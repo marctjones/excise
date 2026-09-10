@@ -74,6 +74,8 @@ public static class PdfCommandRegistry
         Document(PdfCommandIds.ExportAllPages, "Export All Pages as Images", "Export every page as images."),
         Document(PdfCommandIds.Print, "Print", "Print the current document.", "Ctrl+P"),
         Document(PdfCommandIds.Security, "Document Security", "Set, change, or remove password protection on the document (AES-256 or AES-128)."),
+        Document(PdfCommandIds.Attachments, "Attachments", "View files embedded in the document, save one to disk, or strip them all."),
+        Document(PdfCommandIds.BatesNumbering, "Bates Numbering", "Stamp a sequential Bates number on every page of the open document."),
         Document(PdfCommandIds.CombineDocuments, "Combine Documents", "Merge pages from multiple PDFs into a new document, preserving links, bookmarks, and form fields.",
             requiresDocument: false, cliCommand: "merge",
             parameters: [Param("input", "Source PDF file path. Repeat for multiple sources.", "file[]", true), Param("output", "Output PDF path.", "file", true)],

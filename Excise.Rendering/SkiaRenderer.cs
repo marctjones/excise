@@ -578,6 +578,13 @@ internal partial class RenderContext
         }
     }
 
+    /// <summary>
+    /// Record one recovered malformation. A refusal a user cannot see is
+    /// indistinguishable from content that was never there, so anything the
+    /// renderer declines to draw says so here (#1383, #1396).
+    /// </summary>
+    private void AddDiagnostic(string message) => _options.Diagnostics?.Add(message);
+
     private void AddDiagnostics(IEnumerable<ContentStreamReadWarning> warnings)
     {
         if (_options.Diagnostics == null)
@@ -1144,11 +1151,29 @@ internal partial class RenderContext
         }
     }
 
+    /// <summary>
+    /// Draw <paramref name="drawAction"/> through the current soft mask.
+    ///
+    /// <para><paramref name="layerAlpha"/> is the constant alpha the finished
+    /// layer is composited back with. It defaults to 1 because every path and
+    /// text caller passes the SAME <see cref="SKPaint"/> it draws with, so the
+    /// object's <c>/ca</c> is already inside the layer — putting it on the
+    /// layer as well applied it TWICE (#1393). Measured on a red rect under a
+    /// 0.25 luminosity mask with <c>/ca 0.5</c>: excise produced alpha 0.0625
+    /// where Ghostscript, mutool and pdftocairo all produce 0.125.</para>
+    ///
+    /// <para>The form-group caller is the exception and passes it explicitly:
+    /// there the group's contents are drawn at full alpha (its
+    /// <c>DrawFormContent</c> resets <c>FillAlpha</c>/<c>StrokeAlpha</c> to 1)
+    /// precisely because the group's alpha applies to the composited group as a
+    /// whole, not per object inside it.</para>
+    /// </summary>
     private void RenderWithCurrentSoftMask(
         Action drawAction,
         SKPaint sourcePaint,
         SKRect? preferredBounds = null,
-        bool seedBackdrop = false)
+        bool seedBackdrop = false,
+        float layerAlpha = 1f)
     {
         if (_state.SoftMask == null)
         {
@@ -1159,8 +1184,10 @@ internal partial class RenderContext
         var softMaskSource = _state.SoftMask;
         var resolvedSoftMask = _page.Document.Resolve(softMaskSource) ?? softMaskSource;
         Excise.Core.Primitives.PdfObject maskLookupObject = resolvedSoftMask;
+        Excise.Core.Primitives.PdfDictionary? maskDictionary = null;
         if (resolvedSoftMask is Excise.Core.Primitives.PdfDictionary softMaskDictionary)
         {
+            maskDictionary = softMaskDictionary;
             var smaskMode = softMaskDictionary.GetNameOrNull("S");
             if (string.Equals(smaskMode, "None", StringComparison.Ordinal))
             {
@@ -1172,7 +1199,7 @@ internal partial class RenderContext
             var softMaskStreamObj = softMaskDictionary.GetOptional("G");
             if (softMaskStreamObj == null)
             {
-                drawAction();
+                    drawAction();
                 return;
             }
 
@@ -1200,7 +1227,8 @@ internal partial class RenderContext
             maskStream,
             maskWidth,
             maskHeight,
-            maskBounds);
+            maskBounds,
+            maskDictionary);
 
         if (maskBitmap == null)
         {
@@ -1211,31 +1239,32 @@ internal partial class RenderContext
         using var layerPaint = new SKPaint
         {
             BlendMode = sourcePaint.BlendMode,
-            Color = sourcePaint.Color,
+            // Only the ALPHA of a SaveLayer paint matters; the RGB is unused.
+            Color = SKColors.White.WithAlpha(
+                (byte)Math.Clamp(layerAlpha * 255f, 0f, 255f)),
             IsAntialias = sourcePaint.IsAntialias
         };
 
         _canvas.SaveLayer(maskBounds, layerPaint);
         try
         {
-            if (seedBackdrop && _rootBitmap != null)
-            {
-                _canvas.Save();
-                _canvas.ResetMatrix();
-                using var backdropPaint = new SKPaint
-                {
-                    BlendMode = SKBlendMode.Src,
-                    IsAntialias = false
-                };
-                _canvas.DrawBitmap(_rootBitmap, 0, 0, backdropPaint);
-                _canvas.Restore();
-            }
+            if (seedBackdrop)
+                SeedNonIsolatedGroupBackdrop();
             drawAction();
             using var lumaFilter = SKColorFilter.CreateLumaColor();
+            // §11.6.5.2 /TR: a function mapping the mask's computed value to
+            // the actual mask value. CreateLumaColor has already turned
+            // luminosity into alpha, so the transfer acts on the ALPHA channel
+            // (identity tables for R/G/B). /Identity, and an absent /TR, leave
+            // this null and the composite unchanged.
+            using var transferFilter = CreateSoftMaskTransferFilter(maskDictionary);
+            using var maskColorFilter = transferFilter == null
+                ? null
+                : SKColorFilter.CreateCompose(transferFilter, lumaFilter);
             using var maskPaint = new SKPaint
             {
                 BlendMode = SKBlendMode.DstIn,
-                ColorFilter = lumaFilter,
+                ColorFilter = maskColorFilter ?? lumaFilter,
                 IsAntialias = _options.AntiAlias
             };
             _canvas.DrawBitmap(maskBitmap, maskBounds, maskPaint);
@@ -1244,6 +1273,95 @@ internal partial class RenderContext
         {
             _canvas.Restore();
         }
+    }
+
+    /// <summary>
+    /// Build the colour filter for an <c>/SMask</c>'s <c>/TR</c> transfer
+    /// function (§11.6.5.2), or null when there is nothing to apply.
+    ///
+    /// <para>The mask value has already been reduced to the alpha channel by
+    /// <c>SKColorFilter.CreateLumaColor</c>, so the transfer is a 256-entry
+    /// table on ALPHA with identity tables on the colour channels. <c>/TR</c>
+    /// absent, or the name <c>/Identity</c>, means no transform — and a
+    /// function that fails to evaluate is treated the same way, because a mask
+    /// that silently becomes something else is worse than a mask left
+    /// alone.</para>
+    /// </summary>
+    private SKColorFilter? CreateSoftMaskTransferFilter(
+        Excise.Core.Primitives.PdfDictionary? maskDictionary)
+    {
+        var transferObj = maskDictionary?.GetOptional("TR");
+        if (transferObj == null)
+            return null;
+
+        var resolved = _page.Document.Resolve(transferObj) ?? transferObj;
+        if (resolved is Excise.Core.Primitives.PdfName name)
+            return null;   // /Identity (or any name): no transform.
+
+        var table = new byte[256];
+        var identity = new byte[256];
+        for (var i = 0; i < 256; i++)
+        {
+            identity[i] = (byte)i;
+
+            var input = i / 255.0;
+            var evaluated = PdfFunctionEvaluator.Evaluate(transferObj, new[] { input }, _page.Document);
+            if (evaluated is not { Length: >= 1 })
+                return null;
+
+            table[i] = (byte)Math.Clamp(Math.Round(evaluated[0] * 255.0), 0, 255);
+        }
+
+        return SKColorFilter.CreateTable(table, identity, identity, identity);
+    }
+
+    /// <summary>
+    /// Paint the current page raster into the layer that has just been opened,
+    /// so a NON-ISOLATED transparency group's contents blend against the
+    /// group's backdrop rather than against nothing (ISO 32000-2 §11.6.6,
+    /// §11.4.6). Skia's <c>SaveLayer</c> starts fully transparent, which is
+    /// isolated behaviour; without this a <c>/BM</c> set inside the group has
+    /// no backdrop to act on.
+    ///
+    /// <para><b>⚠️ Only the soft-mask branch of
+    /// <c>RenderFormXObjectAtInvocation</c> calls this, and that is deliberate.
+    /// Do not extend it to the plain layer path to close #1394.</b> It was
+    /// tried and measured on 2026-09-09 and it OVERSHOOTS, because seeding
+    /// without §11.4.6's backdrop-REMOVAL step leaves the backdrop's own
+    /// contribution inside the group's result. On pdf.js issue13520 (20
+    /// explicit <c>/I false</c> groups), warm-pale pixel count in
+    /// <c>RenderPage_PdfjsIssue13520_…</c>'s region:</para>
+    ///
+    /// <code>
+    /// mutool      887   ghostscript  762   &lt;- two oracles agreeing: the target
+    /// pdftocairo 3048                      &lt;- outlier; shares excise's defect
+    /// excise, seeded                71     &lt;- overshot BELOW both
+    /// excise, isolated (today)    4079     &lt;- overshoots ABOVE both
+    /// </code>
+    ///
+    /// <para>A synthetic probe cannot see that. On four probes whose group
+    /// paints an opaque rect over the sample point — where removal is a no-op —
+    /// seeding matched Ghostscript and mutool exactly. Real content is where
+    /// the missing removal step shows.</para>
+    ///
+    /// <para><b>Second known limitation.</b> The seed is the ROOT page raster,
+    /// so a non-isolated group nested inside another layer sees the page rather
+    /// than the enclosing layer's accumulated contents.</para>
+    /// </summary>
+    private void SeedNonIsolatedGroupBackdrop()
+    {
+        if (_rootBitmap == null)
+            return;
+
+        _canvas.Save();
+        _canvas.ResetMatrix();
+        using var backdropPaint = new SKPaint
+        {
+            BlendMode = SKBlendMode.Src,
+            IsAntialias = false
+        };
+        _canvas.DrawBitmap(_rootBitmap, 0, 0, backdropPaint);
+        _canvas.Restore();
     }
 
     private static SKBlendMode MapBlendMode(string pdfName) => pdfName switch

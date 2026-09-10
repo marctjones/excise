@@ -257,6 +257,14 @@
                           access:CommandAccessibility.CommandId="document.security">
                     <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconLock}"/></MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Header="_Attachments..." Command="{Binding AttachmentsCommand}"
+                          ToolTip.Tip="View, save, or remove files embedded in this document."
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="document.attachments"/>
+                <MenuItem Header="_Bates Numbering..." Command="{Binding BatesNumberingCommand}"
+                          ToolTip.Tip="Stamp a sequential Bates number on every page."
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="document.batesNumbering"/>
             </MenuItem>
 
             <!-- REDACTION MENU -->

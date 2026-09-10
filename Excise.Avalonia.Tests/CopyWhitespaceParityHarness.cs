@@ -62,6 +62,25 @@ public class CopyWhitespaceParityHarness
             return;
         }
 
+        // #1455: `testPdfs != null` only means the test-pdfs/ DIRECTORY exists
+        // (it is checked into git for a few whitelisted fixture folders — see
+        // .gitignore — so it is present even on a machine with none of the
+        // gitignored corpora fetched). The fixtures this harness actually reads
+        // (local-real-world/, federal/) are a separate, gitignored payload. On a
+        // machine — or worktree — without them, every Corpus entry below missed
+        // and the harness fell through to "no corpus pages were measured" as a
+        // hard FAILURE instead of a SKIP: fixture absence read as a real
+        // regression. Distinguish "no fixtures at all" (skip, corpus-presence
+        // question) from "fixtures present but something broke mid-measurement"
+        // (keep failing — that is a real gate, not a presence gate).
+        if (!Corpus.Any(c => File.Exists(Path.Combine(testPdfs, c.Path))))
+        {
+            Assert.Skip("none of the local-real-world/federal corpus fixtures this harness reads were " +
+                        "found under " + testPdfs + "; run scripts/download-test-pdfs.sh, or point " +
+                        "EXCISE_TEST_PDFS at a checkout that has them.");
+            return;
+        }
+
         var rows = new List<(string File, string Kind, int Pages, double WordJaccard, double LineJaccard, double SeqAgreement)>();
         double wSum = 0, lSum = 0, sSum = 0; int pageTotal = 0;
 

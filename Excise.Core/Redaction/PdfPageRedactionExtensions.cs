@@ -139,7 +139,9 @@ public static class PdfPageRedactionExtensions
         // every screen reader.
         StructureTreeRedactionScrubber.ScrubArea(page, area);
 
-        var content = page.GetContentStream();
+        // Tracked spans: untouched operators keep their original bytes when the
+        // rewritten stream is written back (#1093).
+        var content = page.GetContentStream(trackSourceSpans: true);
 
         // Short-circuit on empty pages — no ops means no work, and building
         // an empty content stream would overwrite any (legal-but-empty)
@@ -155,8 +157,8 @@ public static class PdfPageRedactionExtensions
         if (FormXObjectFlattener.FlattenOverlapping(
                 page, content.Operators, area, out var flattened, out var inlinedForms))
         {
-            page.SetContentStream(new ContentStream(flattened));
-            content = page.GetContentStream(); // re-parse: bounds + letters now in page space
+            page.SetContentStream(new ContentStream(flattened) { SourceBytes = content.SourceBytes });
+            content = page.GetContentStream(trackSourceSpans: true); // re-parse: bounds + letters now in page space
             // Drop the now-orphaned form objects so the writer can't re-emit
             // their content — flattening alone would leak the redacted text,
             // since the writer serializes every in-use object (no GC).
@@ -191,7 +193,7 @@ public static class PdfPageRedactionExtensions
             working, page, imageArea, strategy, out var imgRemoved, out var imgRegionEdited);
         ImageRedactor.PruneUnusedImageXObjects(page, working);
 
-        page.SetContentStream(new ContentStream(working));
+        page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes });
         return new ImageRedactionCounts(imgRegionEdited, imgRemoved);
     }
 
@@ -260,7 +262,7 @@ public static class PdfPageRedactionExtensions
             StructureTreeRedactionScrubber.ScrubArea(page, area);
         }
 
-        var content = page.GetContentStream();
+        var content = page.GetContentStream(trackSourceSpans: true);
         if (content.Operators.Count == 0) return default;
 
         foreach (var area in list)
@@ -269,8 +271,8 @@ public static class PdfPageRedactionExtensions
                     page, content.Operators, area, out var flattened, out var inlinedForms))
                 continue;
 
-            page.SetContentStream(new ContentStream(flattened));
-            content = page.GetContentStream();
+            page.SetContentStream(new ContentStream(flattened) { SourceBytes = content.SourceBytes });
+            content = page.GetContentStream(trackSourceSpans: true);
             FormXObjectFlattener.PruneInlinedForms(page, content.Operators, inlinedForms);
             if (content.Operators.Count == 0) return default;
         }
@@ -299,7 +301,7 @@ public static class PdfPageRedactionExtensions
         }
 
         ImageRedactor.PruneUnusedImageXObjects(page, working);
-        page.SetContentStream(new ContentStream(working));
+        page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes });
         return imageCounts;
     }
 }
