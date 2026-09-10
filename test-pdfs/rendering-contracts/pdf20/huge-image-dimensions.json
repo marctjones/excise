@@ -1,0 +1,28 @@
+{
+  "Path": "pdf20/huge-image-dimensions.pdf",
+  "Source": "Generated PDF 2.0 image fixture -- deliberate resource-limit probe, not feature coverage",
+  "Owner": "rendering:quality",
+  "Issue": 1398,
+  "RootCause": "FAIL_CLOSED_UNDERSPECIFIED_IMAGE_DATA",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "QualityReason": "Fixture declares a 10000x10000 8bpc DeviceGray image (100,000,000 required bytes) but supplies 1 byte of undecoded, unfiltered data. excise's #878 fail-closed guard (SkiaRenderer.Images.cs) refuses to paint from a buffer that cannot supply the declared pixels and draws nothing. mutool, pdftocairo and pdfium instead fabricate a full-size fill from the underspecified buffer and register as inked, so the corpus scan reads excise's correct refusal as MISSING_CONTENT (36/36 tiles). This is the safer behaviour, not a defect -- do not regenerate this fixture with a real payload; that would defeat the resource-limit probe it exists to be.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "MISSING_CONTENT",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "ACCEPTED_LIMITATION",
+      "PixelAgreement": "MATCHES_NONE",
+      "ReferenceSituation": "REFS_WRONG_OR_LOSSY",
+      "RootCause": "FAIL_CLOSED_UNDERSPECIFIED_IMAGE_DATA",
+      "Target": {
+        "Mode": "MALFORMED_INPUT_POLICY",
+        "Primary": null,
+        "Reason": "The fixture is intentionally underspecified: 1 byte of image data for a declared 100,000,000-byte image. mutool/pdftocairo/pdfium fabricate pixels from the short buffer; excise's #878 fail-closed guard refuses and draws nothing."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "excise correctly refuses to paint from a buffer 1/100000000th the declared size (#878). The three oracles that rendered (mutool, pdftocairo, pdfium) all fabricate a fill instead, so their agreement is not evidence excise is wrong."
+    }
+  }
+}
