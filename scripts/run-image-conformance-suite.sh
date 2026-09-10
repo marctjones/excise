@@ -148,6 +148,18 @@ else
     echo "skipping JBIG2 classification for non-JBIG2 feature '$FEATURE'"
 fi
 
+# #1452: without this, an encrypted fixture we already know the password for
+# (tests/corpus-passwords.tsv) was classified NON_RENDERABLE_ACCEPTED /
+# PASSWORD_REQUIRED -- a default else-branch wearing the costume of a triage
+# verdict, since the harness just never supplied a credential it had. The
+# corpus scan (run-exploratory-corpus.sh) already defaults to this manifest;
+# mirror that here rather than inventing a second convention.
+PASSWORD_ARGS=()
+DEFAULT_PASSWORD_MANIFEST="$ROOT/tests/corpus-passwords.tsv"
+if [[ -f "$DEFAULT_PASSWORD_MANIFEST" ]]; then
+    PASSWORD_ARGS=(--password-manifest "$DEFAULT_PASSWORD_MANIFEST")
+fi
+
 echo "running raw differential image/filter scan"
 "$RENDER_TOOLS_BIN" corpus-scan "$CORPUS" \
     --output "$RAW_REPORT" \
@@ -155,7 +167,8 @@ echo "running raw differential image/filter scan"
     --page-mode "$PAGE_MODE" \
     --extra-oracles "$ORACLES" \
     --parallel "$PARALLEL" \
-    --pdf-timeout-ms "$PDF_TIMEOUT_MS"
+    --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
+    "${PASSWORD_ARGS[@]}"
 
 echo "applying rendering quality contracts"
 "$RENDER_TOOLS_BIN" render-quality-classify "$RAW_REPORT" \
