@@ -98,9 +98,12 @@ def fixtures() -> list[tuple[str, bytes]]:
             "\x78\x9c\x63\x00\x00\x00\x01\x00\x01",
         ),
         fixture(
+            # #1398: a PNG-predicted (Predictor 15) row needs a leading filter-type
+            # byte the TIFF-predicted fixture above does not; this is Flate-compressed
+            # bytes 00 40 (filter type None, sample 0x40), not the TIFF payload.
             "flate-predictor-png-image.pdf",
             "/Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode /DecodeParms << /Predictor 15 /Colors 1 /Columns 1 /BitsPerComponent 8 >>",
-            "\x78\x9c\x63\x00\x00\x00\x01\x00\x01",
+            "\x78\xda\x63\x70\x00\x00\x00\x42\x00\x41",
         ),
         fixture(
             "runlength-image.pdf",
@@ -117,9 +120,14 @@ def fixtures() -> list[tuple[str, bytes]]:
             bytes.fromhex("0b00804003").decode("latin-1"),
         ),
         fixture(
+            # #1398: a single zero byte is not a valid G4 bitstream. This is the
+            # minimal valid Group 4 (T.6) encoding of an all-white 8-pixel row
+            # against the imaginary all-white reference line: one Vertical-mode
+            # V0 codeword ("1"), zero-padded to a byte. Verified decoding clean
+            # (no warnings) on mutool, poppler (pdftoppm) and Ghostscript.
             "ccitt-image.pdf",
             "/Width 8 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /CCITTFaxDecode /DecodeParms << /K -1 /Columns 8 /BlackIs1 true >>",
-            "\x00",
+            "\x80",
         ),
         fixture(
             "dct-colotransform-image.pdf",
@@ -143,9 +151,12 @@ def fixtures() -> list[tuple[str, bytes]]:
             "\x00",
         ),
         fixture(
+            # #1398: "00>" is the ASCIIHex encoding of the raw byte 0x00, not of
+            # Flate-compressed data -- a lone 0x00 is not valid zlib input. This is
+            # the ASCIIHex encoding of the real Flate-compressed single sample 0x40.
             "filter-array-image.pdf",
             "/Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter [/ASCIIHexDecode /FlateDecode]",
-            "00>",
+            "78DA73000000410041>",
         ),
         fixture(
             "image-mask.pdf",
