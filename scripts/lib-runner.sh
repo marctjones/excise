@@ -727,6 +727,17 @@ runner_plan_expand_trx() {
 # runner_step_cmdline <name> <kind> <target> <filter> — the ONE place a row
 # becomes a command. Unfiltered project rows emit a trx: check-test-count.sh
 # (#894) only accepts an unfiltered trx by construction.
+#
+# A solution-wide target (excise.sln) runs one vstest invocation PER PROJECT
+# under the hood; a single fixed --logger trx;LogFileName= is one file every
+# project overwrites in turn, so only the last project's results survive
+# (#1368: measured 1121 of 1522 results kept from a 2026-09-05 run). Give a
+# .sln target its own results directory instead and let vstest auto-name each
+# project's trx inside it -- one file per project, nothing overwritten. Not
+# done for project/project-chunked targets: those already name a single
+# project, so the collision this guards against cannot happen there, and
+# check-test-count.sh's --no-build freshness/consumer code expects the exact
+# $LOG_DIR/$name.trx path for those kinds.
 runner_step_cmdline() {
     local name="$1" kind="$2" target="$3" filter="${4:--}" hang="${BLAME_HANG_TIMEOUT:-900000}"
     case "$kind" in
@@ -735,8 +746,13 @@ runner_step_cmdline() {
             printf 'dotnet test "%s" --no-build -c "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
                 "$target" "$CONFIG" "$hang" "$LOG_DIR" "$name" ;;
         test)
-            printf 'dotnet test "%s" --no-build -c "%s" --filter "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
-                "$target" "$CONFIG" "$filter" "$hang" "$LOG_DIR" "$name" ;;
+            if [ "${target%.sln}" != "$target" ]; then
+                printf 'dotnet test "%s" --no-build -c "%s" --filter "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx" --results-directory "%s/%s"\n' \
+                    "$target" "$CONFIG" "$filter" "$hang" "$LOG_DIR" "$name"
+            else
+                printf 'dotnet test "%s" --no-build -c "%s" --filter "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
+                    "$target" "$CONFIG" "$filter" "$hang" "$LOG_DIR" "$name"
+            fi ;;
     esac
 }
 
