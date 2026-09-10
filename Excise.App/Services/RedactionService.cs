@@ -89,7 +89,10 @@ public class RedactionService
         // The engine also strips the document's positionless carriers (/Info,
         // XMP) by default — see #897 and the note at the top of this class.
         page.RedactArea(coreRect, GlyphRemovalStrategy.AnyOverlap);
-        AppendBlackRectangle(page, coreRect);
+        // #1450: the Core helper, not a GUI copy — it threads the tracked
+        // source spans/array boundaries RedactArea just produced through the
+        // append, instead of re-serializing the whole page a second time.
+        PdfDocumentRedactionExtensions.AppendBlackRectangle(page, coreRect);
 
         _logger.LogInformation("Redacted {Count} characters on page", removed.Count);
     }
@@ -299,23 +302,6 @@ public class RedactionService
     {
         if (document.Trailer.ContainsKey("Info"))
             document.Trailer.Remove("Info");
-    }
-
-    /// <summary>
-    /// Append the visual-confirmation black rectangle as a fill op in
-    /// the page's content stream. <c>q 0 0 0 rg X Y W H re f Q</c>.
-    /// </summary>
-    private static void AppendBlackRectangle(PdfPage page, PdfRectangle rect)
-    {
-        var content = page.GetContentStream();
-        var ops = content.Operators.ToList();
-        ops.Add(Excise.Core.Content.ContentOperator.SaveState());
-        ops.Add(Excise.Core.Content.ContentOperator.SetFillRgb(0, 0, 0));
-        ops.Add(Excise.Core.Content.ContentOperator.Rectangle(
-            rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom));
-        ops.Add(Excise.Core.Content.ContentOperator.Fill());
-        ops.Add(Excise.Core.Content.ContentOperator.RestoreState());
-        page.SetContentStream(new Excise.Core.Content.ContentStream(ops));
     }
 }
 

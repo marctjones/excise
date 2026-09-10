@@ -538,7 +538,19 @@ public static class PdfDocumentRedactionExtensions
     /// <c>q 0 0 0 rg X Y W H re f Q</c> sequence. Used as a cosmetic
     /// overlay on top of structural glyph removal.
     /// </summary>
-    private static void AppendBlackRectangle(PdfPage page, PdfRectangle rect, (double R, double G, double B)? boxColor = null)
+    /// <remarks>
+    /// Internal, not private (#1450): <c>Excise.App.Services.RedactionService</c>
+    /// calls this directly for its click-to-redact area path rather than
+    /// keeping its own copy. The GUI's own copy used the untracked
+    /// <c>page.GetContentStream()</c> / <c>page.SetContentStream(new
+    /// ContentStream(ops))</c> — no <see cref="ContentStream.SourceBytes"/>,
+    /// so every append re-serialized the WHOLE page even when
+    /// <see cref="PdfPageRedactionExtensions.RedactArea(PdfPage, PdfRectangle, GlyphRemovalStrategy, bool, bool)"/>
+    /// just did the hardened splice a few lines earlier. Promoting this one
+    /// removes that duplicate instead of teaching it #1093/#1449's byte
+    /// splicing a second time.
+    /// </remarks>
+    internal static void AppendBlackRectangle(PdfPage page, PdfRectangle rect, (double R, double G, double B)? boxColor = null)
     {
         var (r, g, b) = boxColor ?? (0.0, 0.0, 0.0);
         // Tracked spans: this appends five operators, so re-serializing the
