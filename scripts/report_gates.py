@@ -858,9 +858,18 @@ def _grade_row_nodata(rows_by, name):
 
 
 _SCAN_RE = re.compile(r"excise behaves correctly on (\d+)/(\d+) \((\d+\.\d)%\)")
+# The corpus-scan binary's own startup banner (Program.cs) prints the page-mode
+# it actually ran with; tests/gates.tsv's `target` column declares what a tier
+# is SUPPOSED to run. #1401: raw-corpus-scan.json already carries pageMode at
+# the top level and nothing read it -- a --page-mode all row sampled under
+# --page-mode first (or vice versa) would silently report the grade under the
+# wrong tier's declared coverage, exactly the failure this rule exists to catch.
+_RUN_PAGE_MODE_RE = re.compile(r"page-mode=([A-Za-z]+)")
+_DECLARED_PAGE_MODE_RE = re.compile(r"--page-mode[= ](\S+)")
 
 
 def grade_conformance(log_dir, rows_by):
+    manifest = load_manifest()
     parts, values, oracle_note, any_found = [], {}, None, False
     for key, disp in CORPORA:
         name = f"corpus-scan-{key}"
@@ -875,9 +884,21 @@ def grade_conformance(log_dir, rows_by):
             parts.append(f"{disp} NO DATA (no agreement line)")
             continue
         ok, total, pct = m[-1]
+
+        mismatch = ""
+        mrow = manifest_lookup(manifest, name)
+        declared = _DECLARED_PAGE_MODE_RE.search(mrow["target"]) if mrow else None
+        ran = _RUN_PAGE_MODE_RE.search(text) if text else None
+        if declared and ran and declared.group(1) != ran.group(1):
+            mismatch = f" [PAGE-MODE MISMATCH: tests/gates.tsv declares --page-mode {declared.group(1)}, this run used {ran.group(1)}]"
+
         any_found = True
+        # A mismatched run's percentage is not withheld from `values` (the
+        # ratchet needs SOMETHING to compare against a prior grade), but it
+        # is flagged loudly in the text a human reads, per #1401's acceptance:
+        # a coverage claim under the wrong sampling must not read as clean.
         values[key] = float(pct)
-        parts.append(f"{disp} {ok}/{total} {pct}%")
+        parts.append(f"{disp} {ok}/{total} {pct}%{mismatch}")
         if oracle_note is None and text:
             oracle_note = "5 oracles" if "extra-oracles=all" in text else "3 oracles"
     if not any_found:
