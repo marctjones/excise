@@ -85,6 +85,17 @@ public class PdftocairoOutlierClassificationTests
     /// and say nothing about why. The short-decode diagnostic (#878, made
     /// non-silent in 0ee4a044) names the actual failure, so when the JBIG2
     /// decoder is fixed this test fails loudly and gets updated.
+    ///
+    /// ⚠️ UPDATED 2026-09-10 — #656 closed and #1396 landed (the P1.3
+    /// blank-page fallback cluster). This fixture no longer hits the generic
+    /// #878 "returned N of M required bytes" short-sample-buffer path: the
+    /// JBIG2 symbol-dictionary-context-retention limitation now gets its OWN
+    /// specific diagnostic ("could not decode this stream (unimplemented
+    /// feature): ... (#1396)"), exactly as #1396's acceptance criteria asked
+    /// for ("the unimplemented-feature path is distinguishable from the
+    /// corrupt-input path"). Still not a renderer disagreement — still mutool
+    /// alone decoding this correctly against excise/cairo/gs/pdfbox all
+    /// refusing — just a more specific refusal reason than "short buffer" now.
     /// </summary>
     [Fact]
     public void BitmapSymbolContextReuse_IsAJbig2ShortDecode_NotADisagreement()
@@ -97,10 +108,11 @@ public class PdftocairoOutlierClassificationTests
         using var _ = new SkiaRenderer().RenderPage(doc.GetPage(1),
             new RenderOptions { Dpi = Dpi, AntiAlias = false, BackgroundColor = SKColors.White, Diagnostics = diags });
 
-        diags.Should().Contain(d => d.Contains("JBIG2Decode") && d.Contains("required bytes"),
-            "this page is not a renderer disagreement — excise's JBIG2 decoder returns a " +
-            "stub buffer, which is #874/#656. Agreeing with the three renderers that ALSO " +
-            "fail is not corroboration; mutool decodes it and is right.");
+        diags.Should().Contain(d => d.Contains("JBIG2Decode") && d.Contains("#1396"),
+            "this page is not a renderer disagreement — excise's JBIG2 decoder explicitly " +
+            "refuses this unimplemented feature (#874/#656/#1396) rather than fabricating " +
+            "pixels. Agreeing with the three renderers that ALSO fail is not corroboration; " +
+            "mutool decodes it and is right.");
     }
 
     /// <summary>

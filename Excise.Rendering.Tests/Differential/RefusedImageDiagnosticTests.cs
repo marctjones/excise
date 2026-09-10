@@ -33,25 +33,38 @@ public class RefusedImageDiagnosticTests
     /// The RAW-SAMPLE path: a decoder returns fewer than half the bytes the
     /// image geometry requires.
     ///
-    /// ⚠️ THIS TEST MOVED FIXTURES BECAUSE THE BUG IT DOCUMENTED WAS FIXED.
-    /// It was pinned on pdfium bug_631912.pdf, whose /JBIG2Decode returned
-    /// 83 of 103,680 bytes. #874 resolved the always-indirect /JBIG2Globals
-    /// reference, that image now decodes (286 inked px, no diagnostic), and
-    /// this test went red — which is exactly what it was built to do. A
-    /// regression test pinned on a ROOT CAUSE fails loudly when the cause is
-    /// removed, instead of silently continuing to pass on a stale premise.
+    /// ⚠️ THIS TEST MOVED FIXTURES TWICE, BOTH TIMES BECAUSE THE BUG IT
+    /// DOCUMENTED WAS FIXED — pinning by root cause is meant to do exactly
+    /// this.
     ///
-    /// It now uses pdf.js bitmap-symbol-context-reuse.pdf, which still short-
-    /// decodes (454 of 20,000 bytes) because JBIG2 retained symbol-dictionary
-    /// coding contexts are genuinely unimplemented — #656, deliberately out of
-    /// #874's scope. When #656 lands, this test should go red again and want a
-    /// new fixture, or the guard has no witness left and should be reconsidered.
+    /// First: pdfium bug_631912.pdf, whose /JBIG2Decode returned 83 of
+    /// 103,680 bytes. #874 resolved the always-indirect /JBIG2Globals
+    /// reference; that image now decodes (286 inked px, no diagnostic).
+    ///
+    /// Second: pdf.js bitmap-symbol-context-reuse.pdf, which short-decoded
+    /// (454 of 20,000 bytes) because JBIG2 retained symbol-dictionary coding
+    /// contexts were unimplemented (#656). #1396 (2026-09-10) gave that
+    /// specific unimplemented-feature case its OWN diagnostic ("could not
+    /// decode this stream (unimplemented feature): ... (#1396)") instead of
+    /// the generic short-buffer message — see
+    /// <see cref="PdftocairoOutlierClassificationTests.BitmapSymbolContextReuse_IsAJbig2ShortDecode_NotADisagreement"/>
+    /// for that path now. This guard's witness moved again.
+    ///
+    /// Now: pdf20/huge-image-dimensions.pdf (#1398/#1451) — a deliberately
+    /// underspecified fixture (1 byte of data for a declared 10000x10000
+    /// 8bpc image, 100,000,000 required bytes) that is NOT regenerable with
+    /// real payload data without defeating the resource-limit probe it
+    /// exists to be (see the fixture's own rendering-contract note), so it
+    /// should stay a stable witness unlike the two JBIG2 fixtures above. This
+    /// image carries no compression filter at all — the diagnostic message
+    /// says so ("no filter") rather than naming one, so this test checks the
+    /// geometry is what locates the defect, not a filter name.
     /// </summary>
     [Fact]
-    public void ShortSampleBuffer_ReportsTheShortfallAndTheFilter()
+    public void ShortSampleBuffer_ReportsTheShortfallAndTheGeometry()
     {
-        var path = FindCorpusFile("pdfjs", "bitmap-symbol-context-reuse.pdf");
-        Assert.SkipWhen(path == null, "gitignored pdf.js corpus fixture not present (scripts/download-pdfjs-corpus.sh)."); // [requires: corpus:pdfjs]
+        var path = FindCorpusFile("pdf20", "huge-image-dimensions.pdf");
+        Assert.SkipWhen(path == null, "corpus fixture not present (test-pdfs/pdf20)."); // [requires: corpus:pdf20]
 
         var diagnostics = new List<string>();
         using var doc = PdfDocument.Open(path!);
@@ -63,9 +76,9 @@ public class RefusedImageDiagnosticTests
             "an image refused for supplying too few samples must say so — silence here is " +
             "what made #874's root cause unknown for weeks");
 
-        message.Should().Contain("JBIG2Decode",
-            "the FILTER is the actionable part: 'an image failed' does not locate a bug, " +
-            "'/JBIG2Decode returned 454 of 20000 bytes' does");
+        message.Should().Contain("10000x10000",
+            "the GEOMETRY is the actionable part when there's no filter to name: 'an image " +
+            "failed' does not locate a bug, '10000x10000 ... 1 of 100000000 required bytes' does");
         message.Should().MatchRegex(@"\d+ of \d+",
             "the shortfall must be quantified, not merely asserted");
     }
