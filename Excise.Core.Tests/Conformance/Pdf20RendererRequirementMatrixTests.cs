@@ -133,11 +133,17 @@ public class Pdf20RendererRequirementMatrixTests
     [Fact]
     public void ImageFilterCoverageReport_HasNoMissingRequirementsWhenPresent()
     {
+        // #1368: this reads a logs/ artifact only run-image-conformance-suite.sh
+        // (a full-tier row) produces. A silent `return` here reads as PASSED in
+        // every t0/Core.Tests run on a machine that has never run `full` --
+        // Assert.SkipWhen instead makes that visible as SKIPPED, matching every
+        // other missing-fixture guard in this codebase. It does NOT fix the
+        // other half of #1368's complaint: a STALE audit left over from an
+        // earlier full run can still make an unrelated later t0 run red with
+        // no source change -- that needs this check to live beside the
+        // artifact-producing row instead of unconditionally in Core.Tests.
         var reportPath = Path.Combine(RepoRoot(), "logs", "image-conformance", "normative", "coverage-audit.json");
-        if (!File.Exists(reportPath))
-        {
-            return;
-        }
+        Assert.SkipWhen(!File.Exists(reportPath), "image-conformance audit not present -- run scripts/run-image-conformance-suite.sh (full tier) first");
 
         using var report = JsonDocument.Parse(File.ReadAllText(reportPath));
         report.RootElement.GetProperty("missingAtomicRequirements").GetInt32().Should().Be(0);
