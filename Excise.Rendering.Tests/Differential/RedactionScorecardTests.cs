@@ -87,4 +87,21 @@ public class RedactionScorecardTests
         tax.Should().NotContain(l => l.Contains("qpdf-invalid"),
             "output invalid because the input was is inherited, not a redaction fidelity defect");
     }
+
+    [Fact]
+    public void Parse_SkipsTheMetaHeaderLine()
+    {
+        // #1400: WriteReport now prepends a _meta line (commit, timestamp,
+        // leakEngines) recording the run's actual measurement basis. Without
+        // this skip it became a bogus Row -- every field defaulted to ""/
+        // false/0 -- counted straight into Coverage and the taxonomy.
+        var rows = RedactionScorecard.Parse(new[]
+        {
+            """{"_meta":true,"commit":"abc123","timestamp":"2026-01-01T00:00:00Z","leakEngines":["mutool"]}""",
+            """{"tool":"excise","corpus":"x","document":"a.pdf","term":"t","leakOracleText":false,"leakChannels":[],"collateralFraction":0.0,"qpdfOk":true,"inputQpdfOk":true,"structuralDropped":""}""",
+        });
+
+        rows.Should().HaveCount(1, "the _meta line is not a benchmark row");
+        RedactionScorecard.CoverageOf(rows).Measured.Should().Be(1);
+    }
 }

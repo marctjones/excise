@@ -64,30 +64,38 @@ import json, sys, collections
 (results, ts, commit, describe, dirty, manifest_sha, design_version, real_cases,
  synth, corpus, pymupdf, tess, gs, mutool, qpdf, poppler, archive, history) = sys.argv[1:]
 
-rows = [json.loads(l) for l in open(results) if l.strip()]
+raw_lines = [json.loads(l) for l in open(results) if l.strip()]
+meta = raw_lines[0] if raw_lines and raw_lines[0].get("_meta") else None
+rows = raw_lines[1:] if meta else raw_lines
 ok = [r for r in rows if not r.get("error")]
 tools = sorted({r["tool"] for r in rows})
 
-# WHICH ENGINES PRODUCED THE VERDICT.
+# WHICH ENGINES PRODUCED THE VERDICT (#1400).
 #
-# `leakOracleTextMutool`/`Poppler` are non-nullable C# bools (RedactionBenchmarkRunner.cs:
-# 138,140), so they serialise as JSON `true`/`false` -- NEVER `null` -- whether or not Poppler
-# actually ran that row. `.get(...) is not None` on either field is therefore true on every
-# run ever produced, single-engine or not; it is not a bug that missed one case, it cannot
-# ever fire the other way. Caught only because a run with Poppler removed still reported
-# "mutool, pdftotext".
-#
-# The Row type carries no per-row signal of whether Poppler was reachable (checked: no
-# PopplerRan/PopplerAvailable field exists). The only trustworthy signal LEFT is whether
-# pdftotext is on PATH in THIS invocation's environment -- true as long as archiving happens
-# in the same environment as the run, which is the documented usage (see the header comment).
-# It is imprecise for a results.jsonl copied in from a different machine or a different
-# session; TODO(#1372-followup): have the runner stamp a run-level `_meta` line with the
-# engines it actually reached, so this stops being an environment guess. Track that as its own
-# fix rather than widening this script further.
-leak_engines = ["mutool"] if any(r.get("tool") for r in ok) else []
-if poppler:
-    leak_engines.append("pdftotext")
+# `leakOracleTextMutool`/`Poppler` are non-nullable C# bools, so they serialise
+# as JSON `true`/`false` -- NEVER `null` -- whether or not Poppler actually ran
+# that row; a run with Poppler removed still reported "mutool, pdftotext"
+# under the old environment-probe fallback below. RedactionBenchmarkRunner now
+# stamps a `_meta` header line recording the engines IT actually reached, at
+# run time -- the fact, not an inference made later in a possibly different
+# environment. Use it when present.
+if meta and meta.get("leakEngines"):
+    leak_engines = list(meta["leakEngines"])
+    if meta.get("commit") and commit != "unknown" and meta["commit"] != commit:
+        sys.stderr.write(
+            f"\nREFUSING TO ARCHIVE: results.jsonl was produced at commit "
+            f"{meta['commit'][:8]}, HEAD is now {commit[:8]}. Re-run the "
+            f"benchmark before archiving, or this history point would record "
+            f"metrics against code that no longer exists.\n")
+        raise SystemExit(4)
+else:
+    # No _meta line: an older results.jsonl, or the runner didn't get to
+    # WriteReport. Fall back to the environment probe -- imprecise (it reads
+    # pdftotext's presence in THIS shell, not the run's), but better than
+    # refusing outright on legacy input.
+    leak_engines = ["mutool"] if any(r.get("tool") for r in ok) else []
+    if poppler:
+        leak_engines.append("pdftotext")
 
 # Per-tool count of cases where the two engines disagreed. A rising number means one engine is
 # going blind on a carrier the other still sees -- the signal that a THIRD engine is due. Only
