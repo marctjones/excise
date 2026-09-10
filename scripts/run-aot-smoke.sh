@@ -142,6 +142,26 @@ managed_dll_list=""
 : > "$BUILD_LOG"
 : > "$WARNINGS_TXT"
 
+# #1322 self-test — prove the AOT publish below did not touch the ordinary
+# Debug build's restore graph. Snapshot every project.assets.json reachable
+# from Excise.App BEFORE the AOT publish and diff it AFTER: if isolation
+# ever regresses (a flag dropped, a new publish site added without
+# --artifacts-path), this fails the run instead of silently corrupting the
+# next normal build the way the original bug did.
+restore_isolation_ok=1
+restore_snapshot_before=""
+project_assets_files() {
+    find "$ROOT" -maxdepth 4 -path '*/obj/project.assets.json' \
+        -not -path '*/artifacts/*' -not -path '*/logs/*' 2>/dev/null | sort
+}
+snapshot_restore_state() {
+    local f
+    for f in $(project_assets_files); do
+        printf '%s %s\n' "$f" "$(shasum -a 256 "$f" 2>/dev/null | awk '{print $1}')"
+    done
+}
+restore_snapshot_before="$(snapshot_restore_state)"
+
 if [ "$PACKAGE" = "1" ] && [ "$(uname -s)" = "Darwin" ]; then
     publish_kind="macos-app-aot"
     echo "[aot] packaging macOS app for $RID" | tee -a "$BUILD_LOG"
@@ -158,6 +178,24 @@ else
     PACKAGE=0
     echo "[aot] raw publish for $RID" | tee -a "$BUILD_LOG"
     rm -rf "$PUBLISH_DIR"
+    # #1322 — isolate the AOT publish's restore/intermediate graph from the
+    # ordinary Debug build's obj/. Without --artifacts-path, MSBuild writes
+    # project.assets.json (and everything else under obj/) into each
+    # project's own in-tree obj/ directory — the SAME directory a plain
+    # `dotnet build`/`dotnet restore` uses. An AOT publish restores a
+    # graph with EnableScripting=false and PublishAot=true, which excludes
+    # the Microsoft.CodeAnalysis.CSharp.Scripting packages; overwriting the
+    # in-tree obj/project.assets.json with that graph breaks the next
+    # normal --no-restore build (ScriptingService.cs fails CS0234/CS0246).
+    # --artifacts-path buckets every project's intermediate output under
+    # "$AOT_ARTIFACTS_DIR/obj/<ProjectName>/" — verified per-project-unique
+    # (Excise.App vs Excise.Core land in distinct subfolders) — so this
+    # publish never touches Excise.App/obj or any referenced project's obj.
+    # $AOT_ARTIFACTS_DIR lives under the run's own timestamped $OUTPUT, so
+    # concurrent invocations of this script (distinct $OUTPUT each) cannot
+    # collide either.
+    AOT_ARTIFACTS_DIR="$OUTPUT/aot-artifacts"
+    rm -rf "$AOT_ARTIFACTS_DIR"
     dotnet publish Excise.App/Excise.App.csproj \
         -c "$CONFIG" \
         -r "$RID" \
@@ -166,9 +204,28 @@ else
         -p:PublishReadyToRun=false \
         -p:EnableScripting=false \
         -p:IncludeTessdataInApp=false \
+        --artifacts-path "$AOT_ARTIFACTS_DIR" \
         -o "$PUBLISH_DIR" >> "$BUILD_LOG" 2>&1 || build_rc=$?
     binary_path="$PUBLISH_DIR/Excise.App"
     [ -f "$PUBLISH_DIR/Excise.App.exe" ] && binary_path="$PUBLISH_DIR/Excise.App.exe"
+fi
+
+# #1322 self-test, part 2 — the restore-state diff. Any project.assets.json
+# that changed (or newly appeared/disappeared) under the ordinary in-tree
+# obj/ during the AOT publish means isolation failed.
+restore_snapshot_after="$(snapshot_restore_state)"
+if [ "$restore_snapshot_before" != "$restore_snapshot_after" ]; then
+    restore_isolation_ok=0
+    overall=1
+    {
+        echo "[aot] RESTORE-STATE ISOLATION FAILURE (#1322): an in-tree obj/project.assets.json changed during the AOT publish."
+        echo "--- before ---"
+        printf '%s\n' "$restore_snapshot_before"
+        echo "--- after ---"
+        printf '%s\n' "$restore_snapshot_after"
+    } | tee -a "$BUILD_LOG" >&2
+else
+    echo "[aot] restore-state isolation OK: no in-tree obj/project.assets.json changed (#1322)" | tee -a "$BUILD_LOG"
 fi
 
 grep -E 'warning (IL[0-9]+|[A-Z]+[0-9]+):' "$BUILD_LOG" > "$WARNINGS_TXT" 2>/dev/null || true
@@ -228,7 +285,7 @@ symbols_kb="$(size_kb "$SYMBOLS_DIR")"
 {
     printf '{\n'
     printf '  "schemaVersion": 1,\n'
-    printf '  "issues": ["#590", "#591", "#593", "#594", "#595"%s],\n' "$([ "$RUN_GUI_SMOKE" = "1" ] && printf ', "#592"')"
+    printf '  "issues": ["#590", "#591", "#593", "#594", "#595", "#1322"%s],\n' "$([ "$RUN_GUI_SMOKE" = "1" ] && printf ', "#592"')"
     printf '  "generatedUtc": "%s",\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     printf '  "status": "%s",\n' "$([ "$overall" = "0" ] && printf PASS || printf FAIL)"
     printf '  "configuration": "%s",\n' "$(json_escape "$CONFIG")"
@@ -238,6 +295,7 @@ symbols_kb="$(size_kb "$SYMBOLS_DIR")"
     printf '  "buildExitCode": %s,\n' "$build_rc"
     printf '  "warningCount": %s,\n' "$warning_count"
     printf '  "managedDllSidecars": %s,\n' "$managed_dll_count"
+    printf '  "restoreIsolationOk": %s,\n' "$([ "$restore_isolation_ok" = "1" ] && printf true || printf false)"
     printf '  "guiSmoke": {"requested": %s, "exitCode": %s, "output": "%s"},\n' \
         "$([ "$RUN_GUI_SMOKE" = "1" ] && printf true || printf false)" \
         "$gui_rc" \
@@ -268,6 +326,7 @@ symbols_kb="$(size_kb "$SYMBOLS_DIR")"
     printf -- '- Build exit code: `%s`\n' "$build_rc"
     printf -- '- Warning count: `%s`\n' "$warning_count"
     printf -- '- Managed dll sidecars: `%s` (expected `0` for Native AOT)\n' "$managed_dll_count"
+    printf -- '- Restore-state isolation (#1322): `%s`\n' "$([ "$restore_isolation_ok" = "1" ] && printf OK || printf FAIL)"
     printf -- '- Runtime size: `%s KB`\n' "$runtime_kb"
     printf -- '- Symbol size: `%s KB`\n' "$symbols_kb"
     printf -- '- Binary bytes: `%s`\n' "$binary_bytes"
