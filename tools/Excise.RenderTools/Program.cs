@@ -4937,13 +4937,19 @@ partial class Program
 
     private static string InferCorpusResultCategory(CorpusScanEntry entry)
     {
+        // #1384 Part A: the two prior names (PASS_ONE_SEMANTIC_OK,
+        // ACCEPTED_DEGENERATE_INPUT) both asserted a triage judgement this
+        // method never makes -- it relabels a raw status, nothing more. Two
+        // PDFium rows read as already-reviewed under the old names and turned
+        // out to be real defects (#1381, #1382). These names describe what
+        // the code actually did: classified the status, did not review it.
         if (string.Equals(entry.status, "PASS_ONE", StringComparison.Ordinal))
-            return "PASS_ONE_SEMANTIC_OK";
+            return "PASS_ONE_UNREVIEWED";
 
         if (IsPassingRawStatus(entry.status))
             return "PASS";
 
-        return "ACCEPTED_DEGENERATE_INPUT";
+        return "NON_PASS_UNREVIEWED";
     }
 
     internal static CorpusScanSummary BuildCorpusScanSummary(IReadOnlyList<CorpusScanEntry> entries)
