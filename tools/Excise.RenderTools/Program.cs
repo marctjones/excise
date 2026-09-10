@@ -2016,6 +2016,7 @@ partial class Program
             progress?.Update("mutool", pageNumber, $"mutool render page {pageNumber}/{doc.PageCount}");
             var mutoolOutcome = RenderOracleWithCache(
                 oracleCache, "mutool", pdfPath, pageNumber, comparisonDpi, userPassword,
+                MutoolReferenceRenderer.InvocationSignature,
                 () => MutoolReferenceRenderer.TryRenderPage(
                     pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
             var mutoolResult = mutoolOutcome.Result;
@@ -2028,6 +2029,7 @@ partial class Program
             progress?.Update("pdftocairo", pageNumber, $"pdftocairo render page {pageNumber}/{doc.PageCount}");
             var cairoOutcome = RenderOracleWithCache(
                 oracleCache, "pdftocairo", pdfPath, pageNumber, comparisonDpi, userPassword,
+                PdftocairoReferenceRenderer.InvocationSignature,
                 () => PdftocairoReferenceRenderer.TryRenderPage(
                     pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
             var cairoResult = cairoOutcome.Result;
@@ -2096,6 +2098,7 @@ partial class Program
             // libpdfium, which scripts/download-pdfium.sh can actually fetch.
             var pdfiumOutcome = RenderOracleWithCache(
                 oracleCache, "pdfium", pdfPath, pageNumber, comparisonDpi, userPassword,
+                PdfiumNativeReferenceRenderer.InvocationSignature(renderAnnotations: true),
                 // #1020: renderAnnotations TRUE. excise draws annotations
                 // unconditionally and so do mutool, pdftocairo, pdftoppm,
                 // Ghostscript and PDFBox by default — pdfium was the only
@@ -2166,6 +2169,7 @@ partial class Program
                 progress?.Update("ghostscript", pageNumber, $"ghostscript render page {pageNumber}/{doc.PageCount}");
                 var ghostscriptOutcome = RenderOracleWithCache(
                     oracleCache, "ghostscript", pdfPath, pageNumber, comparisonDpi, userPassword,
+                    GhostscriptReferenceRenderer.InvocationSignature(overprintSimulate: false),
                     () => GhostscriptReferenceRenderer.TryRenderPage(
                         pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
                 var ghostscriptResult = ghostscriptOutcome.Result;
@@ -2190,6 +2194,7 @@ partial class Program
                 progress?.Update("pdfbox", pageNumber, $"pdfbox render page {pageNumber}/{doc.PageCount}");
                 var pdfboxOutcome = RenderOracleWithCache(
                     oracleCache, "pdfbox", pdfPath, pageNumber, comparisonDpi, userPassword,
+                    PdfBoxReferenceRenderer.InvocationSignature,
                     () => PdfBoxReferenceRenderer.TryRenderPage(
                         pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
                 var pdfboxResult = pdfboxOutcome.Result;
@@ -2384,9 +2389,10 @@ partial class Program
         int pageNumber,
         int dpi,
         string? userPassword,
+        string invocationSignature,
         Func<ReferenceRenderResult> render)
     {
-        return cache?.GetOrRender(oracleName, pdfPath, pageNumber, dpi, userPassword, render)
+        return cache?.GetOrRender(oracleName, pdfPath, pageNumber, dpi, userPassword, invocationSignature, render)
                ?? new OracleRenderOutcome(render(), CacheEnabled: false, CacheHit: false,
                    CachedRenderMs: null, CachedStatus: null, CachedErrorMessage: null);
     }
@@ -2466,7 +2472,11 @@ partial class Program
         var envDir = Environment.GetEnvironmentVariable("EXCISE_ORACLE_CACHE_DIR");
         return !string.IsNullOrWhiteSpace(envDir)
             ? new DirectoryInfo(envDir)
-            : new DirectoryInfo(Path.Combine(Path.GetTempPath(), "excise-oracle-cache-v1"));
+            // #1385: v2 alongside OracleRenderCache.CacheVersion bumping to
+            // v2 -- old v1 entries (no invocationSignature in their key) are
+            // simply orphaned on disk rather than reused, so a stale render
+            // survives at most as unused bytes in /tmp, never as a wrong answer.
+            : new DirectoryInfo(Path.Combine(Path.GetTempPath(), "excise-oracle-cache-v2"));
     }
 
     private static OracleRenderCache? CreateOracleRenderCache(DirectoryInfo? cacheDir)
@@ -2740,9 +2750,18 @@ partial class Program
         private static string GetMetadataPath(string cachePath) => cachePath + ".json";
     }
 
-    private sealed class OracleRenderCache
+    // internal (not private), and CacheVersion/GetCachePath below (#1385):
+    // OracleRenderCacheKeyTests asserts two different invocationSignature
+    // values over the same (oracle, path, page, dpi, password) produce two
+    // cache misses, not a false hit -- the acceptance criterion the issue
+    // names directly. InternalsVisibleTo("Excise.Cli.Tests") is already
+    // declared above.
+    internal sealed class OracleRenderCache
     {
-        private const string CacheVersion = "v1";
+        // #1385: bumped so every pre-fix cache entry (none of which have an
+        // invocationSignature) is invalidated once, on top of the real fix
+        // (the signature is now part of the key going forward).
+        private const string CacheVersion = "v2";
         private readonly System.Collections.Concurrent.ConcurrentDictionary<string, object> _locks = new(StringComparer.Ordinal);
         private long _hits;
         private long _misses;
@@ -2763,9 +2782,10 @@ partial class Program
             int pageNumber,
             int dpi,
             string? userPassword,
+            string invocationSignature,
             Func<ReferenceRenderResult> render)
         {
-            var cachePath = GetCachePath(oracleName, pdfPath, pageNumber, dpi, userPassword);
+            var cachePath = GetCachePath(oracleName, pdfPath, pageNumber, dpi, userPassword, invocationSignature);
             var gate = _locks.GetOrAdd(cachePath, _ => new object());
 
             lock (gate)
@@ -2806,7 +2826,8 @@ partial class Program
             string pdfPath,
             int pageNumber,
             int dpi,
-            string? userPassword)
+            string? userPassword,
+            string invocationSignature)
         {
             var fullPath = Path.GetFullPath(pdfPath);
             var info = new FileInfo(fullPath);
@@ -2818,7 +2839,13 @@ partial class Program
                 info.LastWriteTimeUtc.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 dpi.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                userPassword == null ? "<none>" : HashText(userPassword));
+                userPassword == null ? "<none>" : HashText(userPassword),
+                // #1385: the flags the oracle is actually invoked with. Without
+                // this, changing a renderer's ArgumentList (#1380 added
+                // -cropbox to pdftocairo) left every pre-change cached render
+                // valid as far as the cache was concerned -- a rescan reported
+                // "changed nothing" because it never re-rendered anything.
+                invocationSignature);
             var key = HashText(material);
             return Path.Combine(CacheDirectory, key[..2], key + ".png");
         }
@@ -2952,7 +2979,7 @@ partial class Program
             => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
     }
 
-    private sealed record OracleRenderOutcome(
+    internal sealed record OracleRenderOutcome(
         ReferenceRenderResult Result,
         bool CacheEnabled,
         bool CacheHit,
@@ -3497,6 +3524,7 @@ partial class Program
         {
             var mutool = RenderOracleWithCache(
                 oracleCache, "mutool", pdfPath, probePage, dpi, userPassword,
+                MutoolReferenceRenderer.InvocationSignature,
                 () => MutoolReferenceRenderer.TryRenderPage(
                     pdfPath, probePage, dpi, oracleTimeoutMs, userPassword));
             entry.mutoolStatus = mutool.Result.Status;
@@ -3506,6 +3534,7 @@ partial class Program
 
             var cairo = RenderOracleWithCache(
                 oracleCache, "pdftocairo", pdfPath, probePage, dpi, userPassword,
+                PdftocairoReferenceRenderer.InvocationSignature,
                 () => PdftocairoReferenceRenderer.TryRenderPage(
                     pdfPath, probePage, dpi, oracleTimeoutMs, userPassword));
             entry.cairoStatus = cairo.Result.Status;

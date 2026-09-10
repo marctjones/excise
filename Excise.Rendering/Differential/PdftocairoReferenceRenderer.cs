@@ -48,6 +48,14 @@ public static class PdftocairoReferenceRenderer
     public static bool IsAvailable => _available.Value;
 
     /// <summary>
+    /// The static flags TryRenderPage invokes with (#1385). Keep literally in
+    /// sync with the ArgumentList.Add calls below -- see MutoolReferenceRenderer
+    /// for why: #1380 added -cropbox here and the oracle render cache did not
+    /// notice, silently reusing every pre-#1380 render.
+    /// </summary>
+    public const string InvocationSignature = "-png -singlefile -cropbox";
+
+    /// <summary>
     /// Render <paramref name="pageNumber"/> (1-based) at <paramref name="dpi"/>
     /// via <c>pdftocairo -png -singlefile</c>. Returns null on any failure.
     /// </summary>

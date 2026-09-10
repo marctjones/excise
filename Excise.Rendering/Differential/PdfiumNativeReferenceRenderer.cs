@@ -91,6 +91,14 @@ public static class PdfiumNativeReferenceRenderer
     /// </summary>
     public static bool IsAvailable => LibraryPath.Value != null && (InProcess || HostPath.Value != null);
 
+    /// <summary>
+    /// The static flags TryRenderPage invokes with (#1385) -- see
+    /// MutoolReferenceRenderer for why this must stay in sync with the
+    /// ArgumentList.Add calls below.
+    /// </summary>
+    public static string InvocationSignature(bool renderAnnotations) =>
+        "pdfium-render" + (renderAnnotations ? " --annots" : "");
+
     /// <summary>Why the oracle is unusable, for a caller that wants to say so.</summary>
     public static string? UnavailableReason =>
         LibraryPath.Value == null
