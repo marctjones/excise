@@ -176,7 +176,15 @@ public class ModeSwitchVisualTests
             await vm.LoadDocumentAsync(path);
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
             viewer.RenderScalingOverride = dpr;
-            await CaptureWhenInkedAsync(window, viewer); // continuous view settled
+            // CreateMultiPagePdf's per-page text is sparse enough that this
+            // viewport never reaches CaptureWhenInkedAsync's default 0.002
+            // early-exit bar (measured ~0.001 here) — with the default
+            // threshold both calls below deterministically burn the full
+            // 30s poll timeout on every run (#1088: ~60s/variant, ~120s total
+            // for zero coverage benefit). 0.0007 sits with margin above the
+            // assertion floor below (0.0005) and below the measured ink.
+            const double InkThreshold = 0.0007;
+            await CaptureWhenInkedAsync(window, viewer, inkThreshold: InkThreshold); // continuous view settled
 
             // Scroll into the middle of the document.
             var continuous = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
@@ -187,7 +195,7 @@ public class ModeSwitchVisualTests
             ModeCommand(vm, "redact").Execute().Subscribe();
             await PumpUntilAsync(window, () =>
                 viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading);
-            var after = await CaptureWhenInkedAsync(window, viewer,
+            var after = await CaptureWhenInkedAsync(window, viewer, inkThreshold: InkThreshold,
                 failureContext: $"after entering redact mode mid-document the current page's text must be displayed");
 
             vm.CurrentPage.Should().Be(pageBefore,
@@ -217,7 +225,8 @@ public class ModeSwitchVisualTests
     }
 
     private static async Task<SKBitmap> CaptureWhenInkedAsync(
-        Window window, PdfViewerControl viewer, string? failureContext = null, int timeoutMs = 30000)
+        Window window, PdfViewerControl viewer, string? failureContext = null, int timeoutMs = 30000,
+        double inkThreshold = 0.002)
     {
         var deadline = Environment.TickCount64 + timeoutMs;
         SKBitmap? last = null;
@@ -227,7 +236,7 @@ public class ModeSwitchVisualTests
             window.UpdateLayout();
             last?.Dispose();
             last = Capture(viewer);
-            if (InkFraction(last) > 0.002)
+            if (InkFraction(last) > inkThreshold)
                 return last;
         }
         // Return the last capture so the caller's assertion message carries the
