@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "62b1d72a107de7b4eccfec9849a014ef06d5b1eb",
+  "sourceRevision": "131912fb3f0a51c71ef87a8e9b8849975273dd82",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "5f2d8f6da164678545e863687a2853655ee9d462",
-    "oldestProductionCommit": "ed031eb5ff5a2bf2ccbf4ddfda6035dc6497bc4e"
+    "newestProductionCommit": "131912fb3f0a51c71ef87a8e9b8849975273dd82",
+    "oldestProductionCommit": "3dc6c0275360c79e2244806b7a262b036a80f6ce"
   },
   "files": [
     {
@@ -194,10 +194,6 @@
       "commits": 4
     },
     {
-      "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
-      "commits": 4
-    },
-    {
       "path": "Excise.Core/Text/TextExtractor.cs",
       "commits": 4
     },
@@ -215,6 +211,10 @@
     },
     {
       "path": "Excise.App/Services/RedactionWorkflowService.cs",
+      "commits": 3
+    },
+    {
+      "path": "Excise.App/Services/ThumbnailCacheService.cs",
       "commits": 3
     },
     {
@@ -263,6 +263,10 @@
     },
     {
       "path": "Excise.Core/Redaction/RedactionReport.cs",
+      "commits": 3
+    },
+    {
+      "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
       "commits": 3
     },
     {
@@ -319,10 +323,6 @@
     },
     {
       "path": "Excise.App/Services/RedactedCopySafetyService.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.App/Services/ThumbnailCacheService.cs",
       "commits": 2
     },
     {
@@ -1662,12 +1662,6 @@
       "jaccard": 0.6667
     },
     {
-      "source": "Excise.App/Services/ThumbnailCacheService.cs",
-      "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
-      "cochanges": 2,
-      "jaccard": 0.5
-    },
-    {
       "source": "Excise.Cli/Commands/CommandMetadataCommand.cs",
       "target": "Excise.Cli/Commands/SaveSizeReportCommand.cs",
       "cochanges": 2,
@@ -1726,6 +1720,12 @@
       "target": "Excise.Core/Text/TextExtractor.cs",
       "cochanges": 2,
       "jaccard": 0.5
+    },
+    {
+      "source": "Excise.App/Services/ThumbnailCacheService.cs",
+      "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
+      "cochanges": 2,
+      "jaccard": 0.4
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.UnsavedChanges.cs",
