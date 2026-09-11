@@ -1416,8 +1416,19 @@ public partial class PdfViewerControl : UserControl
         // flight. (The full-screen overlay is kept hidden — it was always
         // visually overpowering for sub-second renders and is replaced by
         // the indeterminate ProgressBar.)
+        //
+        // IsIndeterminate must follow IsLoading too, not just IsVisible (#1462).
+        // The theme's indeterminate animation targets the indicator's
+        // TranslateTransform, and Avalonia only pauses animations whose target
+        // is a Visual (AnimationInstance.Subscribed), so a hidden indeterminate
+        // bar kept animating forever: one composition commit per frame, the
+        // render loop never slept, and the app idled at 5-12% CPU after the
+        // first page load. Clearing :indeterminate removes the style animation.
         if (_loadingProgressBar != null)
+        {
             _loadingProgressBar.IsVisible = IsLoading;
+            _loadingProgressBar.IsIndeterminate = IsLoading;
+        }
         if (_loadingOverlay != null)
             _loadingOverlay.IsVisible = false;
     }

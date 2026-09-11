@@ -165,10 +165,13 @@
              viewer. Shown only while a page is rendering. Replaces the
              full-screen "Loading page..." overlay that dominated the
              viewport and made every page change feel jarring; this is the
-             standard browser-style "something's happening" affordance. -->
+             standard browser-style "something's happening" affordance.
+             IsIndeterminate starts False and follows IsLoading together with
+             IsVisible (OnLoadingStateChanged): hiding an indeterminate bar
+             does NOT stop its animation (#1462). -->
         <ProgressBar Name="LoadingProgressBar"
                      IsVisible="False"
-                     IsIndeterminate="True"
+                     IsIndeterminate="False"
                      VerticalAlignment="Top"
                      HorizontalAlignment="Stretch"
                      Height="3"

@@ -943,12 +943,13 @@
                  text. Both visible only while a search is actively running.
                  The "X of Y matches" final-state count stays in
                  SearchResultText so this row vanishes when the search
-                 completes. -->
+                 completes. IsIndeterminate is bound to the same condition:
+                 a hidden indeterminate bar keeps animating (#1462). -->
             <Grid ColumnDefinitions="*,Auto"
                   IsVisible="{Binding IsSearching}"
                   Margin="0,2,0,0">
                 <ProgressBar Grid.Column="0"
-                             IsIndeterminate="True"
+                             IsIndeterminate="{Binding IsSearching}"
                              Height="2"
                              Margin="0,0,8,0"
                              VerticalAlignment="Center"
