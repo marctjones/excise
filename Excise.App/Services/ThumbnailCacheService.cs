@@ -39,9 +39,40 @@ public sealed class ThumbnailCacheService : IDisposable
     // this gate entirely so the common path stays fast.
     private readonly SemaphoreSlim _renderGate = new(1, 1);
 
-    // De-duplicates concurrent in-flight requests for the same page.
-    private readonly Dictionary<int, Task<SKBitmap?>> _inFlight = new();
+    // De-duplicates concurrent in-flight requests for the same page. Every
+    // field of an InFlightThumbnail, and membership in this map, is guarded by
+    // _lock.
+    private readonly Dictionary<int, InFlightThumbnail> _inFlight = new();
     private readonly object _lock = new();
+
+    // Test seams (#1467): how many coalesced master bitmaps this instance has
+    // released, and a hook that sees each one just before it is disposed.
+    private int _masterReleaseCount;
+    internal int MasterReleaseCount => Volatile.Read(ref _masterReleaseCount);
+    internal Action<SKBitmap>? MasterReleasingForTest { get; set; }
+
+    /// <summary>
+    /// One coalesced load, shared by every caller that asked for the same page
+    /// while it was in flight. The master bitmap it produces is disposed exactly
+    /// once, by whichever of <see cref="RetireInFlight"/> and
+    /// <see cref="ReleaseAwaiter"/> runs last, and only when BOTH hold:
+    /// <list type="bullet">
+    /// <item><see cref="Retired"/> — the entry has left <see cref="_inFlight"/>,
+    /// so no new caller can join; set only once <see cref="Master"/> has
+    /// completed.</item>
+    /// <item><see cref="Awaiters"/> is 0 — every caller that joined has finished
+    /// copying the master (or given up) and dropped its reference.</item>
+    /// </list>
+    /// Both are read and written only under <c>_lock</c>, and
+    /// <see cref="Released"/> makes the release one-shot.
+    /// </summary>
+    private sealed class InFlightThumbnail(Task<SKBitmap?> master)
+    {
+        public Task<SKBitmap?> Master { get; } = master;
+        public int Awaiters;
+        public bool Retired;
+        public bool Released;
+    }
 
     private readonly int _thumbnailDpi;
     private bool _disposed;
@@ -155,50 +186,51 @@ public sealed class ThumbnailCacheService : IDisposable
     /// Concurrent calls for the same page coalesce on a single in-flight
     /// Task to protect the renderer (and the disk cache) from duplicated
     /// work; <strong>each caller receives its own owned copy of the
-    /// SKBitmap and is responsible for disposing it</strong>. The master
-    /// instance behind the Task is allowed to fall out of scope and be
-    /// finalised — sharing it would mean every awaiter's `using`/Dispose
-    /// would race on the same handle and crash SkiaSharp on the second
-    /// disposal (this was the cause of the "app ended unexpectedly while
-    /// scrolling thumbnails" crash).
+    /// SKBitmap and is responsible for disposing it</strong>. Callers never
+    /// see the shared master: handing it out would make every awaiter's
+    /// `using`/Dispose race on the same handle, and SkiaSharp crashed on the
+    /// second disposal (the "app ended unexpectedly while scrolling thumbnails"
+    /// crash). The service owns the master and disposes it once the last
+    /// joined caller has taken its copy (#1467) — see
+    /// <see cref="InFlightThumbnail"/> for the rule.
     /// </summary>
     public async Task<SKBitmap?> GetThumbnailAsync(int pageIndex,
         CancellationToken cancellationToken = default)
     {
         if (_disposed) return null;
 
-        Task<SKBitmap?> master;
+        InFlightThumbnail entry;
+        bool created = false;
         lock (_lock)
         {
-            if (!_inFlight.TryGetValue(pageIndex, out master!))
+            if (!_inFlight.TryGetValue(pageIndex, out entry!))
             {
-                master = Task.Run(() => LoadOrRender(pageIndex, cancellationToken),
-                    cancellationToken);
-                _inFlight[pageIndex] = master;
-                _ = master.ContinueWith(
-                    _ =>
-                    {
-                        lock (_lock)
-                        {
-                            if (_inFlight.TryGetValue(pageIndex, out var current) &&
-                                ReferenceEquals(current, master))
-                            {
-                                _inFlight.Remove(pageIndex);
-                            }
-                        }
-                    },
-                    CancellationToken.None,
-                    TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
+                entry = new InFlightThumbnail(
+                    Task.Run(() => LoadOrRender(pageIndex, cancellationToken), cancellationToken));
+                _inFlight[pageIndex] = entry;
+                created = true;
             }
+            // Joining is only possible while the entry is in _inFlight, i.e.
+            // before it is retired, so a retired entry's count never grows.
+            entry.Awaiters++;
         }
 
-        // Hand each caller a freshly-copied SKBitmap so disposes don't
-        // alias. The master result will be GC'd / finalised once the
-        // last reference (this Task chain) is dropped.
+        if (created)
+        {
+            // Registered after this caller has joined: if the load already
+            // finished, the continuation runs inline here and sees Awaiters >= 1.
+            _ = entry.Master.ContinueWith(
+                _ => RetireInFlight(pageIndex, entry),
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+        }
+
         try
         {
-            var src = await master.WaitAsync(cancellationToken).ConfigureAwait(false);
+            var src = await entry.Master.WaitAsync(cancellationToken).ConfigureAwait(false);
+            // The copy completes before the finally below drops this caller's
+            // claim, so the master cannot be released while it is being read.
             return src?.Copy();
         }
         catch (OperationCanceledException)
@@ -210,6 +242,61 @@ public sealed class ThumbnailCacheService : IDisposable
             _logger.LogDebug(ex, "Thumbnail task failed for page {Page}", pageIndex);
             return null;
         }
+        finally
+        {
+            ReleaseAwaiter(entry);
+        }
+    }
+
+    /// <summary>
+    /// The load has completed: take the entry out of <see cref="_inFlight"/> so
+    /// no further caller can join, then release the master if nobody still holds
+    /// a claim on it. The single point of retirement — nothing else removes an
+    /// entry.
+    /// </summary>
+    private void RetireInFlight(int pageIndex, InFlightThumbnail entry)
+    {
+        SKBitmap? toRelease;
+        lock (_lock)
+        {
+            if (_inFlight.TryGetValue(pageIndex, out var current) && ReferenceEquals(current, entry))
+                _inFlight.Remove(pageIndex);
+            entry.Retired = true;
+            toRelease = TakeMasterIfUnclaimed(entry);
+        }
+        ReleaseMaster(toRelease);
+    }
+
+    private void ReleaseAwaiter(InFlightThumbnail entry)
+    {
+        SKBitmap? toRelease;
+        lock (_lock)
+        {
+            entry.Awaiters--;
+            toRelease = TakeMasterIfUnclaimed(entry);
+        }
+        ReleaseMaster(toRelease);
+    }
+
+    // Caller holds _lock. Returns the master to dispose at most once over the
+    // entry's life; null while it is still joinable or claimed, or when the load
+    // produced no bitmap (cancelled, failed, or null).
+    private static SKBitmap? TakeMasterIfUnclaimed(InFlightThumbnail entry)
+    {
+        if (!entry.Retired || entry.Awaiters > 0 || entry.Released)
+            return null;
+        entry.Released = true;
+        return entry.Master.IsCompletedSuccessfully ? entry.Master.Result : null;
+    }
+
+    // Outside _lock: the entry is retired and unclaimed, so nothing else can
+    // reach this bitmap any more.
+    private void ReleaseMaster(SKBitmap? master)
+    {
+        if (master == null) return;
+        Interlocked.Increment(ref _masterReleaseCount);
+        MasterReleasingForTest?.Invoke(master);
+        master.Dispose();
     }
 
     private SKBitmap? LoadOrRender(int pageIndex, CancellationToken ct)
@@ -266,12 +353,14 @@ public sealed class ThumbnailCacheService : IDisposable
             _logger.LogError(ex, "Thumbnail render failed for page {Page}", pageIndex);
             return null;
         }
-        finally
-        {
-            lock (_lock) { _inFlight.Remove(pageIndex); }
-        }
+        // No _inFlight removal here (#1467): this ran BEFORE the task completed
+        // and removed the entry by page number, a second retirement point next
+        // to RetireInFlight. The master-release rule needs exactly one.
     }
 
+    // The write task gets its own copy, taken synchronously before the master is
+    // published to any caller, and disposes it itself — so it never aliases the
+    // master or a caller's copy.
     private void QueueCacheWrite(string path, SKBitmap bmp)
     {
         var cacheBitmap = bmp.Copy();
