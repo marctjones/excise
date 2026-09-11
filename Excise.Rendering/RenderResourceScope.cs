@@ -32,13 +32,6 @@ internal sealed class RenderResourceScope : IDisposable
     private bool _disposed;
 
     /// <summary>
-    /// Number of <see cref="TryGetGradientColors"/> calls answered from the
-    /// memo. Diagnostic only (#1404): lets a test prove repeated `sh` of one
-    /// shading resolves its function once.
-    /// </summary>
-    internal int GradientColorCacheHits { get; private set; }
-
-    /// <summary>
     /// Memoised <c>ResolveGradientColors</c> result (#1404), keyed by the
     /// shading dictionary's REFERENCE identity plus the resource object its
     /// <c>/ColorSpace</c> name resolved through (null when the colour space
@@ -54,7 +47,6 @@ internal sealed class RenderResourceScope : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_gradientColors.TryGetValue((shading, colorSpaceSource), out var cached))
         {
-            GradientColorCacheHits++;
             colors = cached;
             return true;
         }

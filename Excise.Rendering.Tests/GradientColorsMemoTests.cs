@@ -35,14 +35,13 @@ public sealed class GradientColorsMemoTests
 
         scope.TryGetGradientColors(shading, null, out var hit).Should().BeTrue();
         hit.Should().BeSameAs(colors);
-        scope.TryGetGradientColors(shading, null, out _).Should().BeTrue();
-        scope.GradientColorCacheHits.Should().Be(2);
+        scope.TryGetGradientColors(shading, null, out var again).Should().BeTrue();
+        again.Should().BeSameAs(colors);
 
         scope.TryGetGradientColors(structuralTwin, null, out _).Should().BeFalse(
             "the key is reference identity: an equal-content shading object is resolved on its own");
         scope.TryGetGradientColors(shading, source, out _).Should().BeFalse(
             "a different colour-space source object is a different resolution context");
-        scope.GradientColorCacheHits.Should().Be(2, "misses must not count as hits");
 
         scope.Dispose();
         Action useAfterDispose = () => scope.TryGetGradientColors(shading, null, out _);
@@ -50,18 +49,30 @@ public sealed class GradientColorsMemoTests
     }
 
     [Fact]
-    public void RepeatedShOfOneShadingResolvesItOncePerRender()
+    public void RepeatedShOfOneShadingIsServedFromTheMemo()
     {
+        // Seed the scope with a SENTINEL (solid magenta) for one shading
+        // object before rendering. Every `sh` that consults the memo paints
+        // magenta; any `sh` that re-resolves the shading paints its real
+        // gradient, which contains no magenta. Uses only the production memo
+        // API, so no test-only counter has to live in the renderer.
         using var shared = PdfDocument.Open(BuildStripsPdf(distinctShadingPerStrip: false));
+        using var sharedBitmap = RenderWithSeededSentinel(shared, "ShA");
+        for (var strip = 0; strip < StripCount; strip++)
+        {
+            IsSentinel(StripCentre(sharedBitmap, strip)).Should().Be(strip % 2 == 0,
+                $"strip {strip}: every `sh` of the shared axial object (even strips) must be served " +
+                "from the memo, and the radial object (odd strips) must not be");
+        }
+
         using var distinct = PdfDocument.Open(BuildStripsPdf(distinctShadingPerStrip: true));
-
-        var sharedHits = RenderCountingGradientHits(shared.GetPage(1));
-        var distinctHits = RenderCountingGradientHits(distinct.GetPage(1));
-
-        // Two shadings (one axial, one radial), StripCount/2 `sh` each: the
-        // first `sh` of each misses, every later one must hit.
-        sharedHits.Should().Be(StripCount - 2);
-        distinctHits.Should().Be(0, "every strip names its own shading object, so nothing can be reused");
+        using var distinctBitmap = RenderWithSeededSentinel(distinct, "S0");
+        for (var strip = 0; strip < StripCount; strip++)
+        {
+            IsSentinel(StripCentre(distinctBitmap, strip)).Should().Be(strip == 0,
+                $"strip {strip}: only the seeded object may be served the sentinel; an " +
+                "identical-content twin is a different key");
+        }
     }
 
     // ---- render identity -------------------------------------------------
@@ -125,16 +136,34 @@ public sealed class GradientColorsMemoTests
 
     // ---- helpers ---------------------------------------------------------
 
-    private static int RenderCountingGradientHits(PdfPage page)
+    private static readonly SKColor Sentinel = new(255, 0, 255);
+
+    private static SKBitmap RenderWithSeededSentinel(PdfDocument document, string shadingName)
     {
-        using var bitmap = new SKBitmap(612, 792, SKColorType.Rgba8888, SKAlphaType.Premul);
+        var page = document.GetPage(1);
+        var shadings = (PdfDictionary)document.Resolve(page.Resources!.GetOptional("Shading")!);
+        var shading = (PdfDictionary)document.Resolve(shadings.GetOptional(shadingName)!);
+
+        var bitmap = new SKBitmap(612, 792, SKColorType.Rgba8888, SKAlphaType.Premul);
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(SKColors.White);
         canvas.SetMatrix(new SKMatrix(1, 0, 0, 0, -1, 792, 0, 0, 1));
         using var scope = new RenderResourceScope();
+        // /ColorSpace /DeviceRGB is a built-in name with no /DefaultRGB in
+        // these resources, so the colour-space source part of the key is null.
+        scope.CacheGradientColors(shading, null, new GradientColors(Sentinel, Sentinel, null, null));
         new RenderContext(canvas, page, new RenderOptions(), scope, CancellationToken.None, bitmap).Render();
-        return scope.GradientColorCacheHits;
+        return bitmap;
     }
+
+    private static SKColor StripCentre(SKBitmap bitmap, int strip)
+    {
+        var x = (int)((strip + 0.5) * (612.0 / StripCount));
+        return bitmap.GetPixel(x, 396);
+    }
+
+    private static bool IsSentinel(SKColor color)
+        => color.Red == Sentinel.Red && color.Green == Sentinel.Green && color.Blue == Sentinel.Blue;
 
     private static int CountNonWhite(SKBitmap bitmap)
     {
