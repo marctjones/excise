@@ -110,6 +110,17 @@ internal static class RawSampleImageDecoder
                 CreateRgbBitmap(request.Samples, request.Width, request.Height),
             PdfColorSpaceType.DeviceCMYK when request.ComponentsPerPixel == 4 =>
                 CreateCmykBitmap(request.Samples, request.Width, request.Height, request.ColorSpace),
+            // #1208: ICCBased N=4 reaches exactly the same converter call here
+            // as in DecodeGeneral. There, at 8 bpc with no /Decode, a sample
+            // is normalised as (byte)Round(sample * (255.0 / 255.0)) — the
+            // quotient is exactly 1.0, so that is the sample itself — and
+            // DecodeSampleByte returns sample / 255.0 for every non-Lab space.
+            // CreateCmykBitmap computes byte / 255.0 directly. Both then call
+            // ImageColorConverter.ToRgb(ReadOnlySpan<double>) on the same
+            // four doubles, which for a 4-component non-Lab space is always the
+            // Continuous4DLattice (never null), so the bytes cannot differ.
+            PdfColorSpaceType.ICCBased when request.ColorSpace.Components == 4 && request.ComponentsPerPixel == 4 =>
+                CreateCmykBitmap(request.Samples, request.Width, request.Height, request.ColorSpace),
             _ => null
         };
     }
