@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "8eaa46426a925fc7f5788ecef4c250c3e43241f0",
+  "sourceRevision": "5315aa894f1cd0a16f3c33c2b5e2dc62f6c77b90",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 6055,
+    "retainedSymbols": 6088,
     "observedComponentDependencies": 80,
     "declaredDependencies": 79,
     "acceptedExceptions": 1,
@@ -654,7 +654,7 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1279,
+      "references": 1285,
       "typeDependencyCount": 195,
       "classification": "declared",
       "evidence": [
@@ -1046,14 +1046,14 @@
     {
       "source": "rendering",
       "target": "core",
-      "references": 155,
+      "references": 160,
       "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Rendering.RenderContext",
           "target": "Excise.Core.ColorSpaces.PdfColorSpace",
-          "references": 61
+          "references": 62
         }
       ]
     },
@@ -1094,14 +1094,14 @@
     {
       "source": "rendering",
       "target": "core-document",
-      "references": 293,
+      "references": 294,
       "typeDependencyCount": 24,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Rendering.RenderContext",
           "target": "Excise.Core.Document.PdfPage",
-          "references": 62
+          "references": 63
         }
       ]
     },
@@ -1136,14 +1136,14 @@
     {
       "source": "rendering",
       "target": "core-primitives",
-      "references": 591,
-      "typeDependencyCount": 37,
+      "references": 608,
+      "typeDependencyCount": 40,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Rendering.RenderContext",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 181
+          "references": 183
         }
       ]
     },
