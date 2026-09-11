@@ -104,12 +104,15 @@ public partial class PdfViewerControl
     // evict it, and counting it there would only evict more tiles. They get their
     // own bound instead, which leaves tile retention exactly as it was.
     //
-    // Each realized page slot holds at most one composite (PdfPageSlot.Bitmap):
-    // its visible band — the viewport plus ContinuousTileOverscanDip, snapped to
-    // the tile grid and clipped to the page — at the render DPI. A replaced or
-    // cleared composite is released once the binding has moved off it
-    // (PdfPageSlot.ReleaseAfterBindingMoves), so the total is set by the current
-    // viewport, not by scroll or zoom history. The band grows as zoom SHRINKS:
+    // Only a realized page slot holds a composite (PdfPageSlot.Bitmap), at most
+    // one: its visible band — the viewport plus ContinuousTileOverscanDip, snapped
+    // to the tile grid and clipped to the page — at the render DPI. Every render
+    // pass clears the composites of slots that are no longer realized, and
+    // RecomposeSlotCore never publishes for one; container recycling cannot do it
+    // (see OnContinuousContainerClearing), and before this a page jump kept every
+    // composite it ever published. A replaced or cleared composite is released
+    // once the binding has moved off it (PdfPageSlot.ReleaseAfterBindingMoves), so
+    // the total is set by the current viewport, not by scroll or zoom history. The band grows as zoom SHRINKS:
     // EffectiveContinuousDpi floors the DPI at DefaultRenderDpi x dpr, so at the
     // app's minimum zoom (0.25) a composite is a whole page at 120 x dpr DPI and
     // several pages share the viewport.
@@ -121,8 +124,9 @@ public partial class PdfViewerControl
     // this number: (1) larger sheets — a D-size page needs ~760 MiB at zoom 0.25
     // on a 2x display, which also exceeds the tile budget, so its band's tiles do
     // not fit in the cache at once; (2) a realized slot whose page has scrolled
-    // out of viewport + overscan keeps its last composite until its container is
-    // cleared (RecomposeSlotCore). If tile geometry, overscan or the DPI model
+    // out of viewport + overscan keeps its last composite until the page stops
+    // being realized (RecomposeSlotCore keeps it rather than blanking a page the
+    // panel still shows). If tile geometry, overscan or the DPI model
     // changes, re-run ContinuousCacheMemoryTests and re-derive this number.
     //
     // RecomposeSlotCore checks the bound after every composite it publishes and
@@ -862,13 +866,17 @@ public partial class PdfViewerControl
 
     private void OnContinuousContainerClearing(object? sender, ContainerClearingEventArgs e)
     {
-        // A page scrolled out of the realized window: clear its composite, which
-        // the slot releases once the recycled container's binding has moved
-        // (#1466). Its tiles stay in the byte-budgeted cache for a quick,
-        // re-render-free return when the page scrolls back (#848 makes that a
-        // cache hit).
-        if (e.Container.DataContext is PdfPageSlot slot)
-            slot.ClearComposite();
+        // A page scrolled out of the realized window. The render pass drops the
+        // composites of pages that are no longer realized (#1466); its tiles stay
+        // in the byte-budgeted cache for a quick, re-render-free return when the
+        // page scrolls back (#848 makes that a cache hit).
+        //
+        // The slot cannot be read from the container here. Avalonia 12 raises
+        // ContainerClearing AFTER ClearContainerForItemOverride has cleared the
+        // presenter's Content, which clears its DataContext too, so the old
+        // `e.Container.DataContext is PdfPageSlot` test never matched and every
+        // composite was kept: 37 pages, 940 MB, paging a 126-page document.
+        RenderVisibleContinuousTiles();
     }
 
     private void RenderVisibleContinuousTiles()
@@ -908,10 +916,12 @@ public partial class PdfViewerControl
         // still needed after it clears the concurrency gate.
         var perSlot = new List<(PdfPageSlot Slot, List<(GridCell Cell, ContinuousTileKey Key)> Cells)>();
         var required = new HashSet<ContinuousTileKey>();
+        var realized = new HashSet<PdfPageSlot>(ReferenceEqualityComparer.Instance);
 
         foreach (var container in _continuousItems.GetRealizedContainers())
         {
             if (container.DataContext is not PdfPageSlot slot) continue;
+            realized.Add(slot);
             if (slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) continue;
 
             var cells = RequiredTileCells(
@@ -929,6 +939,20 @@ public partial class PdfViewerControl
         }
 
         _continuousRequiredKeys = required;
+
+        // #1466: only a realized page may hold a composite. Container recycling
+        // cannot release it (see OnContinuousContainerClearing), so the pass
+        // enforces it: jumping pages, which realizes one page at a time, kept
+        // every composite it ever published. Runs before pass 2 publishes, so the
+        // bound check after each publish counts realized pages only.
+        if (_continuousSlots != null)
+        {
+            foreach (var slot in _continuousSlots)
+            {
+                if (slot.Bitmap != null && !realized.Contains(slot))
+                    slot.ClearComposite();
+            }
+        }
 
         // Pass 2: schedule renders for cells not yet cached, then (re)composite the
         // page from its cached cells. RecomposeSlot only swaps in a new band bitmap
@@ -1291,6 +1315,17 @@ public partial class PdfViewerControl
         if (_continuousDetached || _continuousScrollViewer == null || _continuousDocCts.IsCancellationRequested) return;
         var doc = Document;
         if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) return;
+
+        // #1466: only a realized page may hold a composite. A cell render can
+        // finish after its page's container was recycled (a page jump realizes
+        // the destination only); publishing then would leave a composite that
+        // nothing releases until the next render pass.
+        if (_continuousItems?.ContainerFromItem(slot) == null)
+        {
+            slot.ClearComposite();
+            return;
+        }
+
         var viewport = _continuousScrollViewer.Viewport;
         var offset = _continuousScrollViewer.Offset;
         if (viewport.Width <= 0 || viewport.Height <= 0 || ZoomLevel <= 0) return;

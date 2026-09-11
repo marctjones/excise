@@ -150,6 +150,80 @@ public class ContinuousCompositeReleaseRenderTests
         }
     }
 
+    /// <summary>
+    /// #1466, found live: paging through a 126-page document with Next Page kept
+    /// every composite ever published (37 pages, 940 MB at page 126). Composites
+    /// were released only from <c>ContainerClearing</c>, and Avalonia 12 raises
+    /// that event after <c>ClearContainerForItemOverride</c> has cleared the
+    /// presenter's Content, which clears its DataContext too, so the handler
+    /// never saw a <see cref="PdfPageSlot"/>. A page that is no longer realized
+    /// must not keep a composite, and the ones it dropped must be released.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task PagingThroughTheDocument_KeepsCompositesOnlyForRealizedPages_AndReleasesTheRest()
+    {
+        const int pageCount = 30;
+        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount);
+        int clearings = 0;
+        EventHandler<ContainerClearingEventArgs> onClearing = (_, _) => clearings++;
+        items.ContainerClearing += onClearing;
+        var seen = new HashSet<WriteableBitmap>(ReferenceEqualityComparer.Instance);
+        try
+        {
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            var slots = items.ItemsSource!.Cast<PdfPageSlot>().ToList();
+            foreach (var s in slots)
+            {
+                if (s.Bitmap != null) seen.Add(s.Bitmap);
+                var observed = s;
+                observed.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName == nameof(PdfPageSlot.Bitmap) && observed.Bitmap != null)
+                        seen.Add(observed.Bitmap);
+                };
+            }
+
+            for (int page = 2; page <= pageCount; page++)
+            {
+                viewer.CurrentPage = page;
+                await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, page);
+            }
+
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+
+            var realized = new HashSet<PdfPageSlot>(
+                items.GetRealizedContainers().Select(c => c.DataContext).OfType<PdfPageSlot>(),
+                ReferenceEqualityComparer.Instance);
+            var holding = slots.Where(s => s.Bitmap != null).ToList();
+            _out.WriteLine($"clearings={clearings} realized=[{string.Join(",", realized.Select(s => s.PageNumber).Order())}] " +
+                           $"holding=[{string.Join(",", holding.Select(s => s.PageNumber))}] composites observed={seen.Count} " +
+                           $"residentBytes={viewer.ContinuousCompositeResidentBytes()}");
+
+            clearings.Should().BeGreaterThan(0, "fixture: paging 30 pages must recycle containers");
+            seen.Count.Should().BeGreaterThanOrEqualTo(pageCount, "fixture: every visited page must have published a composite");
+            holding.Where(s => !realized.Contains(s)).Select(s => s.PageNumber).Should().BeEmpty(
+                "a page that is no longer realized must not keep its composite");
+
+            var live = new HashSet<WriteableBitmap>(holding.Select(s => s.Bitmap!), ReferenceEqualityComparer.Instance);
+            foreach (var bitmap in seen)
+            {
+                IsDisposed(bitmap).Should().Be(!live.Contains(bitmap),
+                    "a composite that no slot shows is released, and a shown one never is");
+            }
+            viewer.ContinuousCompositeResidentBytes().Should().Be(
+                live.Sum(b => PdfViewerControl.ContinuousTileByteSize(b.PixelSize.Width, b.PixelSize.Height)),
+                "composite accounting counts exactly the composites the slots hold");
+        }
+        finally
+        {
+            items.ContainerClearing -= onClearing;
+            window.Close();
+            viewer.Document?.Dispose();
+        }
+    }
+
     private static Image ImageFor(ItemsControl items, PdfPageSlot slot)
     {
         var container = items.ContainerFromItem(slot)
