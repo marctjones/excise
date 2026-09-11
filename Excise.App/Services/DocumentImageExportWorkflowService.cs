@@ -87,11 +87,34 @@ internal sealed class DocumentImageExportWorkflowService
 
     private static void WriteBitmap(SKBitmap bitmap, string outputPath, ImageExportFormat format)
     {
-        using var image = SKImage.FromBitmap(bitmap);
-        using var encodedData = image.Encode(format.SkiaFormat, quality: 90)
+        using var encodedData = Encode(bitmap, format)
             ?? throw new InvalidOperationException($"Could not encode image as {format.Extension}.");
         using var fileStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
         encodedData.SaveTo(fileStream);
+    }
+
+    // #1471: PNG uses the Sub row filter at zlib level 6 instead of Skia's
+    // default try-every-filter search, which was measured slower on rendered
+    // pages. Filters are reversible and deflate is lossless, so the decoded
+    // RGBA is unchanged. SKImage.Encode cannot take PNG options, so PNG goes
+    // through the bitmap's pixmap; JPEG keeps the original path untouched.
+    // (Excise.Rendering's SkiaRenderer.EncodePng is internal and not visible
+    // here, hence the local copy.)
+    private static readonly SKPngEncoderOptions PngEncoderOptions =
+        new(SKPngEncoderFilterFlags.Sub, 6);
+
+    private static SKData? Encode(SKBitmap bitmap, ImageExportFormat format)
+    {
+        if (format.SkiaFormat == SKEncodedImageFormat.Png)
+        {
+            using var pixmap = bitmap.PeekPixels();
+            var png = pixmap?.Encode(PngEncoderOptions);
+            if (png != null)
+                return png;
+        }
+
+        using var image = SKImage.FromBitmap(bitmap);
+        return image.Encode(format.SkiaFormat, quality: 90);
     }
 
     private readonly record struct ImageExportFormat(

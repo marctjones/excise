@@ -247,9 +247,34 @@ public class SkiaRenderer
         CancellationToken cancellationToken = default)
     {
         using var bitmap = RenderPage(page, options ?? new RenderOptions(), cancellationToken);
-        using var image = SKImage.FromBitmap(bitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        using var data = EncodePng(bitmap)
+            ?? throw new InvalidOperationException("Could not encode the rendered page as PNG.");
         data.SaveTo(destination);
+    }
+
+    // #1471: Skia's default PNG encoder tries every row filter and keeps the
+    // best; on rendered pages the Sub filter alone at zlib level 6 was measured
+    // faster (49.2 -> 36.0 ms/page) and smaller. PNG filters are reversible and
+    // deflate is lossless, so the decoded RGBA cannot change. SKImage.Encode
+    // cannot take PNG options, hence the pixmap. The bitmap's pixels are encoded
+    // exactly as they are (premultiplied RGBA with its real alpha): nothing here
+    // assumes the page is opaque — a ClipRect render is not (see RenderPage).
+    private static readonly SKPngEncoderOptions PngEncoderOptions =
+        new(SKPngEncoderFilterFlags.Sub, 6);
+
+    internal static SKData? EncodePng(SKBitmap bitmap)
+    {
+        using (var pixmap = bitmap.PeekPixels())
+        {
+            var data = pixmap?.Encode(PngEncoderOptions);
+            if (data != null)
+                return data;
+        }
+
+        // No direct pixel access (PeekPixels returned null) or the options
+        // encoder refused: fall back to the previous default-settings encode.
+        using var image = SKImage.FromBitmap(bitmap);
+        return image?.Encode(SKEncodedImageFormat.Png, 100);
     }
 }
 

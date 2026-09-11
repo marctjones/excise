@@ -19,6 +19,25 @@ internal static class RawSampleImageDecoder
             return null;
         }
 
+        // #1470: an Indexed /Decode of exactly [0, 2^bpc - 1] is the spec
+        // default and a provable no-op here: DecodeImageSample maps it to
+        // 0 + sample * ((2^bpc - 1) / (2^bpc - 1)), and that quotient is
+        // exactly 1.0 in IEEE-754, so the decoded value IS the sample. Its mere
+        // presence used to disable the 256-entry palette table below (the
+        // converter is only built when DecodeArray == null), sending every
+        // pixel through PdfColorSpace.ToRgb instead. Both routes resolve
+        // LookupIndexed((int)Math.Round(sample)) and truncate x*255 the same
+        // way, so dropping the array cannot change a pixel.
+        //
+        // Indexed ONLY. For continuous spaces the default path normalizes via
+        // sample * (255.0 / maxSample) and DecodeSampleByte, while the Decode
+        // path computes sample * (1.0 / maxSample) — those can differ in the
+        // last bit, so an identity array there is NOT provably a no-op.
+        if (IsIdentityIndexedDecodeArray(request.ColorSpace, request.BitsPerComponent, request.DecodeArray))
+        {
+            request = request with { DecodeArray = null };
+        }
+
         // #1403: decode cost is otherwise proportional to the SOURCE pixel
         // grid, not to what the target device space can actually show. A
         // caller (SkiaRenderer.Images.cs) that knows the device-space draw
@@ -51,6 +70,26 @@ internal static class RawSampleImageDecoder
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// True when <paramref name="decodeArray"/> is exactly the §8.9.5.2 default
+    /// for an Indexed image, <c>[0, 2^bpc - 1]</c>, with bpc ≤ 8 (#1470). Exact
+    /// comparison and exact length: any other array keeps the general path.
+    /// </summary>
+    internal static bool IsIdentityIndexedDecodeArray(
+        PdfColorSpace? colorSpace,
+        int bitsPerComponent,
+        double[]? decodeArray)
+    {
+        if (decodeArray is not { Length: 2 } ||
+            colorSpace?.Type != PdfColorSpaceType.Indexed ||
+            bitsPerComponent is < 1 or > 8)
+        {
+            return false;
+        }
+
+        return decodeArray[0] == 0.0 && decodeArray[1] == (1 << bitsPerComponent) - 1;
     }
 
     private static SKBitmap? TryDecodeFast(RawSampleImageDecodeRequest request)

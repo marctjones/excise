@@ -187,6 +187,156 @@ public sealed class RawSampleImageDecoderTests
         largerTarget.GetPixel(1, 0).Should().Be(withoutTarget.GetPixel(1, 0));
     }
 
+    // ---- #1470: identity /Decode on Indexed images ----------------------
+
+    private static PdfColorSpace CreateIndexedRgb(Excise.Core.Document.PdfDocument document, int hival)
+    {
+        // A deliberately non-monotonic palette so a wrong index is visible.
+        var lookup = new byte[(hival + 1) * 3];
+        for (var i = 0; i <= hival; i++)
+        {
+            lookup[i * 3] = (byte)((i * 37) % 256);
+            lookup[(i * 3) + 1] = (byte)((i * 91 + 13) % 256);
+            lookup[(i * 3) + 2] = (byte)(255 - ((i * 53) % 256));
+        }
+
+        return PdfColorSpace.Parse(
+            new Excise.Core.Primitives.PdfArray(
+                new Excise.Core.Primitives.PdfName("Indexed"),
+                new Excise.Core.Primitives.PdfName("DeviceRGB"),
+                new Excise.Core.Primitives.PdfInteger(hival),
+                new Excise.Core.Primitives.PdfString(lookup, isHex: true)),
+            document);
+    }
+
+    private static byte[] PixelBytes(SKBitmap bitmap)
+        => SkiaBitmapPixelBuffer.GetWritableSpan(bitmap).ToArray();
+
+    [Fact]
+    public void IdentityDecodeOnIndexed8BitIsPixelIdenticalToNoDecode()
+    {
+        using var document = Excise.Core.Document.PdfDocument.CreateNew();
+        var indexed = CreateIndexedRgb(document, 255);
+        var samples = new byte[16 * 16];
+        for (var i = 0; i < samples.Length; i++)
+            samples[i] = (byte)i;
+
+        RawSampleImageDecodeRequest Request(double[]? decode) => new(
+            Samples: samples,
+            Width: 16,
+            Height: 16,
+            BitsPerComponent: 8,
+            ColorSpace: indexed,
+            ComponentsPerPixel: 1,
+            DecodeArray: decode,
+            ColorKeyMask: null);
+
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(indexed, 8, [0, 255])
+            .Should().BeTrue("[0 255] is the Indexed 8-bit default and must take the palette-table path");
+
+        using var withoutDecode = RawSampleImageDecoder.Decode(Request(null));
+        using var withIdentity = RawSampleImageDecoder.Decode(Request([0, 255]));
+
+        withoutDecode.Should().NotBeNull();
+        withIdentity.Should().NotBeNull();
+        PixelBytes(withIdentity!).Should().Equal(PixelBytes(withoutDecode!));
+    }
+
+    [Fact]
+    public void IdentityDecodeOnIndexed4BitIsPixelIdenticalToNoDecode()
+    {
+        using var document = Excise.Core.Document.PdfDocument.CreateNew();
+        var indexed = CreateIndexedRgb(document, 15);
+        // 15 pixels cycling through the 4-bit indices, packed two to a byte;
+        // an odd width so every row carries a padding nibble.
+        const int width = 5;
+        const int height = 3;
+        var samples = new byte[((width * 4) + 7) / 8 * height];
+        var index = 0;
+        for (var row = 0; row < height; row++)
+        {
+            var rowStart = row * (((width * 4) + 7) / 8);
+            for (var column = 0; column < width; column++)
+            {
+                var bit = column * 4;
+                samples[rowStart + (bit / 8)] |= (byte)((index++ % 16) << (4 - (bit % 8)));
+            }
+        }
+
+        RawSampleImageDecodeRequest Request(double[]? decode) => new(
+            Samples: samples,
+            Width: width,
+            Height: height,
+            BitsPerComponent: 4,
+            ColorSpace: indexed,
+            ComponentsPerPixel: 1,
+            DecodeArray: decode,
+            ColorKeyMask: null);
+
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(indexed, 4, [0, 15])
+            .Should().BeTrue("[0 15] is the Indexed 4-bit default and must take the palette-table path");
+
+        using var withoutDecode = RawSampleImageDecoder.Decode(Request(null));
+        using var withIdentity = RawSampleImageDecoder.Decode(Request([0, 15]));
+
+        withoutDecode.Should().NotBeNull();
+        withIdentity.Should().NotBeNull();
+        PixelBytes(withIdentity!).Should().Equal(PixelBytes(withoutDecode!));
+    }
+
+    [Fact]
+    public void NonIdentityOrNonIndexedDecodeKeepsTheGeneralPath()
+    {
+        using var document = Excise.Core.Document.PdfDocument.CreateNew();
+        var indexed = CreateIndexedRgb(document, 255);
+
+        // Non-identity arrays on Indexed.
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(indexed, 8, [255, 0]).Should().BeFalse();
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(indexed, 8, [0, 15]).Should().BeFalse(
+            "[0 15] is only the default at 4 bpc");
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(indexed, 4, [0, 255]).Should().BeFalse(
+            "[0 255] is not the default at 4 bpc");
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(indexed, 8, [0, 255, 0, 255]).Should().BeFalse(
+            "only an exactly two-element array is recognised");
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(indexed, 8, [0, 254.99999]).Should().BeFalse(
+            "the comparison is exact, not tolerant");
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(indexed, 16, [0, 65535]).Should().BeFalse(
+            "only bpc <= 8 is recognised");
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(indexed, 8, null).Should().BeFalse();
+
+        // Identity arrays on continuous colour spaces stay on the general path.
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(PdfColorSpace.DeviceGray, 8, [0, 255]).Should().BeFalse();
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(PdfColorSpace.DeviceGray, 8, [0, 1]).Should().BeFalse();
+        RawSampleImageDecoder.IsIdentityIndexedDecodeArray(PdfColorSpace.DeviceRGB, 8, [0, 1, 0, 1, 0, 1]).Should().BeFalse();
+
+        // And a non-identity Indexed array is still honoured: [255 0] reverses
+        // the index, so pixel 0 must read palette entry 255, not entry 0.
+        var samples = new byte[] { 0, 255 };
+        using var reversed = RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
+            Samples: samples,
+            Width: 2,
+            Height: 1,
+            BitsPerComponent: 8,
+            ColorSpace: indexed,
+            ComponentsPerPixel: 1,
+            DecodeArray: [255, 0],
+            ColorKeyMask: null));
+        using var plain = RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
+            Samples: samples,
+            Width: 2,
+            Height: 1,
+            BitsPerComponent: 8,
+            ColorSpace: indexed,
+            ComponentsPerPixel: 1,
+            DecodeArray: null,
+            ColorKeyMask: null));
+
+        reversed.Should().NotBeNull();
+        plain.Should().NotBeNull();
+        reversed!.GetPixel(0, 0).Should().Be(plain!.GetPixel(1, 0));
+        reversed.GetPixel(1, 0).Should().Be(plain.GetPixel(0, 0));
+    }
+
     [Fact]
     public void CancellationIsPropagatedInsteadOfReportedAsMalformedData()
     {
