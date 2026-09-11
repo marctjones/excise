@@ -542,6 +542,13 @@ internal partial class RenderContext
             // arrives as a bare "not decoded", indistinguishable from a stream
             // nothing has got to yet, and an unimplemented JBIG2 feature (our
             // gap) reads the same as a corrupt codestream (the file's).
+            //
+            // #1468: image decodes are deferred to first read, so the reason
+            // does not exist until something attempts the decode. Attempt it
+            // HERE — after the DCT/JPX branches, which read EncodedData and
+            // must not inflate — so a refusal is recorded before it is checked
+            // instead of vanishing into the catch below.
+            imageStream.TryEnsureDecoded();
             if (imageStream.DecodeFailureReason is { } reason)
             {
                 AddDiagnostic(
