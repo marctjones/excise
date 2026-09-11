@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "131912fb3f0a51c71ef87a8e9b8849975273dd82",
+  "sourceRevision": "bfc74cbc500ab71e1ebd057b9d66e4a2efcf1f4c",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "131912fb3f0a51c71ef87a8e9b8849975273dd82",
-    "oldestProductionCommit": "3dc6c0275360c79e2244806b7a262b036a80f6ce"
+    "newestProductionCommit": "bfc74cbc500ab71e1ebd057b9d66e4a2efcf1f4c",
+    "oldestProductionCommit": "f8db4889eeceb4bf4670c60c207800faa9401cf1"
   },
   "files": [
     {
@@ -118,6 +118,10 @@
       "commits": 5
     },
     {
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
+      "commits": 5
+    },
+    {
       "path": "Excise.Cli/Commands/RedactCommandHandler.cs",
       "commits": 5
     },
@@ -147,10 +151,6 @@
     },
     {
       "path": "Excise.App/ViewModels/PreferencesViewModel.cs",
-      "commits": 4
-    },
-    {
-      "path": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
       "commits": 4
     },
     {
@@ -415,10 +415,6 @@
     },
     {
       "path": "Excise.Core/Redaction/RedactionCarrierAudit.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.Core/Security/PdfStandardSecurityHandler.cs",
       "commits": 2
     },
     {
@@ -1023,6 +1019,10 @@
     },
     {
       "path": "Excise.Core/Redaction/XfaXmlCarrier.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Security/PdfStandardSecurityHandler.cs",
       "commits": 1
     },
     {
@@ -1722,12 +1722,6 @@
       "jaccard": 0.5
     },
     {
-      "source": "Excise.App/Services/ThumbnailCacheService.cs",
-      "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
-      "cochanges": 2,
-      "jaccard": 0.4
-    },
-    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.UnsavedChanges.cs",
       "target": "Excise.App/Views/MainWindow.axaml.cs",
       "cochanges": 2,
@@ -1820,6 +1814,12 @@
     {
       "source": "Excise.App/Services/RedactionService.cs",
       "target": "Excise.Core/Redaction/RedactionOptions.cs",
+      "cochanges": 2,
+      "jaccard": 0.3333
+    },
+    {
+      "source": "Excise.App/Services/ThumbnailCacheService.cs",
+      "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
       "cochanges": 2,
       "jaccard": 0.3333
     },
