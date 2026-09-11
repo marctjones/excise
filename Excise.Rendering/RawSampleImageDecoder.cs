@@ -1,3 +1,4 @@
+using System.Runtime.ExceptionServices;
 using Excise.Core.ColorSpaces;
 using SkiaSharp;
 
@@ -11,6 +12,12 @@ namespace Excise.Rendering;
 /// </summary>
 internal static class RawSampleImageDecoder
 {
+    // #1208: below either bound the per-row conversion stays serial, where the
+    // cost of scheduling bands would dominate the work they split.
+    private const int MinimumParallelRows = 256;
+    private const long MinimumParallelPixels = 1_000_000;
+    private const int BandsPerProcessor = 4;
+
     public static SKBitmap? Decode(RawSampleImageDecodeRequest request)
     {
         request.CancellationToken.ThrowIfCancellationRequested();
@@ -109,7 +116,7 @@ internal static class RawSampleImageDecoder
             PdfColorSpaceType.DeviceRGB when request.ComponentsPerPixel == 3 =>
                 CreateRgbBitmap(request.Samples, request.Width, request.Height),
             PdfColorSpaceType.DeviceCMYK when request.ComponentsPerPixel == 4 =>
-                CreateCmykBitmap(request.Samples, request.Width, request.Height, request.ColorSpace),
+                CreateCmykBitmap(request.Samples, request.Width, request.Height, request.ColorSpace, request.CancellationToken),
             // #1208: ICCBased N=4 reaches exactly the same converter call here
             // as in DecodeGeneral. There, at 8 bpc with no /Decode, a sample
             // is normalised as (byte)Round(sample * (255.0 / 255.0)) — the
@@ -120,7 +127,7 @@ internal static class RawSampleImageDecoder
             // four doubles, which for a 4-component non-Lab space is always the
             // Continuous4DLattice (never null), so the bytes cannot differ.
             PdfColorSpaceType.ICCBased when request.ColorSpace.Components == 4 && request.ComponentsPerPixel == 4 =>
-                CreateCmykBitmap(request.Samples, request.Width, request.Height, request.ColorSpace),
+                CreateCmykBitmap(request.Samples, request.Width, request.Height, request.ColorSpace, request.CancellationToken),
             _ => null
         };
     }
@@ -139,7 +146,7 @@ internal static class RawSampleImageDecoder
     /// color-space / color-key path keeps every downsampled pixel a value that
     /// genuinely occurred in the source, for every color space uniformly.
     /// </summary>
-    private static SKBitmap? DecodeGeneral(
+    private static unsafe SKBitmap? DecodeGeneral(
         RawSampleImageDecodeRequest request,
         int targetWidth,
         int targetHeight,
@@ -164,14 +171,9 @@ internal static class RawSampleImageDecoder
 
         try
         {
-            var destinationIndex = 0;
-            var pixelValues = new double[componentsPerPixel];
             var maxSample = Math.Pow(2, request.BitsPerComponent) - 1;
             var imageColorConverter = request.DecodeArray == null
                 ? ImageColorConverter.For(colorSpace)
-                : null;
-            var rawSamples = request.ColorKeyMask != null
-                ? new int[componentsPerPixel]
                 : null;
 
             // Row stride of the SOURCE sample grid (not the target). Every
@@ -188,131 +190,31 @@ internal static class RawSampleImageDecoder
             // PIXEL, not per component, and must not reuse the stride above.
             var singleBitRowStrideBits = AlignBitsToByte(request.Width);
 
-            for (var ty = 0; ty < targetHeight; ty++)
-            {
-                request.CancellationToken.ThrowIfCancellationRequested();
-                var sy = subsample ? MapTargetToSource(ty, targetHeight, request.Height) : ty;
-
-                for (var tx = 0; tx < targetWidth; tx++)
-                {
-                    var sx = subsample ? MapTargetToSource(tx, targetWidth, request.Width) : tx;
-
-                    byte red = 0, green = 0, blue = 0, alpha = 255;
-                    var samplesRead = false;
-
-                    if (request.BitsPerComponent > 1)
-                    {
-                        if (request.BitsPerComponent == 8)
-                        {
-                            // Rows are always byte-aligned at 8 bpc, so this is a
-                            // direct formula, not an accumulated scan position.
-                            var byteOffset = checked(
-                                ((long)sy * request.Width * componentsPerPixel) +
-                                ((long)sx * componentsPerPixel));
-                            if (byteOffset + componentsPerPixel <= request.Samples.LongLength)
-                            {
-                                var baseOffset = (int)byteOffset;
-                                for (var component = 0; component < componentsPerPixel; component++)
-                                {
-                                    var sample = request.Samples[baseOffset + component];
-                                    if (rawSamples != null)
-                                        rawSamples[component] = sample;
-                                    pixelValues[component] = DecodeImageSample(
-                                        request.DecodeArray,
-                                        colorSpace,
-                                        component,
-                                        sample,
-                                        maxSample);
-                                }
-
-                                samplesRead = true;
-                                ConvertPixel(
-                                    colorSpace,
-                                    imageColorConverter,
-                                    pixelValues,
-                                    out red,
-                                    out green,
-                                    out blue);
-                            }
-                        }
-                        else
-                        {
-                            var bitOffset = checked(
-                                ((long)sy * sourceRowStrideBits) +
-                                ((long)sx * componentsPerPixel * request.BitsPerComponent));
-                            if (bitOffset + (componentsPerPixel * request.BitsPerComponent) <=
-                                (long)request.Samples.Length * 8)
-                            {
-                                for (var component = 0; component < componentsPerPixel; component++)
-                                {
-                                    var sample = ReadPackedImageSample(
-                                        request.Samples,
-                                        checked((int)(bitOffset + (component * request.BitsPerComponent))),
-                                        request.BitsPerComponent);
-                                    if (rawSamples != null)
-                                        rawSamples[component] = sample;
-                                    pixelValues[component] = DecodeImageSample(
-                                        request.DecodeArray,
-                                        colorSpace,
-                                        component,
-                                        sample,
-                                        maxSample);
-                                }
-
-                                samplesRead = true;
-                                ConvertPixel(
-                                    colorSpace,
-                                    imageColorConverter,
-                                    pixelValues,
-                                    out red,
-                                    out green,
-                                    out blue);
-                            }
-                        }
-                    }
-                    else if (request.BitsPerComponent == 1)
-                    {
-                        // Same row-stride formula as the packed-bit branch above,
-                        // specialized to the single-component case (matches the
-                        // pre-#1403 behaviour: a 1 bpc pixel here is always read
-                        // as one sample, regardless of ComponentsPerPixel).
-                        var bitOffset = checked(((long)sy * singleBitRowStrideBits) + sx);
-                        var byteIndex = bitOffset / 8;
-                        var bitIndex = 7 - (int)(bitOffset % 8);
-                        var sample = byteIndex < request.Samples.LongLength
-                            ? (request.Samples[byteIndex] >> bitIndex) & 1
-                            : 0;
-                        pixelValues[0] = DecodeImageSample(
-                            request.DecodeArray,
-                            colorSpace,
-                            0,
-                            sample,
-                            maxSample);
-                        ConvertPixel(
-                            colorSpace,
-                            imageColorConverter,
-                            pixelValues,
-                            out red,
-                            out green,
-                            out blue);
-                        if (rawSamples != null)
-                            rawSamples[0] = sample;
-                        samplesRead = true;
-                    }
-
-                    if (samplesRead &&
-                        rawSamples != null &&
-                        IsColorKeyMasked(rawSamples, request.ColorKeyMask!))
-                    {
-                        alpha = 0;
-                    }
-
-                    pixels[destinationIndex++] = red;
-                    pixels[destinationIndex++] = green;
-                    pixels[destinationIndex++] = blue;
-                    pixels[destinationIndex++] = alpha;
-                }
-            }
+            // #1208: rows only in parallel when every pixel converts through the
+            // cached ImageColorConverter (a byte table or lattice, read-only
+            // after construction). Without it ConvertPixel falls back to
+            // PdfColorSpace.ToRgb, whose ICC profile and tint caches take a
+            // lock per call, so parallel rows would serialise on it at best.
+            var pixelAddress = bitmap.GetPixels();
+            var pixelLength = pixels.Length;
+            ForEachRowBand(
+                targetHeight,
+                targetWidth,
+                allowParallel: imageColorConverter != null,
+                request.CancellationToken,
+                (startRow, endRow) => DecodeGeneralRows(
+                    request,
+                    colorSpace,
+                    imageColorConverter,
+                    maxSample,
+                    sourceRowStrideBits,
+                    singleBitRowStrideBits,
+                    targetWidth,
+                    targetHeight,
+                    subsample,
+                    new Span<byte>((void*)pixelAddress, pixelLength),
+                    startRow,
+                    endRow));
         }
         catch (OperationCanceledException)
         {
@@ -326,6 +228,230 @@ internal static class RawSampleImageDecoder
         }
 
         return bitmap;
+    }
+
+    /// <summary>
+    /// Target rows <paramref name="startRow"/> (inclusive) to
+    /// <paramref name="endRow"/> (exclusive) of <see cref="DecodeGeneral"/>.
+    /// Each call owns its scratch arrays and writes only its own rows, so
+    /// disjoint row ranges may run concurrently (#1208). Fresh scratch per call
+    /// is equivalent to the old single pass: every component a pixel reads is
+    /// written before it is used, and the components a branch never writes
+    /// (the 1 bpc branch's [1..]) stay 0 in both.
+    /// </summary>
+    private static void DecodeGeneralRows(
+        RawSampleImageDecodeRequest request,
+        PdfColorSpace colorSpace,
+        ImageColorConverter? imageColorConverter,
+        double maxSample,
+        int sourceRowStrideBits,
+        int singleBitRowStrideBits,
+        int targetWidth,
+        int targetHeight,
+        bool subsample,
+        Span<byte> pixels,
+        int startRow,
+        int endRow)
+    {
+        var componentsPerPixel = request.ComponentsPerPixel;
+        var destinationIndex = startRow * targetWidth * 4;
+        var pixelValues = new double[componentsPerPixel];
+        var rawSamples = request.ColorKeyMask != null
+            ? new int[componentsPerPixel]
+            : null;
+
+        for (var ty = startRow; ty < endRow; ty++)
+        {
+            request.CancellationToken.ThrowIfCancellationRequested();
+            var sy = subsample ? MapTargetToSource(ty, targetHeight, request.Height) : ty;
+
+            for (var tx = 0; tx < targetWidth; tx++)
+            {
+                var sx = subsample ? MapTargetToSource(tx, targetWidth, request.Width) : tx;
+
+                byte red = 0, green = 0, blue = 0, alpha = 255;
+                var samplesRead = false;
+
+                if (request.BitsPerComponent > 1)
+                {
+                    if (request.BitsPerComponent == 8)
+                    {
+                        // Rows are always byte-aligned at 8 bpc, so this is a
+                        // direct formula, not an accumulated scan position.
+                        var byteOffset = checked(
+                            ((long)sy * request.Width * componentsPerPixel) +
+                            ((long)sx * componentsPerPixel));
+                        if (byteOffset + componentsPerPixel <= request.Samples.LongLength)
+                        {
+                            var baseOffset = (int)byteOffset;
+                            for (var component = 0; component < componentsPerPixel; component++)
+                            {
+                                var sample = request.Samples[baseOffset + component];
+                                if (rawSamples != null)
+                                    rawSamples[component] = sample;
+                                pixelValues[component] = DecodeImageSample(
+                                    request.DecodeArray,
+                                    colorSpace,
+                                    component,
+                                    sample,
+                                    maxSample);
+                            }
+
+                            samplesRead = true;
+                            ConvertPixel(
+                                colorSpace,
+                                imageColorConverter,
+                                pixelValues,
+                                out red,
+                                out green,
+                                out blue);
+                        }
+                    }
+                    else
+                    {
+                        var bitOffset = checked(
+                            ((long)sy * sourceRowStrideBits) +
+                            ((long)sx * componentsPerPixel * request.BitsPerComponent));
+                        if (bitOffset + (componentsPerPixel * request.BitsPerComponent) <=
+                            (long)request.Samples.Length * 8)
+                        {
+                            for (var component = 0; component < componentsPerPixel; component++)
+                            {
+                                var sample = ReadPackedImageSample(
+                                    request.Samples,
+                                    checked((int)(bitOffset + (component * request.BitsPerComponent))),
+                                    request.BitsPerComponent);
+                                if (rawSamples != null)
+                                    rawSamples[component] = sample;
+                                pixelValues[component] = DecodeImageSample(
+                                    request.DecodeArray,
+                                    colorSpace,
+                                    component,
+                                    sample,
+                                    maxSample);
+                            }
+
+                            samplesRead = true;
+                            ConvertPixel(
+                                colorSpace,
+                                imageColorConverter,
+                                pixelValues,
+                                out red,
+                                out green,
+                                out blue);
+                        }
+                    }
+                }
+                else if (request.BitsPerComponent == 1)
+                {
+                    // Same row-stride formula as the packed-bit branch above,
+                    // specialized to the single-component case (matches the
+                    // pre-#1403 behaviour: a 1 bpc pixel here is always read
+                    // as one sample, regardless of ComponentsPerPixel).
+                    var bitOffset = checked(((long)sy * singleBitRowStrideBits) + sx);
+                    var byteIndex = bitOffset / 8;
+                    var bitIndex = 7 - (int)(bitOffset % 8);
+                    var sample = byteIndex < request.Samples.LongLength
+                        ? (request.Samples[byteIndex] >> bitIndex) & 1
+                        : 0;
+                    pixelValues[0] = DecodeImageSample(
+                        request.DecodeArray,
+                        colorSpace,
+                        0,
+                        sample,
+                        maxSample);
+                    ConvertPixel(
+                        colorSpace,
+                        imageColorConverter,
+                        pixelValues,
+                        out red,
+                        out green,
+                        out blue);
+                    if (rawSamples != null)
+                        rawSamples[0] = sample;
+                    samplesRead = true;
+                }
+
+                if (samplesRead &&
+                    rawSamples != null &&
+                    IsColorKeyMasked(rawSamples, request.ColorKeyMask!))
+                {
+                    alpha = 0;
+                }
+
+                pixels[destinationIndex++] = red;
+                pixels[destinationIndex++] = green;
+                pixels[destinationIndex++] = blue;
+                pixels[destinationIndex++] = alpha;
+            }
+        }
+    }
+
+    private delegate void RowRangeAction(int startRow, int endRow);
+
+    /// <summary>
+    /// Runs <paramref name="rows"/> as [start, end) row bands (#1208): a single
+    /// serial call below <see cref="MinimumParallelRows"/> rows or
+    /// <see cref="MinimumParallelPixels"/> pixels, or when
+    /// <paramref name="allowParallel"/> is false; otherwise bands of equal
+    /// height via Parallel.For, capped at <see cref="Environment.ProcessorCount"/>
+    /// workers.
+    /// <para>
+    /// The caller's thread executes bands itself, so a saturated thread pool —
+    /// for instance several GUI page bands decoding at once, each asking for
+    /// its own workers — slows this down but cannot deadlock it; the pool's
+    /// slow thread injection queues the surplus rather than oversubscribing.
+    /// </para>
+    /// <para>
+    /// Parallel.For wraps a band's exception in an AggregateException. It is
+    /// unwrapped here so cancellation still surfaces as
+    /// <see cref="OperationCanceledException"/> (the decoders' catch-all would
+    /// otherwise report a cancelled decode as a malformed image) and any other
+    /// failure reaches that catch-all as it did from the serial loop.
+    /// </para>
+    /// </summary>
+    private static void ForEachRowBand(
+        int rows,
+        int columns,
+        bool allowParallel,
+        CancellationToken cancellationToken,
+        RowRangeAction action)
+    {
+        var processors = Environment.ProcessorCount;
+        if (!allowParallel ||
+            processors < 2 ||
+            rows < MinimumParallelRows ||
+            (long)rows * columns < MinimumParallelPixels)
+        {
+            action(0, rows);
+            return;
+        }
+
+        var rowsPerBand = (rows + (processors * BandsPerProcessor) - 1) / (processors * BandsPerProcessor);
+        var bandCount = (rows + rowsPerBand - 1) / rowsPerBand;
+        try
+        {
+            Parallel.For(
+                0,
+                bandCount,
+                new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = processors,
+                    CancellationToken = cancellationToken,
+                },
+                band =>
+                {
+                    var startRow = band * rowsPerBand;
+                    action(startRow, Math.Min(rows, startRow + rowsPerBand));
+                });
+        }
+        catch (AggregateException aggregate)
+        {
+            var failures = aggregate.Flatten().InnerExceptions;
+            var failure = failures.FirstOrDefault(static e => e is OperationCanceledException) ?? failures[0];
+            ExceptionDispatchInfo.Capture(failure).Throw();
+            throw;
+        }
     }
 
     private static void ConvertPixel(
@@ -473,11 +599,12 @@ internal static class RawSampleImageDecoder
         return bitmap;
     }
 
-    private static SKBitmap? CreateCmykBitmap(
+    private static unsafe SKBitmap? CreateCmykBitmap(
         byte[] data,
         int width,
         int height,
-        PdfColorSpace colorSpace)
+        PdfColorSpace colorSpace,
+        CancellationToken cancellationToken)
     {
         var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
         var pixels = SkiaBitmapPixelBuffer.GetWritableSpan(bitmap);
@@ -494,23 +621,69 @@ internal static class RawSampleImageDecoder
             return null;
         }
 
-        var src = 0;
-        var dst = 0;
-        for (var i = 0; i < width * height; i++)
+        // #1208: the converter is a lattice read-only after construction, so
+        // disjoint row bands may convert concurrently (see ForEachRowBand).
+        var pixelAddress = bitmap.GetPixels();
+        var pixelLength = pixels.Length;
+        try
         {
-            var (r, g, b) = converter.ToRgb(
-                data[src],
-                data[src + 1],
-                data[src + 2],
-                data[src + 3]);
-            src += 4;
-            pixels[dst++] = r;
-            pixels[dst++] = g;
-            pixels[dst++] = b;
-            pixels[dst++] = 255;
+            ForEachRowBand(
+                height,
+                width,
+                allowParallel: true,
+                cancellationToken,
+                (startRow, endRow) => ConvertCmykRows(
+                    converter,
+                    data,
+                    width,
+                    new Span<byte>((void*)pixelAddress, pixelLength),
+                    startRow,
+                    endRow,
+                    cancellationToken));
+        }
+        catch
+        {
+            bitmap.Dispose();
+            throw;
         }
 
         return bitmap;
+    }
+
+    /// <summary>
+    /// Rows <paramref name="startRow"/> (inclusive) to <paramref name="endRow"/>
+    /// (exclusive) of <see cref="CreateCmykBitmap"/>: the same per-pixel
+    /// arithmetic as the single pass it replaced, starting at the offsets that
+    /// pass had reached by <paramref name="startRow"/>.
+    /// </summary>
+    private static void ConvertCmykRows(
+        ImageColorConverter converter,
+        byte[] data,
+        int width,
+        Span<byte> pixels,
+        int startRow,
+        int endRow,
+        CancellationToken cancellationToken)
+    {
+        var src = startRow * width * 4;
+        var dst = startRow * width * 4;
+        for (var row = startRow; row < endRow; row++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            for (var column = 0; column < width; column++)
+            {
+                var (r, g, b) = converter.ToRgb(
+                    data[src],
+                    data[src + 1],
+                    data[src + 2],
+                    data[src + 3]);
+                src += 4;
+                pixels[dst++] = r;
+                pixels[dst++] = g;
+                pixels[dst++] = b;
+                pixels[dst++] = 255;
+            }
+        }
     }
 }
 
