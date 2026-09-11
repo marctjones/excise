@@ -103,6 +103,46 @@ public sealed class DocumentImageExportWorkflowServiceTests : IDisposable
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
 
+    [Fact]
+    public async Task ExportPageAsync_PngDecodesToTheSameRgbaAsTheDefaultEncoder()
+    {
+        // #1471: the PNG export path uses Sub filter + zlib 6. Encoded bytes
+        // change; decoded RGBA must not. Opaque pixels must round-trip exactly;
+        // partially transparent ones must decode as they did under the
+        // previous default encoder (premul -> PNG unpremul is not bit-exact
+        // under either encoder, so that is the right comparison for them).
+        var outputPath = Path.Combine(_tempDir, "roundtrip.png");
+        using var source = new SKBitmap(64, 48, SKColorType.Rgba8888, SKAlphaType.Premul);
+        for (var y = 0; y < source.Height; y++)
+        {
+            for (var x = 0; x < source.Width; x++)
+            {
+                var alpha = y < source.Height / 2 ? (byte)255 : (byte)((x * 11 + y * 5) % 256);
+                source.SetPixel(x, y, new SKColor((byte)(x * 4), (byte)(y * 5), (byte)((x ^ y) * 3), alpha));
+            }
+        }
+
+        var workflow = CreateWorkflow(_ => source.Copy());
+        var result = await workflow.ExportPageAsync(
+            new PageImageExportRequest(_document, 0, outputPath, 150));
+        result.WasWritten.Should().BeTrue();
+
+        var unpremul = new SKImageInfo(source.Width, source.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+        using var exported = SKBitmap.Decode(outputPath, unpremul);
+        using var sourceImage = SKImage.FromBitmap(source);
+        using var defaultPng = sourceImage.Encode(SKEncodedImageFormat.Png, 90);
+        using var defaultDecoded = SKBitmap.Decode(defaultPng, unpremul);
+
+        exported.Should().NotBeNull();
+        defaultDecoded.Should().NotBeNull();
+        exported!.GetPixelSpan().ToArray().Should().Equal(defaultDecoded!.GetPixelSpan().ToArray());
+
+        var opaqueBytes = source.RowBytes * (source.Height / 2);
+        exported.GetPixelSpan().Slice(0, opaqueBytes).ToArray().Should().Equal(
+            source.GetPixelSpan().Slice(0, opaqueBytes).ToArray(),
+            "opaque rows must decode to exactly the source pixels");
+    }
+
     public void Dispose()
     {
         _document.Dispose();
