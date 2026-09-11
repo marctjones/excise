@@ -31,10 +31,26 @@ public partial class PdfViewerControl
     private ItemsControl? _continuousItems;
     private List<PdfPageSlot>? _continuousSlots;
 
-    // Bitmaps are bounded by an LRU list. We do NOT dispose on eviction: a bitmap
-    // may still be bound to a realized (visible) Image, and disposing it would
-    // crash the render. Dropping the reference lets the GC reclaim it once no
-    // slot/Image holds it. Full disposal happens only on document change.
+    // Grid-cell TILES, bounded by an LRU list and owned by it. A tile is disposed
+    // the moment it leaves the list (eviction, or replacement under the same key)
+    // and on document change (#1467).
+    //
+    // That is safe because, since #848, a tile is never an Image.Source: tiles are
+    // only read by BlitCell while RecomposeSlotCore builds a composite, and the
+    // only bitmap bound to an Image is the per-page COMPOSITE
+    // (PdfPageSlot.Bitmap, PdfViewerControl.axaml). Eviction and compositing both
+    // run on the UI thread, so a tile cannot be disposed mid-blit: the band render
+    // awaits Task.Run without ConfigureAwait(false), and every dispatcher job runs
+    // under AvaloniaSynchronizationContext, so SliceBandIntoCells ->
+    // AddToContinuousCache and RecomposeSlot -> PeekContinuousCached -> BlitCell
+    // all resume on the dispatcher. Keep it that way: an off-thread eviction would
+    // race a blit.
+    //
+    // COMPOSITES are the opposite case and must NOT be disposed while bound:
+    // Avalonia 12's Bitmap.Dispose releases its IRef<IBitmapImpl>, and an Image
+    // that still points at it throws ObjectDisposedException on its next measure
+    // or render. Releasing a replaced composite needs the binding to have moved
+    // first (#1466).
     private readonly LinkedList<(ContinuousTileKey Key, WriteableBitmap Bitmap)> _continuousCache = new();
 
     // Per-page PdfLink lists for continuous-mode link click/hover hit-testing
@@ -71,6 +87,16 @@ public partial class PdfViewerControl
     // tile geometry changes (quantum, overscan, or the DPI cap) re-run
     // ContinuousCacheMemoryTests and reconsider this number -- don't just restate it.
     private const long ContinuousCacheByteBudget = 200L * 1024 * 1024;
+
+    /// <summary>
+    /// Test hook: replace <see cref="ContinuousCacheByteBudget"/> so a test can
+    /// force tile eviction with real (Skia-backed) bitmaps without allocating
+    /// hundreds of MB. Null in production.
+    /// </summary>
+    internal long? ContinuousCacheByteBudgetOverride { get; set; }
+
+    private long EffectiveContinuousCacheByteBudget =>
+        ContinuousCacheByteBudgetOverride ?? ContinuousCacheByteBudget;
 
     // Always keep at least this many entries, even if a single tile alone
     // exceeds the byte budget -- a single huge page must not defeat the LRU
@@ -1349,20 +1375,37 @@ public partial class PdfViewerControl
         return false;
     }
 
-    private void AddToContinuousCache(ContinuousTileKey key, WriteableBitmap bmp)
+    /// <summary>
+    /// Transfers ownership of <paramref name="bmp"/> to the tile cache. A tile
+    /// replaced under the same key, and every tile evicted to get back under the
+    /// byte budget, is disposed (#1467). Internal for tests.
+    /// </summary>
+    internal void AddToContinuousCache(ContinuousTileKey key, WriteableBitmap bmp)
     {
         for (var node = _continuousCache.First; node != null; node = node.Next)
         {
-            if (node.Value.Key.Equals(key)) { _continuousCache.Remove(node); break; }
+            if (!node.Value.Key.Equals(key)) continue;
+            var replaced = node.Value.Bitmap;
+            _continuousCache.Remove(node);
+            // Re-adding the very same instance must not dispose the bitmap
+            // being inserted.
+            if (!ReferenceEquals(replaced, bmp)) replaced.Dispose();
+            break;
         }
         _continuousCache.AddFirst((key, bmp));
-        // Drop (don't dispose) the LRU tail until back under the byte budget —
-        // see the ContinuousCacheByteBudget field comment for how that number
-        // was measured (#615). See the field comment on _continuousCache for why
-        // eviction drops the reference rather than disposing it.
+        // Evict the LRU tail until back under the byte budget — see the
+        // ContinuousCacheByteBudget field comment for how that number was
+        // measured (#615). Unlink BEFORE disposing: ContinuousCacheResidentBytes
+        // reads every remaining entry's PixelSize, which throws on a disposed
+        // bitmap. See the _continuousCache field comment for why disposing a
+        // tile here is safe.
         while (_continuousCache.Count > ContinuousCacheMinEntries &&
-               ContinuousCacheResidentBytes() > ContinuousCacheByteBudget)
+               ContinuousCacheResidentBytes() > EffectiveContinuousCacheByteBudget)
+        {
+            var evicted = _continuousCache.Last!.Value.Bitmap;
             _continuousCache.RemoveLast();
+            evicted.Dispose();
+        }
     }
 
     private long ContinuousCacheResidentBytes()
