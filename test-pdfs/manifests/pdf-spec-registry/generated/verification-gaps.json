@@ -33,42 +33,6 @@
       "reason": "no verification contract"
     },
     {
-      "capability": "pdf.17.interactive.redaction-review-drafts",
-      "mode": "parse",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.redaction-review-drafts",
-      "mode": "preserve",
-      "implementationState": "partial",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.redaction-review-drafts",
-      "mode": "render",
-      "implementationState": "unknown",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.redaction-review-drafts",
-      "mode": "mutate",
-      "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.redaction-review-drafts",
-      "mode": "write",
-      "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
-      "capability": "pdf.17.interactive.redaction-review-drafts",
-      "mode": "author",
-      "implementationState": "unimplemented",
-      "reason": "no verification contract"
-    },
-    {
       "capability": "pdf.17.interactive.forms",
       "mode": "execute",
       "implementationState": "unimplemented",

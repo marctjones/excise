@@ -7989,14 +7989,6 @@
       "fixtures": []
     },
     {
-      "capability": "pdf.20.annotation.subtype-001",
-      "section": "annotation-subtypes",
-      "mode": "extract",
-      "currentState": "unimplemented",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
       "capability": "pdf.20.annotation.subtype-002",
       "section": "annotation-subtypes",
       "mode": "parse",
@@ -8024,7 +8016,7 @@
       "capability": "pdf.20.annotation.subtype-002",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8056,7 +8048,7 @@
       "capability": "pdf.20.annotation.subtype-003",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8120,7 +8112,7 @@
       "capability": "pdf.20.annotation.subtype-005",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8152,7 +8144,7 @@
       "capability": "pdf.20.annotation.subtype-006",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8184,7 +8176,7 @@
       "capability": "pdf.20.annotation.subtype-007",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8216,7 +8208,7 @@
       "capability": "pdf.20.annotation.subtype-008",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8248,7 +8240,7 @@
       "capability": "pdf.20.annotation.subtype-009",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8280,7 +8272,7 @@
       "capability": "pdf.20.annotation.subtype-010",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8312,7 +8304,7 @@
       "capability": "pdf.20.annotation.subtype-011",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8344,7 +8336,7 @@
       "capability": "pdf.20.annotation.subtype-012",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8376,7 +8368,7 @@
       "capability": "pdf.20.annotation.subtype-013",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8408,7 +8400,7 @@
       "capability": "pdf.20.annotation.subtype-014",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8433,14 +8425,6 @@
       "section": "annotation-subtypes",
       "mode": "render",
       "currentState": "partial",
-      "fixtureStatus": "not-contracted",
-      "fixtures": []
-    },
-    {
-      "capability": "pdf.20.annotation.subtype-015",
-      "section": "annotation-subtypes",
-      "mode": "extract",
-      "currentState": "unimplemented",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8472,7 +8456,7 @@
       "capability": "pdf.20.annotation.subtype-016",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8504,7 +8488,7 @@
       "capability": "pdf.20.annotation.subtype-017",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8536,7 +8520,7 @@
       "capability": "pdf.20.annotation.subtype-018",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8568,7 +8552,7 @@
       "capability": "pdf.20.annotation.subtype-019",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8600,7 +8584,7 @@
       "capability": "pdf.20.annotation.subtype-020",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8632,7 +8616,7 @@
       "capability": "pdf.20.annotation.subtype-021",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8664,7 +8648,7 @@
       "capability": "pdf.20.annotation.subtype-022",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -8696,7 +8680,7 @@
       "capability": "pdf.20.annotation.subtype-023",
       "section": "annotation-subtypes",
       "mode": "extract",
-      "currentState": "unimplemented",
+      "currentState": "partial",
       "fixtureStatus": "not-contracted",
       "fixtures": []
     },
@@ -9324,9 +9308,9 @@
     }
   ],
   "summary": {
-    "targetModes": 900,
+    "targetModes": 898,
     "fixtureStatus": {
-      "not-contracted": 669,
+      "not-contracted": 667,
       "recorded-passing": 231
     }
   }

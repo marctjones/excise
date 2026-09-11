@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "0ae62288f5ca96a17bb777154da69c188c9ffd2d7c8f0a4a2d0f391293f495b2",
+  "sourceFingerprint": "044fb42ae014e42c97df2dbf894418abd25fc42f7cb87d5620d218a104773db2",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -2434,6 +2434,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Filters/PdfFilterDecodeException.cs",
+      "path": "Excise.Core/Filters/PdfFilterDecodeException.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Filters/PdfFilterRegistry.cs",
       "path": "Excise.Core/Filters/PdfFilterRegistry.cs",
       "kind": "source-file",
@@ -3576,6 +3586,29 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Redaction/CarrierScrubPolicy.cs",
+      "path": "Excise.Core/Redaction/CarrierScrubPolicy.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Redaction/CarrierTextRecovery.cs",
       "path": "Excise.Core/Redaction/CarrierTextRecovery.cs",
       "kind": "source-file",
@@ -4565,6 +4598,16 @@
     {
       "id": "Excise.Core/Text/TextSelectionEngine.cs",
       "path": "Excise.Core/Text/TextSelectionEngine.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Text/UnicodeTextSafety.cs",
+      "path": "Excise.Core/Text/UnicodeTextSafety.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -6735,16 +6778,6 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.App/Services/UnicodeTextSafety.cs",
-      "path": "Excise.App/Services/UnicodeTextSafety.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
       "id": "Excise.App/Services/UnsavedChangesDecision.cs",
       "path": "Excise.App/Services/UnsavedChangesDecision.cs",
       "kind": "source-file",
@@ -8653,7 +8686,7 @@
     }
   ],
   "summary": {
-    "records": 402,
+    "records": 404,
     "facets": {
       "annotations": 10,
       "content-and-graphics": 18,
@@ -8661,8 +8694,8 @@
       "fonts": 28,
       "forms": 8,
       "images": 28,
-      "product-integration-general": 214,
-      "redaction": 51,
+      "product-integration-general": 215,
+      "redaction": 52,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 19,
       "transparency": 2
@@ -8711,10 +8744,10 @@
       "pdf.17.interactive.redaction-annotations:parse": 10,
       "pdf.17.interactive.redaction-annotations:preserve": 10,
       "pdf.17.interactive.redaction-annotations:render": 10,
-      "pdf.17.security.redaction-content-removal:extract": 51,
-      "pdf.17.security.redaction-content-removal:mutate": 51,
-      "pdf.17.security.redaction-content-removal:render": 51,
-      "pdf.17.security.redaction-content-removal:write": 51,
+      "pdf.17.security.redaction-content-removal:extract": 52,
+      "pdf.17.security.redaction-content-removal:mutate": 52,
+      "pdf.17.security.redaction-content-removal:render": 52,
+      "pdf.17.security.redaction-content-removal:write": 52,
       "pdf.17.syntax.encryption:mutate": 19,
       "pdf.17.syntax.encryption:parse": 19,
       "pdf.17.syntax.encryption:preserve": 19,
@@ -8740,7 +8773,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 19,
       "pdfe.product.security.signature-and-permission-warning:write": 19
     },
-    "fallbackRecords": 214,
+    "fallbackRecords": 215,
     "allRecordsMapped": true
   }
 }
