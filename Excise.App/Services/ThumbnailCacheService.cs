@@ -375,6 +375,7 @@ public sealed class ThumbnailCacheService : IDisposable
 
     private void TryWriteCache(string path, SKBitmap bmp)
     {
+        string? tempPath = null;
         try
         {
             Directory.CreateDirectory(_cacheDir);
@@ -382,12 +383,27 @@ public sealed class ThumbnailCacheService : IDisposable
             // WebP @ 90 quality is ~10× smaller than PNG for thumbnails
             // and visually identical at 36 DPI display sizes.
             using var data = img.Encode(SKEncodedImageFormat.Webp, 90);
-            using var fs = File.Create(path);
-            data.SaveTo(fs);
+            // Write a sibling temp file and rename it into place. File.Create on the
+            // final path makes the name visible before the bytes are written, so a
+            // concurrent reader (another service instance, a second window, or a
+            // test waiting for the file) could decode a truncated WebP, delete it and
+            // re-render. A same-directory rename is atomic. See issue #1474.
+            tempPath = path + ".tmp-" + Guid.NewGuid().ToString("N");
+            using (var fs = File.Create(tempPath))
+                data.SaveTo(fs);
+            File.Move(tempPath, path, overwrite: true);
+            tempPath = null;
         }
         catch (Exception ex)
         {
             _logger.LogDebug(ex, "Failed to write thumbnail cache {Path}", path);
+        }
+        finally
+        {
+            if (tempPath != null)
+            {
+                try { File.Delete(tempPath); } catch { }
+            }
         }
     }
 
