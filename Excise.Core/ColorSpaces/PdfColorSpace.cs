@@ -28,6 +28,7 @@ public sealed class PdfColorSpace
     private readonly object _tintRgbCacheLock = new();
     private static readonly ConditionalWeakTable<PdfDocument, OutputIntentProfileBox> OutputIntentProfiles = new();
     private static readonly ConditionalWeakTable<PdfDocument, PdfColorSpace> DeviceCmykOutputIntentColorSpaces = new();
+    private static readonly ConditionalWeakTable<PdfDocument, ConditionalWeakTable<PdfStream, IccBasedColorSpaceBox>> IccBasedColorSpaces = new();
 
     private const int MaxTintRgbCacheEntries = 4096;
 
@@ -143,6 +144,43 @@ public sealed class PdfColorSpace
         var iccStream = doc.Resolve(arr[1]) as PdfStream;
         if (iccStream == null) return DeviceRGB;
 
+        // #1208: one parsed instance per ICC profile stream, per document.
+        // Every image draw used to re-parse the profile (386 KB on the ACC
+        // report) into a fresh PdfColorSpace, and Excise.Rendering's
+        // ImageColorConverter cache is keyed by that instance's identity, so
+        // the 17^4 CMYK lattice (325 ms measured) was rebuilt on every render,
+        // GUI re-render and thumbnail. Same shape as #1425's FromName cache.
+        //
+        // Keyed by document THEN stream: the result embeds the document's
+        // OutputIntent profile, so a stream object reachable from two
+        // documents must not share one answer. Both tables are weak, so the
+        // cache lives exactly as long as the document and its stream objects
+        // (PdfDocumentObjectStore hands out one instance per object number).
+        // GetValue returns the same stored box to every concurrent caller.
+        // The whole result is cached, fallbacks included, so an unparseable
+        // profile falls back exactly as before. A stream whose bytes were
+        // replaced since the parse is parsed again rather than served stale;
+        // the source bytes are captured AFTER parsing, since reading the data
+        // is what may replace them (deferred decode/decrypt).
+        var perDocument = IccBasedColorSpaces.GetValue(doc, static _ => new ConditionalWeakTable<PdfStream, IccBasedColorSpaceBox>());
+        var box = perDocument.GetValue(iccStream, stream => CreateIccBasedColorSpaceBox(stream, doc));
+        if (!ReferenceEquals(box.SourceData, iccStream.EncodedData))
+        {
+            box = CreateIccBasedColorSpaceBox(iccStream, doc);
+            perDocument.AddOrUpdate(iccStream, box);
+        }
+
+        return box.ColorSpace;
+    }
+
+    private static IccBasedColorSpaceBox CreateIccBasedColorSpaceBox(PdfStream iccStream, PdfDocument doc)
+    {
+        var colorSpace = ParseICCBasedStream(iccStream, doc);
+        return new IccBasedColorSpaceBox(iccStream.EncodedData, colorSpace);
+    }
+
+    private static PdfColorSpace ParseICCBasedStream(PdfStream iccStream, PdfDocument doc)
+    {
         var n = iccStream.GetInt("N", 3);
         var iccProfile = PdfIccProfile.TryParse(iccStream.DecodedData ?? iccStream.EncodedData);
         if (iccProfile != null)
@@ -438,6 +476,19 @@ public sealed class PdfColorSpace
         public OutputIntentProfileBox(PdfIccProfile? profile) => Profile = profile;
 
         public PdfIccProfile? Profile { get; }
+    }
+
+    private sealed class IccBasedColorSpaceBox
+    {
+        public IccBasedColorSpaceBox(byte[] sourceData, PdfColorSpace colorSpace)
+        {
+            SourceData = sourceData;
+            ColorSpace = colorSpace;
+        }
+
+        public byte[] SourceData { get; }
+
+        public PdfColorSpace ColorSpace { get; }
     }
 
     private (double R, double G, double B) CalGrayToRgb(double a)
