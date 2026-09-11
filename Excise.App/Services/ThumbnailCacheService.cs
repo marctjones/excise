@@ -45,10 +45,8 @@ public sealed class ThumbnailCacheService : IDisposable
     private readonly Dictionary<int, InFlightThumbnail> _inFlight = new();
     private readonly object _lock = new();
 
-    // Test seams (#1467): how many coalesced master bitmaps this instance has
-    // released, and a hook that sees each one just before it is disposed.
-    private int _masterReleaseCount;
-    internal int MasterReleaseCount => Volatile.Read(ref _masterReleaseCount);
+    // Test seam (#1467): a hook that sees each coalesced master bitmap just
+    // before it is disposed.
     internal Action<SKBitmap>? MasterReleasingForTest { get; set; }
 
     /// <summary>
@@ -294,7 +292,6 @@ public sealed class ThumbnailCacheService : IDisposable
     private void ReleaseMaster(SKBitmap? master)
     {
         if (master == null) return;
-        Interlocked.Increment(ref _masterReleaseCount);
         MasterReleasingForTest?.Invoke(master);
         master.Dispose();
     }

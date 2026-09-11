@@ -38,7 +38,7 @@ public class ThumbnailCacheMasterLifetimeTests
             "fixture: the eight requests must coalesce onto one load, or no master is shared");
 
         await fixture.WaitForReleasesAsync(1);
-        svc.MasterReleaseCount.Should().Be(1, "the shared master is released exactly once");
+        fixture.ReleasedCount.Should().Be(1, "the shared master is released exactly once");
         var master = fixture.SingleReleasedMaster();
         master.Handle.Should().Be(IntPtr.Zero, "the released master has been disposed");
 
@@ -74,7 +74,7 @@ public class ThumbnailCacheMasterLifetimeTests
         fixture.Owned.Add(kept!);
 
         await fixture.WaitForReleasesAsync(1);
-        svc.MasterReleaseCount.Should().Be(1,
+        fixture.ReleasedCount.Should().Be(1,
             "the caller that gave up dropped its claim; the master is still released once, not twice or never");
         fixture.SingleReleasedMaster().Handle.Should().Be(IntPtr.Zero);
 
@@ -99,6 +99,15 @@ public class ThumbnailCacheMasterLifetimeTests
         public ThumbnailCacheService Service { get; }
         public List<SKBitmap> Owned { get; } = new();
 
+        /// <summary>
+        /// Masters the service has released, as seen by the hook production
+        /// invokes immediately before each disposal (ReleaseMaster).
+        /// </summary>
+        public int ReleasedCount
+        {
+            get { lock (_released) return _released.Count; }
+        }
+
         public static Task<ThumbnailFixture> CreateAsync()
         {
             var pdfPath = Path.Combine(Path.GetTempPath(), $"excise-thumb-master-{Guid.NewGuid():N}.pdf");
@@ -117,7 +126,7 @@ public class ThumbnailCacheMasterLifetimeTests
             // Retirement runs as a task continuation, which the runtime may queue
             // rather than inline, so allow it a moment after the awaiters return.
             var sw = Stopwatch.StartNew();
-            while (Service.MasterReleaseCount < count && sw.Elapsed < TimeSpan.FromSeconds(5))
+            while (ReleasedCount < count && sw.Elapsed < TimeSpan.FromSeconds(5))
                 await Task.Delay(10);
             // Settle, so a (wrong) second release has the chance to show up.
             await Task.Delay(100);

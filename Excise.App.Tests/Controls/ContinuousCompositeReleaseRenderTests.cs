@@ -114,6 +114,42 @@ public class ContinuousCompositeReleaseRenderTests
         }
     }
 
+    /// <summary>
+    /// The #1466 bound is checked in production after every published composite:
+    /// composites above it raise the over-bound warning, and composites inside it
+    /// do not. The override shrinks the bound so ordinary composites exceed it.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task CompositesAboveTheByteBound_RaiseTheOverBoundWarning_AndCompositesInsideItDoNot()
+    {
+        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount: 1);
+        try
+        {
+            var original = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(
+                window, viewer, items, pageNumber: 1);
+            viewer.ContinuousCompositeResidentBytes().Should().BeGreaterThan(1,
+                "fixture: the page must hold a composite for a 1-byte bound to be exceeded");
+            viewer.ContinuousCompositeOverBoundCount.Should().Be(0,
+                "a one-page document at the default zoom is far inside the documented bound");
+
+            viewer.ContinuousCompositeByteBoundOverride = 1;
+            viewer.ZoomLevel = 1.1;
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(
+                window, viewer, items, pageNumber: 1, notThis: original);
+
+            _out.WriteLine($"overBound={viewer.ContinuousCompositeOverBoundCount} " +
+                           $"residentBytes={viewer.ContinuousCompositeResidentBytes()}");
+            viewer.ContinuousCompositeOverBoundCount.Should().BeGreaterThan(0,
+                "a composite published while the slots' composites exceed the bound must raise the warning");
+        }
+        finally
+        {
+            viewer.ContinuousCompositeByteBoundOverride = null;
+            window.Close();
+            viewer.Document?.Dispose();
+        }
+    }
+
     private static Image ImageFor(ItemsControl items, PdfPageSlot slot)
     {
         var container = items.ContainerFromItem(slot)

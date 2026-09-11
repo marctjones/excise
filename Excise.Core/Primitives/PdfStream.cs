@@ -195,11 +195,6 @@ public class PdfStream : PdfDictionary
     }
 
     /// <summary>
-    /// Whether a deferred decode (#1468) is installed and has not run yet.
-    /// </summary>
-    internal bool HasPendingDecode => _deferredDecode != null;
-
-    /// <summary>
     /// Runs a pending deferred decode (#1468), if there is one, and reports
     /// whether the stream now holds decoded bytes. Never throws for a decode
     /// that refused; the reason, if any, is in <see cref="DecodeFailureReason"/>.

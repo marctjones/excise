@@ -124,7 +124,28 @@ public partial class PdfViewerControl
     // out of viewport + overscan keeps its last composite until its container is
     // cleared (RecomposeSlotCore). If tile geometry, overscan or the DPI model
     // changes, re-run ContinuousCacheMemoryTests and re-derive this number.
+    //
+    // RecomposeSlotCore checks the bound after every composite it publishes and
+    // traces a warning when the slots' composites exceed it, so a viewport
+    // outside the envelope (or a regression inside it) is visible in a traced
+    // live session rather than only in the memory tests.
     internal const long ContinuousCompositeByteBound = 192L * 1024 * 1024;
+
+    /// <summary>
+    /// Test hook: replace <see cref="ContinuousCompositeByteBound"/> so a test can
+    /// drive the over-bound warning with ordinary composites. Null in production.
+    /// </summary>
+    internal long? ContinuousCompositeByteBoundOverride { get; set; }
+
+    private long EffectiveContinuousCompositeByteBound =>
+        ContinuousCompositeByteBoundOverride ?? ContinuousCompositeByteBound;
+
+    /// <summary>
+    /// How many published composites have left the slots' composites above
+    /// <see cref="EffectiveContinuousCompositeByteBound"/> (#1466). Reported in
+    /// the over-bound warning itself.
+    /// </summary>
+    internal int ContinuousCompositeOverBoundCount { get; private set; }
 
     // Always keep at least this many entries, even if a single tile alone
     // exceeds the byte budget -- a single huge page must not defeat the LRU
@@ -1333,7 +1354,31 @@ public partial class PdfViewerControl
         }
 
         slot.SetComposite(composite, compositeKey, bandX, bandY, bandW, bandH);
-        Trace($"Composite page={slot.PageNumber} band={bandX:F0},{bandY:F0} {bandW:F0}x{bandH:F0} px={totalW}x{totalH} cells={parts.Length} dpi={dpi} zoom={ZoomLevel:F3}");
+
+        // #1466 bound check. Runs per composite on the UI thread, so the common
+        // path is one alloc-free walk of the slots; the band's upper bound
+        // (ContinuousCompositeByteSize builds a mosaic) and the strings are only
+        // computed when tracing is on or the bound is exceeded.
+        long residentBytes = ContinuousCompositeResidentBytes();
+        long bound = EffectiveContinuousCompositeByteBound;
+        bool overBound = residentBytes > bound;
+        if (overBound)
+            ContinuousCompositeOverBoundCount++;
+        if (!TraceEnabled && !overBound)
+            return;
+
+        long bandUpperBoundBytes = ContinuousCompositeByteSize(cells, pxPerDip);
+        Trace($"Composite page={slot.PageNumber} band={bandX:F0},{bandY:F0} {bandW:F0}x{bandH:F0} px={totalW}x{totalH} cells={parts.Length} dpi={dpi} zoom={ZoomLevel:F3} bandUpperBoundBytes={bandUpperBoundBytes}");
+        if (overBound)
+        {
+            int composites = 0;
+            if (_continuousSlots != null)
+                foreach (var s in _continuousSlots)
+                    if (s.Bitmap != null) composites++;
+            Trace($"WARNING composite bytes over bound (#{ContinuousCompositeOverBoundCount}): residentBytes={residentBytes} " +
+                  $"bound={bound} zoom={ZoomLevel:F3} dpi={dpi} pagesWithComposite={composites} " +
+                  $"page={slot.PageNumber} bandUpperBoundBytes={bandUpperBoundBytes} (#1466)");
+        }
     }
 
     /// <summary>

@@ -42,11 +42,12 @@ public class DeferredImageDecodeTests
 
         image.IsDecoded.Should().BeFalse(
             "resolving an image XObject is what /Do does just to read /Subtype; it must not inflate the samples");
-        image.HasPendingDecode.Should().BeTrue();
-        image.DecodedData.Should().Equal(Samples,
+        var first = image.DecodedData;
+        first.Should().Equal(Samples,
             "the deferred decode must produce exactly the bytes the eager decode did");
         image.IsDecoded.Should().BeTrue("IsDecoded still means the decoded bytes are held");
-        image.HasPendingDecode.Should().BeFalse();
+        image.DecodedData.Should().BeSameAs(first,
+            "the decode runs once; a later read returns the published array instead of decoding again");
     }
 
     [Fact]
@@ -70,7 +71,6 @@ public class DeferredImageDecodeTests
 
         contents.IsDecoded.Should().BeTrue(
             "only image XObjects defer; content streams have callers that branch on IsDecoded");
-        contents.HasPendingDecode.Should().BeFalse();
     }
 
     [Fact]
@@ -134,10 +134,18 @@ public class DeferredImageDecodeTests
             "the refusal reason is recorded by the deferred decode exactly as by the eager one (#1396)");
         image.DecodeFailureReason.Should().Contain("JBIG2Decode");
         image.IsDecoded.Should().BeFalse("a refused decode must never read back as decoded samples");
-        image.HasPendingDecode.Should().BeFalse("the decode is attempted once, as it was at resolve time");
+
+        // The decode is attempted once, as it was at resolve time. Overwrite the
+        // recorded reason: a second attempt would refuse again and record the
+        // JBIG2 reason over this one.
+        image.SetDecodeFailureReason("sentinel: no second attempt");
 
         var secondRead = () => image.DecodedData;
         secondRead.Should().Throw<InvalidOperationException>();
+        image.TryEnsureDecoded().Should().BeFalse();
+        image.IsDecoded.Should().BeFalse();
+        image.DecodeFailureReason.Should().Be("sentinel: no second attempt",
+            "neither a second read nor TryEnsureDecoded may re-run a decode that already refused");
     }
 
     [Fact]
@@ -198,10 +206,11 @@ public class DeferredImageDecodeTests
         var clone = new PdfObjectCloner(target).CloneStream(
             doc, image, new Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference>());
 
+        clone.IsDecoded.Should().BeTrue(
+            "the clone holds decoded bytes from the moment it is made; it must not carry a decode " +
+            "that reaches back into the source document's store");
         clone.DecodedData.Should().Equal(Samples);
         clone.EncodedData.Should().Equal(image.EncodedData);
-        clone.HasPendingDecode.Should().BeFalse(
-            "a clone must not carry a decode that reaches back into the source document's store");
     }
 
     /// <summary>
