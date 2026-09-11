@@ -11,7 +11,15 @@ namespace Excise.Core.Primitives;
 public class PdfStream : PdfDictionary
 {
     private byte[] _encodedData;
-    private byte[]? _decodedData;
+
+    // volatile: a deferred decode (#1468) publishes this from whichever thread
+    // reads DecodedData first, and the fast path reads it without the lock.
+    private volatile byte[]? _decodedData;
+
+    // Pending on-demand decode installed by the document object store (#1468).
+    // The holder doubles as this stream's decode lock, so a stream that is
+    // never deferred allocates nothing. Null once the decode has run.
+    private volatile DeferredDecode? _deferredDecode;
 
     /// <summary>
     /// Creates a new PDF stream with the specified dictionary and data.
@@ -114,11 +122,18 @@ public class PdfStream : PdfDictionary
             if (!IsFiltered)
                 return _encodedData;
 
+            if (_decodedData is { } decoded)
+                return decoded;
+
+            if (_deferredDecode != null)
+                RunDeferredDecode();
+
             return _decodedData ?? throw new InvalidOperationException(
                 "Stream has not been decoded. Call Decode() first or use a PdfDocumentReader.");
         }
         set
         {
+            _deferredDecode = null;
             _decodedData = value;
             _encodedData = value; // No compression for now
             Remove("Filter");
@@ -143,12 +158,95 @@ public class PdfStream : PdfDictionary
     internal void SetEncodedData(byte[] data)
     {
         _encodedData = data ?? throw new ArgumentNullException(nameof(data));
+        // A pending decode was for the bytes being replaced; drop it so a
+        // filtered stream reads back "not decoded" exactly as it did before
+        // deferral existed.
+        _deferredDecode = null;
         _decodedData = null;
     }
 
     internal void SetDecodedData(byte[] data)
     {
         _decodedData = data;
+        _deferredDecode = null;
+    }
+
+    /// <summary>
+    /// Defers this stream's <c>/Filter</c> pipeline until the first read of
+    /// <see cref="DecodedData"/> (#1468).
+    /// </summary>
+    /// <remarks>
+    /// Installed by the document object store for image XObjects only, which
+    /// owns the decompressor; a stream never builds its own. <paramref name="decode"/>
+    /// runs at most once to completion, under this stream's own lock, on
+    /// whichever thread reads first; concurrent readers wait and then see the
+    /// same array. It is expected to behave exactly as the eager decode at
+    /// resolve time did: set the decoded bytes on success, and on a refused
+    /// decode leave the stream undecoded (recording
+    /// <see cref="DecodeFailureReason"/>) rather than throw.
+    /// </remarks>
+    internal void DeferDecode(Action<PdfStream> decode)
+    {
+        ArgumentNullException.ThrowIfNull(decode);
+        if (_decodedData != null)
+            return;
+
+        _deferredDecode = new DeferredDecode(decode);
+    }
+
+    /// <summary>
+    /// Whether a deferred decode (#1468) is installed and has not run yet.
+    /// </summary>
+    internal bool HasPendingDecode => _deferredDecode != null;
+
+    /// <summary>
+    /// Runs a pending deferred decode (#1468), if there is one, and reports
+    /// whether the stream now holds decoded bytes. Never throws for a decode
+    /// that refused; the reason, if any, is in <see cref="DecodeFailureReason"/>.
+    /// For a stream with no pending decode this is just <see cref="IsDecoded"/>.
+    /// </summary>
+    /// <remarks>
+    /// For callers that branch on <see cref="IsDecoded"/> or on
+    /// <see cref="DecodeFailureReason"/> and must see the same answer they
+    /// saw when every filtered stream was decoded at resolve time.
+    /// </remarks>
+    internal bool TryEnsureDecoded()
+    {
+        if (_decodedData == null && _deferredDecode != null)
+            RunDeferredDecode();
+
+        return _decodedData != null;
+    }
+
+    private void RunDeferredDecode()
+    {
+        var pending = _deferredDecode;
+        if (pending == null)
+            return;
+
+        lock (pending)
+        {
+            // Another reader finished (or the bytes were replaced) while this
+            // one waited for the lock.
+            if (_decodedData != null || !ReferenceEquals(_deferredDecode, pending))
+                return;
+
+            pending.Decode(this);
+
+            // Cleared only after a normal return, success or refusal — the same
+            // single attempt the eager path made. An OutOfMemoryException skips
+            // this and leaves the decode pending, as the eager path left the
+            // object uncached so a later resolve retried.
+            if (ReferenceEquals(_deferredDecode, pending))
+                _deferredDecode = null;
+        }
+    }
+
+    private sealed class DeferredDecode
+    {
+        public DeferredDecode(Action<PdfStream> decode) => Decode = decode;
+
+        public Action<PdfStream> Decode { get; }
     }
 
     /// <summary>

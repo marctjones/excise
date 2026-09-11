@@ -91,6 +91,9 @@ public class Jbig2GlobalsResolutionTests
         using var doc = PdfDocument.Open(File.ReadAllBytes(path));
         var image = doc.GetObject(imageObjectNumber).Should().BeOfType<PdfStream>().Subject;
 
+        // #1468: resolving an image XObject no longer decodes it; the decode
+        // runs on first read. Attempt it before asking whether it succeeded.
+        image.TryEnsureDecoded();
         image.IsDecoded.Should().BeTrue("the /JBIG2Decode filter must succeed once globals resolve");
         int expectedBytes = ((width + 7) / 8) * height;
         image.DecodedData.Length.Should().Be(expectedBytes);

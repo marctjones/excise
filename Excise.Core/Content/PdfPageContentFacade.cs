@@ -143,7 +143,11 @@ public partial class PdfPage
             throw new InvalidDataException(warning.Message);
         }
 
-        if (skipRecoverableContentStreams && stream.IsFiltered && !stream.IsDecoded)
+        // TryEnsureDecoded, not IsDecoded: a /Contents entry pointing at a
+        // stream shaped like an image XObject has its decode deferred (#1468),
+        // and "not decoded YET" must not read as "undecodable" and skip page
+        // content the eager decode would have parsed.
+        if (skipRecoverableContentStreams && stream.IsFiltered && !stream.TryEnsureDecoded())
         {
             warnings.Add(ContentStreamReadWarning.UndecodedFilter(
                 stream.ObjectNumber ?? 0,

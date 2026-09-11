@@ -196,7 +196,11 @@ internal sealed class PdfObjectCloner
     {
         var dict = CloneDictionary(sourceDocument, source, clonedRefs);
         var clone = new PdfStream(dict, source.EncodedData.ToArray());
-        if (source.IsDecoded)
+        // A source image whose decode is still deferred (#1468) is decoded
+        // here, so the clone carries decoded bytes exactly as it did when every
+        // stream was decoded at resolve time — without holding a reference back
+        // to the source document's object store.
+        if (source.TryEnsureDecoded())
             clone.SetDecodedData(source.DecodedData.ToArray());
 
         return clone;

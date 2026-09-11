@@ -188,20 +188,21 @@ internal sealed class PdfDocumentObjectStore : IDisposable
                 if (obj is PdfStream filteredStream && filteredStream.IsFiltered)
                 {
                     ResolveJbig2GlobalsReferences(filteredStream);
-                    try
-                    {
-                        _decompressor.Decompress(filteredStream);
-                    }
-                    catch (Exception ex) when (ex is not OutOfMemoryException)
-                    {
-                        // Image and unsupported content filters may remain encoded.
-                        // One unreadable image must not fail the document open —
-                        // but a decoder that ATTEMPTED the decode and refused
-                        // has something worth saying, and this is the only place
-                        // that still holds it (#1396).
-                        if (ex is Filters.PdfFilterDecodeException)
-                            filteredStream.SetDecodeFailureReason(ex.Message);
-                    }
+
+                    // #1468: an image XObject's samples are decoded when someone
+                    // reads them, not when the object is resolved. Resolving is
+                    // what every /Do does just to read /Subtype — text extraction
+                    // rejects images that way — so eager decoding here inflated
+                    // every Flate image in a document on open and pinned the bytes
+                    // in _objectCache until close. Everything else (content
+                    // streams, fonts, ICC, object streams, JBIG2 globals) stays
+                    // eager: decryption and globals resolution above have already
+                    // run, so the deferred decode sees exactly the bytes and
+                    // DecodeParms the eager one would have.
+                    if (IsDeferredDecodeImage(filteredStream))
+                        filteredStream.DeferDecode(DecodeDeferredStream);
+                    else
+                        DecodeStream(filteredStream);
                 }
             }
 
@@ -209,6 +210,61 @@ internal sealed class PdfDocumentObjectStore : IDisposable
             return obj;
         }
     }
+
+    /// <summary>
+    /// Which filtered streams resolve with their decode deferred (#1468): image
+    /// XObjects (§8.9.5 — <c>/Subtype /Image</c>, <c>/Type</c> absent or
+    /// <c>/XObject</c>). Deliberately narrow. Object streams, content streams,
+    /// fonts, ICC profiles and JBIG2 globals have callers that branch on
+    /// <see cref="PdfStream.IsDecoded"/> and stay decoded at resolve time.
+    /// </summary>
+    private static bool IsDeferredDecodeImage(PdfStream stream)
+    {
+        if (stream.GetNameOrNull("Subtype") != "Image")
+            return false;
+
+        var type = stream.GetNameOrNull("Type");
+        return type is null or "XObject";
+    }
+
+    /// <summary>
+    /// Runs a stream's /Filter pipeline once, swallowing a refusal exactly as
+    /// resolve-time decoding always has: one unreadable image must not fail the
+    /// document open, and a decoder that ATTEMPTED the decode and refused has
+    /// something worth saying, which is recorded on the stream (#1396).
+    /// </summary>
+    private void DecodeStream(PdfStream stream)
+    {
+        try
+        {
+            _decompressor.Decompress(stream);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            // Image and unsupported content filters may remain encoded.
+            if (ex is Filters.PdfFilterDecodeException)
+                stream.SetDecodeFailureReason(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// The deferred decode installed on image XObjects (#1468). Runs on
+    /// whichever thread first reads <see cref="PdfStream.DecodedData"/>, under
+    /// that stream's own lock.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ LOCK RULE — what keeps this deadlock-free: this method must never take
+    /// <c>_parseLock</c> (no <see cref="GetObject(int)"/>, no <see cref="Resolve"/>)
+    /// and must never read another stream's <see cref="PdfStream.DecodedData"/>
+    /// or call its <see cref="PdfStream.TryEnsureDecoded"/>. Everything the
+    /// decode needs was settled at resolve time: decryption has already
+    /// replaced the encoded bytes, and <see cref="ResolveJbig2GlobalsReferences"/>
+    /// has already swapped in (and decoded) the globals stream. The only lock
+    /// order in the store is therefore <c>_parseLock</c> → stream lock, never
+    /// the reverse. <see cref="_decompressor"/> is shared without a lock: the
+    /// filter registry and its decoders hold no per-decode mutable state.
+    /// </remarks>
+    private void DecodeDeferredStream(PdfStream stream) => DecodeStream(stream);
 
     internal PdfObject Resolve(PdfObject obj)
     {
@@ -334,7 +390,16 @@ internal sealed class PdfDocumentObjectStore : IDisposable
             try
             {
                 if (GetObject(reference.ObjectNum) is PdfStream globals)
+                {
+                    // Globals are read DURING another stream's decode, and a
+                    // decode must never wait on a second stream's lock (see
+                    // DecodeDeferredStream). So a globals stream that happens to
+                    // be shaped like an image is decoded now, at resolve time,
+                    // under _parseLock — the only lock order that exists is
+                    // _parseLock → stream lock (#1468).
+                    globals.TryEnsureDecoded();
                     parameters["JBIG2Globals"] = globals;
+                }
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
