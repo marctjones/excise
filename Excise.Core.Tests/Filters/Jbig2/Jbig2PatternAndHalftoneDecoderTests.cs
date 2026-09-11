@@ -191,6 +191,9 @@ public class Jbig2PatternAndHalftoneDecoderTests
         using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(fixture));
         var image = (Excise.Core.Primitives.PdfStream)doc.GetObject(5);
 
+        // #1468: resolving an image XObject no longer decodes it; the decode
+        // runs on first read. Attempt it before asking whether it succeeded.
+        image.TryEnsureDecoded();
         image.IsDecoded.Should().BeTrue();
         int expectedBytes = ((399 + 7) / 8) * 400;
         image.DecodedData.Length.Should().Be(expectedBytes);
