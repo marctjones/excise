@@ -101,10 +101,12 @@ public class ContinuousTileEvictionCompositeTests
     /// <summary>
     /// Waits until page <paramref name="pageNumber"/> has a composite, no cell
     /// render is in flight, and the composite instance has stayed the same across
-    /// a few pumps (initial layout can recomposite more than once).
+    /// a few pumps (initial layout can recomposite more than once). With
+    /// <paramref name="notThis"/>, that composite must also differ from it.
     /// </summary>
     internal static async Task<WriteableBitmap> WaitForSettledCompositeAsync(
-        Window window, PdfViewerControl viewer, ItemsControl items, int pageNumber)
+        Window window, PdfViewerControl viewer, ItemsControl items, int pageNumber,
+        WriteableBitmap? notThis = null)
     {
         var timeout = TimeSpan.FromSeconds(60);
         var sw = Stopwatch.StartNew();
@@ -117,7 +119,8 @@ public class ContinuousTileEvictionCompositeTests
 
             var bitmap = items.ItemsSource?.Cast<PdfPageSlot>()
                 .FirstOrDefault(s => s.PageNumber == pageNumber)?.Bitmap;
-            if (bitmap != null && viewer.ContinuousInFlightCount == 0 && ReferenceEquals(bitmap, last))
+            if (bitmap != null && !ReferenceEquals(bitmap, notThis)
+                && viewer.ContinuousInFlightCount == 0 && ReferenceEquals(bitmap, last))
             {
                 if (++stable >= 3) return bitmap;
             }

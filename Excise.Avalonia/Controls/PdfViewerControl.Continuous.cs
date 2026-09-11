@@ -49,8 +49,9 @@ public partial class PdfViewerControl
     // COMPOSITES are the opposite case and must NOT be disposed while bound:
     // Avalonia 12's Bitmap.Dispose releases its IRef<IBitmapImpl>, and an Image
     // that still points at it throws ObjectDisposedException on its next measure
-    // or render. Releasing a replaced composite needs the binding to have moved
-    // first (#1466).
+    // or render. PdfPageSlot therefore releases a replaced or cleared composite
+    // only after the binding has moved off it (ReleaseAfterBindingMoves, #1466);
+    // composites are bounded separately, by ContinuousCompositeByteBound.
     private readonly LinkedList<(ContinuousTileKey Key, WriteableBitmap Bitmap)> _continuousCache = new();
 
     // Per-page PdfLink lists for continuous-mode link click/hover hit-testing
@@ -98,13 +99,40 @@ public partial class PdfViewerControl
     private long EffectiveContinuousCacheByteBudget =>
         ContinuousCacheByteBudgetOverride ?? ContinuousCacheByteBudget;
 
+    // #1466: page COMPOSITES are not in the tile budget above, and cannot be: a
+    // composite is bound to an Image while its page is shown, so an LRU could not
+    // evict it, and counting it there would only evict more tiles. They get their
+    // own bound instead, which leaves tile retention exactly as it was.
+    //
+    // Each realized page slot holds at most one composite (PdfPageSlot.Bitmap):
+    // its visible band — the viewport plus ContinuousTileOverscanDip, snapped to
+    // the tile grid and clipped to the page — at the render DPI. A replaced or
+    // cleared composite is released once the binding has moved off it
+    // (PdfPageSlot.ReleaseAfterBindingMoves), so the total is set by the current
+    // viewport, not by scroll or zoom history. The band grows as zoom SHRINKS:
+    // EffectiveContinuousDpi floors the DPI at DefaultRenderDpi x dpr, so at the
+    // app's minimum zoom (0.25) a composite is a whole page at 120 x dpr DPI and
+    // several pages share the viewport.
+    //
+    // Bound: 192 MiB for the envelope ContinuousCacheMemoryTests sweeps — pages up
+    // to US Legal/A4 in either orientation, viewports up to 2560x1440 DIP, dpr up
+    // to 2, zoom 0.25-5. Measured worst: ~164 MiB, landscape Letter at zoom 0.25
+    // on a 2x 2560x1440 viewport. Two things sit OUTSIDE it and are not bounded by
+    // this number: (1) larger sheets — a D-size page needs ~760 MiB at zoom 0.25
+    // on a 2x display, which also exceeds the tile budget, so its band's tiles do
+    // not fit in the cache at once; (2) a realized slot whose page has scrolled
+    // out of viewport + overscan keeps its last composite until its container is
+    // cleared (RecomposeSlotCore). If tile geometry, overscan or the DPI model
+    // changes, re-run ContinuousCacheMemoryTests and re-derive this number.
+    internal const long ContinuousCompositeByteBound = 192L * 1024 * 1024;
+
     // Always keep at least this many entries, even if a single tile alone
     // exceeds the byte budget -- a single huge page must not defeat the LRU
     // entirely and force a full re-render on every scroll frame.
     private const int ContinuousCacheMinEntries = 2;
 
     internal const double PointsToDip = 96.0 / 72.0;
-    private const double PageGapDip = 12.0;   // matches the DataTemplate Border bottom margin
+    internal const double PageGapDip = 12.0;   // matches the DataTemplate Border bottom margin
     internal const int ContinuousTileQuantumDip = 256;
     internal const int ContinuousTileOverscanDip = 256;
 
@@ -383,6 +411,12 @@ public partial class PdfViewerControl
             slots.Add(new PdfPageSlot(i, page.VisualWidth, page.VisualHeight, ZoomLevel));
         }
         ApplyContinuousSlotLayout(slots);
+        // #1466: a structural refresh (RefreshContinuousLayout) or a return to
+        // this view replaces the slots without going through
+        // InvalidateContinuousCache, so the outgoing slots can still hold their
+        // band-sized composites. Release them rather than leave them to the
+        // finalizer; each slot defers the dispose until its binding has moved.
+        ReleaseSlotComposites(_continuousSlots);
         _continuousSlots = slots;
         _continuousItems.ItemsSource = slots;
 
@@ -423,8 +457,17 @@ public partial class PdfViewerControl
 
     private void ClearContinuous()
     {
+        ReleaseSlotComposites(_continuousSlots);
         if (_continuousItems != null) _continuousItems.ItemsSource = null;
         _continuousSlots = null;
+    }
+
+    // Clear every slot's composite; each slot disposes it once its binding has
+    // moved (PdfPageSlot.ReleaseAfterBindingMoves, #1466).
+    private static void ReleaseSlotComposites(IEnumerable<PdfPageSlot>? slots)
+    {
+        if (slots == null) return;
+        foreach (var slot in slots) slot.ClearComposite();
     }
 
     // Cancel every in-flight grid-cell render and start a fresh generation. Safe
@@ -444,10 +487,10 @@ public partial class PdfViewerControl
         CancelContinuousCellRenders();
         _continuousRenderPassScheduled = false;
         _pendingContinuousPage = null;
-        // Drop each slot's live tile references so their bitmaps aren't retained
-        // past the cache. The slots themselves are rebuilt by RebuildContinuous.
-        if (_continuousSlots != null)
-            foreach (var slot in _continuousSlots) slot.ClearComposite();
+        // Clear each slot's composite (released once its binding has moved,
+        // #1466) and dispose every cached tile (#1467). The slots themselves are
+        // rebuilt by RebuildContinuous.
+        ReleaseSlotComposites(_continuousSlots);
         foreach (var entry in _continuousCache) entry.Bitmap.Dispose();
         _continuousCache.Clear();
         _continuousPageLinks.Clear();
@@ -798,10 +841,11 @@ public partial class PdfViewerControl
 
     private void OnContinuousContainerClearing(object? sender, ContainerClearingEventArgs e)
     {
-        // A page scrolled out of the realized window: release its live tile
-        // references so their bitmaps aren't retained beyond the LRU cache. The
-        // bitmaps stay in the byte-budgeted cache for a quick, re-render-free
-        // return when the page scrolls back (#848 makes that a cache hit).
+        // A page scrolled out of the realized window: clear its composite, which
+        // the slot releases once the recycled container's binding has moved
+        // (#1466). Its tiles stay in the byte-budgeted cache for a quick,
+        // re-render-free return when the page scrolls back (#848 makes that a
+        // cache hit).
         if (e.Container.DataContext is PdfPageSlot slot)
             slot.ClearComposite();
     }
@@ -1104,8 +1148,8 @@ public partial class PdfViewerControl
         var rowH = new SortedDictionary<int, int>();
         foreach (var (cell, _) in cells)
         {
-            colW[cell.Col] = Math.Max(1, (int)Math.Floor(cell.WidthDip * pxPerDip));
-            rowH[cell.Row] = Math.Max(1, (int)Math.Floor(cell.HeightDip * pxPerDip));
+            colW[cell.Col] = ContinuousCellPixelExtent(cell.WidthDip, pxPerDip);
+            rowH[cell.Row] = ContinuousCellPixelExtent(cell.HeightDip, pxPerDip);
         }
         int ax = 0;
         foreach (var kv in colW) { colX[kv.Key] = ax; ax += kv.Value; }
@@ -1253,8 +1297,8 @@ public partial class PdfViewerControl
             var key = CellKey(slot.PageNumber, dpi, slot.DisplayWidth, slot.DisplayHeight, cell);
             var bmp = PeekContinuousCached(key);
             if (bmp == null) return; // incomplete — leave the previous composite up
-            int pxW = Math.Min(bmp.PixelSize.Width, Math.Max(1, (int)Math.Floor(cell.WidthDip * pxPerDip)));
-            int pxH = Math.Min(bmp.PixelSize.Height, Math.Max(1, (int)Math.Floor(cell.HeightDip * pxPerDip)));
+            int pxW = Math.Min(bmp.PixelSize.Width, ContinuousCellPixelExtent(cell.WidthDip, pxPerDip));
+            int pxH = Math.Min(bmp.PixelSize.Height, ContinuousCellPixelExtent(cell.HeightDip, pxPerDip));
             parts[i] = (cell, bmp, pxW, pxH);
             minCol = Math.Min(minCol, cell.Col);
             minRow = Math.Min(minRow, cell.Row);
@@ -1426,6 +1470,46 @@ public partial class PdfViewerControl
     internal static long ContinuousTileByteSize(int pixelWidth, int pixelHeight) =>
         (long)pixelWidth * pixelHeight * 4;
 
+    /// <summary>
+    /// A cell's CONTENT extent in pixels (floored, at least 1) — the size the
+    /// band is sliced into and a composite is laid out with. A cell's bitmap is
+    /// the ceiling of this; see RecomposeSlotCore for why layout uses the floor.
+    /// </summary>
+    internal static int ContinuousCellPixelExtent(double dip, double pxPerDip) =>
+        Math.Max(1, (int)Math.Floor(dip * pxPerDip));
+
+    /// <summary>
+    /// Resident bytes of the composite RecomposeSlotCore builds for
+    /// <paramref name="cells"/> (#1466): the <see cref="ComputeMosaic"/> of their
+    /// content extents, 4 bytes/pixel. RecomposeSlotCore additionally caps each
+    /// extent at its cached bitmap's size, so this is an upper bound on what it
+    /// allocates. Pure, for ContinuousCacheMemoryTests.
+    /// </summary>
+    internal static long ContinuousCompositeByteSize(IEnumerable<GridCell> cells, double pxPerDip)
+    {
+        var (totalW, totalH, _) = ComputeMosaic(System.Linq.Enumerable.Select(cells, c =>
+            (c.Col, c.Row, ContinuousCellPixelExtent(c.WidthDip, pxPerDip), ContinuousCellPixelExtent(c.HeightDip, pxPerDip))));
+        return ContinuousTileByteSize(totalW, totalH);
+    }
+
+    /// <summary>
+    /// Resident bytes of the page composites the slots currently show (#1466) —
+    /// the second half of the continuous view's bitmap memory, next to
+    /// <see cref="ContinuousCacheResidentBytes"/> for tiles. Composites already
+    /// replaced and awaiting release are not counted. Internal for tests.
+    /// </summary>
+    internal long ContinuousCompositeResidentBytes()
+    {
+        if (_continuousSlots == null) return 0;
+        long total = 0;
+        foreach (var slot in _continuousSlots)
+        {
+            if (slot.Bitmap is { } composite)
+                total += ContinuousTileByteSize(composite.PixelSize.Width, composite.PixelSize.Height);
+        }
+        return total;
+    }
+
     // Stable, content-addressed grid-cell key (#848). Two cells collide iff they
     // show the same content at the same pixel density: same page, same render DPI,
     // same page DIP dimensions (which encode zoom — see CellKey), same grid cell.
@@ -1516,22 +1600,62 @@ public sealed class PdfPageSlot : INotifyPropertyChanged
         ApplyZoom(zoom);
     }
 
-    /// <summary>Publish a freshly composited band bitmap and its page-local DIP placement.</summary>
+    /// <summary>
+    /// Publish a freshly composited band bitmap and its page-local DIP placement.
+    /// The slot takes ownership of <paramref name="bitmap"/>; the composite it
+    /// replaces is released once the binding has moved off it (#1466).
+    /// </summary>
     internal void SetComposite(WriteableBitmap bitmap, PdfViewerControl.ContinuousTileKey compositeKey,
         double xDip, double yDip, double widthDip, double heightDip)
     {
+        var previous = _bitmap;
         CompositeKey = compositeKey;
         TileDisplayX = xDip;
         TileDisplayY = yDip;
         TileDisplayWidth = widthDip;
         TileDisplayHeight = heightDip;
         Bitmap = bitmap;
+        ReleaseAfterBindingMoves(previous, bitmap);
     }
 
+    /// <summary>Stop showing a composite and release it once the binding has moved off it (#1466).</summary>
     internal void ClearComposite()
     {
+        var previous = _bitmap;
         Bitmap = null;
         CompositeKey = default;
+        ReleaseAfterBindingMoves(previous, null);
+    }
+
+    /// <summary>
+    /// Dispose a composite this slot no longer shows (#1466), but never
+    /// synchronously.
+    /// </summary>
+    /// <remarks>
+    /// A composite is bound to an Image (<c>{Binding Bitmap}</c>,
+    /// PdfViewerControl.axaml), and Avalonia 12's <c>Bitmap.Dispose</c> releases
+    /// its <c>IRef&lt;IBitmapImpl&gt;</c>: an Image still pointing at the
+    /// disposed wrapper throws <see cref="ObjectDisposedException"/> on its next
+    /// measure or render. By the time this runs, <see cref="Bitmap"/> has already
+    /// changed and raised PropertyChanged, which the binding applies to
+    /// <c>Image.Source</c> synchronously on the UI thread. The dispose is still
+    /// posted at <see cref="DispatcherPriority.Background"/>, below the layout
+    /// and render passes, so anything that picked up the old wrapper earlier in
+    /// the same dispatcher turn finishes first. Frames the compositor already
+    /// recorded are unaffected: render data holds its own cloned, ref-counted
+    /// <c>IRef</c> to the pixels.
+    /// <para>
+    /// Every composite passes through <see cref="_bitmap"/> once —
+    /// RecomposeSlotCore allocates a new one for each SetComposite — so each is
+    /// posted at most once, and re-publishing the current instance posts
+    /// nothing. If the dispatcher never runs the job (application shutdown), the
+    /// bitmap falls back to the finalizer, as every composite did before.
+    /// </para>
+    /// </remarks>
+    private static void ReleaseAfterBindingMoves(WriteableBitmap? previous, WriteableBitmap? current)
+    {
+        if (previous == null || ReferenceEquals(previous, current)) return;
+        Dispatcher.UIThread.Post(previous.Dispose, DispatcherPriority.Background);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
