@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "5315aa894f1cd0a16f3c33c2b5e2dc62f6c77b90",
+  "sourceRevision": "677b4665424a9a34ce38c61e1ae75de3be7ca73e",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "5315aa894f1cd0a16f3c33c2b5e2dc62f6c77b90",
-    "oldestProductionCommit": "c9fe67dc0ad6629e843640a950e06d6e9a92a919"
+    "newestProductionCommit": "0c271c134ec91a99f96dadff38d1a64bd94b3f6d",
+    "oldestProductionCommit": "269441c16b4ae1b4113c664dc950b1966dafb26d"
   },
   "files": [
     {
@@ -70,6 +70,10 @@
       "commits": 8
     },
     {
+      "path": "Excise.Rendering/RawSampleImageDecoder.cs",
+      "commits": 8
+    },
+    {
       "path": "Excise.App/Composition/ApplicationComposition.cs",
       "commits": 7
     },
@@ -99,10 +103,6 @@
     },
     {
       "path": "Excise.App/Views/PreferencesWindow.axaml",
-      "commits": 6
-    },
-    {
-      "path": "Excise.Rendering/RawSampleImageDecoder.cs",
       "commits": 6
     },
     {
@@ -290,10 +290,6 @@
       "commits": 3
     },
     {
-      "path": "Excise.Rendering/Differential/ResidueRecoveryEngine.cs",
-      "commits": 3
-    },
-    {
       "path": "Excise.Rendering/ImageColorConverter.cs",
       "commits": 3
     },
@@ -383,6 +379,10 @@
     },
     {
       "path": "Excise.Cli/Commands/ValidateCommand.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
       "commits": 2
     },
     {
@@ -478,7 +478,7 @@
       "commits": 2
     },
     {
-      "path": "Excise.Rendering/Differential/XRayBadRedactionDetector.cs",
+      "path": "Excise.Rendering/Differential/ResidueRecoveryEngine.cs",
       "commits": 2
     },
     {
@@ -755,10 +755,6 @@
     },
     {
       "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
       "commits": 1
     },
     {
@@ -1122,10 +1118,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Rendering/Differential/MutoolGlyphPositions.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Rendering/Differential/MutoolReferenceRedactor.cs",
       "commits": 1
     },
@@ -1139,6 +1131,10 @@
     },
     {
       "path": "Excise.Rendering/Differential/VeraPdfReferenceValidator.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Rendering/Differential/XRayBadRedactionDetector.cs",
       "commits": 1
     },
     {
@@ -1293,7 +1289,7 @@
       "source": "Excise.Rendering/RawSampleImageDecoder.cs",
       "target": "Excise.Rendering/SkiaRenderer.Images.cs",
       "cochanges": 4,
-      "jaccard": 0.2
+      "jaccard": 0.1818
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.cs",

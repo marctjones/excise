@@ -85,9 +85,9 @@ digraph excise_architecture {
   "cli" -> "core-writing" [label="observed via parent boundary\n6 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "ocr" [label="target + observed\n77 refs", color="#15803d", style="solid", penwidth=2];
   "cli" -> "rendering" [label="target + observed\n20 refs", color="#15803d", style="solid", penwidth=2];
-  "core" -> "core-document" [label="observed via parent boundary\n106 refs", color="#2563eb", style="dashed", penwidth=1];
+  "core" -> "core-document" [label="observed via parent boundary\n108 refs", color="#2563eb", style="dashed", penwidth=1];
   "core" -> "core-fonts" [label="observed via parent boundary\n39 refs", color="#2563eb", style="dashed", penwidth=1];
-  "core" -> "core-primitives" [label="observed via parent boundary\n170 refs", color="#2563eb", style="dashed", penwidth=1];
+  "core" -> "core-primitives" [label="observed via parent boundary\n174 refs", color="#2563eb", style="dashed", penwidth=1];
   "core-content" -> "core-document" [label="target + observed\n108 refs", color="#15803d", style="solid", penwidth=2];
   "core-content" -> "core-fonts" [label="target + observed\n65 refs", color="#15803d", style="solid", penwidth=2];
   "core-content" -> "core-parsing" [label="target + observed\n6 refs", color="#15803d", style="solid", penwidth=2];
@@ -126,7 +126,7 @@ digraph excise_architecture {
   "ocr" -> "core-redaction" [label="observed via parent boundary\n2 refs", color="#2563eb", style="dashed", penwidth=1];
   "ocr" -> "ocr-native" [label="target + observed\n5 refs", color="#15803d", style="solid", penwidth=2];
   "ocr" -> "rendering" [label="target + observed\n16 refs", color="#15803d", style="solid", penwidth=2];
-  "rendering" -> "core" [label="target + observed\n160 refs", color="#15803d", style="solid", penwidth=2];
+  "rendering" -> "core" [label="target + observed\n163 refs", color="#15803d", style="solid", penwidth=2];
   "rendering" -> "core-content" [label="accepted exception\n59 refs", color="#7e22ce", style="dotted", penwidth=2];
   "rendering" -> "core-document" [label="observed via parent boundary\n294 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-fonts" [label="observed via parent boundary\n58 refs", color="#2563eb", style="dashed", penwidth=1];
