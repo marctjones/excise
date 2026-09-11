@@ -1484,8 +1484,55 @@ internal partial class RenderContext
         return values;
     }
 
+    /// <summary>
+    /// Memoised per render (#1404). Every `sh` used to re-evaluate the shading
+    /// function at 2 + (ComplexGradientSampleCount + 1) points; bug1721218
+    /// paints 3,523 `sh` over 41 shadings, i.e. ~1.36M evaluations for ~16K
+    /// distinct ones.
+    ///
+    /// What the result depends on, checked against the uncached body below:
+    /// the shading dictionary's /ColorSpace, /Function and /Domain entries;
+    /// the document (Resolve, PdfFunctionEvaluator, and the per-document
+    /// DeviceCMYK output-intent instance behind FromName); and nothing from the
+    /// graphics state, canvas, alpha or blend mode — those are applied later in
+    /// DrawShaderOverCurrentClip. The document is fixed for a
+    /// RenderResourceScope (one per RenderPage). The one CONTEXT dependency is
+    /// a /ColorSpace given as a NAME: ResolveColorSpace walks the current
+    /// resource stack for /DefaultGray|RGB|CMYK and for a same-named
+    /// /ColorSpace resource, so the same shading dictionary can resolve to
+    /// different colours inside different form XObjects. That resource object
+    /// is therefore part of the key (ResolveColorSpaceSource, shared with
+    /// ResolveColorSpace so the key cannot drift from the lookup).
+    /// </summary>
     private (SKColor start, SKColor end, SKColor[]? stops, float[]? positions) ResolveGradientColors(
         Excise.Core.Primitives.PdfDictionary shading)
+    {
+        PdfObject? colorSpaceSource;
+        try
+        {
+            colorSpaceSource = shading.GetOptional("ColorSpace") is PdfName colorSpaceName
+                ? ResolveColorSpaceSource(colorSpaceName.Value, out _)
+                : null;
+        }
+        catch
+        {
+            // ResolveShadingColorSpace swallows lookup failures into
+            // DeviceGray; keep that behaviour exactly by not memoising a
+            // shading whose key cannot be derived.
+            var uncached = ResolveGradientColorsUncached(shading);
+            return (uncached.Start, uncached.End, uncached.Stops, uncached.Positions);
+        }
+
+        if (!_resourceScope.TryGetGradientColors(shading, colorSpaceSource, out var colors) || colors is null)
+        {
+            colors = ResolveGradientColorsUncached(shading);
+            _resourceScope.CacheGradientColors(shading, colorSpaceSource, colors);
+        }
+
+        return (colors.Start, colors.End, colors.Stops, colors.Positions);
+    }
+
+    private GradientColors ResolveGradientColorsUncached(Excise.Core.Primitives.PdfDictionary shading)
     {
         var colorSpace = ResolveShadingColorSpace(shading);
         var funcRef = shading.GetOptional("Function");
@@ -1508,7 +1555,7 @@ internal partial class RenderContext
             ? SampleGradientFunction(funcObj, colorSpace, domainMin, domainMax)
             : (null, null);
 
-        return (startColor, endColor, stops, positions);
+        return new GradientColors(startColor, endColor, stops, positions);
     }
 
     private (SKColor[] stops, float[] positions) SampleGradientFunction(
@@ -1747,16 +1794,36 @@ internal partial class RenderContext
 
     private PdfColorSpace? ResolveColorSpace(string name)
     {
+        var source = ResolveColorSpaceSource(name, out var builtIn);
+        if (builtIn != null)
+            return builtIn;
+
+        return source != null ? PdfColorSpace.Parse(source, _page.Document) : null;
+    }
+
+    /// <summary>
+    /// The resource-stack object a colour-space NAME resolves through, in
+    /// ResolveColorSpace's precedence order: a /DefaultGray|RGB|CMYK override
+    /// first, then a built-in family name (returned via
+    /// <paramref name="builtIn"/> with a null source — context-free), then a
+    /// same-named /ColorSpace resource (null when absent). Split out so the
+    /// #1404 gradient memo keys on exactly what ResolveColorSpace reads.
+    /// </summary>
+    private PdfObject? ResolveColorSpaceSource(string name, out PdfColorSpace? builtIn)
+    {
+        builtIn = null;
         var defaultCsObj = ResolveDefaultColorSpaceObject(name);
         if (defaultCsObj != null)
-            return PdfColorSpace.Parse(defaultCsObj, _page.Document);
+            return defaultCsObj;
 
         var cs = PdfColorSpace.FromName(name, _page.Document);
         if (cs.Type != PdfColorSpaceType.Unknown)
-            return cs;
+        {
+            builtIn = cs;
+            return null;
+        }
 
-        var csObj = ResolveColorSpaceObject(name);
-        return csObj != null ? PdfColorSpace.Parse(csObj, _page.Document) : null;
+        return ResolveColorSpaceObject(name);
     }
 
     private PdfObject? ResolveDefaultColorSpaceObject(string deviceColorSpaceName)

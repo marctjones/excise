@@ -27,7 +27,50 @@ internal sealed class RenderResourceScope : IDisposable
         _softMasksByReference = new();
     private readonly Dictionary<PdfStream, Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>>
         _softMasksByStream = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<(PdfDictionary Shading, PdfObject? ColorSpaceSource), GradientColors>
+        _gradientColors = new(GradientColorsKeyComparer.Instance);
     private bool _disposed;
+
+    /// <summary>
+    /// Number of <see cref="TryGetGradientColors"/> calls answered from the
+    /// memo. Diagnostic only (#1404): lets a test prove repeated `sh` of one
+    /// shading resolves its function once.
+    /// </summary>
+    internal int GradientColorCacheHits { get; private set; }
+
+    /// <summary>
+    /// Memoised <c>ResolveGradientColors</c> result (#1404), keyed by the
+    /// shading dictionary's REFERENCE identity plus the resource object its
+    /// <c>/ColorSpace</c> name resolved through (null when the colour space
+    /// does not depend on the resource stack). Reference identity, not
+    /// structural equality: two distinct shading objects with identical
+    /// content are resolved separately, which is always correct.
+    /// </summary>
+    public bool TryGetGradientColors(
+        PdfDictionary shading,
+        PdfObject? colorSpaceSource,
+        out GradientColors? colors)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_gradientColors.TryGetValue((shading, colorSpaceSource), out var cached))
+        {
+            GradientColorCacheHits++;
+            colors = cached;
+            return true;
+        }
+
+        colors = null;
+        return false;
+    }
+
+    public void CacheGradientColors(
+        PdfDictionary shading,
+        PdfObject? colorSpaceSource,
+        GradientColors colors)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _gradientColors[(shading, colorSpaceSource)] = colors;
+    }
 
     public bool TryGetDecodedImage(
         PdfStream imageStream,
@@ -196,6 +239,26 @@ internal sealed class RenderResourceScope : IDisposable
         _parsedContentByBytes.Clear();
         _softMasksByReference.Clear();
         _softMasksByStream.Clear();
+        _gradientColors.Clear();
+    }
+
+    private sealed class GradientColorsKeyComparer
+        : IEqualityComparer<(PdfDictionary Shading, PdfObject? ColorSpaceSource)>
+    {
+        public static readonly GradientColorsKeyComparer Instance = new();
+
+        public bool Equals(
+            (PdfDictionary Shading, PdfObject? ColorSpaceSource) x,
+            (PdfDictionary Shading, PdfObject? ColorSpaceSource) y)
+            => ReferenceEquals(x.Shading, y.Shading)
+               && ReferenceEquals(x.ColorSpaceSource, y.ColorSpaceSource);
+
+        public int GetHashCode((PdfDictionary Shading, PdfObject? ColorSpaceSource) key)
+            => HashCode.Combine(
+                System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(key.Shading),
+                key.ColorSpaceSource is null
+                    ? 0
+                    : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(key.ColorSpaceSource));
     }
 
     private sealed class GlyphOutlineKeyComparer
@@ -266,6 +329,17 @@ internal sealed class RenderResourceScope : IDisposable
 }
 
 internal sealed record SoftMaskAlpha(byte[] Data, int Width, int Height);
+
+/// <summary>
+/// A resolved axial/radial gradient (#1404). The arrays are shared between
+/// every `sh` that hits the memo; callers only hand them to
+/// <c>SKShader.Create*</c>, which copies, and must never mutate them.
+/// </summary>
+internal sealed record GradientColors(
+    SKColor Start,
+    SKColor End,
+    SKColor[]? Stops,
+    float[]? Positions);
 
 internal readonly record struct ImageBitmapCacheKey(
     int Width,
