@@ -35,7 +35,11 @@
 #                  executing the whole suite a second time just to read
 #                  skips. May be REPEATED: the full-suite runner chunks the
 #                  big projects by test class, and the union of the chunk
-#                  trx files is exactly one unfiltered run.
+#                  trx files is exactly one unfiltered run. t1 passes the
+#                  three filtered Rendering rows the same way.
+#                  Every --trx must exist and be non-empty: each one is a PART
+#                  of a union, and reading the others as the whole would
+#                  report the missing part's skips as absent.
 set -euo pipefail
 
 PROJECT="${1:?usage: check-skip-budget.sh <project.csproj> [--trx <file>]...}"
@@ -60,7 +64,13 @@ if [[ ${#EXISTING_TRX[@]} -gt 0 ]]; then
   for _t in "${EXISTING_TRX[@]}"; do
     _i=$(( _i + 1 ))
     echo "    $_t"
-    cp "$_t" "$TMP/r$_i.trx" 2>/dev/null || true
+    if [[ ! -s "$_t" ]]; then
+      echo "FAIL: no trx produced at $_t — the run that should have written it did not complete."
+      echo "      It is one part of a ${#EXISTING_TRX[@]}-file union; reading the rest as the whole"
+      echo "      would report its skips as absent. Not treating that as 'no skips'."
+      exit 1
+    fi
+    cp "$_t" "$TMP/r$_i.trx"
   done
 else
   echo "==> running $NAME to enumerate skips"

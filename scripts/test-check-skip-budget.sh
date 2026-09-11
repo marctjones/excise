@@ -129,10 +129,9 @@ fi
 
 # ---------------------------------------------------------------------------
 # 5. No trx produced at all is a hard FAIL, never silently "no skips". A
-#    --trx pointing at a file that does not exist reaches the same code
-#    path as a real run whose `dotnet test` never wrote a trx (crashed host,
-#    killed process): the `cp` is best-effort and produces nothing, so the
-#    later `ls "$TMP"/r*.trx` finds no files. Deterministic, no real build.
+#    --trx pointing at a file that does not exist is what a run whose
+#    `dotnet test` never wrote a trx (crashed host, killed process) hands the
+#    gate; it is refused up front. Deterministic, no real build.
 # ---------------------------------------------------------------------------
 OUT5="$WORK/notrx.log"
 RC5=0
@@ -170,6 +169,25 @@ RC6=0
 [[ "$RC6" -ne 0 ]] || { echo "FAIL: --trx union did not see the undeclared skip in the second file"; FAIL=1; }
 grep -qF -- '+ Demo.Tests.B.ChunkBBad' "$OUT6" || { echo "FAIL: --trx union missed chunk B's undeclared skip"; cat "$OUT6"; FAIL=1; }
 
+# ---------------------------------------------------------------------------
+# 7. A union with one part MISSING or EMPTY fails and names that part, even
+#    though the part that is present is clean. t1's skip-budget-rendering
+#    reads three filtered trx; a lost one used to be dropped by a best-effort
+#    `cp` while the rest were read as the whole project.
+# ---------------------------------------------------------------------------
+OUT7="$WORK/lost-part.log"
+RC7=0
+"$GATE" "$PROJECT" --trx "$TRX_OK" --trx "$WORK/lost-part.trx" >"$OUT7" 2>&1 || RC7=$?
+[[ "$RC7" -ne 0 ]] || { echo "FAIL: a union with a missing part was accepted as the whole run"; cat "$OUT7"; FAIL=1; }
+grep -qF "no trx produced at $WORK/lost-part.trx" "$OUT7" || { echo "FAIL: the missing part of the union was not named"; cat "$OUT7"; FAIL=1; }
+
+: > "$WORK/empty-part.trx"
+OUT7B="$WORK/empty-part.log"
+RC7B=0
+"$GATE" "$PROJECT" --trx "$TRX_OK" --trx "$WORK/empty-part.trx" >"$OUT7B" 2>&1 || RC7B=$?
+[[ "$RC7B" -ne 0 ]] || { echo "FAIL: a union with a zero-byte part was accepted as the whole run"; cat "$OUT7B"; FAIL=1; }
+grep -qF "no trx produced at $WORK/empty-part.trx" "$OUT7B" || { echo "FAIL: the empty part of the union was not named"; cat "$OUT7B"; FAIL=1; }
+
 if [[ $FAIL -ne 0 ]]; then
   exit 1
 fi
@@ -177,4 +195,5 @@ fi
 echo "PASS: check-skip-budget.sh (#1172) accepts every skip with a declared,"
 echo "      non-empty in-code reason and fails on any that has none — no"
 echo "      <Output> at all, a blank <Message>, mixed in with a good one, or"
-echo "      missing entirely across a chunked (--trx, repeated) union."
+echo "      missing entirely across a chunked (--trx, repeated) union — and"
+echo "      on a union with one part missing or empty."

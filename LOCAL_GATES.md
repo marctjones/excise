@@ -23,7 +23,7 @@ scripts/test-tier.sh --install-hook                                   # once per
 | Tier | Cost (headline; "Timings" has the dates and the load caveat) | When |
 |------|------|------|
 | `t0` | 2–4 min warm, ~5 min cold; 2–3× that under load | Before every push. `--install-hook` installs it as `.git/hooks/pre-push`. |
-| `t1` | ~20–25 min (estimate) | Before merging anything to `develop`. |
+| `t1` | 56–57 min measured 2026-09-10; ~44–47 min projected after that day's `skip-budget-rendering` dedup | Before merging anything to `develop`. |
 | `full` | ≈3 h (estimate) | Weekly, and before a release candidate. Chunked, memory-bounded, resumable. |
 | `t2` | ~30 min (pre-manifest budget) | Release candidate — `docs/RELEASE_CHECKLIST.md`. |
 | `t3` | — | `t2` on this machine, plus a printed reminder that Linux/Windows packaging is untested here. **That packaging is a separate issue**; one machine cannot execute another platform's job. |
@@ -344,9 +344,9 @@ tools and corpora, which this machine has. They are `t1` rows: `oracle-tools`
 tesseract — the PDFBox jar, the PDFium library and the smoke and federal
 corpora resolve, or FAIL before any oracle row can skip its way green),
 `rendering-oracles` (3,701 passed / 1 failed / 919 skipped measured
-2026-09-04; the one failure is accepted through a class-scoped `knownIssue` —
-see the KNOWN-ISSUE column of `--list t1` — so a second failing class reads
-NEW), `app-oracles` (13/13), `core-oracles` (14/14), each with a `*-floor`
+2026-09-04; that failure, #1180's test, passes since #1361 — re-measured
+2026-09-09 — and the row's `knownIssue` is `-`, so ANY failure there blocks),
+`app-oracles` (13/13), `core-oracles` (14/14), each with a `*-floor`
 row, plus the parity ratchets `extraction-parity`, `copy-whitespace-parity`
 and `advance-parity`.
 
@@ -359,9 +359,13 @@ let 3,600 tests vanish in silence. 875 of the 919 skips (2026-09-04) are
 `RedactionCollateralHarness` fixtures with under 200 characters of text (#1046
 documents that as intended). Do not lower a floor to make a run pass.
 
-`rendering-deterministic` deliberately EXCLUDES `Corpus` and `Differential`;
-the oracle rows are its complement. Before this, `t1` ran the exact inverse of
-the oracle job, so the tests that exist because excise must not be its own
+`rendering-deterministic` deliberately EXCLUDES `Corpus` and `Differential`
+(`rendering-oracles`) and `Benchmark` (`rendering-benchmark`, whose wall-clock
+and memory budgets make it load-sensitive). The three filters partition the
+project, so `skip-budget-rendering` reads their three trx as one whole-project
+run; until 2026-09-10 it ran `Excise.Rendering.Tests` a second time just to
+read skip reasons (573 s and 798 s in that day's two t1 ledgers). Before the
+oracle rows were added, `t1` ran the exact inverse of the oracle job, so the tests that exist because excise must not be its own
 oracle ran in no tier at all. Every runner exports `EXCISE_PDFBOX_JAR` when the
 jar is vendored — PDFBox is gated on the variable, not the file (#935).
 
@@ -400,14 +404,24 @@ tier alone.
   1m57s–3m49s; the run of 2026-09-05 00:10, 2m42s). Budget ~5 min for a cold
   build. The "~30s" this document and CLAUDE.md quoted until 2026-09-05 was
   stale by a factor of 5–10.
-- **t1: ~20–25 min**, a 2026-09-04 estimate on an idle machine — no t1 ledger
-  exists yet. Its two biggest rows measured under load on 2026-08-31:
-  `app-tests-unchunked-evidence` 1467 s, `redaction-suites` 525 s. The first
-  manifest-driven t1 writes the ledger that settles it.
+- **t1: 56.0 and 57.0 min** — the two ledgers of 2026-09-10
+  (`logs/test-tier_t1_20260910_150314` and `_161848`, sum of the rows'
+  `durationSeconds`). Four rows were ~92% of it: `app-tests-unchunked-evidence`
+  1351 / 1339 s, `skip-budget-rendering` 573 / 798 s, `rendering-oracles`
+  700 / 596 s, `redaction-suites` 455 / 435 s. `skip-budget-rendering` was a
+  second whole-project `Excise.Rendering.Tests` pass run only to read skip
+  reasons; the same day it was changed to read the trx of
+  `rendering-deterministic`, `rendering-benchmark` and `rendering-oracles`, so
+  **~44–47 min is the projection**: both runs minus that row, plus ~20–30 s
+  for the new `rendering-benchmark` row and the Visual tests folded into
+  `rendering-deterministic`. It stays a projection until a t1 ledger after
+  that change exists. The "~20–25 min" quoted here and in CLAUDE.md until
+  2026-09-10 was a 2026-09-04 estimate made before any t1 ledger existed, low
+  by more than 2×.
 - **full: ≈3 h.** The only complete ledger (2026-08-31) sums to ~80 min of
   executed rows with 24 checkpointed, so it is a floor, not a measurement.
-  Now included by chain inheritance and the new rows: the t1 rows (~20–25
-  min), `redaction-bench` 28m34s (2026-08-29), `image-conformance` ~6 min
+  Now included by chain inheritance and the new rows: the t1 rows (56–57
+  min measured 2026-09-10, ~44–47 projected since), `redaction-bench` 28m34s (2026-08-29), `image-conformance` ~6 min
   (artifact mtimes 2026-08-18), `reference-performance` ~4–5 min (derived from
   2026-08-29 walls); unmeasured: `annotation-bench`, `render-quality-scan`,
   `license-manifest`. The t1 oracle rows re-run inside full's chunked

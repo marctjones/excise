@@ -525,16 +525,17 @@ not, and a cited issue that has CLOSED reads STALE and fails until the
 acceptance is deleted. `scripts/test-tier.sh --report --latest` re-prints the
 last run's report without running anything.
 
-| Tier | Cost (t0 measured, the others estimated, 2026-09-04 — `LOCAL_GATES.md` "Timings") | What | When |
+| Tier | Cost (t0 measured 2026-09-04, t1 measured 2026-09-10, the others estimated — `LOCAL_GATES.md` "Timings") | What | When |
 |------|------|------|------|
 | `t0` | 2–4 min warm, ~5 min cold; 2–3× that under load (8m29s on 2026-09-05) | Build + Excise.Core/Cli/Avalonia tests + the static gates (doc freshness, gate-asymmetry, redaction architecture, registries, selftests) | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. Every clone runs that once; a hook installed before 2026-09-05 must be re-installed (it read no stdin, and the base for gate-asymmetry is the push range on stdin). |
-| `t1` | ~20–25 min | `t0` + the full redaction test suites + `Excise.Rendering.Tests` (deterministic AND the independent-oracle subsets with their floors) + the parity ratchets + the skip budgets + the full `Excise.App.Tests` run | Before merging anything to `develop`. This is what CI used to block a PR on; there is no CI now (see `LOCAL_GATES.md`), so running it is on you. |
+| `t1` | 56–57 min measured 2026-09-10; ~44–47 min projected once `skip-budget-rendering` stopped re-running `Excise.Rendering.Tests` that day | `t0` + the full redaction test suites + `Excise.Rendering.Tests` (deterministic, benchmark AND the independent-oracle subsets with their floors) + the parity ratchets + the skip budgets + the full `Excise.App.Tests` run | Before merging anything to `develop`. This is what CI used to block a PR on; there is no CI now (see `LOCAL_GATES.md`), so running it is on you. |
 | `full` | ≈3 h | `t1` + every project chunked + the four corpus scans + the release-smoke rows + the GRADE benches; `caffeinate -i scripts/run-full-suite.sh`, resumable | Weekly, and before a release candidate. |
 | `t2` | ~30 min | `scripts/release-smoke.sh --release-tests` — a curated Release-config set, not a superset of `t1` | Release candidate (`docs/RELEASE_CHECKLIST.md`). |
 | `t3` | — | `t2` on this machine, plus a printed reminder that Linux/Windows packaging is untested here — that packaging is a separate issue (`LOCAL_GATES.md`) | Before tagging a release. |
 
 Chain semantics: t0 ⊂ t1 ⊂ full; t2 only when a row lists it. The "~30s"
-this table quoted for `t0` until 2026-09-05 was stale by a factor of 5–10.
+this table quoted for `t0` until 2026-09-05 was stale by a factor of 5–10, and
+the "~20–25 min" it quoted for `t1` until 2026-09-10 was low by more than 2×.
 
 **Tier is selected by blast radius — who gets hurt if this is wrong — not by
 convenience.** Pick the tier that matches what the change touches, not the
