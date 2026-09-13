@@ -1589,6 +1589,16 @@ public sealed class RedactionBenchmarkRunner
         if (taxonomy.Count == 0)
             _out.WriteLine("  no failure classes occurred on this run");
         foreach (var line in taxonomy) _out.WriteLine($"  {line}");
+
+        // #1163: the single Security x Fidelity GRADE per tool (and per
+        // tool/corpus, so concentration cannot average away) — same
+        // scoreRows, same file, no extra run.
+        _out.WriteLine("");
+        var scorecardReport = RedactionScorecard.Render(RedactionScorecard.ComputeScorecards(scoreRows));
+        foreach (var line in scorecardReport.Split('\n'))
+        {
+            if (line.Length > 0) _out.WriteLine(line);
+        }
     }
 
     /// <summary>

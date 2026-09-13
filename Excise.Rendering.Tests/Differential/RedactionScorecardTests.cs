@@ -104,4 +104,177 @@ public class RedactionScorecardTests
         rows.Should().HaveCount(1, "the _meta line is not a benchmark row");
         RedactionScorecard.CoverageOf(rows).Measured.Should().Be(1);
     }
+
+    // =========================================================================
+    // #1163 — the Security x Fidelity GRADE. A naive WEIGHTED AVERAGE across
+    // the four categories is exactly what the issue's worked example (excise
+    // 88.8 A-, pymupdf 82.6 B, itext 49.5 F, raster 0.0 F) rules out: it would
+    // rank a document-destroying tool near the top because its Security is
+    // perfect. These pin the two failure modes a weighted average gets wrong.
+    // =========================================================================
+
+    private static string Case(
+        string tool, string corpus, string doc, string term,
+        string verdict, bool probeUsable, bool leakSavedBytes, int visualTermReadable,
+        int survivingWordsChecked, int survivingWordsDamaged, double collateralFraction,
+        double survivingRenderDelta, bool qpdfOk = true, bool inputQpdfOk = true,
+        string structuralDropped = "")
+        => $$"""
+        {"tool":"{{tool}}","corpus":"{{corpus}}","document":"{{doc}}","term":"{{term}}",
+         "leakOracleText":false,"leakChannels":[],
+         "verdict":"{{verdict}}","probeUsable":{{(probeUsable ? "true" : "false")}},
+         "leakSavedBytes":{{(leakSavedBytes ? "true" : "false")}},
+         "visualTermReadable":{{visualTermReadable}},
+         "survivingWordsChecked":{{survivingWordsChecked}},"survivingWordsDamaged":{{survivingWordsDamaged}},
+         "collateralFraction":{{collateralFraction}},"survivingRenderDelta":{{survivingRenderDelta}},
+         "qpdfOk":{{(qpdfOk ? "true" : "false")}},"inputQpdfOk":{{(inputQpdfOk ? "true" : "false")}},
+         "structuralDropped":"{{structuralDropped}}"}
+        """.ReplaceLineEndings("").Replace(" ", "");
+
+    [Fact]
+    public void Overall_LeakingToolWithPerfectOutput_ScoresNearZero_NotHigh()
+    {
+        // Recoverable leak (the worst Verdict), saved-bytes leak too, AND the
+        // secret is still legible on the render — Security should floor at 0.
+        // Fidelity is PERFECT: nothing damaged, no collateral, no render delta.
+        var row = RedactionScorecard.Parse(new[]
+        {
+            Case("leaky", "x", "a.pdf", "t", verdict: "Recoverable", probeUsable: true,
+                leakSavedBytes: true, visualTermReadable: 1,
+                survivingWordsChecked: 100, survivingWordsDamaged: 0,
+                collateralFraction: 0.0, survivingRenderDelta: 0.0),
+        })[0];
+
+        var grade = RedactionScorecard.GradeCase(row);
+        grade.Security.Should().Be(0.0, "every security channel measured says LEAK");
+        grade.Fidelity.Should().Be(1.0, "surviving content, collateral and render are all perfect");
+
+        var sc = RedactionScorecard.ComputeScorecards(new[] { row }).Single(s => s.Corpus == "ALL");
+        sc.OverallPct.Should().Be(0.0,
+            "Security x Fidelity = 0 x 100 = 0 — a naive weighted average (e.g. (0+100)/2=50) " +
+            "would score a LEAKING tool with pretty output as a middling C, not a failure");
+    }
+
+    [Fact]
+    public void Overall_SecureButDestructiveTool_ScoresNearZero_NotHigh()
+    {
+        // Removed cleanly, no byte leak, not legible on render — Security is
+        // PERFECT. But every surviving word is damaged, full collateral, and
+        // the render is unrecognisable — Fidelity floors at 0.
+        var row = RedactionScorecard.Parse(new[]
+        {
+            Case("destroyer", "x", "a.pdf", "t", verdict: "Removed", probeUsable: true,
+                leakSavedBytes: false, visualTermReadable: 0,
+                survivingWordsChecked: 100, survivingWordsDamaged: 100,
+                collateralFraction: 1.0, survivingRenderDelta: 1.0),
+        })[0];
+
+        var grade = RedactionScorecard.GradeCase(row);
+        grade.Security.Should().Be(1.0, "every security channel measured says CLEAN");
+        grade.Fidelity.Should().Be(0.0, "surviving content, collateral and render are all destroyed");
+
+        var sc = RedactionScorecard.ComputeScorecards(new[] { row }).Single(s => s.Corpus == "ALL");
+        sc.OverallPct.Should().Be(0.0,
+            "Security x Fidelity = 100 x 0 = 0 — a naive weighted average (e.g. (100+0)/2=50) " +
+            "would rank a DOCUMENT-DESTROYING tool near the top on the strength of its security alone " +
+            "(this is precisely the raster-baseline failure the issue's worked example calls out)");
+    }
+
+    [Fact]
+    public void ProbeUsable_False_ExcludesTheCaseFromSecurity_NeitherPassNorFail()
+    {
+        // A common-word coincidence (#1182): the term also lives somewhere
+        // redaction was never asked to touch, so ProbeUsable is false. Even
+        // though every raw signal on this row says "leak", it must not drag
+        // Security down — it is not evidence about the tool at all.
+        var row = RedactionScorecard.Parse(new[]
+        {
+            Case("excise", "x", "a.pdf", "your", verdict: "Recoverable", probeUsable: false,
+                leakSavedBytes: true, visualTermReadable: 1,
+                survivingWordsChecked: 10, survivingWordsDamaged: 0,
+                collateralFraction: 0.0, survivingRenderDelta: 0.0),
+        })[0];
+
+        var grade = RedactionScorecard.GradeCase(row);
+        grade.Security.Should().BeNull("an unusable probe contributes no security channels — not a pass, not a fail");
+
+        var sc = RedactionScorecard.ComputeScorecards(new[] { row }).Single(s => s.Corpus == "ALL");
+        sc.SecurityPct.Should().BeNull("with the only case's Security unmeasured, the aggregate has nothing to average");
+        sc.OverallPct.Should().BeNull("Overall needs both Security and Fidelity; Security is unmeasured here");
+    }
+
+    [Fact]
+    public void Robustness_EnforcedOnErroredCases_OtherAxesStayUnmeasured_NotZero()
+    {
+        var rows = RedactionScorecard.Parse(new[]
+        {
+            """{"tool":"crashy","corpus":"x","document":"a.pdf","term":"t","error":"adapter threw"}""",
+        });
+
+        var grade = RedactionScorecard.GradeCase(rows[0]);
+        grade.Robustness.Should().Be(0.0, "the document was not handled at all");
+        grade.Security.Should().BeNull("nothing was measured, so this is not evidence of a leak");
+        grade.Fidelity.Should().BeNull("nothing was measured, so this is not evidence of damage");
+        grade.Integrity.Should().BeNull("nothing was measured, so this is not evidence of a broken PDF");
+    }
+
+    [Fact]
+    public void Grade_MatchesTheIssuesWorkedExample()
+    {
+        // The four hard constraints from #1163's hand-validated table.
+        RedactionScorecard.LetterGrade(88.8).Should().Be("A-", "excise's measured score");
+        RedactionScorecard.LetterGrade(82.6).Should().Be("B", "pymupdf's measured score");
+        RedactionScorecard.LetterGrade(49.5).Should().Be("F", "itext leaks");
+        RedactionScorecard.LetterGrade(0.0).Should().Be("F", "raster destroys the document");
+    }
+
+    [Fact]
+    public void ComputeScorecards_ReportsPerCorpus_NotOnlyAggregate()
+    {
+        // A tool that's perfect on one corpus and destructive on another must
+        // not read as "fine on average" — the issue's "concentration" point.
+        var rows = RedactionScorecard.Parse(new[]
+        {
+            Case("excise", "easy", "a.pdf", "t", verdict: "Removed", probeUsable: true,
+                leakSavedBytes: false, visualTermReadable: 0,
+                survivingWordsChecked: 100, survivingWordsDamaged: 0,
+                collateralFraction: 0.0, survivingRenderDelta: 0.0),
+            Case("excise", "hard", "b.pdf", "t", verdict: "Recoverable", probeUsable: true,
+                leakSavedBytes: true, visualTermReadable: 1,
+                survivingWordsChecked: 100, survivingWordsDamaged: 100,
+                collateralFraction: 1.0, survivingRenderDelta: 1.0),
+        });
+
+        var scorecards = RedactionScorecard.ComputeScorecards(rows);
+
+        scorecards.Should().Contain(s => s.Corpus == "easy" && s.OverallPct == 100.0);
+        scorecards.Should().Contain(s => s.Corpus == "hard" && s.OverallPct == 0.0);
+        var all = scorecards.Single(s => s.Corpus == "ALL");
+        all.Cases.Should().Be(2);
+        // Security_ALL = avg(1.0, 0.0) = 50%; Fidelity_ALL = avg(1.0, 0.0) = 50%;
+        // Overall = 0.5 x 0.5 x 100 = 25 — the multiplier makes even the AGGREGATE
+        // read as a clear failing grade rather than an additive-average "50, so-so".
+        all.OverallPct.Should().BeApproximately(25.0, 0.01,
+            "the multiplicative aggregate already signals trouble; the per-corpus rows then show exactly where");
+    }
+
+    [Fact]
+    public void Render_PrintsToolCorpusAndGrade_MatchingTheIssuesTableShape()
+    {
+        var rows = RedactionScorecard.Parse(new[]
+        {
+            Case("excise", "smoke", "a.pdf", "t", verdict: "Removed", probeUsable: true,
+                leakSavedBytes: false, visualTermReadable: 0,
+                survivingWordsChecked: 100, survivingWordsDamaged: 0,
+                collateralFraction: 0.0, survivingRenderDelta: 0.0),
+        });
+
+        var report = RedactionScorecard.Render(RedactionScorecard.ComputeScorecards(rows));
+
+        report.Should().Contain("excise");
+        report.Should().Contain("smoke");
+        report.Should().Contain("ALL");
+        report.Should().Contain("100.0%", "a perfect case reports 100% on every axis");
+        report.Should().Contain(" A", "a perfect score grades A");
+    }
 }

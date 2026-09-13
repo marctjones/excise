@@ -151,6 +151,68 @@ for t in tools:
         tier_grades[tier] = letter(sum(1 for r in sub if not leaked(r))/len(sub)) if sub else None
     grades[t] = {"overall": letter(overall), "byTier": tier_grades}
 
+# #1163 — the SECURITY x FIDELITY combined grade, per tool. `grades` above
+# and `sf` below are both SECURITY-only (or security-plus-separate-numbers);
+# no single field combines security and fidelity into one comparable score,
+# which is exactly the gap #1163 was filed to close. Mirrors
+# Excise.Rendering.Tests/Differential/RedactionScorecard.cs's model (same
+# philosophy, independently reimplemented here since this script has no
+# access to the test assembly): Overall = Security x Fidelity, a MULTIPLIER
+# — a leak cannot be bought back with pretty output, and a tool that
+# destroys the document cannot buy a good grade with a clean leak scan.
+#
+# Security is gated on `probeUsable` (#1182's canary/common-word
+# discriminator) wherever the field is present — a term that also lives
+# somewhere redaction was never asked to touch (JS, field names, viewer
+# boilerplate) cannot indict the tool. Older archived rows without the field
+# treat every row as usable, matching this script's prior (ungated)
+# behaviour — narrower than the C# scorer's per-CHANNEL gating (this reads
+# one boolean per case, not per channel), but re-derivable from the same
+# results.jsonl and good enough for the historical trend line this script
+# maintains.
+def _overall_sf_letter(pct):
+    if pct is None:
+        return None
+    for thr, g in [(93, "A"), (88, "A-"), (85, "B+"), (80, "B"), (77, "B-"),
+                   (73, "C+"), (70, "C"), (67, "C-"), (63, "D+"), (60, "D")]:
+        if pct >= thr:
+            return g
+    return "F"
+
+
+def _fidelity_of(r):
+    parts = []
+    checked = r.get("survivingWordsChecked", 0) or 0
+    if checked:
+        damaged_frac = min(1.0, max(0.0, (r.get("survivingWordsDamaged", 0) or 0) / checked))
+        parts.append((1.0 - damaged_frac, 2.0))  # the Fidelity ANCHOR (#1157)
+    parts.append((1.0 - min(1.0, max(0.0, r.get("collateralFraction", 0) or 0)), 1.0))
+    delta = r.get("survivingRenderDelta", -1)
+    if delta is not None and delta >= 0:
+        parts.append((1.0 - min(1.0, max(0.0, delta)), 1.0))
+    if not parts:
+        return None
+    return sum(score * weight for score, weight in parts) / sum(weight for _, weight in parts)
+
+
+overall_grade = {}
+for t in tools:
+    g = [r for r in ok if r["tool"] == t]
+    if not g:
+        continue
+    usable = [r for r in g if r.get("probeUsable", True)]
+    security_pct = (sum(1 for r in usable if not leaked(r)) / len(usable) * 100) if usable else None
+    fidelity_values = [v for v in (_fidelity_of(r) for r in g) if v is not None]
+    fidelity_pct = (sum(fidelity_values) / len(fidelity_values) * 100) if fidelity_values else None
+    overall_pct = (security_pct / 100 * fidelity_pct / 100 * 100
+                   if security_pct is not None and fidelity_pct is not None else None)
+    overall_grade[t] = {
+        "securityPct": round(security_pct, 1) if security_pct is not None else None,
+        "fidelityPct": round(fidelity_pct, 1) if fidelity_pct is not None else None,
+        "overallPct": round(overall_pct, 1) if overall_pct is not None else None,
+        "grade": _overall_sf_letter(overall_pct),
+    }
+
 # REFUSE TO SILENTLY NARROW THE COMPARISON.
 #
 # The bench discovers its peer tools from the environment: PyMuPDF and the raster anchor
@@ -207,7 +269,7 @@ entry = {
     "peerTools": [t for t in tools if t != "excise"],
     "metrics": {"measured": len(ok), "errored": len(rows) - len(ok),
                 "leakByTierTool": by_tier, "securityFidelity": sf,
-                "securityGrade": grades},
+                "securityGrade": grades, "overallGrade": overall_grade},
     "archive": archive,
 }
 with open(history, "a") as f:
@@ -222,8 +284,11 @@ for tier in tiers:
     cells = "  ".join(f"{t}={by_tier[tier][t][0]}/{by_tier[tier][t][1]}" for t in tools)
     print(f"  leak {tier:8} {cells}")
 for t in tools:
+    og = overall_grade.get(t, {})
     print(f"  grade {t:8} overall={grades[t]['overall']}  "
-          f"tiers={' '.join(f'{k}:{v}' for k,v in grades[t]['byTier'].items())}")
+          f"tiers={' '.join(f'{k}:{v}' for k,v in grades[t]['byTier'].items())}  "
+          f"sxf={og.get('overallPct')}({og.get('grade')})  "
+          f"[security={og.get('securityPct')} fidelity={og.get('fidelityPct')}]")
 print(f"  full rows -> {archive}")
 print(f"  history   -> {history}")
 PY
