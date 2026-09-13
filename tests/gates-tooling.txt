@@ -90,6 +90,8 @@ scripts/import-github-issues.sh   # one-time issue import
 scripts/lib-runner.sh   # library sourced by every runner
 scripts/mine-hard-redaction-cases.py   # bench corpus mining
 scripts/monitor-exploratory-corpus.sh   # progress monitor for a running corpus scan
+scripts/profile-render.sh   # dotnet-trace hotspot workflow for one CLI render (#1351); a diagnostic, not a gate
+scripts/profile_render_analyze.py   # body of profile-render.sh: self/inclusive time from an evented speedscope profile
 scripts/profile-test-rss-by-filter.sh   # measurement helper (#861)
 scripts/release-smoke.sh   # RUNNER: t2
 scripts/report-hotspots.sh   # invoked at the end of run-full-suite
