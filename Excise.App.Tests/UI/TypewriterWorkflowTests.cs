@@ -234,21 +234,12 @@ public class TypewriterWorkflowTests
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         viewer.Should().NotBeNull();
 
-        // Wait for single-page layout (mirrors MouseInputTests): the overlay
+        // Wait for the single-page PAGE, not just its ScrollViewer: the overlay
         // canvas shares the zoom transform, so a page-space point translates to
-        // window coords even though the canvas itself reports zero Bounds.
-        ScrollViewer? scrollViewer = null;
-        var deadline = DateTime.UtcNow.AddSeconds(10);
-        while (DateTime.UtcNow < deadline)
-        {
-            window.UpdateLayout();
-            scrollViewer = viewer!.FindControl<ScrollViewer>("PdfScrollViewer");
-            if (scrollViewer is { IsVisible: true } && scrollViewer.Bounds != default)
-                break;
-            await Task.Delay(150);
-        }
-        scrollViewer.Should().NotBeNull();
-        scrollViewer!.Bounds.Should().NotBe(default(Rect), "single-page view must be laid out before clicking");
+        // window coords only once the page Image has sized the ZoomHost. The
+        // typewriter toggle switches the default continuous view to single-page,
+        // which renders the page then (#1473); a user cannot aim at it earlier.
+        await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer!);
 
         var overlay = viewer!.FindControl<Canvas>("OverlayCanvas");
         overlay.Should().NotBeNull();
