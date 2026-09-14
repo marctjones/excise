@@ -80,8 +80,11 @@ public class ModeSwitchVisualTests
 
             // Click the mode button.
             ModeCommand(vm, mode).Execute().Subscribe();
-            await PumpUntilAsync(window, () =>
-                viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading);
+            // Select-text keeps the continuous view (#815), which never renders
+            // the hidden single-page Image (#1473); CaptureWhenInkedAsync below
+            // waits for that view's ink instead.
+            await PumpUntilAsync(window, () => vm.ViewMode == PdfViewMode.Continuous ||
+                (viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading));
 
             var after = await CaptureWhenInkedAsync(window, viewer,
                 failureContext: $"after switching to {mode} mode (dpr={dpr}) the page text must still be displayed");
@@ -132,8 +135,11 @@ public class ModeSwitchVisualTests
             var inkBefore = InkFraction(before);
 
             ModeCommand(vm, mode).Execute().Subscribe();
-            await PumpUntilAsync(window, () =>
-                viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading);
+            // Select-text keeps the continuous view (#815), which never renders
+            // the hidden single-page Image (#1473); CaptureWhenInkedAsync below
+            // waits for that view's ink instead.
+            await PumpUntilAsync(window, () => vm.ViewMode == PdfViewMode.Continuous ||
+                (viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading));
             var after = await CaptureWhenInkedAsync(window, viewer,
                 failureContext: $"after {mode} on a form document the page text must still be displayed");
 
@@ -193,8 +199,11 @@ public class ModeSwitchVisualTests
             var pageBefore = vm.CurrentPage;
 
             ModeCommand(vm, "redact").Execute().Subscribe();
-            await PumpUntilAsync(window, () =>
-                viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading);
+            // Select-text keeps the continuous view (#815), which never renders
+            // the hidden single-page Image (#1473); CaptureWhenInkedAsync below
+            // waits for that view's ink instead.
+            await PumpUntilAsync(window, () => vm.ViewMode == PdfViewMode.Continuous ||
+                (viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading));
             var after = await CaptureWhenInkedAsync(window, viewer, inkThreshold: InkThreshold,
                 failureContext: $"after entering redact mode mid-document the current page's text must be displayed");
 

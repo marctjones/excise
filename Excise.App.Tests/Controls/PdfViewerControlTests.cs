@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -640,6 +641,107 @@ public class PdfViewerControlTests
 
         single.IsVisible.Should().BeFalse();
         continuous.IsVisible.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// #1473: in continuous view, opening a document, bumping RenderVersion and
+    /// toggling annotations must not render the hidden single-page Image. The
+    /// single page still renders the moment it becomes visible. Each continuous
+    /// path that drops the single-page cache also disposes the bitmap the hidden
+    /// Image last showed, so the Image must let go of it: switching back to
+    /// single-page must lay out and render frames without an
+    /// ObjectDisposedException.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ContinuousView_DoesNotRenderHiddenSinglePage_AndRendersItWhenShown()
+    {
+        var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"excise_hidden_single_{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
+        var bytes = System.IO.File.ReadAllBytes(path);
+        System.IO.File.Delete(path);
+
+        var viewer = new PdfViewerControl { ViewMode = PdfViewMode.Continuous };
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        var dispatcherErrors = new System.Collections.Generic.List<Exception>();
+        DispatcherUnhandledExceptionEventHandler onError = (_, e) => dispatcherErrors.Add(e.Exception);
+        Dispatcher.UIThread.UnhandledException += onError;
+        window.Show();
+        var image = viewer.FindControl<Image>("PdfImage")!;
+        try
+        {
+            viewer.Document = PdfCoreDocument.Open(bytes);
+            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+
+            SinglePageRenderAttempts(viewer).Should().Be(0,
+                "opening a document in continuous view must not render the hidden single page");
+            image.Source.Should().BeNull();
+
+            // Shown: the single page renders.
+            viewer.ViewMode = PdfViewMode.SinglePage;
+            await PumpUntilAsync(window, () => image.Source != null);
+            RenderFrames(window);
+            long attemptsAfterShow = SinglePageRenderAttempts(viewer);
+            attemptsAfterShow.Should().BeGreaterThan(0, "switching to single-page renders the current page");
+
+            // Hidden again: a content rewrite and an annotation toggle drop the
+            // single-page cache without rendering the hidden page.
+            viewer.ViewMode = PdfViewMode.Continuous;
+            viewer.RenderVersion++;
+            RenderFrames(window);
+            image.Source.Should().BeNull("RenderVersion disposed the bitmap the hidden Image showed");
+            viewer.ShowAnnotations = !viewer.ShowAnnotations;
+            RenderFrames(window);
+            image.Source.Should().BeNull();
+
+            // A second document opened in continuous view: still no hidden render.
+            var previous = viewer.Document;
+            viewer.Document = PdfCoreDocument.Open(bytes);
+            previous?.Dispose();
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            SinglePageRenderAttempts(viewer).Should().Be(attemptsAfterShow,
+                "no continuous-view path may render the hidden single page");
+
+            // Shown again: renders, and the Image never measures a disposed bitmap.
+            viewer.ViewMode = PdfViewMode.SinglePage;
+            RenderFrames(window);
+            await PumpUntilAsync(window, () => image.Source != null);
+            RenderFrames(window);
+            ((global::Avalonia.Media.Imaging.Bitmap)image.Source!).PixelSize.Width.Should().BeGreaterThan(0);
+            dispatcherErrors.Should().BeEmpty();
+        }
+        finally
+        {
+            Dispatcher.UIThread.UnhandledException -= onError;
+            window.Close();
+            viewer.Document?.Dispose();
+        }
+
+        static long SinglePageRenderAttempts(PdfViewerControl v)
+        {
+            var d = v.GetRenderDiagnostics();
+            return d.SinglePageHits + d.SinglePageMisses;
+        }
+
+        static void RenderFrames(Window w)
+        {
+            w.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            using (w.CaptureRenderedFrame()) { }
+        }
+
+        static async Task PumpUntilAsync(Window w, Func<bool> condition)
+        {
+            var deadline = DateTime.UtcNow.AddSeconds(30);
+            while (!condition())
+            {
+                if (DateTime.UtcNow > deadline)
+                    throw new TimeoutException("condition not reached within 30s");
+                w.UpdateLayout();
+                Dispatcher.UIThread.RunJobs();
+                await Task.Delay(25);
+            }
+        }
     }
 
     [FixedAvaloniaFact]
