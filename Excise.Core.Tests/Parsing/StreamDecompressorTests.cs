@@ -420,6 +420,90 @@ public class StreamDecompressorTests
         });
     }
 
+    /// <summary>
+    /// #1207/#1482 — Flate output is assembled from geometrically growing
+    /// chunks (81,920 bytes first, doubling to 16 MiB). Sizes straddling each
+    /// chunk boundary must decode to exactly the original bytes, through both
+    /// the zlib-wrapped and the raw-deflate attempt.
+    /// </summary>
+    [Theory]
+    [InlineData(1)]
+    [InlineData(81_919)]
+    [InlineData(81_920)]
+    [InlineData(81_921)]
+    [InlineData(81_920 + 163_840)]
+    [InlineData(81_920 + 163_840 + 1)]
+    [InlineData(3_000_017)]
+    public void ApplyFilter_Flate_OutputSpanningChunkBoundaries_DecodesByteIdentically(int size)
+    {
+        var decompressor = new StreamDecompressor();
+        var original = new byte[size];
+        new Random(size).NextBytes(original);
+
+        decompressor.ApplyFilter("FlateDecode", CompressWithZlib(original), null)
+            .Should().Equal(original, "zlib-wrapped Flate");
+        decompressor.ApplyFilter("FlateDecode", CompressWithDeflate(original), null)
+            .Should().Equal(original, "raw-deflate Flate");
+    }
+
+    /// <summary>
+    /// #1207/#1482 — the decode used to grow a MemoryStream (capacity doubling)
+    /// and then ToArray() it: ~3.5x the decoded size allocated on this input,
+    /// almost all of it on the large object heap. Measured on the Altona
+    /// technical2 x4 page that was 2.2 GiB of LOH churn. The chunked decode
+    /// allocates the chunks (~1x plus at most one partly-filled chunk) and one
+    /// exact result array (1x).
+    /// </summary>
+    [Fact]
+    public void ApplyFilter_Flate_AllocatesAboutTwiceTheDecodedSize_NotAGrowingMemoryStream()
+    {
+        const int size = 32 * 1024 * 1024;
+        var original = new byte[size];
+        for (var i = 0; i < original.Length; i++)
+            original[i] = (byte)(i % 251);
+        var compressed = CompressWithZlib(original);
+        var decompressor = new StreamDecompressor();
+        decompressor.ApplyFilter("FlateDecode", CompressWithZlib(new byte[16]), null); // warm up
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        var result = decompressor.ApplyFilter("FlateDecode", compressed, null);
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        result.Should().Equal(original);
+        allocated.Should().BeLessThan((long)(size * 2.5),
+            $"a {size:N0}-byte decode allocated {allocated:N0} bytes ({(double)allocated / size:F2}x); "
+            + "the MemoryStream doubling + ToArray path it replaced allocated ~3.5x");
+    }
+
+    /// <summary>
+    /// #1408 + #1207 — a chunk is never allocated past the decode ceiling. Each
+    /// new chunk is clamped to the remaining budget plus one byte, so a bomb is
+    /// refused after ~ceiling bytes of allocation.
+    ///
+    /// The ceiling sits EXACTLY on a chunk boundary (81,920 + 163,840 +
+    /// 327,680 + 655,360 bytes) because that is the only place the clamp is
+    /// observable: the first four chunks fill without crossing it, so an
+    /// unclamped decode pre-allocates a whole fifth chunk (1,310,720 bytes,
+    /// ~2x the ceiling in total) before the read that trips the guard.
+    /// Mutation-checked: with the clamp removed this test fails; with a 1 MiB
+    /// ceiling (mid-chunk) it would not.
+    /// </summary>
+    [Fact]
+    public void DecodeFlateData_Bomb_RefusedWithoutAllocatingPastTheCeiling()
+    {
+        const long ceiling = 81_920 + 163_840 + 327_680 + 655_360;
+        var compressed = CompressWithZlib(new byte[64 * 1024 * 1024]);
+        Excise.Core.Filters.FlateFilterDecoder.DecodeFlateData(CompressWithZlib(new byte[16]), ceiling); // warm up
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        var act = () => Excise.Core.Filters.FlateFilterDecoder.DecodeFlateData(compressed, ceiling);
+        act.Should().Throw<PdfParseException>().Where(ex => ex.IsResourceGuard);
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        allocated.Should().BeLessThan((long)(ceiling * 1.25) + 256 * 1024,
+            $"the guard must trip before chunk growth outruns the {ceiling:N0}-byte ceiling (allocated {allocated:N0})");
+    }
+
     #endregion
 
     #region LZWDecode Tests
