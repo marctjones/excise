@@ -235,6 +235,7 @@ public sealed class EditModeSwitchReportTests
                 await Task.Yield();
             }
             var firstWasFinal = viewer.SinglePagePublishCount > publish0;
+            var firstGeometry = Geometry(viewer);
             using var first = CaptureZoomHost(viewer);
 
             while (!(viewer.SinglePagePublishCount > publish0 && !viewer.IsLoading))
@@ -245,6 +246,7 @@ public sealed class EditModeSwitchReportTests
                 await Task.Delay(10);
             }
             await SettleAsync(window, 3);
+            var finalGeometry = Geometry(viewer);
             using var final = CaptureZoomHost(viewer);
 
             var a = InkBounds(first);
@@ -256,6 +258,8 @@ public sealed class EditModeSwitchReportTests
                 $"dLeft={b.Left - a.Left}", $"dTop={b.Top - a.Top}",
                 $"dRight={b.Right - a.Right}", $"dBottom={b.Bottom - a.Bottom}",
                 $"inkFraction={InkFraction(first):0.0000}/{InkFraction(final):0.0000}"));
+            Emit(string.Join('\t', "# geometry", label, Path.GetFileName(pdf), page,
+                $"first: {firstGeometry}", $"final: {finalGeometry}"));
         }
         finally
         {
@@ -363,6 +367,17 @@ public sealed class EditModeSwitchReportTests
         var local = new Point(image.Bounds.Width * 0.5, image.Bounds.Height * 0.4);
         return overlay.TranslatePoint(local, window)
             ?? throw new InvalidOperationException("overlay not attached to the window");
+    }
+
+    /// <summary>Layout geometry of the page Image and ZoomHost, for the offset line.</summary>
+    private static string Geometry(PdfViewerControl viewer)
+    {
+        var image = viewer.FindControl<Image>("PdfImage")!;
+        var zoomHost = viewer.FindControl<Control>("ZoomHost")!;
+        var origin = zoomHost.TranslatePoint(default, viewer) ?? default;
+        var pixels = image.Source is Bitmap b ? $"{b.PixelSize.Width}x{b.PixelSize.Height}" : "none";
+        return string.Create(CultureInfo.InvariantCulture,
+            $"imgWH={image.Width:F2}x{image.Height:F2} zoomHostWH={zoomHost.Bounds.Width:F2}x{zoomHost.Bounds.Height:F2} zoomHostOrigin={origin.X:F2},{origin.Y:F2} srcPx={pixels}");
     }
 
     private static SKBitmap CaptureZoomHost(PdfViewerControl viewer)
