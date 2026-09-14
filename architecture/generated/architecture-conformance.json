@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "333c5dc927bb32577a0378006566388c8db4b811",
+  "sourceRevision": "1ddc41f71f732049b8a865d99691ee565d09365e",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 6115,
+    "retainedSymbols": 6170,
     "observedComponentDependencies": 80,
     "declaredDependencies": 79,
     "acceptedExceptions": 1,
@@ -24,8 +24,8 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 293,
-      "typeDependencyCount": 19,
+      "references": 300,
+      "typeDependencyCount": 20,
       "classification": "declared",
       "evidence": [
         {
@@ -136,22 +136,22 @@
     {
       "source": "app",
       "target": "rendering",
-      "references": 3,
+      "references": 4,
       "typeDependencyCount": 2,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Services.ThumbnailCacheService",
           "target": "Excise.Rendering.RenderOptions",
-          "references": 2
+          "references": 3
         }
       ]
     },
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 465,
-      "typeDependencyCount": 52,
+      "references": 471,
+      "typeDependencyCount": 54,
       "classification": "declared",
       "evidence": [
         {
@@ -304,7 +304,7 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 363,
+      "references": 365,
       "typeDependencyCount": 21,
       "classification": "declared",
       "evidence": [
@@ -500,7 +500,7 @@
     {
       "source": "cli",
       "target": "rendering",
-      "references": 20,
+      "references": 21,
       "typeDependencyCount": 6,
       "classification": "declared",
       "evidence": [
@@ -1136,7 +1136,7 @@
     {
       "source": "rendering",
       "target": "core-primitives",
-      "references": 608,
+      "references": 615,
       "typeDependencyCount": 40,
       "classification": "declared",
       "evidence": [
