@@ -469,6 +469,7 @@ public partial class PdfViewerControl : UserControl
     {
         InitializeComponent();
         _renderer = new SkiaRenderer();
+        MetricsViewerId = ViewerMetrics.Register(this);
         Focusable = true;
         UpdateViewerAutomationProperties();
         DetachedFromVisualTree += OnDetachedFromVisualTreeHandler;
@@ -1725,6 +1726,7 @@ public partial class PdfViewerControl : UserControl
             var showFields = ShowFieldAndLinkAnnotations;
             var revealHidden = RevealHiddenAnnotations;
             var highlightFields = HighlightFormFields;
+            long renderStart = ViewerMetrics.SinglePageRenderStart();
             var skBitmap = await Task.Run(() =>
             {
                 token.ThrowIfCancellationRequested();
@@ -1761,6 +1763,7 @@ public partial class PdfViewerControl : UserControl
                                        bitmap.PixelSize.Height * 96.0 / bitmapDpi);
                     Trace($"SinglePageRender page={pageNumber} RENDERED px={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dip={dip.Width:F0}x{dip.Height:F0}");
                     _singlePageRenderLifetime.Add(pageNumber, renderDpi, bitmap, dip);
+                    ViewerMetrics.RecordSinglePageRender(renderStart, renderDpi);
                     Trace($"ContVis={_continuousScrollViewer?.IsVisible} SingleVis={_scrollViewer?.IsVisible}");
                     Trace($"ImageSet page={pageNumber} imgWidth={_pdfImage?.Width:F0} srcDip={dip.Width:F0}x{dip.Height:F0} srcPx={bitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
                     if (_pdfImage != null)

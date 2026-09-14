@@ -489,6 +489,7 @@ public partial class PdfViewerControl
         // finalizer; each slot defers the dispose until its binding has moved.
         ReleaseSlotComposites(_continuousSlots);
         _continuousSlots = slots;
+        RefreshContinuousByteMirrors();
         _continuousItems.ItemsSource = slots;
 
         // Re-assert CurrentPage now that the slots exist.
@@ -531,6 +532,7 @@ public partial class PdfViewerControl
         ReleaseSlotComposites(_continuousSlots);
         if (_continuousItems != null) _continuousItems.ItemsSource = null;
         _continuousSlots = null;
+        RefreshContinuousByteMirrors();
     }
 
     // Clear every slot's composite; each slot disposes it once its binding has
@@ -564,6 +566,7 @@ public partial class PdfViewerControl
         ReleaseSlotComposites(_continuousSlots);
         foreach (var entry in _continuousCache) entry.Bitmap.Dispose();
         _continuousCache.Clear();
+        RefreshContinuousByteMirrors();
         _continuousPageLinks.Clear();
         // Same lifetime as the link cache: an annotation cache that outlived
         // the document would hover notes from the previous file (#1074).
@@ -998,6 +1001,7 @@ public partial class PdfViewerControl
                 if (slot.Bitmap != null && !realized.Contains(slot))
                     slot.ClearComposite();
             }
+            RefreshContinuousByteMirrors();
         }
 
         // Pass 2: schedule renders for cells not yet cached, then (re)composite the
@@ -1177,6 +1181,7 @@ public partial class PdfViewerControl
                     });
                 }, token);
                 renderWatch.Stop();
+                ViewerMetrics.RecordBandRender(renderWatch.Elapsed, dpi);
                 ContinuousRenderCompletedCount++;
                 ContinuousRenderWallMs += renderWatch.ElapsedMilliseconds;
 
@@ -1369,6 +1374,7 @@ public partial class PdfViewerControl
         if (_continuousItems?.ContainerFromItem(slot) == null)
         {
             slot.ClearComposite();
+            RefreshContinuousByteMirrors();
             return;
         }
 
@@ -1435,6 +1441,8 @@ public partial class PdfViewerControl
         }
 
         slot.SetComposite(composite, compositeKey, bandX, bandY, bandW, bandH);
+        ViewerMetrics.RecordComposite(ContinuousTileByteSize(totalW, totalH), dpi);
+        RefreshContinuousByteMirrors();
 
         // #1466 bound check. Runs per composite on the UI thread, so the common
         // path is one alloc-free walk of the slots; the band's upper bound
@@ -1576,6 +1584,7 @@ public partial class PdfViewerControl
             _continuousCache.RemoveLast();
             evicted.Dispose();
         }
+        RefreshContinuousByteMirrors();
     }
 
     private long ContinuousCacheResidentBytes()

@@ -68,6 +68,7 @@ internal sealed class DocumentTextIndexSession : IDisposable
         }
 
         CancelAndDispose(previousCancellation);
+        AppMetrics.TrackTextIndex(nextIndex);
         return nextIndex;
     }
 

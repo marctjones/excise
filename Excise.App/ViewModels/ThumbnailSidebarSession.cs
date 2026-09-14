@@ -80,6 +80,7 @@ internal sealed class ThumbnailSidebarSession : IDisposable
             document,
             Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
             cacheSalt: cacheSalt);
+        AppMetrics.RegisterThumbnailCache(_cache);
 
         for (var index = 0; index < pageCount; index++)
         {
@@ -117,6 +118,8 @@ internal sealed class ThumbnailSidebarSession : IDisposable
             _windowPassScheduled = false;
         }
 
+        if (_cache != null)
+            AppMetrics.RetireThumbnailCache(_cache);
         _cache?.Dispose();
         _cache = null;
         ClearItems();

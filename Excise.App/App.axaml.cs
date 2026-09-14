@@ -21,6 +21,7 @@ namespace Excise.App;
 public partial class App : Application
 {
     private IServiceProvider? _serviceProvider;
+    private MetricsJsonlSink? _metricsSink;
 
     public override void Initialize()
     {
@@ -65,6 +66,10 @@ public partial class App : Application
         logger.LogInformation("Framework initialization completed");
         logger.LogInformation("ReactiveUI configured to use Avalonia scheduler");
 
+        // #1491: EXCISE_TRACE_VIEWER=<path> writes live metrics as JSONL. Started
+        // before the main window so the first document open is captured.
+        _metricsSink = MetricsJsonlSink.TryStartFromEnvironment(logger);
+
         MainWindowViewModel? mainViewModel = null;
         string? pendingActivationPath = null;
 
@@ -99,6 +104,9 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             logger.LogInformation("Creating main window");
+
+            if (_metricsSink != null)
+                desktop.Exit += (_, _) => _metricsSink.Dispose();
 
             var vm = _serviceProvider.GetRequiredService<MainWindowViewModel>();
             mainViewModel = vm;

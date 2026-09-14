@@ -291,6 +291,7 @@ public partial class MainWindowViewModel
             timings.OutlineReadyElapsedMs,
             timings.SearchIndexStartedElapsedMs,
             stopwatch.ElapsedMilliseconds);
+        AppMetrics.RecordDocumentOpen(LastDocumentOpenTiming);
 
         _logger.LogInformation(
             ">>> STEP 13: LoadDocumentAsync COMPLETE. Total pages: {PageCount}. Timings: docLoad={DocLoadMs}ms firstPage={FirstPageMs}ms thumbnails={ThumbnailsMs}ms outline={OutlineMs}ms indexStart={IndexStartMs}ms total={TotalMs}ms",

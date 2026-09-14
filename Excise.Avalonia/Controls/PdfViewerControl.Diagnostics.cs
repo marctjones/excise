@@ -246,6 +246,35 @@ public partial class PdfViewerControl
     internal readonly record struct ContinuousBitmapOverlap(
         int Tiles, long TileBytes, int BakedTiles, long BakedTileBytes, long CompositeBytes);
 
+    // #1491 gauge sources. ViewerMetrics reads these from the listener's thread,
+    // so the byte totals (which walk UI-thread collections) are mirrors refreshed
+    // on the UI thread; the counts are single int reads.
+    private long _metricsContinuousTileBytes;
+    private long _metricsContinuousCompositeBytes;
+
+    /// <summary>This viewer's <c>viewer</c> tag on the per-viewer gauges (#1491).</summary>
+    internal int MetricsViewerId { get; }
+
+    internal long MetricsContinuousTileBytes => Volatile.Read(ref _metricsContinuousTileBytes);
+    internal long MetricsContinuousCompositeBytes => Volatile.Read(ref _metricsContinuousCompositeBytes);
+    internal int MetricsContinuousTileCount => _continuousCache.Count;
+    internal int MetricsContinuousInFlightCount => _continuousInFlight.Count;
+    internal int MetricsContinuousCacheHits => ContinuousRenderCacheHitCount;
+
+    internal SinglePageRenderLifetime<global::Avalonia.Media.Imaging.WriteableBitmap>.CacheDiagnostics
+        MetricsSinglePageCache() => _singlePageRenderLifetime.GetCacheDiagnostics();
+
+    /// <summary>
+    /// Refresh the continuous byte mirrors after the tile cache or the slot
+    /// composites change. UI thread only; a no-op unless a byte gauge is enabled.
+    /// </summary>
+    private void RefreshContinuousByteMirrors()
+    {
+        if (!ViewerMetrics.ByteGaugesEnabled) return;
+        Volatile.Write(ref _metricsContinuousTileBytes, ContinuousCacheResidentBytes());
+        Volatile.Write(ref _metricsContinuousCompositeBytes, ContinuousCompositeResidentBytes());
+    }
+
     private ScrollViewer? ActiveViewportScrollViewer() =>
         ViewMode == PdfViewMode.Continuous ? _continuousScrollViewer : _scrollViewer;
 
