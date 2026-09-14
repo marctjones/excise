@@ -388,6 +388,10 @@ single-project runner that replaces the deleted wrappers:
 scripts/t.sh Excise.Core.Tests/Excise.Core.Tests.csproj --filter Redaction
 ```
 
+For "which method is hot", not "how slow is it", use `scripts/profile-render.sh
+<pdf> [page] [dpi]` (#1351): `dotnet-trace` around one Release CLI render, top
+self/inclusive frames, speedscope file kept under `logs/profile-render/`.
+
 ## Timings, honestly
 
 Measured with dates; re-measure before quoting. The rows' `note` cells carry

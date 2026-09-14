@@ -105,6 +105,18 @@ else
     printf "                 run ./scripts/download-pdfium.sh (pdfium_test itself is not distributed)\n"
     missing=$((missing+1))
 fi
+# #1351 — dotnet global tools land in ~/.dotnet/tools, which is often not on PATH.
+if command -v dotnet-trace >/dev/null 2>&1; then
+    printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "dotnet-trace" "$DIM" "$(command -v dotnet-trace)" "$RESET"
+    ok=$((ok+1))
+elif [[ -x "$HOME/.dotnet/tools/dotnet-trace" ]]; then
+    printf "  %s✓%s %-12s %s(found: ~/.dotnet/tools/dotnet-trace)%s\n" "$GREEN" "$RESET" "dotnet-trace" "$DIM" "$RESET"
+    ok=$((ok+1))
+else
+    printf "  %s✗%s %-12s %sinstall: dotnet tool install -g dotnet-trace%s\n" "$RED" "$RESET" "dotnet-trace" "$YELLOW" "$RESET"
+    printf "                 unlocks: scripts/profile-render.sh (method-level render hotspots)\n"
+    missing=$((missing+1))
+fi
 
 echo
 echo "Test corpora (under $TEST_PDF_DIR):"

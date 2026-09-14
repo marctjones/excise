@@ -102,6 +102,13 @@ internal sealed class FlateFilterDecoder : AliasedFilterDecoder
         return CopyToArray(gzip, maxDecodedBytes);
     }
 
+    /// <summary>First chunk size: below the 85 KB large-object-heap threshold,
+    /// so a small content stream never touches the LOH until its final array.</summary>
+    internal const int InitialChunkBytes = 81920;
+
+    /// <summary>Chunks double up to this size, then stay at it.</summary>
+    internal const int MaxChunkBytes = 16 * 1024 * 1024;
+
     /// <summary>
     /// Reads in bounded chunks rather than <c>stream.CopyTo</c>, checking the
     /// running total against <paramref name="maxDecodedBytes"/> on every
@@ -109,18 +116,63 @@ internal sealed class FlateFilterDecoder : AliasedFilterDecoder
     /// Flate, and a single unbounded <c>CopyTo</c> would allocate every one
     /// of them before this method ever got a chance to say no.
     /// </summary>
+    /// <remarks>
+    /// #1207/#1482: the decompressor fills a list of geometrically growing
+    /// chunks directly, and the result is copied ONCE into an exact-size
+    /// array. This replaced a <see cref="MemoryStream"/> whose doubling
+    /// capacity plus the final <c>ToArray</c> copy allocated ~4x the decoded
+    /// size and held up to 3x live at the end: on the Altona technical2 x4
+    /// page that was 2.2 GiB of large-object-heap churn for ~526 MiB of
+    /// images. Now the total allocation is ~2x the decoded size and at most
+    /// 2x is live. The output bytes are the same bytes in the same order.
+    ///
+    /// Each new chunk is clamped to the remaining ceiling plus one byte, so a
+    /// pre-allocated chunk can never outrun the #1408 guard: the read that
+    /// crosses the ceiling is the next one, not an allocation past it.
+    /// </remarks>
     private static byte[] CopyToArray(Stream stream, long maxDecodedBytes)
     {
-        using var output = new MemoryStream();
-        var buffer = new byte[81920];
+        List<byte[]>? full = null;
         long total = 0;
-        int read;
-        while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+        var current = new byte[NextChunkSize(InitialChunkBytes, total, maxDecodedBytes)];
+        var used = 0;
+
+        while (true)
         {
+            if (used == current.Length)
+            {
+                (full ??= new List<byte[]>()).Add(current);
+                current = new byte[NextChunkSize(Math.Min((long)current.Length * 2, MaxChunkBytes), total, maxDecodedBytes)];
+                used = 0;
+            }
+
+            var read = stream.Read(current, used, current.Length - used);
+            if (read <= 0)
+                break;
+
             total += read;
             StreamDecodeLimits.ThrowIfExceeded(total, maxDecodedBytes);
-            output.Write(buffer, 0, read);
+            used += read;
         }
-        return output.ToArray();
+
+        var result = GC.AllocateUninitializedArray<byte>(checked((int)total));
+        var offset = 0;
+        if (full is not null)
+        {
+            foreach (var chunk in full)
+            {
+                Buffer.BlockCopy(chunk, 0, result, offset, chunk.Length);
+                offset += chunk.Length;
+            }
+        }
+
+        Buffer.BlockCopy(current, 0, result, offset, used);
+        return result;
+    }
+
+    private static int NextChunkSize(long preferred, long decodedSoFar, long maxDecodedBytes)
+    {
+        var remainingPlusOne = maxDecodedBytes - decodedSoFar + 1;
+        return (int)Math.Max(1, Math.Min(preferred, remainingPlusOne));
     }
 }

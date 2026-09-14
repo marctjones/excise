@@ -732,6 +732,7 @@ against synthetic trx fixtures.
 
 - Rendering goes through Excise.Rendering (SkiaSharp); SkiaSharp carries its own native component
 - Check `Excise.Rendering/SkiaRenderer.cs` for raster semantics, `Excise.Avalonia/Controls/PdfViewerControl*.cs` for interactive scheduling/cache lifetime, `ThumbnailCacheService.cs` for thumbnails, and `PageImageRenderer.cs` for uncached image export
+- "Where is the render time going?" → `scripts/profile-render.sh <pdf> [page] [dpi]` (dotnet-trace, top self/inclusive frames; #1351). macOS `sample` cannot resolve JIT frames
 
 ### Build Failures
 
