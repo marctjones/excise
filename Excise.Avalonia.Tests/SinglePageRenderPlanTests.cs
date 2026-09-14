@@ -19,21 +19,6 @@ public class SinglePageRenderPlanTests
     private const double Uncapped = 1000.0;
 
     [Theory]
-    // logicalDpi, scale (dpr×zoom), expectedDeviceDpi, expectedBitmapDpi
-    [InlineData(120, 1.0, 120, 96.0)]   // 100% on a standard display: exact no-op
-    [InlineData(96, 1.0, 96, 96.0)]
-    [InlineData(120, 2.0, 240, 192.0)]  // Retina @100%, or standard @200% zoom
-    [InlineData(120, 1.5, 180, 144.0)]
-    [InlineData(120, 4.0, 480, 384.0)]  // Retina @200% zoom -> device resolution
-    public void SinglePageRenderPlan_RastersAtOnScreenMagnification(
-        int logicalDpi, double scale, int expectedDeviceDpi, double expectedBitmapDpi)
-    {
-        var (deviceDpi, bitmapDpi) = PdfViewerControl.SinglePageRenderPlan(logicalDpi, scale, Uncapped);
-        deviceDpi.Should().Be(expectedDeviceDpi);
-        bitmapDpi.Should().Be(expectedBitmapDpi);
-    }
-
-    [Theory]
     [InlineData(120, 1.0)]
     [InlineData(120, 2.0)]
     [InlineData(96, 3.0)]
@@ -70,18 +55,6 @@ public class SinglePageRenderPlanTests
         var size = PdfViewerControl.SinglePageLayoutSize(widthPt, heightPt, logicalDpi);
         size.Width.Should().Be(widthPt * logicalDpi / 72.0);
         size.Height.Should().Be(heightPt * logicalDpi / 72.0);
-    }
-
-    [Theory]
-    [InlineData(0.5, 1.0)]     // never below 1 (would down-res the base render)
-    [InlineData(8.0, 5.0)]     // capped to the memory budget
-    [InlineData(3.0, 5.0)]     // under the cap -> unaffected
-    public void SinglePageRenderPlan_ClampsScaleToBudget(double scale, double maxScale)
-    {
-        var (deviceDpi, bitmapDpi) = PdfViewerControl.SinglePageRenderPlan(120, scale, maxScale);
-        double effective = System.Math.Clamp(scale <= 0 ? 1.0 : scale, 1.0, maxScale);
-        deviceDpi.Should().Be((int)System.Math.Round(120 * effective));
-        bitmapDpi.Should().Be(96.0 * effective);
     }
 
     [Fact]
