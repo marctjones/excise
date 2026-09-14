@@ -165,9 +165,16 @@ internal sealed unsafe class MacMemoryPressureSource : IDisposable
     {
         try
         {
-            if (GCHandle.FromIntPtr(context).Target is not MacMemoryPressureSource self || self._disposed)
+            if (GCHandle.FromIntPtr(context).Target is not MacMemoryPressureSource self)
                 return;
-            self._onPressure(MapPressureData(s_getData(self._source)));
+            // Read the handle BEFORE the disposed flag: Dispose (UI thread)
+            // zeroes _source, and dispatch_source_get_data(NULL) crashes. A
+            // captured non-zero handle stays valid, because libdispatch keeps
+            // the source alive until the cancel handler has run.
+            nint source = self._source;
+            if (source == 0 || self._disposed)
+                return;
+            self._onPressure(MapPressureData(s_getData(source)));
         }
         catch
         {

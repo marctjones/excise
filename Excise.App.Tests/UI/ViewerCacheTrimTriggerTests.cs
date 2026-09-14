@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using AwesomeAssertions;
 using Excise.App.Services;
 using Excise.App.Tests.Controls;
+using Excise.App.Tests.Utilities;
+using Excise.App.ViewModels;
 using Excise.Avalonia.Controls;
 using Xunit;
 
@@ -28,12 +32,14 @@ public class ViewerCacheTrimTriggerTests
     public void DeactivateAndMinimize_TrimToBackground_OnlyWhenSoftTriggersAreOn()
     {
         var trims = new List<PdfViewerCacheTrimLevel>();
-        using (var on = new ViewerCacheTrimCoordinator(trims.Add, SoftOn, NoGcLoad))
+        var thumbnails = new List<PdfViewerCacheTrimLevel>();
+        using (var on = new ViewerCacheTrimCoordinator(trims.Add, SoftOn, NoGcLoad, thumbnails.Add))
         {
             on.OnDeactivated();
             on.OnMinimized();
         }
         trims.Should().Equal(PdfViewerCacheTrimLevel.Background, PdfViewerCacheTrimLevel.Background);
+        thumbnails.Should().BeEmpty("Background leaves the thumbnail tier alone; it is released from Warn up");
 
         trims.Clear();
         using (var off = new ViewerCacheTrimCoordinator(trims.Add, SoftOff, NoGcLoad))
@@ -87,8 +93,9 @@ public class ViewerCacheTrimTriggerTests
         int uiThread = Environment.CurrentManagedThreadId;
         int postingThread = 0;
         var trims = new List<(PdfViewerCacheTrimLevel Level, int Thread)>();
+        var thumbnails = new List<PdfViewerCacheTrimLevel>();
         using (var coordinator = new ViewerCacheTrimCoordinator(
-                   level => trims.Add((level, Environment.CurrentManagedThreadId)), SoftOff, NoGcLoad))
+                   level => trims.Add((level, Environment.CurrentManagedThreadId)), SoftOff, NoGcLoad, thumbnails.Add))
         {
             coordinator.OnPressure(MemoryPressureLevel.Normal);
             coordinator.OnPressure(MemoryPressureLevel.Warn);
@@ -102,6 +109,8 @@ public class ViewerCacheTrimTriggerTests
         }
         postingThread.Should().NotBe(uiThread, "fixture: the pressure must arrive from another thread");
         trims.Should().Equal((PdfViewerCacheTrimLevel.Warn, uiThread), (PdfViewerCacheTrimLevel.Critical, uiThread));
+        thumbnails.Should().Equal(new[] { PdfViewerCacheTrimLevel.Warn, PdfViewerCacheTrimLevel.Critical },
+            "OS pressure also releases the thumbnail in-memory tier");
 
         var ignored = new List<PdfViewerCacheTrimLevel>();
         using (var off = new ViewerCacheTrimCoordinator(ignored.Add, SoftOn with { OnMemoryPressure = false }, NoGcLoad))
@@ -186,6 +195,75 @@ public class ViewerCacheTrimTriggerTests
             Dispatcher.UIThread.UnhandledException -= onError;
             window.Close();
             viewer.Document?.Dispose();
+        }
+    }
+
+    [FixedAvaloniaFact(Timeout = 180000)]
+    public async Task ThumbnailTier_WarnKeepsThePrefetchWindow_CriticalOnlyTheVisiblePages_BackgroundEverything()
+    {
+        const int pageCount = 30;
+        const int lastVisible = 2;
+        var path = Path.Combine(Path.GetTempPath(), $"excise-trim-thumbs-{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount);
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
+        try
+        {
+            await vm.LoadDocumentAsync(path);
+            for (int i = 0; i <= lastVisible; i++)
+                vm.NotifyThumbnailViewport(i, isVisible: true);
+            for (int i = 0; i < pageCount; i++)
+                await vm.EnsureThumbnailLoadedAsync(i);
+            await PumpForAsync(TimeSpan.FromMilliseconds(100));
+            if (vm.ThumbnailPrefetchTask is { } prefetch)
+                await prefetch.WaitAsync(TimeSpan.FromSeconds(60));
+            await PumpForAsync(TimeSpan.FromMilliseconds(50));
+            var loaded = vm.PageThumbnails.Select(t => t.ThumbnailImage).ToArray();
+            loaded.Should().OnlyContain(b => b != null, "fixture: every thumbnail is loaded (keep window covers all 30)");
+
+            vm.TrimThumbnailCaches(PdfViewerCacheTrimLevel.Background);
+            vm.PageThumbnails.Should().OnlyContain(t => t.ThumbnailImage != null, "Background releases no thumbnails");
+
+            int prefetchTo = lastVisible + MainWindowViewModel.ThumbnailPrefetchMargin;
+            vm.TrimThumbnailCaches(PdfViewerCacheTrimLevel.Warn);
+            for (int i = 0; i < pageCount; i++)
+            {
+                if (i <= prefetchTo)
+                    vm.PageThumbnails[i].ThumbnailImage.Should().BeSameAs(loaded[i], $"page {i} is inside the prefetch window");
+                else
+                    vm.PageThumbnails[i].ThumbnailImage.Should().BeNull($"Warn releases page {i}, outside the prefetch window");
+            }
+            await PumpForAsync(TimeSpan.FromMilliseconds(100));
+            for (int i = 0; i < pageCount; i++)
+                IsDisposed(loaded[i]!).Should().Be(i > prefetchTo, $"page {i}: a released thumbnail is disposed once its binding moved, a kept one never");
+
+            vm.TrimThumbnailCaches(PdfViewerCacheTrimLevel.Critical);
+            for (int i = 0; i <= prefetchTo; i++)
+            {
+                if (i <= lastVisible)
+                    vm.PageThumbnails[i].ThumbnailImage.Should().BeSameAs(loaded[i], $"Critical keeps visible page {i}");
+                else
+                    vm.PageThumbnails[i].ThumbnailImage.Should().BeNull($"Critical releases non-visible page {i}");
+            }
+            await PumpForAsync(TimeSpan.FromMilliseconds(100));
+            for (int i = 0; i <= prefetchTo; i++)
+                IsDisposed(loaded[i]!).Should().Be(i > lastVisible);
+        }
+        finally
+        {
+            TestPdfGenerator.CleanupTestFile(path);
+        }
+    }
+
+    private static bool IsDisposed(global::Avalonia.Media.Imaging.Bitmap bitmap)
+    {
+        try
+        {
+            _ = bitmap.PixelSize;
+            return false;
+        }
+        catch (ObjectDisposedException)
+        {
+            return true;
         }
     }
 

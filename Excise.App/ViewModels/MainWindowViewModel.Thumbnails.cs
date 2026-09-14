@@ -60,4 +60,23 @@ public partial class MainWindowViewModel
     }
 
     private void ResetThumbnailSession() => _thumbnailSession.Reset();
+
+    /// <summary>
+    /// #1478: the thumbnail in-memory tier under OS memory pressure. Warn keeps
+    /// the visible pages plus the prefetch margin, so a small sidebar scroll
+    /// does not flash; Critical keeps only the visible pages. Background
+    /// releases nothing here: sidebar thumbnails are small and reload from disk.
+    /// </summary>
+    internal void TrimThumbnailCaches(Excise.Avalonia.Controls.PdfViewerCacheTrimLevel level)
+    {
+        switch (level)
+        {
+            case Excise.Avalonia.Controls.PdfViewerCacheTrimLevel.Warn:
+                _thumbnailSession.TrimToVisible(ThumbnailPrefetchMargin);
+                break;
+            case Excise.Avalonia.Controls.PdfViewerCacheTrimLevel.Critical:
+                _thumbnailSession.TrimToVisible(0);
+                break;
+        }
+    }
 }

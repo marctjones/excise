@@ -110,12 +110,26 @@ public partial class App : Application
 
             var vm = _serviceProvider.GetRequiredService<MainWindowViewModel>();
             mainViewModel = vm;
-            desktop.MainWindow = new MainWindow
+            var mainWindow = new MainWindow
             {
                 DataContext = vm,
             };
+            desktop.MainWindow = mainWindow;
 
             logger.LogInformation("Main window created successfully");
+
+            // #1478: release viewer and thumbnail caches under OS memory
+            // pressure, and (opt-in) in the background or idle. Wired here, in
+            // the real application only: headless tests build their windows
+            // under TestApp, so no test installs a live OS pressure source.
+            var (trimViewer, trimPolicy) = mainWindow.CacheTrimTarget();
+            if (trimViewer != null)
+            {
+                var cacheTrim = ViewerCacheTrimCoordinator.Attach(
+                    mainWindow, trimViewer, trimPolicy, logger, vm.TrimThumbnailCaches);
+                mainWindow.Closed += (_, _) => cacheTrim.Dispose();
+                desktop.Exit += (_, _) => cacheTrim.Dispose();
+            }
 
             // Open a PDF that was passed on the command line (Windows/Linux
             // "Open With", `excise file.pdf`, demos). Avalonia's Window.Opened

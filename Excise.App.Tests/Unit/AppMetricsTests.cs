@@ -42,6 +42,7 @@ public class AppMetricsTests
             AppMetrics.TextIndexPagesIndexed,
             AppMetrics.TextIndexPagesTotal,
             AppMetrics.ThumbnailRenders,
+            AppMetrics.CacheTrimRequests,
         }.Should().OnlyContain(i => !i.Enabled);
 
         AppMetrics.RecordDocumentOpen(Timing);
@@ -78,6 +79,12 @@ public class AppMetricsTests
         var session = new ThumbnailSidebarSession(NullLogger.Instance) { PrewarmEnabled = false };
         try
         {
+            // AppMetrics' instruments are static fields: until something touches
+            // the type, the counter does not exist and nothing is observed. Run
+            // alone (or first) this test read an empty capture; it passed only
+            // when another test had initialised AppMetrics first (#1478 added a
+            // test to this class and changed that order).
+            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(AppMetrics).TypeHandle);
             capture.Listener.RecordObservableInstruments();
             double before = capture.Last("excise.app.thumbnail.renders");
 
@@ -233,6 +240,26 @@ public class AppMetricsTests
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount);
         try { return File.ReadAllBytes(path); }
         finally { File.Delete(path); }
+    }
+
+    [FixedAvaloniaFact]
+    public void Metrics_CacheTrimRequests_CountEachRequest_TaggedByTriggerAndLevel()
+    {
+        using var capture = new AppMeterCapture();
+        using var coordinator = new ViewerCacheTrimCoordinator(
+            _ => { },
+            new CacheTrimPolicy(OnMemoryPressure: true, SoftTriggers: true, IdleDelay: TimeSpan.FromMinutes(10)),
+            sampleGc: () => (0, 0));
+
+        coordinator.OnMinimized();
+        coordinator.OnPressure(MemoryPressureLevel.Critical);
+        coordinator.OnPressure(MemoryPressureLevel.Normal);
+
+        var requests = capture.All("excise.app.cache_trim.requests");
+        requests.Should().HaveCount(2, "#1478: every trim request is counted, and Normal pressure requests nothing");
+        requests.Should().OnlyContain(r => r.Value == 1);
+        requests[0].Tags.Should().Contain("trigger", "minimized").And.Contain("level", "background");
+        requests[1].Tags.Should().Contain("trigger", "os_pressure").And.Contain("level", "critical");
     }
 
     private readonly record struct Captured(string Instrument, double Value, Dictionary<string, string> Tags);

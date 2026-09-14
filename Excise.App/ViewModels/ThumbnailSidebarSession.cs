@@ -140,6 +140,33 @@ internal sealed class ThumbnailSidebarSession : IDisposable
         Dispatcher.UIThread.Post(RunWindowPass, DispatcherPriority.Background);
     }
 
+    /// <summary>
+    /// #1478 memory pressure: release the sidebar's thumbnail bitmaps outside
+    /// the visible pages plus <paramref name="margin"/>. The disk cache stays,
+    /// so a released thumbnail comes back from a WebP decode, not a render.
+    /// With nothing visible (the sidebar is collapsed) every bitmap goes.
+    /// UI thread: <see cref="EvictOutside"/> moves each binding before it posts
+    /// the dispose (#1466).
+    /// </summary>
+    internal void TrimToVisible(int margin)
+    {
+        int visibleMin, visibleMax;
+        lock (_viewportLock)
+        {
+            if (_visibleIndices.Count == 0)
+            {
+                EvictOutside(0, -1);
+                return;
+            }
+            visibleMin = _visibleIndices.Min();
+            visibleMax = _visibleIndices.Max();
+        }
+
+        var (_, _, keepFrom, keepTo) = ComputeWindow(
+            visibleMin, visibleMax, Items.Count, prefetchMargin: margin, keepMargin: margin);
+        EvictOutside(keepFrom, keepTo);
+    }
+
     internal async Task EnsureLoadedAsync(int pageIndex, CancellationToken cancellationToken = default)
     {
         if (pageIndex < 0 || pageIndex >= Items.Count)

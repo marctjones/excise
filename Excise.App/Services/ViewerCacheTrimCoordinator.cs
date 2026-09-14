@@ -49,6 +49,7 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
     internal static readonly TimeSpan GcSampleInterval = TimeSpan.FromSeconds(10);
 
     private readonly Action<PdfViewerCacheTrimLevel> _trim;
+    private readonly Action<PdfViewerCacheTrimLevel>? _trimThumbnails;
     private readonly CacheTrimPolicy _policy;
     private readonly Func<(long MemoryLoadBytes, long HighMemoryLoadThresholdBytes)> _sampleGc;
     private readonly DispatcherTimer? _idleTimer;
@@ -60,9 +61,11 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
     internal ViewerCacheTrimCoordinator(
         Action<PdfViewerCacheTrimLevel> trim,
         CacheTrimPolicy policy,
-        Func<(long MemoryLoadBytes, long HighMemoryLoadThresholdBytes)>? sampleGc = null)
+        Func<(long MemoryLoadBytes, long HighMemoryLoadThresholdBytes)>? sampleGc = null,
+        Action<PdfViewerCacheTrimLevel>? trimThumbnails = null)
     {
         _trim = trim ?? throw new ArgumentNullException(nameof(trim));
+        _trimThumbnails = trimThumbnails;
         _policy = policy;
         _sampleGc = sampleGc ?? SampleGcMemoryLoad;
         if (policy.SoftTriggers && policy.IdleDelay > TimeSpan.Zero)
@@ -82,11 +85,14 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
     /// Wire the coordinator to a window and its viewer: deactivation and
     /// minimize, viewer activity (scroll, zoom, page, document, view mode,
     /// render), and on macOS the OS pressure source.
+    /// <paramref name="trimThumbnails"/> releases the sidebar's thumbnail tier
+    /// at Warn and Critical.
     /// </summary>
     internal static ViewerCacheTrimCoordinator Attach(
-        Window window, PdfViewerControl viewer, CacheTrimPolicy policy, ILogger? logger = null)
+        Window window, PdfViewerControl viewer, CacheTrimPolicy policy, ILogger? logger = null,
+        Action<PdfViewerCacheTrimLevel>? trimThumbnails = null)
     {
-        var coordinator = new ViewerCacheTrimCoordinator(viewer.TrimCaches, policy);
+        var coordinator = new ViewerCacheTrimCoordinator(viewer.TrimCaches, policy, trimThumbnails: trimThumbnails);
 
         EventHandler onDeactivated = (_, _) => coordinator.OnDeactivated();
         EventHandler<AvaloniaPropertyChangedEventArgs> onWindowProperty = (_, e) =>
@@ -216,6 +222,10 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
     {
         AppMetrics.RecordCacheTrimRequest(trigger, level);
         _trim(level);
+        // The design's Warn tier: thumbnails are not the viewer's, and Background
+        // leaves them alone (they are small and reload from the disk cache).
+        if (level != PdfViewerCacheTrimLevel.Background)
+            _trimThumbnails?.Invoke(level);
     }
 
     public void Dispose()
