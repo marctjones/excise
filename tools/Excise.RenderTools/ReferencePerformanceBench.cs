@@ -359,21 +359,28 @@ partial class Program
             // startup and JIT plus whatever else the machine is doing. On the same
             // fixture whose render time moved under 1%, wall moved 456 -> 715 ms and
             // tripped a 1.5x threshold — a false regression. A gate that cries wolf is a
-            // gate people stop reading, so wall and RSS are recorded for context and the
-            // pass/fail decision rests on the stable signal.
+            // gate people stop reading, so wall is recorded for context only.
             var now = Median(current.Where(r => r.fixture == fixture).Select(r => r.exciseCli?.elapsedMs));
             var before = Median(baseline.runs.Where(r => r.fixture == fixture).Select(r => r.exciseCli?.elapsedMs));
             AddRatioCheck(checks, fixture + ".excise-cli.wall", now, before, maxTimeRatio, "ratio", gated: false);
             var nowRss = Median(current.Where(r => r.fixture == fixture).Select(r => r.exciseCli?.peakWorkingSetBytes));
             var beforeRss = Median(baseline.runs.Where(r => r.fixture == fixture).Select(r => r.exciseCli?.peakWorkingSetBytes));
-            AddRatioCheck(checks, fixture + ".excise-cli.rss", nowRss, beforeRss, maxRssRatio, "ratio", gated: false);
+            // GATED since 2026-09-13: peak RSS against the baseline. It was reported only
+            // because the recorded values were not a measurement -- before #1406 the CLI's
+            // peakWorkingSetBytes read e.g. 32768 bytes for a 1 GiB render. Since #1406 it
+            // matches /usr/bin/time within 2%, and a fresh process's peak RSS does not scale
+            // with machine load the way wall clock does. A baseline value below the
+            // plausibility floor is one of those pre-#1406 readings: skip it rather than
+            // let a garbage denominator decide the verdict.
+            if (nowRss is >= MinPlausiblePeakRssBytes && beforeRss is >= MinPlausiblePeakRssBytes)
+                AddRatioCheck(checks, fixture + ".excise-cli.rss", nowRss, beforeRss, maxRssRatio, "ratio", gated: true);
         }
         return new ReferencePerformanceGate
         {
             passed = checks.Where(c => c.gated).All(c => c.passed),
             checks = checks,
-            note = "Gated on excise in-process render ms RELATIVE TO THE ORACLES IN THE SAME RUN. "
-                 + "Absolute ms, wall and RSS are reported but not gated: on unchanged code two passes "
+            note = "Gated on excise in-process render ms RELATIVE TO THE ORACLES IN THE SAME RUN, and on "
+                 + "excise peak RSS relative to the baseline. Absolute ms and wall are reported but not gated: on unchanged code two passes "
                  + "minutes apart moved render-abs 0.88x-3.26x (five false regressions) while "
                  + "render-vs-oracles stayed 0.68x-1.33x (#1387).",
         };
@@ -404,6 +411,10 @@ partial class Program
                          .ToArray();
         return shapes.Length switch { 0 => null, 1 => shapes[0], _ => "mixed" };
     }
+
+    /// <summary>Below this a recorded peak RSS is not a measurement of a .NET renderer
+    /// process (pre-#1406 baselines recorded 32768 bytes); the RSS gate skips it.</summary>
+    internal const long MinPlausiblePeakRssBytes = 16L * 1024 * 1024;
 
     private static void AddRatioCheck(List<ReferencePerformanceGateCheck> checks, string name, long? current, long? baseline, double threshold, string unit, bool gated = true)
         => AddRatioCheck(checks, name, (double?)current, (double?)baseline, threshold, unit, gated);

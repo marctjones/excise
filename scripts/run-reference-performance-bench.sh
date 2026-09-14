@@ -10,8 +10,9 @@ RUNS="${EXCISE_REFERENCE_PERF_RUNS:-3}"
 dotnet build tools/Excise.RenderTools/Excise.RenderTools.csproj -c "$CONFIG" --nologo -v quiet
 # #1386/#1387 — compare against the committed baseline when one exists, so a run answers
 # "is this faster than the last recorded state" rather than only "how fast is it".
-# The gate REPORTS; it does not fail the run (tests/gates.tsv keeps this row a GRADE),
-# because these timings are machine- and load-specific.
+# By default the gate REPORTS; pass --fail-on-regression to enforce it. tests/gates.tsv
+# enforces it in tier full (2026-09-13): render ms relative to the same-run oracles, and
+# peak RSS relative to the baseline. Absolute ms and wall stay report-only (load-specific).
 have() { for arg in "$@"; do [ "$arg" = "$WANT" ] && return 0; done; return 1; }
 
 BASELINE_ARGS=()

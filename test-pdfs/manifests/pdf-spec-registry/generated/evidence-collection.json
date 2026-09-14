@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1066,
-  "indexedContentSha256": "cb07e3c8d7d1f095ae6f9d5ad81debab75acf289f34f08f3440a3092dcf079b6",
+  "indexedContentSha256": "322f4d063ce84087b53078911469933d330ad61370e768536c02ce5eaf8fee42",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -8503,7 +8503,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 233
+      "candidateReferenceCount": 234
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -51204,6 +51204,15 @@
           ]
         },
         {
+          "path": "tests/reference-performance/baseline.json",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "transparency",
+            "transparency"
+          ]
+        },
+        {
           "path": "tests/reference-performance/fixtures.json",
           "kind": "test",
           "matchedTerms": [
@@ -51222,7 +51231,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 76
+      "candidateReferenceCount": 77
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -67607,6 +67616,14 @@
           ]
         },
         {
+          "path": "tests/reference-performance/baseline.json",
+          "kind": "test",
+          "matchedTerms": [
+            "documents",
+            "pdfe"
+          ]
+        },
+        {
           "path": "tests/unwired-api-baseline.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -67627,7 +67644,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 57
+      "candidateReferenceCount": 58
     },
     {
       "id": "pdfe.product.security.audit-log",
@@ -68516,6 +68533,14 @@
           ]
         },
         {
+          "path": "tests/reference-performance/baseline.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "platform"
+          ]
+        },
+        {
           "path": "docs/architecture/decisions.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -68526,7 +68551,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 14
+      "candidateReferenceCount": 15
     },
     {
       "id": "pdfe.product.forms.restricted-javascript-research",
@@ -68855,6 +68880,14 @@
           ]
         },
         {
+          "path": "tests/reference-performance/baseline.json",
+          "kind": "test",
+          "matchedTerms": [
+            "forms",
+            "pdfe"
+          ]
+        },
+        {
           "path": "tests/unwired-api-baseline.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -68879,7 +68912,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 35
+      "candidateReferenceCount": 36
     }
   ],
   "summary": {

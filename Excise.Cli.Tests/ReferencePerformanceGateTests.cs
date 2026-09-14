@@ -149,6 +149,54 @@ public class ReferencePerformanceGateTests
         act.Should().Throw<InvalidDataException>().WithMessage("*vacuous pass*");
     }
 
+    /// <summary>
+    /// Peak RSS is gated (2026-09-13). A 30% memory regression with render time unchanged
+    /// must fail the gate, not just print a ratio nobody reads.
+    /// </summary>
+    [Fact]
+    public void Gate_Fails_OnAPeakRssRegressionBeyondTheRatio()
+    {
+        var current = Runs("f", renderMs: 100, oracleMs: 100, mode: "jit", rssBytes: 130_000_000);
+        var baseline = Report(Runs("f", renderMs: 100, oracleMs: 100, mode: "jit", rssBytes: 100_000_000));
+
+        var gate = RenderProgram.EvaluateReferencePerformanceGate(current, baseline, MaxTime, MaxRss);
+
+        var rss = gate.checks.Single(c => c.name.EndsWith(".excise-cli.rss", StringComparison.Ordinal));
+        rss.gated.Should().BeTrue("peak RSS is enforced, not merely reported");
+        rss.passed.Should().BeFalse("1.30x exceeds the 1.25x RSS ratio");
+        gate.passed.Should().BeFalse("a gated RSS regression fails the whole gate even when render time is unchanged");
+    }
+
+    /// <summary>The control: growth inside the ratio passes.</summary>
+    [Fact]
+    public void Gate_Passes_WhenPeakRssGrowthIsInsideTheRatio()
+    {
+        var current = Runs("f", renderMs: 100, oracleMs: 100, mode: "jit", rssBytes: 120_000_000);
+        var baseline = Report(Runs("f", renderMs: 100, oracleMs: 100, mode: "jit", rssBytes: 100_000_000));
+
+        var gate = RenderProgram.EvaluateReferencePerformanceGate(current, baseline, MaxTime, MaxRss);
+
+        gate.checks.Single(c => c.name.EndsWith(".excise-cli.rss", StringComparison.Ordinal)).passed.Should().BeTrue();
+        gate.passed.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// Pre-#1406 baselines recorded 32768 bytes of "peak RSS" for a 1 GiB render. Dividing by
+    /// that would fail every run by a factor of thousands; a garbage denominator must be
+    /// skipped, not scored.
+    /// </summary>
+    [Fact]
+    public void Gate_SkipsTheRssCheck_WhenTheBaselineRssIsNotAPlausibleMeasurement()
+    {
+        var current = Runs("f", renderMs: 100, oracleMs: 100, mode: "jit", rssBytes: 1_000_000_000);
+        var baseline = Report(Runs("f", renderMs: 100, oracleMs: 100, mode: "jit", rssBytes: 32_768));
+
+        var gate = RenderProgram.EvaluateReferencePerformanceGate(current, baseline, MaxTime, MaxRss);
+
+        gate.checks.Should().NotContain(c => c.name.EndsWith(".excise-cli.rss", StringComparison.Ordinal));
+        gate.passed.Should().BeTrue("render time is unchanged and the RSS baseline is not a measurement");
+    }
+
     private static string RepositoryRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
@@ -158,7 +206,7 @@ public class ReferencePerformanceGateTests
 
     private static IReadOnlyList<RenderProgram.ReferencePerformanceRun> Runs(
         string fixture, double renderMs, long oracleMs, string? mode,
-        string oracleName = "mutool", (string Name, long Ms)[]? extraOracles = null)
+        string oracleName = "mutool", (string Name, long Ms)[]? extraOracles = null, long rssBytes = 100_000_000)
     {
         var references = new List<RenderProgram.BenchmarkReferenceResult>
         {
@@ -178,7 +226,7 @@ public class ReferencePerformanceGateTests
                 exciseCli = new RenderProgram.BenchmarkCliRenderResult
                 {
                     name = "excise-cli", status = "OK", renderMs = renderMs,
-                    elapsedMs = (long)renderMs + 50, peakWorkingSetBytes = 100_000_000,
+                    elapsedMs = (long)renderMs + 50, peakWorkingSetBytes = rssBytes,
                     runtimeMode = mode,
                 },
                 references = references,
