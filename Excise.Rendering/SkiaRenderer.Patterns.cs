@@ -848,16 +848,19 @@ internal partial class RenderContext
         using var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
         bitmap.Erase(SKColors.Transparent);
 
+        // #1386: span stores instead of a SetPixel P/Invoke per pixel.
+        var target = new MeshRasterTarget(bitmap);
         foreach (var patch in patches)
         {
             if (tensorPatch && patch.Points.Count >= 16)
-                RasterizeTensorPatch(bitmap, patch, minX, minY, maxX, maxY);
+                RasterizeTensorPatch(target, patch, minX, minY, maxX, maxY);
             else if (!tensorPatch && patch.Points.Count >= 12)
-                RasterizeCoonsPatch(bitmap, patch, minX, minY, maxX, maxY);
+                RasterizeCoonsPatch(target, patch, minX, minY, maxX, maxY);
             else
-                RasterizeMeshPatch(bitmap, patch, minX, minY, maxX, maxY);
+                MeshRasterizer.RasterizeBoundingBoxPatch(target, patch, minX, minY, maxX, maxY);
         }
 
+        bitmap.NotifyPixelsChanged();
         DrawMeshBitmap(bitmap, minX, minY, maxX, maxY);
     }
 
@@ -878,9 +881,12 @@ internal partial class RenderContext
         using var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
         bitmap.Erase(SKColors.Transparent);
 
+        // #1386: span stores instead of a SetPixel P/Invoke per pixel.
+        var target = new MeshRasterTarget(bitmap);
         foreach (var triangle in triangles)
-            RasterizeMeshTriangle(bitmap, triangle, minX, minY, maxX, maxY);
+            RasterizeMeshTriangle(target, triangle, minX, minY, maxX, maxY);
 
+        bitmap.NotifyPixelsChanged();
         DrawMeshBitmap(bitmap, minX, minY, maxX, maxY);
     }
 
@@ -917,32 +923,9 @@ internal partial class RenderContext
         }
     }
 
-    private static void RasterizeMeshPatch(SKBitmap bitmap, MeshPatch patch, double minX, double minY, double maxX, double maxY)
+    private static void RasterizeTensorPatch(MeshRasterTarget target, MeshPatch patch, double minX, double minY, double maxX, double maxY)
     {
-        var startX = Math.Clamp((int)Math.Floor((patch.MinX - minX) / (maxX - minX) * bitmap.Width), 0, bitmap.Width - 1);
-        var endX = Math.Clamp((int)Math.Ceiling((patch.MaxX - minX) / (maxX - minX) * bitmap.Width), 0, bitmap.Width - 1);
-        var startY = Math.Clamp((int)Math.Floor((patch.MinY - minY) / (maxY - minY) * bitmap.Height), 0, bitmap.Height - 1);
-        var endY = Math.Clamp((int)Math.Ceiling((patch.MaxY - minY) / (maxY - minY) * bitmap.Height), 0, bitmap.Height - 1);
-
-        for (var y = startY; y <= endY; y++)
-        {
-            var py = minY + ((y + 0.5) / bitmap.Height) * (maxY - minY);
-            var v = patch.MaxY > patch.MinY ? (py - patch.MinY) / (patch.MaxY - patch.MinY) : 0;
-            v = Math.Clamp(v, 0, 1);
-
-            for (var x = startX; x <= endX; x++)
-            {
-                var px = minX + ((x + 0.5) / bitmap.Width) * (maxX - minX);
-                var u = patch.MaxX > patch.MinX ? (px - patch.MinX) / (patch.MaxX - patch.MinX) : 0;
-                u = Math.Clamp(u, 0, 1);
-                bitmap.SetPixel(x, bitmap.Height - 1 - y, Bilinear(patch.Colors, u, v));
-            }
-        }
-    }
-
-    private static void RasterizeTensorPatch(SKBitmap bitmap, MeshPatch patch, double minX, double minY, double maxX, double maxY)
-    {
-        var steps = CalculatePatchSubdivisionSteps(bitmap, patch, minX, minY, maxX, maxY);
+        var steps = CalculatePatchSubdivisionSteps(target, patch, minX, minY, maxX, maxY);
         var vertices = new MeshVertex[steps + 1, steps + 1];
 
         for (var row = 0; row <= steps; row++)
@@ -954,7 +937,7 @@ internal partial class RenderContext
                 vertices[row, col] = new MeshVertex(
                     0,
                     EvaluateTensorPatchPoint(patch.Points, u, v),
-                    Bilinear(patch.Colors, u, v));
+                    MeshRasterizer.Bilinear(patch.Colors, u, v));
             }
         }
 
@@ -963,14 +946,14 @@ internal partial class RenderContext
             for (var col = 0; col < steps; col++)
             {
                 RasterizeMeshTriangle(
-                    bitmap,
+                    target,
                     new MeshTriangle(vertices[row, col], vertices[row, col + 1], vertices[row + 1, col + 1]),
                     minX,
                     minY,
                     maxX,
                     maxY);
                 RasterizeMeshTriangle(
-                    bitmap,
+                    target,
                     new MeshTriangle(vertices[row, col], vertices[row + 1, col + 1], vertices[row + 1, col]),
                     minX,
                     minY,
@@ -980,9 +963,9 @@ internal partial class RenderContext
         }
     }
 
-    private static void RasterizeCoonsPatch(SKBitmap bitmap, MeshPatch patch, double minX, double minY, double maxX, double maxY)
+    private static void RasterizeCoonsPatch(MeshRasterTarget target, MeshPatch patch, double minX, double minY, double maxX, double maxY)
     {
-        var steps = CalculatePatchSubdivisionSteps(bitmap, patch, minX, minY, maxX, maxY);
+        var steps = CalculatePatchSubdivisionSteps(target, patch, minX, minY, maxX, maxY);
         var vertices = new MeshVertex[steps + 1, steps + 1];
 
         for (var row = 0; row <= steps; row++)
@@ -994,7 +977,7 @@ internal partial class RenderContext
                 vertices[row, col] = new MeshVertex(
                     0,
                     EvaluateTensorPatchPoint(patch.Points, u, v),
-                    Bilinear(patch.Colors, u, v));
+                    MeshRasterizer.Bilinear(patch.Colors, u, v));
             }
         }
 
@@ -1003,14 +986,14 @@ internal partial class RenderContext
             for (var col = 0; col < steps; col++)
             {
                 RasterizeMeshTriangle(
-                    bitmap,
+                    target,
                     new MeshTriangle(vertices[row, col], vertices[row, col + 1], vertices[row + 1, col + 1]),
                     minX,
                     minY,
                     maxX,
                     maxY);
                 RasterizeMeshTriangle(
-                    bitmap,
+                    target,
                     new MeshTriangle(vertices[row, col], vertices[row + 1, col + 1], vertices[row + 1, col]),
                     minX,
                     minY,
@@ -1021,15 +1004,15 @@ internal partial class RenderContext
     }
 
     private static int CalculatePatchSubdivisionSteps(
-        SKBitmap bitmap,
+        MeshRasterTarget target,
         MeshPatch patch,
         double minX,
         double minY,
         double maxX,
         double maxY)
     {
-        var patchPixelWidth = (patch.MaxX - patch.MinX) / Math.Max(maxX - minX, 1e-9) * bitmap.Width;
-        var patchPixelHeight = (patch.MaxY - patch.MinY) / Math.Max(maxY - minY, 1e-9) * bitmap.Height;
+        var patchPixelWidth = (patch.MaxX - patch.MinX) / Math.Max(maxX - minX, 1e-9) * target.Width;
+        var patchPixelHeight = (patch.MaxY - patch.MinY) / Math.Max(maxY - minY, 1e-9) * target.Height;
         var visiblePixels = Math.Max(patchPixelWidth, patchPixelHeight);
         return Math.Clamp((int)Math.Ceiling(visiblePixels / 3), 24, 96);
     }
@@ -1070,75 +1053,28 @@ internal partial class RenderContext
         => points[(row * 4) + col];
 
     private static void RasterizeMeshTriangle(
-        SKBitmap bitmap,
+        MeshRasterTarget target,
         MeshTriangle triangle,
         double minX,
         double minY,
         double maxX,
         double maxY)
-    {
-        var startX = Math.Clamp((int)Math.Floor((triangle.MinX - minX) / (maxX - minX) * bitmap.Width), 0, bitmap.Width - 1);
-        var endX = Math.Clamp((int)Math.Ceiling((triangle.MaxX - minX) / (maxX - minX) * bitmap.Width), 0, bitmap.Width - 1);
-        var startY = Math.Clamp((int)Math.Floor((triangle.MinY - minY) / (maxY - minY) * bitmap.Height), 0, bitmap.Height - 1);
-        var endY = Math.Clamp((int)Math.Ceiling((triangle.MaxY - minY) / (maxY - minY) * bitmap.Height), 0, bitmap.Height - 1);
-
-        var a = triangle.A.Point;
-        var b = triangle.B.Point;
-        var c = triangle.C.Point;
-        var denominator =
-            (b.Y - c.Y) * (a.X - c.X) +
-            (c.X - b.X) * (a.Y - c.Y);
-        if (Math.Abs(denominator) < 1e-9)
-            return;
-
-        for (var y = startY; y <= endY; y++)
-        {
-            var py = minY + ((y + 0.5) / bitmap.Height) * (maxY - minY);
-            for (var x = startX; x <= endX; x++)
-            {
-                var px = minX + ((x + 0.5) / bitmap.Width) * (maxX - minX);
-                var wa = ((b.Y - c.Y) * (px - c.X) + (c.X - b.X) * (py - c.Y)) / denominator;
-                var wb = ((c.Y - a.Y) * (px - c.X) + (a.X - c.X) * (py - c.Y)) / denominator;
-                var wc = 1 - wa - wb;
-                const double epsilon = -0.001;
-                if (wa < epsilon || wb < epsilon || wc < epsilon)
-                    continue;
-
-                bitmap.SetPixel(x, y, Barycentric(
-                    triangle.A.Color,
-                    triangle.B.Color,
-                    triangle.C.Color,
-                    wa,
-                    wb,
-                    wc));
-            }
-        }
-    }
-
-    private static SKColor Barycentric(SKColor a, SKColor b, SKColor c, double wa, double wb, double wc)
-    {
-        return new SKColor(
-            (byte)Math.Clamp((a.Red * wa) + (b.Red * wb) + (c.Red * wc), 0, 255),
-            (byte)Math.Clamp((a.Green * wa) + (b.Green * wb) + (c.Green * wc), 0, 255),
-            (byte)Math.Clamp((a.Blue * wa) + (b.Blue * wb) + (c.Blue * wc), 0, 255),
-            255);
-    }
-
-    private static SKColor Bilinear(SKColor[] colors, double u, double v)
-    {
-        static double Lerp(double a, double b, double t) => a + (b - a) * t;
-        var r0 = Lerp(colors[0].Red, colors[1].Red, u);
-        var r1 = Lerp(colors[3].Red, colors[2].Red, u);
-        var g0 = Lerp(colors[0].Green, colors[1].Green, u);
-        var g1 = Lerp(colors[3].Green, colors[2].Green, u);
-        var b0 = Lerp(colors[0].Blue, colors[1].Blue, u);
-        var b1 = Lerp(colors[3].Blue, colors[2].Blue, u);
-        return new SKColor(
-            (byte)Math.Clamp(Lerp(r0, r1, v), 0, 255),
-            (byte)Math.Clamp(Lerp(g0, g1, v), 0, 255),
-            (byte)Math.Clamp(Lerp(b0, b1, v), 0, 255),
-            255);
-    }
+        => MeshRasterizer.RasterizeTriangle(
+            target,
+            triangle.A.Point,
+            triangle.B.Point,
+            triangle.C.Point,
+            triangle.A.Color,
+            triangle.B.Color,
+            triangle.C.Color,
+            triangle.MinX,
+            triangle.MaxX,
+            triangle.MinY,
+            triangle.MaxY,
+            minX,
+            minY,
+            maxX,
+            maxY);
 
     private static SKMatrix? InvertAffine(SKMatrix matrix)
     {
