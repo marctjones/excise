@@ -189,6 +189,44 @@ public partial class PdfViewerControl
         return true;
     }
 
+    /// <summary>
+    /// #1479 measurement: how many continuous-view tile bytes are also baked into
+    /// a live page composite. A tile counts when its page's slot shows a composite
+    /// built at the same DPI and page DIP size, and its grid cell lies inside that
+    /// composite's band. RecomposeSlotCore publishes only once every cell of the
+    /// band is cached, so at publish time this is ~all of the composite's bytes;
+    /// it falls only as the LRU evicts. Report-only; internal for tests.
+    /// </summary>
+    internal ContinuousBitmapOverlap MeasureContinuousBitmapOverlap()
+    {
+        long tileBytes = 0, bakedBytes = 0;
+        int baked = 0;
+        int q = ContinuousTileQuantumDip;
+        foreach (var (key, bitmap) in _continuousCache)
+        {
+            long bytes = ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
+            tileBytes += bytes;
+            if (_continuousSlots == null || key.Page < 1 || key.Page > _continuousSlots.Count) continue;
+            var slot = _continuousSlots[key.Page - 1];
+            var composite = slot.CompositeKey;
+            if (slot.Bitmap == null || composite.Dpi != key.Dpi ||
+                composite.PageWidthDip != key.PageWidthDip || composite.PageHeightDip != key.PageHeightDip)
+                continue;
+            int lastCol = (int)Math.Floor((slot.TileDisplayX + slot.TileDisplayWidth - 0.5) / q);
+            int lastRow = (int)Math.Floor((slot.TileDisplayY + slot.TileDisplayHeight - 0.5) / q);
+            if (key.Col < composite.Col || key.Col > lastCol || key.Row < composite.Row || key.Row > lastRow)
+                continue;
+            bakedBytes += bytes;
+            baked++;
+        }
+        return new ContinuousBitmapOverlap(
+            _continuousCache.Count, tileBytes, baked, bakedBytes, ContinuousCompositeResidentBytes());
+    }
+
+    /// <summary>#1479 snapshot; see <see cref="MeasureContinuousBitmapOverlap"/>.</summary>
+    internal readonly record struct ContinuousBitmapOverlap(
+        int Tiles, long TileBytes, int BakedTiles, long BakedTileBytes, long CompositeBytes);
+
     private ScrollViewer? ActiveViewportScrollViewer() =>
         ViewMode == PdfViewMode.Continuous ? _continuousScrollViewer : _scrollViewer;
 

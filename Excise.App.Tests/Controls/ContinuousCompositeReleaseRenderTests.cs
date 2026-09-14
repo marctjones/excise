@@ -90,6 +90,7 @@ public class ContinuousCompositeReleaseRenderTests
 
             var live = new HashSet<WriteableBitmap>(
                 slots.Where(s => s.Bitmap != null).Select(s => s.Bitmap!), ReferenceEqualityComparer.Instance);
+            ReportBitmapMemory(viewer, $"after {steps} zoom recomposites");
             _out.WriteLine($"composites observed={seen.Count} live={live.Count} " +
                            $"residentBytes={viewer.ContinuousCompositeResidentBytes()}");
 
@@ -183,11 +184,16 @@ public class ContinuousCompositeReleaseRenderTests
                 };
             }
 
+            ReportBitmapMemory(viewer, "paging start (page 1)");
+            var overlapSamples = new List<PdfViewerControl.ContinuousBitmapOverlap>();
             for (int page = 2; page <= pageCount; page++)
             {
                 viewer.CurrentPage = page;
                 await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, page);
+                overlapSamples.Add(viewer.MeasureContinuousBitmapOverlap());
             }
+            ReportOverlapSummary(overlapSamples);
+            ReportBitmapMemory(viewer, $"paging end (page {pageCount})");
 
             Dispatcher.UIThread.RunJobs();
             window.UpdateLayout();
@@ -223,6 +229,40 @@ public class ContinuousCompositeReleaseRenderTests
             viewer.Document?.Dispose();
         }
     }
+
+    // #1479 report-only memory lines, deliberately not asserted. WorkingSet64 is
+    // the process number that moves with bitmap pixels: WriteableBitmap pixels are
+    // native Skia allocations, which GC.GetTotalMemory and TotalCommittedBytes do
+    // not see (they report the managed heap only). "baked" = tile bytes whose cell
+    // is also inside a live composite of the same page, DPI and zoom.
+    private void ReportBitmapMemory(PdfViewerControl viewer, string label)
+    {
+        Dispatcher.UIThread.RunJobs();
+        var o = viewer.MeasureContinuousBitmapOverlap();
+        using var process = System.Diagnostics.Process.GetCurrentProcess();
+        _out.WriteLine($"[#1479 report-only] {label}: tiles={o.Tiles} tileMB={Mb(o.TileBytes)} " +
+                       $"compositeMB={Mb(o.CompositeBytes)} bakedTiles={o.BakedTiles} bakedTileMB={Mb(o.BakedTileBytes)} " +
+                       $"baked/composite={Share(o.BakedTileBytes, o.CompositeBytes)} " +
+                       $"baked/allBitmaps={Share(o.BakedTileBytes, o.TileBytes + o.CompositeBytes)} " +
+                       $"workingSetMB={Mb(process.WorkingSet64)} gcHeapMB={Mb(GC.GetTotalMemory(false))} " +
+                       $"gcCommittedMB={Mb(GC.GetGCMemoryInfo().TotalCommittedBytes)} (GC counters exclude native pixels)");
+    }
+
+    private void ReportOverlapSummary(IReadOnlyList<PdfViewerControl.ContinuousBitmapOverlap> samples)
+    {
+        if (samples.Count == 0) return;
+        double meanBakedOfComposite = samples.Average(s => s.CompositeBytes == 0 ? 0 : (double)s.BakedTileBytes / s.CompositeBytes);
+        double meanBakedOfAll = samples.Average(s => (double)s.BakedTileBytes / Math.Max(1, s.TileBytes + s.CompositeBytes));
+        _out.WriteLine($"[#1479 report-only] over {samples.Count} settled pages: " +
+                       $"tileMB max={Mb(samples.Max(s => s.TileBytes))} compositeMB max={Mb(samples.Max(s => s.CompositeBytes))} " +
+                       $"bakedTileMB max={Mb(samples.Max(s => s.BakedTileBytes))} " +
+                       $"baked/composite mean={meanBakedOfComposite:P0} baked/allBitmaps mean={meanBakedOfAll:P0} " +
+                       $"max={samples.Max(s => (double)s.BakedTileBytes / Math.Max(1, s.TileBytes + s.CompositeBytes)):P0}");
+    }
+
+    private static string Mb(long bytes) => (bytes / 1024.0 / 1024.0).ToString("0.0");
+
+    private static string Share(long part, long whole) => whole <= 0 ? "n/a" : ((double)part / whole).ToString("P0");
 
     private static Image ImageFor(ItemsControl items, PdfPageSlot slot)
     {

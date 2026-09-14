@@ -25,9 +25,11 @@ namespace Excise.Avalonia.Tests;
 /// <para>
 /// Under the content-addressed grid (#848), tiles are UNIFORM: every interior
 /// cell is a full <see cref="PdfViewerControl.ContinuousTileQuantumDip"/> square,
-/// edge cells smaller. So the worst-case resident tile is simply a full-quantum
-/// interior cell rendered at the (dpr-scaled) DPI cap. This test builds that cell
-/// through the REAL <see cref="PdfViewerControl.RequiredTileCells"/> +
+/// edge cells smaller. Since #1472/#1480 the render DPI tracks the display (one
+/// render pixel per device pixel at every zoom up to the DPI cap, fewer above
+/// it), so the worst-case resident tile is a full-quantum interior cell at
+/// device resolution: <c>quantum × dpr</c> pixels square. This test builds that
+/// cell through the REAL <see cref="PdfViewerControl.RequiredTileCells"/> +
 /// <see cref="PdfViewerControl.CellToRequest"/> code paths, converts its
 /// <c>ClipRect</c> (PDF points) to device pixels using the renderer's own DPI
 /// scale (<c>scale = dpi / 72.0</c>, <c>pixelWidth = ceil(clipRect.Width * scale)</c>
@@ -42,23 +44,25 @@ public class ContinuousCacheMemoryTests
 
     public ContinuousCacheMemoryTests(ITestOutputHelper output) => _output = output;
 
-    // Matches PdfViewerControl.DefaultRenderDpi (private const = 120). Duplicated
-    // here because EffectiveContinuousDpi takes it as a parameter rather than
-    // exposing the field; if that private const ever changes, re-run this test
-    // with the new value — it is the one number in this file NOT derived from a
-    // public/internal symbol.
-    private const int BaseRenderDpi = 120;
+    // The production base DPI, not a copy of it: until #1480 this file duplicated
+    // the literal 120, so a change to the model could leave these measurements
+    // describing a DPI production no longer used.
+    private const int BaseRenderDpi = PdfViewerControl.ContinuousBaseDpi;
 
-    private static readonly double[] ZoomLevels = [1.0, 1.5, 2.0, 4.0];
+    // The app's minimum zoom (DocumentViewportSession.MinimumZoom). Integer DPI
+    // rounding overshoots device resolution most at the smallest zoom.
+    private const double MinimumZoom = 0.25;
+
+    private static readonly double[] ZoomLevels = [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 4.0];
     // Device-pixel ratios: standard and Retina/HiDPI. The DPI cap scales with dpr
     // (#682/#683), so a HiDPI display is where a single grid tile is largest.
     private static readonly double[] DevicePixelRatios = [1.0, 2.0];
 
     /// <summary>
     /// The measurement (#615/#848): the worst single resident grid tile is a
-    /// full-quantum interior cell at the dpr-scaled DPI cap. Sweeps zoom x dpr,
-    /// finds that tile, and confirms the byte budget holds it many times over
-    /// (uniform tiles ⇒ generous scroll-back buffer). Run with
+    /// full-quantum interior cell at device resolution. Sweeps zoom x dpr, finds
+    /// that tile, and confirms the byte budget holds it many times over (uniform
+    /// tiles ⇒ generous scroll-back buffer). Run with
     /// <c>dotnet test --filter ContinuousCacheMemory --logger "console;verbosity=detailed"</c>
     /// to see the table.
     /// </summary>
@@ -110,17 +114,27 @@ public class ContinuousCacheMemoryTests
 
         _output.WriteLine($"{"Zoom",6} {"Dpr",5} {"PxW",6} {"PxH",6} {"MB",8}");
         foreach (var r in rows.OrderByDescending(r => r.Bytes))
-            _output.WriteLine($"{r.Zoom,6:0.0} {r.Dpr,5:0.0} {r.WidthPx,6} {r.HeightPx,6} {r.Bytes / 1024.0 / 1024.0,8:0.00}");
+            _output.WriteLine($"{r.Zoom,6:0.00} {r.Dpr,5:0.0} {r.WidthPx,6} {r.HeightPx,6} {r.Bytes / 1024.0 / 1024.0,8:0.00}");
 
         var worst = rows.MaxBy(r => r.Bytes);
         long worstTileBytes = worst.Bytes;
         double worstTileMb = worstTileBytes / 1024.0 / 1024.0;
 
         _output.WriteLine("");
-        _output.WriteLine($"Worst single grid tile: zoom {worst.Zoom:0.0}x dpr {worst.Dpr:0.0} " +
+        _output.WriteLine($"Worst single grid tile: zoom {worst.Zoom:0.00}x dpr {worst.Dpr:0.0} " +
                            $"= {worst.WidthPx}x{worst.HeightPx}px = {worstTileMb:0.00} MB");
         _output.WriteLine($"Byte budget: {ContinuousCacheByteBudgetForTest / 1024.0 / 1024.0:0} MB " +
                            $"(~{ContinuousCacheByteBudgetForTest / (double)worstTileBytes:0.0} worst-case tiles)");
+
+        // #1472/#1480: a tile holds at most one render pixel per device pixel. The
+        // old model floored the DPI at 120 x dpr, so at zoom 0.25 on a 2x display a
+        // 256-DIP cell was 2560 px square (25 MB) for 512 device pixels.
+        foreach (var r in rows)
+        {
+            int devicePx = (int)Math.Ceiling(q * (r.Dpr + 0.5 / (96.0 * r.Zoom)));
+            r.WidthPx.Should().BeLessThanOrEqualTo(devicePx + 1,
+                $"a {q}-DIP tile at zoom {r.Zoom:0.00}, dpr {r.Dpr} must not hold more pixels than the display shows");
+        }
 
         // Uniform tiles mean the budget holds many of them — a generous scroll-back
         // buffer so scrolling away and back is a cache hit, not a re-render (#848).
@@ -148,7 +162,7 @@ public class ContinuousCacheMemoryTests
             .GetRawConstantValue()
             .Should().Be(ContinuousCacheByteBudgetForTest,
                 "this file's narrative was derived against this specific budget value; if you change " +
-                "ContinuousCacheByteBudget, re-run MeasureContinuousTileCache_AcrossDocumentViewportZoomMatrix " +
+                "ContinuousCacheByteBudget, re-run MeasureContinuousTileCache_WorstCaseGridCell " +
                 "and update ContinuousCacheByteBudgetForTest to match");
     }
 
@@ -166,64 +180,79 @@ public class ContinuousCacheMemoryTests
     // production paths RecomposeSlotCore sizes them with: RequiredTileCells for
     // the band, ContinuousCellPixelExtent + ComputeMosaic for its pixels
     // (ContinuousCompositeByteSize), EffectiveContinuousDpi for the density.
-
-    // The envelope PdfViewerControl.ContinuousCompositeByteBound is documented
-    // for. Zoom starts at the app's floor (DocumentViewportSession.MinimumZoom =
-    // 0.25) on purpose: the DPI is floored at DefaultRenderDpi x dpr, so pixels
-    // per DIP GROW as zoom shrinks, and the lowest zoom is where composites peak.
+    //
+    // Since #1472/#1480 composite bytes are set by the VIEWPORT, not by the page
+    // or the zoom. Every realized page's band is the viewport plus
+    // ContinuousTileOverscanDip, snapped outward to the grid (less than one
+    // quantum each side) and clipped to the page, and stacked pages share that one
+    // vertical span. At one render pixel per device pixel, the composites together
+    // can never exceed the device pixels of (viewport + 2 x (overscan + quantum)).
+    // So the envelope now includes sheets that sat outside the old bound (a D-size
+    // page needed ~760 MiB at zoom 0.25 on a 2x display under the 120 x dpr floor).
     private static readonly (string Name, double WidthPt, double HeightPt)[] EnvelopePages =
     [
         ("Letter", 612, 792), ("Letter landscape", 792, 612), ("A4", 595, 842), ("Legal", 612, 1008),
+        ("Tabloid landscape", 1224, 792), ("D-size", 2592, 3456),
     ];
     private static readonly Size[] EnvelopeViewports = [new(1280, 800), new(1920, 1080), new(2560, 1440)];
-    private static readonly double[] EnvelopeZooms = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0, 5.0];
+    private static readonly double[] EnvelopeZooms = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0];
 
     /// <summary>
-    /// The composite measurement (#1466): the worst total composite bytes held
-    /// for any one viewport position, over the documented envelope, must stay
-    /// within <see cref="PdfViewerControl.ContinuousCompositeByteBound"/> — and
-    /// the bound must stay close enough to that worst case that a composite
-    /// regression (larger overscan, a lower DPI floor, a band no longer clipped
-    /// to the page) fails here instead of hiding under slack.
+    /// The composite measurement (#1466, re-derived for #1472/#1480): at every
+    /// page size, viewport, dpr and zoom in the envelope, the composites held at
+    /// the worst scroll position fit in the device pixels of the band's
+    /// viewport-derived ceiling. That ceiling uses the DISPLAY's pixels per DIP
+    /// (dpr, plus integer-DPI rounding), never the render's own, so a render DPI
+    /// above device resolution (the #1472 floor, the #1480 1.25×) fails here.
+    /// <see cref="PdfViewerControl.ContinuousCompositeByteBound"/> is that ceiling
+    /// for the largest viewport, derived below rather than restated.
     /// </summary>
     [Fact]
-    public void MeasureContinuousComposites_WorstViewportStaysWithinTheDocumentedBound()
+    public void MeasureContinuousComposites_NeverExceedTheDevicePixelsOfTheViewportBand()
     {
-        var rows = new List<(string Page, Size Viewport, double Dpr, double Zoom, int Pages, long Bytes)>();
+        var rows = new List<(string Page, Size Viewport, double Dpr, double Zoom, int Pages, long Bytes, long Ceiling)>();
         foreach (var (name, widthPt, heightPt) in EnvelopePages)
             foreach (var viewport in EnvelopeViewports)
                 foreach (var dpr in DevicePixelRatios)
                     foreach (var zoom in EnvelopeZooms)
                     {
                         var (bytes, pages) = WorstCompositeBytes(widthPt, heightPt, viewport, dpr, zoom);
-                        rows.Add((name, viewport, dpr, zoom, pages, bytes));
+                        long ceiling = DeviceBandCeilingBytes(viewport, dpr + 0.5 / (96.0 * zoom));
+                        rows.Add((name, viewport, dpr, zoom, pages, bytes, ceiling));
                     }
 
-        _output.WriteLine($"{"Page",-17} {"Viewport",-10} {"Dpr",4} {"Zoom",5} {"Pages",5} {"MB",8}");
+        _output.WriteLine($"{"Page",-18} {"Viewport",-10} {"Dpr",4} {"Zoom",5} {"Pages",5} {"MB",8} {"ceilMB",8}");
         foreach (var r in rows.OrderByDescending(r => r.Bytes).Take(12))
-            _output.WriteLine($"{r.Page,-17} {r.Viewport.Width,4}x{r.Viewport.Height,-5} {r.Dpr,4:0.0} {r.Zoom,5:0.00} " +
-                              $"{r.Pages,5} {r.Bytes / 1024.0 / 1024.0,8:0.0}");
+            _output.WriteLine($"{r.Page,-18} {r.Viewport.Width,4}x{r.Viewport.Height,-5} {r.Dpr,4:0.0} {r.Zoom,5:0.00} " +
+                              $"{r.Pages,5} {r.Bytes / 1024.0 / 1024.0,8:0.0} {r.Ceiling / 1024.0 / 1024.0,8:0.0}");
+        foreach (var zoom in new[] { 0.25, 1.0 })
+        {
+            var d = rows.First(r => r.Page == "D-size" && r.Viewport.Width == 2560 && r.Dpr == 2.0 && r.Zoom == zoom);
+            _output.WriteLine($"D-size 2560x1440 dpr 2 zoom {zoom:0.00}: pages={d.Pages} {d.Bytes / 1024.0 / 1024.0:0.0} MB");
+        }
 
-        // Informational, NOT asserted: a large-format sheet is outside the
-        // envelope. At the zoom floor on a 2x display its band alone outgrows both
-        // this bound and the tile budget.
-        var (dSizeBytes, dSizePages) = WorstCompositeBytes(2592, 3456, new Size(2560, 1440), 2.0, 0.25);
-        _output.WriteLine($"(outside envelope) D-size 2560x1440 dpr 2 zoom 0.25: pages={dSizePages} " +
-                          $"{dSizeBytes / 1024.0 / 1024.0:0.0} MB");
+        foreach (var r in rows)
+        {
+            r.Bytes.Should().BeLessThanOrEqualTo(r.Ceiling,
+                $"{r.Page} in {r.Viewport.Width}x{r.Viewport.Height} at dpr {r.Dpr}, zoom {r.Zoom:0.00}: composites " +
+                $"hold {r.Bytes / 1024.0 / 1024.0:0.0} MB, more than the display's pixels for the viewport band " +
+                $"({r.Ceiling / 1024.0 / 1024.0:0.0} MB) — the render DPI is above device resolution");
+        }
 
         var worst = rows.MaxBy(r => r.Bytes);
-        double worstMb = worst.Bytes / 1024.0 / 1024.0;
-        double boundMb = PdfViewerControl.ContinuousCompositeByteBound / 1024.0 / 1024.0;
+        long bound = PdfViewerControl.ContinuousCompositeByteBound;
         _output.WriteLine($"Worst: {worst.Page} {worst.Viewport.Width}x{worst.Viewport.Height} dpr {worst.Dpr:0.0} " +
-                          $"zoom {worst.Zoom:0.00} = {worstMb:0.0} MB over {worst.Pages} pages; bound {boundMb:0} MB");
+                          $"zoom {worst.Zoom:0.00} = {worst.Bytes / 1024.0 / 1024.0:0.0} MB over {worst.Pages} pages; " +
+                          $"bound {bound / 1024.0 / 1024.0:0} MiB");
 
-        worst.Zoom.Should().Be(EnvelopeZooms.Min(),
-            "composites peak at the zoom floor; if they no longer do, the DPI/zoom model changed — re-derive the bound");
-        worst.Bytes.Should().BeLessThanOrEqualTo(PdfViewerControl.ContinuousCompositeByteBound,
-            $"worst composite total is {worstMb:0.0} MB; the documented bound is {boundMb:0} MB");
-        ((double)PdfViewerControl.ContinuousCompositeByteBound / worst.Bytes).Should().BeLessThan(1.5,
-            "a bound far above the measurement would let a composite-byte regression through; " +
-            "re-derive it from this table rather than restating it");
+        worst.Bytes.Should().BeLessThanOrEqualTo(bound);
+
+        var largest = EnvelopeViewports.MaxBy(v => v.Width * v.Height);
+        long derived = DeviceBandCeilingBytes(largest, DevicePixelRatios.Max() + 0.5 / (96.0 * MinimumZoom));
+        const long MiB = 1024 * 1024;
+        bound.Should().Be((derived + MiB - 1) / MiB * MiB,
+            "ContinuousCompositeByteBound is the device-pixel ceiling of the largest envelope viewport's band " +
+            "at the largest dpr, rounded up to a MiB; re-derive it here if the grid, overscan or envelope changes");
     }
 
     [Fact]
@@ -240,6 +269,20 @@ public class ContinuousCacheMemoryTests
 
         PdfViewerControl.ContinuousCompositeByteSize(cells, pxPerDip: 1.25)
             .Should().Be((320L + 125) * 320 * 4);
+    }
+
+    /// <summary>
+    /// Device pixels, 4 bytes each, of the largest band the continuous view can
+    /// composite for <paramref name="viewport"/>: the viewport grown by
+    /// overscan plus one grid quantum on each side, at
+    /// <paramref name="pxPerDip"/>.
+    /// </summary>
+    private static long DeviceBandCeilingBytes(Size viewport, double pxPerDip)
+    {
+        int grow = 2 * (PdfViewerControl.ContinuousTileOverscanDip + PdfViewerControl.ContinuousTileQuantumDip);
+        long w = (long)Math.Floor((viewport.Width + grow) * pxPerDip);
+        long h = (long)Math.Floor((viewport.Height + grow) * pxPerDip);
+        return w * h * 4;
     }
 
     /// <summary>

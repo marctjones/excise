@@ -732,7 +732,20 @@ public partial class PdfViewerControl : UserControl
         {
             InvalidateContinuousCache();
             InvalidateVisual();
-            _ = RenderCurrentPageAsync();
+            // #1473: no hidden single-page render in continuous view; the switch
+            // to single-page renders with the new annotation settings. The
+            // single-page cache is keyed by page and DPI only, so drop it here
+            // or that switch would show bitmaps rendered with the old settings.
+            // Dropping it disposes the bitmap the hidden Image may still show.
+            if (ViewMode == PdfViewMode.Continuous)
+            {
+                InvalidatePageCache();
+                ClearDisplay();
+            }
+            else
+            {
+                _ = RenderCurrentPageAsync();
+            }
         }
     }
 
@@ -1483,8 +1496,20 @@ public partial class PdfViewerControl : UserControl
             RefreshPageAnnotations();
             RedrawTypewriterLayer();
             if (ViewMode == PdfViewMode.Continuous)
+            {
                 RebuildContinuous();
-            await RenderCurrentPageAsync();
+                // #1473: the single-page Image is hidden in continuous view, so
+                // rendering it here was a full page render nobody saw, plus a
+                // bitmap held in the single-page cache. OnViewModeChanged renders
+                // the current page when single-page becomes visible. Drop the
+                // hidden Image's Source: InvalidatePageCache above has disposed
+                // it, and an Image measured with a disposed bitmap throws.
+                ClearDisplay();
+            }
+            else
+            {
+                await RenderCurrentPageAsync();
+            }
         }
         else
         {
@@ -1578,6 +1603,9 @@ public partial class PdfViewerControl : UserControl
         {
             RebuildContinuous();
             RenderVisibleContinuousTiles();
+            // InvalidatePageCache above disposed the bitmap the hidden
+            // single-page Image may still show (#1473).
+            ClearDisplay();
         }
         else
         {
@@ -1839,6 +1867,11 @@ public partial class PdfViewerControl : UserControl
     private void ClearDisplay()
     {
         _currentSinglePageRenderDpi = DefaultRenderDpi;
+        // The ZoomHost scale depends on the logical DPI, and RenderCurrentPageAsync
+        // refreshes it only when a page's logical DPI differs from this field.
+        // Resetting the field without the transform would leave a clamped page's
+        // scale in place for the next 120-DPI page (#1473).
+        UpdateZoomTransform();
         if (_pdfImage != null)
         {
             _pdfImage.Source = null;

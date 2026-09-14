@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -640,6 +641,177 @@ public class PdfViewerControlTests
 
         single.IsVisible.Should().BeFalse();
         continuous.IsVisible.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// #1473: in continuous view, opening a document, bumping RenderVersion and
+    /// toggling annotations must not render the hidden single-page Image. The
+    /// single page still renders the moment it becomes visible. Each continuous
+    /// path that drops the single-page cache also disposes the bitmap the hidden
+    /// Image last showed, so the Image must let go of it: switching back to
+    /// single-page must lay out and render frames without an
+    /// ObjectDisposedException.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ContinuousView_DoesNotRenderHiddenSinglePage_AndRendersItWhenShown()
+    {
+        var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"excise_hidden_single_{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
+        var bytes = System.IO.File.ReadAllBytes(path);
+        System.IO.File.Delete(path);
+
+        var viewer = new PdfViewerControl { ViewMode = PdfViewMode.Continuous };
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        var dispatcherErrors = new System.Collections.Generic.List<Exception>();
+        DispatcherUnhandledExceptionEventHandler onError = (_, e) => dispatcherErrors.Add(e.Exception);
+        Dispatcher.UIThread.UnhandledException += onError;
+        window.Show();
+        var image = viewer.FindControl<Image>("PdfImage")!;
+        try
+        {
+            viewer.Document = PdfCoreDocument.Open(bytes);
+            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+
+            SinglePageRenderAttempts(viewer).Should().Be(0,
+                "opening a document in continuous view must not render the hidden single page");
+            image.Source.Should().BeNull();
+
+            // Shown: the single page renders.
+            viewer.ViewMode = PdfViewMode.SinglePage;
+            await PumpUntilAsync(window, () => image.Source != null);
+            RenderFrames(window);
+            long attemptsAfterShow = SinglePageRenderAttempts(viewer);
+            attemptsAfterShow.Should().BeGreaterThan(0, "switching to single-page renders the current page");
+
+            // Hidden again: a content rewrite and an annotation toggle drop the
+            // single-page cache without rendering the hidden page.
+            viewer.ViewMode = PdfViewMode.Continuous;
+            viewer.RenderVersion++;
+            RenderFrames(window);
+            image.Source.Should().BeNull("RenderVersion disposed the bitmap the hidden Image showed");
+            viewer.ShowAnnotations = !viewer.ShowAnnotations;
+            RenderFrames(window);
+            image.Source.Should().BeNull();
+
+            // A second document opened in continuous view: still no hidden render.
+            var previous = viewer.Document;
+            viewer.Document = PdfCoreDocument.Open(bytes);
+            previous?.Dispose();
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            SinglePageRenderAttempts(viewer).Should().Be(attemptsAfterShow,
+                "no continuous-view path may render the hidden single page");
+
+            // Shown again: renders, and the Image never measures a disposed bitmap.
+            viewer.ViewMode = PdfViewMode.SinglePage;
+            RenderFrames(window);
+            await PumpUntilAsync(window, () => image.Source != null);
+            RenderFrames(window);
+            ((global::Avalonia.Media.Imaging.Bitmap)image.Source!).PixelSize.Width.Should().BeGreaterThan(0);
+            dispatcherErrors.Should().BeEmpty();
+        }
+        finally
+        {
+            Dispatcher.UIThread.UnhandledException -= onError;
+            window.Close();
+            viewer.Document?.Dispose();
+        }
+
+        static long SinglePageRenderAttempts(PdfViewerControl v)
+        {
+            var d = v.GetRenderDiagnostics();
+            return d.SinglePageHits + d.SinglePageMisses;
+        }
+    }
+
+    /// <summary>
+    /// #1473 follow-up: a continuous-view document change resets the single-page
+    /// logical DPI (ClearDisplay), and the ZoomHost scale (zoom × 96 / logical DPI)
+    /// must follow. RenderCurrentPageAsync refreshes the scale only when a page's
+    /// logical DPI differs from the field, so a reset field with a stale scale
+    /// showed the next ordinary page at a huge page's clamped scale.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ContinuousDocumentChange_AfterAClampedPage_KeepsTheSinglePageDisplayScale()
+    {
+        var viewer = new PdfViewerControl();
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        window.Show();
+        var image = viewer.FindControl<Image>("PdfImage")!;
+        var zoomHost = viewer.FindControl<LayoutTransformControl>("ZoomHost")!;
+        try
+        {
+            // A 7200 x 7200 pt page exceeds the single-page pixel budget at 120 DPI,
+            // so its logical DPI clamps (to 81). Opening it sets that DPI and scale
+            // synchronously; the switch and the second document in the same turn
+            // cancel its render.
+            viewer.Document = PdfCoreDocument.Open(SquarePagePdf(7200));
+            var clampedScale = ((global::Avalonia.Media.ScaleTransform)zoomHost.LayoutTransform!).ScaleX;
+            clampedScale.Should().BeGreaterThan(viewer.ZoomLevel * 96.0 / 120.0 + 0.1,
+                "fixture: the huge page must clamp its logical DPI below 120");
+
+            viewer.ViewMode = PdfViewMode.Continuous;
+            var huge = viewer.Document;
+            viewer.Document = PdfCoreDocument.Open(TestPdfGenerator.CreateSimplePdf("ordinary page"));
+            huge?.Dispose();
+
+            viewer.ViewMode = PdfViewMode.SinglePage;
+            var deadline = DateTime.UtcNow.AddSeconds(30);
+            while (image.Source == null && DateTime.UtcNow < deadline)
+            {
+                window.UpdateLayout();
+                Dispatcher.UIThread.RunJobs();
+                await Task.Delay(25);
+            }
+            image.Source.Should().NotBeNull("switching to single-page renders the ordinary page");
+
+            ((global::Avalonia.Media.ScaleTransform)zoomHost.LayoutTransform!).ScaleX
+                .Should().BeApproximately(viewer.ZoomLevel * 96.0 / 120.0, 1e-9,
+                    "an ordinary page renders at the 120 logical DPI, so it must display at zoom x 96/120");
+        }
+        finally
+        {
+            window.Close();
+            viewer.Document?.Dispose();
+        }
+
+        static byte[] SquarePagePdf(int sizePt)
+        {
+            var sb = new StringBuilder();
+            sb.Append("%PDF-1.7\n");
+            var offsets = new int[4];
+            offsets[1] = sb.Length;
+            sb.Append("1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n");
+            offsets[2] = sb.Length;
+            sb.Append("2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n");
+            offsets[3] = sb.Length;
+            sb.Append($"3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 {sizePt} {sizePt}] >> endobj\n");
+            int xref = sb.Length;
+            sb.Append("xref\n0 4\n0000000000 65535 f \n");
+            for (int i = 1; i <= 3; i++) sb.Append($"{offsets[i]:D10} 00000 n \n");
+            sb.Append($"trailer << /Size 4 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+            return Encoding.ASCII.GetBytes(sb.ToString());
+        }
+    }
+
+    private static void RenderFrames(Window w)
+    {
+        w.UpdateLayout();
+        Dispatcher.UIThread.RunJobs();
+        using (w.CaptureRenderedFrame()) { }
+    }
+
+    private static async Task PumpUntilAsync(Window w, Func<bool> condition)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (!condition())
+        {
+            if (DateTime.UtcNow > deadline)
+                throw new TimeoutException("condition not reached within 30s");
+            w.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(25);
+        }
     }
 
     [FixedAvaloniaFact]
