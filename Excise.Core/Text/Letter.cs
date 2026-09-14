@@ -81,7 +81,24 @@ public class Letter
     /// not affect <see cref="Value"/>, letter order, or which letters are
     /// emitted, so it is invisible to text extraction output.
     /// </summary>
-    public int? MarkedContentId { get; set; }
+    public int? MarkedContentId
+    {
+        get => _hasMarkedContentId ? _markedContentId : null;
+        set
+        {
+            _hasMarkedContentId = value.HasValue;
+            _markedContentId = value.GetValueOrDefault();
+        }
+    }
+
+    // #1485: MarkedContentId's backing store. An auto-property's Nullable<int>
+    // is a struct field, which the runtime lays out 8-aligned after the
+    // primitives; an int and a bool pack into the tail beside the other ints
+    // and flags instead, taking every Letter from 136 to 128 bytes (595,373
+    // letters on irs-1040-instructions.pdf). Every int value, including
+    // negatives, round-trips unchanged: no sentinel.
+    private int _markedContentId;
+    private bool _hasMarkedContentId;
 
     /// <summary>
     /// Whether this letter was rendered inside an Optional Content Group (OCG)

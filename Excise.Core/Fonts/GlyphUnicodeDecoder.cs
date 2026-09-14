@@ -816,22 +816,36 @@ internal sealed class GlyphUnicodeDecoder
     }
 
 
-    // Single-character string cache for the Latin-1 range (#600): the decode
-    // fallbacks (DecodeWinAnsi/DecodeMacRoman/identity) allocated a fresh
-    // one-char string per glyph. Cached instances are value-equal to what
-    // ToString() produced; Letter.Value is only ever compared by value.
-    private static readonly string[] Latin1CharStrings = CreateLatin1CharStrings();
+    // Single-character string cache (#600, widened to the BMP by #1485): the
+    // decode fallbacks (DecodeWinAnsi/DecodeMacRoman/identity) allocated a
+    // fresh one-char string per glyph, and every /ToUnicode map re-parsed per
+    // page held its own copy of each value, so a retained letter model kept
+    // tens of thousands of equal one-char strings alive. Cached instances are
+    // value-equal to what ToString() produced; Letter.Value is only ever
+    // compared by value. Blocks of 256 are allocated on first use, so the
+    // table is bounded at 65,536 strings however hostile the document.
+    private static readonly string?[]?[] SingleCharStringBlocks = new string?[]?[256];
 
-    private static string[] CreateLatin1CharStrings()
+    private static string CharToString(char c)
     {
-        var strings = new string[256];
-        for (int i = 0; i < strings.Length; i++)
-            strings[i] = ((char)i).ToString();
-        return strings;
+        var block = SingleCharStringBlocks[c >> 8];
+        if (block is null)
+        {
+            Interlocked.CompareExchange(ref SingleCharStringBlocks[c >> 8], new string?[256], null);
+            block = SingleCharStringBlocks[c >> 8]!;
+        }
+        // A race stores two equal strings into the same slot; either is correct.
+        return block[c & 0xFF] ??= c.ToString();
     }
 
-    private static string CharToString(char c) =>
-        c <= '\u00FF' ? Latin1CharStrings[c] : c.ToString();
+    /// <summary>
+    /// The shared instance for a one-character <paramref name="value"/>, or
+    /// <paramref name="value"/> itself when it is longer or empty. Value-equal
+    /// either way; lets a sink that RETAINS decoded text (the letter model)
+    /// hold one string per character instead of one per glyph (#1485).
+    /// </summary>
+    internal static string ShareSingleChar(string value) =>
+        value.Length == 1 ? CharToString(value[0]) : value;
 
     /// <summary>
     /// A numeric operand as a double. A private copy of TextExtractor's helper

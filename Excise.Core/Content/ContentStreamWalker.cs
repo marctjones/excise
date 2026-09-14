@@ -177,6 +177,12 @@ internal sealed class ContentStreamWalker
     // Text state tracking
     private double _fontSize = 12;
     private string _fontName = "";
+    // #1485: one string per distinct Tf font name for this walk. The tokenizer
+    // allocates a fresh name string for every Tf operand, and the letter model
+    // retains FontName per glyph for the document's lifetime (36,084 copies of
+    // 19 names on irs-1040-instructions.pdf). Value-equal, so nothing reads it
+    // differently.
+    private Dictionary<string, string>? _fontNames;
     private PdfDictionary? _currentFont;
     // The shared code→Unicode cascade (#981) — /ToUnicode, /Differences, the
     // embedded reverse cmap, the Mac glyph order and the symbol cmap all live
@@ -779,6 +785,15 @@ internal sealed class ContentStreamWalker
         }
     }
 
+    private string ShareFontName(string fontName)
+    {
+        _fontNames ??= new Dictionary<string, string>(StringComparer.Ordinal);
+        if (_fontNames.TryGetValue(fontName, out var shared))
+            return shared;
+        _fontNames[fontName] = fontName;
+        return fontName;
+    }
+
     private bool ExecuteTextStateOperator(string name, OperandView operands)
     {
         switch (name)
@@ -786,7 +801,7 @@ internal sealed class ContentStreamWalker
             case "Tf":
                 if (operands.Count >= 2)
                 {
-                    _fontName = operands[0] is PdfName n ? n.Value : "";
+                    _fontName = operands[0] is PdfName n ? ShareFontName(n.Value) : "";
                     _fontSize = GetNumber(operands[1]);
                     LoadFont();
                 }

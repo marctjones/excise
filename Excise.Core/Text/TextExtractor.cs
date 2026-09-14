@@ -343,7 +343,7 @@ public class TextExtractor
             foreach (var ch in line)
             {
                 var bbox = new PdfRectangle(x, y, x + advance, y + fontSize);
-                _letters.Add(new Letter(ch.ToString(), bbox, fontSize, fontName, x, y, advance, ch));
+                _letters.Add(new Letter(GlyphUnicodeDecoder.ShareSingleChar(ch.ToString()), bbox, fontSize, fontName, x, y, advance, ch));
                 x += advance;
             }
 
@@ -374,7 +374,7 @@ public class TextExtractor
         {
             var bbox = new PdfRectangle(x, baselineY, x + advance, baselineY + fontSize);
             _letters.Add(new Letter(
-                ch.ToString(),
+                GlyphUnicodeDecoder.ShareSingleChar(ch.ToString()),
                 bbox,
                 fontSize,
                 fontName,
@@ -566,7 +566,10 @@ public class TextExtractor
     private void AddLetter(in WalkedGlyph glyph)
     {
         _letters.Add(new Letter(
-            glyph.Unicode,
+            // #1485: letters are retained for the document's lifetime, and a
+            // per-page /ToUnicode map gives each page its own copy of every
+            // one-char value. Share them; the value is unchanged.
+            GlyphUnicodeDecoder.ShareSingleChar(glyph.Unicode),
             glyph.Cell,
             glyph.FontSize,
             glyph.FontName,
