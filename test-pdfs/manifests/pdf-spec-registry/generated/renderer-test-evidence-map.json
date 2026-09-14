@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "2f4ccf38b1577cf5aa44929cb630e87944efad2f5700271ba3820c67e192b9bc",
+  "sourceFingerprint": "f9d61364872f81d1ca4066c869af55604060c06eb3b40148b18af24276412b5f",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -948,6 +948,98 @@
       "class": "DctImageDecoderTests",
       "method": "CancellationIsPropagatedInsteadOfReportedAsMalformedData",
       "line": 55,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRender_ReleasesTheImageAndMaskSamplesItDecoded_AndDrawsTheSamePixels",
+      "path": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs",
+      "class": "DecodedImageSampleReleaseTests",
+      "method": "AFlaggedRender_ReleasesTheImageAndMaskSamplesItDecoded_AndDrawsTheSamePixels",
+      "line": 31,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRenderedTwice_DrawsIdentically_BothTimes",
+      "path": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs",
+      "class": "DecodedImageSampleReleaseTests",
+      "method": "AFlaggedRenderedTwice_DrawsIdentically_BothTimes",
+      "line": 59,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRender_LeavesSamplesItDidNotDecode",
+      "path": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs",
+      "class": "DecodedImageSampleReleaseTests",
+      "method": "AFlaggedRender_LeavesSamplesItDidNotDecode",
+      "line": 72,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRender_NeverReleasesSamplesWrittenByAnythingButTheDecoder",
+      "path": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs",
+      "class": "DecodedImageSampleReleaseTests",
+      "method": "AFlaggedRender_NeverReleasesSamplesWrittenByAnythingButTheDecoder",
+      "line": 90,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -38625,7 +38717,7 @@
     }
   ],
   "summary": {
-    "testMethods": 1067,
+    "testMethods": 1071,
     "facets": {
       "content-streams": 316,
       "content-strings-and-text": 7,
@@ -38633,7 +38725,7 @@
       "fonts": 191,
       "functions-and-shadings": 51,
       "graphics-state-and-paths": 314,
-      "images": 175,
+      "images": 179,
       "page-group-backdrop": 3,
       "renderer-integration-general": 25,
       "renderer-performance-and-lifetime": 12,
@@ -38651,9 +38743,9 @@
       "pdf.17.graphics.fonts:extract": 191,
       "pdf.17.graphics.fonts:parse": 191,
       "pdf.17.graphics.fonts:render": 681,
-      "pdf.17.graphics.images:extract": 175,
-      "pdf.17.graphics.images:parse": 175,
-      "pdf.17.graphics.images:render": 666,
+      "pdf.17.graphics.images:extract": 179,
+      "pdf.17.graphics.images:parse": 179,
+      "pdf.17.graphics.images:render": 670,
       "pdf.17.graphics.paths-painting:parse": 314,
       "pdf.17.graphics.paths-painting:render": 314,
       "pdf.17.graphics.patterns-shadings:parse": 51,

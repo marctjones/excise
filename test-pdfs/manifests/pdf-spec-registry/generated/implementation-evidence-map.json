@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "c8a43d00222a165ca0c41bebb21d6d1699b106c37c171cc43b6d8bb988f11737",
+  "sourceFingerprint": "ee8650e036086b281a712135c0aa3644785df516efa3b52472a64af7c9e810f3",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6184,6 +6184,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Services/AppMetrics.cs",
+      "path": "Excise.App/Services/AppMetrics.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Services/AppPaths.cs",
       "path": "Excise.App/Services/AppPaths.cs",
       "kind": "source-file",
@@ -6345,6 +6355,16 @@
     {
       "id": "Excise.App/Services/IUserDialogService.cs",
       "path": "Excise.App/Services/IUserDialogService.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/MetricsJsonlSink.cs",
+      "path": "Excise.App/Services/MetricsJsonlSink.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -8695,6 +8715,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Avalonia/Controls/ViewerMetrics.cs",
+      "path": "Excise.Avalonia/Controls/ViewerMetrics.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Avalonia/Imaging/SkiaInterop.cs",
       "path": "Excise.Avalonia/Imaging/SkiaInterop.cs",
       "kind": "source-file",
@@ -8706,7 +8736,7 @@
     }
   ],
   "summary": {
-    "records": 406,
+    "records": 409,
     "facets": {
       "annotations": 10,
       "content-and-graphics": 18,
@@ -8714,7 +8744,7 @@
       "fonts": 28,
       "forms": 8,
       "images": 28,
-      "product-integration-general": 217,
+      "product-integration-general": 220,
       "redaction": 52,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 19,
@@ -8793,7 +8823,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 19,
       "pdfe.product.security.signature-and-permission-warning:write": 19
     },
-    "fallbackRecords": 217,
+    "fallbackRecords": 220,
     "allRecordsMapped": true
   }
 }
