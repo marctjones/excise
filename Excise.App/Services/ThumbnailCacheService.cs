@@ -82,7 +82,8 @@ public sealed class ThumbnailCacheService : IDisposable
 
     /// <summary>
     /// Number of times this instance invoked the renderer (as opposed to
-    /// serving a disk-cache hit). Test observability only — see issue #733.
+    /// serving a disk-cache hit). Test observability (#733) and the
+    /// <c>excise.app.thumbnail.renders</c> counter (#1491).
     /// </summary>
     internal int RenderCount => Volatile.Read(ref _renderCount);
 
