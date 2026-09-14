@@ -187,50 +187,69 @@ public class ConcurrentDocumentAccessTests
     /// returns the correct text.
     /// </summary>
     [Fact]
-    public async Task CancellingReadsUnderLoad_LeavesTheDocumentUsable()
+    public void CancellingReadsUnderLoad_LeavesTheDocumentUsable()
     {
         var bytes = MultiPagePdf(pageCount: 40, marker: "CancelLoadMarker");
         using var doc = PdfDocument.Open(bytes);
 
         var errors = new ConcurrentQueue<Exception>();
-        using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+
+        // Dedicated threads and a Stopwatch deadline, NOT Task.Run and timed
+        // CancellationTokenSources: a CTS timer fires its callback on the thread
+        // pool, and busy-looping pool workers (this test's own, or another
+        // stress test running in parallel) can starve it so the stop never
+        // arrives. Observed 2026-09-14 as a 10-minute Core.Tests hang at 800%
+        // CPU, this test and PageLetterCacheBoundTests spinning together. The
+        // cancellations below are still issued from another thread; only the
+        // timer that delivered them is gone.
+        var deadline = System.Diagnostics.Stopwatch.StartNew();
+        var budget = TimeSpan.FromSeconds(3);
 
         // Half the threads read normally; half start work and cancel it almost
         // immediately, so cancellation lands at unpredictable points in the
         // shared parse.
-        var workers = Enumerable.Range(0, ThreadCount).Select(tid => Task.Run(() =>
+        var workers = Enumerable.Range(0, ThreadCount).Select(tid => new Thread(() =>
         {
             try
             {
-                while (!stop.IsCancellationRequested)
+                while (deadline.Elapsed < budget)
                 {
                     if (tid % 2 == 0)
                     {
-                        for (int p = 1; p <= doc.PageCount && !stop.IsCancellationRequested; p++)
+                        for (int p = 1; p <= doc.PageCount && deadline.Elapsed < budget; p++)
                             _ = doc.GetPage(p).Letters?.Count();
                     }
                     else
                     {
                         using var cts = new CancellationTokenSource();
-                        var work = Task.Run(() =>
+                        var work = new Thread(() =>
                         {
-                            for (int p = 1; p <= doc.PageCount; p++)
+                            try
                             {
-                                cts.Token.ThrowIfCancellationRequested();
-                                _ = doc.GetPage(p).Text;
+                                for (int p = 1; p <= doc.PageCount; p++)
+                                {
+                                    cts.Token.ThrowIfCancellationRequested();
+                                    _ = doc.GetPage(p).Text;
+                                }
                             }
-                        }, cts.Token);
+                            catch (OperationCanceledException) { /* the point of the test */ }
+                            catch (Exception ex) { errors.Enqueue(ex); }
+                        }) { IsBackground = true };
+                        work.Start();
 
-                        cts.CancelAfter(TimeSpan.FromMilliseconds(2));
-                        try { work.GetAwaiter().GetResult(); }
-                        catch (OperationCanceledException) { /* the point of the test */ }
+                        Thread.Sleep(TimeSpan.FromMilliseconds(2));
+                        cts.Cancel();
+                        if (!work.Join(TimeSpan.FromSeconds(60)))
+                            throw new TimeoutException("a cancelled read must finish within its time budget");
                     }
                 }
             }
             catch (Exception ex) { errors.Enqueue(ex); }
-        })).ToArray();
+        }) { IsBackground = true }).ToArray();
 
-        await Task.WhenAll(workers);
+        foreach (var worker in workers) worker.Start();
+        foreach (var worker in workers)
+            worker.Join(TimeSpan.FromSeconds(60)).Should().BeTrue("a reader must finish within its time budget");
 
         errors.Should().BeEmpty("cancellation must not corrupt concurrent readers; first: " +
                                 (errors.FirstOrDefault()?.ToString() ?? "none"));
