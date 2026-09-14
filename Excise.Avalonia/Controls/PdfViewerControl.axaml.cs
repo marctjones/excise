@@ -1753,14 +1753,16 @@ public partial class PdfViewerControl : UserControl
                 // Stamp 96 (dip Size == PixelSize) and carry the layout size
                 // separately: Avalonia's Image paints a non-96-stamped bitmap
                 // as a top-left pixel crop magnified by stamp/96 (#697;
-                // DpiStampedBitmapPaintProbeTests). The plan's invariant
-                // px × 96 / bitmapDpi == logical page dips still sizes the
-                // layout, so coordinates and the ScaleTransform are unchanged.
+                // DpiStampedBitmapPaintProbeTests). The layout size comes from
+                // the page geometry, never from the raster (#1489): the renderer
+                // ceils the pixel count and the device DPI is an integer, so
+                // px × 96 / bitmapDpi missed pt × logicalDpi / 72 — the space
+                // the overlay and every input rect map into — by up to ~0.4%.
+                // Stretch="Fill" absorbs the sub-pixel raster difference.
                 var bitmap = SkiaInterop.ToAvaloniaBitmap(skBitmap);
                 if (bitmap != null)
                 {
-                    var dip = new Size(bitmap.PixelSize.Width * 96.0 / bitmapDpi,
-                                       bitmap.PixelSize.Height * 96.0 / bitmapDpi);
+                    var dip = SinglePageLayoutSize(widthPt, heightPt, logicalDpi);
                     Trace($"SinglePageRender page={pageNumber} RENDERED px={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dip={dip.Width:F0}x{dip.Height:F0}");
                     _singlePageRenderLifetime.Add(pageNumber, renderDpi, bitmap, dip);
                     ViewerMetrics.RecordSinglePageRender(renderStart, renderDpi);
@@ -1834,12 +1836,15 @@ public partial class PdfViewerControl : UserControl
     /// <paramref name="scale"/> is the on-screen magnification the raster must
     /// resolve — the display device-pixel-ratio times the zoom level — so text
     /// stays crisp both on HiDPI displays (#682) and when zoomed in (#683). It
-    /// returns the DPI to rasterize at (device resolution) and the BitmapDpi
-    /// divisor that maps the raster back to the *logical* layout size
-    /// (px × 96 / bitmapDpi). That invariant —
-    /// <c>deviceDpi / (bitmapDpi / 96) == logicalDpi</c> — is what keeps the
-    /// Image layout size, the ScaleTransform, and every coordinate mapping
-    /// unchanged; only pixel density changes. BitmapDpi is NOT stamped on the
+    /// returns the DPI to rasterize at (device resolution) and the equivalent
+    /// BitmapDpi, <c>deviceDpi × 96 / logicalDpi</c>, so that
+    /// <c>deviceDpi / (bitmapDpi / 96) == logicalDpi</c> holds exactly. The
+    /// Image is NOT sized from the raster through it:
+    /// <see cref="SinglePageLayoutSize"/> sizes it from the page geometry
+    /// (#1489), which is what keeps the layout size, the ScaleTransform and
+    /// every coordinate mapping unchanged; only pixel density changes. Until
+    /// #1489 BitmapDpi was <c>96 × scale</c>, a rounding away from the integer
+    /// device DPI, and it sized the Image. BitmapDpi is NOT stamped on the
     /// bitmap: Avalonia's Image mispaints non-96-stamped bitmaps as a magnified
     /// top-left pixel crop (#697; DpiStampedBitmapPaintProbeTests) — the bitmap
     /// stays 96-stamped and the Image's Width/Height carry the layout size
@@ -1853,9 +1858,20 @@ public partial class PdfViewerControl : UserControl
     {
         double s = Math.Clamp(scale <= 0 ? 1.0 : scale, 1.0, Math.Max(1.0, maxScale));
         int deviceDpi = (int)Math.Round(logicalDpi * s);
-        double bitmapDpi = 96.0 * s;
+        double bitmapDpi = deviceDpi * 96.0 / logicalDpi;
         return (deviceDpi, bitmapDpi);
     }
+
+    /// <summary>
+    /// The single page's layout size in logical DIPs (pure; #1489): the page
+    /// geometry at the logical DPI, which is the space the overlay, hit-testing
+    /// and every redaction, typewriter and form rect map through. The
+    /// placeholder and the published render both size the Image with this,
+    /// never with the raster's pixel count.
+    /// </summary>
+    internal static Size SinglePageLayoutSize(double widthPt, double heightPt, int logicalDpi) =>
+        new(widthPt * logicalDpi / PdfPageRect.PdfPointsPerInch,
+            heightPt * logicalDpi / PdfPageRect.PdfPointsPerInch);
 
     /// <summary>
     /// The largest render scale that keeps a single page's raster within the

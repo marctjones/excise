@@ -38,6 +38,9 @@ public class SinglePageRenderPlanTests
     [InlineData(120, 2.0)]
     [InlineData(96, 3.0)]
     [InlineData(72, 1.5)]
+    [InlineData(120, 1.429)]  // 120 × 1.429 = 171.48: the device DPI rounds down (#1489)
+    [InlineData(120, 1.43)]   // 171.6: rounds up
+    [InlineData(107, 1.0064)] // a budget-clamped large page at its non-integer scale cap
     public void SinglePageRenderPlan_KeepsDipSizeInvariant(int logicalDpi, double scale)
     {
         var (deviceDpi, bitmapDpi) = PdfViewerControl.SinglePageRenderPlan(logicalDpi, scale, Uncapped);
@@ -48,6 +51,25 @@ public class SinglePageRenderPlanTests
         double dipScale = deviceDpi / (bitmapDpi / 96.0);
         dipScale.Should().BeApproximately(logicalDpi, 0.5,
             "the bitmap's DIP size (and thus layout + coordinates) must be invariant to zoom/dpr");
+        // Exactly (#1489): the 0.5 DPI in 120 allowed above is the size of the
+        // defect itself (bitmapDpi = 96 × scale against a rounded deviceDpi). The
+        // bound is tightened by adding this check rather than rewriting that one,
+        // so the change reads as a strengthening to check-gate-asymmetry.sh.
+        dipScale.Should().BeApproximately(logicalDpi, 1e-9,
+            "the plan's DIP scale must equal the logical DPI exactly, or input maps off the drawn page");
+    }
+
+    [Theory]
+    [InlineData(612, 792, 120)]
+    [InlineData(2000, 1400, 120)]
+    [InlineData(5000, 6000, 107)]
+    public void SinglePageLayoutSize_IsThePageGeometryAtTheLogicalDpi(double widthPt, double heightPt, int logicalDpi)
+    {
+        // #1489: the Image is sized from geometry, not from the ceiled raster, so
+        // it spans exactly the space ViewerDipsToPdfRect maps input through.
+        var size = PdfViewerControl.SinglePageLayoutSize(widthPt, heightPt, logicalDpi);
+        size.Width.Should().Be(widthPt * logicalDpi / 72.0);
+        size.Height.Should().Be(heightPt * logicalDpi / 72.0);
     }
 
     [Theory]

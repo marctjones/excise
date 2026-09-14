@@ -9,12 +9,15 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using AwesomeAssertions;
+using Excise.App.Tests.Utilities;
 using Excise.Core.Document;
 using Excise.Core.Graphics;
 using Excise.Core.Text;
 using Excise.Avalonia.Controls;
+using Excise.Rendering.Differential;
 using Excise.App.ViewModels;
 using Excise.App.Views;
 using Xunit;
@@ -136,7 +139,181 @@ public class RedactionMouseDragBroadeningTests
         finally { window.Close(); }
     }
 
+    /// <summary>
+    /// #1489: a box drawn around the text the user SEES, near the far corner of a
+    /// large page at a render scale where <c>120 × zoom × dpr</c> is not an
+    /// integer, removes exactly the glyphs inside it.
+    /// </summary>
+    /// <remarks>
+    /// The other drags here aim through <c>ToViewerDips(…, 120)</c> — the input
+    /// coordinate space itself — so they are blind to the drawn page disagreeing
+    /// with that space. This one aims at INK found in the published raster and
+    /// maps it through the Image's laid-out bounds, which is where the user's
+    /// eye puts the box.
+    /// <para>
+    /// Before the fix, at zoom 0.5 × dpr 2.858 (scale 1.429) the 2000 pt page
+    /// rendered at 171 DPI into 4750 px and was laid out 4750 × 96 / 137.18 =
+    /// 3324.0 DIPs wide instead of 3333.3: 0.28% short, so ink at x ≈ 1700 pt was
+    /// drawn about 4.8 pt left of where input maps. The survivor gap is chosen to
+    /// sit between the pad and pad + that drift: with the default AnyOverlap rule
+    /// a correct mapping clears the left survivor by ~2.4 pt and the drifted one
+    /// clips its last glyph.
+    /// </para>
+    /// Verified with mutool (an independent extractor) and the decompressing
+    /// saved-bytes scanner, not excise's own letters.
+    /// </remarks>
+    [FixedAvaloniaFact(Timeout = 120000)]
+    public async Task DragAroundVisibleGlyphs_NearFarCornerOfLargePage_AtNonIntegerRenderScale_RemovesExactlyThem()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
+            "mutool is not installed; the far-corner drag is verified with an independent extractor (#1489).");
+
+        const double widthPt = 2000, heightPt = 1400;
+        const double fontSize = 18, baselineY = 150, targetX = 1700;
+        const double leftGapPt = 2.5, rightGapPt = 4.0, padPt = 1.5;
+        const string target = "FARSECRET", leftSurvivor = "KEEPL", rightSurvivor = "KEEPR";
+
+        var (dir, src) = NewPdf("farcorner");
+        using (var doc = PdfDocument.CreateNew())
+        {
+            var blank = doc.Pages.AddBlank(widthPt, heightPt);
+            var font = PdfFont.Helvetica(fontSize);
+            using (var graphics = blank.GetGraphics())
+            {
+                graphics.DrawString(leftSurvivor, font, PdfBrush.Black,
+                    targetX - leftGapPt - font.MeasureWidth(leftSurvivor), baselineY);
+                graphics.DrawString(target, font, PdfBrush.Black, targetX, baselineY);
+                graphics.DrawString(rightSurvivor, font, PdfBrush.Black,
+                    targetX + font.MeasureWidth(target) + rightGapPt, baselineY);
+                graphics.Flush();
+            }
+            doc.Save(src);
+        }
+
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
+        var window = new MainWindow { DataContext = vm, Width = 2000, Height = 1600 };
+        window.Show();
+        try
+        {
+            await vm.LoadDocumentAsync(src);
+            await WaitForIdleLayout(window);
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            viewer.RenderScalingOverride = 2.858;
+            vm.SetManualZoom(0.5);
+            vm.IsRedactionMode = true;
+            await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer);
+            await WaitForIdleLayout(window);
+            await WaitForFinalSinglePageRender(window, viewer);
+            viewer.ZoomLevel.Should().BeApproximately(0.5, 1e-9, "the drift depends on zoom × dpr being 1.429");
+
+            var page = vm.PdfCoreDocument!.GetPage(1);
+            var image = viewer.FindControl<Image>("PdfImage")!;
+            var bitmap = (WriteableBitmap)image.Source!;
+
+            // Fixture guard: the survivor must sit between pad and pad + drift, or
+            // this test is green on both sides of the fix and proves nothing.
+            var targetBox = GlyphRunBox(page, target);
+            var leftBox = GlyphRunBox(page, leftSurvivor);
+            (targetBox.Left - leftBox.Right).Should().BeApproximately(leftGapPt, 0.25);
+
+            // Where the target is DRAWN: its ink in the raster, searched inside its
+            // own glyph cells (survivor ink starts at least 2.5 pt outside them).
+            double pxPerPtX = bitmap.PixelSize.Width / page.VisualWidth;
+            double pxPerPtY = bitmap.PixelSize.Height / page.VisualHeight;
+            var ink = InkBounds(bitmap,
+                (int)Math.Floor((targetBox.Left - 1) * pxPerPtX),
+                (int)Math.Floor((heightPt - targetBox.Top - 2) * pxPerPtY),
+                (int)Math.Ceiling((targetBox.Right + 1) * pxPerPtX),
+                (int)Math.Ceiling((heightPt - targetBox.Bottom + 2) * pxPerPtY));
+            ink.Width.Should().BeGreaterThan(0, "the target must be inked in the published raster");
+
+            // The box the user draws: ink ± pad, in raster pixels, placed on screen
+            // through the Image's laid-out bounds (Stretch=Fill).
+            double dipPerPxX = image.Bounds.Width / bitmap.PixelSize.Width;
+            double dipPerPxY = image.Bounds.Height / bitmap.PixelSize.Height;
+            var startDip = new Point((ink.X - padPt * pxPerPtX) * dipPerPxX, (ink.Y - padPt * pxPerPtY) * dipPerPxY);
+            var endDip = new Point((ink.Right + padPt * pxPerPtX) * dipPerPxX, (ink.Bottom + padPt * pxPerPtY) * dipPerPxY);
+            var start = image.TranslatePoint(startDip, window)!.Value;
+            var end = image.TranslatePoint(endDip, window)!.Value;
+            new Rect(window.ClientSize).Contains(end).Should().BeTrue(
+                $"the far-corner drag must land inside the window (end {end}, client {window.ClientSize})");
+
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseDown(start, MouseButton.Left));
+            await Task.Delay(50);
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(end));
+            await Task.Delay(50);
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseUp(end, MouseButton.Left));
+            await WaitForIdleLayout(window);
+            vm.RedactionWorkflow.PendingRedactions.Should().ContainSingle("one drag makes one pending redaction");
+
+            var outPath = Path.Combine(dir, "out.pdf");
+            await ApplyAndSave(vm, outPath);
+
+            var extracted = MutoolTextExtractor.ExtractPage(outPath, 1);
+            extracted.Should().NotBeNull("mutool must be able to read the redacted copy");
+            var compact = new string(extracted!.Where(c => !char.IsWhiteSpace(c)).ToArray());
+            compact.Should().Contain(leftSurvivor,
+                $"the glyph just left of the box must survive: a drifted box clips its last letter (mutool read '{compact}')");
+            compact.Should().Contain(rightSurvivor,
+                $"the glyph just right of the box must survive (mutool read '{compact}')");
+            compact.Should().NotContain(target,
+                "an independent extractor must not read the glyphs the user boxed");
+            compact.Replace(leftSurvivor, "").Replace(rightSurvivor, "").Should().BeEmpty(
+                "no glyph of the boxed word may survive, even one the box only just covered");
+            SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outPath), target).Should().BeEmpty(
+                "the boxed glyphs must be removed from the saved bytes, not hidden");
+        }
+        finally { window.Close(); }
+    }
+
     // ── harness ──────────────────────────────────────────────────────────────
+
+    private static async Task WaitForFinalSinglePageRender(Window window, PdfViewerControl viewer)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
+        while (viewer.SinglePagePublishCount == 0 || viewer.IsLoading || viewer.SinglePagePlaceholderForTests != null)
+        {
+            if (DateTime.UtcNow > deadline)
+                throw new TimeoutException("the single-page render never published");
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(25);
+        }
+        window.UpdateLayout();
+    }
+
+    /// <summary>The union of the glyph cells of the first run of letters spelling <paramref name="word"/>.</summary>
+    private static PdfRectangle GlyphRunBox(PdfPage page, string word)
+    {
+        var ordered = TextSelectionEngine.SortReadingOrder(page.Letters!.ToList());
+        var joined = string.Concat(ordered.Select(l => l.Value));
+        var idx = joined.IndexOf(word, StringComparison.Ordinal);
+        idx.Should().BeGreaterThanOrEqualTo(0, $"fixture must contain '{word}'");
+        var run = ordered.Skip(idx).Take(word.Length).Select(l => l.GlyphRectangle.Normalize()).ToList();
+        return new PdfRectangle(run.Min(r => r.Left), run.Min(r => r.Bottom), run.Max(r => r.Right), run.Max(r => r.Top));
+    }
+
+    /// <summary>Bounds, in raster pixels, of the dark pixels inside a search window.</summary>
+    private static PixelRect InkBounds(WriteableBitmap bitmap, int x0, int y0, int x1, int y1)
+    {
+        using var fb = bitmap.Lock();
+        x0 = Math.Max(0, x0); y0 = Math.Max(0, y0);
+        x1 = Math.Min(fb.Size.Width, x1); y1 = Math.Min(fb.Size.Height, y1);
+        int minX = int.MaxValue, minY = int.MaxValue, maxX = -1, maxY = -1;
+        var row = new byte[fb.RowBytes];
+        for (var y = y0; y < y1; y++)
+        {
+            System.Runtime.InteropServices.Marshal.Copy(fb.Address + y * fb.RowBytes, row, 0, fb.RowBytes);
+            for (var x = x0; x < x1; x++)
+            {
+                var p = x * 4;
+                if (row[p] >= 128 || row[p + 1] >= 128 || row[p + 2] >= 128) continue;
+                minX = Math.Min(minX, x); maxX = Math.Max(maxX, x);
+                minY = Math.Min(minY, y); maxY = Math.Max(maxY, y);
+            }
+        }
+        return maxX < 0 ? default : new PixelRect(minX, minY, maxX - minX + 1, maxY - minY + 1);
+    }
 
     private static (string dir, string src) NewPdf(string tag)
     {

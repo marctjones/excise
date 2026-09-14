@@ -45,8 +45,9 @@ public partial class PdfViewerControl
 
         // (a) Geometry first: the logical-DIP size the final render will have,
         // so the ZoomHost and overlay are laid out before any bitmap exists.
-        _pdfImage.Width = widthPt * logicalDpi / 72.0;
-        _pdfImage.Height = heightPt * logicalDpi / 72.0;
+        var layout = SinglePageLayoutSize(widthPt, heightPt, logicalDpi);
+        _pdfImage.Width = layout.Width;
+        _pdfImage.Height = layout.Height;
 
         // (b) A copy of the continuous composite, if one matches this zoom.
         var copy = TryCopyContinuousCompositeForPage(pageNumber, widthPt, heightPt);
