@@ -63,6 +63,25 @@ public class WindowSettings
     public string MetadataCarrierPolicy { get; set; } = "Strip";
 
     /// <summary>
+    /// Trim the viewer's caches when the OS reports memory pressure (#1478).
+    /// Only fires when the OS asks, so it is on by default. No UI: an
+    /// internal switch for A/B measurement in a live session.
+    /// </summary>
+    public bool CacheTrimOnMemoryPressure { get; set; } = true;
+
+    /// <summary>
+    /// Trim the viewer's scroll-back caches when the window is deactivated or
+    /// minimized, and after <see cref="CacheTrimIdleSeconds"/> without viewer
+    /// activity (#1478). Off by default until a live session has measured
+    /// what it costs: a Background trim makes scrolling back re-render, which
+    /// on a heavy page takes seconds. No UI.
+    /// </summary>
+    public bool CacheTrimSoftTriggers { get; set; }
+
+    /// <summary>Idle delay for <see cref="CacheTrimSoftTriggers"/>, in seconds.</summary>
+    public int CacheTrimIdleSeconds { get; set; } = 30;
+
+    /// <summary>
     /// Per-document state: file path -> (zoom level, last page index, timestamp).
     /// Limited to 50 most recent documents to avoid unbounded growth.
     /// </summary>

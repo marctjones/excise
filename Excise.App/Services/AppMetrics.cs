@@ -43,6 +43,11 @@ internal static class AppMetrics
         "excise.app.thumbnail.renders", ObserveThumbnailRenders, "{render}",
         "Thumbnail renderer invocations (disk-cache hits excluded) since process start.");
 
+    internal static readonly Counter<long> CacheTrimRequests = Meter.CreateCounter<long>(
+        "excise.app.cache_trim.requests", "{request}",
+        "Viewer cache trims the app asked for, tagged by trigger (deactivated, minimized, idle, " +
+        "os_pressure, gc_memory_load) and level (#1478). What each released is on Excise.Viewer.");
+
     private static WeakReference<DocumentTextIndex>? _textIndex;
 
     private static readonly object ThumbnailGate = new();
@@ -61,6 +66,30 @@ internal static class AppMetrics
 
         static void Record(long ms, string phase) =>
             DocumentOpenPhaseDuration.Record(ms, new KeyValuePair<string, object?>("phase", phase));
+    }
+
+    internal static void RecordCacheTrimRequest(CacheTrimTrigger trigger, Excise.Avalonia.Controls.PdfViewerCacheTrimLevel level)
+    {
+        if (!CacheTrimRequests.Enabled) return;
+        string triggerTag = trigger switch
+        {
+            CacheTrimTrigger.Deactivated => "deactivated",
+            CacheTrimTrigger.Minimized => "minimized",
+            CacheTrimTrigger.Idle => "idle",
+            CacheTrimTrigger.OsPressure => "os_pressure",
+            CacheTrimTrigger.GcMemoryLoad => "gc_memory_load",
+            _ => "unknown",
+        };
+        string levelTag = level switch
+        {
+            Excise.Avalonia.Controls.PdfViewerCacheTrimLevel.Background => "background",
+            Excise.Avalonia.Controls.PdfViewerCacheTrimLevel.Warn => "warn",
+            Excise.Avalonia.Controls.PdfViewerCacheTrimLevel.Critical => "critical",
+            _ => "unknown",
+        };
+        CacheTrimRequests.Add(1,
+            new KeyValuePair<string, object?>("trigger", triggerTag),
+            new KeyValuePair<string, object?>("level", levelTag));
     }
 
     /// <summary>The index the text-index gauges report; the most recently started one wins.</summary>

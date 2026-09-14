@@ -42,6 +42,8 @@ public partial class MainWindow : Window
     // CtrlS_SavesFile) flaky. See the KeyboardShortcutTests quarantine.
     private DispatcherTimer? _toastTimer;
 
+    private Excise.App.Services.ViewerCacheTrimCoordinator? _cacheTrim;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -78,6 +80,19 @@ public partial class MainWindow : Window
         // Load and apply window settings (Issue #23)
         _windowSettings = WindowSettings.Load();
         _windowSettings.ApplyTo(this);
+
+        // #1478: release the viewer's caches when the OS reports memory
+        // pressure, and (opt-in, see WindowSettings) in the background or idle.
+        _pdfViewerControl = this.FindControl<PdfViewerControl>("PdfViewerControl");
+        if (_pdfViewerControl != null)
+        {
+            _cacheTrim = Excise.App.Services.ViewerCacheTrimCoordinator.Attach(this, _pdfViewerControl,
+                new Excise.App.Services.CacheTrimPolicy(
+                    _windowSettings.CacheTrimOnMemoryPressure,
+                    _windowSettings.CacheTrimSoftTriggers,
+                    TimeSpan.FromSeconds(Math.Max(1, _windowSettings.CacheTrimIdleSeconds))));
+            this.Closed += (_, _) => _cacheTrim?.Dispose();
+        }
 
         // Save settings on close, and guard unsaved document changes (#1233)
         this.Closing += OnWindowClosing;
