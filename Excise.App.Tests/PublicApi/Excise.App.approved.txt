@@ -233,7 +233,7 @@ namespace Excise.App.Services
                 "Done",
                 "Total"})] System.IProgress<System.ValueTuple<int, int>>? progress = null, System.Threading.CancellationToken cancellationToken = default) { }
         public string GetPageText(int pageIndex) { }
-        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Word> GetPageWords(int pageIndex) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.App.Services.IndexedWord> GetPageWords(int pageIndex) { }
         public bool IsPageIndexed(int pageIndex) { }
     }
     public sealed class EditHistoryEntry
@@ -271,6 +271,12 @@ namespace Excise.App.Services
         System.Threading.Tasks.Task<bool> ShowConfirmAsync(string title, string message);
         System.Threading.Tasks.Task ShowMessageAsync(string title, string message);
         System.Threading.Tasks.Task<Excise.App.Services.UnsavedChangesDecision> ShowUnsavedChangesAsync(string title, string message, string saveActionText);
+    }
+    public readonly struct IndexedWord : System.IEquatable<Excise.App.Services.IndexedWord>
+    {
+        public IndexedWord(string Text, Excise.Core.Document.PdfRectangle BoundingBox) { }
+        public Excise.Core.Document.PdfRectangle BoundingBox { get; init; }
+        public string Text { get; init; }
     }
     public sealed class PageOperationDiagnostics : System.IEquatable<Excise.App.Services.PageOperationDiagnostics>
     {

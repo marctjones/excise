@@ -41,8 +41,13 @@ public partial class PdfViewerControl
     private int _continuousSelectionFocusPage;   // focus (current drag) page, 1-based
     private Letter? _continuousSelectionFocus;
 
-    /// <summary>Per-page letter caches for continuous selection, cleared with the tile cache.</summary>
-    private readonly Dictionary<int, ContinuousPageLetters> _continuousPageLetterCache = new();
+    /// <summary>
+    /// Per-page letter caches for continuous selection, cleared with the tile
+    /// cache. Bounded to the Core per-document letter bound plus the live
+    /// selection span (#1485, see <see cref="BoundedPageCache{T}"/>).
+    /// </summary>
+    private readonly BoundedPageCache<ContinuousPageLetters> _continuousPageLetterCache =
+        new(PdfDocument.PageLetterCacheCapacity);
 
     private sealed record ContinuousPageLetters(
         IReadOnlyList<Letter> Raw, List<Letter> Reading, double ColumnGap)
@@ -53,7 +58,7 @@ public partial class PdfViewerControl
 
     private ContinuousPageLetters GetContinuousPageLetters(int pageNumber)
     {
-        if (_continuousPageLetterCache.TryGetValue(pageNumber, out var cached))
+        if (_continuousPageLetterCache.TryGet(pageNumber, out var cached))
             return cached;
 
         ContinuousPageLetters result;
@@ -69,7 +74,19 @@ public partial class PdfViewerControl
         {
             result = ContinuousPageLetters.Empty;
         }
-        _continuousPageLetterCache[pageNumber] = result;
+
+        // The anchor→focus span stays cached: its endpoints are held by
+        // reference (see BoundedPageCache). No live selection pins nothing.
+        int pinnedFirst = 1, pinnedLast = 0;
+        if (_continuousSelectionPage > 0)
+        {
+            var focusPage = _continuousSelectionFocusPage > 0
+                ? _continuousSelectionFocusPage
+                : _continuousSelectionPage;
+            pinnedFirst = Math.Min(_continuousSelectionPage, focusPage);
+            pinnedLast = Math.Max(_continuousSelectionPage, focusPage);
+        }
+        _continuousPageLetterCache.Add(pageNumber, result, pinnedFirst, pinnedLast);
         return result;
     }
 

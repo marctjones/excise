@@ -216,7 +216,9 @@ public class PdfSearchService
         try
         {
             var pageText = page.Text;
-            var words = page.GetWords();
+            // The same compact shape the document index holds (#1485), so the
+            // live and indexed searches run one matching code path.
+            var words = IndexedWord.FromWords(page.GetWords());
 
             if (useRegex)
             {
@@ -409,7 +411,7 @@ public class PdfSearchService
     private List<SearchMatch> SearchWithRegex(
         string pageText,
         string pattern,
-        IReadOnlyList<Word> words,
+        IReadOnlyList<IndexedWord> words,
         int pageIndex,
         bool caseSensitive)
     {
@@ -447,9 +449,9 @@ public class PdfSearchService
                     {
                         PageIndex = pageIndex,
                         MatchedText = match.Value,
-                        X = firstWord!.BoundingBox.Left,
+                        X = firstWord.BoundingBox.Left,
                         Y = firstWord.BoundingBox.Bottom,
-                        Width = lastWord!.BoundingBox.Right - firstWord.BoundingBox.Left,
+                        Width = lastWord.BoundingBox.Right - firstWord.BoundingBox.Left,
                         Height = Math.Max(firstWord.BoundingBox.Height, lastWord.BoundingBox.Height),
                         Context = GetContext(pageText, match.Index, match.Length)
                     });
@@ -468,7 +470,7 @@ public class PdfSearchService
     /// Search for whole words only
     /// </summary>
     private List<SearchMatch> SearchWholeWords(
-        IReadOnlyList<Word> words,
+        IReadOnlyList<IndexedWord> words,
         string searchTerm,
         int pageIndex,
         bool caseSensitive)
@@ -505,7 +507,7 @@ public class PdfSearchService
     /// </summary>
     private List<SearchMatch> SearchSubstring(
         string pageText,
-        IReadOnlyList<Word> words,
+        IReadOnlyList<IndexedWord> words,
         string searchTerm,
         int pageIndex,
         bool caseSensitive)
@@ -537,9 +539,9 @@ public class PdfSearchService
                 {
                     PageIndex = pageIndex,
                     MatchedText = pageText.Substring(index, searchTerm.Length),
-                    X = firstWord!.BoundingBox.Left,
+                    X = firstWord.BoundingBox.Left,
                     Y = firstWord.BoundingBox.Bottom,
-                    Width = lastWord!.BoundingBox.Right - firstWord.BoundingBox.Left,
+                    Width = lastWord.BoundingBox.Right - firstWord.BoundingBox.Left,
                     Height = Math.Max(firstWord.BoundingBox.Height, lastWord.BoundingBox.Height),
                     Context = GetContext(pageText, index, searchTerm.Length)
                 });
@@ -595,7 +597,7 @@ public class PdfSearchService
     /// A term that only matched BECAUSE of a missing space no longer matches;
     /// that is the intended direction.
     /// </summary>
-    private static (string Text, List<WordSpan> Spans) BuildSearchableText(IReadOnlyList<Word> words)
+    private static (string Text, List<WordSpan> Spans) BuildSearchableText(IReadOnlyList<IndexedWord> words)
     {
         var sb = new StringBuilder();
         var spans = new List<WordSpan>(words.Count);
@@ -623,11 +625,12 @@ public class PdfSearchService
         IReadOnlyList<WordSpan> wordSpans,
         int startIndex,
         int length,
-        out Word? firstWord,
-        out Word? lastWord)
+        out IndexedWord firstWord,
+        out IndexedWord lastWord)
     {
-        firstWord = null;
-        lastWord = null;
+        firstWord = default;
+        lastWord = default;
+        var found = false;
 
         // Now find all words that overlap with the search range [startIndex, startIndex+length)
         var matchEndIndex = startIndex + length;
@@ -640,14 +643,16 @@ public class PdfSearchService
             if (span.End <= startIndex)
                 continue;
 
-            firstWord ??= span.Word;
+            if (!found)
+                firstWord = span.Word;
             lastWord = span.Word;
+            found = true;
         }
 
-        return firstWord != null && lastWord != null;
+        return found;
     }
 
-    private readonly record struct WordSpan(int Start, int End, Word Word);
+    private readonly record struct WordSpan(int Start, int End, IndexedWord Word);
 
     /// <summary>
     /// Get surrounding context for a match
