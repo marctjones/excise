@@ -6,18 +6,18 @@ digraph excise_architecture {
   subgraph cluster_delivery {
     label="delivery";
     color="#cbd5e1";
-    "app" [label="Excise.App project\npartial\n719 retained symbols", fillcolor="#fff3bf"];
+    "app" [label="Excise.App project\npartial\n765 retained symbols", fillcolor="#fff3bf"];
     "cli" [label="Excise.Cli project\npartial\n413 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {
     label="engine";
     color="#cbd5e1";
-    "core-content" [label="Content-stream walker and sinks\nimplemented\n278 retained symbols", fillcolor="#d8f3dc"];
+    "core-content" [label="Content-stream walker and sinks\nimplemented\n279 retained symbols", fillcolor="#d8f3dc"];
     "core-document" [label="Document model and mutation boundary\nimplemented\n493 retained symbols", fillcolor="#d8f3dc"];
     "core-fonts" [label="Font decoding, metrics, and subsetting\npartial\n192 retained symbols", fillcolor="#fff3bf"];
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n326 retained symbols", fillcolor="#fff3bf"];
     "core-security" [label="Document conformance and structural validation\npartial\n54 retained symbols", fillcolor="#fff3bf"];
-    "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n152 retained symbols", fillcolor="#d8f3dc"];
+    "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n156 retained symbols", fillcolor="#d8f3dc"];
     "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n62 retained symbols", fillcolor="#d8f3dc"];
     "rendering" [label="Excise.Rendering project\npartial\n826 retained symbols", fillcolor="#fff3bf"];
   }
@@ -38,8 +38,8 @@ digraph excise_architecture {
   subgraph cluster_presentation {
     label="presentation";
     color="#cbd5e1";
-    "app-main-window" [label="Main-window orchestration and feature state\npartial\n512 retained symbols", fillcolor="#fff3bf"];
-    "avalonia" [label="Excise.Avalonia project\npartial\n431 retained symbols", fillcolor="#fff3bf"];
+    "app-main-window" [label="Main-window orchestration and feature state\npartial\n513 retained symbols", fillcolor="#fff3bf"];
+    "avalonia" [label="Excise.Avalonia project\npartial\n443 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_verification {
     label="verification";
@@ -47,7 +47,7 @@ digraph excise_architecture {
     "architecture-tooling" [label="Architecture registry, reachability, and derived diagrams\npartial\n149 retained symbols", fillcolor="#fff3bf"];
     "verification" [label="Repository verification system\npartial\n0 retained symbols", fillcolor="#fff3bf"];
   }
-  "app" -> "app-main-window" [label="300 refs / 20 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app" -> "app-main-window" [label="301 refs / 20 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core" [label="33 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-document" [label="317 refs / 52 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-encryption" [label="6 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -110,6 +110,7 @@ digraph excise_architecture {
   "core-text" -> "core" [label="4 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core-content" [label="36 refs / 5 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core-document" [label="135 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-text" -> "core-fonts" [label="6 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core-primitives" [label="52 refs / 13 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-writing" -> "core-document" [label="10 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-writing" -> "core-encryption" [label="61 refs / 8 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

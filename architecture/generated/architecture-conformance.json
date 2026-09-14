@@ -2,16 +2,16 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "0f8ed8705260ed028a13358f56a2fc573ce73b5a",
+  "sourceRevision": "b4c7107b8db6682785da1fb7595e2992e0594f75",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 6170,
-    "observedComponentDependencies": 80,
-    "declaredDependencies": 79,
+    "retainedSymbols": 6234,
+    "observedComponentDependencies": 81,
+    "declaredDependencies": 80,
     "acceptedExceptions": 1,
     "undeclaredDependencies": 0,
     "forbiddenDependencies": 0,
@@ -24,7 +24,7 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 300,
+      "references": 301,
       "typeDependencyCount": 20,
       "classification": "declared",
       "evidence": [
@@ -900,6 +900,20 @@
           "source": "Excise.Core.Text.TextSelectionEngine",
           "target": "Excise.Core.Document.PdfRectangle",
           "references": 51
+        }
+      ]
+    },
+    {
+      "source": "core-text",
+      "target": "core-fonts",
+      "references": 6,
+      "typeDependencyCount": 1,
+      "classification": "declared",
+      "evidence": [
+        {
+          "source": "Excise.Core.Text.TextExtractor",
+          "target": "Excise.Core.Text.GlyphUnicodeDecoder",
+          "references": 6
         }
       ]
     },

@@ -47,7 +47,7 @@ digraph excise_architecture {
     "architecture-tooling" [label="Architecture registry, reachability, and derived diagrams\npartial", fillcolor="#fff3bf"];
     "verification" [label="Repository verification system\npartial", fillcolor="#fff3bf"];
   }
-  "app" -> "app-main-window" [label="observed via parent boundary\n300 refs", color="#2563eb", style="dashed", penwidth=1];
+  "app" -> "app-main-window" [label="observed via parent boundary\n301 refs", color="#2563eb", style="dashed", penwidth=1];
   "app" -> "avalonia" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "app" -> "core" [label="target + observed\n33 refs", color="#15803d", style="solid", penwidth=2];
   "app" -> "core-document" [label="observed via parent boundary\n317 refs", color="#2563eb", style="dashed", penwidth=1];
@@ -115,7 +115,7 @@ digraph excise_architecture {
   "core-text" -> "core" [label="observed via parent boundary\n4 refs", color="#2563eb", style="dashed", penwidth=1];
   "core-text" -> "core-content" [label="target + observed\n36 refs", color="#15803d", style="solid", penwidth=2];
   "core-text" -> "core-document" [label="target + observed\n135 refs", color="#15803d", style="solid", penwidth=2];
-  "core-text" -> "core-fonts" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
+  "core-text" -> "core-fonts" [label="target + observed\n6 refs", color="#15803d", style="solid", penwidth=2];
   "core-text" -> "core-primitives" [label="target + observed\n52 refs", color="#15803d", style="solid", penwidth=2];
   "core-writing" -> "core-document" [label="target + observed\n10 refs", color="#15803d", style="solid", penwidth=2];
   "core-writing" -> "core-encryption" [label="target + observed\n61 refs", color="#15803d", style="solid", penwidth=2];
