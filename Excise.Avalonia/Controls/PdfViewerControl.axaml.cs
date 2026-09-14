@@ -1690,6 +1690,8 @@ public partial class PdfViewerControl : UserControl
                 _pdfImage.Width = cachedDip.Width;
                 _pdfImage.Height = cachedDip.Height;
                 _pdfImage.Source = cachedBitmap;
+                _singlePagePublishCount++;
+                ReleaseSinglePagePlaceholder();
                 Trace($"ImageSet(cache) page={pageNumber} imgWidth={_pdfImage.Width:F0} srcDip={cachedDip.Width:F0} srcPx={cachedBitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
                 if (_pendingSingleFraction >= 0)
                 {
@@ -1712,6 +1714,10 @@ public partial class PdfViewerControl : UserControl
             IsLoading = true;
             HasError = false;
             ErrorMessage = null;
+
+            // Size the page and show the continuous composite for it while the
+            // sharp render runs, if nothing real is on screen yet.
+            ShowSinglePagePlaceholder(pageNumber, widthPt, heightPt, logicalDpi);
 
             // Captured on the UI thread — see the continuous path's note.
             var showAnnotations = ShowAnnotations;
@@ -1762,6 +1768,8 @@ public partial class PdfViewerControl : UserControl
                         _pdfImage.Width = dip.Width;
                         _pdfImage.Height = dip.Height;
                         _pdfImage.Source = bitmap;
+                        _singlePagePublishCount++;
+                        ReleaseSinglePagePlaceholder();
                     }
                     // A mode switch may be waiting to restore the carried
                     // reading position (#693); the ScrollViewer only gets a
@@ -1878,6 +1886,7 @@ public partial class PdfViewerControl : UserControl
             _pdfImage.Width = double.NaN;
             _pdfImage.Height = double.NaN;
         }
+        ReleaseSinglePagePlaceholder();
     }
 
     #endregion
