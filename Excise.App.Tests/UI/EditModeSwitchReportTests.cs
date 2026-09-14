@@ -49,6 +49,7 @@ public sealed class EditModeSwitchReportTests
     private static readonly TimeSpan PhaseTimeout = TimeSpan.FromSeconds(90);
     private readonly ITestOutputHelper _out;
     private readonly StringBuilder _lines = new();
+    private double _dpr = 1.0;
 
     public EditModeSwitchReportTests(ITestOutputHelper output) => _out = output;
 
@@ -66,10 +67,12 @@ public sealed class EditModeSwitchReportTests
         var reps = ReadInt("EXCISE_EDITMODE_REPS", 3);
         var label = Environment.GetEnvironmentVariable("EXCISE_EDITMODE_LABEL") ?? "unlabelled";
         var outPath = Environment.GetEnvironmentVariable("EXCISE_EDITMODE_OUT");
+        _dpr = double.TryParse(Environment.GetEnvironmentVariable("EXCISE_EDITMODE_DPR"),
+            NumberStyles.Float, CultureInfo.InvariantCulture, out var dpr) && dpr > 0 ? dpr : 1.0;
 
-        Emit($"# label={label} pdf={Path.GetFileName(pdf)} page={page} reps={reps} pid={Environment.ProcessId} " +
-             $"cores={Environment.ProcessorCount} started={DateTime.Now:O}");
-        Emit("label\tfixture\tpage\trep\topenWallMs\topenCpuMs\topenAllocMB\tsingleCacheMB\tsingleEntries\tcontCacheMB\t" +
+        Emit($"# label={label} pdf={Path.GetFileName(pdf)} page={page} reps={reps} dpr={F(_dpr, "0.##")} " +
+             $"pid={Environment.ProcessId} cores={Environment.ProcessorCount} started={DateTime.Now:O}");
+        Emit("label\tfixture\tpage\trep\tidleWaitMs\topenWallMs\topenCpuMs\topenAllocMB\tsingleCacheMB\tsingleEntries\tcontCacheMB\t" +
              "zoomBefore\tzoomAfter\tsingleHitsDelta\ttVisibleMs\ttFinalMs\tvisibleWasFinal\tpollLoops\t" +
              "clickImgSized\tclickSrc\tboxCount\tboxPage\tboxErrPt\tboxLeft\tboxTop\texpLeft\texpTop");
 
@@ -80,7 +83,7 @@ public sealed class EditModeSwitchReportTests
             var click = await ClickRepAsync(pdf!, page, timing.AimWindowPoint);
             rows.Add(new RepResult(timing, click));
             Emit(string.Join('\t', label, Path.GetFileName(pdf), page, rep,
-                F(timing.Open.WallMs), F(timing.Open.CpuMs), F(Mb(timing.Open.AllocatedBytes)),
+                F(timing.Open.IdleWaitMs), F(timing.Open.WallMs), F(timing.Open.CpuMs), F(Mb(timing.Open.AllocatedBytes)),
                 F(Mb(timing.Open.SingleCacheBytes)), timing.Open.SingleEntries, F(Mb(timing.Open.ContinuousBytes)),
                 F(timing.ZoomBefore, "0.000"), F(timing.ZoomAfter, "0.000"), timing.SingleHitsDelta,
                 F(timing.VisibleMs), F(timing.FinalMs), timing.VisibleWasFinal, timing.PollLoops,
@@ -260,7 +263,7 @@ public sealed class EditModeSwitchReportTests
         }
     }
 
-    private static async Task<(MainWindowViewModel Vm, MainWindow Window, PdfViewerControl Viewer)> ShowAsync()
+    private async Task<(MainWindowViewModel Vm, MainWindow Window, PdfViewerControl Viewer)> ShowAsync()
     {
         var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
@@ -268,7 +271,36 @@ public sealed class EditModeSwitchReportTests
         await SettleAsync(window, 4);
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")
             ?? throw new InvalidOperationException("MainWindow has no PdfViewerControl");
+        // The headless host always reports RenderScaling 1; a Retina display
+        // renders four times the pixels, so the switch is measured at both.
+        viewer.RenderScalingOverride = _dpr;
         return (vm, window, viewer);
+    }
+
+    /// <summary>
+    /// Waits until the process has been nearly idle for two consecutive 200 ms
+    /// windows, so background work left by the previous window (text indexing,
+    /// #1469) is not billed to the next open. Capped at 30 s.
+    /// </summary>
+    private static async Task<double> WaitForProcessIdleAsync(Window window)
+    {
+        using var process = Process.GetCurrentProcess();
+        var sw = Stopwatch.StartNew();
+        var quietWindows = 0;
+        while (quietWindows < 2 && sw.Elapsed < TimeSpan.FromSeconds(30))
+        {
+            process.Refresh();
+            var cpu0 = process.TotalProcessorTime;
+            var wall0 = sw.Elapsed;
+            await Task.Delay(200);
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            process.Refresh();
+            var coreShare = (process.TotalProcessorTime - cpu0).TotalMilliseconds
+                / Math.Max(1, (sw.Elapsed - wall0).TotalMilliseconds);
+            quietWindows = coreShare < 0.15 ? quietWindows + 1 : 0;
+        }
+        return sw.Elapsed.TotalMilliseconds;
     }
 
     private static async Task<OpenCost> OpenAndSettleAsync(
@@ -277,6 +309,7 @@ public sealed class EditModeSwitchReportTests
         using var process = Process.GetCurrentProcess();
         GC.Collect();
         GC.WaitForPendingFinalizers();
+        var idleWaitMs = await WaitForProcessIdleAsync(window);
         process.Refresh();
         var cpu0 = process.TotalProcessorTime;
         var alloc0 = GC.GetTotalAllocatedBytes(precise: false);
@@ -309,7 +342,7 @@ public sealed class EditModeSwitchReportTests
 
         var diagnostics = viewer.GetRenderDiagnostics();
         return new OpenCost(wall, cpu, alloc, viewer.SinglePageCacheResidentBytes(),
-            diagnostics.SinglePageEntryCount, diagnostics.ContinuousResidentBytes);
+            diagnostics.SinglePageEntryCount, diagnostics.ContinuousResidentBytes, idleWaitMs);
     }
 
     private static bool PageImageVisible(PdfViewerControl viewer)
@@ -431,7 +464,8 @@ public sealed class EditModeSwitchReportTests
     }
 
     private readonly record struct OpenCost(
-        double WallMs, double CpuMs, long AllocatedBytes, long SingleCacheBytes, int SingleEntries, long ContinuousBytes);
+        double WallMs, double CpuMs, long AllocatedBytes, long SingleCacheBytes, int SingleEntries, long ContinuousBytes,
+        double IdleWaitMs);
 
     private readonly record struct TimingResult(
         OpenCost Open, double ZoomBefore, double ZoomAfter, long SingleHitsDelta,
