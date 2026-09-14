@@ -19,7 +19,7 @@ digraph excise_architecture {
     "core-security" [label="Document conformance and structural validation\npartial\n54 retained symbols", fillcolor="#fff3bf"];
     "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n152 retained symbols", fillcolor="#d8f3dc"];
     "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n62 retained symbols", fillcolor="#d8f3dc"];
-    "rendering" [label="Excise.Rendering project\npartial\n818 retained symbols", fillcolor="#fff3bf"];
+    "rendering" [label="Excise.Rendering project\npartial\n823 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_foundation {
     label="foundation";
@@ -39,7 +39,7 @@ digraph excise_architecture {
     label="presentation";
     color="#cbd5e1";
     "app-main-window" [label="Main-window orchestration and feature state\npartial\n512 retained symbols", fillcolor="#fff3bf"];
-    "avalonia" [label="Excise.Avalonia project\npartial\n388 retained symbols", fillcolor="#fff3bf"];
+    "avalonia" [label="Excise.Avalonia project\npartial\n390 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_verification {
     label="verification";
