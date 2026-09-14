@@ -1690,6 +1690,7 @@ public partial class PdfViewerControl : UserControl
                 _pdfImage.Width = cachedDip.Width;
                 _pdfImage.Height = cachedDip.Height;
                 _pdfImage.Source = cachedBitmap;
+                _singlePagePublishCount++;
                 Trace($"ImageSet(cache) page={pageNumber} imgWidth={_pdfImage.Width:F0} srcDip={cachedDip.Width:F0} srcPx={cachedBitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
                 if (_pendingSingleFraction >= 0)
                 {
@@ -1762,6 +1763,7 @@ public partial class PdfViewerControl : UserControl
                         _pdfImage.Width = dip.Width;
                         _pdfImage.Height = dip.Height;
                         _pdfImage.Source = bitmap;
+                        _singlePagePublishCount++;
                     }
                     // A mode switch may be waiting to restore the carried
                     // reading position (#693); the ScrollViewer only gets a

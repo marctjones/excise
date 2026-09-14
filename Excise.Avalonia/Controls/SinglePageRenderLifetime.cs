@@ -132,6 +132,21 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
         }
     }
 
+    /// <summary>
+    /// Bytes held by the cached bitmaps, sized by the caller (the generic
+    /// bitmap type does not know its own pixel format). Report-only.
+    /// </summary>
+    internal long ResidentBytes(Func<TBitmap, long> bytesOf)
+    {
+        lock (_gate)
+        {
+            long total = 0;
+            foreach (var entry in _cache)
+                total += bytesOf(entry.Bitmap);
+            return total;
+        }
+    }
+
     internal CacheDiagnostics GetCacheDiagnostics()
     {
         lock (_gate)

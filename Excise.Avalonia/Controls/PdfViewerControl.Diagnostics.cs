@@ -128,6 +128,25 @@ public partial class PdfViewerControl
                 true);
     }
 
+    private long _singlePagePublishCount;
+
+    /// <summary>
+    /// Times a finished single-page render (fresh or cached) was bound to the
+    /// page Image. A placeholder does not count. Report-only, for the
+    /// edit-mode switch measurements.
+    /// </summary>
+    internal long SinglePagePublishCount => _singlePagePublishCount;
+
+    /// <summary>Bytes held by the single-page LRU (BGRA, 4 bytes per pixel).</summary>
+    internal long SinglePageCacheResidentBytes() =>
+        _singlePageRenderLifetime.ResidentBytes(b => (long)b.PixelSize.Width * b.PixelSize.Height * 4);
+
+    /// <summary>
+    /// True while single-page work that the viewer started on its own is still
+    /// running, so a measurement can wait for the viewer to go quiet.
+    /// </summary>
+    internal bool HasPendingSinglePageWork => IsLoading;
+
     /// <summary>
     /// Capture explicit telemetry for the viewer-owned single-page and
     /// continuous render caches. The two caches remain separate because their
