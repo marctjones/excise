@@ -162,7 +162,7 @@ public class ContinuousCacheMemoryTests
             .GetRawConstantValue()
             .Should().Be(ContinuousCacheByteBudgetForTest,
                 "this file's narrative was derived against this specific budget value; if you change " +
-                "ContinuousCacheByteBudget, re-run MeasureContinuousTileCache_AcrossDocumentViewportZoomMatrix " +
+                "ContinuousCacheByteBudget, re-run MeasureContinuousTileCache_WorstCaseGridCell " +
                 "and update ContinuousCacheByteBudgetForTest to match");
     }
 

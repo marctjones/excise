@@ -722,25 +722,95 @@ public class PdfViewerControlTests
             var d = v.GetRenderDiagnostics();
             return d.SinglePageHits + d.SinglePageMisses;
         }
+    }
 
-        static void RenderFrames(Window w)
+    /// <summary>
+    /// #1473 follow-up: a continuous-view document change resets the single-page
+    /// logical DPI (ClearDisplay), and the ZoomHost scale (zoom × 96 / logical DPI)
+    /// must follow. RenderCurrentPageAsync refreshes the scale only when a page's
+    /// logical DPI differs from the field, so a reset field with a stale scale
+    /// showed the next ordinary page at a huge page's clamped scale.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ContinuousDocumentChange_AfterAClampedPage_KeepsTheSinglePageDisplayScale()
+    {
+        var viewer = new PdfViewerControl();
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        window.Show();
+        var image = viewer.FindControl<Image>("PdfImage")!;
+        var zoomHost = viewer.FindControl<LayoutTransformControl>("ZoomHost")!;
+        try
         {
-            w.UpdateLayout();
-            Dispatcher.UIThread.RunJobs();
-            using (w.CaptureRenderedFrame()) { }
-        }
+            // A 7200 x 7200 pt page exceeds the single-page pixel budget at 120 DPI,
+            // so its logical DPI clamps (to 81). Opening it sets that DPI and scale
+            // synchronously; the switch and the second document in the same turn
+            // cancel its render.
+            viewer.Document = PdfCoreDocument.Open(SquarePagePdf(7200));
+            var clampedScale = ((global::Avalonia.Media.ScaleTransform)zoomHost.LayoutTransform!).ScaleX;
+            clampedScale.Should().BeGreaterThan(viewer.ZoomLevel * 96.0 / 120.0 + 0.1,
+                "fixture: the huge page must clamp its logical DPI below 120");
 
-        static async Task PumpUntilAsync(Window w, Func<bool> condition)
-        {
+            viewer.ViewMode = PdfViewMode.Continuous;
+            var huge = viewer.Document;
+            viewer.Document = PdfCoreDocument.Open(TestPdfGenerator.CreateSimplePdf("ordinary page"));
+            huge?.Dispose();
+
+            viewer.ViewMode = PdfViewMode.SinglePage;
             var deadline = DateTime.UtcNow.AddSeconds(30);
-            while (!condition())
+            while (image.Source == null && DateTime.UtcNow < deadline)
             {
-                if (DateTime.UtcNow > deadline)
-                    throw new TimeoutException("condition not reached within 30s");
-                w.UpdateLayout();
+                window.UpdateLayout();
                 Dispatcher.UIThread.RunJobs();
                 await Task.Delay(25);
             }
+            image.Source.Should().NotBeNull("switching to single-page renders the ordinary page");
+
+            ((global::Avalonia.Media.ScaleTransform)zoomHost.LayoutTransform!).ScaleX
+                .Should().BeApproximately(viewer.ZoomLevel * 96.0 / 120.0, 1e-9,
+                    "an ordinary page renders at the 120 logical DPI, so it must display at zoom x 96/120");
+        }
+        finally
+        {
+            window.Close();
+            viewer.Document?.Dispose();
+        }
+
+        static byte[] SquarePagePdf(int sizePt)
+        {
+            var sb = new StringBuilder();
+            sb.Append("%PDF-1.7\n");
+            var offsets = new int[4];
+            offsets[1] = sb.Length;
+            sb.Append("1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n");
+            offsets[2] = sb.Length;
+            sb.Append("2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n");
+            offsets[3] = sb.Length;
+            sb.Append($"3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 {sizePt} {sizePt}] >> endobj\n");
+            int xref = sb.Length;
+            sb.Append("xref\n0 4\n0000000000 65535 f \n");
+            for (int i = 1; i <= 3; i++) sb.Append($"{offsets[i]:D10} 00000 n \n");
+            sb.Append($"trailer << /Size 4 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+            return Encoding.ASCII.GetBytes(sb.ToString());
+        }
+    }
+
+    private static void RenderFrames(Window w)
+    {
+        w.UpdateLayout();
+        Dispatcher.UIThread.RunJobs();
+        using (w.CaptureRenderedFrame()) { }
+    }
+
+    private static async Task PumpUntilAsync(Window w, Func<bool> condition)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (!condition())
+        {
+            if (DateTime.UtcNow > deadline)
+                throw new TimeoutException("condition not reached within 30s");
+            w.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(25);
         }
     }
 

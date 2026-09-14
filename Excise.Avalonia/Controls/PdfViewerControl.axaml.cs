@@ -1867,6 +1867,11 @@ public partial class PdfViewerControl : UserControl
     private void ClearDisplay()
     {
         _currentSinglePageRenderDpi = DefaultRenderDpi;
+        // The ZoomHost scale depends on the logical DPI, and RenderCurrentPageAsync
+        // refreshes it only when a page's logical DPI differs from this field.
+        // Resetting the field without the transform would leave a clamped page's
+        // scale in place for the next 120-DPI page (#1473).
+        UpdateZoomTransform();
         if (_pdfImage != null)
         {
             _pdfImage.Source = null;
