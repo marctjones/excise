@@ -74,18 +74,22 @@ public partial class PdfViewerControl
     // #615/#848: the cache bounds total resident BYTES, not a flat entry count.
     // Under the content-addressed grid (#848), tiles are now UNIFORM — every
     // interior cell is a full ContinuousTileQuantumDip square, edge cells smaller
-    // — so the old 10x per-tile spread is gone. A worst-case tile is a full
-    // quantum cell rendered at the (dpr-scaled) MaxContinuousDpi cap: at
-    // ContinuousTileQuantumDip=256 that is ~1.6MB (dpr 1) up to ~6.5MB (dpr 2),
-    // Bgra8888 4 bytes/px (see SkiaInterop.ToAvaloniaBitmap). Measurement lives in
+    // — so the old 10x per-tile spread is gone. Since #1472/#1480 a tile holds one
+    // render pixel per device pixel at every zoom up to the MaxContinuousDpi cap
+    // (fewer above it), so a worst-case tile is a full quantum cell at device
+    // resolution: at ContinuousTileQuantumDip=256 that is 256x256 px (~0.25MB) at
+    // dpr 1 and 512x512 px (~1MB) at dpr 2, Bgra8888 4 bytes/px (see
+    // SkiaInterop.ToAvaloniaBitmap). Measurement lives in
     // Excise.Avalonia.Tests/ContinuousCacheMemoryTests.cs, which drives the real
     // CellToRequest + EffectiveContinuousDpi + ContinuousTileByteSize code paths.
     //
-    // Budget: ~200MB peak resident bytes. That comfortably holds many uniform
-    // tiles (dozens to ~120), i.e. the visible grid of the current page plus a
-    // generous scroll-back buffer, so scrolling away and back is a cache hit
-    // rather than a re-render — the reuse the grid was designed to make free. If
-    // tile geometry changes (quantum, overscan, or the DPI cap) re-run
+    // Budget: ~200MB peak resident bytes. That holds ~200 worst-case tiles at dpr
+    // 2, i.e. the visible grid of the current page plus a generous scroll-back
+    // buffer, so scrolling away and back is a cache hit rather than a re-render —
+    // the reuse the grid was designed to make free. The budget was set when tiles
+    // were 1.56x (and zoomed out up to 25x) larger; it was deliberately left
+    // alone by #1480, which changed pixel density, not retention policy (#1478).
+    // If tile geometry changes (quantum, overscan, or the DPI model) re-run
     // ContinuousCacheMemoryTests and reconsider this number -- don't just restate it.
     private const long ContinuousCacheByteBudget = 200L * 1024 * 1024;
 
@@ -112,28 +116,33 @@ public partial class PdfViewerControl
     // (see OnContinuousContainerClearing), and before this a page jump kept every
     // composite it ever published. A replaced or cleared composite is released
     // once the binding has moved off it (PdfPageSlot.ReleaseAfterBindingMoves), so
-    // the total is set by the current viewport, not by scroll or zoom history. The band grows as zoom SHRINKS:
-    // EffectiveContinuousDpi floors the DPI at DefaultRenderDpi x dpr, so at the
-    // app's minimum zoom (0.25) a composite is a whole page at 120 x dpr DPI and
-    // several pages share the viewport.
+    // the total is set by the current viewport, not by scroll or zoom history.
     //
-    // Bound: 192 MiB for the envelope ContinuousCacheMemoryTests sweeps — pages up
-    // to US Legal/A4 in either orientation, viewports up to 2560x1440 DIP, dpr up
-    // to 2, zoom 0.25-5. Measured worst: ~164 MiB, landscape Letter at zoom 0.25
-    // on a 2x 2560x1440 viewport. Two things sit OUTSIDE it and are not bounded by
-    // this number: (1) larger sheets — a D-size page needs ~760 MiB at zoom 0.25
-    // on a 2x display, which also exceeds the tile budget, so its band's tiles do
-    // not fit in the cache at once; (2) a realized slot whose page has scrolled
-    // out of viewport + overscan keeps its last composite until the page stops
-    // being realized (RecomposeSlotCore keeps it rather than blanking a page the
-    // panel still shows). If tile geometry, overscan or the DPI model
-    // changes, re-run ContinuousCacheMemoryTests and re-derive this number.
+    // Since #1472/#1480 it is set by the viewport ALONE. The render DPI tracks the
+    // display (EffectiveContinuousDpi), so a composite holds at most one pixel per
+    // device pixel of its band, and the bands of all realized pages together span
+    // at most the viewport plus ContinuousTileOverscanDip plus one grid quantum on
+    // each side. Page size and zoom no longer enter it. (Under the old 120 x dpr
+    // floor the band grew as zoom shrank: the worst case was ~164 MiB at zoom 0.25,
+    // and a D-size sheet needed ~760 MiB there, outside any bound.)
+    //
+    // Bound: 138 MiB = that device-pixel ceiling for a 2560x1440 DIP viewport at
+    // dpr 2: (2560 + 2x512) x (1440 + 2x512) DIP at up to 2.021 px/DIP (dpr plus
+    // integer-DPI rounding at zoom 0.25), 4 bytes/px. ContinuousCacheMemoryTests
+    // derives it and sweeps pages up to D-size, viewports up to 2560x1440, dpr up
+    // to 2 and zoom 0.25-5 against the per-viewport ceiling; measured worst 121.1 MB
+    // (landscape Tabloid, zoom 2.5, 2x 2560x1440). OUTSIDE it: (1) a viewport larger
+    // than 2560x1440 DIP or a dpr above 2; (2) a realized slot whose page has
+    // scrolled out of viewport + overscan keeps its last composite until the page
+    // stops being realized (RecomposeSlotCore keeps it rather than blanking a page
+    // the panel still shows). If tile geometry, overscan or the DPI model changes,
+    // re-run ContinuousCacheMemoryTests and re-derive this number.
     //
     // RecomposeSlotCore checks the bound after every composite it publishes and
     // traces a warning when the slots' composites exceed it, so a viewport
     // outside the envelope (or a regression inside it) is visible in a traced
     // live session rather than only in the memory tests.
-    internal const long ContinuousCompositeByteBound = 192L * 1024 * 1024;
+    internal const long ContinuousCompositeByteBound = 138L * 1024 * 1024;
 
     /// <summary>
     /// Test hook: replace <see cref="ContinuousCompositeByteBound"/> so a test can
@@ -166,26 +175,63 @@ public partial class PdfViewerControl
     // so deep zoom stays bounded. Realized pages render only the visible region
     // through RenderOptions.ClipRect rather than allocating a full-page bitmap.
     internal const int MaxContinuousDpi = 240;
+
+    /// <summary>
+    /// The continuous view's render DPI at zoom 1 on a 1× display (#1480): one
+    /// render pixel per DIP. A slot lays a page point out at
+    /// <see cref="PointsToDip"/> (96/72) DIP × zoom and an Avalonia DIP is 1/96
+    /// inch, so <c>96 × zoom × dpr</c> DPI is exactly the display's device
+    /// resolution. This is NOT <see cref="DefaultRenderDpi"/> (120): that is the
+    /// single-page view's logical layout DPI, which the continuous view borrowed
+    /// when it was created (#371) and which rendered 1.25× the display's linear
+    /// resolution (1.56× the pixels) at every zoom.
+    /// </summary>
+    internal const int ContinuousBaseDpi = 96;
+
+    /// <summary>
+    /// Safety minimum for <see cref="EffectiveContinuousDpi"/>. Below the app's
+    /// minimum zoom (0.25) it never binds on a real display; it only keeps a
+    /// degenerate zoom from producing a zero-size raster. It is NOT a legibility
+    /// floor: a floor above device resolution is what #1472 removed.
+    /// </summary>
+    internal const int MinContinuousDpi = 12;
+
     private int ContinuousRenderDpi =>
-        EffectiveContinuousDpi(DefaultRenderDpi, ZoomLevel, MaxContinuousDpi, EffectiveRenderScaling);
+        EffectiveContinuousDpi(ContinuousBaseDpi, ZoomLevel, MaxContinuousDpi, EffectiveRenderScaling);
 
     /// <summary>
     /// The render DPI chosen for a given zoom and display device-pixel-ratio
-    /// (pure; unit-tested). Multiplying by <paramref name="renderScaling"/> makes
-    /// text crisp on HiDPI/Retina displays (#682): at 100% zoom on a 2× display,
-    /// a page point occupies ~2.67 device pixels, so a 120-DPI raster upscales and
-    /// softens — rendering at baseDpi×dpr gives the pixels the display actually has.
-    /// The tile is laid out by its DIP dimensions, so more render pixels change
-    /// only sharpness, never geometry. The cap scales with dpr too, so zoom stays
-    /// crisp to the same *visual* zoom on every display (#683); the byte-budgeted
-    /// tile cache (#615) absorbs the larger tiles.
+    /// (pure; unit-tested): <c>baseDpi × zoom × dpr</c>, so a continuous tile has
+    /// one render pixel per device pixel at every zoom, capped at
+    /// <c>maxDpi × dpr</c> (#683) so deep zoom stays bounded. The tile is laid out
+    /// by its DIP dimensions, so render pixels change only sharpness, never
+    /// geometry.
+    /// <para>
+    /// History, measured rather than restated (2026-09-13). #682 multiplied by the
+    /// device-pixel-ratio to stop HiDPI text upscaling. #682's own reasoning
+    /// ("a page point occupies ~2.67 device pixels" on a 2× display) describes
+    /// 192 DPI, but the code rendered at 120 × dpr = 240. It also floored the DPI
+    /// at 120 × dpr regardless of zoom, so zoomed-out pages rendered up to
+    /// 1/zoom² more pixels than the screen shows (#1472: 25× at zoom 0.25).
+    /// </para>
+    /// <para>
+    /// The extra 1.25× was not buying crispness. Against an independent oracle
+    /// (mutool at the device resolution, IRS 1040 instructions p10 and p47),
+    /// excise rendered 1:1 at 192 DPI matched mutool's edge energy (1.00×,
+    /// mean abs error 1.59 / 1.82). The 240-DPI render downscaled to the same
+    /// pixels was softer with bilinear resampling (0.90×, error 1.88 / 2.61) and
+    /// over-sharpened with Lanczos (1.13× / 1.05×, error 2.00 / 2.40). At dpr 1
+    /// (96 vs 120 DPI) bilinear was 0.78×. The composite Image sets no
+    /// BitmapInterpolationMode, so it resamples with Avalonia's default; both
+    /// resamplers sit on the far side of 1:1.
+    /// </para>
     /// </summary>
     internal static int EffectiveContinuousDpi(int baseDpi, double zoom, int maxDpi, double renderScaling)
     {
         double dpr = Math.Clamp(renderScaling <= 0 ? 1.0 : renderScaling, 1.0, 4.0);
         return (int)Math.Clamp(
             Math.Round(baseDpi * zoom * dpr),
-            Math.Round(baseDpi * dpr),
+            MinContinuousDpi,
             Math.Round(maxDpi * dpr));
     }
 
