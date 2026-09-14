@@ -333,8 +333,14 @@ public sealed class ThumbnailCacheService : IDisposable
                 if (pageIndex < 0 || pageIndex >= _doc.PageCount) return null;
                 var page = _doc.GetPage(pageIndex + 1);
                 Interlocked.Increment(ref _renderCount);
+                // Pre-warm renders every page of the document exactly once, and
+                // the result is cached as pixels here and on disk, so the image
+                // samples it decodes are not needed again. Without the release
+                // they stayed inflated in the document's object cache until
+                // close — the main GUI retention driver after #1468's first
+                // increment. The viewer's own renders keep them.
                 var bmp = _renderer.RenderPage(page,
-                    new RenderOptions { Dpi = _thumbnailDpi });
+                    new RenderOptions { Dpi = _thumbnailDpi, ReleaseDecodedImageSamples = true });
                 if (bmp == null) return null;
 
                 // 3) Best-effort write to disk after returning the pixels to

@@ -100,6 +100,31 @@ public record RenderOptions
     public bool HighlightFormFields { get; init; }
 
     /// <summary>
+    /// Let go of the image sample bytes this render decoded, once they are no
+    /// longer needed (#1468). Off by default.
+    /// </summary>
+    /// <remarks>
+    /// <para>An image XObject's decoded samples live on its stream object, and
+    /// the document caches that object until it closes — so without this every
+    /// image a caller has ever rendered stays inflated in memory. For a caller
+    /// that renders each page once and moves on (thumbnail pre-warm, a one-page
+    /// export) that is pure retention: Altona's single page pins ~1 GiB.</para>
+    ///
+    /// <para>With it set, an image or mask stream this render caused to decode
+    /// is released as soon as its bitmap is cached for the render, and any
+    /// still held are released when the render ends. Streams that were already
+    /// decoded when the render started are left alone, and so is any stream
+    /// whose bytes were written by something other than the decoder — a
+    /// redacted image is never reverted. Output pixels do not change; the cost
+    /// is decoding again if the same image is needed again.</para>
+    ///
+    /// <para>⚠️ Leave it off where the same page is rendered repeatedly. The
+    /// interactive viewer draws a page as several band renders, and releasing
+    /// after each would inflate a large image once per band.</para>
+    /// </remarks>
+    public bool ReleaseDecodedImageSamples { get; init; }
+
+    /// <summary>
     /// Optional diagnostic sink for recoverable rendering warnings, such as
     /// malformed page content skipped on best-effort viewer paths.
     /// </summary>

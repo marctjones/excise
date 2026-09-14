@@ -16,10 +16,24 @@ public class PdfStream : PdfDictionary
     // reads DecodedData first, and the fast path reads it without the lock.
     private volatile byte[]? _decodedData;
 
-    // Pending on-demand decode installed by the document object store (#1468).
+    // The on-demand decode installed by the document object store (#1468).
     // The holder doubles as this stream's decode lock, so a stream that is
-    // never deferred allocates nothing. Null once the decode has run.
-    private volatile DeferredDecode? _deferredDecode;
+    // never deferred allocates nothing. Installed once and never cleared: it
+    // is the lock a release and every later reader must agree on, and the
+    // delegate a release re-arms. Null for a stream that was never deferred.
+    private volatile DeferredDecode? _deferral;
+
+    // Guarded by the _deferral lock; never read outside it. The decode is
+    // pending (_deferral) or not (null).
+    private DeferredDecode? _pendingDecode;
+
+    // Guarded by the _deferral lock. True only while _decodedData is exactly
+    // what the deferred decode produced from the current encoded bytes — the
+    // one case where dropping the array and decoding again later is guaranteed
+    // to give a reader the same bytes. Every writer of the byte fields clears
+    // it, which is what keeps a redaction-written array from ever being
+    // released and silently reverted to the original samples (#1468).
+    private bool _decodedByDeferral;
 
     /// <summary>
     /// Creates a new PDF stream with the specified dictionary and data.
@@ -125,17 +139,15 @@ public class PdfStream : PdfDictionary
             if (_decodedData is { } decoded)
                 return decoded;
 
-            if (_deferredDecode != null)
-                RunDeferredDecode();
-
-            return _decodedData ?? throw new InvalidOperationException(
+            // The array comes back from inside the decode lock, never from a
+            // second read of the field: a release on another thread between
+            // the two reads would turn a successful decode into this throw.
+            return DecodeOnDemand() ?? throw new InvalidOperationException(
                 "Stream has not been decoded. Call Decode() first or use a PdfDocumentReader.");
         }
         set
         {
-            _deferredDecode = null;
-            _decodedData = value;
-            _encodedData = value; // No compression for now
+            ReplaceBytes(decoded: value, encoded: value); // No compression for now
             Remove("Filter");
             Remove("DecodeParms");
             SetInt("Length", value.Length);
@@ -157,18 +169,53 @@ public class PdfStream : PdfDictionary
     /// </summary>
     internal void SetEncodedData(byte[] data)
     {
-        _encodedData = data ?? throw new ArgumentNullException(nameof(data));
+        ArgumentNullException.ThrowIfNull(data);
         // A pending decode was for the bytes being replaced; drop it so a
         // filtered stream reads back "not decoded" exactly as it did before
         // deferral existed.
-        _deferredDecode = null;
-        _decodedData = null;
+        ReplaceBytes(decoded: null, encoded: data);
     }
 
     internal void SetDecodedData(byte[] data)
     {
-        _decodedData = data;
-        _deferredDecode = null;
+        ReplaceBytes(decoded: data, encoded: null);
+    }
+
+    /// <summary>
+    /// The one writer of the byte fields for every caller outside the deferred
+    /// decode itself (#1468). <paramref name="encoded"/> null keeps the current
+    /// encoded bytes.
+    /// </summary>
+    /// <remarks>
+    /// On a deferred stream this takes the decode lock, so a write can never
+    /// interleave with <see cref="TryReleaseDecoded"/>: without it a release
+    /// that had already checked the provenance flag could re-arm the decode and
+    /// null a redaction's freshly written array a moment after it landed,
+    /// handing the next reader the ORIGINAL samples again. Lock order stays
+    /// the store's: a caller may hold <c>_parseLock</c> when it gets here, and
+    /// nothing under this lock takes <c>_parseLock</c>. The deferred decode's
+    /// own <c>SetDecodedData</c> call re-enters the lock it already holds.
+    /// </remarks>
+    private void ReplaceBytes(byte[]? decoded, byte[]? encoded)
+    {
+        var deferral = _deferral;
+        if (deferral == null)
+        {
+            Write();
+            return;
+        }
+
+        lock (deferral)
+            Write();
+
+        void Write()
+        {
+            _decodedByDeferral = false;
+            _pendingDecode = null;
+            if (encoded != null)
+                _encodedData = encoded;
+            _decodedData = decoded;
+        }
     }
 
     /// <summary>
@@ -183,7 +230,8 @@ public class PdfStream : PdfDictionary
     /// same array. It is expected to behave exactly as the eager decode at
     /// resolve time did: set the decoded bytes on success, and on a refused
     /// decode leave the stream undecoded (recording
-    /// <see cref="DecodeFailureReason"/>) rather than throw.
+    /// <see cref="DecodeFailureReason"/>) rather than throw. Called once, at
+    /// resolve time, before the stream is reachable from any other thread.
     /// </remarks>
     internal void DeferDecode(Action<PdfStream> decode)
     {
@@ -191,7 +239,9 @@ public class PdfStream : PdfDictionary
         if (_decodedData != null)
             return;
 
-        _deferredDecode = new DeferredDecode(decode);
+        var deferral = new DeferredDecode(decode);
+        _pendingDecode = deferral;
+        _deferral = deferral;
     }
 
     /// <summary>
@@ -206,34 +256,98 @@ public class PdfStream : PdfDictionary
     /// saw when every filtered stream was decoded at resolve time.
     /// </remarks>
     internal bool TryEnsureDecoded()
-    {
-        if (_decodedData == null && _deferredDecode != null)
-            RunDeferredDecode();
+        => _decodedData != null || DecodeOnDemand() != null;
 
-        return _decodedData != null;
+    /// <summary>
+    /// Runs the pending deferred decode if there is one and returns the decoded
+    /// bytes as they stood INSIDE the decode lock — null when the stream is not
+    /// decoded (refused, replaced, or never deferred and never decoded).
+    /// </summary>
+    /// <remarks>
+    /// Callers must use the returned array and must not re-read
+    /// <c>_decodedData</c> after this returns. Under the lock the state
+    /// is always one of three consistent shapes — decoded; not decoded with the
+    /// decode pending; not decoded and nothing pending (refused) — but outside
+    /// it a concurrent <see cref="TryReleaseDecoded"/> can move a decoded stream
+    /// back to "pending" at any moment. A reader that decoded successfully and
+    /// then looked at the field again would see null and report a refusal that
+    /// never happened (#1468).
+    /// </remarks>
+    private byte[]? DecodeOnDemand()
+    {
+        var deferral = _deferral;
+        if (deferral == null)
+            return _decodedData;
+
+        lock (deferral)
+        {
+            if (_decodedData == null && ReferenceEquals(_pendingDecode, deferral))
+            {
+                deferral.Decode(this);
+
+                // Cleared only after a normal return, success or refusal — the
+                // same single attempt the eager path made. An
+                // OutOfMemoryException skips this and leaves the decode
+                // pending, as the eager path left the object uncached so a
+                // later resolve retried.
+                _pendingDecode = null;
+
+                // Set AFTER the decode: the decompressor publishes its result
+                // through SetDecodedData, which clears the flag like any other
+                // writer. Nothing else can write in between — every writer
+                // takes this lock.
+                _decodedByDeferral = _decodedData != null;
+            }
+
+            return _decodedData;
+        }
     }
 
-    private void RunDeferredDecode()
+    /// <summary>
+    /// Drops the decoded bytes of a deferred image stream (#1468) and re-arms
+    /// its decode, so the next reader decodes the same encoded bytes again.
+    /// Returns whether anything was released.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>What it will release.</b> Only bytes the deferred decode
+    /// produced from the current encoded bytes. A stream whose bytes were
+    /// written by anyone else — the <see cref="DecodedData"/> setter,
+    /// <see cref="SetDecodedData"/> (a redacted image's zeroed samples, a
+    /// clone), <see cref="SetEncodedData"/> — is refused, for as long as that
+    /// write stands. So is a stream that was never deferred, never decoded, or
+    /// whose decode refused: there is nothing that could be rebuilt exactly.</para>
+    ///
+    /// <para><b>What it guards.</b> The provenance flag watches the BYTES, not
+    /// the dictionary. Every in-tree path that edits <c>/Filter</c> or
+    /// <c>/DecodeParms</c> on an existing stream also replaces its bytes
+    /// through one of the writers above (or runs at resolve time, before the
+    /// decode is deferred), which is what makes a re-decode byte-identical.</para>
+    ///
+    /// <para><b>Concurrency.</b> Safe against concurrent readers. A reader
+    /// already holding the array keeps it; a later reader finds the decode
+    /// pending and runs it again under the lock. The decode is re-armed before
+    /// the array is dropped, but correctness does not rest on that order —
+    /// only the lock-free fast path reads <c>_decodedData</c> outside
+    /// the lock, and it only ever returns a non-null array.</para>
+    ///
+    /// <para>The save path is unaffected: the writer serializes
+    /// <see cref="EncodedData"/>, which a release never touches.</para>
+    /// </remarks>
+    internal bool TryReleaseDecoded()
     {
-        var pending = _deferredDecode;
-        if (pending == null)
-            return;
+        var deferral = _deferral;
+        if (deferral == null)
+            return false;
 
-        lock (pending)
+        lock (deferral)
         {
-            // Another reader finished (or the bytes were replaced) while this
-            // one waited for the lock.
-            if (_decodedData != null || !ReferenceEquals(_deferredDecode, pending))
-                return;
+            if (!_decodedByDeferral || _decodedData == null)
+                return false;
 
-            pending.Decode(this);
-
-            // Cleared only after a normal return, success or refusal — the same
-            // single attempt the eager path made. An OutOfMemoryException skips
-            // this and leaves the decode pending, as the eager path left the
-            // object uncached so a later resolve retried.
-            if (ReferenceEquals(_deferredDecode, pending))
-                _deferredDecode = null;
+            _decodedByDeferral = false;
+            _pendingDecode = deferral;
+            _decodedData = null;
+            return true;
         }
     }
 

@@ -54,7 +54,11 @@ internal static class RenderPageHandler
         // "implemented, tested, zero callers" shape check-unwired-api.sh exists
         // to catch (#1358).
         var renderer = new SkiaRenderer();
-        var options = new RenderOptions { Dpi = request.Dpi };
+        // One page, then the process (or the batch step) is done with this
+        // document. The release lowers the render's peak, not just what is
+        // kept afterwards: each image's samples are dropped once its bitmap is
+        // built, instead of every image on the page being held at once (#1468).
+        var options = new RenderOptions { Dpi = request.Dpi, ReleaseDecodedImageSamples = true };
         using var png = new MemoryStream();
         var renderWatch = Stopwatch.StartNew();
         renderer.RenderPageToPng(document.GetPage(request.PageNumber), png, options, cancellationToken);

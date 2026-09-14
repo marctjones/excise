@@ -31,6 +31,11 @@ internal partial class RenderContext
         if (_type3ClipOnlyPass)
             return;
 
+        // Before the first sample read below (the pattern stencil reads them
+        // too), so the scope can tell whether this render is the one that
+        // decoded them (#1468).
+        _resourceScope.NoteImageSampleRead(imageStream);
+
         if (imageStream.GetBool("ImageMask") &&
             _state.FillPatternName != null &&
             TryDrawImageMaskWithPattern(imageStream, width, height))
@@ -465,6 +470,8 @@ internal partial class RenderContext
         ImageBitmapCacheMisses++;
         bitmap = DecodeImageBitmap(imageStream, width, height, bitsPerComponent, colorSpace);
         _resourceScope.CacheDecodedImage(imageStream, key, bitmap);
+        // The bitmap is all the rest of this draw needs from the samples.
+        _resourceScope.ReleaseImageSamplesEarly(imageStream);
         return bitmap;
     }
 
@@ -807,6 +814,8 @@ internal partial class RenderContext
         if (maskWidth <= 0 || maskHeight <= 0)
             return false;
 
+        // Uncached, so released when the render ends rather than early (#1468).
+        _resourceScope.NoteImageSampleRead(maskStream);
         using var maskBitmap = CreateExplicitImageMaskBitmap(maskStream, maskWidth, maskHeight);
         if (maskBitmap == null)
             return false;
@@ -1275,8 +1284,10 @@ internal partial class RenderContext
             return maskData;
         }
 
+        _resourceScope.NoteImageSampleRead(maskStream);
         maskData = DecodeSoftMaskData(maskStream, maskWidth, maskHeight, targetWidth, targetHeight);
         _resourceScope.CacheSoftMask(maskObj, maskStream, targetWidth, targetHeight, maskData);
+        _resourceScope.ReleaseImageSamplesEarly(maskStream);
         return maskData;
     }
 

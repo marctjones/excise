@@ -29,7 +29,54 @@ internal sealed class RenderResourceScope : IDisposable
         _softMasksByStream = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<(PdfDictionary Shading, PdfObject? ColorSpaceSource), GradientColors>
         _gradientColors = new(GradientColorsKeyComparer.Instance);
+
+    // Image and mask streams whose samples THIS render caused to decode, when
+    // RenderOptions.ReleaseDecodedImageSamples asked for them to be let go
+    // (#1468). Null when it did not, so an unflagged render records nothing.
+    private readonly HashSet<PdfStream>? _decodedImageSampleStreams;
     private bool _disposed;
+
+    public RenderResourceScope(bool releaseDecodedImageSamples = false)
+    {
+        if (releaseDecodedImageSamples)
+            _decodedImageSampleStreams = new HashSet<PdfStream>(ReferenceEqualityComparer.Instance);
+    }
+
+    /// <summary>
+    /// Call before reading an image or mask stream's samples (#1468). When the
+    /// render releases decoded samples, a stream that is not decoded yet is
+    /// recorded as this render's to release; one that is already decoded was
+    /// decoded by someone else (a viewer band render, an earlier caller) and is
+    /// left alone, so this render never makes another renderer decode again.
+    /// </summary>
+    /// <remarks>
+    /// The check is a snapshot: a concurrent renderer can decode the stream
+    /// between it and this render's read, and this render will then release
+    /// bytes the other one decoded. That costs the other renderer one
+    /// re-decode, never a wrong byte — a reader holding the array keeps it,
+    /// and a later reader decodes again under the stream's lock.
+    /// </remarks>
+    public void NoteImageSampleRead(PdfStream stream)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_decodedImageSampleStreams != null && !stream.IsDecoded)
+            _decodedImageSampleStreams.Add(stream);
+    }
+
+    /// <summary>
+    /// Releases a recorded stream's decoded samples now rather than at the end
+    /// of the render (#1468), for a caller that has just cached what it built
+    /// from them. This is what lowers the PEAK of a one-page render: releasing
+    /// at dispose only helps a caller that keeps the document open, while
+    /// releasing here holds one image's samples at a time instead of every
+    /// image on the page. A no-op for a stream this render did not record.
+    /// </summary>
+    public void ReleaseImageSamplesEarly(PdfStream stream)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_decodedImageSampleStreams?.Contains(stream) == true)
+            stream.TryReleaseDecoded();
+    }
 
     /// <summary>
     /// Memoised <c>ResolveGradientColors</c> result (#1404), keyed by the
@@ -216,6 +263,18 @@ internal sealed class RenderResourceScope : IDisposable
             return;
 
         _disposed = true;
+
+        // Catches every recorded stream the early release did not reach (an
+        // uncached stencil or explicit-mask read, or a later re-read of one
+        // already released). A stream whose bytes were rewritten meanwhile
+        // refuses the release by itself (PdfStream.TryReleaseDecoded).
+        if (_decodedImageSampleStreams != null)
+        {
+            foreach (var stream in _decodedImageSampleStreams)
+                stream.TryReleaseDecoded();
+            _decodedImageSampleStreams.Clear();
+        }
+
         foreach (var path in _glyphOutlines.Values)
             path?.Dispose();
         foreach (var path in _glyphOutlinesById.Values)
