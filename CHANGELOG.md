@@ -51,6 +51,15 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   leak** — joining across the break makes a match span two lines and its
   removal box destroy everything between them (#942), so a real fix needs a
   wrapped match to produce two boxes, one per line. #1372 stays open.
+- **Queryable live performance metrics** (#1491) — the `Excise.Viewer` and
+  `Excise.App` meters publish band and single-page render times, composite
+  sizes, per-viewer cache bytes and counts, document-open phase timings,
+  text-index progress and thumbnail renders. Read them with
+  `dotnet-counters monitor --counters Excise.Viewer,Excise.App,System.Runtime`
+  or set `EXCISE_TRACE_VIEWER=<path>` to append them as JSONL, with periodic
+  GC, working-set and CPU snapshots. `EXCISE_TRACE_VIEWER=1` still means the
+  stdout text trace. Off by default: with nothing listening, the recording
+  sites neither record nor allocate. See `docs/AUTOMATION_API.md`.
 
 ### Notes
 - #1180 (unredact certain channel missing visible-but-readable failed

@@ -51,7 +51,7 @@ Viewer.ZoomToActualSize();
 | `NextPage()` / `PreviousPage()` | methods | navigation |
 | `ZoomIn()` / `ZoomOut()` / `ZoomToActualSize()` | methods | zoom |
 | `GetViewportDiagnostics()` | method | immutable active-viewport snapshot without exposing template controls |
-| `GetRenderDiagnostics()` | method | immutable, explicitly separated single-page and continuous cache telemetry |
+| `GetRenderDiagnostics()` | method | immutable, explicitly separated single-page and continuous cache telemetry; the same numbers plus render timings are published live on the `Excise.Viewer` meter (see `docs/AUTOMATION_API.md`, #1491) |
 | `AddSearchHighlight()` / `ClearSearchHighlights()` | methods | search overlay |
 | `PageChanged`, `TextSelected`, `LinkClicked`, `RedactionDrawn`, `FormFieldEdited`, `FormFieldRectDrawn`, `TypewriterTextCreated` | events | interaction callbacks |
 

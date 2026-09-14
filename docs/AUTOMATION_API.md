@@ -192,6 +192,93 @@ If a future long-lived automation service is added, it must be local-only,
 disabled by default, explicitly enabled by the user, and gated by a per-session
 token or equivalent capability.
 
+## Live Performance Metrics (#1491)
+
+The GUI publishes live performance state through
+`System.Diagnostics.Metrics`, so a development or automation session can
+read render timings, cache bytes and GC state without scraping stdout or
+sampling the process from outside. Both routes below are local-only and read
+nothing unless enabled. There is no query verb or network endpoint; any future
+inbound channel falls under the service rule in the Security Boundary section.
+`footprint`/`vmmap` remain the independent OS-level check on the numbers the
+app reports about itself.
+
+Instruments (histograms are recorded per event; gauges and observable
+counters are read when a listener asks):
+
+| Meter | Instrument | Unit | Kind | Source |
+| --- | --- | --- | --- | --- |
+| `Excise.Viewer` | `excise.viewer.continuous.band.render.duration` | ms | histogram, tag `dpi` | each completed continuous band render |
+| `Excise.Viewer` | `excise.viewer.continuous.composite.size` | By | histogram, tag `dpi` | each published page composite |
+| `Excise.Viewer` | `excise.viewer.single_page.render.duration` | ms | histogram, tag `dpi` | each single-page render that reached the screen (cache hits excluded) |
+| `Excise.Viewer` | `excise.viewer.continuous.cache.resident_bytes` | By | gauge, tag `viewer` | continuous tile LRU |
+| `Excise.Viewer` | `excise.viewer.continuous.composite.resident_bytes` | By | gauge, tag `viewer` | published composites |
+| `Excise.Viewer` | `excise.viewer.continuous.cache.entries` | {tile} | gauge, tag `viewer` | continuous tile LRU |
+| `Excise.Viewer` | `excise.viewer.continuous.renders.in_flight` | {tile} | gauge, tag `viewer` | continuous renders in flight |
+| `Excise.Viewer` | `excise.viewer.continuous.cache.hits` | {hit} | observable counter, tag `viewer` | continuous tile LRU |
+| `Excise.Viewer` | `excise.viewer.single_page.cache.entries` | {bitmap} | gauge, tag `viewer` | single-page LRU |
+| `Excise.Viewer` | `excise.viewer.single_page.cache.hits` / `.misses` | {hit} / {miss} | observable counter, tag `viewer` | single-page LRU |
+| `Excise.App` | `excise.app.document_open.phase.duration` | ms | histogram, tag `phase` | each document open; phases match `EXCISE_RESPONSIVENESS_REPORT` workflow names |
+| `Excise.App` | `excise.app.text_index.pages_indexed` / `.pages_total` | {page} | gauge | the most recently started search index |
+| `Excise.App` | `excise.app.thumbnail.renders` | {render} | observable counter | thumbnail renderer invocations (disk-cache hits excluded) |
+
+The two continuous byte gauges are mirrors that the viewer refreshes on the UI
+thread whenever the tile cache or the composites change. They are refreshed only
+while a listener has one of them enabled, so the first reading after attaching
+reflects the next cache change.
+
+### JSONL file
+
+```bash
+EXCISE_TRACE_VIEWER=/tmp/excise-metrics.jsonl excise   # start the GUI with the sink
+tail -f /tmp/excise-metrics.jsonl
+```
+
+`EXCISE_TRACE_VIEWER=1` keeps its original meaning, which is the viewer's
+free-text trace on stdout. Any other value is used as a JSONL path, but only
+when it is rooted, contains a directory separator, or ends in `.jsonl`; other
+values (`0`, `true`) are ignored, so they do not create a file. The two modes
+are exclusive: a path does not also enable the stdout trace. The file is
+appended to, and parent directories are created.
+`EXCISE_METRICS_INTERVAL_MS` sets the observation/snapshot interval
+(default 1000).
+
+Every line is one JSON object with `ts` (UTC) and `kind`:
+
+```json
+{"ts":"2026-09-13T18:00:00.000Z","kind":"session-start","pid":4242,"intervalMs":1000}
+{"ts":"…","kind":"measurement","meter":"Excise.Viewer","instrument":"excise.viewer.continuous.band.render.duration","unit":"ms","value":38.4,"tags":{"dpi":"144"}}
+{"ts":"…","kind":"observation","meter":"Excise.Viewer","instrument":"excise.viewer.continuous.cache.resident_bytes","unit":"By","value":52428800,"tags":{"viewer":"1"}}
+{"ts":"…","kind":"snapshot","lastGcHeapSizeBytes":81234567,"lastGcCommittedBytes":98765432,"liveHeapBytes":80123456,"allocatedBytes":912345678,"workingSetBytes":412345678,"cpuTotalMs":5321.5,"cpuUserMs":4100.2,"gen0Collections":41,"gen1Collections":9,"gen2Collections":2}
+```
+
+- `measurement` lines are histogram records, one per event.
+- `observation` lines are gauge and observable-counter readings, taken every
+  interval.
+- In `snapshot` lines, `lastGcHeapSizeBytes` and `lastGcCommittedBytes`
+  describe the most recent garbage collection and read 0 before the first
+  one. `liveHeapBytes` and `workingSetBytes` are current.
+- `snapshot` lines carry cumulative process CPU, so idle CPU over a window is
+  the `cpuTotalMs` difference between two snapshots divided by their `ts`
+  difference.
+- Open → first page visible is the `first_page_visible` phase measurement.
+- Band render p50/p99 come from the `measurement` values of
+  `excise.viewer.continuous.band.render.duration`.
+
+The file is written through a source-generated `JsonSerializerContext`, so the
+sink works in the Native AOT build.
+
+### dotnet-counters
+
+```bash
+dotnet-counters monitor -p <pid> --counters Excise.Viewer,Excise.App,System.Runtime
+```
+
+`System.Runtime` adds the runtime's own GC heap, committed memory, working set,
+CPU and allocation rate. dotnet-counters attaches over EventPipe, and a Native
+AOT publish omits EventSource support unless it is built with
+`-p:EventSourceSupport=true`. On the AOT lane, use the JSONL file instead.
+
 ## Platform Examples
 
 - macOS AppleScript:
