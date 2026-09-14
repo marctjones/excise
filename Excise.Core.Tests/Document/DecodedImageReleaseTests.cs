@@ -189,6 +189,36 @@ public class DecodedImageReleaseTests
         image.DecodedData.Should().Equal(Samples);
     }
 
+    /// <summary>
+    /// The GUI sequence end to end: thumbnail pre-warm decodes and releases an
+    /// image, then the user redacts it. The redactor re-decodes from the
+    /// encoded bytes; what it writes and what gets saved must be exactly what
+    /// the same redaction writes when nothing was ever released.
+    /// </summary>
+    [Fact]
+    public void RegionRedactingAReleasedImage_SavesTheSameBytesAsWithoutTheRelease()
+    {
+        var source = SavedFlateImageDocument();
+
+        byte[] RedactAndSave(bool releaseFirst)
+        {
+            using var doc = PdfDocument.Open(source);
+            var page = doc.GetPage(1);
+            var image = GetImage(doc);
+            image.DecodedData.Should().Equal(Samples, "precondition: a render decoded the samples");
+            if (releaseFirst)
+                image.TryReleaseDecoded().Should().BeTrue("precondition: the render released them");
+
+            ImageRegionRedactor.TryRegionRedact(
+                    page, image, 40, 0, 0, 40, 10, 10, new PdfRectangle(15, 15, 30, 30), out _)
+                .Should().BeTrue();
+            return doc.SaveToBytes();
+        }
+
+        RedactAndSave(releaseFirst: true).Should().Equal(RedactAndSave(releaseFirst: false),
+            "a redaction after a release must see, zero and save exactly the samples it would have otherwise");
+    }
+
     [Fact]
     public void SavedBytes_AreIdentical_AfterAReleaseAndReDecode()
     {
