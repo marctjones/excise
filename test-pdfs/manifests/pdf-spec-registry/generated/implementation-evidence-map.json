@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "4e2cc74d61dcacbbe297826a861aeecc0bec8d5a502c8bb9380f8ad9aaabccbd",
+  "sourceFingerprint": "c56b3f6dbbe0dfec2c43869ddc4f9a1bd13979dddf79cd8c98e43650391a1dfd",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6415,6 +6415,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Services/PageWordStore.cs",
+      "path": "Excise.App/Services/PageWordStore.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Services/PdfDocumentService.cs",
       "path": "Excise.App/Services/PdfDocumentService.cs",
       "kind": "source-file",
@@ -8551,6 +8561,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Avalonia/Controls/BoundedPageCache.cs",
+      "path": "Excise.Avalonia/Controls/BoundedPageCache.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Avalonia/Controls/ContinuousReadingAnchor.cs",
       "path": "Excise.Avalonia/Controls/ContinuousReadingAnchor.cs",
       "kind": "source-file",
@@ -8766,7 +8786,7 @@
     }
   ],
   "summary": {
-    "records": 412,
+    "records": 414,
     "facets": {
       "annotations": 10,
       "content-and-graphics": 18,
@@ -8774,7 +8794,7 @@
       "fonts": 28,
       "forms": 8,
       "images": 28,
-      "product-integration-general": 223,
+      "product-integration-general": 225,
       "redaction": 52,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 19,
@@ -8853,7 +8873,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 19,
       "pdfe.product.security.signature-and-permission-warning:write": 19
     },
-    "fallbackRecords": 223,
+    "fallbackRecords": 225,
     "allRecordsMapped": true
   }
 }

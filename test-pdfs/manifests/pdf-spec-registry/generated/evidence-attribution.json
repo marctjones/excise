@@ -43980,6 +43980,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_OverEveryTaggedFixture_EqualsTheLetterScan",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_RepeatWalk_WalksNoPageAndKeepsNoLetters",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRewritingOnePage_WalksOnlyThatPage_AndServesItsNewText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::StructElementMcidTextTests.HeadingWithoutActualText_ResolvesRealBodyTextViaMcid",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -44957,43 +44985,6 @@
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.FromFile_ProducesType0EmbeddedFont",
           "mappingSources": [
             "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_UnicodeText_RoundTripsThroughExtraction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_DictionaryIsType0WithFontFile2AndToUnicode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_MeasureWidth_IsPositiveAndScalesWithText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_RoundTripsThroughOpen_NoErrors",
-          "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -45444,6 +45435,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_OverEveryTaggedFixture_EqualsTheLetterScan",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_RepeatWalk_WalksNoPageAndKeepsNoLetters",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRewritingOnePage_WalksOnlyThatPage_AndServesItsNewText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::StructElementMcidTextTests.HeadingWithoutActualText_ResolvesRealBodyTextViaMcid",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -46421,43 +46440,6 @@
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.FromFile_ProducesType0EmbeddedFont",
           "mappingSources": [
             "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_UnicodeText_RoundTripsThroughExtraction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_DictionaryIsType0WithFontFile2AndToUnicode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_MeasureWidth_IsPositiveAndScalesWithText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_RoundTripsThroughOpen_NoErrors",
-          "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -46890,6 +46872,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_OverEveryTaggedFixture_EqualsTheLetterScan",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_RepeatWalk_WalksNoPageAndKeepsNoLetters",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRewritingOnePage_WalksOnlyThatPage_AndServesItsNewText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextTests.cs::StructElementMcidTextTests.HeadingWithoutActualText_ResolvesRealBodyTextViaMcid",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -47867,43 +47877,6 @@
           "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.FromFile_ProducesType0EmbeddedFont",
           "mappingSources": [
             "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_UnicodeText_RoundTripsThroughExtraction",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_DictionaryIsType0WithFontFile2AndToUnicode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_MeasureWidth_IsPositiveAndScalesWithText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/EmbeddedFontTests.cs::EmbeddedFontTests.EmbeddedFont_RoundTripsThroughOpen_NoErrors",
-          "mappingSources": [
-            "keyword-facet-candidate",
-            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -93399,6 +93372,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs::RedactAreaCarrierScopeTests.Measure_WhichCarriersSurviveAnAreaRedaction",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -93658,6 +93638,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/PageLetterCacheBoundTests.cs::PageLetterCacheBoundTests.RedactText_OnAPageWithCachedTextState_LeavesNoStaleLettersWordsOrText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/PageLetterCacheBoundTests.cs::PageLetterCacheBoundTests.RedactText_OnPagesWhoseLettersWereEvicted_RemovesTheTerm_PerSavedBytesAndMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs::PredefinedCMapCoverageTests.GbkEuc_RedactText_RemovesTargetAndKeepsRest",
@@ -94185,33 +94179,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.SimpleFont_StillUsesUnicodePath_NotRegressed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.ParentFieldNameAndTooltip_AreScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94835,6 +94802,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs::RedactAreaCarrierScopeTests.Measure_WhichCarriersSurviveAnAreaRedaction",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95094,6 +95068,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/PageLetterCacheBoundTests.cs::PageLetterCacheBoundTests.RedactText_OnAPageWithCachedTextState_LeavesNoStaleLettersWordsOrText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/PageLetterCacheBoundTests.cs::PageLetterCacheBoundTests.RedactText_OnPagesWhoseLettersWereEvicted_RemovesTheTerm_PerSavedBytesAndMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs::PredefinedCMapCoverageTests.GbkEuc_RedactText_RemovesTargetAndKeepsRest",
@@ -95621,33 +95609,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.SimpleFont_StillUsesUnicodePath_NotRegressed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.ParentFieldNameAndTooltip_AreScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96285,6 +96246,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs::RedactAreaCarrierScopeTests.Measure_WhichCarriersSurviveAnAreaRedaction",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96544,6 +96512,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/PageLetterCacheBoundTests.cs::PageLetterCacheBoundTests.RedactText_OnAPageWithCachedTextState_LeavesNoStaleLettersWordsOrText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/PageLetterCacheBoundTests.cs::PageLetterCacheBoundTests.RedactText_OnPagesWhoseLettersWereEvicted_RemovesTheTerm_PerSavedBytesAndMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs::PredefinedCMapCoverageTests.GbkEuc_RedactText_RemovesTargetAndKeepsRest",
@@ -97071,33 +97053,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.SimpleFont_StillUsesUnicodePath_NotRegressed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.ParentFieldNameAndTooltip_AreScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97763,6 +97718,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs::RedactAreaCarrierScopeTests.Measure_WhichCarriersSurviveAnAreaRedaction",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98022,6 +97984,20 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/PageLetterCacheBoundTests.cs::PageLetterCacheBoundTests.RedactText_OnAPageWithCachedTextState_LeavesNoStaleLettersWordsOrText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/PageLetterCacheBoundTests.cs::PageLetterCacheBoundTests.RedactText_OnPagesWhoseLettersWereEvicted_RemovesTheTerm_PerSavedBytesAndMutool",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Text/PredefinedCMapCoverageTests.cs::PredefinedCMapCoverageTests.GbkEuc_RedactText_RemovesTargetAndKeepsRest",
@@ -98549,33 +98525,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.SimpleFont_StillUsesUnicodePath_NotRegressed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/FormFieldNameCarrierTests.cs::FormFieldNameCarrierTests.ParentFieldNameAndTooltip_AreScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112718,8 +112667,8 @@
     "gradeImplemented": 197,
     "gradeVerified": 155,
     "gradeUnknown": 546,
-    "testMethods": 6677,
-    "testMethodsWithCapabilityCandidate": 4185,
+    "testMethods": 6699,
+    "testMethodsWithCapabilityCandidate": 4192,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
