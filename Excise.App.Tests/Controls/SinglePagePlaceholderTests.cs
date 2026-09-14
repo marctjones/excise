@@ -49,9 +49,17 @@ public class SinglePagePlaceholderTests
             viewer.SinglePagePublishCount.Should().Be(published, "the placeholder is not the final render");
             viewer.IsLoading.Should().BeTrue();
             CountNonWhite(placeholder!).Should().BeGreaterThan(0, "the copy carries the composite's ink");
+            var placeholderPixels = placeholder!.PixelSize;
 
             await PumpUntilAsync(window, () => viewer.SinglePagePublishCount > published && !viewer.IsLoading);
             image.Source.Should().NotBeSameAs(placeholder);
+            // Both views now render at device resolution, 96 × zoom × dpr (#1480
+            // continuous, #1487 single-page), so at this test's zoom 1 × dpr 1 the
+            // sharp render replaces the placeholder pixel for pixel instead of
+            // 1.25× denser. Exact only where 96 × zoom × dpr is an integer: the
+            // two paths ceil different products, so elsewhere they may differ by 1 px.
+            ((Bitmap)image.Source!).PixelSize.Should().Be(placeholderPixels,
+                "at zoom 1 × dpr 1 the single-page render and the continuous composite share one device resolution");
             viewer.SinglePagePlaceholderForTests.Should().BeNull();
 
             for (var i = 0; i < 5; i++)

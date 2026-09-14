@@ -209,11 +209,12 @@ public class TextSelectionAlignmentTests
             {
                 var scale = Math.Max(1.0, zoom * dpr);
                 // The bitmap is 96-stamped (#697), so the layout dip size lives
-                // on the Image's Width; the raster is that × zoom × dpr.
-                var pxOk = Math.Abs(src.PixelSize.Width - img.Width * scale) <= 10;
+                // on the Image's Width (120-dpi DIPs for these pages); the raster
+                // is at device resolution, 96/120 of that × zoom × dpr (#1487).
+                var pxOk = Math.Abs(src.PixelSize.Width - img.Width * (96.0 / 120.0) * scale) <= 10;
                 // The raster alone cannot distinguish two zooms whose device
                 // scale clamps to the same value (e.g. fit≈0.98 and 0.6 at
-                // dpr 1 both floor to scale 1 → 900 px): also require the
+                // dpr 1 both floor to scale 1 → 720 px): also require the
                 // LAYOUT to reflect the requested zoom. Displayed width =
                 // img dips × zoom × 96/renderDpi (#693 display unification;
                 // 120 = DefaultRenderDpi for these pages).

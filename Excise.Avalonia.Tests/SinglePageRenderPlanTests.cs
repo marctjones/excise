@@ -19,6 +19,26 @@ public class SinglePageRenderPlanTests
     private const double Uncapped = 1000.0;
 
     [Theory]
+    // logicalDpi, scale (dpr×zoom), expectedDeviceDpi, expectedBitmapDpi
+    // Device resolution is 96 × scale whatever the logical DPI (#1487): a DIP is
+    // 1/96 in and the page is displayed at pt × 96/72 × zoom DIPs. These rows were
+    // 120/240/180/480 before — the 120-dpi layout scale used as a render DPI,
+    // 1.25× the display's linear resolution.
+    [InlineData(120, 1.0, 96, 76.8)]    // 100% on a standard display: one pixel per device pixel
+    [InlineData(96, 1.0, 96, 96.0)]
+    [InlineData(120, 2.0, 192, 153.6)]  // Retina @100%, or standard @200% zoom
+    [InlineData(120, 1.5, 144, 115.2)]
+    [InlineData(120, 4.0, 384, 307.2)]  // Retina @200% zoom
+    [InlineData(120, 0.5, 96, 76.8)]    // zoom × dpr below 1 is floored at 1 (not #1472's continuous floor removal)
+    public void SinglePageRenderPlan_RastersAtOnScreenMagnification(
+        int logicalDpi, double scale, int expectedDeviceDpi, double expectedBitmapDpi)
+    {
+        var (deviceDpi, bitmapDpi) = PdfViewerControl.SinglePageRenderPlan(logicalDpi, scale, Uncapped);
+        deviceDpi.Should().Be(expectedDeviceDpi);
+        bitmapDpi.Should().BeApproximately(expectedBitmapDpi, 1e-9);
+    }
+
+    [Theory]
     [InlineData(120, 1.0)]
     [InlineData(120, 2.0)]
     [InlineData(96, 3.0)]
@@ -57,6 +77,37 @@ public class SinglePageRenderPlanTests
         size.Height.Should().Be(heightPt * logicalDpi / 72.0);
     }
 
+    [Theory]
+    // scale, maxScale (a multiple of the logical DPI), expectedDeviceDpi
+    [InlineData(0.5, 1.0, 96)]     // zoom × dpr floored at 1
+    [InlineData(8.0, 5.0, 600)]    // 96 × 8 = 768 is over the budget cap of 120 × 5
+    [InlineData(3.0, 5.0, 288)]    // under the cap -> unaffected
+    [InlineData(6.25, 5.0, 600)]   // 96 × 6.25 = 600: exactly at the cap
+    public void SinglePageRenderPlan_ClampsDpiToBudget(double scale, double maxScale, int expectedDeviceDpi)
+    {
+        var (deviceDpi, bitmapDpi) = PdfViewerControl.SinglePageRenderPlan(120, scale, maxScale);
+        deviceDpi.Should().Be(expectedDeviceDpi);
+        bitmapDpi.Should().Be(deviceDpi * 96.0 / 120);
+    }
+
+    [Fact]
+    public void SinglePageRenderPlan_HugePage_RendersAtItsBudgetDpi_NotAtTheDeviceBase()
+    {
+        // A page too large for the budget at 120 DPI gets a clamped logical DPI
+        // (EffectiveSinglePageRenderDpi) sized to fit the budget at scale 1. The
+        // 96-DPI device base must not push it back over: the cap is in DPI.
+        const double w = 14400, h = 14400;
+        int logicalDpi = (int)System.Math.Floor(System.Math.Sqrt(64L * 1024 * 1024 / (w * h)) * 72);
+        double maxScale = PdfViewerControl.MaxSinglePageRenderScale(w, h, logicalDpi);
+
+        var (deviceDpi, _) = PdfViewerControl.SinglePageRenderPlan(logicalDpi, 2.0, maxScale);
+
+        logicalDpi.Should().BeLessThan(96, "the fixture must be a budget-clamped page");
+        deviceDpi.Should().BeLessThanOrEqualTo((int)System.Math.Floor(logicalDpi * maxScale));
+        double pixels = System.Math.Ceiling(w * deviceDpi / 72.0) * System.Math.Ceiling(h * deviceDpi / 72.0);
+        pixels.Should().BeLessThanOrEqualTo(64L * 1024 * 1024);
+    }
+
     [Fact]
     public void MaxSinglePageRenderScale_IsAtLeastOne_AndShrinksForHugePages()
     {
@@ -81,8 +132,11 @@ public class SinglePageRenderPlanTests
         double maxScale = PdfViewerControl.MaxSinglePageRenderScale(w, h, dpi);
         var (deviceDpi, _) = PdfViewerControl.SinglePageRenderPlan(dpi, maxScale + 5, maxScale);
 
-        double pixels = (w * deviceDpi / 72.0) * (h * deviceDpi / 72.0);
-        pixels.Should().BeLessThanOrEqualTo(64L * 1024 * 1024 * 1.02,
+        // Ceiled like the renderer counts them, and with no slack: over the budget
+        // the renderer throws RenderResourceLimitException. The cap used to be
+        // rounded, which could overshoot it.
+        double pixels = System.Math.Ceiling(w * deviceDpi / 72.0) * System.Math.Ceiling(h * deviceDpi / 72.0);
+        pixels.Should().BeLessThanOrEqualTo(64L * 1024 * 1024,
             "the capped device render must not exceed the single-page pixel budget");
     }
 }

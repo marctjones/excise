@@ -32,8 +32,6 @@ namespace Excise.App.Tests.UI;
 [Collection("AvaloniaTests")]
 public class PdfViewerHeadlessRenderTests
 {
-    private const int ViewerRenderDpi = 120;
-
     private readonly ITestOutputHelper _output;
 
     public PdfViewerHeadlessRenderTests(ITestOutputHelper output)
@@ -99,7 +97,7 @@ public class PdfViewerHeadlessRenderTests
         var pdfPath = FindRepoFile("test-pdfs", "generated-regressions", "annotations", "annotation-property-probe.pdf");
         var pdfBytes = await File.ReadAllBytesAsync(pdfPath);
 
-        using var expectedRaw = RenderDirectPage(pdfBytes, pageNumber: 1, dpi: ViewerRenderDpi);
+        using var expectedRaw = RenderDirectViewerPage(pdfBytes, pageNumber: 1);
         using var expected = NormalizeSkiaBitmap(expectedRaw);
         using var displayed = await RenderViaViewerControl(pdfBytes);
 
@@ -656,7 +654,16 @@ public class PdfViewerHeadlessRenderTests
             ? Excise.Core.Document.PdfDocument.Open(pdfBytes)
             : Excise.Core.Document.PdfDocument.Open(pdfBytes, password);
         var page = doc.GetPage(pageNumber);
-        var dpi = PdfViewerControl.EffectiveSinglePageRenderDpi(page);
+        // The DPI the viewer actually rasterizes at, from its own plan. The
+        // headless host runs at zoom 1 × dpr 1, which is 96 DPI for a normal
+        // page since #1487 (device resolution) and lower for a budget-clamped
+        // one. This used to be the logical layout DPI (120), which equalled the
+        // render DPI at scale 1 only while the render DPI was the layout scale.
+        // What this suite guards is that the GUI display path preserves the
+        // renderer's pixels, not which DPI the plan picks.
+        var logicalDpi = PdfViewerControl.EffectiveSinglePageRenderDpi(page);
+        var dpi = PdfViewerControl.SinglePageRenderPlan(logicalDpi, 1.0,
+            PdfViewerControl.MaxSinglePageRenderScale(page.VisualWidth, page.VisualHeight, logicalDpi)).DeviceDpi;
         var renderer = new Excise.Rendering.SkiaRenderer();
         return renderer.RenderPage(page, new Excise.Rendering.RenderOptions
         {

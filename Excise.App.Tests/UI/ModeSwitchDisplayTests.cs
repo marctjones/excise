@@ -87,9 +87,10 @@ public class ModeSwitchDisplayTests
                 "mispaints non-96-stamped bitmaps as a magnified top-left crop (#697); " +
                 "the logical page size lives on the Image's Width instead");
 
-            // CRISPNESS: the backing pixels match the on-screen magnification —
-            // the app enters modes at its current (often fit-width) zoom, so the
-            // device scale is zoom × dpr, floored at 1 (never below base render).
+            // CRISPNESS: the backing pixels match the display's device resolution
+            // (#1487: 96 × zoom × dpr DPI, a DIP being 1/96 in — not the 120-dpi
+            // layout scale, which rendered 1.25× the display) — the app enters
+            // modes at its current (often fit-width) zoom; zoom × dpr is floored at 1.
             //
             // The zoom-triggered re-render (#686) is async: right after the mode
             // switch the Image may briefly hold the PREVIOUS zoom's raster while
@@ -98,7 +99,7 @@ public class ModeSwitchDisplayTests
             // live zoom was already 0.79). Pump until the raster corresponds to
             // the CURRENT zoom, then assert with the settled values.
             int ExpectedPx() => (int)Math.Round(
-                expectedDipWidth * Math.Max(1.0, viewer.ZoomLevel * dpr));
+                LetterWidthPt * 96.0 / 72.0 * Math.Max(1.0, viewer.ZoomLevel * dpr));
             int PixelWidth() => (SinglePageImage(viewer)?.Source as
                 global::Avalonia.Media.Imaging.Bitmap)?.PixelSize.Width ?? -1;
             var settleDeadline = Environment.TickCount64 + 20000;
@@ -110,9 +111,9 @@ public class ModeSwitchDisplayTests
             }
             PixelWidth().Should().BeCloseTo(ExpectedPx(), 8,
                 $"the raster must settle to zoom×dpr pixels (zoom={viewer.ZoomLevel:F2}, dpr={dpr}) so text is crisp");
-            if (dpr > 1)
-                PixelWidth().Should().BeGreaterThan((int)expectedDipWidth,
-                    "on HiDPI the raster must exceed the logical size — otherwise it upscales and softens");
+            var displayedDevicePx = LetterWidthPt * 96.0 / 72.0 * viewer.ZoomLevel * dpr;
+            PixelWidth().Should().BeGreaterThanOrEqualTo((int)Math.Floor(displayedDevicePx) - 8,
+                "the raster must not have fewer pixels than the page covers on the display — otherwise it upscales and softens");
 
             // Only this mode is active.
             foreach (var other in new[] { "redact", "select-text", "typewriter", "form-authoring" })

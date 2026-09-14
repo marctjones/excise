@@ -15,13 +15,13 @@ using Xunit;
 namespace Excise.App.Tests.Controls;
 
 /// <summary>
-/// #1489: the published single-page Image must be laid out at exactly the
-/// coordinate space pointer input maps into (<c>pt × logicalDpi / 72</c> DIPs),
-/// at any render scale.
+/// Single-page geometry: the Image is laid out in the logical coordinate space
+/// input maps into (#1489), while the raster behind it is at the display's
+/// device resolution (#1487). The two are independent; these tests pin both.
 /// </summary>
 /// <remarks>
 /// The overlay, <c>ViewerDipsToPdfRect</c> and every redaction/typewriter/form
-/// rect map through <c>pt × 120 / 72</c>. Before the fix the Image was sized
+/// rect map through <c>pt × 120 / 72</c>. Before #1489 the Image was sized
 /// from the raster instead, <c>px × 96 / bitmapDpi</c>, which differs from that
 /// space twice over: the render DPI was rounded (<c>round(120·s)</c>) while the
 /// bitmap DPI was not (<c>96·s</c>), and the renderer ceils the pixel count.
@@ -37,8 +37,8 @@ public class SinglePageLayoutGeometryTests
     public static TheoryData<double, double, double, double> NonIntegerRenderScales() => new()
     {
         // widthPt, heightPt, zoom, dpr
-        { 612, 792, 1.0, 1.429 },   // 120 × 1.429 = 171.48: the render DPI rounds down to 171
-        { 612, 792, 1.0, 1.43 },    // 171.6 rounds up to 172: the raster overshoots instead
+        { 612, 792, 1.0, 1.429 },   // 120 × 1.429 = 171.48: the old render DPI rounded down to 171
+        { 612, 792, 1.0, 1.43 },    // 171.6 rounded up to 172: the raster overshot instead
         { 2000, 1400, 0.5, 2.858 }, // a large page; zoom × dpr = 1.429 again
     };
 
@@ -47,15 +47,9 @@ public class SinglePageLayoutGeometryTests
     public async Task PublishedPage_IsLaidOutAtExactlyTheInputCoordinateSpace(
         double widthPt, double heightPt, double zoom, double dpr)
     {
-        var viewer = new PdfViewerControl { ViewMode = PdfViewMode.SinglePage, RenderScalingOverride = dpr };
-        var window = new Window { Content = viewer, Width = 900, Height = 700 };
-        window.Show();
+        var (window, viewer) = await OpenSinglePageAsync(widthPt, heightPt, zoom, dpr);
         try
         {
-            viewer.ZoomLevel = zoom;
-            viewer.Document = PdfDocument.Open(BlankPage(widthPt, heightPt));
-            await WaitForFinalRenderAsync(window, viewer);
-
             var image = viewer.FindControl<Image>("PdfImage")!;
             var bitmap = (Bitmap)image.Source!;
             var logicalWidth = widthPt * 120.0 / 72.0;
@@ -74,7 +68,7 @@ public class SinglePageLayoutGeometryTests
             image.Bounds.Width.Should().BeApproximately(logicalWidth, layoutPixel);
             image.Bounds.Height.Should().BeApproximately(logicalHeight, layoutPixel);
 
-            // The far corner of what is drawn is the far corner of the page in
+            // The far corner of the page as sized is the far corner of the page in
             // the space a redaction or typewriter rect is built from.
             var corner = viewer.ViewerDipsToPdfRect(new Rect(image.Width, image.Height, 0, 0), 1);
             corner.Left.Should().BeApproximately(widthPt, 1e-6);
@@ -83,6 +77,61 @@ public class SinglePageLayoutGeometryTests
         finally
         {
             window.Close();
+        }
+    }
+
+    /// <summary>
+    /// #1487: the single page renders at the display's device resolution,
+    /// <c>96 × zoom × dpr</c> DPI (a DIP is 1/96 inch), not <c>120 × zoom × dpr</c>
+    /// — the logical layout DPI used as a render DPI, which is 1.25× the linear
+    /// resolution and 1.56× the pixels. The layout, and with it every input
+    /// mapping, stays at 120. The <c>zoom × dpr ≥ 1</c> floor is kept.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(1.0, 1.0)]
+    [InlineData(1.0, 2.0)]
+    [InlineData(2.0, 1.0)]
+    [InlineData(2.0, 2.0)]
+    public async Task PublishedRaster_IsAtDeviceResolution_WhileLayoutStaysLogical(double zoom, double dpr)
+    {
+        const double widthPt = 612, heightPt = 792;
+        var (window, viewer) = await OpenSinglePageAsync(widthPt, heightPt, zoom, dpr);
+        try
+        {
+            var image = viewer.FindControl<Image>("PdfImage")!;
+            var bitmap = (Bitmap)image.Source!;
+            var deviceDpi = (int)Math.Round(96 * Math.Max(1.0, zoom * dpr));
+
+            bitmap.PixelSize.Width.Should().Be((int)Math.Ceiling(widthPt * deviceDpi / 72.0),
+                $"one raster pixel per device pixel at zoom {zoom} × dpr {dpr} ({deviceDpi} DPI)");
+            bitmap.PixelSize.Height.Should().Be((int)Math.Ceiling(heightPt * deviceDpi / 72.0));
+            image.Width.Should().BeApproximately(widthPt * 120.0 / 72.0, 1e-6,
+                "the layout, and so every input mapping, must not move with the render DPI");
+            image.Height.Should().BeApproximately(heightPt * 120.0 / 72.0, 1e-6);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    private static async Task<(Window Window, PdfViewerControl Viewer)> OpenSinglePageAsync(
+        double widthPt, double heightPt, double zoom, double dpr)
+    {
+        var viewer = new PdfViewerControl { ViewMode = PdfViewMode.SinglePage, RenderScalingOverride = dpr };
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        window.Show();
+        try
+        {
+            viewer.ZoomLevel = zoom;
+            viewer.Document = PdfDocument.Open(BlankPage(widthPt, heightPt));
+            await WaitForFinalRenderAsync(window, viewer);
+            return (window, viewer);
+        }
+        catch
+        {
+            window.Close();
+            throw;
         }
     }
 

@@ -424,11 +424,17 @@ public partial class PdfViewerControl : UserControl
     private Point _dragStart;
     private bool _isDragging;
 
-    // Default render DPI for the on-screen viewer. 200 DPI was overkill —
-    // a US-Letter page at 200 DPI is 1700×2200 (3.7M px); at 120 DPI it's
-    // 1020×1320 (1.3M px), 3× less rasterisation work, and the difference
-    // is invisible at typical zoom levels.
+    // The single-page view's LOGICAL layout DPI: the Image is laid out at
+    // pt × 120/72 DIPs, and the overlay, hit-testing and every redaction,
+    // typewriter and form rect map through it. Despite the name it has not
+    // been the render DPI since #682 made the raster follow the display, and
+    // since #1487 the raster is at the device resolution, 96 × zoom × dpr
+    // (SinglePageRenderPlan). It began as a render DPI, chosen over 200 for
+    // 3× less rasterisation work; changing it now would move input mapping.
     private const int DefaultRenderDpi = 120;
+    // One raster pixel per device pixel per unit of zoom × dpr (#1487): an
+    // Avalonia DIP is 1/96 inch. Same basis as ContinuousBaseDpi (#1480).
+    internal const int SinglePageDeviceBaseDpi = 96;
     private const int MinSinglePageRenderDpi = 12;
     private const long MaxSinglePagePreviewPixels = 64L * 1024L * 1024L;
     private int _currentSinglePageRenderDpi = DefaultRenderDpi;
@@ -686,7 +692,7 @@ public partial class PdfViewerControl : UserControl
     }
 
     // DPI used for single-page viewer overlay scaling. Most pages use
-    // DefaultRenderDpi, but huge page boxes may render at a lower preview DPI.
+    // DefaultRenderDpi, but huge page boxes lay out at a lower logical DPI.
     private double ViewerUnitsPerPoint => _currentSinglePageRenderDpi / PdfPageRect.PdfPointsPerInch;
 
     private static Rect ToAvaloniaRect(PdfPageRect rect) =>
@@ -1836,7 +1842,7 @@ public partial class PdfViewerControl : UserControl
     /// <paramref name="scale"/> is the on-screen magnification the raster must
     /// resolve — the display device-pixel-ratio times the zoom level — so text
     /// stays crisp both on HiDPI displays (#682) and when zoomed in (#683). It
-    /// returns the DPI to rasterize at (device resolution) and the equivalent
+    /// returns the DPI to rasterize at and the equivalent
     /// BitmapDpi, <c>deviceDpi × 96 / logicalDpi</c>, so that
     /// <c>deviceDpi / (bitmapDpi / 96) == logicalDpi</c> holds exactly. The
     /// Image is NOT sized from the raster through it:
@@ -1848,16 +1854,38 @@ public partial class PdfViewerControl : UserControl
     /// bitmap: Avalonia's Image mispaints non-96-stamped bitmaps as a magnified
     /// top-left pixel crop (#697; DpiStampedBitmapPaintProbeTests) — the bitmap
     /// stays 96-stamped and the Image's Width/Height carry the layout size
-    /// instead. <paramref name="maxScale"/>
-    /// caps the raster at the single-page memory budget: beyond it the
-    /// ScaleTransform upscales (soft at extreme zoom) rather than allocating an
-    /// unbounded bitmap. At scale=1 it is an exact no-op (device == logical,
-    /// stamp == 96).
+    /// instead.
+    /// <para>
+    /// The DPI is <c>96 × scale</c> — one raster pixel per device pixel —
+    /// whatever the logical DPI (#1487). The ZoomHost displays every page at
+    /// <c>pt × 96/72 × zoom</c> DIPs and an Avalonia DIP is 1/96 inch, so the
+    /// display's device resolution is <c>96 × zoom × dpr</c>. Until #1487 this
+    /// was <c>logicalDpi × scale</c>: the 120-dpi LAYOUT scale used as a render
+    /// DPI, 1.25× the display's linear resolution and 1.56× its pixels. The
+    /// continuous view made the same change in #1480, where a 1:1 render matched
+    /// mutool's edge sharpness and the 1.25× render downscaled was softer. Only
+    /// pixel density changed; the layout is still sized at the logical DPI.
+    /// <c>scale</c> is still floored at 1, so zoomed out below 100% on a 1×
+    /// display the page renders at 96 DPI; removing that floor as #1472 did for
+    /// the continuous view is a separate change.
+    /// </para>
+    /// <para>
+    /// <paramref name="maxScale"/> is a multiple of the logical DPI and caps the
+    /// raster at the single-page memory budget: beyond it the ScaleTransform
+    /// upscales (soft at extreme zoom) rather than allocating an unbounded
+    /// bitmap. The cap applies to the DPI itself, not to the scale, because a
+    /// huge page's logical DPI is already clamped to fit the budget at scale 1
+    /// and must not be pushed back over it by the 96-DPI base. It is floored:
+    /// rounding up past it can put the ceiled raster over MaxPixelCount, where
+    /// the renderer throws instead of rendering.
+    /// </para>
     /// </summary>
     internal static (int DeviceDpi, double BitmapDpi) SinglePageRenderPlan(int logicalDpi, double scale, double maxScale)
     {
-        double s = Math.Clamp(scale <= 0 ? 1.0 : scale, 1.0, Math.Max(1.0, maxScale));
-        int deviceDpi = (int)Math.Round(logicalDpi * s);
+        double s = Math.Max(1.0, scale <= 0 ? 1.0 : scale);
+        int budgetDpi = (int)Math.Floor(logicalDpi * Math.Max(1.0, maxScale) + 1e-9);
+        int deviceDpi = Math.Min((int)Math.Round(SinglePageDeviceBaseDpi * s), budgetDpi);
+        deviceDpi = Math.Max(MinSinglePageRenderDpi, deviceDpi);
         double bitmapDpi = deviceDpi * 96.0 / logicalDpi;
         return (deviceDpi, bitmapDpi);
     }
