@@ -30,8 +30,13 @@ namespace Excise.App.Tests.Integration;
 /// <item><c>EXCISE_HEAP_REPORT_STAGE_GC=1</c>: force a full GC at every stage
 /// boundary so the live-bytes column attributes growth per stage (#1469). It
 /// changes the heap's shape, so leave it off for the #1481 A/B.</item>
-/// <item><c>EXCISE_HEAP_REPORT_PAUSE_SECONDS</c>: sleep after the first open's
-/// index + pre-warm so <c>dotnet-gcdump collect -p &lt;pid&gt;</c> can run.</item>
+/// <item><c>EXCISE_HEAP_REPORT_PAUSE_SECONDS</c>: sleep in the first cycle so
+/// <c>dotnet-gcdump collect -p &lt;pid&gt;</c> can run; <c>_PAUSE_AT</c> picks
+/// the stage (<c>indexed</c> or <c>prewarmed</c>, default <c>prewarmed</c>) and
+/// <c>_PAUSE_MARKER</c> names a file that receives the pid when the pause starts.</item>
+/// <item><c>EXCISE_HEAP_REPORT_SURVIVOR_MB</c>: keep this many MB of small
+/// long-lived objects scattered across the heap, modelling the GUI's live
+/// objects, so a non-compacting GC cannot simply return whole regions.</item>
 /// <item><c>EXCISE_HEAP_REPORT_OUT</c>: also append the TSV rows to this file.</item>
 /// <item><c>EXCISE_HEAP_REPORT_PDF</c>, <c>_CYCLES</c>, <c>_PAGES</c>, <c>_DPI</c>.</item>
 /// </list>
