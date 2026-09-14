@@ -18,6 +18,7 @@ namespace Excise.Rendering
         public int Dpi { get; init; }
         public bool HighlightFormFields { get; init; }
         public long MaxPixelCount { get; init; }
+        public bool ReleaseDecodedImageSamples { get; init; }
         public bool RenderAnnotations { get; init; }
         public bool RevealHiddenAnnotations { get; init; }
         public bool ShowCommentAnnotations { get; init; }
