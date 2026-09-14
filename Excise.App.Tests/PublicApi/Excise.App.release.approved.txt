@@ -112,6 +112,9 @@ namespace Excise.App.Models
     public class WindowSettings
     {
         public WindowSettings() { }
+        public int CacheTrimIdleSeconds { get; set; }
+        public bool CacheTrimOnMemoryPressure { get; set; }
+        public bool CacheTrimSoftTriggers { get; set; }
         public bool ContinuousScrollEnabled { get; set; }
         public System.Collections.Generic.List<Excise.App.Models.WindowSettings.DocumentState> DocumentStates { get; set; }
         public double Height { get; set; }
