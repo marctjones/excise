@@ -98,7 +98,7 @@ public class PageLetterCacheBoundTests
 
         for (int p = 1; p <= indexed.PageCount; p++)
         {
-            var (text, words) = indexed.GetPage(p).ExtractTextAndWordsWithoutRetainingLetters();
+            var (text, words, _) = indexed.GetPage(p).ExtractTextAndWordsWithoutRetainingLetters();
 
             text.Should().Be(reference.GetPage(p).Text);
             words.Select(w => (w.Text, Bits(w.BoundingBox))).Should()

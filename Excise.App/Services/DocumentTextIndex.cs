@@ -91,12 +91,13 @@ public sealed class DocumentTextIndex
                 var page = _doc.GetPage(i + 1);
                 // #1485: NOT page.Text + page.GetWords(). Those cache the
                 // page's letters, and holding every page's letters is the
-                // retention this index exists without.
-                var (text, words) = page.ExtractTextAndWordsWithoutRetainingLetters(cancellationToken);
+                // retention this index exists without. The store's arrays are
+                // shared with live search, so this holds no second copy.
+                var (text, words) = PageWordStore.Get(page, cancellationToken);
                 // Words before text: IsPageIndexed keys off the text, and a
                 // concurrent search must never see a page as indexed while its
                 // words are still missing.
-                _pageWords[i] = IndexedWord.FromWords(words);
+                _pageWords[i] = words;
                 _pageTexts[i] = text;
                 Interlocked.Increment(ref _pagesIndexed);
                 progress?.Report((_pagesIndexed, _doc.PageCount));

@@ -190,7 +190,22 @@ public partial class PdfPage
         // on the second RedactArea call seeing freshly-extracted letters that
         // reflect the first redaction's deletions.
         InvalidateTextExtractionCache();
+        try
+        {
+            WriteContentStreamBytes(data);
+        }
+        finally
+        {
+            // Again AFTER the bytes change (#1485). A walk that starts between
+            // the bump above and the write reads the OLD bytes under the NEW
+            // generation; a second bump keeps whatever it produced from being
+            // stored in the letter cache or served from a word store.
+            InvalidateTextExtractionCache();
+        }
+    }
 
+    private void WriteContentStreamBytes(byte[] data)
+    {
         var contentsObj = _pageDict.GetOptional("Contents");
 
         if (contentsObj == null)
@@ -358,6 +373,8 @@ public partial class PdfPage
             if (_document.Resolve(array[streamIndices[k]]) is PdfStream streamObj)
                 streamObj.DecodedData = chunks[k];
         }
+        // Again after the write, as in SetContentStreamBytes (#1485).
+        InvalidateTextExtractionCache();
 
         return true;
     }

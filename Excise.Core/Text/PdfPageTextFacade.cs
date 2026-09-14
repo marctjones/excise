@@ -37,6 +37,21 @@ public partial class PdfPage
     // and a mutation overlap (the background text index and a GUI redaction).
     private int _textCacheGeneration;
 
+    // Content-stream walks this facade has run for this page. Test seam for
+    // "a repeated search walks no page twice" (#1485); production never reads it.
+    private int _textWalkCount;
+
+    /// <summary>
+    /// The page's text-content generation: bumped by every content rewrite and
+    /// every <see cref="InvalidateTextExtractionCache"/>. A caller that keeps
+    /// data derived from this page's text stamps it with the generation it was
+    /// walked under and must not serve it once this has moved on (#1485).
+    /// </summary>
+    internal int TextContentGeneration => Volatile.Read(ref _textCacheGeneration);
+
+    /// <summary>Walks run through this facade for this page. For tests (#1485).</summary>
+    internal int TextWalkCount => Volatile.Read(ref _textWalkCount);
+
     /// <summary>
     /// Get the extracted text content from the page.
     /// Cached on first access; subsequent calls return the cached result.
@@ -115,6 +130,7 @@ public partial class PdfPage
         }
 
         var generation = Volatile.Read(ref _textCacheGeneration);
+        Interlocked.Increment(ref _textWalkCount);
         var extractor = new Excise.Core.Text.TextExtractor(this);
         var letters = extractor.ExtractLetters(cancellationToken);
 
@@ -181,12 +197,19 @@ public partial class PdfPage
     /// evict the pages a reader is working on. The text is cached (it is one
     /// string); the letters and words are not.
     /// </remarks>
-    internal (string Text, IReadOnlyList<Excise.Core.Text.Word> Words) ExtractTextAndWordsWithoutRetainingLetters(
+    internal (string Text, IReadOnlyList<Excise.Core.Text.Word> Words, int Generation) ExtractTextAndWordsWithoutRetainingLetters(
         CancellationToken cancellationToken = default)
     {
+        // Read BEFORE the letters, and returned: a rewrite that lands during
+        // or after the walk moves the generation past this value, so a caller
+        // that stamps its copy with it can never serve that copy afterwards.
         var generation = Volatile.Read(ref _textCacheGeneration);
-        var letters = _cachedLetters
-            ?? new Excise.Core.Text.TextExtractor(this).ExtractLetters(cancellationToken);
+        var letters = _cachedLetters;
+        if (letters == null)
+        {
+            Interlocked.Increment(ref _textWalkCount);
+            letters = new Excise.Core.Text.TextExtractor(this).ExtractLetters(cancellationToken);
+        }
         var words = _cachedWords is { } cachedWords && ReferenceEquals(letters, _cachedLetters)
             ? cachedWords
             : Excise.Core.Text.TextExtractor.BuildWords(letters);
@@ -197,7 +220,7 @@ public partial class PdfPage
             text = BuildPageText(letters);
             StoreText(text, generation);
         }
-        return (text, words);
+        return (text, words, generation);
     }
 
     /// <summary>

@@ -215,10 +215,12 @@ public class PdfSearchService
 
         try
         {
-            var pageText = page.Text;
-            // The same compact shape the document index holds (#1485), so the
-            // live and indexed searches run one matching code path.
-            var words = IndexedWord.FromWords(page.GetWords());
+            // #1485: the page's compact words, walked once and kept, not
+            // page.GetWords(). Letters are bounded to a few pages, so reading
+            // words through them re-walked every evicted page on every search.
+            // Same shape the document index holds, so both searches run one
+            // matching code path.
+            var (pageText, words) = PageWordStore.Get(page);
 
             if (useRegex)
             {
