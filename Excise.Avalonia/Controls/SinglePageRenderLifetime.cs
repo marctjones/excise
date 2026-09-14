@@ -121,6 +121,40 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
         }
     }
 
+    /// <summary>
+    /// Dispose every cached entry <paramref name="keep"/> rejects (#1478) and
+    /// report how many and how many bytes (<paramref name="bytesOf"/> sizes an
+    /// entry before it is disposed). Kept entries keep their LRU order.
+    /// </summary>
+    internal (int Count, long Bytes) Trim(Func<TBitmap, bool> keep, Func<TBitmap, long> bytesOf)
+    {
+        ArgumentNullException.ThrowIfNull(keep);
+        ArgumentNullException.ThrowIfNull(bytesOf);
+
+        lock (_gate)
+        {
+            if (_disposed)
+                return default;
+
+            int count = 0;
+            long bytes = 0;
+            var node = _cache.First;
+            while (node != null)
+            {
+                var next = node.Next;
+                if (!keep(node.Value.Bitmap))
+                {
+                    bytes += bytesOf(node.Value.Bitmap);
+                    _cache.Remove(node);
+                    node.Value.Bitmap.Dispose();
+                    count++;
+                }
+                node = next;
+            }
+            return (count, bytes);
+        }
+    }
+
     internal void InvalidateCache()
     {
         lock (_gate)

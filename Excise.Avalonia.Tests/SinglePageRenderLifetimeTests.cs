@@ -41,6 +41,30 @@ public sealed class SinglePageRenderLifetimeTests
     }
 
     [Fact]
+    public void Trim_DisposesEveryRejectedEntry_KeepsTheKeptOneCached_AndReportsBytes()
+    {
+        using var lifetime = new SinglePageRenderLifetime<TrackedBitmap>(cacheCapacity: 4);
+        var kept = new TrackedBitmap();
+        var dropA = new TrackedBitmap();
+        var dropB = new TrackedBitmap();
+        lifetime.Add(pageNumber: 1, dpi: 96, dropA, new Size(10, 10));
+        lifetime.Add(pageNumber: 2, dpi: 192, kept, new Size(10, 10));
+        lifetime.Add(pageNumber: 3, dpi: 96, dropB, new Size(10, 10));
+
+        var (count, bytes) = lifetime.Trim(b => ReferenceEquals(b, kept), _ => 1000);
+
+        count.Should().Be(2);
+        bytes.Should().Be(2000, "each rejected entry is sized before it is disposed");
+        dropA.IsDisposed.Should().BeTrue("#1478: a trimmed bitmap's native pixels must be released, not left to GC");
+        dropB.IsDisposed.Should().BeTrue();
+        kept.IsDisposed.Should().BeFalse("the kept bitmap is the one on screen");
+        lifetime.GetCacheDiagnostics().EntryCount.Should().Be(1);
+        lifetime.TryGet(pageNumber: 2, dpi: 192, out var found, out _).Should().BeTrue();
+        found.Should().BeSameAs(kept);
+        lifetime.TryGet(pageNumber: 1, dpi: 96, out _, out _).Should().BeFalse();
+    }
+
+    [Fact]
     public void Cache_TouchUpdatesLru_AndEvictionDisposesOwnedBitmap()
     {
         using var lifetime = new SinglePageRenderLifetime<TrackedBitmap>(cacheCapacity: 2);

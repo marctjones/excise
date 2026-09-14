@@ -102,6 +102,12 @@ namespace Excise.Avalonia.Controls
         SinglePage = 0,
         Continuous = 1,
     }
+    public enum PdfViewerCacheTrimLevel
+    {
+        Background = 0,
+        Warn = 1,
+        Critical = 2,
+    }
     public class PdfViewerControl : Avalonia.Controls.UserControl
     {
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfAnnotation>?> AnnotationsProperty;
@@ -186,6 +192,7 @@ namespace Excise.Avalonia.Controls
         public void PreserveContinuousReadingPositionOnNextRebuild() { }
         public void PreviousPage() { }
         public void RefreshContinuousLayout() { }
+        public void TrimCaches(Excise.Avalonia.Controls.PdfViewerCacheTrimLevel level) { }
         public bool TryScrollViewportBy(double deltaY) { }
         public bool TrySetViewportVerticalFraction(double fraction) { }
         public void ZoomIn() { }

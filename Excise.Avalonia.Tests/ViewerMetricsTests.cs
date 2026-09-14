@@ -38,6 +38,8 @@ public class ViewerMetricsTests
         ViewerMetrics.SinglePageEntries,
         ViewerMetrics.SinglePageHits,
         ViewerMetrics.SinglePageMisses,
+        ViewerMetrics.CacheTrims,
+        ViewerMetrics.CacheTrimReleasedBytes,
     ];
 
     [Fact]
@@ -63,7 +65,26 @@ public class ViewerMetricsTests
             ViewerMetrics.RecordBandRender(TimeSpan.FromMilliseconds(3), 120);
             ViewerMetrics.RecordComposite(4096, 120);
             ViewerMetrics.RecordSinglePageRender(ViewerMetrics.SinglePageRenderStart(), 144);
+            ViewerMetrics.RecordCacheTrim(PdfViewerCacheTrimLevel.Critical, 1, 2, 3);
         }
+    }
+
+    [Fact]
+    public void Metrics_CacheTrim_CountsTheTrim_AndRecordsReleasedBytesPerCache_TaggedByLevel()
+    {
+        using var capture = MetricCapture.Start();
+
+        ViewerMetrics.RecordCacheTrim(PdfViewerCacheTrimLevel.Warn, tileBytes: 4096, compositeBytes: 0, singlePageBytes: 256);
+
+        capture.Single("excise.viewer.cache.trims").Should()
+            .Match<CapturedMeasurement>(m => m.Value == 1 && m.Tag("level") == "warn");
+        var released = capture.Of("excise.viewer.cache.trim.released");
+        released.Should().HaveCount(3, "one sample per cache, zero included, so a live session sees what each level touched");
+        released.Should().OnlyContain(m => m.Tag("level") == "warn");
+        released.Single(m => m.Tag("kind") == "tiles").Value.Should().Be(4096);
+        released.Single(m => m.Tag("kind") == "composites").Value.Should().Be(0);
+        released.Single(m => m.Tag("kind") == "single_page").Value.Should().Be(256);
+        capture.Instruments["excise.viewer.cache.trim.released"].Unit.Should().Be("By");
     }
 
     [Fact]

@@ -74,6 +74,14 @@ internal static class ViewerMetrics
         "excise.viewer.single_page.cache.misses", ObserveSinglePageMisses, "{miss}",
         "Single-page LRU misses since the viewer was constructed.");
 
+    internal static readonly Counter<long> CacheTrims = Meter.CreateCounter<long>(
+        "excise.viewer.cache.trims", "{trim}",
+        "PdfViewerControl.TrimCaches calls, tagged by level (background, warn, critical) (#1478).");
+
+    internal static readonly Histogram<long> CacheTrimReleasedBytes = Meter.CreateHistogram<long>(
+        "excise.viewer.cache.trim.released", "By",
+        "Bytes one TrimCaches call released from one cache, tagged by level and kind (tiles, composites, single_page) (#1478).");
+
     /// <summary>True while a listener wants either continuous byte gauge.</summary>
     internal static bool ByteGaugesEnabled => ContinuousTileBytes.Enabled || ContinuousCompositeBytes.Enabled;
 
@@ -127,6 +135,34 @@ internal static class ViewerMetrics
                 Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds,
                 new KeyValuePair<string, object?>("dpi", dpi));
     }
+
+    /// <summary>
+    /// One trim: a count, and a released-bytes sample per cache. Tag values are
+    /// string constants, so nothing is boxed even when a listener is attached.
+    /// </summary>
+    internal static void RecordCacheTrim(PdfViewerCacheTrimLevel level, long tileBytes, long compositeBytes, long singlePageBytes)
+    {
+        bool trims = CacheTrims.Enabled, released = CacheTrimReleasedBytes.Enabled;
+        if (!trims && !released) return;
+
+        var levelTag = new KeyValuePair<string, object?>("level", LevelTag(level));
+        if (trims)
+            CacheTrims.Add(1, levelTag);
+        if (released)
+        {
+            CacheTrimReleasedBytes.Record(tileBytes, levelTag, new KeyValuePair<string, object?>("kind", "tiles"));
+            CacheTrimReleasedBytes.Record(compositeBytes, levelTag, new KeyValuePair<string, object?>("kind", "composites"));
+            CacheTrimReleasedBytes.Record(singlePageBytes, levelTag, new KeyValuePair<string, object?>("kind", "single_page"));
+        }
+    }
+
+    private static string LevelTag(PdfViewerCacheTrimLevel level) => level switch
+    {
+        PdfViewerCacheTrimLevel.Background => "background",
+        PdfViewerCacheTrimLevel.Warn => "warn",
+        PdfViewerCacheTrimLevel.Critical => "critical",
+        _ => "unknown",
+    };
 
     private static IEnumerable<Measurement<long>> ObserveContinuousTileBytes() =>
         Observe(static v => v.MetricsContinuousTileBytes);
