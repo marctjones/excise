@@ -82,7 +82,9 @@ mkdir -p "$OUT"
     echo
 } | tee "$OUT/report.txt"
 
-"$TRACE" collect --format speedscope -o "$OUT/render.nettrace" -- \
+# --show-child-io: without it dotnet-trace swallows the child's stdout, so the
+# CLI's --json phase timings never reach collect.log (the grep below found nothing).
+"$TRACE" collect --show-child-io --format speedscope -o "$OUT/render.nettrace" -- \
     "$CLI" render "$PDF" --page "$PAGE" --dpi "$DPI" -o "$OUT/render.png" --json \
     > "$OUT/collect.log" 2>&1 || {
         echo "profile-render: dotnet-trace collect failed; see $OUT/collect.log" >&2
