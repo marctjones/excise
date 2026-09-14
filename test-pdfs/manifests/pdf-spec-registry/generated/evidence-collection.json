@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1064,
-  "indexedContentSha256": "14fb9c22a54f372e1960197084ad41f825afb36c97f1e51046da43fa5c7d1d29",
+  "indexedFileCount": 1066,
+  "indexedContentSha256": "cb07e3c8d7d1f095ae6f9d5ad81debab75acf289f34f08f3440a3092dcf079b6",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7659,7 +7659,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 481
+      "candidateReferenceCount": 482
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8503,7 +8503,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 232
+      "candidateReferenceCount": 233
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9481,7 +9481,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 174
+      "candidateReferenceCount": 175
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -33949,7 +33949,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 129
+      "candidateReferenceCount": 130
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -37127,6 +37127,16 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/EditModeSwitchReportTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/GuiClickSafetySweepTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37162,18 +37172,9 @@
             "lab",
             "image"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/TypewriterWorkflowTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 96
+      "candidateReferenceCount": 97
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -50528,7 +50529,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 147
+      "candidateReferenceCount": 148
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -54191,7 +54192,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 89
+      "candidateReferenceCount": 90
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -59358,7 +59359,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 329
+      "candidateReferenceCount": 330
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -60092,7 +60093,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 145
+      "candidateReferenceCount": 146
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -61632,7 +61633,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 493
+      "candidateReferenceCount": 494
     },
     {
       "id": "pdf.20.extension.developer",

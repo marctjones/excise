@@ -39,7 +39,7 @@ digraph excise_architecture {
     label="presentation";
     color="#cbd5e1";
     "app-main-window" [label="Main-window orchestration and feature state\npartial\n512 retained symbols", fillcolor="#fff3bf"];
-    "avalonia" [label="Excise.Avalonia project\npartial\n390 retained symbols", fillcolor="#fff3bf"];
+    "avalonia" [label="Excise.Avalonia project\npartial\n403 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_verification {
     label="verification";
