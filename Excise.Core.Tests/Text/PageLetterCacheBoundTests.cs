@@ -169,19 +169,26 @@ public class PageLetterCacheBoundTests
     /// shows up here as an exception, a wrong letter list, or a bound overrun.
     /// </summary>
     [Fact]
-    public async Task Letters_ReadFromManyThreads_StayCorrectAndBounded()
+    public void Letters_ReadFromManyThreads_StayCorrectAndBounded()
     {
         const int pageCount = 12;
         using var doc = PdfDocument.Open(MultiPagePdf(pageCount, p => $"Thread{p} words here"));
         var expected = Enumerable.Range(1, pageCount)
             .ToDictionary(p => p, p => $"Thread{p}wordshere");
         var errors = new ConcurrentQueue<string>();
-        using var stop = new CancellationTokenSource(TimeSpan.FromMilliseconds(750));
+        // Dedicated threads and a Stopwatch deadline, NOT Task.Run and a timed
+        // CancellationTokenSource: a CTS timer fires its callback on the thread
+        // pool, and busy-looping pool workers can starve it so the stop never
+        // arrives. Observed 2026-09-14 as a 10-minute Core.Tests hang at 800% CPU,
+        // this test and ConcurrentDocumentAccessTests' timed loops spinning
+        // together.
+        var deadline = System.Diagnostics.Stopwatch.StartNew();
+        var budget = TimeSpan.FromMilliseconds(750);
 
-        var workers = Enumerable.Range(0, 8).Select(seed => Task.Run(() =>
+        var workers = Enumerable.Range(0, 8).Select(seed => new Thread(() =>
         {
             var random = new Random(seed);
-            while (!stop.IsCancellationRequested)
+            while (deadline.Elapsed < budget)
             {
                 var p = random.Next(1, pageCount + 1);
                 var page = doc.GetPage(p);
@@ -196,8 +203,10 @@ public class PageLetterCacheBoundTests
                 if (text != expected[p])
                     errors.Enqueue($"page {p}: '{text}'");
             }
-        })).ToArray();
-        await Task.WhenAll(workers);
+        }) { IsBackground = true }).ToArray();
+        foreach (var worker in workers) worker.Start();
+        foreach (var worker in workers)
+            worker.Join(TimeSpan.FromSeconds(60)).Should().BeTrue("a reader must finish within its time budget");
 
         errors.Should().BeEmpty();
         Enumerable.Range(1, pageCount).Count(p => doc.GetPage(p).HasCachedLetters)

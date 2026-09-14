@@ -103,7 +103,42 @@ public partial class PdfDocument
         if (refs.Count == 0)
             return string.Empty;
 
-        // Cache each referenced page's letters once.
+        // #1485: each referenced page's per-MCID text, not its letters. The
+        // map holds, per mcid, exactly the letter-order concatenation the scan
+        // below used to append, and it survives across calls where the page's
+        // letters no longer do (see PdfPage.GetMarkedContentText).
+        var textByPage = new Dictionary<int, IReadOnlyDictionary<int, string>>();
+        var sb = new StringBuilder();
+        foreach (var (page, mcid) in refs)
+        {
+            if (page < 1 || page > PageCount)
+                continue;
+            if (!textByPage.TryGetValue(page, out var byMcid))
+                textByPage[page] = byMcid = GetPage(page).GetMarkedContentText();
+            if (byMcid.TryGetValue(mcid, out var text))
+                sb.Append(text);
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// <see cref="ResolveStructElementText"/> as it was before #1485: a scan of
+    /// each referenced page's letters per reference. Kept only so tests can
+    /// hold the per-MCID map to the letter-derived text it replaced.
+    /// </summary>
+    internal string ResolveStructElementTextFromLetters(
+        PdfStructElement element,
+        int? inheritedPageNumber = null)
+    {
+        if (element == null)
+            return string.Empty;
+
+        int? elementPage = PageNumberFromPg(element.RawDictionary) ?? inheritedPageNumber;
+        var refs = new List<(int Page, int Mcid)>();
+        CollectMarkedContentRefs(element.RawDictionary.GetOptional("K"), elementPage, refs, depth: 0);
+        if (refs.Count == 0)
+            return string.Empty;
+
         var lettersByPage = new Dictionary<int, IReadOnlyList<Excise.Core.Text.Letter>>();
         var sb = new StringBuilder();
         foreach (var (page, mcid) in refs)

@@ -224,6 +224,62 @@ public partial class PdfPage
     }
 
     /// <summary>
+    /// This page's text per marked-content id: for each <c>/MCID</c>, the
+    /// <see cref="Excise.Core.Text.Letter.Value"/>s of the letters carrying it,
+    /// concatenated in letter order (#1485). What
+    /// <see cref="PdfDocument.ResolveStructElementText"/> appends for one
+    /// reference, from one walk of the page, without keeping the letters.
+    /// </summary>
+    /// <remarks>
+    /// <para>The accessibility structure walk resolves every tagged element's
+    /// text this way. It used to scan the page's letters once per element,
+    /// which was cheap only because every page's letters were kept for the
+    /// document's lifetime. With letters bounded to a few pages, a walk over
+    /// irs-1040-instructions.pdf repeated at ~165 ms against ~33 ms before;
+    /// this map is text-sized and makes the repeat a dictionary lookup.</para>
+    /// <para>Stamped with the generation it was walked under and served only
+    /// while the page is still at it, so a content rewrite — which bumps the
+    /// generation before and after the bytes change — makes the next read walk
+    /// the new bytes. A stale map is replaced on that read, never returned.</para>
+    /// </remarks>
+    internal IReadOnlyDictionary<int, string> GetMarkedContentText(CancellationToken cancellationToken = default)
+    {
+        var generation = Volatile.Read(ref _textCacheGeneration);
+        if (_markedContentText is { } entry && entry.Generation == generation)
+            return entry.Text;
+
+        var letters = _cachedLetters;
+        if (letters == null)
+        {
+            Interlocked.Increment(ref _textWalkCount);
+            letters = new Excise.Core.Text.TextExtractor(this).ExtractLetters(cancellationToken);
+        }
+
+        var builders = new Dictionary<int, System.Text.StringBuilder>();
+        foreach (var letter in letters)
+        {
+            if (letter.MarkedContentId is not int mcid)
+                continue;
+            if (!builders.TryGetValue(mcid, out var sb))
+                builders[mcid] = sb = new System.Text.StringBuilder();
+            sb.Append(letter.Value);
+        }
+
+        var text = new Dictionary<int, string>(builders.Count);
+        foreach (var (mcid, sb) in builders)
+            text[mcid] = sb.ToString();
+
+        // A reference assignment is atomic; a lost race stores an older stamp,
+        // which only costs a walk because a stale stamp is never served.
+        _markedContentText = new MarkedContentTextEntry(generation, text);
+        return text;
+    }
+
+    private sealed record MarkedContentTextEntry(int Generation, IReadOnlyDictionary<int, string> Text);
+
+    private MarkedContentTextEntry? _markedContentText;
+
+    /// <summary>
     /// True while this page holds its letter list. For tests of the #1485
     /// bound; production code reads <see cref="Letters"/>.
     /// </summary>
