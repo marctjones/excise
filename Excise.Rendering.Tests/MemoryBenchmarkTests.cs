@@ -83,11 +83,8 @@ public class MemoryBenchmarkTests
     public void RenderAllocationPerPage_StaysBelowBudget(string fileName, int pageIndex)
     {
         var path = Path.Combine(CorpusDir, fileName);
-        if (!File.Exists(path))
-        {
-            _out.WriteLine($"SKIP: {path} missing — corpus not downloaded");
-            return;
-        }
+        Assert.SkipUnless(File.Exists(path),
+            $"{path} missing — smoke corpus not downloaded (scripts/download-smoke-corpus.sh)");
 
         // Warmup: open + render once so JIT, font caches, and process
         // stabilization don't dominate the allocation measurement.
@@ -140,11 +137,8 @@ public class MemoryBenchmarkTests
     public void WorkingSet_ReturnsToBaseline_AfterDocumentClose()
     {
         var path = Path.Combine(CorpusDir, "irs-w9.pdf");
-        if (!File.Exists(path))
-        {
-            _out.WriteLine("SKIP: irs-w9.pdf missing — corpus not downloaded");
-            return;
-        }
+        Assert.SkipUnless(File.Exists(path),
+            $"{path} missing — smoke corpus not downloaded (scripts/download-smoke-corpus.sh)");
 
         // Warmup to stabilize WorkingSet.
         using (var warmDoc = PdfDocument.Open(path))
@@ -206,11 +200,8 @@ public class MemoryBenchmarkTests
     public void LetterCache_NoAllocationOnRepeatedCalls()
     {
         var path = Path.Combine(CorpusDir, "irs-w9.pdf");
-        if (!File.Exists(path))
-        {
-            _out.WriteLine("SKIP: irs-w9.pdf missing — corpus not downloaded");
-            return;
-        }
+        Assert.SkipUnless(File.Exists(path),
+            $"{path} missing — smoke corpus not downloaded (scripts/download-smoke-corpus.sh)");
 
         using var doc = PdfDocument.Open(path);
         var page = doc.GetPage(1);
@@ -254,11 +245,8 @@ public class MemoryBenchmarkTests
     public void SequentialRenders_AllocationStable_WithinDocument()
     {
         var path = Path.Combine(CorpusDir, "irs-1040.pdf");
-        if (!File.Exists(path))
-        {
-            _out.WriteLine("SKIP: irs-1040.pdf missing — corpus not downloaded");
-            return;
-        }
+        Assert.SkipUnless(File.Exists(path),
+            $"{path} missing — smoke corpus not downloaded (scripts/download-smoke-corpus.sh)");
 
         using var doc = PdfDocument.Open(path);
 
@@ -312,11 +300,8 @@ public class MemoryBenchmarkTests
     public void MultiPageRender_PeakAllocation_StaysBelow_50MB()
     {
         var path = Path.Combine(CorpusDir, "scotus-trump-v-us.pdf");
-        if (!File.Exists(path))
-        {
-            _out.WriteLine("SKIP: scotus-trump-v-us.pdf missing — corpus not downloaded");
-            return;
-        }
+        Assert.SkipUnless(File.Exists(path),
+            $"{path} missing — smoke corpus not downloaded (scripts/download-smoke-corpus.sh)");
 
         using var doc = PdfDocument.Open(path);
 
