@@ -94,7 +94,16 @@ internal static class ImageRegionRedactor
         byte[] pixels;
         try
         {
-            pixels = image.DecodedData;
+            // A COPY (#1492). The redaction replaces the image with a new
+            // XObject; it must not edit the original's samples in place. The
+            // original is still what other pages sharing it draw, and what the
+            // writer saves from its unchanged encoded bytes — zeroing its
+            // decoded array made the viewer show those pages redacted while the
+            // saved file kept them intact, and a release of that decode-owned
+            // array (the viewer releases unrealized pages' samples) silently
+            // flipped them back. Zeroing a copy gives the new stream the same
+            // bytes, so the saved output is unchanged.
+            pixels = image.DecodedData.AsSpan().ToArray();
         }
         catch
         {

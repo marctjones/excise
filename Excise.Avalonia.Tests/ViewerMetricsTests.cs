@@ -40,6 +40,8 @@ public class ViewerMetricsTests
         ViewerMetrics.SinglePageMisses,
         ViewerMetrics.CacheTrims,
         ViewerMetrics.CacheTrimReleasedBytes,
+        ViewerMetrics.DecodedSampleReleases,
+        ViewerMetrics.DecodedSampleReleasedBytes,
     ];
 
     [Fact]
@@ -66,7 +68,28 @@ public class ViewerMetricsTests
             ViewerMetrics.RecordComposite(4096, 120);
             ViewerMetrics.RecordSinglePageRender(ViewerMetrics.SinglePageRenderStart(), 144);
             ViewerMetrics.RecordCacheTrim(PdfViewerCacheTrimLevel.Critical, 1, 2, 3);
+            ViewerMetrics.RecordDecodedSampleRelease(ViewerMetrics.DecodedSampleReleaseUnrealized, 2, 4096);
         }
+    }
+
+    [Fact]
+    public void Metrics_DecodedSampleRelease_CountsStreamsAndBytes_TaggedByReason_AndSkipsEmptyPasses()
+    {
+        using var capture = MetricCapture.Start();
+
+        ViewerMetrics.RecordDecodedSampleRelease(ViewerMetrics.DecodedSampleReleaseUnrealized, streams: 3, bytes: 12_000);
+        ViewerMetrics.RecordDecodedSampleRelease(ViewerMetrics.DecodedSampleReleaseTrim, streams: 1, bytes: 500);
+        ViewerMetrics.RecordDecodedSampleRelease(ViewerMetrics.DecodedSampleReleaseTrim, streams: 0, bytes: 0);
+
+        var releases = capture.Of("excise.viewer.decoded_samples.releases");
+        releases.Should().HaveCount(2, "a pass that released nothing records nothing");
+        releases.Single(m => m.Tag("reason") == "unrealized").Value.Should().Be(3);
+        releases.Single(m => m.Tag("reason") == "trim").Value.Should().Be(1);
+
+        var bytes = capture.Of("excise.viewer.decoded_samples.released");
+        bytes.Single(m => m.Tag("reason") == "unrealized").Value.Should().Be(12_000);
+        bytes.Single(m => m.Tag("reason") == "trim").Value.Should().Be(500);
+        capture.Instruments["excise.viewer.decoded_samples.released"].Unit.Should().Be("By");
     }
 
     [Fact]

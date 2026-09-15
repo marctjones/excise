@@ -82,6 +82,20 @@ internal static class ViewerMetrics
         "excise.viewer.cache.trim.released", "By",
         "Bytes one TrimCaches call released from one cache, tagged by level and kind (tiles, composites, single_page) (#1478).");
 
+    internal static readonly Counter<long> DecodedSampleReleases = Meter.CreateCounter<long>(
+        "excise.viewer.decoded_samples.releases", "{stream}",
+        "Image and mask streams whose decoded samples the viewer released, tagged by reason (unrealized, trim) (#1492).");
+
+    internal static readonly Counter<long> DecodedSampleReleasedBytes = Meter.CreateCounter<long>(
+        "excise.viewer.decoded_samples.released", "By",
+        "Decoded image-sample bytes the viewer released, tagged by reason (unrealized, trim) (#1492).");
+
+    /// <summary>Release reason: the pages that read the samples are no longer realized.</summary>
+    internal const string DecodedSampleReleaseUnrealized = "unrealized";
+
+    /// <summary>Release reason: <see cref="PdfViewerControl.TrimCaches"/>.</summary>
+    internal const string DecodedSampleReleaseTrim = "trim";
+
     /// <summary>True while a listener wants either continuous byte gauge.</summary>
     internal static bool ByteGaugesEnabled => ContinuousTileBytes.Enabled || ContinuousCompositeBytes.Enabled;
 
@@ -154,6 +168,24 @@ internal static class ViewerMetrics
             CacheTrimReleasedBytes.Record(compositeBytes, levelTag, new KeyValuePair<string, object?>("kind", "composites"));
             CacheTrimReleasedBytes.Record(singlePageBytes, levelTag, new KeyValuePair<string, object?>("kind", "single_page"));
         }
+    }
+
+    /// <summary>
+    /// One release pass that released anything (#1492): the stream count and
+    /// the decoded bytes, tagged by <paramref name="reason"/> — one of the
+    /// <c>DecodedSampleRelease*</c> string constants, so nothing is boxed.
+    /// </summary>
+    internal static void RecordDecodedSampleRelease(string reason, int streams, long bytes)
+    {
+        if (streams <= 0) return;
+        bool releases = DecodedSampleReleases.Enabled, released = DecodedSampleReleasedBytes.Enabled;
+        if (!releases && !released) return;
+
+        var reasonTag = new KeyValuePair<string, object?>("reason", reason);
+        if (releases)
+            DecodedSampleReleases.Add(streams, reasonTag);
+        if (released)
+            DecodedSampleReleasedBytes.Add(bytes, reasonTag);
     }
 
     private static string LevelTag(PdfViewerCacheTrimLevel level) => level switch

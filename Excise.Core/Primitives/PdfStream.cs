@@ -188,7 +188,7 @@ public class PdfStream : PdfDictionary
     /// </summary>
     /// <remarks>
     /// On a deferred stream this takes the decode lock, so a write can never
-    /// interleave with <see cref="TryReleaseDecoded"/>: without it a release
+    /// interleave with <see cref="TryReleaseDecoded()"/>: without it a release
     /// that had already checked the provenance flag could re-arm the decode and
     /// null a redaction's freshly written array a moment after it landed,
     /// handing the next reader the ORIGINAL samples again. Lock order stays
@@ -268,7 +268,7 @@ public class PdfStream : PdfDictionary
     /// <c>_decodedData</c> after this returns. Under the lock the state
     /// is always one of three consistent shapes — decoded; not decoded with the
     /// decode pending; not decoded and nothing pending (refused) — but outside
-    /// it a concurrent <see cref="TryReleaseDecoded"/> can move a decoded stream
+    /// it a concurrent <see cref="TryReleaseDecoded()"/> can move a decoded stream
     /// back to "pending" at any moment. A reader that decoded successfully and
     /// then looked at the field again would see null and report a refusal that
     /// never happened (#1468).
@@ -333,22 +333,67 @@ public class PdfStream : PdfDictionary
     /// <para>The save path is unaffected: the writer serializes
     /// <see cref="EncodedData"/>, which a release never touches.</para>
     /// </remarks>
-    internal bool TryReleaseDecoded()
+    internal bool TryReleaseDecoded() => TryReleaseDecoded(out _);
+
+    /// <summary>
+    /// <see cref="TryReleaseDecoded()"/>, reporting how many decoded bytes the
+    /// release dropped (0 when nothing was released). For the viewer's release
+    /// metrics (#1492).
+    /// </summary>
+    internal bool TryReleaseDecoded(out long releasedBytes)
     {
+        releasedBytes = 0;
         var deferral = _deferral;
         if (deferral == null)
             return false;
 
         lock (deferral)
-        {
-            if (!_decodedByDeferral || _decodedData == null)
-                return false;
+            return ReleaseHeld(deferral, out releasedBytes);
+    }
 
-            _decodedByDeferral = false;
-            _pendingDecode = deferral;
-            _decodedData = null;
-            return true;
+    /// <summary>
+    /// <see cref="TryReleaseDecoded(out long)"/> for a caller that must not wait
+    /// (#1492): the interactive viewer releases on the UI thread, and a decode
+    /// runs inside this stream's lock, which on a large image can take seconds.
+    /// When the lock is held — a decode or a write is in progress, so the
+    /// samples are in use right now — this gives up at once and reports
+    /// <see cref="DecodedReleaseOutcome.Busy"/>, and the caller tries again
+    /// later. Same release rules otherwise.
+    /// </summary>
+    internal DecodedReleaseOutcome TryReleaseDecodedWithoutWaiting(out long releasedBytes)
+    {
+        releasedBytes = 0;
+        var deferral = _deferral;
+        if (deferral == null)
+            return DecodedReleaseOutcome.NotReleasable;
+
+        if (!Monitor.TryEnter(deferral))
+            return DecodedReleaseOutcome.Busy;
+        try
+        {
+            return ReleaseHeld(deferral, out releasedBytes)
+                ? DecodedReleaseOutcome.Released
+                : DecodedReleaseOutcome.NotReleasable;
         }
+        finally
+        {
+            Monitor.Exit(deferral);
+        }
+    }
+
+    // Caller holds the deferral lock.
+    private bool ReleaseHeld(DeferredDecode deferral, out long releasedBytes)
+    {
+        releasedBytes = 0;
+        var decoded = _decodedData;
+        if (!_decodedByDeferral || decoded == null)
+            return false;
+
+        _decodedByDeferral = false;
+        _pendingDecode = deferral;
+        _decodedData = null;
+        releasedBytes = decoded.LongLength;
+        return true;
     }
 
     private sealed class DeferredDecode
@@ -396,4 +441,22 @@ public class PdfStream : PdfDictionary
     {
         return $"{base.ToString()}\nstream\n[{_encodedData.Length} bytes]\nendstream";
     }
+}
+
+/// <summary>
+/// What <see cref="PdfStream.TryReleaseDecodedWithoutWaiting"/> did (#1492).
+/// </summary>
+internal enum DecodedReleaseOutcome
+{
+    /// <summary>The decoded bytes were dropped and the decode re-armed.</summary>
+    Released,
+
+    /// <summary>
+    /// Nothing to release now: never deferred, not decoded, a refused decode,
+    /// or bytes written by something other than the decoder.
+    /// </summary>
+    NotReleasable,
+
+    /// <summary>The stream's lock was held (a decode or write in progress); try again later.</summary>
+    Busy,
 }

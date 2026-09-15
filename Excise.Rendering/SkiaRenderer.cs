@@ -144,7 +144,8 @@ public class SkiaRenderer
         // Render content. The facade owns the per-page resource scope; nested
         // contexts borrow it and therefore cannot dispose resources still in
         // use by a sibling form, pattern, mask, or transparency group.
-        using var resourceScope = new RenderResourceScope(options.ReleaseDecodedImageSamples);
+        using var resourceScope = new RenderResourceScope(
+            options.ReleaseDecodedImageSamples, options.ImageSampleStreamSink);
         var context = new RenderContext(
             canvas,
             page,

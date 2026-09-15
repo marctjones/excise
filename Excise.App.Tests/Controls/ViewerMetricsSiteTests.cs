@@ -58,6 +58,38 @@ public class ViewerMetricsSiteTests
         }
     }
 
+    /// <summary>
+    /// #1492: paging away from a page whose images were decoded records the
+    /// release at its real site, tagged "unrealized", with the released bytes.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task Metrics_PagingAway_RecordsTheDecodedSampleRelease_TaggedUnrealized()
+    {
+        using var capture = new ViewerMeterCapture();
+        const int pageCount = 8;
+        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(
+            ContinuousImageSampleReleaseTests.ImageDocument(pageCount));
+        try
+        {
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            viewer.CurrentPage = pageCount;
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageCount);
+            Dispatcher.UIThread.RunJobs();
+
+            var releases = capture.Of("excise.viewer.decoded_samples.releases");
+            releases.Should().NotBeEmpty("paging away from page 1 released its images' samples");
+            releases.Should().OnlyContain(m => m.Reason == "unrealized" && m.Value >= 1);
+            var bytes = capture.Of("excise.viewer.decoded_samples.released");
+            bytes.Should().OnlyContain(m => m.Reason == "unrealized");
+            bytes.Sum(m => m.Value).Should().BeGreaterThanOrEqualTo(16 * 16 * 3, "at least page 1's own 16x16 RGB image");
+        }
+        finally
+        {
+            window.Close();
+            viewer.Document?.Dispose();
+        }
+    }
+
     [FixedAvaloniaFact]
     public async Task Metrics_SinglePageRender_RecordsDuration_AndCacheCounters()
     {
@@ -91,7 +123,7 @@ public class ViewerMetricsSiteTests
         }
     }
 
-    private readonly record struct Captured(string Instrument, double Value, string? Dpi, string? Viewer);
+    private readonly record struct Captured(string Instrument, double Value, string? Dpi, string? Viewer, string? Reason = null);
 
     private sealed class ViewerMeterCapture : IDisposable
     {
@@ -115,14 +147,15 @@ public class ViewerMetricsSiteTests
 
         private void Add(Instrument instrument, double value, ReadOnlySpan<KeyValuePair<string, object?>> tags)
         {
-            string? dpi = null, viewer = null;
+            string? dpi = null, viewer = null, reason = null;
             foreach (var tag in tags)
             {
                 var text = Convert.ToString(tag.Value, CultureInfo.InvariantCulture);
                 if (tag.Key == "dpi") dpi = text;
                 else if (tag.Key == "viewer") viewer = text;
+                else if (tag.Key == "reason") reason = text;
             }
-            lock (_gate) _all.Add(new Captured(instrument.Name, value, dpi, viewer));
+            lock (_gate) _all.Add(new Captured(instrument.Name, value, dpi, viewer, reason));
         }
 
         public Captured[] Of(string instrument)

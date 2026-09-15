@@ -104,16 +104,144 @@ public class DecodedImageSampleReleaseTests
             "releasing a rewritten stream would re-decode the ORIGINAL encoded bytes and silently undo the rewrite");
     }
 
+    /// <summary>
+    /// #1492: <c>RenderOptions.ImageSampleStreamSink</c> reports which image and
+    /// mask streams a render read. The viewer keeps a realized page's samples
+    /// pinned by it, so it must name a stream the page reads even when another
+    /// render already decoded it — a filter on "not decoded yet" would let a
+    /// realized page's shared image be released under it.
+    /// </summary>
+    [Fact]
+    public void TheImageSampleSink_RecordsEveryImageAndMaskStreamTheRenderRead_DecodedOrNot()
+    {
+        using var doc = PdfDocument.Open(MaskedImagesDocument());
+        var streams = Streams(doc);
+        streams.Should().OnlyContain(s => !s.IsDecoded, "precondition: the first render drives every decode");
+
+        var first = new List<PdfStream>();
+        using var firstBitmap = Render(doc, release: false, sink: first);
+        first.Should().HaveCount(streams.Length, "the image, its /SMask, the second image and its /Mask, once each");
+        foreach (var stream in streams)
+            first.Should().Contain(s => ReferenceEquals(s, stream));
+
+        streams.Should().OnlyContain(s => s.IsDecoded, "precondition: nothing released them");
+        var second = new List<PdfStream>();
+        using var secondBitmap = Render(doc, release: false, sink: second);
+        second.Should().HaveCount(streams.Length,
+            "a stream an earlier render decoded is still a stream this page reads");
+        foreach (var stream in streams)
+            second.Should().Contain(s => ReferenceEquals(s, stream));
+
+        using var plain = Render(doc, release: false);
+        secondBitmap.Bytes.Should().Equal(plain.Bytes, "recording what a render reads changes no pixel");
+    }
+
+    [Fact]
+    public void TheImageSampleSink_RecordsImagesDrawnInsideAFormAndAnAnnotationAppearance_EvenWhenTheRenderReleasesThem()
+    {
+        using var doc = PdfDocument.Open(FormAndAnnotationImagesDocument());
+        var page = doc.GetPage(1);
+        var form = XObjectOf(doc, page.Dictionary, "Fm0");
+        var formImage = XObjectOf(doc, form, "ImF");
+        var annots = doc.Resolve(page.Dictionary.GetOptional("Annots")!).Should().BeOfType<PdfArray>().Subject;
+        var annot = doc.Resolve(annots[0]).Should().BeOfType<PdfDictionary>().Subject;
+        var ap = doc.Resolve(annot.GetOptional("AP")!).Should().BeOfType<PdfDictionary>().Subject;
+        var appearance = doc.Resolve(ap.GetOptional("N")!).Should().BeOfType<PdfStream>().Subject;
+        var appearanceImage = XObjectOf(doc, appearance, "ImA");
+
+        var sink = new List<PdfStream>();
+        using var bitmap = Render(doc, release: true, sink: sink);
+
+        sink.Should().HaveCount(2, "the only two images on the page, one per carrier");
+        sink.Should().Contain(s => ReferenceEquals(s, formImage), "an image drawn by a form XObject");
+        sink.Should().Contain(s => ReferenceEquals(s, appearanceImage), "an image drawn by an annotation's appearance stream");
+        formImage.IsDecoded.Should().BeFalse("the release flag still releases what the render decoded");
+        appearanceImage.IsDecoded.Should().BeFalse();
+        bitmap.Bytes.Should().Contain(b => b != 0xFF, "the images actually drew");
+    }
+
+    [Fact]
+    public void TheImageSampleSink_StaysEmpty_ForAPageWithNoImages()
+    {
+        using var doc = PdfDocument.CreateNew();
+        var page = doc.Pages.AddBlank(100, 100);
+        page.SetContentStreamBytes(Encoding.ASCII.GetBytes("0 0 1 rg 10 10 50 50 re f"));
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+
+        var sink = new List<PdfStream>();
+        using var _ = Render(reopened, release: false, sink: sink);
+
+        sink.Should().BeEmpty();
+    }
+
     // ---- helpers -------------------------------------------------------
 
-    private static SKBitmap Render(PdfDocument doc, bool release)
+    private static SKBitmap Render(PdfDocument doc, bool release, ICollection<PdfStream>? sink = null)
         => new SkiaRenderer().RenderPage(doc.GetPage(1), new RenderOptions
         {
             Dpi = 72,
             AntiAlias = false,
             BackgroundColor = SKColors.White,
             ReleaseDecodedImageSamples = release,
+            ImageSampleStreamSink = sink,
         });
+
+    private static PdfStream XObjectOf(PdfDocument doc, PdfDictionary owner, string name)
+    {
+        var resources = doc.Resolve(owner.GetOptional("Resources")!).Should().BeOfType<PdfDictionary>().Subject;
+        var xobjects = doc.Resolve(resources.GetOptional("XObject")!).Should().BeOfType<PdfDictionary>().Subject;
+        return doc.Resolve(xobjects.GetOptional(name)!).Should().BeOfType<PdfStream>().Subject;
+    }
+
+    /// <summary>
+    /// A page that draws one image through a form XObject, and a Square
+    /// annotation whose normal appearance draws another.
+    /// </summary>
+    private static byte[] FormAndAnnotationImagesDocument()
+    {
+        using var doc = PdfDocument.CreateNew();
+        var rgb = Enumerable.Range(0, Size * Size * 3).Select(i => (byte)((i * 53) % 180)).ToArray();
+        var formImageRef = doc.AddIndirectObject(new PdfStream(
+            ImageDictionary(bitsPerComponent: 8, colorSpace: "DeviceRGB"), Flate(rgb)));
+        var appearanceImageRef = doc.AddIndirectObject(new PdfStream(
+            ImageDictionary(bitsPerComponent: 8, colorSpace: "DeviceRGB"), Flate(rgb.Reverse().ToArray())));
+        var formRef = doc.AddIndirectObject(FormDrawing("ImF", formImageRef));
+        var appearanceRef = doc.AddIndirectObject(FormDrawing("ImA", appearanceImageRef));
+
+        var page = doc.Pages.AddBlank(100, 100);
+        var xobjects = new PdfDictionary();
+        xobjects["Fm0"] = formRef;
+        var resources = new PdfDictionary();
+        resources["XObject"] = xobjects;
+        page.Dictionary["Resources"] = resources;
+        page.SetContentStreamBytes(Encoding.ASCII.GetBytes("q 1 0 0 1 5 5 cm /Fm0 Do Q"));
+
+        var ap = new PdfDictionary();
+        ap["N"] = appearanceRef;
+        var annot = new PdfDictionary();
+        annot.SetName("Type", "Annot");
+        annot.SetName("Subtype", "Square");
+        annot["Rect"] = new PdfArray(new PdfInteger(55), new PdfInteger(55), new PdfInteger(95), new PdfInteger(95));
+        annot["AP"] = ap;
+        page.Dictionary["Annots"] = new PdfArray(doc.AddIndirectObject(annot));
+        return doc.SaveToBytes();
+    }
+
+    private static PdfStream FormDrawing(string imageName, PdfReference imageRef)
+    {
+        var xobjects = new PdfDictionary();
+        xobjects[imageName] = imageRef;
+        var resources = new PdfDictionary();
+        resources["XObject"] = xobjects;
+        var dict = new PdfDictionary();
+        dict.SetName("Type", "XObject");
+        dict.SetName("Subtype", "Form");
+        dict["BBox"] = new PdfArray(new PdfInteger(0), new PdfInteger(0), new PdfInteger(40), new PdfInteger(40));
+        dict["Resources"] = resources;
+        var content = Encoding.ASCII.GetBytes($"q 40 0 0 40 0 0 cm /{imageName} Do Q");
+        dict.SetInt("Length", content.Length);
+        return new PdfStream(dict, content);
+    }
 
     /// <summary>Im0, its /SMask, Im1, its explicit /Mask — in that order.</summary>
     private static PdfStream[] Streams(PdfDocument doc)

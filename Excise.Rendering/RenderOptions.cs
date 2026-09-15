@@ -125,6 +125,24 @@ public record RenderOptions
     public bool ReleaseDecodedImageSamples { get; init; }
 
     /// <summary>
+    /// Optional sink that receives every image and mask stream whose samples
+    /// this render read (#1492) — an image XObject, its <c>/SMask</c> or
+    /// explicit <c>/Mask</c>, wherever it was drawn from: page content, a form,
+    /// a pattern, a soft-mask group, an annotation appearance. Filled once, when
+    /// the render ends (also when it throws), on the rendering thread.
+    /// </summary>
+    /// <remarks>
+    /// Unlike <see cref="ReleaseDecodedImageSamples"/> this records a stream
+    /// whether or not it was already decoded: it answers "which samples does
+    /// this page use", which is what lets the interactive viewer keep a
+    /// realized page's samples pinned across its band renders and release them
+    /// once the page is no longer realized. Recording the render's actual reads
+    /// means no static walk has to mirror form, pattern, Type3, appearance and
+    /// mask resolution, or optional content.
+    /// </remarks>
+    internal ICollection<Excise.Core.Primitives.PdfStream>? ImageSampleStreamSink { get; init; }
+
+    /// <summary>
     /// Optional diagnostic sink for recoverable rendering warnings, such as
     /// malformed page content skipped on best-effort viewer paths.
     /// </summary>

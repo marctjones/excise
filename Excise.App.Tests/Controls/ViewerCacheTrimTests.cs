@@ -118,6 +118,58 @@ public class ViewerCacheTrimTests
         }
     }
 
+    /// <summary>
+    /// #1492: every level also releases the decoded image samples of pages
+    /// outside the current bands — stricter than the render pass, which keeps
+    /// any REALIZED page's samples. A stream a band page also reads stays. The
+    /// record for the out-of-band page is placed directly, so the trim is
+    /// measured before any render pass could release it for being unrealized.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task EveryLevel_ReleasesTheDecodedSamplesOfPagesOutsideTheBands_AndKeepsTheBandPagesAndSharedOnes()
+    {
+        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(
+            ContinuousImageSampleReleaseTests.ImageDocument(pageCount: 4));
+        try
+        {
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            var doc = viewer.Document!;
+            var own1 = ContinuousImageSampleReleaseTests.XObject(doc, 1, "Own");
+            var logo = ContinuousImageSampleReleaseTests.XObject(doc, 1, "Logo");
+            const int outOfBand = 4;
+            var ownOutOfBand = ContinuousImageSampleReleaseTests.XObject(doc, outOfBand, "Own");
+            viewer.ContinuousRequiredKeysForTests.Select(k => k.Page).Should().Contain(1)
+                .And.NotContain(outOfBand, "fixture: only the first page's band is required");
+            own1.IsDecoded.Should().BeTrue("precondition: page 1 rendered");
+            logo.IsDecoded.Should().BeTrue("precondition: page 1 rendered the shared logo");
+
+            foreach (var level in new[] { PdfViewerCacheTrimLevel.Background, PdfViewerCacheTrimLevel.Warn, PdfViewerCacheTrimLevel.Critical })
+            {
+                _ = ownOutOfBand.DecodedData;
+                ownOutOfBand.IsDecoded.Should().BeTrue("fixture");
+                viewer.ContinuousImageSamplesForTests.Record(outOfBand, [ownOutOfBand, logo]);
+
+                viewer.TrimCaches(level);
+
+                ownOutOfBand.IsDecoded.Should().BeFalse($"{level}: a page outside the bands gives back the samples only it read");
+                logo.IsDecoded.Should().BeTrue($"{level}: the band page still reads the shared logo");
+                own1.IsDecoded.Should().BeTrue($"{level}: the band page keeps its own samples");
+                viewer.LastCacheTrim.DecodedSampleStreams.Should().Be(1);
+                viewer.LastCacheTrim.DecodedSampleBytes.Should().Be(16 * 16 * 3, "one 16x16 RGB image's decoded samples");
+                viewer.ContinuousImageSamplesForTests.StreamsOf(outOfBand).Should().BeEmpty();
+                _out.WriteLine($"{level}: {viewer.LastCacheTrim}");
+
+                // Critical dropped the band's tiles; let page 1 settle again before the next level.
+                await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            }
+        }
+        finally
+        {
+            window.Close();
+            viewer.Document?.Dispose();
+        }
+    }
+
     [FixedAvaloniaFact]
     public async Task Critical_ReleasesEveryTileAndOffViewportComposites_KeepsTheVisibleComposite_AndTheBandRebuilds()
     {

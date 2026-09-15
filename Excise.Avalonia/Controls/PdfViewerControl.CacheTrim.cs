@@ -101,9 +101,21 @@ public partial class PdfViewerControl
             bitmap => ReferenceEquals(bitmap, shown),
             static bitmap => ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height));
 
+        // #1492: decoded image samples of pages outside the current bands, at
+        // every level. Stricter than the render pass, which keeps every
+        // REALIZED page: a realized page scrolled out of its band keeps its
+        // samples there, but a trim lets them go (a later band render of that
+        // page decodes again). Pages with a render in flight are always kept.
+        var bandPages = new HashSet<int>();
+        foreach (var key in _continuousRequiredKeys)
+            bandPages.Add(key.Page);
+        var (sampleStreams, sampleBytes) = ReleaseContinuousImageSamples(
+            bandPages, ViewerMetrics.DecodedSampleReleaseTrim);
+
         RefreshContinuousByteMirrors();
 
-        var result = new CacheTrimResult(level, tiles, tileBytes, composites, compositeBytes, singlePage, singlePageBytes);
+        var result = new CacheTrimResult(level, tiles, tileBytes, composites, compositeBytes, singlePage, singlePageBytes,
+            sampleStreams, sampleBytes);
         LastCacheTrim = result;
         CacheTrimCount++;
         ViewerMetrics.RecordCacheTrim(level, tileBytes, compositeBytes, singlePageBytes);
@@ -179,13 +191,21 @@ public partial class PdfViewerControl
     /// <summary>The band keys the last continuous render pass required (tests only).</summary>
     internal IReadOnlySet<ContinuousTileKey> ContinuousRequiredKeysForTests => _continuousRequiredKeys;
 
-    /// <summary>What one <see cref="TrimCaches"/> call released, by cache.</summary>
+    /// <summary>
+    /// What one <see cref="TrimCaches"/> call released, by cache, plus the
+    /// decoded image samples it released (#1492).
+    /// </summary>
     internal readonly record struct CacheTrimResult(
         PdfViewerCacheTrimLevel Level,
         int Tiles, long TileBytes,
         int Composites, long CompositeBytes,
-        int SinglePageBitmaps, long SinglePageBytes)
+        int SinglePageBitmaps, long SinglePageBytes,
+        int DecodedSampleStreams = 0, long DecodedSampleBytes = 0)
     {
+        /// <summary>
+        /// Bitmap bytes only (native pixels). Decoded samples are managed
+        /// memory and are reported separately in <see cref="DecodedSampleBytes"/>.
+        /// </summary>
         public long TotalBytes => TileBytes + CompositeBytes + SinglePageBytes;
     }
 }
