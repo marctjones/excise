@@ -57,7 +57,7 @@ public class FormerlyStallingDocumentTests
     private static string? FixturePath()
     {
         var dir = new DirectoryInfo(System.AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")))
+        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git")))
             dir = dir.Parent;
         if (dir == null) return null;
         var path = Path.Combine(dir.FullName, Fixture);

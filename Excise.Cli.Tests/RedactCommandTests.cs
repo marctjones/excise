@@ -142,7 +142,7 @@ public class RedactCommandTests : IDisposable
     {
         Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")))
+        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git")))
             dir = dir.Parent;
         Assert.SkipWhen(dir == null, "repository root unavailable");
 
@@ -167,7 +167,7 @@ public class RedactCommandTests : IDisposable
     {
         Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
+        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
         Assert.SkipWhen(dir == null, "repository root unavailable");
         var input = Path.Combine(dir!.FullName, "test-pdfs", "redaction-adversarial",
             "image-baked-text--IMAGEBAKEDSECRET.pdf");
@@ -187,7 +187,7 @@ public class RedactCommandTests : IDisposable
     {
         Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
+        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
         Assert.SkipWhen(dir == null, "repository root unavailable");
         var input = Path.Combine(dir!.FullName, "test-pdfs", "redaction-adversarial",
             "image-baked-text--IMAGEBAKEDSECRET.pdf");

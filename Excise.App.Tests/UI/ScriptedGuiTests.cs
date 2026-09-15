@@ -188,7 +188,7 @@ public class ScriptedGuiTests
         // Find repository root by walking up from current directory
         var currentDir = Directory.GetCurrentDirectory();
         var repoRoot = currentDir;
-        while (repoRoot != null && !Directory.Exists(Path.Combine(repoRoot, ".git")))
+        while (repoRoot != null && !Directory.Exists(Path.Combine(repoRoot, ".git")) && !File.Exists(Path.Combine(repoRoot, ".git")))
         {
             var parent = Directory.GetParent(repoRoot);
             repoRoot = parent?.FullName;

@@ -239,12 +239,29 @@ public static class GuiInteractionRecorder
     /// </summary>
     internal static string RepoArtifactsDirectory()
     {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")))
-            dir = dir.Parent;
-
-        var root = dir?.FullName ?? AppContext.BaseDirectory;
+        var root = FindRepoRoot(AppContext.BaseDirectory) ?? AppContext.BaseDirectory;
         return Path.Combine(root, "artifacts", "gui-coverage");
+    }
+
+    /// <summary>
+    /// The nearest ancestor of <paramref name="start"/> holding a <c>.git</c>
+    /// entry, or null. In a git worktree <c>.git</c> is a FILE
+    /// (<c>gitdir: ...</c>), not a directory; a directory-only check walked past
+    /// the worktree to the parent checkout, so a t1 run from
+    /// <c>.claude/worktrees/*</c> wrote its coverage into the main checkout's
+    /// <c>artifacts/</c> and <c>check-gui-interaction-coverage.sh</c> found none.
+    /// </summary>
+    internal static string? FindRepoRoot(string start)
+    {
+        var dir = new DirectoryInfo(start);
+        while (dir != null)
+        {
+            var git = Path.Combine(dir.FullName, ".git");
+            if (Directory.Exists(git) || File.Exists(git))
+                return dir.FullName;
+            dir = dir.Parent;
+        }
+        return null;
     }
 
     private sealed class AnonymousObserver<T>(Action<T> onNext) : IObserver<T>

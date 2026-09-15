@@ -45,7 +45,7 @@ public sealed class AdvanceParityTests
     private static string RepoRoot()
     {
         var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
+        while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
         return d?.FullName ?? AppContext.BaseDirectory;
     }
 

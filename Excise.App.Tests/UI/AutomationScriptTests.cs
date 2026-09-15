@@ -84,8 +84,9 @@ public class AutomationScriptTests
 
         while (dir != null)
         {
-            // Look for .git directory or automation-scripts directory
+            // Look for .git (a directory, or a file in a worktree) or automation-scripts directory
             if (Directory.Exists(Path.Combine(dir.FullName, ".git")) ||
+                File.Exists(Path.Combine(dir.FullName, ".git")) ||
                 Directory.Exists(Path.Combine(dir.FullName, "automation-scripts")))
             {
                 return dir.FullName;

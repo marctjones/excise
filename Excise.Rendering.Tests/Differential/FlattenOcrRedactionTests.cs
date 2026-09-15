@@ -55,7 +55,7 @@ public sealed class FlattenOcrRedactionTests
     private static string RepoRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory != null && !Directory.Exists(Path.Combine(directory.FullName, ".git")))
+        while (directory != null && !Directory.Exists(Path.Combine(directory.FullName, ".git")) && !File.Exists(Path.Combine(directory.FullName, ".git")))
             directory = directory.Parent;
         return directory?.FullName ?? throw new InvalidOperationException("repository root unavailable");
     }

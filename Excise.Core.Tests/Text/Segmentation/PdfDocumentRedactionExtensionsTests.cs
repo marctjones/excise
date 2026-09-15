@@ -372,7 +372,7 @@ public class PdfDocumentRedactionExtensionsTests
     public void RedactText_RealCanvasFixture_RemovesVisuallyOrderedWord()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")))
+        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git")))
             dir = dir.Parent;
         Assert.SkipWhen(dir == null, "repository root unavailable");
 
@@ -402,7 +402,7 @@ public class PdfDocumentRedactionExtensionsTests
     public void FindTextMatches_RealFreecultureFixture_DoesNotInventWordBreakInsideVisibleThat()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
+        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
         Assert.SkipWhen(dir == null, "repository root unavailable");
 
         using var doc = PdfDocument.Open(Path.Combine(dir!.FullName, "test-pdfs", "pdfjs", "freeculture.pdf"));
