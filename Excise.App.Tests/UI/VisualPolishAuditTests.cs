@@ -160,11 +160,12 @@ public class VisualPolishAuditTests
                 "Redaction mode, apply button, and pending-redaction sidebar area."));
 
             // #1476: a non-maximized width, so the audit sees the toolbar degrade
-            // (icon-only labels, wrapping) rather than scroll sideways.
+            // (labels dropped, then icons shrunk, then low-priority items hidden)
+            // rather than scroll sideways or wrap.
             window.Width = 1024;
             await WaitForUi();
             captures.Add(await CaptureWindow(window, output, "04b-narrow-toolbar-1024.png",
-                "Toolbar at 1024 px in redaction mode: icon-only labels, no horizontal scroll bar, zoom visible (#1476)."));
+                "Toolbar at 1024 px in redaction mode: one row, no horizontal scroll bar, degraded by priority, zoom visible (#1476)."));
             window.Width = 1280;
             await WaitForUi();
 
