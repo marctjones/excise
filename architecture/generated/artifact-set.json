@@ -2,32 +2,32 @@
   "$schema": "../schemas/artifact-set.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/architecture_artifacts.py",
-  "sourceRevision": "5e4d8ca2d2655840a7f047ee6a6eca906eec69f7",
+  "sourceRevision": "020ee8f9c6e2f89599b892ca40e69546fdccd370",
   "revisionSemantics": "provenance-only; normalized content and hashes determine freshness",
   "artifacts": [
     {
       "path": "architecture/inventory.generated.json",
       "format": "json",
       "schema": "architecture/schemas/inventory.schema.json",
-      "sha256": "740913d4d97ac5ac96972d66b18e5b06b898caecd5491411dfdf109ac7153570"
+      "sha256": "7337aacd026ff1116e682ca140cd8fc47e4e648fdd3e8b923742fef70d6c5472"
     },
     {
       "path": "architecture/generated/code-topology.json",
       "format": "json",
       "schema": "architecture/schemas/topology.schema.json",
-      "sha256": "2a30522f091aa0e72bc5a701c11aab49af665039c8ca61be20c536caf87d2047"
+      "sha256": "98930cdd5e698cb7a6f71eaaebd492f9de2841b20b8b210a86a336dcb2332008"
     },
     {
       "path": "architecture/generated/change-coupling.json",
       "format": "json",
       "schema": "architecture/schemas/change-coupling.schema.json",
-      "sha256": "eaea61f35d76bf29c427ef78fc75ba21406f6945a28ca620adf6fc4421908f85"
+      "sha256": "566824bf02247f799053037c3ac4fac2196e257ebe2a523d2bb4c7f40c5adbaf"
     },
     {
       "path": "architecture/generated/architecture-conformance.json",
       "format": "json",
       "schema": "architecture/schemas/architecture-conformance.schema.json",
-      "sha256": "606de3c8cd28e7078517c9ad9300d29132d43d5c9d787d0bc7877826cb8fd6e7"
+      "sha256": "5e44bdaeb366287d5f99780a4f22611110235f128ff5ccc12dfe6f71e8b16cc3"
     },
     {
       "path": "architecture/generated/current-projects.dot",
