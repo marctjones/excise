@@ -3,6 +3,7 @@
         xmlns:vm="using:Excise.App.ViewModels"
         xmlns:models="using:Excise.App.Models"
         xmlns:access="using:Excise.App.Automation"
+        xmlns:app="using:Excise.App"
         xmlns:controls="using:Excise.Avalonia.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -23,8 +24,21 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="/Styles/Icons.axaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <!-- #1476: declared on the window, not the Application, so the
+                 toolbar resolves it under any Application (including the
+                 headless test app). -->
+            <app:WidthBelowConverter x:Key="WidthBelowConverter"/>
         </ResourceDictionary>
     </Window.Resources>
+
+    <Window.Styles>
+        <!-- #1476: below the toolbar's compact width its labelled buttons show
+             their icon only. The tooltip and AutomationProperties.Name still
+             carry the label, the pattern #589 used for the secondary actions. -->
+        <Style Selector="Border.compact TextBlock.toolbar-label">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+    </Window.Styles>
 
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
 
@@ -445,18 +459,26 @@
         </Grid>
 
         <!-- Simplified Toolbar with Grouped Actions -->
-        <Border Grid.Row="3"
+        <Border x:Name="ToolbarBorder"
+                Grid.Row="3"
+                Classes.compact="{Binding $self.Bounds.Width, Converter={StaticResource WidthBelowConverter}, ConverterParameter=1480}"
                 Background="{DynamicResource SecondaryBackgroundBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="8,6">
             <Grid ColumnDefinitions="*,Auto">
-                <!-- Left: Main Actions -->
-                <ScrollViewer Grid.Column="0"
-                              HorizontalScrollBarVisibility="Auto"
-                              VerticalScrollBarVisibility="Disabled"
-                              Margin="0,0,8,0">
-                <StackPanel Orientation="Horizontal" Spacing="4">
+                <!-- Left: Main Actions. #1476: a WrapPanel, not the horizontally
+                     scrolling strip #589 introduced. Below 1480 px the labelled
+                     buttons collapse to icons (Border.compact in Controls.axaml),
+                     and whatever still does not fit wraps onto another row, so no
+                     action sits behind a scroll bar. Zoom keeps its own column,
+                     so #589's guarantee is unchanged. -->
+                <WrapPanel x:Name="ToolbarActionsPanel"
+                           Grid.Column="0"
+                           Orientation="Horizontal"
+                           ItemSpacing="4"
+                           LineSpacing="4"
+                           Margin="0,0,8,0">
                     <!-- View Group: sidebar toggles (outline + page previews) -->
                     <Button x:Name="ToolbarOutlineButton"
                             Command="{Binding ToggleOutlineCommand}"
@@ -504,7 +526,7 @@
                             AutomationProperties.HelpText="Opens a file dialog to select a PDF document">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconFolderOpen}"/>
-                            <TextBlock Text="Open"/>
+                            <TextBlock Classes="toolbar-label" Text="Open"/>
                         </StackPanel>
                     </Button>
                     <Button Command="{Binding SaveFileCommand}"
@@ -516,7 +538,7 @@
                             AutomationProperties.HelpText="Saves the current PDF document">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSave}"/>
-                            <TextBlock Text="{Binding SaveButtonText}"/>
+                            <TextBlock Classes="toolbar-label" Text="{Binding SaveButtonText}"/>
                         </StackPanel>
                     </Button>
                     <Button Command="{Binding SaveFlattenedFormCopyCommand}"
@@ -528,7 +550,7 @@
                             AutomationProperties.HelpText="Creates a copy where interactive form values are baked into page content">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconLayers}"/>
-                            <TextBlock Text="Flatten Form"/>
+                            <TextBlock Classes="toolbar-label" Text="Flatten Form"/>
                         </StackPanel>
                     </Button>
 
@@ -547,7 +569,7 @@
                             AutomationProperties.HelpText="Toggle text selection mode to select and copy text">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconTextSelect}"/>
-                            <TextBlock Text="Select Text"/>
+                            <TextBlock Classes="toolbar-label" Text="Select Text"/>
                         </StackPanel>
                     </Button>
 
@@ -562,7 +584,7 @@
                             AutomationProperties.HelpText="Place editable text that saves as flat PDF page content">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconTypewriter}"/>
-                            <TextBlock Text="Type"/>
+                            <TextBlock Classes="toolbar-label" Text="Type"/>
                         </StackPanel>
                     </Button>
 
@@ -704,7 +726,7 @@
                             AutomationProperties.HelpText="Toggle redaction mode to mark areas for removal">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconRedact}"/>
-                            <TextBlock Text="Redact"/>
+                            <TextBlock Classes="toolbar-label" Text="Redact"/>
                         </StackPanel>
                     </Button>
 
@@ -719,7 +741,7 @@
                             AutomationProperties.HelpText="Apply the current redaction selection">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconCheck}"/>
-                            <TextBlock Text="Apply"/>
+                            <TextBlock Classes="toolbar-label" Text="Apply"/>
                         </StackPanel>
                     </Button>
 
@@ -774,7 +796,7 @@
                             AutomationProperties.HelpText="Opens the search bar to find text in the document">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSearch}"/>
-                            <TextBlock Text="Find"/>
+                            <TextBlock Classes="toolbar-label" Text="Find"/>
                         </StackPanel>
                     </Button>
                     <Border Width="1" Height="24" Margin="6,0"
@@ -795,8 +817,7 @@
                             ToolTip.Tip="Rotate Right (Ctrl+R)"
                             AutomationProperties.Name="Rotate Page Right"
                             AutomationProperties.HelpText="Rotate the current page 90 degrees clockwise"/>
-                </StackPanel>
-                </ScrollViewer>
+                </WrapPanel>
 
                 <!-- Right: Zoom Controls -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">

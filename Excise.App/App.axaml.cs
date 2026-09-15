@@ -293,6 +293,29 @@ public partial class App : Application
     }
 }
 
+/// <summary>
+/// True when a width is positive and below the number given as the converter
+/// parameter. The main toolbar uses it to collapse its button labels to icons at
+/// narrow widths instead of scrolling (#1476).
+/// </summary>
+internal sealed class WidthBelowConverter : global::Avalonia.Data.Converters.IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
+    {
+        if (value is not double width
+            || !double.TryParse(parameter?.ToString(), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var threshold))
+        {
+            return false;
+        }
+
+        return width > 0 && width < threshold;
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
+        => AvaloniaProperty.UnsetValue;
+}
+
 public class BooleanToBrushConverter : global::Avalonia.Data.Converters.IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
