@@ -329,10 +329,10 @@ pixel/bug_349972030.pdf	1	PASS
 pixel/bug_42271010.pdf	1	PASS_ONE
 pixel/bug_440028542.pdf	1	PASS
 pixel/bug_512557.pdf	1	DIFF		#1384 not an excise defect: the RunLengthDecode stream decodes to exactly 512 bytes (64 rows x 8) and every renderer gets identical data; the 1-bit stripe pattern is resampled differently by all five oracles (10/10 pairs disagree). Skia-origin, /Interpolate absent and no kernel prescribed (§8.9.5.3).
-pixel/bug_603518.pdf	1	DIFF		#1383 memory-safety fixture (chromium:603518, pdfium 7cf5552027): JPEG SOF says 640x63760/3-comp, dictionary says 999x999/DeviceCMYK. excise's DecodeCmyk component guard is CORRECT; only the EncodedImageDecoder fallback paints a misleading grey field.
+pixel/bug_603518.pdf	1	PASS_ONE		#1383 memory-safety fixture (chromium:603518, pdfium 7cf5552027): JPEG SOF says 640x63760/3-comp, dictionary says 999x999/DeviceCMYK. excise's DecodeCmyk component guard is CORRECT; only the EncodedImageDecoder fallback paints a misleading grey field.
 pixel/bug_828206.pdf	1	MALFORMED_PDF
 pixel/bug_830221.pdf	1	MALFORMED_PDF
-pixel/bug_867501.pdf	1	PASS_ONE
+pixel/bug_867501.pdf	1	PASS
 pixel/bug_925736.pdf	1	PASS
 pixel/direct_content_stream.pdf	1	PASS
 pixel/freetext_annotation_without_da.pdf	1	PASS

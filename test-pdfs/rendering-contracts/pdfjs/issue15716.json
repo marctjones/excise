@@ -8,7 +8,7 @@
   "Notes": "Baseline contract inferred from full all-pages raw corpus report exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS",
+      "ExpectedRawStatus": "DIFF",
       "ReleaseStatus": "PASS",
       "QualityStatus": "PIXEL_EXACT",
       "PixelAgreement": "MATCHES_ALL_REQUIRED",
@@ -21,7 +21,7 @@
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
       "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
-      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json."
+      "Notes": "Re-pinned 2026-09-15: DIFF vs all 5 oracles, tracked by #1502 (ZapfDingbats club/heart glyphs compressed). excise pixels unchanged since before the #1370 re-pin; the June PASS pin was stale."
     }
   }
 }

@@ -8,7 +8,7 @@
   "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_bug1802506.pdf-p1-sheet.png. pdfinfo confirms a small CropBox inside a letter MediaBox.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_TARGET",

@@ -8,7 +8,7 @@
   "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_bug1922766.pdf-p1-sheet.png. pdfinfo shows CropBox 78.75 505.50 462.00 577.50 inside a letter MediaBox.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_SOME",

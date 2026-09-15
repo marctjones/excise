@@ -8,7 +8,7 @@
   "Notes": "Focused review: pdfe renders the repeated blue tiling-pattern strokes and follows Cairo's accepted phase/density.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "DIFF",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_TARGET",
@@ -22,7 +22,7 @@
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
       "QualityReason": "pdfe matches the accepted Cairo-style rendering for this tiling-pattern phase disagreement.",
-      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
+      "Notes": "Re-pinned 2026-09-15: #1460 tile-locality oracle disagreement no longer grants PASS_ONE for this #521 tiling-phase reference disagreement. excise pixels unchanged 05080bb7 -> HEAD."
     }
   }
 }

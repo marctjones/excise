@@ -8,7 +8,7 @@
   "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_issue4402_reduced.pdf-p1-sheet.png. pdfinfo confirms a tight heading CropBox inside an A4 MediaBox.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_ONE_REFERENCE",
