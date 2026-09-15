@@ -1,7 +1,7 @@
 {
   "$schema": "./schemas/assessment.schema.json",
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-31",
+  "reviewedAt": "2026-09-15",
   "statusDefinitions": {
     "implemented": "Present, production-reachable, and backed by named verification evidence.",
     "partial": "Present but has a documented boundary, structural risk, or incomplete verification.",
@@ -492,9 +492,10 @@
         "avalonia"
       ],
       "symptoms": [
-        "MainWindowViewModel.cs is 2,985 lines before its additional partials; search-index and search-execution lifecycles, annotation mutation and page-image export transactions, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, page/view/zoom viewport ownership, and one required composition contract are complete, but other workflow ownership remains concentrated.",
+        "MainWindowViewModel.cs is 3,223 lines and the 22 MainWindowViewModel*.cs partials total 8,488 lines (wc -l, 2026-09-15; MainWindowViewModel.cs was 2,985 at the 2026-08-31 review, so it grew); search-index and search-execution lifecycles, annotation mutation and page-image export transactions, staged document-open orchestration, workflow-grouped command composition, thumbnail-session ownership, page/view/zoom viewport ownership, and one required composition contract are complete, but other workflow ownership remains concentrated.",
         "Production uses an explicit validated service factory, tests use a named factory with explicit overrides and production-matching contracts, and design-time XAML no longer creates a second service graph.",
-        "Document, editing, redaction, security, and background work still share mutable state; thumbnail, search-request, annotation-mutation, and page/view/zoom viewport lifetimes now have explicit owners, with same-page and same-mode feedback made idempotent."
+        "Document, editing, redaction, security, and background work still share mutable state; thumbnail, search-request, annotation-mutation, and page/view/zoom viewport lifetimes now have explicit owners, with same-page and same-mode feedback made idempotent.",
+        "Every issue in issueIds is closed (re-checked with gh 2026-09-15) while the concentration above remains, so no open issue tracks the rest of this work; it needs a scoped follow-up issue or an explicit accepted_exception decision (#1356)."
       ],
       "deterministicDiscovery": [
         "wc -l Excise.App/ViewModels/MainWindowViewModel*.cs",
@@ -678,18 +679,19 @@
       "id": "architecture-status-drift",
       "name": "Narrative architecture status can drift from implementation",
       "priority": "high",
-      "currentStatus": "partial",
+      "currentStatus": "implemented",
       "desiredState": "Current/target component status, dependencies, workflow ownership, verification, and known gaps live in the checked JSON registry; narrative docs explain concepts and link to it.",
       "components": [
         "architecture-tooling",
         "verification"
       ],
       "symptoms": [
-        "Architecture, design, implementation-plan, and status claims are spread across documents and registries with overlapping authority.",
-        "Static diagrams and prose do not fail when project dependencies or evidence paths change."
+        "Resolved (#1234, #1246, #1247): current/target component status, relationships, workflows, decisions and concerns live in the schema-checked JSON registry (architecture/design.json, assessment.json, decisions.json), and docs/architecture/README.md is the canonical prose entry point that links to it rather than restating status.",
+        "Resolved (#1248, #957, #936): project dependencies, evidence paths and generated diagrams are compared with the code by the t0 BLOCK rows architecture-registry (scripts/check-architecture-registry.sh: 20 design components, 20 observed projects, 83 observed component edges, 0 undeclared, 0 forbidden on 2026-09-15), architecture-docs (scripts/check-architecture-docs.sh) and doc-claim-freshness (scripts/check-doc-claim-freshness.sh). All tracking issues are closed (re-checked with gh 2026-09-15)."
       ],
       "deterministicDiscovery": [
         "scripts/check-architecture-registry.sh",
+        "scripts/check-architecture-docs.sh",
         "scripts/check-doc-claim-freshness.sh",
         "dotnet sln excise.sln list",
         "rg -n 'ProjectReference' --glob '*.csproj'"
