@@ -88,7 +88,13 @@ public class ContinuousTileEvictionCompositeTests
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount);
         var bytes = File.ReadAllBytes(path);
         File.Delete(path);
+        return ShowContinuousViewer(bytes);
+    }
 
+    /// <summary>A continuous-view viewer over <paramref name="pdfBytes"/> in a shown window.</summary>
+    internal static (Window Window, PdfViewerControl Viewer, ItemsControl Items) ShowContinuousViewer(byte[] pdfBytes)
+    {
+        var bytes = pdfBytes;
         var viewer = new PdfViewerControl();
         var window = new Window { Content = viewer, Width = 900, Height = 700 };
         window.Show();

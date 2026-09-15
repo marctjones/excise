@@ -39,6 +39,8 @@
     <InternalsVisibleTo Include="excise" />
     <InternalsVisibleTo Include="Excise.RenderTools" />
     <InternalsVisibleTo Include="Excise.Rendering.Tests" />
+    <!-- #1492: the viewer passes RenderOptions.ImageSampleStreamSink. -->
+    <InternalsVisibleTo Include="Excise.Avalonia" />
   </ItemGroup>
 
 </Project>

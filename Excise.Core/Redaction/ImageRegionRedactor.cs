@@ -94,7 +94,14 @@ internal static class ImageRegionRedactor
         byte[] pixels;
         try
         {
-            pixels = image.DecodedData;
+            // The samples are zeroed IN PLACE, on the original stream's own
+            // decoded array, exactly as before: a later redaction of the same
+            // image object (another page sharing it) sees the zeroes, which is
+            // the saved output this redactor has always produced. Taking the
+            // array for the edit (#1492) marks it as no longer the decoder's, in
+            // the same lock that decodes it, so no release can drop it and
+            // silently hand the next reader the unredacted original samples.
+            pixels = image.TakeDecodedDataForInPlaceEdit();
         }
         catch
         {

@@ -7,12 +7,13 @@ using Excise.Core.Document;
 using Excise.Core.Parsing;
 using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Document;
 
 /// <summary>
-/// #1468 increment 2: <see cref="PdfStream.TryReleaseDecoded"/> gives back an
+/// #1468 increment 2: <see cref="PdfStream.TryReleaseDecoded()"/> gives back an
 /// image's decoded samples and re-arms its deferred decode.
 ///
 /// <para><b>Why.</b> Increment 1 stopped image samples inflating on OPEN, but
@@ -184,9 +185,12 @@ public class DecodedImageReleaseTests
         redacted.TryReleaseDecoded().Should().BeFalse("the redactor wrote these samples, not a decoder");
         redacted.DecodedData.Should().BeSameAs(redactedSamples);
 
-        image.TryReleaseDecoded().Should().BeTrue(
-            "the ORIGINAL image is untouched by a region redaction (it is replaced, not edited) and stays releasable");
-        image.DecodedData.Should().Equal(Samples);
+        // #1492: the redactor zeroes the ORIGINAL's decoded array in place (the
+        // saved output depends on it), so the original is no longer what its
+        // decoder produced and must never be released back to it.
+        image.TryReleaseDecoded().Should().BeFalse(
+            "the region redaction edited the original's samples in place; releasing would restore the unredacted ones");
+        image.DecodedData.Should().BeSameAs(redactedSamples);
     }
 
     /// <summary>
@@ -342,7 +346,259 @@ public class DecodedImageReleaseTests
         stream.DecodedData.Should().Equal(Samples);
     }
 
+    /// <summary>#1492: the viewer's release metrics need the bytes a release dropped.</summary>
+    [Fact]
+    public void AReleaseReportsTheDecodedBytesItDropped()
+    {
+        using var doc = PdfDocument.Open(SavedFlateImageDocument());
+        var image = GetImage(doc);
+
+        image.TryReleaseDecoded(out long before).Should().BeFalse("nothing decoded yet");
+        before.Should().Be(0);
+
+        image.DecodedData.Should().Equal(Samples);
+        image.TryReleaseDecoded(out long released).Should().BeTrue();
+        released.Should().Be(Samples.Length);
+
+        image.TryReleaseDecoded(out long again).Should().BeFalse();
+        again.Should().Be(0);
+    }
+
+    /// <summary>
+    /// #1492: the viewer releases on the UI thread, and a decode runs inside the
+    /// stream's lock. A release that would wait for it must give up instead.
+    /// </summary>
+    [Fact]
+    public async Task AReleaseWithoutWaiting_IsBusyWhileADecodeHoldsTheLock_AndReleasesOnceItIsDone()
+    {
+        using var entered = new ManualResetEventSlim();
+        using var gate = new ManualResetEventSlim();
+        var stream = new PdfStream(ImageDictionary(), Flate(Samples));
+        stream.DeferDecode(s =>
+        {
+            entered.Set();
+            gate.Wait(TimeSpan.FromSeconds(30));
+            s.SetDecodedData(Samples.ToArray());
+        });
+
+        stream.TryReleaseDecodedWithoutWaiting(out _).Should().Be(DecodedReleaseOutcome.NotReleasable,
+            "nothing is decoded and nobody holds the lock");
+
+        var reader = Task.Run(() => stream.DecodedData);
+        entered.Wait(TimeSpan.FromSeconds(30)).Should().BeTrue("fixture: the decode started");
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        stream.TryReleaseDecodedWithoutWaiting(out long busyBytes).Should().Be(DecodedReleaseOutcome.Busy);
+        watch.Stop();
+        busyBytes.Should().Be(0);
+        watch.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(5), "it returns at once rather than waiting for the decode");
+
+        gate.Set();
+        (await reader).Should().Equal(Samples);
+
+        stream.TryReleaseDecodedWithoutWaiting(out long released).Should().Be(DecodedReleaseOutcome.Released);
+        released.Should().Be(Samples.Length);
+        stream.IsDecoded.Should().BeFalse();
+        stream.TryReleaseDecodedWithoutWaiting(out _).Should().Be(DecodedReleaseOutcome.NotReleasable);
+    }
+
+    [Fact]
+    public void AReleaseWithoutWaiting_StillRefusesBytesTheDecoderDidNotWrite()
+    {
+        using var doc = PdfDocument.Open(SavedFlateImageDocument());
+        var image = GetImage(doc);
+        var rewritten = new byte[Samples.Length];
+        image.SetDecodedData(rewritten);
+
+        image.TryReleaseDecodedWithoutWaiting(out long bytes).Should().Be(DecodedReleaseOutcome.NotReleasable);
+        bytes.Should().Be(0);
+        image.DecodedData.Should().BeSameAs(rewritten);
+    }
+
+    /// <summary>
+    /// #1492, the aliasing hazard. A region redaction zeroes the ORIGINAL
+    /// image stream's decoded array in place (a later redaction of the same
+    /// image object sees those zeroes, which is the saved output the redactor
+    /// has always produced). That array must stop counting as the decoder's:
+    /// released, the next reader — another page sharing the image, a second
+    /// redaction — would decode the unredacted samples again.
+    /// </summary>
+    [Fact]
+    public void ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease()
+    {
+        using var doc = PdfDocument.Open(SavedSharedFlateImageDocument());
+        var page1 = doc.GetPage(1);
+        var shared = GetImage(doc);
+        doc.GetPage(2).GetXObject("Im0").Should().BeSameAs(shared, "precondition: both pages draw one image object");
+
+        ImageRegionRedactor.TryRegionRedact(
+                page1, shared, 40, 0, 0, 40, 10, 10, new PdfRectangle(15, 15, 30, 30), out var newName)
+            .Should().BeTrue("precondition: the redactor handled this Flate DeviceRGB image");
+        var redacted = page1.GetXObject(newName).Should().BeOfType<PdfStream>().Subject;
+        var zeroed = shared.DecodedData;
+        zeroed.Should().NotEqual(Samples, "precondition: the region was zeroed in the original's array");
+
+        shared.TryReleaseDecoded(out long bytes).Should().BeFalse("an in-place edit is not the decoder's output");
+        bytes.Should().Be(0);
+        shared.TryReleaseDecodedWithoutWaiting(out long noWaitBytes).Should().Be(DecodedReleaseOutcome.NotReleasable,
+            "never Released, and never Busy — nothing holds the lock, the answer is final");
+        noWaitBytes.Should().Be(0);
+
+        shared.DecodedData.Should().BeSameAs(zeroed, "the edited array stays in place");
+        redacted.DecodedData.Should().Equal(zeroed, "the redacted XObject carries the same zeroed samples");
+    }
+
+    /// <summary>
+    /// #1492: a release racing the redaction never leaves the shared stream (or
+    /// the redacted copy) holding the original samples. The redactor's read and
+    /// its provenance clear happen in one hold of the decode lock; a release
+    /// that lands first only makes the redactor decode again.
+    /// </summary>
+    [Fact]
+    public async Task AReleaseLoopingOnAnotherThread_NeverLeavesTheRedactedImageWithTheOriginalSamples()
+    {
+        var source = SavedSharedFlateImageDocument();
+        for (var round = 0; round < 200; round++)
+        {
+            using var doc = PdfDocument.Open(source);
+            var page1 = doc.GetPage(1);
+            var shared = GetImage(doc);
+            shared.DecodedData.Should().Equal(Samples, "precondition: a render decoded the image");
+
+            using var stop = new CancellationTokenSource();
+            var releaser = Task.Run(() =>
+            {
+                while (!stop.IsCancellationRequested)
+                    shared.TryReleaseDecoded();
+            });
+
+            ImageRegionRedactor.TryRegionRedact(
+                    page1, shared, 40, 0, 0, 40, 10, 10, new PdfRectangle(15, 15, 30, 30), out var newName)
+                .Should().BeTrue($"round {round}");
+            var redacted = page1.GetXObject(newName).Should().BeOfType<PdfStream>().Subject;
+
+            stop.Cancel();
+            await releaser.WaitAsync(TimeSpan.FromSeconds(30));
+
+            redacted.DecodedData.Should().NotEqual(Samples, $"round {round}: the redacted copy is zeroed");
+            shared.DecodedData.Should().BeSameAs(redacted.DecodedData,
+                $"round {round}: the shared stream still holds the zeroed array, not a re-decode of the original");
+        }
+    }
+
+    /// <summary>
+    /// #1492: the redaction removes the text from every carrier (scanned inside
+    /// compressed streams) and zeroes the region in the redacted page's image,
+    /// and the page that shares the original image saves it from its unchanged
+    /// encoded bytes.
+    /// </summary>
+    [Fact]
+    public void RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes()
+    {
+        const string term = "SECRETNAME";
+        byte[] saved;
+        using (var doc = PdfDocument.Open(SavedSharedFlateImageDocument(textOnPage1: term)))
+        {
+            var shared = GetImage(doc);
+            shared.DecodedData.Should().Equal(Samples, "precondition: a render decoded the image");
+
+            doc.GetPage(1).RedactArea(new PdfRectangle(15, 15, 30, 30));
+
+            shared.TryReleaseDecoded().Should().BeFalse("the redaction edited the shared original's samples in place");
+            saved = doc.SaveToBytes();
+        }
+
+        SavedPdfLeakScanner.FindTerm(saved, term).Should().BeEmpty("the redacted text must not survive in any carrier");
+
+        using var reopened = PdfDocument.Open(saved);
+        // The area covers columns 0-1 of rows 2-3.
+        AssertZeroedExactly(ImagesOf(reopened.GetPage(1)).Should().ContainSingle().Subject.DecodedData,
+            (row, col) => row >= 2 && col <= 1, "page 1");
+        reopened.GetPage(2).GetXObject("Im0").Should().BeOfType<PdfStream>().Subject
+            .DecodedData.Should().Equal(Samples, "page 2's image saves from the original's unchanged encoded bytes");
+    }
+
+    /// <summary>
+    /// Pins the redactor's saved output for two pages that share an image, each
+    /// region-redacted in its own area (#1492 keeps it byte-identical to
+    /// before). The first redaction zeroes the shared original in place, so
+    /// page 2's redacted copy carries page 1's zeroed region as well as its own.
+    /// </summary>
+    [Fact]
+    public void RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions()
+    {
+        byte[] saved;
+        using (var doc = PdfDocument.Open(SavedSharedFlateImageDocument()))
+        {
+            doc.GetPage(1).RedactArea(new PdfRectangle(15, 15, 30, 30));
+            doc.GetPage(2).RedactArea(new PdfRectangle(35, 35, 48, 48));
+            saved = doc.SaveToBytes();
+        }
+
+        using var reopened = PdfDocument.Open(saved);
+        // Page 1's area covers columns 0-1 of rows 2-3; page 2's covers columns 2-3 of rows 0-1.
+        AssertZeroedExactly(ImagesOf(reopened.GetPage(1)).Should().ContainSingle().Subject.DecodedData,
+            (row, col) => row >= 2 && col <= 1, "page 1");
+        AssertZeroedExactly(ImagesOf(reopened.GetPage(2)).Should().ContainSingle().Subject.DecodedData,
+            (row, col) => (row >= 2 && col <= 1) || (row <= 1 && col >= 2), "page 2");
+    }
+
     // ---- helpers -------------------------------------------------------
+
+    private static void AssertZeroedExactly(byte[] samples, Func<int, int, bool> zeroed, string page)
+    {
+        samples.Should().HaveCount(Samples.Length);
+        for (var row = 0; row < Height; row++)
+        {
+            for (var col = 0; col < Width; col++)
+            {
+                for (var c = 0; c < 3; c++)
+                {
+                    int i = (row * Width + col) * 3 + c;
+                    samples[i].Should().Be(zeroed(row, col) ? (byte)0 : Samples[i],
+                        $"{page} sample row {row} col {col}");
+                }
+            }
+        }
+    }
+
+    private static List<PdfStream> ImagesOf(PdfPage page)
+    {
+        var resources = page.Document.Resolve(page.Dictionary.GetOptional("Resources")!) as PdfDictionary;
+        var xobjects = resources == null ? null : page.Document.Resolve(resources.GetOptional("XObject")!) as PdfDictionary;
+        var images = new List<PdfStream>();
+        if (xobjects == null)
+            return images;
+        foreach (var (_, value) in xobjects)
+        {
+            if (page.Document.Resolve(value) is PdfStream stream && stream.GetOptional("Subtype") is PdfName { Value: "Image" })
+                images.Add(stream);
+        }
+        return images;
+    }
+
+    /// <summary>One Flate image drawn by two pages, optionally with text over its lower-left region on page 1.</summary>
+    private static byte[] SavedSharedFlateImageDocument(string? textOnPage1 = null)
+    {
+        using var doc = PdfDocument.CreateNew();
+        var imageRef = doc.AddIndirectObject(new PdfStream(ImageDictionary(), Flate(Samples)));
+        PlaceOnNewPage(doc, imageRef);
+        PlaceOnNewPage(doc, imageRef);
+        if (textOnPage1 != null)
+        {
+            var page = doc.GetPage(1);
+            var font = new PdfDictionary();
+            font.SetName("Type", "Font");
+            font.SetName("Subtype", "Type1");
+            font.SetName("BaseFont", "Helvetica");
+            var fonts = new PdfDictionary();
+            fonts["F1"] = doc.AddIndirectObject(font);
+            ((PdfDictionary)page.Dictionary.GetOptional("Resources")!)["Font"] = fonts;
+            page.SetContentStreamBytes(Encoding.ASCII.GetBytes(
+                $"q 40 0 0 40 10 10 cm /Im0 Do Q BT /F1 2 Tf 16 20 Td ({textOnPage1}) Tj ET"));
+        }
+        return doc.SaveToBytes();
+    }
 
     private static void Write(PdfStream image, string writer, byte[] decoded, byte[] encoded)
     {

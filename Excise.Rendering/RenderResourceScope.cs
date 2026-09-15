@@ -34,12 +34,25 @@ internal sealed class RenderResourceScope : IDisposable
     // RenderOptions.ReleaseDecodedImageSamples asked for them to be let go
     // (#1468). Null when it did not, so an unflagged render records nothing.
     private readonly HashSet<PdfStream>? _decodedImageSampleStreams;
+
+    // Every image and mask stream whose samples this render read, decoded or
+    // not, when RenderOptions.ImageSampleStreamSink asked for them (#1492).
+    // Handed to the sink once, at Dispose. Null when nothing asked.
+    private readonly HashSet<PdfStream>? _readImageSampleStreams;
+    private readonly ICollection<PdfStream>? _imageSampleStreamSink;
     private bool _disposed;
 
-    public RenderResourceScope(bool releaseDecodedImageSamples = false)
+    public RenderResourceScope(
+        bool releaseDecodedImageSamples = false,
+        ICollection<PdfStream>? imageSampleStreamSink = null)
     {
         if (releaseDecodedImageSamples)
             _decodedImageSampleStreams = new HashSet<PdfStream>(ReferenceEqualityComparer.Instance);
+        if (imageSampleStreamSink != null)
+        {
+            _imageSampleStreamSink = imageSampleStreamSink;
+            _readImageSampleStreams = new HashSet<PdfStream>(ReferenceEqualityComparer.Instance);
+        }
     }
 
     /// <summary>
@@ -55,10 +68,15 @@ internal sealed class RenderResourceScope : IDisposable
     /// bytes the other one decoded. That costs the other renderer one
     /// re-decode, never a wrong byte — a reader holding the array keeps it,
     /// and a later reader decodes again under the stream's lock.
+    /// <para>Independently of that, when the render has an image-sample sink
+    /// (#1492) the stream is recorded there WHETHER OR NOT it is decoded: the
+    /// sink answers "which samples does this page use", and a stream another
+    /// page already decoded is still one this page needs pinned.</para>
     /// </remarks>
     public void NoteImageSampleRead(PdfStream stream)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        _readImageSampleStreams?.Add(stream);
         if (_decodedImageSampleStreams != null && !stream.IsDecoded)
             _decodedImageSampleStreams.Add(stream);
     }
@@ -263,6 +281,15 @@ internal sealed class RenderResourceScope : IDisposable
             return;
 
         _disposed = true;
+
+        // Before the release below: the sink reports what the render READ,
+        // which is independent of whether this render then let it go.
+        if (_readImageSampleStreams != null)
+        {
+            foreach (var stream in _readImageSampleStreams)
+                _imageSampleStreamSink!.Add(stream);
+            _readImageSampleStreams.Clear();
+        }
 
         // Catches every recorded stream the early release did not reach (an
         // uncached stencil or explicit-mask read, or a later re-read of one

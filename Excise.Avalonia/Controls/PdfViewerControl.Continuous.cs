@@ -66,6 +66,11 @@ public partial class PdfViewerControl
     private CancellationTokenSource _continuousDocCts = new();
     private readonly HashSet<ContinuousTileKey> _continuousInFlight = new();
     private IReadOnlySet<ContinuousTileKey> _continuousRequiredKeys = new HashSet<ContinuousTileKey>();
+    // #1492: the image and mask streams each page's band renders read, and the
+    // document they belong to. A page's decoded samples stay pinned while it is
+    // realized or has a render in flight, and are released once it is neither.
+    private readonly DecodedImageSampleRetention _continuousImageSamples = new();
+    private Excise.Core.Document.PdfDocument? _continuousImageSamplesDocument;
     // Cap concurrent cell renders: a grid multiplies the old per-page fan-out by
     // the visible cell count, and SkiaRenderer serializes typeface acquisition
     // process-wide (_typefaceLoadLock) — unbounded Task.Run just thrashes.
@@ -580,7 +585,109 @@ public partial class PdfViewerControl
         _continuousSelectionAnchor = null;
         _continuousSelectionFocus = null;
         _continuousSelectionPage = 0;
+
+        // #1492: records of another document are dropped, never released —
+        // those streams are not this viewer's to touch any more. On the same
+        // document (an annotation toggle, a redaction's render-version bump) the
+        // records stay: a page's streams only over-approximate what it now
+        // reads, which costs at most a re-decode, and dropping them would pin
+        // every visited page's samples until that page rendered again.
+        if (!ReferenceEquals(_continuousImageSamplesDocument, Document))
+        {
+            _continuousImageSamples.Clear();
+            _continuousImageSamplesDocument = Document;
+        }
     }
+
+    /// <summary>
+    /// Merge the image and mask streams one band render of <paramref name="pageNumber"/>
+    /// read into its record (#1492). Dropped when the render belonged to a
+    /// document the viewer no longer shows.
+    /// </summary>
+    private void RecordContinuousImageSamples(
+        Excise.Core.Document.PdfDocument renderedDocument,
+        int pageNumber,
+        IReadOnlyCollection<Excise.Core.Primitives.PdfStream> streams)
+    {
+        if (streams.Count == 0 || !ReferenceEquals(renderedDocument, Document))
+            return;
+        if (!ReferenceEquals(_continuousImageSamplesDocument, renderedDocument))
+        {
+            _continuousImageSamples.Clear();
+            _continuousImageSamplesDocument = renderedDocument;
+        }
+        _continuousImageSamples.Record(pageNumber, streams);
+    }
+
+    /// <summary>
+    /// Release the decoded image samples of pages that are no longer realized
+    /// (#1492), keeping every stream a realized page or a page with a render in
+    /// flight has read. Recomputed from the current state on every call, so
+    /// calling it again is harmless.
+    /// </summary>
+    private void ReleaseImageSamplesOfUnrealizedPages(IReadOnlySet<int>? realizedPages = null)
+    {
+        if (_continuousImageSamples.IsEmpty || _continuousDetached)
+            return;
+
+        if (realizedPages == null)
+        {
+            var pages = new HashSet<int>();
+            if (_continuousItems != null)
+            {
+                foreach (var container in _continuousItems.GetRealizedContainers())
+                {
+                    if (container.DataContext is PdfPageSlot slot)
+                        pages.Add(slot.PageNumber);
+                }
+            }
+            realizedPages = pages;
+        }
+
+        ReleaseContinuousImageSamples(realizedPages, ViewerMetrics.DecodedSampleReleaseUnrealized);
+    }
+
+    /// <summary>
+    /// Release every recorded stream not read by <paramref name="keepPages"/>
+    /// or by a page with a render in flight (#1492). UI thread only; never
+    /// waits on a decode in progress.
+    /// </summary>
+    private (int Streams, long Bytes) ReleaseContinuousImageSamples(IReadOnlySet<int> keepPages, string reason)
+    {
+        if (_continuousImageSamples.IsEmpty)
+            return default;
+
+        var keep = ContinuousImageSampleKeepPages(keepPages, _continuousInFlight);
+        var (streams, bytes) = _continuousImageSamples.ReleaseAllExcept(keep);
+        ViewerMetrics.RecordDecodedSampleRelease(reason, streams, bytes);
+        if (streams > 0 && TraceEnabled)
+            Trace($"ImageSamplesReleased reason={reason} streams={streams} bytes={bytes} kept=[{string.Join(",", keep.Order())}]");
+        return (streams, bytes);
+    }
+
+    /// <summary>
+    /// The pages whose image samples stay pinned (#1492): <paramref name="pages"/>
+    /// plus every page with a band render in flight. An in-flight render's
+    /// streams are not recorded until it lands, and the page they belong to
+    /// must not lose its samples mid-render.
+    /// </summary>
+    internal static HashSet<int> ContinuousImageSampleKeepPages(
+        IEnumerable<int> pages, IEnumerable<ContinuousTileKey> inFlight)
+    {
+        var keep = new HashSet<int>(pages);
+        foreach (var key in inFlight)
+            keep.Add(key.Page);
+        return keep;
+    }
+
+    /// <summary>The #1492 per-page stream records (tests only).</summary>
+    internal DecodedImageSampleRetention ContinuousImageSamplesForTests => _continuousImageSamples;
+
+    /// <summary>
+    /// Called on the render thread with the page number just before a band
+    /// render starts (tests only), so a test can hold a render in flight.
+    /// </summary>
+    internal Action<int>? ContinuousBandRenderStartingForTests { get; set; }
 
     /// <summary>
     /// Resize every slot to the new zoom (bindings re-layout the borders) and
@@ -1004,6 +1111,16 @@ public partial class PdfViewerControl
             RefreshContinuousByteMirrors();
         }
 
+        // #1492: the same bound for decoded image samples. A page that is no
+        // longer realized gives back the samples only it read.
+        if (!_continuousImageSamples.IsEmpty)
+        {
+            var realizedPages = new HashSet<int>();
+            foreach (var slot in realized)
+                realizedPages.Add(slot.PageNumber);
+            ReleaseImageSamplesOfUnrealizedPages(realizedPages);
+        }
+
         // Pass 2: schedule renders for cells not yet cached, then (re)composite the
         // page from its cached cells. RecomposeSlot only swaps in a new band bitmap
         // once every covering cell is available, so the previous composite (which
@@ -1133,6 +1250,10 @@ public partial class PdfViewerControl
         }
 
         var token = _continuousDocCts.Token;
+        // #1492: every image and mask stream this band's render reads. Filled
+        // by the renderer when RenderPage returns (or throws), on the render
+        // thread, before the awaited task completes; read only after that.
+        var imageSamples = new List<Excise.Core.Primitives.PdfStream>();
 
         try
         {
@@ -1162,9 +1283,11 @@ public partial class PdfViewerControl
                 var showFields = ShowFieldAndLinkAnnotations;
                 var revealHidden = RevealHiddenAnnotations;
                 var highlightFields = HighlightFormFields;
+                var renderStarting = ContinuousBandRenderStartingForTests;
                 var skBitmap = await Task.Run(() =>
                 {
                     token.ThrowIfCancellationRequested();
+                    renderStarting?.Invoke(pageNumber);
                     // A fresh renderer per pass: SkiaRenderer carries per-render
                     // instance state and is not reentrant, and several pages'
                     // bands may render concurrently.
@@ -1177,7 +1300,8 @@ public partial class PdfViewerControl
                         ShowCommentAnnotations = showComments,
                         ShowFieldAndLinkAnnotations = showFields,
                         RevealHiddenAnnotations = revealHidden,
-                        HighlightFormFields = highlightFields
+                        HighlightFormFields = highlightFields,
+                        ImageSampleStreamSink = imageSamples,
                     });
                 }, token);
                 renderWatch.Stop();
@@ -1217,7 +1341,19 @@ public partial class PdfViewerControl
         }
         finally
         {
+            // #1492, in this order. Record what the render read (a cancelled
+            // render may belong to a document the viewer no longer shows), THEN
+            // end the in-flight claim, THEN re-check: a page unrealized while
+            // this render was running was kept by the claim, and nothing else
+            // would release the samples the render just pinned.
+            bool current = !token.IsCancellationRequested && !_continuousDetached;
+            if (current)
+                RecordContinuousImageSamples(doc, pageNumber, imageSamples);
             foreach (var (_, key) in claimed) _continuousInFlight.Remove(key);
+            if (current)
+            {
+                try { ReleaseImageSamplesOfUnrealizedPages(); } catch { }
+            }
         }
     }
 
@@ -1375,6 +1511,9 @@ public partial class PdfViewerControl
         {
             slot.ClearComposite();
             RefreshContinuousByteMirrors();
+            // #1492: and its decoded image samples, unless a render of it is
+            // still in flight (the render's finally re-checks once it lands).
+            ReleaseImageSamplesOfUnrealizedPages();
             return;
         }
 
