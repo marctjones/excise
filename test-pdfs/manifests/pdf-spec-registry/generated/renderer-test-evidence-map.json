@@ -3765,7 +3765,7 @@
       "path": "Excise.Rendering.Tests/Differential/CertainChannelReferenceComparisonTests.cs",
       "class": "CertainChannelReferenceComparisonTests",
       "method": "ExciseCertainChannel_RecoversUnderBoxText_AtLeastAsWellAsXRay",
-      "line": 41,
+      "line": 42,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -3968,7 +3968,7 @@
       "path": "Excise.Rendering.Tests/Differential/CompetitorAdapterTests.cs",
       "class": "CompetitorAdapterTests",
       "method": "RasterBaseline_LeavesNoExtractableTextAnywhere_TheAnchor",
-      "line": 56,
+      "line": 57,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4009,7 +4009,7 @@
       "path": "Excise.Rendering.Tests/Differential/CompetitorAdapterTests.cs",
       "class": "CompetitorAdapterTests",
       "method": "ItextPdfSweep_RemovesTheTerm_ButKeepsItsNeighbours",
-      "line": 81,
+      "line": 82,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -8738,7 +8738,7 @@
       "path": "Excise.Rendering.Tests/Differential/HyphenWrappedRedactionReportingTests.cs",
       "class": "HyphenWrappedRedactionReportingTests",
       "method": "AHyphenWrappedTerm_SurvivesRedaction_AndIsReportedRatherThanCalledClean",
-      "line": 48,
+      "line": 49,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -10168,7 +10168,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperandSplitImprovementTests.cs",
       "class": "OperandSplitImprovementTests",
       "method": "OperandSplit_Fires_AndDestroysNoMoreThanReconstruction",
-      "line": 78,
+      "line": 79,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -18999,7 +18999,7 @@
       "path": "Excise.Rendering.Tests/Differential/UnredactMethodComparisonTests.cs",
       "class": "UnredactMethodComparisonTests",
       "method": "ExactMetrics_vs_PixelTolerance_NarrowingPower",
-      "line": 60,
+      "line": 61,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -19038,7 +19038,7 @@
       "path": "Excise.Rendering.Tests/Differential/UnredactMethodComparisonTests.cs",
       "class": "UnredactMethodComparisonTests",
       "method": "ExactMetrics_vs_PixelTolerance_ResidueRecovery",
-      "line": 109,
+      "line": 110,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -19077,7 +19077,7 @@
       "path": "Excise.Rendering.Tests/Differential/UnredactionScorecardTests.cs",
       "class": "UnredactionScorecardTests",
       "method": "Score_GradesPerChannelStratumTool_AndComputesExciseAdvantage",
-      "line": 37,
+      "line": 38,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -19116,7 +19116,7 @@
       "path": "Excise.Rendering.Tests/Differential/UnredactionScorecardTests.cs",
       "class": "the",
       "method": "NoReferenceForAStratum_IsReportedNotCountedAsAWin",
-      "line": 63,
+      "line": 64,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -19155,7 +19155,7 @@
       "path": "Excise.Rendering.Tests/Differential/UnredactionScorecardTests.cs",
       "class": "the",
       "method": "ConsolidatedScorecard_CertainAndResidue_ExciseLeadsTheReferences",
-      "line": 71,
+      "line": 72,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
