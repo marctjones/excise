@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "6c5c88655216641728f954d02754cf2e4ff755ab98a54f75ab771839186636d5",
+  "sourceFingerprint": "9827ca4114e7b622fef87f421222fc51de6cad30884c17e3326a1260d9d68ed9",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -5563,6 +5563,28 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering/Fonts/FontManagerLock.cs",
+      "path": "Excise.Rendering/Fonts/FontManagerLock.cs",
+      "kind": "source-file",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering/Fonts/PdfFontResolver.cs",
       "path": "Excise.Rendering/Fonts/PdfFontResolver.cs",
       "kind": "source-file",
@@ -8915,12 +8937,12 @@
     }
   ],
   "summary": {
-    "records": 422,
+    "records": 423,
     "facets": {
       "annotations": 11,
       "content-and-graphics": 18,
       "document-structure": 32,
-      "fonts": 29,
+      "fonts": 30,
       "forms": 8,
       "images": 29,
       "product-integration-general": 231,
@@ -8944,9 +8966,9 @@
       "pdf.17.graphics.color:preserve": 1,
       "pdf.17.graphics.color:render": 1,
       "pdf.17.graphics.color:write": 1,
-      "pdf.17.graphics.fonts:extract": 29,
-      "pdf.17.graphics.fonts:parse": 29,
-      "pdf.17.graphics.fonts:render": 29,
+      "pdf.17.graphics.fonts:extract": 30,
+      "pdf.17.graphics.fonts:parse": 30,
+      "pdf.17.graphics.fonts:render": 30,
       "pdf.17.graphics.images:extract": 29,
       "pdf.17.graphics.images:parse": 29,
       "pdf.17.graphics.images:render": 29,

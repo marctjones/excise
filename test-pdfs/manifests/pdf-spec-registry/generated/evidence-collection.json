@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1096,
-  "indexedContentSha256": "e9688cca48c965102577259327d13dcb491abb459820452410418dd618c89dc7",
+  "indexedFileCount": 1100,
+  "indexedContentSha256": "6e8d132354e7cbccc04ec0b12941cdb433a168d12846243a740a47ae554c1f76",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7660,7 +7660,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 496
+      "candidateReferenceCount": 497
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8202,6 +8202,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Fonts/AnnotationTypesetter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "spaces",
+            "values"
+          ]
+        },
+        {
           "path": "Excise.Rendering/ImageColorConverter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -8491,20 +8499,9 @@
             "values",
             "colorspace"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/ColorSpaces/PdfIccProfileTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "output",
-            "spaces",
-            "values",
-            "colorspace"
-          ]
         }
       ],
-      "candidateReferenceCount": 239
+      "candidateReferenceCount": 240
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9935,6 +9932,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Fonts/AnnotationTypesetter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "fonts",
+            "glyph",
+            "metrics"
+          ]
+        },
+        {
           "path": "Excise.Rendering/Fonts/CffToOpenType.cs",
           "kind": "source",
           "matchedTerms": [
@@ -10314,17 +10320,9 @@
             "fonts",
             "glyph"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/EmbeddedTrueTypeWidthTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "fonts",
-            "glyph"
-          ]
         }
       ],
-      "candidateReferenceCount": 165
+      "candidateReferenceCount": 169
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -22152,6 +22150,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/FreeTextComplexScriptDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "synthesis",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -22237,7 +22244,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 23
+      "candidateReferenceCount": 24
     },
     {
       "id": "pdf.20.renderer.requirement-019",
@@ -40692,6 +40699,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/FreeTextComplexScriptDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "freetext",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -40722,6 +40739,15 @@
         },
         {
           "path": "Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "freetext",
+            "annotation"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Fonts/AnnotationTypesetterTests.cs",
           "kind": "test",
           "matchedTerms": [
             "annotation",
@@ -40849,7 +40875,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 48
+      "candidateReferenceCount": 50
     },
     {
       "id": "pdf.20.annotation.subtype-005",
@@ -44400,6 +44426,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Fonts/AnnotationTypesetter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "line",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering/README.md",
           "kind": "source",
           "matchedTerms": [
@@ -44802,19 +44838,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "line",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 161
+      "candidateReferenceCount": 164
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -46649,7 +46675,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 126
+      "candidateReferenceCount": 127
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -48441,6 +48467,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Fonts/AnnotationTypesetter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "redact",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering/RenderOptions.cs",
           "kind": "source",
           "matchedTerms": [
@@ -48896,19 +48932,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/AnnotationDisplayOptionsTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "redact",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 131
+      "candidateReferenceCount": 132
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -52740,7 +52766,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 163
+      "candidateReferenceCount": 164
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -59793,6 +59819,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering/Fonts/AnnotationTypesetter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "class",
+            "logical"
+          ]
+        },
+        {
           "path": "Excise.Rendering/Fonts/ResolvedRenderFont.cs",
           "kind": "source",
           "matchedTerms": [
@@ -59807,17 +59841,9 @@
             "class",
             "structure"
           ]
-        },
-        {
-          "path": "Excise.Rendering/JpxImageDecoder.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "class",
-            "logical"
-          ]
         }
       ],
-      "candidateReferenceCount": 336
+      "candidateReferenceCount": 338
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -62095,7 +62121,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 518
+      "candidateReferenceCount": 520
     },
     {
       "id": "pdf.20.extension.developer",

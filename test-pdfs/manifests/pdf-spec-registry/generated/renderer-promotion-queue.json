@@ -1976,6 +1976,7 @@
         "Excise.Rendering/Fonts/AnnotationTypesetter.cs",
         "Excise.Rendering/Fonts/CffToOpenType.cs",
         "Excise.Rendering/Fonts/CmapFormat0Table.cs",
+        "Excise.Rendering/Fonts/FontManagerLock.cs",
         "Excise.Rendering/Fonts/PdfFontResolver.cs",
         "Excise.Rendering/Fonts/ResolvedPdfFont.cs",
         "Excise.Rendering/Fonts/ResolvedRenderFont.cs"
@@ -2308,6 +2309,7 @@
         "Excise.Rendering/Fonts/AnnotationTypesetter.cs",
         "Excise.Rendering/Fonts/CffToOpenType.cs",
         "Excise.Rendering/Fonts/CmapFormat0Table.cs",
+        "Excise.Rendering/Fonts/FontManagerLock.cs",
         "Excise.Rendering/Fonts/PdfFontResolver.cs",
         "Excise.Rendering/Fonts/ResolvedPdfFont.cs",
         "Excise.Rendering/Fonts/ResolvedRenderFont.cs"
@@ -3617,6 +3619,7 @@
         "Excise.Rendering/Fonts/AnnotationTypesetter.cs",
         "Excise.Rendering/Fonts/CffToOpenType.cs",
         "Excise.Rendering/Fonts/CmapFormat0Table.cs",
+        "Excise.Rendering/Fonts/FontManagerLock.cs",
         "Excise.Rendering/Fonts/PdfFontResolver.cs",
         "Excise.Rendering/Fonts/ResolvedPdfFont.cs",
         "Excise.Rendering/Fonts/ResolvedRenderFont.cs"
