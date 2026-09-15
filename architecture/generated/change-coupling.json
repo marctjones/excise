@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "cf5a3720683e91a22da2042b9d6edd2661dc7c30",
+  "sourceRevision": "e1ada253f42be693898732cdb31055ec1198fa72",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 198,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "589359d758d4909ca354d5fdb06fbd6a4156f00a",
-    "oldestProductionCommit": "c5d0dbe9d7f39bdaab40fc664144ea820be7a59c"
+    "newestProductionCommit": "e1ada253f42be693898732cdb31055ec1198fa72",
+    "oldestProductionCommit": "f0c0eda0f494e3d0bb59eb6060aaa00774de0d15"
   },
   "files": [
     {
@@ -47,7 +47,7 @@
     },
     {
       "path": "Excise.App/Views/MainWindow.axaml",
-      "commits": 10
+      "commits": 11
     },
     {
       "path": "Excise.Core/Document/PdfDocument.cs",
@@ -56,6 +56,10 @@
     {
       "path": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
       "commits": 10
+    },
+    {
+      "path": "Excise.App/App.axaml.cs",
+      "commits": 9
     },
     {
       "path": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
@@ -68,10 +72,6 @@
     {
       "path": "Excise.Cli/AutomationBatch.cs",
       "commits": 9
-    },
-    {
-      "path": "Excise.App/App.axaml.cs",
-      "commits": 8
     },
     {
       "path": "Excise.App/Composition/ApplicationComposition.cs",
@@ -198,6 +198,10 @@
       "commits": 4
     },
     {
+      "path": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "commits": 4
+    },
+    {
       "path": "Excise.Cli/Commands/RedactCommand.cs",
       "commits": 4
     },
@@ -266,10 +270,6 @@
       "commits": 3
     },
     {
-      "path": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "commits": 3
-    },
-    {
       "path": "Excise.Avalonia/Controls/ViewerMetrics.cs",
       "commits": 3
     },
@@ -295,10 +295,6 @@
     },
     {
       "path": "Excise.Core/Document/PdfPage.cs",
-      "commits": 3
-    },
-    {
-      "path": "Excise.Core/Operations/PdfDocumentSanitizer.cs",
       "commits": 3
     },
     {
@@ -502,6 +498,10 @@
       "commits": 2
     },
     {
+      "path": "Excise.Core/Operations/PdfDocumentSanitizer.cs",
+      "commits": 2
+    },
+    {
       "path": "Excise.Core/Redaction/AppearanceStreamRedactor.cs",
       "commits": 2
     },
@@ -568,6 +568,14 @@
     {
       "path": "Excise.Rendering/Transparency/DeviceCmykExecutionState.cs",
       "commits": 2
+    },
+    {
+      "path": "Excise.App/Controls/PriorityToolbarLayout.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.App/Controls/PriorityToolbarPanel.cs",
+      "commits": 1
     },
     {
       "path": "Excise.App/Models/AttachmentEntry.cs",
@@ -1086,10 +1094,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Text/Segmentation/CarrierTextRecovery.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
       "commits": 1
     },
@@ -1262,12 +1266,6 @@
       "jaccard": 0.8
     },
     {
-      "source": "Excise.App/Views/MainWindow.axaml",
-      "target": "Excise.Core/Automation/PdfCommandIds.cs",
-      "cochanges": 4,
-      "jaccard": 0.4
-    },
-    {
       "source": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
       "target": "Excise.Core/Redaction/PdfPageRedactionExtensions.cs",
       "cochanges": 4,
@@ -1280,16 +1278,16 @@
       "jaccard": 0.4
     },
     {
-      "source": "Excise.Cli/Commands/RedactCommandHandler.cs",
-      "target": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
+      "source": "Excise.App/Views/MainWindow.axaml",
+      "target": "Excise.Core/Automation/PdfCommandIds.cs",
       "cochanges": 4,
       "jaccard": 0.3636
     },
     {
-      "source": "Excise.App/App.axaml.cs",
-      "target": "Excise.App/Views/MainWindow.axaml.cs",
+      "source": "Excise.Cli/Commands/RedactCommandHandler.cs",
+      "target": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
       "cochanges": 4,
-      "jaccard": 0.3333
+      "jaccard": 0.3636
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
@@ -1302,6 +1300,12 @@
       "target": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
       "cochanges": 4,
       "jaccard": 0.3333
+    },
+    {
+      "source": "Excise.App/App.axaml.cs",
+      "target": "Excise.App/Views/MainWindow.axaml.cs",
+      "cochanges": 4,
+      "jaccard": 0.3077
     },
     {
       "source": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
@@ -1472,18 +1476,6 @@
       "jaccard": 0.375
     },
     {
-      "source": "Excise.App/App.axaml.cs",
-      "target": "Excise.App/Services/ViewerCacheTrimCoordinator.cs",
-      "cochanges": 3,
-      "jaccard": 0.3333
-    },
-    {
-      "source": "Excise.App/App.axaml.cs",
-      "target": "Excise.App/ViewModels/ThumbnailSidebarSession.cs",
-      "cochanges": 3,
-      "jaccard": 0.3333
-    },
-    {
       "source": "Excise.App/Models/WindowSettings.cs",
       "target": "Excise.App/Views/MainWindow.axaml.cs",
       "cochanges": 3,
@@ -1514,6 +1506,18 @@
       "jaccard": 0.3333
     },
     {
+      "source": "Excise.App/App.axaml.cs",
+      "target": "Excise.App/Services/ViewerCacheTrimCoordinator.cs",
+      "cochanges": 3,
+      "jaccard": 0.3
+    },
+    {
+      "source": "Excise.App/App.axaml.cs",
+      "target": "Excise.App/ViewModels/ThumbnailSidebarSession.cs",
+      "cochanges": 3,
+      "jaccard": 0.3
+    },
+    {
       "source": "Excise.Core/Redaction/ObstructionStripper.cs",
       "target": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
       "cochanges": 3,
@@ -1528,12 +1532,6 @@
     {
       "source": "Excise.App/Services/RedactionService.cs",
       "target": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
-      "cochanges": 3,
-      "jaccard": 0.2727
-    },
-    {
-      "source": "Excise.App/Views/MainWindow.axaml",
-      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 3,
       "jaccard": 0.2727
     },
@@ -1568,10 +1566,22 @@
       "jaccard": 0.25
     },
     {
+      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "target": "Excise.App/Views/MainWindow.axaml",
+      "cochanges": 3,
+      "jaccard": 0.25
+    },
+    {
+      "source": "Excise.App/Views/MainWindow.axaml",
+      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
+      "cochanges": 3,
+      "jaccard": 0.25
+    },
+    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
       "target": "Excise.App/Views/MainWindow.axaml",
       "cochanges": 3,
-      "jaccard": 0.2308
+      "jaccard": 0.2143
     },
     {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
@@ -1874,18 +1884,6 @@
       "jaccard": 0.4
     },
     {
-      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "target": "Excise.Core/Automation/PdfCommandIds.cs",
-      "cochanges": 2,
-      "jaccard": 0.4
-    },
-    {
-      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
-      "cochanges": 2,
-      "jaccard": 0.4
-    },
-    {
       "source": "Excise.Core/Content/ContentStreamParser.cs",
       "target": "Excise.Core/Redaction/ObstructionStripper.cs",
       "cochanges": 2,
@@ -1954,6 +1952,18 @@
     {
       "source": "Excise.App/Services/ViewerCacheTrimCoordinator.cs",
       "target": "Excise.App/ViewModels/ThumbnailSidebarSession.cs",
+      "cochanges": 2,
+      "jaccard": 0.3333
+    },
+    {
+      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "target": "Excise.Core/Automation/PdfCommandIds.cs",
+      "cochanges": 2,
+      "jaccard": 0.3333
+    },
+    {
+      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "target": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "cochanges": 2,
       "jaccard": 0.3333
     },
@@ -2036,12 +2046,6 @@
       "jaccard": 0.2857
     },
     {
-      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
-      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "cochanges": 2,
-      "jaccard": 0.2857
-    },
-    {
       "source": "Excise.App/ViewModels/PreferencesViewModel.cs",
       "target": "Excise.Core/Redaction/RedactedCopySafetyContract.cs",
       "cochanges": 2,
@@ -2116,6 +2120,12 @@
     {
       "source": "Excise.App/Services/RedactionWorkflowService.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.Scripting.cs",
+      "cochanges": 2,
+      "jaccard": 0.25
+    },
+    {
+      "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
+      "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
       "cochanges": 2,
       "jaccard": 0.25
     },
@@ -2264,12 +2274,6 @@
       "jaccard": 0.2222
     },
     {
-      "source": "Excise.App/App.axaml.cs",
-      "target": "Excise.App/Services/AppMetrics.cs",
-      "cochanges": 2,
-      "jaccard": 0.2
-    },
-    {
       "source": "Excise.App/Composition/ApplicationComposition.cs",
       "target": "Excise.App/Services/RedactionWorkflowService.cs",
       "cochanges": 2,
@@ -2354,6 +2358,12 @@
       "jaccard": 0.2
     },
     {
+      "source": "Excise.App/App.axaml.cs",
+      "target": "Excise.App/Services/AppMetrics.cs",
+      "cochanges": 2,
+      "jaccard": 0.1818
+    },
+    {
       "source": "Excise.App/Composition/ApplicationComposition.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.Redaction.cs",
       "cochanges": 2,
@@ -2384,12 +2394,6 @@
       "jaccard": 0.1818
     },
     {
-      "source": "Excise.App/Views/MacNativeMenuBuilder.cs",
-      "target": "Excise.App/Views/MainWindow.axaml",
-      "cochanges": 2,
-      "jaccard": 0.1818
-    },
-    {
       "source": "Excise.Cli/AutomationBatch.cs",
       "target": "Excise.Cli/Commands/RenderPageHandler.cs",
       "cochanges": 2,
@@ -2406,12 +2410,6 @@
       "target": "Excise.Core/Document/PdfPage.cs",
       "cochanges": 2,
       "jaccard": 0.1818
-    },
-    {
-      "source": "Excise.App/App.axaml.cs",
-      "target": "Excise.Avalonia/Controls/PdfViewerControl.Diagnostics.cs",
-      "cochanges": 2,
-      "jaccard": 0.1667
     },
     {
       "source": "Excise.App/Composition/ApplicationComposition.cs",
@@ -2462,6 +2460,12 @@
       "jaccard": 0.1667
     },
     {
+      "source": "Excise.App/App.axaml.cs",
+      "target": "Excise.Avalonia/Controls/PdfViewerControl.Diagnostics.cs",
+      "cochanges": 2,
+      "jaccard": 0.1538
+    },
+    {
       "source": "Excise.App/Composition/ApplicationComposition.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.Typewriter.cs",
       "cochanges": 2,
@@ -2498,12 +2502,6 @@
       "jaccard": 0.1538
     },
     {
-      "source": "Excise.App/App.axaml.cs",
-      "target": "Excise.App/Composition/ApplicationComposition.cs",
-      "cochanges": 2,
-      "jaccard": 0.1429
-    },
-    {
       "source": "Excise.App/Services/ThumbnailCacheService.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
       "cochanges": 2,
@@ -2535,7 +2533,7 @@
     },
     {
       "source": "Excise.App/App.axaml.cs",
-      "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
+      "target": "Excise.App/Composition/ApplicationComposition.cs",
       "cochanges": 2,
       "jaccard": 0.1333
     },
@@ -2546,6 +2544,12 @@
       "jaccard": 0.1333
     },
     {
+      "source": "Excise.App/App.axaml.cs",
+      "target": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
+      "cochanges": 2,
+      "jaccard": 0.125
+    },
+    {
       "source": "Excise.Core/Document/PdfDocument.cs",
       "target": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
       "cochanges": 2,
@@ -2553,9 +2557,15 @@
     },
     {
       "source": "Excise.App/App.axaml.cs",
-      "target": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
+      "target": "Excise.App/Views/MainWindow.axaml",
       "cochanges": 2,
       "jaccard": 0.1111
+    },
+    {
+      "source": "Excise.App/App.axaml.cs",
+      "target": "Excise.Avalonia/Controls/PdfViewerControl.axaml.cs",
+      "cochanges": 2,
+      "jaccard": 0.1053
     },
     {
       "source": "Excise.Core/Primitives/PdfStream.cs",
@@ -2711,7 +2721,7 @@
       "source": "Excise.App/App.axaml.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "cochanges": 2,
-      "jaccard": 0.0714
+      "jaccard": 0.069
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.cs",
