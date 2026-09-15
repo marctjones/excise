@@ -3,6 +3,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Rendering.Differential;
+using Excise.Rendering.Fonts;
 using SkiaSharp;
 using Xunit;
 
@@ -126,33 +127,119 @@ public class FreeTextContentSynthesisTests : IDisposable
     }
 
     /// <summary>
-    /// Case 3, and the guard that stops this fix being worse than the bug.
-    ///
-    /// <para>The text reaches RenderText as Latin-1 bytes, exactly as a Tj
-    /// operand would, so anything outside Latin-1 becomes '?' and draws as
-    /// .notdef boxes. The first cut of #1070's fix did precisely that on
-    /// pdf.js <c>freetext_no_appearance.pdf</c> — a row of tofu where mutool
-    /// shapes and draws Arabic. An empty box reads as "an annotation is here";
-    /// tofu reads as "this document is corrupt".</para>
-    ///
-    /// <para>So non-Latin-1 content draws the box and border and no text. The
-    /// right way to lift this is real complex-script shaping, NOT widening the
-    /// check — which is what this test exists to prevent.</para>
+    /// Case 3 (#1363). Complex-script <c>/Contents</c> used to draw no glyphs
+    /// at all. The first cut of #1070's fix fed Arabic through the Latin-1 Tj
+    /// path and drew a row of tofu on pdf.js <c>freetext_no_appearance.pdf</c>,
+    /// where mutool shapes and draws the Arabic. The guard that replaced it drew
+    /// nothing. Real shaping now draws it. These tests pin both halves: shaped
+    /// text draws, and with no covering font it still draws NOTHING rather than
+    /// tofu.
     /// </summary>
+    private const string Arabic = "الإنترنت";
+
     [Fact]
-    public void FreeTextWithNonLatinContents_DrawsNoGlyphs()
+    public void FreeTextWithArabicContents_DrawsShapedGlyphsInsideRect()
     {
-        var path = WriteTemp(FreeTextPdf(withDa: true, withColor: true,
-            contents: "\u0627\u0644\u0625\u0646\u062a\u0631\u0646\u062a"));
+        RequireArabicSystemFont();
+
+        var path = WriteTemp(FreeTextPdf(withDa: true, withColor: false,
+            contents: Arabic, border: "/Border [0 0 0]"));
         using var bmp = RenderWithExcise(path);
 
+        InteriorBluePixels(bmp).Should().BeGreaterThan(40,
+            "with /Border [0 0 0] and no /C, blue ink inside the rect can only be the " +
+            "shaped Arabic; before #1363 this was 0");
+        InkOutsideAnnotationRect(bmp).Should().Be(0,
+            "the synthesised appearance is clipped to /Rect");
+    }
+
+    [Fact]
+    public void FreeTextWithArabicContents_MutoolDrawsItToo()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var path = WriteTemp(FreeTextPdf(withDa: true, withColor: false,
+            contents: Arabic, border: "/Border [0 0 0]"));
+        using var reference = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        reference.Should().NotBeNull();
+
+        InteriorBluePixels(reference!).Should().BeGreaterThan(40,
+            "mutool shapes and draws Arabic /Contents; excise drawing it is only correct " +
+            "because an engine that is not excise does it too");
+    }
+
+    [Fact]
+    public void FreeTextWithArabicContents_DrawsEveryLine()
+    {
+        RequireArabicSystemFont();
+
+        // Three short paragraphs at 14 pt with 1.2 leading: one line is at most
+        // ~34 px tall at 144 dpi, so an ink box taller than two lines needs at
+        // least two lines drawn. Before #1363 only the first line was ever
+        // considered.
+        const string word = "بيت";
+        var path = WriteTemp(FreeTextPdf(withDa: true, withColor: false,
+            contents: word + "\n" + word + "\r\n" + word, border: "/Border [0 0 0]"));
+        using var bmp = RenderWithExcise(path);
+
+        var bounds = InkBounds(bmp);
+        bounds.Should().NotBeNull("three lines of Arabic must draw something");
+        bounds!.Value.Height.Should().BeGreaterThan(2 * 14 * Dpi / 72,
+            "the ink spans more than two text lines, so the later paragraphs were drawn");
+        InkOutsideAnnotationRect(bmp).Should().Be(0,
+            "every line stays inside /Rect");
+    }
+
+    [Fact]
+    public void FreeTextWithComplexScript_NoCoveringFont_DrawsNoGlyphs()
+    {
+        var path = WriteTemp(FreeTextPdf(withDa: true, withColor: true, contents: Arabic));
+        var diagnostics = new List<string>();
+        using var doc = PdfDocument.Open(path);
+        using var bmp = new SkiaRenderer().RenderPage(doc.GetPage(1), new RenderOptions
+        {
+            Dpi = Dpi,
+            AntiAlias = false,
+            BackgroundColor = SKColors.White,
+            DisableSystemFontFallback = true,
+            Diagnostics = diagnostics,
+        });
+
+        diagnostics.Should().Contain(d => d.Contains("no available font covers U+0627"),
+            "this test is about the no-covering-font branch. If the /Helv substitute on this " +
+            "machine covers Arabic, the fixture no longer reaches that branch");
+
         InteriorBluePixels(bmp).Should().Be(0,
-            "Arabic cannot survive the Latin-1 round-trip, so drawing it produces " +
-            ".notdef boxes — strictly worse than the empty rectangle this replaced");
+            "with no font covering the script, drawing anything would be tofu, which is " +
+            "strictly worse than the empty rectangle. The typesetter fails closed");
 
         BluePixels(bmp).Should().BeGreaterThan(0,
-            "the border must still draw: the reader should know the annotation is there, " +
-            "which is the half of #1070 that is fixable without shaping");
+            "the border must still draw: the reader should know the annotation is there");
+    }
+
+    /// <summary>
+    /// The #1363 decision: the synthesised appearance is RENDER-ONLY. A
+    /// generated <c>/AP</c> saved into the file would be a text carrier the
+    /// redaction scrubber was never taught about.
+    /// </summary>
+    [Fact]
+    public void SynthesisedFreeTextAppearance_IsNeverWrittenToTheSavedFile()
+    {
+        var path = WriteTemp(FreeTextPdf(withDa: true, withColor: false,
+            contents: Arabic, border: "/Border [0 0 0]"));
+
+        using var doc = PdfDocument.Open(path);
+        using (new SkiaRenderer().RenderPage(doc.GetPage(1),
+                   new RenderOptions { Dpi = Dpi, AntiAlias = false, BackgroundColor = SKColors.White }))
+        {
+        }
+
+        doc.GetPage(1).GetAnnotations().Single().RawDictionary.GetOptional("AP").Should().BeNull(
+            "rendering must not attach an appearance to the in-memory annotation");
+
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        reopened.GetPage(1).GetAnnotations().Single().RawDictionary.GetOptional("AP").Should().BeNull(
+            "a synthesised /AP must never reach a saved file");
     }
 
     /// <summary>
@@ -219,11 +306,66 @@ public class FreeTextContentSynthesisTests : IDisposable
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
-    private static SKBitmap RenderWithExcise(string path)
+    private static SKBitmap RenderWithExcise(string path, bool disableSystemFontFallback = false)
     {
         using var doc = PdfDocument.Open(path);
         return new SkiaRenderer().RenderPage(doc.GetPage(1),
-            new RenderOptions { Dpi = Dpi, AntiAlias = false, BackgroundColor = SKColors.White });
+            new RenderOptions
+            {
+                Dpi = Dpi,
+                AntiAlias = false,
+                BackgroundColor = SKColors.White,
+                DisableSystemFontFallback = disableSystemFontFallback,
+            });
+    }
+
+    private static void RequireArabicSystemFont()
+    {
+        bool covered;
+        lock (FontManagerLock.Instance)
+        {
+            covered = SKFontManager.Default.MatchCharacter(0x0627) != null;
+        }
+
+        Assert.SkipWhen(!covered,
+            "No system font covers Arabic (U+0627), so there is nothing to shape with. " +
+            "The fail-closed branch is covered by FreeTextWithComplexScript_NoCoveringFont_DrawsNoGlyphs.");
+    }
+
+    private static SKRectI AnnotationDeviceRect()
+    {
+        float s = Dpi / 72f;
+        return new SKRectI((int)(20 * s), (int)((PageSize - 175) * s),
+                           (int)Math.Ceiling(180 * s), (int)Math.Ceiling((PageSize - 120) * s));
+    }
+
+    /// <summary>Ink more than one pixel outside the annotation rect.</summary>
+    private static int InkOutsideAnnotationRect(SKBitmap bmp)
+    {
+        var r = AnnotationDeviceRect();
+        int n = 0;
+        for (int y = 0; y < bmp.Height; y++)
+            for (int x = 0; x < bmp.Width; x++)
+            {
+                if (x >= r.Left - 1 && x < r.Right + 1 && y >= r.Top - 1 && y < r.Bottom + 1) continue;
+                var c = bmp.GetPixel(x, y);
+                if (c.Red < 240 || c.Green < 240 || c.Blue < 240) n++;
+            }
+        return n;
+    }
+
+    private static SKRectI? InkBounds(SKBitmap bmp)
+    {
+        int minX = bmp.Width, minY = bmp.Height, maxX = -1, maxY = -1;
+        for (int y = 0; y < bmp.Height; y++)
+            for (int x = 0; x < bmp.Width; x++)
+            {
+                var c = bmp.GetPixel(x, y);
+                if (c.Red >= 240 && c.Green >= 240 && c.Blue >= 240) continue;
+                minX = Math.Min(minX, x); maxX = Math.Max(maxX, x);
+                minY = Math.Min(minY, y); maxY = Math.Max(maxY, y);
+            }
+        return maxX < 0 ? null : new SKRectI(minX, minY, maxX + 1, maxY + 1);
     }
 
     private static bool IsBlue(SKColor c) => c.Blue > 140 && c.Red < 120 && c.Green < 120;

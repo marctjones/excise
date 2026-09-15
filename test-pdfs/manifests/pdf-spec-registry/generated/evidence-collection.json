@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1096,
-  "indexedContentSha256": "88d36b44479c9954f6d04b6a74ef8388412bd169bc9bb223839375ecfcea9681",
+  "indexedContentSha256": "e9688cca48c965102577259327d13dcb491abb459820452410418dd618c89dc7",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4273,6 +4273,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "outlines",
+            "viewer"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.Images.cs",
           "kind": "source",
           "matchedTerms": [
@@ -4822,19 +4830,9 @@
             "viewer",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/PointerInteractionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "named",
-            "viewer",
-            "catalog",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 104
+      "candidateReferenceCount": 105
     },
     {
       "id": "pdf.17.document.metadata",
@@ -22060,6 +22058,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering/RenderOptions.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotations",
+            "synthesis"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
           "kind": "source",
           "matchedTerms": [
@@ -22146,6 +22152,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "synthesis",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ShapeAnnotationSynthesisTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -22222,7 +22237,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 21
+      "candidateReferenceCount": 23
     },
     {
       "id": "pdf.20.renderer.requirement-019",
@@ -40682,7 +40697,8 @@
           "matchedTerms": [
             "annotation",
             "freetext",
-            "annotation"
+            "annotation",
+            "redact"
           ]
         },
         {
@@ -46805,7 +46821,8 @@
           "matchedTerms": [
             "annotation",
             "popup",
-            "annotation"
+            "annotation",
+            "redact"
           ]
         },
         {
@@ -48891,7 +48908,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 130
+      "candidateReferenceCount": 131
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -50396,9 +50413,10 @@
             "blend",
             "compositing",
             "model",
+            "modes",
+            "soft",
             "transparency",
-            "blendmode",
-            "transparency"
+            "blendmode"
           ]
         },
         {
@@ -51106,6 +51124,7 @@
             "preview",
             "transparency",
             "blendmode",
+            "softmask",
             "transparency"
           ]
         },
@@ -52721,7 +52740,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 162
+      "candidateReferenceCount": 163
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -53356,6 +53375,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/GroupBAnnotationMeaningTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -53675,7 +53705,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 77
+      "candidateReferenceCount": 78
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -58057,6 +58087,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/GroupBAnnotationMeaningTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58277,18 +58316,9 @@
             "screen",
             "media"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/RedactionMouseDragBroadeningTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "media",
-            "screen",
-            "media"
-          ]
         }
       ],
-      "candidateReferenceCount": 92
+      "candidateReferenceCount": 93
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -58737,6 +58767,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "media",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/GroupBAnnotationMeaningTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58963,7 +59002,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 70
+      "candidateReferenceCount": 71
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
@@ -60134,6 +60173,7 @@
           "kind": "source",
           "matchedTerms": [
             "coordinate",
+            "data",
             "measurement"
           ]
         },
@@ -62055,7 +62095,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 517
+      "candidateReferenceCount": 518
     },
     {
       "id": "pdf.20.extension.developer",

@@ -364,11 +364,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "HarfBuzzSharp",
-      "nugetVersion": "8.3.1.3",
+      "nugetVersion": "8.3.1.5",
       "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
       "repositoryUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
       "spdx": "MIT",
-      "version": "8.3.1.3"
+      "version": "8.3.1.5"
     },
     {
       "authors": "Microsoft",
@@ -404,11 +404,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "HarfBuzzSharp.NativeAssets.macOS",
-      "nugetVersion": "8.3.1.3",
+      "nugetVersion": "8.3.1.5",
       "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
       "repositoryUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
       "spdx": "MIT",
-      "version": "8.3.1.3"
+      "version": "8.3.1.5"
     },
     {
       "authors": "Microsoft",
@@ -444,11 +444,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "HarfBuzzSharp.NativeAssets.Win32",
-      "nugetVersion": "8.3.1.3",
+      "nugetVersion": "8.3.1.5",
       "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
       "repositoryUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
       "spdx": "MIT",
-      "version": "8.3.1.3"
+      "version": "8.3.1.5"
     },
     {
       "authors": "MicroCom.Runtime",
@@ -787,6 +787,26 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "SkiaSharp",
+      "nugetVersion": "3.119.4",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "repositoryUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "spdx": "MIT",
+      "version": "3.119.4"
+    },
+    {
+      "authors": "Microsoft",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "description": "This package adds text shaping support to SkiaSharp via HarfBuzz.",
+      "id": "SkiaSharp.HarfBuzz",
+      "licenseFileName": "license.txt",
+      "licenseFileSha1": "69823b2d87608e88f3e94051a873b74fe93318c1",
+      "licenseKind": "expression",
+      "licenseName": "MIT License",
+      "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html",
+      "licenseText": "Copyright (c) 2015-2016 Xamarin, Inc.\nCopyright (c) 2017-2018 Microsoft Corporation.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR \nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n",
+      "licenseUrl": "https://licenses.nuget.org/MIT",
+      "licenseValue": "MIT",
+      "nugetId": "SkiaSharp.HarfBuzz",
       "nugetVersion": "3.119.4",
       "projectUrl": "https://go.microsoft.com/fwlink/?linkid=868515",
       "repositoryUrl": "https://go.microsoft.com/fwlink/?linkid=868515",

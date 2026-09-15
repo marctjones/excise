@@ -4,8 +4,8 @@
   "Owner": "rendering:quality",
   "RootCause": "FULL_CORPUS_BASELINE",
   "ImprovementPriority": "NONE",
-  "Confidence": "MEDIUM",
-  "Notes": "Baseline contract inferred from full all-pages raw corpus report exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
+  "Confidence": "HIGH",
+  "Notes": "Re-measured 2026-09-15 after #1363 taught the synthesised FreeText appearance to shape complex scripts: page 1 classifies PASS against all five oracles (mutool, pdftocairo, ghostscript, pdfbox, pdfium), so the baseline PASS pin and tests/corpus-expectations.tsv agree and neither moved. Before the fix excise inked 0 px here while mutool inked 20,152 inside /Rect.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS",
@@ -20,8 +20,9 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
-      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json."
+      "QualityReason": "excise shapes and draws the Arabic /Contents clipped to /Rect; ink inside /Rect is within a measured band of mutool's and no ink escapes the rect. Fallback faces differ from mutool's bundled Noto Naskh, so FreeTextComplexScriptDifferentialTests asserts ink-in-region rather than pixel identity.",
+      "Notes": "Re-reviewed under #1363; status re-measured by a single-file exploratory scan rather than inferred."
     }
-  }
+  },
+  "Issue": 1363
 }

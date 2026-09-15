@@ -10,6 +10,19 @@ Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Fixed
+- **A FreeText annotation with Arabic `/Contents` and no `/AP` rendered
+  blank** (#1363) — the synthesised appearance refused any string that needs
+  complex-script shaping, and drew only the first line of the rest. Such
+  `/Contents` now go through a typesetter in `Excise.Rendering`. It uses
+  HarfBuzz shaping through the new `SkiaSharp.HarfBuzz` dependency (MIT, which
+  brings the native HarfBuzzSharp), tries the `/DA` font first and then system
+  fonts per run, orders each paragraph right-to-left or left-to-right, and draws
+  every line wrapped to and clipped at `/Rect`. It still draws nothing when no
+  font covers the text or shaping is unavailable, because unshaped Arabic reads
+  as plausible wrong text. The appearance is render-only and is never written
+  to a saved file. Before the fix, pdf.js `freetext_no_appearance.pdf` at
+  150 dpi inked 20,152 px in mutool and 4,926 in pdfium, both inside `/Rect`,
+  and 0 in excise. Full Unicode bidi stays with #632.
 - **The TJ array adjustment was applied raw instead of composed through the
   text matrix** (#1391) — §9.4.3's horizontal branch did `_tm_e -= tx` with no
   `·_tm_a` and no effect on `_tm_f`, three lines below an already-correct
