@@ -14,8 +14,11 @@ namespace Excise.App.Tests.Integration;
 /// Pin the contract for the disk-backed thumbnail cache: first call
 /// renders + writes to disk, second call (and re-instantiations of
 /// the service over the same file) load from disk without rendering.
-/// Uses a temp cache dir via XDG_CACHE_HOME so tests don't pollute
-/// the user's real cache directory.
+/// The cache root comes from AppPaths.ThumbnailCacheRoot, which the
+/// assembly-wide test override points at a temp directory. (These tests used
+/// to set XDG_CACHE_HOME, which only the Linux branch read — on macOS they
+/// wrote into the real ~/Library/Caches/excise.) Each test opens a fresh
+/// GUID-named PDF, so its cache identity starts empty.
 /// </summary>
 public class ThumbnailCacheTests
 {
@@ -28,13 +31,6 @@ public class ThumbnailCacheTests
         var pdfPath = Path.Combine(Path.GetTempPath(), $"excise-thumb-cache-{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 4);
 
-        // Sandbox the cache dir for this test so we don't fight other
-        // runs or pollute ~/.cache/excise.
-        var tempCache = Path.Combine(Path.GetTempPath(),
-            "excise-thumb-test-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(tempCache);
-        var prevXdg = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
-        Environment.SetEnvironmentVariable("XDG_CACHE_HOME", tempCache);
         try
         {
             using var doc = PdfDocument.Open(pdfPath);
@@ -79,8 +75,6 @@ public class ThumbnailCacheTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable("XDG_CACHE_HOME", prevXdg);
-            try { Directory.Delete(tempCache, recursive: true); } catch { }
             TestPdfGenerator.CleanupTestFile(pdfPath);
         }
     }
@@ -98,11 +92,6 @@ public class ThumbnailCacheTests
         var pdfPath = Path.Combine(Path.GetTempPath(), $"excise-thumb-cache-{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
 
-        var tempCache = Path.Combine(Path.GetTempPath(),
-            "excise-thumb-test-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(tempCache);
-        var prevXdg = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
-        Environment.SetEnvironmentVariable("XDG_CACHE_HOME", tempCache);
         try
         {
             using var doc = PdfDocument.Open(pdfPath);
@@ -132,8 +121,6 @@ public class ThumbnailCacheTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable("XDG_CACHE_HOME", prevXdg);
-            try { Directory.Delete(tempCache, recursive: true); } catch { }
             TestPdfGenerator.CleanupTestFile(pdfPath);
         }
     }
@@ -144,11 +131,6 @@ public class ThumbnailCacheTests
         var pdfPath = Path.Combine(Path.GetTempPath(), $"excise-thumb-cache-{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
 
-        var tempCache = Path.Combine(Path.GetTempPath(),
-            "excise-thumb-test-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(tempCache);
-        var prevXdg = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
-        Environment.SetEnvironmentVariable("XDG_CACHE_HOME", tempCache);
         try
         {
             using var doc = PdfDocument.Open(pdfPath);
@@ -175,8 +157,6 @@ public class ThumbnailCacheTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable("XDG_CACHE_HOME", prevXdg);
-            try { Directory.Delete(tempCache, recursive: true); } catch { }
             TestPdfGenerator.CleanupTestFile(pdfPath);
         }
     }

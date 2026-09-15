@@ -78,9 +78,11 @@ public class ResponsivenessReportTests
     [Fact]
     public void ConsumeOneShotReportRequest_ReadsAndDeletesRequestFile()
     {
-        var root = Path.Combine(Path.GetTempPath(), "excise-responsiveness-request", Guid.NewGuid().ToString("N"));
-        AppPaths.OverrideForTests(root);
-        var reportPath = Path.Combine(root, "report.json");
+        // AppPaths is already redirected for the whole assembly
+        // (TestEnvironmentInitializer). This test used to install its own root
+        // and then call OverrideForTests(null) in finally, which put every later
+        // test on the user's real ~/Library/Application Support/Excise.App.
+        var reportPath = Path.Combine(AppPaths.DataDir, $"report-{Guid.NewGuid():N}.json");
 
         try
         {
@@ -93,9 +95,8 @@ public class ResponsivenessReportTests
         }
         finally
         {
-            AppPaths.OverrideForTests(null);
-            if (Directory.Exists(root))
-                Directory.Delete(root, recursive: true);
+            if (File.Exists(AppPaths.ResponsivenessReportRequestPath))
+                File.Delete(AppPaths.ResponsivenessReportRequestPath);
         }
     }
 }

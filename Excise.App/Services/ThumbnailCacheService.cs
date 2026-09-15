@@ -98,7 +98,7 @@ public sealed class ThumbnailCacheService : IDisposable
         _logger = logger;
         _thumbnailDpi = thumbnailDpi;
         var identity = BuildCacheIdentity(pdfPath, thumbnailDpi, RendererCacheIdentity, cacheSalt);
-        var versionRoot = Path.Combine(GetCacheRoot(), "thumbnails", "v3");
+        var versionRoot = Path.Combine(AppPaths.ThumbnailCacheRoot, "thumbnails", "v3");
         _cacheDir = Path.Combine(versionRoot, identity);
         _logger.LogInformation("Thumbnail cache for {File} → {Dir}",
             Path.GetFileName(pdfPath), _cacheDir);
@@ -452,34 +452,5 @@ public sealed class ThumbnailCacheService : IDisposable
             $"last-write-utc={(info.Exists ? info.LastWriteTimeUtc.Ticks : 0)}");
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(identity));
         return Convert.ToHexString(bytes, 0, 8).ToLowerInvariant();
-    }
-
-    /// <summary>
-    /// OS-appropriate cache root. .NET doesn't have a SpecialFolder for
-    /// "user cache directory" so we follow each platform's convention
-    /// directly.
-    /// </summary>
-    private static string GetCacheRoot()
-    {
-        if (OperatingSystem.IsMacOS())
-        {
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "Library", "Caches", "excise");
-        }
-        if (OperatingSystem.IsLinux())
-        {
-            // XDG Base Directory: $XDG_CACHE_HOME or $HOME/.cache.
-            var xdg = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
-            if (!string.IsNullOrEmpty(xdg))
-                return Path.Combine(xdg, "excise");
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                ".cache", "excise");
-        }
-        // Windows (and the fallback): %LOCALAPPDATA%/excise/Cache.
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "excise", "Cache");
     }
 }

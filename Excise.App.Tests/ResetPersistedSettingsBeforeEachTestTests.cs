@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using AwesomeAssertions;
 using Excise.App.Models;
@@ -36,5 +37,53 @@ public class ResetPersistedSettingsBeforeEachTestTests
         // a freshly loaded WindowSettings (no file) reports the continuous default.
         WindowSettings.Load().ContinuousScrollEnabled.Should().BeTrue(
             "with no persisted file, continuous scroll is the default");
+    }
+
+    [Fact]
+    public void AppPaths_NeverResolvesToTheRealUserDirectories()
+    {
+        // A test run once wrote fixture PDFs into the real
+        // ~/Library/Application Support/Excise.App/recent.txt: one test ended
+        // the assembly-wide override and every later test ran un-redirected.
+        // The hook's Before/After guard catches that for EVERY test; this pins
+        // the property itself, compared against the real resolution and not
+        // just against the override root.
+        var realDirs = new[]
+        {
+            AppPaths.ResolveConfigDirFresh(),
+            AppPaths.ResolveDataDirFresh(),
+            AppPaths.ResolveCacheDirFresh(),
+        };
+        var livePaths = new[]
+        {
+            AppPaths.ConfigDir, AppPaths.DataDir, AppPaths.CacheDir, AppPaths.ThumbnailCacheRoot,
+            AppPaths.WindowSettingsPath, AppPaths.RecentFilesPath, AppPaths.ZoomSettingsPath,
+            AppPaths.PreferencesPath, AppPaths.ResponsivenessReportRequestPath,
+        };
+
+        AppPaths.OverrideRootForTests.Should().NotBeNull(
+            "TestEnvironmentInitializer must redirect AppPaths before any test runs");
+        var tempRoot = Path.GetFullPath(Path.GetTempPath());
+        foreach (var path in livePaths)
+        {
+            Path.GetFullPath(path).Should().StartWith(tempRoot,
+                $"{path} must live under the per-run temp root, never the user's home");
+            foreach (var real in realDirs)
+                path.Should().NotStartWith(real, "tests must never touch the user's real app directories");
+        }
+
+        // The thumbnail cache has its own production root (not CacheDir).
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        AppPaths.ThumbnailCacheRoot.Should().NotStartWith(Path.Combine(home, "Library"))
+            .And.NotStartWith(Path.Combine(home, ".cache"));
+    }
+
+    [Fact]
+    public void Guard_AcceptsTheAssemblyOverride()
+    {
+        // The guard runs before and after every test; if it misfired on a
+        // correctly redirected run, every test in the assembly would fail.
+        var guard = () => ResetPersistedSettingsBeforeEachTest.AssertStorageIsRedirected("direct call");
+        guard.Should().NotThrow();
     }
 }

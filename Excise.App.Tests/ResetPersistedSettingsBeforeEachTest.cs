@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Reflection;
 using Excise.App.Services;
@@ -30,6 +31,14 @@ namespace Excise.App.Tests;
 ///
 /// Deleting the redirected config files before each test gives every test a
 /// clean default state, independent of run order.
+///
+/// The hook also GUARDS the redirection, before and after every test. One test
+/// used to end the override in its <c>finally</c>, which put every later test in
+/// the serial run on the user's real ~/Library/Application Support/Excise.App:
+/// fixture PDFs landed in the real recent.txt, and this hook deleted the real
+/// window.json, zoom.txt and preferences.json before each test. The check runs
+/// before the deletes, and the After check names the test that broke isolation
+/// rather than whichever test happens to run next.
 /// </summary>
 public sealed class ResetPersistedSettingsBeforeEachTest : BeforeAfterTestAttribute
 {
@@ -39,10 +48,47 @@ public sealed class ResetPersistedSettingsBeforeEachTest : BeforeAfterTestAttrib
     public override void Before(MethodInfo methodUnderTest, IXunitTest test)
     {
         System.Threading.Interlocked.Increment(ref InvocationCount);
+        AssertStorageIsRedirected($"before {Describe(methodUnderTest)}");
         TryDelete(AppPaths.WindowSettingsPath);   // continuous-scroll view-mode preference
         TryDelete(AppPaths.ZoomSettingsPath);
         TryDelete(AppPaths.PreferencesPath);
     }
+
+    public override void After(MethodInfo methodUnderTest, IXunitTest test)
+        => AssertStorageIsRedirected($"after {Describe(methodUnderTest)}");
+
+    /// <summary>
+    /// Throws unless every per-user directory AppPaths hands out resolves under
+    /// the assembly's temp override root. Checked against the root rather than
+    /// against the real home, so a path that goes wrong in some new way fails too.
+    /// </summary>
+    internal static void AssertStorageIsRedirected(string context)
+    {
+        var root = AppPaths.OverrideRootForTests
+            ?? throw new InvalidOperationException(
+                $"AppPaths is not redirected for tests ({context}). Every later test would read and " +
+                "write the user's real settings and caches. TestEnvironmentInitializer sets the " +
+                "override once for the whole assembly; no test may replace or end it.");
+
+        var prefix = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root)) + Path.DirectorySeparatorChar;
+        foreach (var (name, dir) in new[]
+                 {
+                     (nameof(AppPaths.ConfigDir), AppPaths.ConfigDir),
+                     (nameof(AppPaths.DataDir), AppPaths.DataDir),
+                     (nameof(AppPaths.CacheDir), AppPaths.CacheDir),
+                     (nameof(AppPaths.ThumbnailCacheRoot), AppPaths.ThumbnailCacheRoot),
+                 })
+        {
+            if (!Path.GetFullPath(dir).StartsWith(prefix, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"AppPaths.{name} resolves to '{dir}', outside the test override root '{root}' " +
+                    $"({context}). Tests must never reach the user's real directories.");
+            }
+        }
+    }
+
+    private static string Describe(MethodInfo method) => $"{method.DeclaringType?.FullName}.{method.Name}";
 
     private static void TryDelete(string path)
     {

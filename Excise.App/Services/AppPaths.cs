@@ -223,18 +223,54 @@ public static class AppPaths
         }
     }
 
-    /// <summary>
-    /// Resets cached paths. Only for testing purposes.
-    /// </summary>
-    internal static void Reset()
-    {
-        _configDir = null;
-        _dataDir = null;
-        _cacheDir = null;
-        _overrideRoot = null;
-    }
-
     private static string? _overrideRoot;
+
+    /// <summary>
+    /// Test-only: the root passed to <see cref="OverrideForTests"/>, or null
+    /// when the real per-user directories are in effect.
+    /// </summary>
+    internal static string? OverrideRootForTests => _overrideRoot;
+
+    /// <summary>
+    /// Root of the persistent thumbnail cache (<see cref="ThumbnailCacheService"/>).
+    /// Deliberately NOT <see cref="CacheDir"/>: the cache has always lived under
+    /// an "excise" directory, and renaming it would orphan every existing cache.
+    /// It is resolved here rather than in the service so the test override
+    /// covers it — the service used to compute its own root, honouring
+    /// XDG_CACHE_HOME only on Linux, so tests on macOS wrote thumbnails into the
+    /// real ~/Library/Caches/excise.
+    ///
+    /// Platform paths:
+    /// - macOS: ~/Library/Caches/excise
+    /// - Linux: $XDG_CACHE_HOME/excise or ~/.cache/excise
+    /// - Windows: %LOCALAPPDATA%\excise\Cache
+    /// </summary>
+    internal static string ThumbnailCacheRoot =>
+        _overrideRoot != null ? Path.Combine(_overrideRoot, "Cache", "excise") : GetThumbnailCacheRoot();
+
+    private static string GetThumbnailCacheRoot()
+    {
+        if (OperatingSystem.IsMacOS())
+        {
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "Library", "Caches", "excise");
+        }
+        if (OperatingSystem.IsLinux())
+        {
+            // XDG Base Directory: $XDG_CACHE_HOME or $HOME/.cache.
+            var xdg = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
+            if (!string.IsNullOrEmpty(xdg))
+                return Path.Combine(xdg, "excise");
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                ".cache", "excise");
+        }
+        // Windows (and the fallback): %LOCALAPPDATA%/excise/Cache.
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "excise", "Cache");
+    }
 
     /// <summary>
     /// Test-only: redirect every directory under a single root.
@@ -243,13 +279,18 @@ public static class AppPaths
     /// respectively. The trailing "Excise.App" segment matches the production
     /// path shape so existing AppPaths tests that assert EndWith("Excise.App")
     /// continue to pass under isolation.
+    ///
+    /// There is deliberately no way to END the redirection. The null overload
+    /// that used to exist let one test's <c>finally</c> put every later test in
+    /// the serial run on the user's real directories.
     /// </summary>
-    internal static void OverrideForTests(string? root)
+    internal static void OverrideForTests(string root)
     {
+        ArgumentException.ThrowIfNullOrEmpty(root);
         _overrideRoot = root;
-        _configDir = root != null ? EnsureExists(Path.Combine(root, "Config", AppName)) : null;
-        _dataDir   = root != null ? EnsureExists(Path.Combine(root, "Data",   AppName)) : null;
-        _cacheDir  = root != null ? EnsureExists(Path.Combine(root, "Cache",  AppName)) : null;
+        _configDir = EnsureExists(Path.Combine(root, "Config", AppName));
+        _dataDir   = EnsureExists(Path.Combine(root, "Data",   AppName));
+        _cacheDir  = EnsureExists(Path.Combine(root, "Cache",  AppName));
     }
 
     private static string EnsureExists(string dir)

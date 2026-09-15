@@ -13,8 +13,10 @@ namespace Excise.App.Tests.Unit;
 ///
 /// Calls the Resolve*Fresh internal helpers so the assembly-wide test
 /// override (which redirects ConfigDir/DataDir/CacheDir into a temp
-/// dir for the rest of the suite) doesn't have to be disabled — that
-/// would race with persistence tests running in parallel.
+/// dir for the rest of the suite) never has to be ended. Ending it would
+/// put every later test on the user's real directories; the override has
+/// no off switch, and ResetPersistedSettingsBeforeEachTest fails any test
+/// that runs without it.
 /// </summary>
 public class AppPathsTests
 {
