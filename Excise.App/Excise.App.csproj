@@ -134,7 +134,7 @@
          loads FluentAvaloniaTheme, and the live launch crash only surfaced
          afterwards. AppThemeCanaryTests constructs the real theme so this
          class of exclusion can never pass the suite again. -->
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.1" />
     <!-- FluentIcons.Avalonia.Fluent dropped: not referenced anywhere
          in source/axaml. Shell icons use local vector StreamGeometry resources
          instead of the FluentIcons component library. Removing unblocks
@@ -160,10 +160,10 @@
          is ReactiveUI.SourceGenerators (Roslyn-based, no Fody). -->
 
     <!-- Logging Infrastructure (paired with .NET 10 BCL). -->
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.9" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.9" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.9" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
 
     <!-- Tmds.DBus.Protocol pin removed: Avalonia 12 already brings 0.92.0
          transitively, which is past the GHSA-xrw6-gwf8-vvr9 cutoff
