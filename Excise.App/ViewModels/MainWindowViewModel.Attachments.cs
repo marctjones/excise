@@ -213,12 +213,14 @@ public partial class MainWindowViewModel
             return null;
         }
 
-        var file = await storageProvider.SaveFilePickerAsync(
+        var file = await global::Excise.App.Services.StoragePickers.SaveFileAsync(
+            storageProvider,
             new global::Avalonia.Platform.Storage.FilePickerSaveOptions
             {
                 Title = "Save Attachment",
                 SuggestedFileName = suggestedName,
-            });
+            },
+            _logger);
 
         var path = file?.Path.LocalPath;
         return string.IsNullOrWhiteSpace(path) ? null : path;

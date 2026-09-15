@@ -76,6 +76,7 @@ public partial class SaveRedactedVersionDialog : Window
             // Ignore errors, will use default location
         }
 
-        return await StorageProvider.SaveFilePickerAsync(options);
+        // No logger in this view; the cleanup still runs (#1477).
+        return await global::Excise.App.Services.StoragePickers.SaveFileAsync(StorageProvider, options);
     }
 }
