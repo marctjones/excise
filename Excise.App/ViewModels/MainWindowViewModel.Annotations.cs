@@ -401,7 +401,7 @@ public partial class MainWindowViewModel
             return null;
         }
 
-        var files = await storageProvider.OpenFilePickerAsync(new global::Avalonia.Platform.Storage.FilePickerOpenOptions
+        var files = await global::Excise.App.Services.StoragePickers.OpenFilesAsync(storageProvider, new global::Avalonia.Platform.Storage.FilePickerOpenOptions
         {
             Title = "Choose a stamp image",
             AllowMultiple = false,
@@ -412,7 +412,7 @@ public partial class MainWindowViewModel
                     Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp" }
                 }
             }
-        });
+        }, _logger);
 
         return files.Count == 0 ? null : files[0].Path.LocalPath;
     }

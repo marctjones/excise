@@ -50,7 +50,7 @@ public partial class MainWindowViewModel
             return;
         }
 
-        var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        var files = await StoragePickers.OpenFilesAsync(storageProvider, new FilePickerOpenOptions
         {
             Title = "Open PDF File",
             AllowMultiple = false,
@@ -61,7 +61,7 @@ public partial class MainWindowViewModel
                     Patterns = ["*.pdf"]
                 }
             ]
-        });
+        }, _logger);
 
         if (files.Count == 0)
         {

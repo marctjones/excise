@@ -82,7 +82,7 @@ public partial class MainWindowViewModel
             return null;
         }
 
-        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var file = await global::Excise.App.Services.StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
         {
             Title = "Save Protected PDF As",
             DefaultExtension = "pdf",
@@ -91,7 +91,7 @@ public partial class MainWindowViewModel
             {
                 new FilePickerFileType("PDF Files") { Patterns = new[] { "*.pdf" } }
             }
-        });
+        }, _logger);
 
         if (file == null)
             return null;
@@ -126,7 +126,7 @@ public partial class MainWindowViewModel
             return null;
         }
 
-        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var file = await global::Excise.App.Services.StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
         {
             Title = "Save Unprotected PDF As",
             DefaultExtension = "pdf",
@@ -135,7 +135,7 @@ public partial class MainWindowViewModel
             {
                 new FilePickerFileType("PDF Files") { Patterns = new[] { "*.pdf" } }
             }
-        });
+        }, _logger);
 
         if (file == null)
             return null;

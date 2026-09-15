@@ -2379,7 +2379,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var suggestedFileName = System.IO.Path.GetFileNameWithoutExtension(_currentFilePath) +
                                 $"_page{CurrentPageIndex + 1}.png";
 
-        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var file = await StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
         {
             Title = "Export Current Page",
             SuggestedFileName = suggestedFileName,
@@ -2389,7 +2389,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 new FilePickerFileType("JPEG Image") { Patterns = new[] { "*.jpg", "*.jpeg" } }
             },
             DefaultExtension = "png"
-        });
+        }, _logger);
 
         if (file == null)
         {
@@ -2825,7 +2825,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return Array.Empty<string>();
         }
 
-        var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        var files = await StoragePickers.OpenFilesAsync(storageProvider, new FilePickerOpenOptions
         {
             Title = title,
             AllowMultiple = allowMultiple,
@@ -2836,7 +2836,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     Patterns = new[] { "*.pdf" }
                 }
             }
-        });
+        }, _logger);
 
         return files
             .Select(f => f.Path.LocalPath)
@@ -2861,7 +2861,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return null;
         }
 
-        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var file = await StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
         {
             Title = title,
             DefaultExtension = "pdf",
@@ -2873,7 +2873,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     Patterns = new[] { "*.pdf" }
                 }
             }
-        });
+        }, _logger);
 
         var path = file?.Path.LocalPath;
         return string.IsNullOrWhiteSpace(path) ? null : path;
@@ -2941,7 +2941,7 @@ public partial class MainWindowViewModel : ViewModelBase
             // Ignore errors, will use default location
         }
 
-        return await storageProvider.SaveFilePickerAsync(options);
+        return await StoragePickers.SaveFileAsync(storageProvider, options, _logger);
     }
 
     // Recent Files Management

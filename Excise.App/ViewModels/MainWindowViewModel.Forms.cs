@@ -372,7 +372,7 @@ public partial class MainWindowViewModel
         if (storageProvider == null)
             return;
 
-        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var file = await global::Excise.App.Services.StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
         {
             Title = "Save Flattened Form Copy",
             DefaultExtension = "pdf",
@@ -384,7 +384,7 @@ public partial class MainWindowViewModel
                     Patterns = new[] { "*.pdf" }
                 }
             }
-        });
+        }, _logger);
 
         if (file?.Path.LocalPath is not { Length: > 0 } filePath)
             return;

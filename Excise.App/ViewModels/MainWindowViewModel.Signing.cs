@@ -59,7 +59,7 @@ public partial class MainWindowViewModel
         if (storageProvider == null)
             return;
 
-        var certFiles = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        var certFiles = await StoragePickers.OpenFilesAsync(storageProvider, new FilePickerOpenOptions
         {
             Title = "Choose a signing certificate (PKCS#12)",
             AllowMultiple = false,
@@ -67,7 +67,7 @@ public partial class MainWindowViewModel
             {
                 new FilePickerFileType("PKCS#12 certificate") { Patterns = new[] { "*.p12", "*.pfx" } },
             },
-        });
+        }, _logger);
 
         if (certFiles is not { Count: > 0 } || certFiles[0].Path.LocalPath is not { Length: > 0 } certPath)
             return;
@@ -79,7 +79,7 @@ public partial class MainWindowViewModel
         if (password == null)
             return;
 
-        var outFile = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var outFile = await StoragePickers.SaveFileAsync(storageProvider, new FilePickerSaveOptions
         {
             Title = "Save Signed Copy",
             DefaultExtension = "pdf",
@@ -88,7 +88,7 @@ public partial class MainWindowViewModel
             {
                 new FilePickerFileType("PDF Files") { Patterns = new[] { "*.pdf" } },
             },
-        });
+        }, _logger);
 
         if (outFile?.Path.LocalPath is not { Length: > 0 } outputPath)
             return;
