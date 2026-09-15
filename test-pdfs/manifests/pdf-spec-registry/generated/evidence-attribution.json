@@ -39524,7 +39524,7 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheSharedOriginalPristineAndReleasable",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -39545,7 +39545,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_EachPagesCopyCarriesOnlyItsOwnZeroedRegion",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOverASharedImage_ReportsThePageThatStillDrawsTheOriginal",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOnEveryPageThatSharesTheImage_ReportsNoRemainingImageCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -40566,24 +40580,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.StandardHuffmanTableB5_DecodesLowerRange",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.StandardHuffmanTables_DecodeSimpleSymbolDictionarySequence",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.StandardHuffmanTable_WithInvalidNumber_Throws",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -40956,7 +40952,7 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheSharedOriginalPristineAndReleasable",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -40977,7 +40973,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_EachPagesCopyCarriesOnlyItsOwnZeroedRegion",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOverASharedImage_ReportsThePageThatStillDrawsTheOriginal",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOnEveryPageThatSharesTheImage_ReportsNoRemainingImageCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -42007,24 +42017,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.StandardHuffmanTables_DecodeSimpleSymbolDictionarySequence",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.StandardHuffmanTable_WithInvalidNumber_Throws",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.UserHuffmanTableBuilder_BuildsEncodedTable",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -42370,7 +42362,7 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheSharedOriginalPristineAndReleasable",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -42391,7 +42383,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_EachPagesCopyCarriesOnlyItsOwnZeroedRegion",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOverASharedImage_ReportsThePageThatStillDrawsTheOriginal",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOnEveryPageThatSharesTheImage_ReportsNoRemainingImageCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -43421,24 +43427,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.StandardHuffmanTables_DecodeSimpleSymbolDictionarySequence",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.StandardHuffmanTable_WithInvalidNumber_Throws",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.UserHuffmanTableBuilder_BuildsEncodedTable",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -93097,7 +93085,7 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheSharedOriginalPristineAndReleasable",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -93118,7 +93106,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_EachPagesCopyCarriesOnlyItsOwnZeroedRegion",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOverASharedImage_ReportsThePageThatStillDrawsTheOriginal",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOnEveryPageThatSharesTheImage_ReportsNoRemainingImageCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94103,24 +94105,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0FontWithSingleByteCodespaceEncoding_RemovesOnlyTargetedByte",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0WithCharSpacingAndHorizontalScaling_RemovesSecret_KeepsRestInPlace",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94519,7 +94503,7 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheSharedOriginalPristineAndReleasable",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94540,7 +94524,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_EachPagesCopyCarriesOnlyItsOwnZeroedRegion",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOverASharedImage_ReportsThePageThatStillDrawsTheOriginal",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOnEveryPageThatSharesTheImage_ReportsNoRemainingImageCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95525,24 +95523,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0FontWithSingleByteCodespaceEncoding_RemovesOnlyTargetedByte",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0WithCharSpacingAndHorizontalScaling_RemovesSecret_KeepsRestInPlace",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95955,7 +95935,7 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheSharedOriginalPristineAndReleasable",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95976,7 +95956,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_EachPagesCopyCarriesOnlyItsOwnZeroedRegion",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOverASharedImage_ReportsThePageThatStillDrawsTheOriginal",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOnEveryPageThatSharesTheImage_ReportsNoRemainingImageCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96961,24 +96955,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0FontWithSingleByteCodespaceEncoding_RemovesOnlyTargetedByte",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0WithCharSpacingAndHorizontalScaling_RemovesSecret_KeepsRestInPlace",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97419,7 +97395,7 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheSharedOriginalPristineAndReleasable",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97440,7 +97416,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_EachPagesCopyCarriesOnlyItsOwnZeroedRegion",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOverASharedImage_ReportsThePageThatStillDrawsTheOriginal",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingATermOnEveryPageThatSharesTheImage_ReportsNoRemainingImageCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98425,24 +98415,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactArea_OverSecondCjkGlyph_RemovesItsCode_KeepsFirstWithOriginalCode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0FontWithSingleByteCodespaceEncoding_RemovesOnlyTargetedByte",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0WithCharSpacingAndHorizontalScaling_RemovesSecret_KeepsRestInPlace",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112581,8 +112553,8 @@
     "gradeImplemented": 197,
     "gradeVerified": 155,
     "gradeUnknown": 546,
-    "testMethods": 6771,
-    "testMethodsWithCapabilityCandidate": 4221,
+    "testMethods": 6775,
+    "testMethodsWithCapabilityCandidate": 4225,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

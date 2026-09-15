@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1095,
-  "indexedContentSha256": "0b88f7c16ccdc12dd553903929b6b174fb626d8ea072195c9d5a72ae1876734f",
+  "indexedFileCount": 1096,
+  "indexedContentSha256": "88d36b44479c9954f6d04b6a74ef8388412bd169bc9bb223839375ecfcea9681",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -8506,7 +8506,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 238
+      "candidateReferenceCount": 239
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9069,7 +9069,8 @@
           "kind": "source",
           "matchedTerms": [
             "image",
-            "images"
+            "images",
+            "xobjects"
           ]
         },
         {
@@ -9487,7 +9488,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 183
+      "candidateReferenceCount": 184
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -11870,6 +11871,17 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "form",
+            "xobjects",
+            "contentoperator",
+            "contentstream",
+            "textextractor"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -12271,17 +12283,9 @@
             "xobjects",
             "contentstream"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "form",
-            "streams"
-          ]
         }
       ],
-      "candidateReferenceCount": 131
+      "candidateReferenceCount": 132
     },
     {
       "id": "pdf.20.content.operators",
@@ -27407,6 +27411,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/SharedImageRegionRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -27475,7 +27488,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 33
+      "candidateReferenceCount": 34
     },
     {
       "id": "pdf.20.image.requirement-004",
@@ -27802,6 +27815,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/SharedImageRegionRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -27871,7 +27893,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 33
+      "candidateReferenceCount": 34
     },
     {
       "id": "pdf.20.image.requirement-005",
@@ -28208,6 +28230,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/SharedImageRegionRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -28287,7 +28318,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 35
+      "candidateReferenceCount": 36
     },
     {
       "id": "pdf.20.image.requirement-006",
@@ -34213,7 +34244,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 138
+      "candidateReferenceCount": 139
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -34624,6 +34655,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/SharedImageRegionRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bitspercomponent",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/FullPageImageRenderFidelityTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34772,7 +34812,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 53
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -35733,6 +35773,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/SharedImageRegionRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/UncolouredTilingPatternColourTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -35891,7 +35940,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 51
+      "candidateReferenceCount": 52
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -37390,6 +37439,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/SharedImageRegionRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/Type3RenderingDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37511,19 +37569,9 @@
             "lab",
             "image"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/ModeSwitchDisplayTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image",
-            "pdfimage"
-          ]
         }
       ],
-      "candidateReferenceCount": 99
+      "candidateReferenceCount": 100
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -60466,7 +60514,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 154
+      "candidateReferenceCount": 155
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -62007,7 +62055,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 516
+      "candidateReferenceCount": 517
     },
     {
       "id": "pdf.20.extension.developer",
