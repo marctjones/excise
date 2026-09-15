@@ -68,6 +68,24 @@ internal static class ImageRedactor
         GlyphRemovalStrategy strategy,
         out int removedCount,
         out int regionEditedCount)
+        => ProcessOperations(operations, page, redactionArea, strategy,
+            out removedCount, out regionEditedCount, touchedImages: null);
+
+    /// <summary>
+    /// As above, additionally adding every image stream this pass region-edited
+    /// or dropped to <paramref name="touchedImages"/> (#1493). Both replace the
+    /// image on THIS page only; any other page (or another <c>Do</c> on this
+    /// one) that still references the same stream keeps the original pixels,
+    /// and <c>RedactText</c> reports those references instead of hiding them.
+    /// </summary>
+    public static List<ContentOperator> ProcessOperations(
+        IReadOnlyList<ContentOperator> operations,
+        PdfPage page,
+        PdfRectangle redactionArea,
+        GlyphRemovalStrategy strategy,
+        out int removedCount,
+        out int regionEditedCount,
+        List<PdfStream>? touchedImages)
     {
         removedCount = 0;
         regionEditedCount = 0;
@@ -103,13 +121,20 @@ internal static class ImageRedactor
                 case "Do":
                     if (ShouldRemoveImageDo(op, page, ctm, redactionArea, strategy))
                     {
+                        // #1493: region-edited or dropped, the image is replaced
+                        // on this page only. Record it so the pages still drawing
+                        // the original can be reported.
+                        var image = ResolveImageStream(op, page);
+                        if (image != null)
+                            touchedImages?.Add(image);
+
                         // #1195: if the redaction area only PARTIALLY covers the
                         // image, try to destroy just the covered samples instead
                         // of dropping the whole image. Fail-secure: any decline
                         // falls through to whole-Do removal below.
                         var quad = TransformedUnitSquareAabb(ctm);
                         if (!QuadFullyInside(quad, redactionArea)
-                            && ResolveImageStream(op, page) is { } image
+                            && image != null
                             && ImageRegionRedactor.TryRegionRedact(
                                    page, image, ctm.A, ctm.B, ctm.C, ctm.D, ctm.E, ctm.F,
                                    redactionArea, out var newName))

@@ -333,37 +333,6 @@ public class PdfStream : PdfDictionary
     /// <para>The save path is unaffected: the writer serializes
     /// <see cref="EncodedData"/>, which a release never touches.</para>
     /// </remarks>
-    /// <summary>
-    /// Returns the decoded bytes for a caller that will EDIT THEM IN PLACE, and
-    /// gives up this stream's claim that they are what its decoder produced
-    /// (#1492), so <see cref="TryReleaseDecoded()"/> refuses them from now on.
-    /// Throws exactly as <see cref="DecodedData"/> does when there is nothing
-    /// decoded.
-    /// </summary>
-    /// <remarks>
-    /// The image region redactor zeroes samples in the array it reads. Read
-    /// through <see cref="DecodedData"/>, that array still carried the
-    /// provenance flag, so a release (the viewer releases pages that scroll
-    /// away) would drop the edited array and the next reader would decode the
-    /// ORIGINAL samples again. For a deferred stream the decode, the read and
-    /// the flag clear happen inside one hold of the decode lock (it is
-    /// re-entrant), so no release can land between them.
-    /// </remarks>
-    internal byte[] TakeDecodedDataForInPlaceEdit()
-    {
-        var deferral = _deferral;
-        if (deferral == null || !IsFiltered)
-            return DecodedData;
-
-        lock (deferral)
-        {
-            var decoded = DecodeOnDemand() ?? throw new InvalidOperationException(
-                "Stream has not been decoded. Call Decode() first or use a PdfDocumentReader.");
-            _decodedByDeferral = false;
-            return decoded;
-        }
-    }
-
     internal bool TryReleaseDecoded() => TryReleaseDecoded(out _);
 
     /// <summary>

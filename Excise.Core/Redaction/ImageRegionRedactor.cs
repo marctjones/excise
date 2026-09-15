@@ -94,22 +94,26 @@ internal static class ImageRegionRedactor
         byte[] pixels;
         try
         {
-            // The samples are zeroed IN PLACE, on the original stream's own
-            // decoded array, exactly as before: a later redaction of the same
-            // image object (another page sharing it) sees the zeroes, which is
-            // the saved output this redactor has always produced. Taking the
-            // array for the edit (#1492) marks it as no longer the decoder's, in
-            // the same lock that decodes it, so no release can drop it and
-            // silently hand the next reader the unredacted original samples.
-            pixels = image.TakeDecodedDataForInPlaceEdit();
+            // #1493: READ the original's samples, never edit them. The zeroes go
+            // into a copy that only this page's new XObject owns. Zeroing the
+            // original in place (the behaviour before #1493) made every other
+            // page drawing the same image look redacted in the viewer while the
+            // saved file kept that page's unchanged encoded bytes, and leaked one
+            // page's blackout into another page's later redacted copy. Left
+            // pristine, the original stays ordinary decoder output: the viewer and
+            // the saved file agree on every page, and a #1492 release can drop and
+            // re-decode it safely. The pages still drawing it are reported by
+            // RedactText, not silently redacted (surface, don't guess).
+            var source = image.DecodedData;
+            // THE gate: a length match means DecodedData is pixels, not a codestream.
+            if (source.LongLength != expected)
+                return false;
+            pixels = (byte[])source.Clone();
         }
         catch
         {
             return false; // undecodable → caller drops the whole Do
         }
-        // THE gate: a length match means DecodedData is pixels, not a codestream.
-        if (pixels.LongLength != expected)
-            return false;
 
         // Map the redaction rectangle into image sample space via the inverse of
         // the unit-square→page CTM, rounding OUTWARD (fail secure).

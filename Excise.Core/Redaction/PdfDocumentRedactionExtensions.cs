@@ -422,6 +422,14 @@ public static class PdfDocumentRedactionExtensions
                     "scrubDocumentCarriers: false was requested by the caller"));
         }
 
+        // #1493: an image region-redacted (or dropped) on one page is replaced on
+        // THAT page only. Every page that still references the same image
+        // object keeps the original pixels, including the redacted area's, and
+        // the writer saves them. Reported per the carrier policy rather than
+        // silently redacted on pages the caller did not ask about. Runs after
+        // every page, so a page this call also redacted is not named.
+        carrierResults.AddRange(SharedImageCarrierResults(document, imageCounts.TouchedImages));
+
         return new RedactionReport
         {
             Term = text,
@@ -432,6 +440,56 @@ public static class PdfDocumentRedactionExtensions
             ImagesDroppedWhole = imageCounts.RemovedWhole,
             HyphenatedCandidates = hyphenCandidates,
         };
+    }
+
+    /// <summary>
+    /// #1493: one "not scrubbed" carrier row for each image this call
+    /// region-edited or removed that some page still references, naming those
+    /// pages.
+    /// </summary>
+    /// <remarks>
+    /// Reads each page's <c>/Resources /XObject</c> entries, not its content
+    /// stream: a referenced image is written to the file, and is extractable
+    /// with <c>mutool extract</c>, whether or not the page draws it. Images
+    /// reached only through a form XObject's or an annotation appearance's own
+    /// resources are not examined.
+    /// </remarks>
+    private static IEnumerable<CarrierResult> SharedImageCarrierResults(
+        PdfDocument document,
+        IReadOnlyList<Excise.Core.Primitives.PdfStream>? touchedImages)
+    {
+        if (touchedImages is not { Count: > 0 })
+            yield break;
+
+        var touched = new HashSet<Excise.Core.Primitives.PdfStream>(
+            touchedImages, ReferenceEqualityComparer.Instance);
+        var pagesByImage = new Dictionary<Excise.Core.Primitives.PdfStream, SortedSet<int>>(
+            ReferenceEqualityComparer.Instance);
+        for (int pageNum = 1; pageNum <= document.PageCount; pageNum++)
+        {
+            var xobjects = document.GetPage(pageNum).Resources?.ResolveDictionary(document, "XObject");
+            if (xobjects == null)
+                continue;
+            foreach (var (_, value) in xobjects)
+            {
+                if (document.Resolve(value) is not Excise.Core.Primitives.PdfStream image
+                    || !touched.Contains(image))
+                    continue;
+                if (!pagesByImage.TryGetValue(image, out var pages))
+                    pagesByImage[image] = pages = new SortedSet<int>();
+                pages.Add(pageNum);
+            }
+        }
+
+        foreach (var pages in pagesByImage.Values.OrderBy(p => p.Min))
+        {
+            yield return new CarrierResult(
+                $"image XObject still drawn on page(s) {string.Join(", ", pages)}",
+                false,
+                "an image this redaction region-edited or removed is shared with these page(s), which still " +
+                "reference the original, including the redacted area's pixels, and the saved file keeps it; " +
+                "redact those pages too (#1493)");
+        }
     }
 
     /// <summary>The document-level carriers the term is scrubbed from and

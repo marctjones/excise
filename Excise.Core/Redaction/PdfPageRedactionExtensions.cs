@@ -13,10 +13,29 @@ namespace Excise.Core.Text.Segmentation;
 /// <summary>How many images a redaction pass region-edited vs dropped wholesale
 /// (#1187 surfacing of #1195). A wholesale drop on a term redaction is
 /// destructive collateral the report must not hide.</summary>
-internal readonly record struct ImageRedactionCounts(int RegionEdited, int RemovedWhole)
+/// <param name="TouchedImages">Every image stream the pass region-edited or
+/// dropped (#1493), so <c>RedactText</c> can report the pages that still draw
+/// the unredacted original. Null when there were none.</param>
+internal readonly record struct ImageRedactionCounts(
+    int RegionEdited,
+    int RemovedWhole,
+    IReadOnlyList<Excise.Core.Primitives.PdfStream>? TouchedImages = null)
 {
     public static ImageRedactionCounts operator +(ImageRedactionCounts a, ImageRedactionCounts b)
-        => new(a.RegionEdited + b.RegionEdited, a.RemovedWhole + b.RemovedWhole);
+        => new(a.RegionEdited + b.RegionEdited, a.RemovedWhole + b.RemovedWhole,
+            Concat(a.TouchedImages, b.TouchedImages));
+
+    private static IReadOnlyList<Excise.Core.Primitives.PdfStream>? Concat(
+        IReadOnlyList<Excise.Core.Primitives.PdfStream>? a,
+        IReadOnlyList<Excise.Core.Primitives.PdfStream>? b)
+    {
+        if (a is not { Count: > 0 }) return b;
+        if (b is not { Count: > 0 }) return a;
+        var all = new List<Excise.Core.Primitives.PdfStream>(a.Count + b.Count);
+        all.AddRange(a);
+        all.AddRange(b);
+        return all;
+    }
 }
 
 public static class PdfPageRedactionExtensions
@@ -189,12 +208,13 @@ public static class PdfPageRedactionExtensions
         // Pass 2: image XObject redaction (#279, region-level #1195). Uses
         // imageArea (the full glyph bbox), NOT the possibly-thin glyph-match
         // area, so region blackout covers the term's visible extent.
+        var touchedImages = new List<Excise.Core.Primitives.PdfStream>();
         working = ImageRedactor.ProcessOperations(
-            working, page, imageArea, strategy, out var imgRemoved, out var imgRegionEdited);
+            working, page, imageArea, strategy, out var imgRemoved, out var imgRegionEdited, touchedImages);
         ImageRedactor.PruneUnusedImageXObjects(page, working);
 
         page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
-        return new ImageRedactionCounts(imgRegionEdited, imgRemoved);
+        return new ImageRedactionCounts(imgRegionEdited, imgRemoved, touchedImages);
     }
 
     /// <summary>
@@ -295,9 +315,10 @@ public static class PdfPageRedactionExtensions
         var imageCounts = default(ImageRedactionCounts);
         foreach (var imageArea in imageList)
         {
+            var touchedImages = new List<Excise.Core.Primitives.PdfStream>();
             working = ImageRedactor.ProcessOperations(
-                working, page, imageArea, strategy, out var removed, out var regionEdited);
-            imageCounts += new ImageRedactionCounts(regionEdited, removed);
+                working, page, imageArea, strategy, out var removed, out var regionEdited, touchedImages);
+            imageCounts += new ImageRedactionCounts(regionEdited, removed, touchedImages);
         }
 
         ImageRedactor.PruneUnusedImageXObjects(page, working);
