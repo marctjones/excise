@@ -53,6 +53,20 @@ public partial class PdfDocument : IDisposable
     internal PdfReference AddIndirectObject(PdfObject obj)
         => _objectStore.AddIndirectObject(obj);
 
+    // #1445: embedded font objects already built into this document, keyed by
+    // PdfFont.FontProgramIdentity (reference equality). A font is a document-wide
+    // resource; building it per page wrote one FontFile2 per page.
+    private readonly Dictionary<object, PdfReference> _embeddedFontObjects =
+        new(ReferenceEqualityComparer.Instance);
+
+    internal bool TryGetEmbeddedFontObject(
+        object fontProgramIdentity,
+        [System.Diagnostics.CodeAnalysis.MaybeNullWhen(false)] out PdfReference reference)
+        => _embeddedFontObjects.TryGetValue(fontProgramIdentity, out reference);
+
+    internal void RememberEmbeddedFontObject(object fontProgramIdentity, PdfReference reference)
+        => _embeddedFontObjects[fontProgramIdentity] = reference;
+
     /// <summary>
     /// Overwrite the content of an already-registered indirect object.
     /// </summary>
