@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "874e226f33641d47de458b0ff3b63962c8debf60",
+  "sourceRevision": "5e4d8ca2d2655840a7f047ee6a6eca906eec69f7",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,13 +21,13 @@
     "commitsRequested": 200,
     "commitsObserved": 198,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "e700c674315d231e665fa93fb070e0f2776bd5e6",
-    "oldestProductionCommit": "223939bbb41051c27517faac5bd8a290469c66a0"
+    "newestProductionCommit": "5e4d8ca2d2655840a7f047ee6a6eca906eec69f7",
+    "oldestProductionCommit": "11a194f972387e1a85848a8e123caaffa73292e8"
   },
   "files": [
     {
       "path": "Excise.Cli/Program.cs",
-      "commits": 26
+      "commits": 25
     },
     {
       "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
@@ -226,7 +226,15 @@
       "commits": 4
     },
     {
+      "path": "Excise.App/Excise.App.csproj",
+      "commits": 3
+    },
+    {
       "path": "Excise.App/Models/ClipboardEntry.cs",
+      "commits": 3
+    },
+    {
+      "path": "Excise.App/Models/WindowSettings.cs",
       "commits": 3
     },
     {
@@ -342,14 +350,6 @@
       "commits": 2
     },
     {
-      "path": "Excise.App/Excise.App.csproj",
-      "commits": 2
-    },
-    {
-      "path": "Excise.App/Models/WindowSettings.cs",
-      "commits": 2
-    },
-    {
       "path": "Excise.App/Services/DocumentSearchSession.cs",
       "commits": 2
     },
@@ -458,6 +458,10 @@
       "commits": 2
     },
     {
+      "path": "Excise.Cli/Excise.Cli.csproj",
+      "commits": 2
+    },
+    {
       "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
       "commits": 2
     },
@@ -503,14 +507,6 @@
     },
     {
       "path": "Excise.Core/Text/Segmentation/AppearanceStreamRedactor.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.Core/Text/Segmentation/CarrierTextRecovery.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
       "commits": 2
     },
     {
@@ -830,10 +826,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Cli/Excise.Cli.csproj",
-      "commits": 1
-    },
-    {
       "path": "Excise.Core/Authoring/PdfA.cs",
       "commits": 1
     },
@@ -1090,6 +1082,14 @@
       "commits": 1
     },
     {
+      "path": "Excise.Core/Text/Segmentation/CarrierTextRecovery.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Text/Segmentation/HiddenTextDetector.cs",
+      "commits": 1
+    },
+    {
       "path": "Excise.Core/Text/Segmentation/ImageRedactor.cs",
       "commits": 1
     },
@@ -1231,7 +1231,7 @@
       "source": "Excise.Cli/AutomationBatch.cs",
       "target": "Excise.Cli/Program.cs",
       "cochanges": 7,
-      "jaccard": 0.25
+      "jaccard": 0.2593
     },
     {
       "source": "Excise.Rendering/RenderResourceScope.cs",
@@ -1621,13 +1621,13 @@
       "source": "Excise.Cli/Program.cs",
       "target": "Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs",
       "cochanges": 3,
-      "jaccard": 0.1034
+      "jaccard": 0.1071
     },
     {
       "source": "Excise.Cli/Program.cs",
       "target": "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs",
       "cochanges": 3,
-      "jaccard": 0.1
+      "jaccard": 0.1034
     },
     {
       "source": "Excise.App/Services/DocumentSearchSession.cs",
@@ -1658,6 +1658,12 @@
       "target": "Excise.Rendering/Differential/PdfBoxReferenceRenderer.cs",
       "cochanges": 2,
       "jaccard": 1.0
+    },
+    {
+      "source": "Excise.App/Excise.App.csproj",
+      "target": "Excise.Cli/Excise.Cli.csproj",
+      "cochanges": 2,
+      "jaccard": 0.6667
     },
     {
       "source": "Excise.App/Models/ClipboardEntry.cs",
@@ -2008,12 +2014,6 @@
       "jaccard": 0.2857
     },
     {
-      "source": "Excise.App/Models/WindowSettings.cs",
-      "target": "Excise.App/Views/MainWindow.axaml.cs",
-      "cochanges": 2,
-      "jaccard": 0.2857
-    },
-    {
       "source": "Excise.App/Services/MacMemoryPressureSource.cs",
       "target": "Excise.App/Views/MainWindow.axaml.cs",
       "cochanges": 2,
@@ -2112,6 +2112,12 @@
     {
       "source": "Excise.App/App.axaml.cs",
       "target": "Excise.App/Services/AppMetrics.cs",
+      "cochanges": 2,
+      "jaccard": 0.25
+    },
+    {
+      "source": "Excise.App/Models/WindowSettings.cs",
+      "target": "Excise.App/Views/MainWindow.axaml.cs",
       "cochanges": 2,
       "jaccard": 0.25
     },
@@ -2542,16 +2548,22 @@
       "jaccard": 0.087
     },
     {
+      "source": "Excise.App/Services/RedactedCopySafetyService.cs",
+      "target": "Excise.Cli/Program.cs",
+      "cochanges": 2,
+      "jaccard": 0.08
+    },
+    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.cs",
       "cochanges": 2,
       "jaccard": 0.08
     },
     {
-      "source": "Excise.App/Services/RedactedCopySafetyService.cs",
+      "source": "Excise.Cli/Commands/FillFormCommand.cs",
       "target": "Excise.Cli/Program.cs",
       "cochanges": 2,
-      "jaccard": 0.0769
+      "jaccard": 0.08
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.cs",
@@ -2560,34 +2572,28 @@
       "jaccard": 0.0769
     },
     {
-      "source": "Excise.Cli/Commands/FillFormCommand.cs",
+      "source": "Excise.Cli/Commands/CommandMetadataCommand.cs",
       "target": "Excise.Cli/Program.cs",
       "cochanges": 2,
       "jaccard": 0.0769
     },
     {
-      "source": "Excise.Cli/Commands/CommandMetadataCommand.cs",
-      "target": "Excise.Cli/Program.cs",
-      "cochanges": 2,
-      "jaccard": 0.0741
-    },
-    {
       "source": "Excise.Cli/Commands/SaveSizeReportCommand.cs",
       "target": "Excise.Cli/Program.cs",
       "cochanges": 2,
-      "jaccard": 0.0741
+      "jaccard": 0.0769
     },
     {
       "source": "Excise.Cli/DocumentPermissionGuard.cs",
       "target": "Excise.Cli/Program.cs",
       "cochanges": 2,
-      "jaccard": 0.0741
+      "jaccard": 0.0769
     },
     {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Scripting.cs",
       "target": "Excise.Cli/Program.cs",
       "cochanges": 2,
-      "jaccard": 0.0667
+      "jaccard": 0.069
     }
   ]
 }
