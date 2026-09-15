@@ -650,7 +650,8 @@ public sealed class AdversarialRedactionRegressionTests
         while (d != null &&
                !System.IO.Directory.Exists(System.IO.Path.Combine(d.FullName, ".git")) &&
                !System.IO.File.Exists(System.IO.Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d!.FullName;
+        return d?.FullName ?? throw new System.InvalidOperationException(
+            "repository root not found: no .git directory or worktree .git file above " + System.AppContext.BaseDirectory);
     }
 
     [Fact]

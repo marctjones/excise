@@ -405,7 +405,10 @@ public class PdfDocumentRedactionExtensionsTests
         while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, ".git")) && !File.Exists(Path.Combine(dir.FullName, ".git"))) dir = dir.Parent;
         Assert.SkipWhen(dir == null, "repository root unavailable");
 
-        using var doc = PdfDocument.Open(Path.Combine(dir!.FullName, "test-pdfs", "pdfjs", "freeculture.pdf"));
+        var fixture = Path.Combine(dir!.FullName, "test-pdfs", "pdfjs", "freeculture.pdf");
+        Assert.SkipWhen(!File.Exists(fixture), "freeculture.pdf corpus fixture not present");
+
+        using var doc = PdfDocument.Open(fixture);
         var letters = doc.GetPage(201).Letters;
 
         // 244.70 (was 243.02 before #1391). The old number was excise's own

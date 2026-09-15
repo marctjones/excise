@@ -40,7 +40,8 @@ public class UnredactOcrChannelTests
     {
         var d = new DirectoryInfo(AppContext.BaseDirectory);
         while (d != null && !Directory.Exists(Path.Combine(d.FullName, ".git")) && !File.Exists(Path.Combine(d.FullName, ".git"))) d = d.Parent;
-        return d!.FullName;
+        return d?.FullName ?? throw new InvalidOperationException(
+            "repository root not found: no .git directory or worktree .git file above " + AppContext.BaseDirectory);
     }
 
     private static (int Exit, string Out) RunUnredact(params string[] args)
