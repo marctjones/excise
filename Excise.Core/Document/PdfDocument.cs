@@ -67,6 +67,22 @@ public partial class PdfDocument : IDisposable
     internal void RememberEmbeddedFontObject(object fontProgramIdentity, PdfReference reference)
         => _embeddedFontObjects[fontProgramIdentity] = reference;
 
+    // #1444: widgets AcroFormAuthoring wrote an /AP for in this session, with the
+    // font that encodes their value, so PdfField.SetValue can redraw the
+    // appearance instead of setting NeedAppearances. Keyed by the widget
+    // dictionary instance (reference equality); empty for a document opened from
+    // bytes, which therefore keeps the NeedAppearances fallback.
+    private readonly Dictionary<PdfDictionary, AuthoredWidgetAppearance> _authoredWidgetAppearances =
+        new(ReferenceEqualityComparer.Instance);
+
+    internal void RememberAuthoredWidgetAppearance(PdfDictionary widget, AuthoredWidgetAppearance appearance)
+        => _authoredWidgetAppearances[widget] = appearance;
+
+    internal bool TryGetAuthoredWidgetAppearance(
+        PdfDictionary widget,
+        [System.Diagnostics.CodeAnalysis.MaybeNullWhen(false)] out AuthoredWidgetAppearance appearance)
+        => _authoredWidgetAppearances.TryGetValue(widget, out appearance);
+
     /// <summary>
     /// Overwrite the content of an already-registered indirect object.
     /// </summary>

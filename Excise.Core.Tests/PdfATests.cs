@@ -137,6 +137,58 @@ public class PdfATests
         }
     }
 
+    /// <summary>
+    /// #1444: <c>PdfA()</c> plus AcroForm fields. veraPDF reported 6.3.3 (a widget
+    /// without an appearance dictionary), 6.3.2 (a widget without /F) and 6.4.1
+    /// (NeedAppearances true) for a builder document with one text field, while
+    /// the XMP still claimed PDF/A. Text (single and multiline), checkbox (on and
+    /// off) and dropdown fields are here, with and without a value.
+    /// <para>DateField is deliberately absent: it carries JavaScript /AA format
+    /// and keystroke actions, which PDF/A forbids outright (ISO 19005-2 6.5.1,
+    /// 6.4.1 test 2) independently of appearance streams. That is a separate
+    /// defect from #1444.</para>
+    /// </summary>
+    private static byte[] BuildPdfAWithFormFields(PdfAConformance conformance)
+    {
+        var font = PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 11);
+        return PdfDocumentBuilder.Create()
+            .Language("en-US")
+            .Title("Archival Form")
+            .DefaultFont(font)
+            .PdfA(conformance)
+            .Heading("Archival Form")
+            .Paragraph("Fields authored by the builder.")
+            .TextField("Name", "name", defaultValue: "Ada Lovelace")
+            .TextField("Notes", "notes", multiline: true)
+            .CheckBox("Subscribe", "subscribe", checkedByDefault: true)
+            .CheckBox("Opt out", "optout")
+            .Dropdown("Colour", new[] { "Red", "Green" }, "colour", defaultValue: "Green")
+            .SaveToBytes();
+    }
+
+    [Theory]
+    [InlineData(PdfAConformance.PdfA1B, "1b")]
+    [InlineData(PdfAConformance.PdfA2B, "2b")]
+    public void PdfA_WithFormFields_IsConformant_PerVeraPdf(PdfAConformance conformance, string flavour)
+    {
+        var verapdf = FindVeraPdf();
+        Assert.SkipWhen(verapdf is null, "veraPDF not installed (~/verapdf/verapdf or PATH)");
+
+        var path = Path.Combine(Path.GetTempPath(), $"pdfa_forms_{flavour}_{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, BuildPdfAWithFormFields(conformance));
+        try
+        {
+            var report = RunVeraPdf(verapdf!, path, flavour);
+            report.Should().Contain("isCompliant=\"true\"",
+                $"PdfA({conformance}) with form fields must be PDF/A-{flavour} conformant, not just claim it. Report:\n" +
+                report.Substring(0, Math.Min(report.Length, 6000)));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private static string RunVeraPdf(string verapdf, string path, string flavour)
     {
         var psi = new ProcessStartInfo(verapdf)
