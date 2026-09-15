@@ -176,33 +176,69 @@ public class PerformanceBenchmarkTests
             "a warmed ordinary form fill-and-save should remain interactive");
     }
 
+    /// <summary>
+    /// #919 guard: a common term on irs-w9.pdf (391 matches) is removed through
+    /// one batched content-stream rewrite per pass, not one rewrite per match.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Why allocation, not wall clock (#1475).</b> This used to assert a
+    /// 5 s wall-clock budget. The Debug test host measures 3.7-7.4 s for the
+    /// current code on an idle-ish machine and 13.0 s while a full suite runs
+    /// alongside, so the budget went red on develop 3 times in 4 and could not
+    /// tell the regression from load. The per-match path re-parses and
+    /// re-serialises the page's content stream once per match, so what it
+    /// multiplies is work per match — and allocation on the calling thread
+    /// tracks that work without depending on how busy the machine is.</para>
+    ///
+    /// <para><b>Measured 2026-09-15</b> (Debug, M5 MacBook, a 3-hour full suite
+    /// running in another checkout): current code allocates 865 MiB on this
+    /// thread (13.0 s wall); with the batched <c>RedactAreasInternal</c> call
+    /// reverted to one call per match — the #919 shape — it allocates
+    /// 5,915 MiB (49.3 s wall). The 2 GiB ceiling is 2.4x above the current
+    /// code and 2.9x below the regression. The redaction path starts no
+    /// threads (no Parallel/Task.Run/ThreadPool in Excise.Core/Redaction or
+    /// Text), so this thread sees all of its allocation; the floor fails if
+    /// that ever stops being true, because the ceiling would then pass
+    /// vacuously.</para>
+    ///
+    /// <para>Wall time is still printed as a diagnostic, but it is not asserted.</para>
+    /// </remarks>
     [Fact]
-    public void RedactText_CommonTermOnW9_StaysUnderFiveSeconds()
+    public void RedactText_CommonTermOnW9_StaysOnTheBatchedRewritePath()
     {
         var path = Path.Combine(CorpusDir, "irs-w9.pdf");
         Assert.SkipUnless(File.Exists(path),
             "irs-w9.pdf is required for the #919 common-term redaction budget");
 
         // Warm parser, text extraction, and redaction JIT without mutating the
-        // measured document. The old per-match path took 7-10 seconds after
-        // warmup, so a five-second budget leaves machine-noise headroom while
-        // still catching that algorithmic regression.
+        // measured document, so one-time JIT and static-table allocation does
+        // not count against the budget.
         using (var warm = PdfDocument.Open(path))
             warm.RedactText("ZzzzNoSuchStringZzzz", drawBlackRect: false);
 
+        const double CeilingMiB = 2048;
+        const double FloorMiB = 100;
+
         using var document = PdfDocument.Open(path);
+        var allocatedBefore = GC.GetAllocatedBytesForCurrentThread();
         var sw = Stopwatch.StartNew();
         var matches = document.RedactText("the").VerifiedRemovals;
         sw.Stop();
+        var allocatedMiB = (GC.GetAllocatedBytesForCurrentThread() - allocatedBefore) / (1024.0 * 1024.0);
 
         var survivingText = string.Join('\n', Enumerable.Range(1, document.PageCount)
             .Select(pageNumber => document.GetPage(pageNumber).Text));
 
-        _out.WriteLine($"RedactText(irs-w9.pdf, 'the'): {matches} matches in {sw.ElapsedMilliseconds}ms");
+        _out.WriteLine(
+            $"RedactText(irs-w9.pdf, 'the'): {matches} matches, {allocatedMiB:F1} MiB allocated on the calling thread, {sw.ElapsedMilliseconds}ms wall (diagnostic)");
         matches.Should().BeGreaterThan(200,
             "the common-term fixture must exercise batching rather than pass vacuously");
-        sw.ElapsedMilliseconds.Should().BeLessThan(5_000,
-            "#919: common-term redaction must not return to the 7-10 second per-match rewrite path");
+        allocatedMiB.Should().BeLessThan(CeilingMiB,
+            "#919: common-term redaction must not return to the per-match rewrite path " +
+            "(measured 865 MiB batched vs 5,915 MiB per-match)");
+        allocatedMiB.Should().BeGreaterThan(FloorMiB,
+            "the redaction must run on the calling thread for the allocation ceiling to mean anything; " +
+            "if this fails, the work moved to other threads or got far leaner, so re-measure both numbers in the remarks");
         survivingText.Contains("the", StringComparison.OrdinalIgnoreCase).Should().BeFalse(
             "the timed operation must still complete the requested redaction");
         survivingText.Should().Contain("1099-INT").And.Contain("1099-DIV")
