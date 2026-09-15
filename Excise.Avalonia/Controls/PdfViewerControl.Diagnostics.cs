@@ -163,7 +163,7 @@ public partial class PdfViewerControl
             single.Misses,
             _continuousCache.Count,
             ContinuousCacheResidentBytes(),
-            ContinuousCacheByteBudget,
+            _continuousCacheByteBudget,
             ContinuousRenderCacheHitCount,
             _continuousInFlight.Count);
     }

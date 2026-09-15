@@ -50,9 +50,9 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
 
     private readonly Action<PdfViewerCacheTrimLevel> _trim;
     private readonly Action<PdfViewerCacheTrimLevel>? _trimThumbnails;
-    private readonly CacheTrimPolicy _policy;
+    private CacheTrimPolicy _policy;
     private readonly Func<(long MemoryLoadBytes, long HighMemoryLoadThresholdBytes)> _sampleGc;
-    private readonly DispatcherTimer? _idleTimer;
+    private DispatcherTimer? _idleTimer;
     private readonly ReleasedMemoryReclaimer? _memoryReclaimer;
     private IDisposable? _pressureSource;
     private Action? _detach;
@@ -71,15 +71,55 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
         _memoryReclaimer = memoryReclaimer;
         _policy = policy;
         _sampleGc = sampleGc ?? SampleGcMemoryLoad;
-        if (policy.SoftTriggers && policy.IdleDelay > TimeSpan.Zero)
-        {
-            _idleTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = policy.IdleDelay };
-            _idleTimer.Tick += OnIdleElapsed;
-        }
+        ConfigureIdleTimer(policy);
     }
 
     /// <summary>True while the one-shot idle timer is waiting to fire.</summary>
     internal bool IdleTimerArmed => _idleTimer?.IsEnabled == true;
+
+    /// <summary>
+    /// Apply a new soft-trigger policy to a live coordinator (Preferences →
+    /// Performance). UI thread. Soft triggers off stops and drops the idle timer,
+    /// so nothing is armed (#1462); on creates it, or changes its delay, and
+    /// leaves it disarmed until the next viewer activity. The OS pressure switch
+    /// is fixed at <see cref="Attach"/>, where its native source is installed,
+    /// so <see cref="CacheTrimPolicy.OnMemoryPressure"/> is not changed here.
+    /// </summary>
+    internal void UpdatePolicy(CacheTrimPolicy policy)
+    {
+        if (_disposed)
+            return;
+        _policy = policy with { OnMemoryPressure = _policy.OnMemoryPressure };
+        ConfigureIdleTimer(_policy);
+    }
+
+    private void ConfigureIdleTimer(CacheTrimPolicy policy)
+    {
+        if (policy.SoftTriggers && policy.IdleDelay > TimeSpan.Zero)
+        {
+            if (_idleTimer == null)
+            {
+                _idleTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = policy.IdleDelay };
+                _idleTimer.Tick += OnIdleElapsed;
+            }
+            else if (_idleTimer.Interval != policy.IdleDelay)
+            {
+                // Changing Interval on a running DispatcherTimer restarts it;
+                // stop first so a change never arms a timer that was idle.
+                bool wasArmed = _idleTimer.IsEnabled;
+                _idleTimer.Stop();
+                _idleTimer.Interval = policy.IdleDelay;
+                if (wasArmed)
+                    _idleTimer.Start();
+            }
+        }
+        else if (_idleTimer != null)
+        {
+            _idleTimer.Stop();
+            _idleTimer.Tick -= OnIdleElapsed;
+            _idleTimer = null;
+        }
+    }
 
     /// <summary>True when OS pressure comes from a native source rather than GC sampling.</summary>
     internal bool HasNativePressureSource => _pressureSource != null;

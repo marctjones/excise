@@ -136,6 +136,61 @@ public sealed class SinglePageRenderLifetimeTests
         lifetime.Dispose();
     }
 
+    [Fact]
+    public void SetCapacity_Lowering_DisposesLeastRecentFirst_ButNeverTheKeptEntry()
+    {
+        using var lifetime = new SinglePageRenderLifetime<TrackedBitmap>(cacheCapacity: 4);
+        var shown = new TrackedBitmap();
+        var b = new TrackedBitmap();
+        var c = new TrackedBitmap();
+        var newest = new TrackedBitmap();
+        lifetime.Add(pageNumber: 1, dpi: 96, shown, new Size(10, 10));
+        lifetime.Add(pageNumber: 2, dpi: 96, b, new Size(10, 10));
+        lifetime.Add(pageNumber: 3, dpi: 96, c, new Size(10, 10));
+        lifetime.Add(pageNumber: 4, dpi: 96, newest, new Size(10, 10));
+
+        // The kept entry is the LRU tail, so a plain tail-first trim would take it.
+        int disposed = lifetime.SetCapacity(2, bitmap => ReferenceEquals(bitmap, shown));
+
+        disposed.Should().Be(2);
+        shown.IsDisposed.Should().BeFalse("the bitmap bound to the page Image is never disposed by a capacity change");
+        b.IsDisposed.Should().BeTrue();
+        c.IsDisposed.Should().BeTrue();
+        newest.IsDisposed.Should().BeFalse();
+        var diagnostics = lifetime.GetCacheDiagnostics();
+        diagnostics.Capacity.Should().Be(2);
+        diagnostics.EntryCount.Should().Be(2);
+        lifetime.TryGet(1, 96, out var stillCached, out _).Should().BeTrue();
+        stillCached.Should().BeSameAs(shown);
+    }
+
+    [Fact]
+    public void Add_WithKeep_DoesNotEvictTheBitmapStillOnScreen_AndCatchesUpOnTheNextInsert()
+    {
+        using var lifetime = new SinglePageRenderLifetime<TrackedBitmap>(cacheCapacity: 1);
+        var page1 = new TrackedBitmap();
+        var page2 = new TrackedBitmap();
+        var page3 = new TrackedBitmap();
+        lifetime.Add(pageNumber: 1, dpi: 96, page1, new Size(10, 10));
+
+        lifetime.Add(pageNumber: 2, dpi: 96, page2, new Size(10, 10), keep: bitmap => ReferenceEquals(bitmap, page1));
+        page1.IsDisposed.Should().BeFalse("page 1 is still the Image's source while page 2 is published");
+        lifetime.GetCacheDiagnostics().EntryCount.Should().Be(2);
+
+        lifetime.Add(pageNumber: 3, dpi: 96, page3, new Size(10, 10), keep: bitmap => ReferenceEquals(bitmap, page2));
+        page1.IsDisposed.Should().BeTrue("once nothing shows page 1 it is evicted");
+        page2.IsDisposed.Should().BeFalse();
+        lifetime.GetCacheDiagnostics().EntryCount.Should().Be(2);
+    }
+
+    [Fact]
+    public void SetCapacity_RejectsNonPositive()
+    {
+        using var lifetime = new SinglePageRenderLifetime<TrackedBitmap>(cacheCapacity: 2);
+        Action zero = () => lifetime.SetCapacity(0, keep: null);
+        zero.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
     private sealed class TrackedBitmap : IDisposable
     {
         internal bool IsDisposed { get; private set; }

@@ -14,7 +14,7 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
     where TBitmap : class, IDisposable
 {
     private readonly object _gate = new();
-    private readonly int _cacheCapacity;
+    private int _cacheCapacity;
     private readonly LinkedList<CacheEntry> _cache = new();
     private CancellationTokenSource? _activeRenderSource;
     private long _activeGeneration;
@@ -94,7 +94,14 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
     /// Transfers ownership of <paramref name="bitmap"/> to the cache. Replaced
     /// and evicted entries are disposed immediately.
     /// </summary>
-    internal void Add(int pageNumber, int dpi, TBitmap bitmap, Size dipSize)
+    /// <remarks>
+    /// Eviction skips every entry <paramref name="keep"/> accepts — the bitmap
+    /// still bound to the page Image while the new one is being published. A
+    /// kept entry can leave the cache one over capacity until the next insert
+    /// or <see cref="SetCapacity"/>; that matters only at small capacities,
+    /// where the entry being replaced on screen is otherwise the LRU tail.
+    /// </remarks>
+    internal void Add(int pageNumber, int dpi, TBitmap bitmap, Size dipSize, Func<TBitmap, bool>? keep = null)
     {
         ArgumentNullException.ThrowIfNull(bitmap);
 
@@ -112,13 +119,45 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
             }
 
             _cache.AddFirst(new CacheEntry(pageNumber, dpi, bitmap, dipSize));
-            while (_cache.Count > _cacheCapacity)
-            {
-                var last = _cache.Last!;
-                _cache.RemoveLast();
-                last.Value.Bitmap.Dispose();
-            }
+            TrimToCapacityNoLock(keep);
         }
+    }
+
+    /// <summary>
+    /// Change the LRU capacity. Lowering it disposes least-recently-used
+    /// entries until the cache fits, skipping any entry <paramref name="keep"/>
+    /// accepts (the bitmap on screen). Returns how many entries were disposed.
+    /// </summary>
+    internal int SetCapacity(int capacity, Func<TBitmap, bool>? keep)
+    {
+        if (capacity <= 0)
+            throw new ArgumentOutOfRangeException(nameof(capacity));
+
+        lock (_gate)
+        {
+            ThrowIfDisposed();
+            _cacheCapacity = capacity;
+            return TrimToCapacityNoLock(keep);
+        }
+    }
+
+    private int TrimToCapacityNoLock(Func<TBitmap, bool>? keep)
+    {
+        int disposed = 0;
+        var node = _cache.Last;
+        while (node != null && _cache.Count > _cacheCapacity)
+        {
+            var previous = node.Previous;
+            // The newest entry is never evicted by its own insert.
+            if (node != _cache.First && (keep == null || !keep(node.Value.Bitmap)))
+            {
+                _cache.Remove(node);
+                node.Value.Bitmap.Dispose();
+                disposed++;
+            }
+            node = previous;
+        }
+        return disposed;
     }
 
     /// <summary>

@@ -3131,6 +3131,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var preferencesViewModel = new PreferencesViewModel();
         preferencesViewModel.LoadFromMainViewModel(this);
+        // Applied from the Save command itself, on the UI thread, before the
+        // dialog closes. The old ShowDialog(...).ContinueWith ran this on a
+        // thread-pool thread, where the viewer's cache setters (VerifyAccess)
+        // would throw; and it persisted nothing until the main window closed.
+        preferencesViewModel.SaveRequested = () => ApplySavedPreferences(preferencesViewModel);
 
         var window = new Views.PreferencesWindow
         {
@@ -3141,14 +3146,9 @@ public partial class MainWindowViewModel : ViewModelBase
         var mainWindow = GetMainWindow();
         if (mainWindow != null)
         {
-            window.ShowDialog(mainWindow).ContinueWith(task =>
-            {
-                if (preferencesViewModel.DialogResult)
-                {
-                    preferencesViewModel.SaveToMainViewModel(this);
-                    _logger.LogInformation("Preferences saved");
-                }
-            });
+            // Not awaited: the command returns once the dialog is shown (tests
+            // await Execute() and then look for the owned window).
+            _ = window.ShowDialog(mainWindow);
         }
         else
         {
@@ -3207,9 +3207,10 @@ public partial class MainWindowViewModel : ViewModelBase
             if (string.IsNullOrEmpty(_currentFilePath) || !_documentService.IsDocumentLoaded)
                 return;
 
-            var settings = Models.WindowSettings.Load();
-            settings.UpdateDocumentState(_currentFilePath, ZoomLevel, CurrentPageIndex);
-            settings.Save();
+            var filePath = _currentFilePath;
+            var zoom = ZoomLevel;
+            var pageIndex = CurrentPageIndex;
+            Models.WindowSettings.Update(settings => settings.UpdateDocumentState(filePath, zoom, pageIndex));
             _logger.LogDebug("Document state saved for {FilePath}: Zoom={Zoom}, Page={Page}",
                 _currentFilePath, ZoomLevel, CurrentPageIndex);
         }

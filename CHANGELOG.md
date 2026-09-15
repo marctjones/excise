@@ -60,6 +60,28 @@ safety** and **P1.5 — Redaction policy and de-redaction side channels**.
   GC, working-set and CPU snapshots. `EXCISE_TRACE_VIEWER=1` still means the
   stdout text trace. Off by default: with nothing listening, the recording
   sites neither record nor allocate. See `docs/AUTOMATION_API.md`.
+- **Preferences → Performance** — trade memory and CPU against scroll-back
+  speed from the GUI. A preset (LowMemory / Balanced / Fast; Balanced is the
+  previous behaviour exactly) and an Advanced section with the individual
+  limits: continuous tile-cache budget (32–1024 MB), single-page cached pages
+  (1–24), background thumbnail rendering, thumbnail keep margin, background/idle
+  cache trims and their idle delay (10–600 s), and render threads. Editing a
+  field shows Custom. Saved values apply to the open document at once — a
+  lowered budget evicts immediately, never the visible band or the page on
+  screen — and are written to `window.json` on Save rather than when the window
+  closes. A live readout (working set, managed heap, tile cache) refreshes
+  once a second only while the dialog is open. `PdfViewerControl` gains
+  `ContinuousTileCacheByteBudget`, `ContinuousTileCacheResidentBytes`,
+  `SinglePageCacheCapacity` and `ContinuousRenderConcurrency`.
+
+### Fixed
+- **Preferences applied on a thread-pool thread and could be reverted on
+  close.** The dialog's Save ran through `ShowDialog(...).ContinueWith`, off the
+  UI thread; and `window.json` had two whole-file writers (window close saved
+  its startup snapshot, document close did load/modify/save), so the last one
+  silently reverted the other. Save now runs on the UI thread, and every writer
+  goes through `WindowSettings.Update`, which changes only its own fields under
+  one lock.
 
 ### Notes
 - #1180 (unredact certain channel missing visible-but-readable failed
