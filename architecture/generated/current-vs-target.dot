@@ -57,7 +57,7 @@ digraph excise_architecture {
   "app" -> "core-text" [label="observed via parent boundary\n43 refs", color="#2563eb", style="dashed", penwidth=1];
   "app" -> "ocr" [label="target + observed\n29 refs", color="#15803d", style="solid", penwidth=2];
   "app" -> "rendering" [label="target + observed\n4 refs", color="#15803d", style="solid", penwidth=2];
-  "app-main-window" -> "app" [label="target + observed\n471 refs", color="#15803d", style="solid", penwidth=2];
+  "app-main-window" -> "app" [label="target + observed\n500 refs", color="#15803d", style="solid", penwidth=2];
   "app-main-window" -> "avalonia" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "app-main-window" -> "core" [label="observed via parent boundary\n8 refs", color="#2563eb", style="dashed", penwidth=1];
   "app-main-window" -> "core-content" [label="observed via parent boundary\n3 refs", color="#2563eb", style="dashed", penwidth=1];
@@ -70,10 +70,10 @@ digraph excise_architecture {
   "app-main-window" -> "rendering" [label="observed via parent boundary\n3 refs", color="#2563eb", style="dashed", penwidth=1];
   "architecture-tooling" -> "verification" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "avalonia" -> "core" [label="target + observed\n7 refs", color="#15803d", style="solid", penwidth=2];
-  "avalonia" -> "core-document" [label="observed via parent boundary\n365 refs", color="#2563eb", style="dashed", penwidth=1];
-  "avalonia" -> "core-primitives" [label="observed via parent boundary\n8 refs", color="#2563eb", style="dashed", penwidth=1];
+  "avalonia" -> "core-document" [label="observed via parent boundary\n366 refs", color="#2563eb", style="dashed", penwidth=1];
+  "avalonia" -> "core-primitives" [label="observed via parent boundary\n19 refs", color="#2563eb", style="dashed", penwidth=1];
   "avalonia" -> "core-text" [label="observed via parent boundary\n50 refs", color="#2563eb", style="dashed", penwidth=1];
-  "avalonia" -> "rendering" [label="target + observed\n22 refs", color="#15803d", style="solid", penwidth=2];
+  "avalonia" -> "rendering" [label="target + observed\n23 refs", color="#15803d", style="solid", penwidth=2];
   "cli" -> "core" [label="target + observed\n38 refs", color="#15803d", style="solid", penwidth=2];
   "cli" -> "core-content" [label="observed via parent boundary\n10 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-document" [label="observed via parent boundary\n136 refs", color="#2563eb", style="dashed", penwidth=1];
@@ -131,7 +131,7 @@ digraph excise_architecture {
   "rendering" -> "core-document" [label="observed via parent boundary\n294 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-fonts" [label="observed via parent boundary\n58 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-parsing" [label="observed via parent boundary\n35 refs", color="#2563eb", style="dashed", penwidth=1];
-  "rendering" -> "core-primitives" [label="observed via parent boundary\n615 refs", color="#2563eb", style="dashed", penwidth=1];
+  "rendering" -> "core-primitives" [label="observed via parent boundary\n616 refs", color="#2563eb", style="dashed", penwidth=1];
   "rendering" -> "core-text" [label="observed via parent boundary\n9 refs", color="#2563eb", style="dashed", penwidth=1];
   "verification" -> "app" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "verification" -> "avalonia" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
