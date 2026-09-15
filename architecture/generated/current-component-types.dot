@@ -48,6 +48,7 @@ digraph excise_architecture {
     "verification" [label="Repository verification system\npartial\n0 retained symbols", fillcolor="#fff3bf"];
   }
   "app" -> "app-main-window" [label="304 refs / 21 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app" -> "avalonia" [label="107 refs / 22 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core" [label="33 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-document" [label="317 refs / 54 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-encryption" [label="6 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -57,6 +58,7 @@ digraph excise_architecture {
   "app" -> "ocr" [label="29 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "rendering" [label="4 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "app" [label="499 refs / 59 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app-main-window" -> "avalonia" [label="49 refs / 8 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core" [label="8 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core-content" [label="3 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core-document" [label="308 refs / 44 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
