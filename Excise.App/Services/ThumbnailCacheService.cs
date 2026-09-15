@@ -108,7 +108,12 @@ public sealed class ThumbnailCacheService : IDisposable
         // exactly this). Best-effort, off the open path, never touching the
         // document we just opened.
         var protectDir = identity;
-        _ = Task.Run(() => TrimCacheRoot(versionRoot, DefaultCacheCapBytes, protectDir, _logger));
+        // A LOCAL logger, not _logger: reading the field would capture `this`,
+        // and with it _doc, for as long as the directory walk runs. That kept a
+        // replaced document alive past the #1481 collection that was queued to
+        // free it (measured: still reachable 300 ms after open, gone by 600 ms).
+        var trimLogger = _logger;
+        _ = Task.Run(() => TrimCacheRoot(versionRoot, DefaultCacheCapBytes, protectDir, trimLogger));
     }
 
     /// <summary>Disk budget for the whole thumbnail cache across all files (#690).</summary>

@@ -53,6 +53,7 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
     private readonly CacheTrimPolicy _policy;
     private readonly Func<(long MemoryLoadBytes, long HighMemoryLoadThresholdBytes)> _sampleGc;
     private readonly DispatcherTimer? _idleTimer;
+    private readonly ReleasedMemoryReclaimer? _memoryReclaimer;
     private IDisposable? _pressureSource;
     private Action? _detach;
     private long _lastGcSampleTimestamp;
@@ -62,10 +63,12 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
         Action<PdfViewerCacheTrimLevel> trim,
         CacheTrimPolicy policy,
         Func<(long MemoryLoadBytes, long HighMemoryLoadThresholdBytes)>? sampleGc = null,
-        Action<PdfViewerCacheTrimLevel>? trimThumbnails = null)
+        Action<PdfViewerCacheTrimLevel>? trimThumbnails = null,
+        ReleasedMemoryReclaimer? memoryReclaimer = null)
     {
         _trim = trim ?? throw new ArgumentNullException(nameof(trim));
         _trimThumbnails = trimThumbnails;
+        _memoryReclaimer = memoryReclaimer;
         _policy = policy;
         _sampleGc = sampleGc ?? SampleGcMemoryLoad;
         if (policy.SoftTriggers && policy.IdleDelay > TimeSpan.Zero)
@@ -86,13 +89,16 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
     /// minimize, viewer activity (scroll, zoom, page, document, view mode,
     /// render), and on macOS the OS pressure source.
     /// <paramref name="trimThumbnails"/> releases the sidebar's thumbnail tier
-    /// at Warn and Critical.
+    /// at Warn and Critical; <paramref name="memoryReclaimer"/> then collects
+    /// the managed garbage those trims leave behind (#1481).
     /// </summary>
     internal static ViewerCacheTrimCoordinator Attach(
         Window window, PdfViewerControl viewer, CacheTrimPolicy policy, ILogger? logger = null,
-        Action<PdfViewerCacheTrimLevel>? trimThumbnails = null)
+        Action<PdfViewerCacheTrimLevel>? trimThumbnails = null,
+        ReleasedMemoryReclaimer? memoryReclaimer = null)
     {
-        var coordinator = new ViewerCacheTrimCoordinator(viewer.TrimCaches, policy, trimThumbnails: trimThumbnails);
+        var coordinator = new ViewerCacheTrimCoordinator(
+            viewer.TrimCaches, policy, trimThumbnails: trimThumbnails, memoryReclaimer: memoryReclaimer);
 
         EventHandler onDeactivated = (_, _) => coordinator.OnDeactivated();
         EventHandler<AvaloniaPropertyChangedEventArgs> onWindowProperty = (_, e) =>
@@ -226,6 +232,23 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
         // leaves them alone (they are small and reload from the disk cache).
         if (level != PdfViewerCacheTrimLevel.Background)
             _trimThumbnails?.Invoke(level);
+
+        // #1481: the trims above release bitmaps, but the managed garbage
+        // around them stays until a GC runs, and an idle app runs none. Only
+        // the pressure signals ask: they are rare and mean the memory is wanted
+        // back. Background trims (deactivate, minimize, idle) do not. They are
+        // frequent, a blocking compacting gen2 on every window switch would be
+        // a visible hitch, and they release too little managed memory to pay
+        // for one. The reclaimer posts, so it runs after both trims above.
+        switch (trigger)
+        {
+            case CacheTrimTrigger.OsPressure when level != PdfViewerCacheTrimLevel.Background:
+                _memoryReclaimer?.Request(HeapReclaimTrigger.OsPressure);
+                break;
+            case CacheTrimTrigger.GcMemoryLoad when level != PdfViewerCacheTrimLevel.Background:
+                _memoryReclaimer?.Request(HeapReclaimTrigger.GcMemoryLoad);
+                break;
+        }
     }
 
     public void Dispose()

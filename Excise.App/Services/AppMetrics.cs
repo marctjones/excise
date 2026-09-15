@@ -48,6 +48,20 @@ internal static class AppMetrics
         "Viewer cache trims the app asked for, tagged by trigger (deactivated, minimized, idle, " +
         "os_pressure, gc_memory_load) and level (#1478). What each released is on Excise.Viewer.");
 
+    internal static readonly Histogram<long> HeapReclaimDuration = Meter.CreateHistogram<long>(
+        "excise.app.heap_reclaim.duration", "ms",
+        "Wall time of one compacting gen2 collection after a document close/replace or an OS-pressure trim, " +
+        "tagged by trigger (document_closed, document_replaced, os_pressure, gc_memory_load) (#1481).");
+
+    internal static readonly Histogram<long> HeapReclaimHeapSize = Meter.CreateHistogram<long>(
+        "excise.app.heap_reclaim.heap_size", "By",
+        "GC.GetTotalMemory around that collection, tagged by trigger and phase (before, after) (#1481).");
+
+    internal static readonly Histogram<long> HeapReclaimNativeReleased = Meter.CreateHistogram<long>(
+        "excise.app.heap_reclaim.native_released", "By",
+        "Bytes malloc_zone_pressure_relief returned to macOS right after that collection (0 elsewhere), " +
+        "tagged by trigger (#1481).");
+
     private static WeakReference<DocumentTextIndex>? _textIndex;
 
     private static readonly object ThumbnailGate = new();
@@ -90,6 +104,29 @@ internal static class AppMetrics
         CacheTrimRequests.Add(1,
             new KeyValuePair<string, object?>("trigger", triggerTag),
             new KeyValuePair<string, object?>("level", levelTag));
+    }
+
+    internal static void RecordHeapReclaim(
+        HeapReclaimTrigger trigger, long durationMs, long heapBefore, long heapAfter, long nativeReleasedBytes)
+    {
+        string triggerTag = trigger switch
+        {
+            HeapReclaimTrigger.DocumentClosed => "document_closed",
+            HeapReclaimTrigger.DocumentReplaced => "document_replaced",
+            HeapReclaimTrigger.OsPressure => "os_pressure",
+            HeapReclaimTrigger.GcMemoryLoad => "gc_memory_load",
+            _ => "unknown",
+        };
+        var triggerPair = new KeyValuePair<string, object?>("trigger", triggerTag);
+        if (HeapReclaimDuration.Enabled)
+            HeapReclaimDuration.Record(durationMs, triggerPair);
+        if (HeapReclaimHeapSize.Enabled)
+        {
+            HeapReclaimHeapSize.Record(heapBefore, triggerPair, new KeyValuePair<string, object?>("phase", "before"));
+            HeapReclaimHeapSize.Record(heapAfter, triggerPair, new KeyValuePair<string, object?>("phase", "after"));
+        }
+        if (HeapReclaimNativeReleased.Enabled)
+            HeapReclaimNativeReleased.Record(nativeReleasedBytes, triggerPair);
     }
 
     /// <summary>The index the text-index gauges report; the most recently started one wins.</summary>

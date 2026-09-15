@@ -42,6 +42,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ToastService _toastService;
     private readonly IUserDialogService _dialogService;
     private readonly DocumentTextIndexSession _textIndexSession;
+    private readonly ReleasedMemoryReclaimer _memoryReclaimer;
 
     // State managers
     public DocumentStateManager FileState { get; } = new();
@@ -118,7 +119,8 @@ public partial class MainWindowViewModel : ViewModelBase
         SignatureVerificationWorkflowService signatureWorkflowService,
         PageOrganizationWorkflowService pageOrganizationWorkflow,
         DocumentImageExportWorkflowService imageExportWorkflow,
-        AnnotationWorkflowService annotationWorkflow)
+        AnnotationWorkflowService annotationWorkflow,
+        ReleasedMemoryReclaimer memoryReclaimer)
     {
         _logger = logger;
         _documentService = documentService;
@@ -136,6 +138,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _imageExportWorkflow = imageExportWorkflow;
         _annotationWorkflow = annotationWorkflow;
         _thumbnailSession = new ThumbnailSidebarSession(_logger);
+        _memoryReclaimer = memoryReclaimer ?? throw new ArgumentNullException(nameof(memoryReclaimer));
+        _documentService.DocumentReleased += OnDocumentReleased;
 
         InitializeCommands();
         _logger.LogInformation("MainWindowViewModel initialized");
@@ -1084,6 +1088,26 @@ public partial class MainWindowViewModel : ViewModelBase
     /// hand-written mirror unnecessary.
     /// </summary>
     internal PdfCoreDocument? SaveDocumentForTests => _documentService.GetCurrentDocument();
+
+    /// <summary>
+    /// #1481: the one seam every close and replace goes through, because every
+    /// one of them ends in the document service releasing its instance. The
+    /// reclaimer POSTS the collection, so it runs after the rest of the close
+    /// or open has dropped this view model's references too. A save's reload
+    /// is not a close or replace and asks for nothing.
+    /// </summary>
+    private void OnDocumentReleased(DocumentReleaseReason reason)
+    {
+        switch (reason)
+        {
+            case DocumentReleaseReason.Closed:
+                _memoryReclaimer.Request(HeapReclaimTrigger.DocumentClosed);
+                break;
+            case DocumentReleaseReason.Replaced:
+                _memoryReclaimer.Request(HeapReclaimTrigger.DocumentReplaced);
+                break;
+        }
+    }
 
     private void DisposeViewerDocumentIfNotShared()
     {

@@ -125,8 +125,11 @@ public partial class App : Application
             var (trimViewer, trimPolicy) = mainWindow.CacheTrimTarget();
             if (trimViewer != null)
             {
+                // #1481: the same reclaimer the view model uses for
+                // close/replace, so a trim and a close coalesce into one GC.
                 var cacheTrim = ViewerCacheTrimCoordinator.Attach(
-                    mainWindow, trimViewer, trimPolicy, logger, vm.TrimThumbnailCaches);
+                    mainWindow, trimViewer, trimPolicy, logger, vm.TrimThumbnailCaches,
+                    _serviceProvider.GetRequiredService<ReleasedMemoryReclaimer>());
                 mainWindow.Closed += (_, _) => cacheTrim.Dispose();
                 desktop.Exit += (_, _) => cacheTrim.Dispose();
             }

@@ -32,8 +32,13 @@ internal static class MainWindowViewModelTestFactory
         PageOrganizationWorkflowService? pageOrganizationWorkflow = null,
         DocumentImageExportWorkflowService? imageExportWorkflow = null,
         AnnotationWorkflowService? annotationWorkflow = null,
-        bool thumbnailPrewarmEnabled = true)
+        bool thumbnailPrewarmEnabled = true,
+        ReleasedMemoryReclaimer? memoryReclaimer = null)
     {
+        // #1481: the default collects nothing, so the serial suite's many
+        // close/replace calls do not each run a blocking, compacting gen2 GC.
+        // Tests of the reclaim inject their own.
+        memoryReclaimer ??= new ReleasedMemoryReclaimer(collect: static _ => { }, relieveNativeHeap: static () => 0);
         loggerFactory ??= NullLoggerFactory.Instance;
         logger ??= NullLogger<MainWindowViewModel>.Instance;
         documentService ??= new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
@@ -88,7 +93,8 @@ internal static class MainWindowViewModelTestFactory
             signatureWorkflowService,
             pageOrganizationWorkflow,
             imageExportWorkflow,
-            annotationWorkflow);
+            annotationWorkflow,
+            memoryReclaimer);
         viewModel.ThumbnailPrewarmEnabled = thumbnailPrewarmEnabled;
         return viewModel;
     }

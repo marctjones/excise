@@ -88,14 +88,29 @@ public class PdfDocumentService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Raised after this service has let go of a loaded document (#1481): the
+    /// instance was disposed and is no longer <see cref="GetCurrentDocument"/>.
+    /// Raised on the thread that released it, which for an open is a pool thread.
+    /// </summary>
+    internal event Action<DocumentReleaseReason>? DocumentReleased;
+
     /// <summary>Load a PDF from disk. Replaces any previously-loaded document.</summary>
-    public void LoadDocument(string filePath, string? userPassword = null)
+    public void LoadDocument(string filePath, string? userPassword = null) =>
+        LoadDocument(filePath, userPassword, DocumentReleaseReason.Replaced);
+
+    /// <summary>
+    /// <see cref="LoadDocument(string, string?)"/>, naming why a previously
+    /// loaded document is being released: the app's post-save reload passes
+    /// <see cref="DocumentReleaseReason.SaveReload"/>.
+    /// </summary>
+    internal void LoadDocument(string filePath, string? userPassword, DocumentReleaseReason releaseReason)
     {
         _logger.LogInformation("Loading PDF document from: {FilePath}", filePath);
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"PDF file not found: {filePath}");
 
-        _currentDocument?.Dispose();
+        bool replacing = DisposeIfLoaded(_currentDocument);
         // Open from bytes so the file is not held open — matches the
         // previous file-based behavior that kept the file freely writable.
         _currentDocument = userPassword is null
@@ -107,6 +122,24 @@ public class PdfDocumentService
         _logger.LogInformation(
             "PDF loaded. Pages: {PageCount}, Version: {Version}, File: {FileName}",
             PageCount, PdfVersion, Path.GetFileName(filePath));
+
+        // A failed open throws above and leaves the disposed previous instance
+        // current; the caller's CloseDocument then reports it as Closed.
+        if (replacing)
+            DocumentReleased?.Invoke(releaseReason);
+    }
+
+    /// <summary>
+    /// Dispose without leaving the instance in a caller's local: the release
+    /// event hands off to a collection that may run while the caller's frame
+    /// is still on the stack, and an unoptimised local keeps the document alive.
+    /// </summary>
+    private static bool DisposeIfLoaded(PdfDocument? document)
+    {
+        if (document == null)
+            return false;
+        document.Dispose();
+        return true;
     }
 
     /// <summary>
@@ -132,6 +165,7 @@ public class PdfDocumentService
             ? PdfDocument.Open(File.ReadAllBytes(savePath))
             : PdfDocument.Open(File.ReadAllBytes(savePath), _currentUserPassword);
         _currentFilePath = savePath;
+        DocumentReleased?.Invoke(DocumentReleaseReason.SaveReload);
     }
 
     /// <summary>Remove a single page by 0-based index.</summary>
@@ -477,10 +511,25 @@ public class PdfDocumentService
     /// <summary>Dispose the current document and clear state.</summary>
     public void CloseDocument()
     {
-        _currentDocument?.Dispose();
+        bool closing = DisposeIfLoaded(_currentDocument);
         _currentDocument = null;
         _currentFilePath = null;
+        if (closing)
+            DocumentReleased?.Invoke(DocumentReleaseReason.Closed);
     }
+}
+
+/// <summary>Why <see cref="PdfDocumentService"/> released a document (#1481).</summary>
+internal enum DocumentReleaseReason
+{
+    /// <summary>A different load replaced it.</summary>
+    Replaced,
+
+    /// <summary>The document was closed.</summary>
+    Closed,
+
+    /// <summary>A save reopened the document from the bytes it just wrote.</summary>
+    SaveReload,
 }
 
 public sealed record PageOperationDiagnostics(IReadOnlyList<string> Warnings)

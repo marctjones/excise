@@ -35,6 +35,9 @@ internal static class ApplicationComposition
         services.AddSingleton<FilenameSuggestionService>();
         services.AddSingleton<ToastService>();
         services.AddSingleton<IUserDialogService, AvaloniaUserDialogService>();
+        // #1481: one instance, shared by the view model (close/replace) and the
+        // cache-trim coordinator (OS pressure), so their requests coalesce.
+        services.AddSingleton(_ => new ReleasedMemoryReclaimer());
 
         // The desktop lifetime has one main window and therefore one document
         // session. Use an explicit factory so constructor selection cannot fall
@@ -62,5 +65,6 @@ internal static class ApplicationComposition
             services.GetRequiredService<SignatureVerificationWorkflowService>(),
             services.GetRequiredService<PageOrganizationWorkflowService>(),
             services.GetRequiredService<DocumentImageExportWorkflowService>(),
-            services.GetRequiredService<AnnotationWorkflowService>());
+            services.GetRequiredService<AnnotationWorkflowService>(),
+            services.GetRequiredService<ReleasedMemoryReclaimer>());
 }

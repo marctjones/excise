@@ -274,7 +274,7 @@ public partial class MainWindowViewModel
         // byte-backed and the file is not held open — reopening file-backed
         // here is what made "redact twice into the same path" fail on Windows.
         // The service disposes its previous instance, so nothing is leaked.
-        _documentService.LoadDocument(filePath, _documentService.CurrentUserPassword);
+        _documentService.LoadDocument(filePath, _documentService.CurrentUserPassword, Services.DocumentReleaseReason.SaveReload);
         PdfCoreDocument = _documentService.GetCurrentDocument();
         CurrentPageIndex = pageIndex;
         StartThumbnailSession(filePath, PdfCoreDocument!);
