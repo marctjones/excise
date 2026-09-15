@@ -57,11 +57,6 @@ internal static class AppMetrics
         "excise.app.heap_reclaim.heap_size", "By",
         "GC.GetTotalMemory around that collection, tagged by trigger and phase (before, after) (#1481).");
 
-    internal static readonly Histogram<long> HeapReclaimNativeReleased = Meter.CreateHistogram<long>(
-        "excise.app.heap_reclaim.native_released", "By",
-        "Bytes malloc_zone_pressure_relief returned to macOS right after that collection (0 elsewhere), " +
-        "tagged by trigger (#1481).");
-
     private static WeakReference<DocumentTextIndex>? _textIndex;
 
     private static readonly object ThumbnailGate = new();
@@ -107,7 +102,7 @@ internal static class AppMetrics
     }
 
     internal static void RecordHeapReclaim(
-        HeapReclaimTrigger trigger, long durationMs, long heapBefore, long heapAfter, long nativeReleasedBytes)
+        HeapReclaimTrigger trigger, long durationMs, long heapBefore, long heapAfter)
     {
         string triggerTag = trigger switch
         {
@@ -125,8 +120,6 @@ internal static class AppMetrics
             HeapReclaimHeapSize.Record(heapBefore, triggerPair, new KeyValuePair<string, object?>("phase", "before"));
             HeapReclaimHeapSize.Record(heapAfter, triggerPair, new KeyValuePair<string, object?>("phase", "after"));
         }
-        if (HeapReclaimNativeReleased.Enabled)
-            HeapReclaimNativeReleased.Record(nativeReleasedBytes, triggerPair);
     }
 
     /// <summary>The index the text-index gauges report; the most recently started one wins.</summary>

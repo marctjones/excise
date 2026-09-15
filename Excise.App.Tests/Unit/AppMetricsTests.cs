@@ -45,7 +45,6 @@ public class AppMetricsTests
             AppMetrics.CacheTrimRequests,
             AppMetrics.HeapReclaimDuration,
             AppMetrics.HeapReclaimHeapSize,
-            AppMetrics.HeapReclaimNativeReleased,
         }.Should().OnlyContain(i => !i.Enabled);
 
         AppMetrics.RecordDocumentOpen(Timing);

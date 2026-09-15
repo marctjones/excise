@@ -45,25 +45,22 @@ internal sealed class ReleasedMemoryReclaimer
 {
     private readonly Action<HeapReclaimTrigger> _collect;
     private readonly Action<Action> _post;
-    private readonly Func<long> _relieveNativeHeap;
     private int _pending;
     private HeapReclaimTrigger _pendingTrigger;
 
     /// <param name="collect">The collection; defaults to <see cref="CollectReleasedMemory"/>. Tests record here.</param>
     /// <param name="post">How the collection is deferred; defaults to a Background-priority UI post.</param>
-    /// <param name="relieveNativeHeap">
-    /// Runs after the collection and returns the bytes the native allocator gave
-    /// back; defaults to <see cref="MacMallocPressureRelief.Relieve"/>, a no-op
-    /// off macOS.
-    /// </param>
+    /// <remarks>
+    /// No native-allocator relief follows the collection. <c>malloc_zone_pressure_relief(NULL, 0)</c>
+    /// was measured on Darwin 25.6 on 2026-09-14: it returned 0 bytes after 512 MB was freed, and the
+    /// footprint did not move. So it was not kept.
+    /// </remarks>
     internal ReleasedMemoryReclaimer(
         Action<HeapReclaimTrigger>? collect = null,
-        Action<Action>? post = null,
-        Func<long>? relieveNativeHeap = null)
+        Action<Action>? post = null)
     {
         _collect = collect ?? CollectReleasedMemory;
         _post = post ?? PostAtBackgroundPriority;
-        _relieveNativeHeap = relieveNativeHeap ?? MacMallocPressureRelief.Relieve;
     }
 
     /// <summary>
@@ -85,22 +82,15 @@ internal sealed class ReleasedMemoryReclaimer
         // point is not covered by the collection below, so it may queue another.
         Volatile.Write(ref _pending, 0);
 
-        bool record = AppMetrics.HeapReclaimDuration.Enabled
-            || AppMetrics.HeapReclaimHeapSize.Enabled
-            || AppMetrics.HeapReclaimNativeReleased.Enabled;
+        bool record = AppMetrics.HeapReclaimDuration.Enabled || AppMetrics.HeapReclaimHeapSize.Enabled;
         long before = record ? GC.GetTotalMemory(forceFullCollection: false) : 0;
         long started = Stopwatch.GetTimestamp();
         _collect(trigger);
         long collectMs = (long)Stopwatch.GetElapsedTime(started).TotalMilliseconds;
         long after = record ? GC.GetTotalMemory(forceFullCollection: false) : 0;
 
-        // After the collection, not before: collecting is what finalizes and
-        // frees native buffers owned by dead managed objects, and only then are
-        // their pages the allocator's to give back.
-        long nativeReleased = _relieveNativeHeap();
-
         if (record)
-            AppMetrics.RecordHeapReclaim(trigger, collectMs, before, after, nativeReleased);
+            AppMetrics.RecordHeapReclaim(trigger, collectMs, before, after);
     }
 
     /// <summary>The production collection: compacting, blocking, gen2, LOH included.</summary>

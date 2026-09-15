@@ -38,7 +38,7 @@ internal static class MainWindowViewModelTestFactory
         // #1481: the default collects nothing, so the serial suite's many
         // close/replace calls do not each run a blocking, compacting gen2 GC.
         // Tests of the reclaim inject their own.
-        memoryReclaimer ??= new ReleasedMemoryReclaimer(collect: static _ => { }, relieveNativeHeap: static () => 0);
+        memoryReclaimer ??= new ReleasedMemoryReclaimer(collect: static _ => { });
         loggerFactory ??= NullLoggerFactory.Instance;
         logger ??= NullLogger<MainWindowViewModel>.Instance;
         documentService ??= new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
