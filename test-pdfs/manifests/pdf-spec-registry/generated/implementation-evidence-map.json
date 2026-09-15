@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "c56b3f6dbbe0dfec2c43869ddc4f9a1bd13979dddf79cd8c98e43650391a1dfd",
+  "sourceFingerprint": "5fb999369e442f530ffdc404931df9c2915097ebfb964e4681857254cf1b914d",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6363,6 +6363,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Services/MacFilePanelAccessoryCleanup.cs",
+      "path": "Excise.App/Services/MacFilePanelAccessoryCleanup.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Services/MacMemoryPressureSource.cs",
       "path": "Excise.App/Services/MacMemoryPressureSource.cs",
       "kind": "source-file",
@@ -6555,6 +6565,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/ReleasedMemoryReclaimer.cs",
+      "path": "Excise.App/Services/ReleasedMemoryReclaimer.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -6800,6 +6820,16 @@
     {
       "id": "Excise.App/Services/SigningCertificateFactory.cs",
       "path": "Excise.App/Services/SigningCertificateFactory.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/StoragePickers.cs",
+      "path": "Excise.App/Services/StoragePickers.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -8581,6 +8611,28 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Avalonia/Controls/DecodedImageSampleRetention.cs",
+      "path": "Excise.Avalonia/Controls/DecodedImageSampleRetention.cs",
+      "kind": "source-file",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Avalonia/Controls/HiddenTextHighlight.cs",
       "path": "Excise.Avalonia/Controls/HiddenTextHighlight.cs",
       "kind": "source-file",
@@ -8786,15 +8838,15 @@
     }
   ],
   "summary": {
-    "records": 414,
+    "records": 418,
     "facets": {
       "annotations": 10,
       "content-and-graphics": 18,
       "document-structure": 32,
       "fonts": 28,
       "forms": 8,
-      "images": 28,
-      "product-integration-general": 225,
+      "images": 29,
+      "product-integration-general": 228,
       "redaction": 52,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 19,
@@ -8818,9 +8870,9 @@
       "pdf.17.graphics.fonts:extract": 28,
       "pdf.17.graphics.fonts:parse": 28,
       "pdf.17.graphics.fonts:render": 28,
-      "pdf.17.graphics.images:extract": 28,
-      "pdf.17.graphics.images:parse": 28,
-      "pdf.17.graphics.images:render": 28,
+      "pdf.17.graphics.images:extract": 29,
+      "pdf.17.graphics.images:parse": 29,
+      "pdf.17.graphics.images:render": 29,
       "pdf.17.graphics.paths-painting:author": 2,
       "pdf.17.graphics.paths-painting:mutate": 18,
       "pdf.17.graphics.paths-painting:parse": 18,
@@ -8873,7 +8925,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 19,
       "pdfe.product.security.signature-and-permission-warning:write": 19
     },
-    "fallbackRecords": 225,
+    "fallbackRecords": 228,
     "allRecordsMapped": true
   }
 }

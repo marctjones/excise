@@ -36,7 +36,8 @@
         "Excise.Rendering/RawSampleImageDecoder.cs",
         "Excise.Rendering/SkiaRenderer.Images.cs",
         "Excise.App/Services/DocumentImageExportWorkflowService.cs",
-        "Excise.App/Services/PageImageRenderer.cs"
+        "Excise.App/Services/PageImageRenderer.cs",
+        "Excise.Avalonia/Controls/DecodedImageSampleRetention.cs"
       ],
       "directTestCandidates": [
         "Excise.Rendering.Tests/DctImageDecoderTests.cs::DctImageDecoderTests.DeclaredRgbColorTransformDecodesWithoutAContext",
@@ -46,6 +47,9 @@
         "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRenderedTwice_DrawsIdentically_BothTimes",
         "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRender_LeavesSamplesItDidNotDecode",
         "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRender_NeverReleasesSamplesWrittenByAnythingButTheDecoder",
+        "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.TheImageSampleSink_RecordsEveryImageAndMaskStreamTheRenderRead_DecodedOrNot",
+        "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.TheImageSampleSink_RecordsImagesDrawnInsideAFormAndAnAnnotationAppearance_EvenWhenTheRenderReleasesThem",
+        "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.TheImageSampleSink_StaysEmpty_ForAPageWithNoImages",
         "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.BlendMask_IsGrowOnlyAndDisposedWithOwner",
         "Excise.Rendering.Tests/Differential/AnnotationAppearanceDrawnTests.cs::AnnotationAppearanceDrawnTests.UnbalancedCtmInPageContent_DoesNotMoveTheAnnotation",
         "Excise.Rendering.Tests/Differential/AnnotationAppearanceDrawnTests.cs::AnnotationAppearanceDrawnTests.UnbalancedCtmInPageContent_MatchesIndependentRenderer",
@@ -155,6 +159,7 @@
         "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.NonIdentityOrNonIndexedDecodeKeepsTheGeneralPath",
         "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.CancellationIsPropagatedInsteadOfReportedAsMalformedData",
         "Excise.Rendering.Tests/RenderResourceScopeTests.cs::RenderResourceScopeTests.BorrowersShareTheOwnersIndirectImageEntry",
+        "Excise.Rendering.Tests/RenderResourceScopeTests.cs::RenderResourceScopeTests.ImageSampleSink_ReceivesEveryNotedStreamOnce_AtDispose_DecodedOrNot",
         "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.Determinism_SameContentRenderedTwice_ProducesByteIdenticalBitmaps",
         "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.DpiScaling_TwoDpisRelationship_BitmapSizeFollows2xDpiRatio",
         "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.EmptyPageInvariant_DifferentPageSizes_BitmapDimensionsMatchCalculation",
@@ -342,7 +347,8 @@
         "Excise.Rendering/RawSampleImageDecoder.cs",
         "Excise.Rendering/SkiaRenderer.Images.cs",
         "Excise.App/Services/DocumentImageExportWorkflowService.cs",
-        "Excise.App/Services/PageImageRenderer.cs"
+        "Excise.App/Services/PageImageRenderer.cs",
+        "Excise.Avalonia/Controls/DecodedImageSampleRetention.cs"
       ],
       "directTestCandidates": [
         "Excise.Rendering.Tests/ContinuousTileClipTests.cs::ContinuousTileClipTests.Unrotated_VisualTopHalf_MapsToContentTopHalf",
@@ -365,6 +371,9 @@
         "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRenderedTwice_DrawsIdentically_BothTimes",
         "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRender_LeavesSamplesItDidNotDecode",
         "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRender_NeverReleasesSamplesWrittenByAnythingButTheDecoder",
+        "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.TheImageSampleSink_RecordsEveryImageAndMaskStreamTheRenderRead_DecodedOrNot",
+        "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.TheImageSampleSink_RecordsImagesDrawnInsideAFormAndAnAnnotationAppearance_EvenWhenTheRenderReleasesThem",
+        "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.TheImageSampleSink_StaysEmpty_ForAPageWithNoImages",
         "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.BlendMask_IsGrowOnlyAndDisposedWithOwner",
         "Excise.Rendering.Tests/Differential/AdvanceParityTests.cs::AdvanceParityTests.PerGlyphAdvanceParity_AgainstMutool",
         "Excise.Rendering.Tests/Differential/AnnotationAppearanceDrawnTests.cs::AnnotationAppearanceDrawnTests.IndirectBBox_AppearanceIsStillDrawn",
@@ -879,6 +888,7 @@
         "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.NonIdentityOrNonIndexedDecodeKeepsTheGeneralPath",
         "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.CancellationIsPropagatedInsteadOfReportedAsMalformedData",
         "Excise.Rendering.Tests/RenderResourceScopeTests.cs::RenderResourceScopeTests.BorrowersShareTheOwnersIndirectImageEntry",
+        "Excise.Rendering.Tests/RenderResourceScopeTests.cs::RenderResourceScopeTests.ImageSampleSink_ReceivesEveryNotedStreamOnce_AtDispose_DecodedOrNot",
         "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.Determinism_SameContentRenderedTwice_ProducesByteIdenticalBitmaps",
         "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.DpiScaling_TwoDpisRelationship_BitmapSizeFollows2xDpiRatio",
         "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.EmptyPageInvariant_DifferentPageSizes_BitmapDimensionsMatchCalculation",
@@ -1611,7 +1621,8 @@
         "Excise.Rendering/RawSampleImageDecoder.cs",
         "Excise.Rendering/SkiaRenderer.Images.cs",
         "Excise.App/Services/DocumentImageExportWorkflowService.cs",
-        "Excise.App/Services/PageImageRenderer.cs"
+        "Excise.App/Services/PageImageRenderer.cs",
+        "Excise.Avalonia/Controls/DecodedImageSampleRetention.cs"
       ],
       "directTestCandidates": [
         "Excise.Rendering.Tests/DctImageDecoderTests.cs::DctImageDecoderTests.DeclaredRgbColorTransformDecodesWithoutAContext",
@@ -1621,6 +1632,9 @@
         "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRenderedTwice_DrawsIdentically_BothTimes",
         "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRender_LeavesSamplesItDidNotDecode",
         "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.AFlaggedRender_NeverReleasesSamplesWrittenByAnythingButTheDecoder",
+        "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.TheImageSampleSink_RecordsEveryImageAndMaskStreamTheRenderRead_DecodedOrNot",
+        "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.TheImageSampleSink_RecordsImagesDrawnInsideAFormAndAnAnnotationAppearance_EvenWhenTheRenderReleasesThem",
+        "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs::DecodedImageSampleReleaseTests.TheImageSampleSink_StaysEmpty_ForAPageWithNoImages",
         "Excise.Rendering.Tests/DeviceCmykExecutionStateTests.cs::DeviceCmykExecutionStateTests.BlendMask_IsGrowOnlyAndDisposedWithOwner",
         "Excise.Rendering.Tests/Differential/AnnotationAppearanceDrawnTests.cs::AnnotationAppearanceDrawnTests.UnbalancedCtmInPageContent_DoesNotMoveTheAnnotation",
         "Excise.Rendering.Tests/Differential/AnnotationAppearanceDrawnTests.cs::AnnotationAppearanceDrawnTests.UnbalancedCtmInPageContent_MatchesIndependentRenderer",
@@ -1730,6 +1744,7 @@
         "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.NonIdentityOrNonIndexedDecodeKeepsTheGeneralPath",
         "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs::RawSampleImageDecoderTests.CancellationIsPropagatedInsteadOfReportedAsMalformedData",
         "Excise.Rendering.Tests/RenderResourceScopeTests.cs::RenderResourceScopeTests.BorrowersShareTheOwnersIndirectImageEntry",
+        "Excise.Rendering.Tests/RenderResourceScopeTests.cs::RenderResourceScopeTests.ImageSampleSink_ReceivesEveryNotedStreamOnce_AtDispose_DecodedOrNot",
         "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.Determinism_SameContentRenderedTwice_ProducesByteIdenticalBitmaps",
         "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.DpiScaling_TwoDpisRelationship_BitmapSizeFollows2xDpiRatio",
         "Excise.Rendering.Tests/RenderingInvariantTests.cs::RenderingInvariantTests.EmptyPageInvariant_DifferentPageSizes_BitmapDimensionsMatchCalculation",

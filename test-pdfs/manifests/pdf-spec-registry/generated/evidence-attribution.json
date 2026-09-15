@@ -7982,6 +7982,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DeferredImageDecodeTests.cs::DeferredImageDecodeTests.SavedBytes_AreIdentical_WhetherOrNotTheImageWasReadFirst",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -8727,15 +8734,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfPageThumbnailTests.cs::PdfPageThumbnailTests.ThumbnailStream_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -21604,6 +21602,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DeferredImageDecodeTests.cs::DeferredImageDecodeTests.SavedBytes_AreIdentical_WhetherOrNotTheImageWasReadFirst",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -22352,15 +22357,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfPageThumbnailTests.cs::PdfPageThumbnailTests.ThumbnailStream_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -23098,6 +23094,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DeferredImageDecodeTests.cs::DeferredImageDecodeTests.SavedBytes_AreIdentical_WhetherOrNotTheImageWasReadFirst",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -23846,15 +23849,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfPageThumbnailTests.cs::PdfPageThumbnailTests.ThumbnailStream_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -24555,6 +24549,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DeferredImageDecodeTests.cs::DeferredImageDecodeTests.SavedBytes_AreIdentical_WhetherOrNotTheImageWasReadFirst",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -25303,15 +25304,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfPageThumbnailTests.cs::PdfPageThumbnailTests.ThumbnailStream_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -39511,6 +39503,55 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseReportsTheDecodedBytesItDropped",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseWithoutWaiting_IsBusyWhileADecodeHoldsTheLock_AndReleasesOnceItIsDone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseWithoutWaiting_StillRefusesBytesTheDecoderDidNotWrite",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseLoopingOnAnotherThread_NeverLeavesTheRedactedImageWithTheOriginalSamples",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DeferredImageDecodeTests.cs::DeferredImageDecodeTests.ResolvingAFlateImage_LeavesItUndecoded_AndDecodedDataStillReturnsTheSamples",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -40543,69 +40584,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.StandardHuffmanTable_WithInvalidNumber_Throws",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.UserHuffmanTableBuilder_BuildsEncodedTable",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.UserHuffmanTableBuilder_BuildsOutOfBandLine",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Open_IndirectJbig2Globals_ResolvesReferenceToStream",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Open_SelfReferentialJbig2Globals_TerminatesWithoutRecursion",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Bug631912_JbigImageWithGlobals_DecodesFullImage",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Bug1087_JbigImageWithGlobals_DecodesFullImage",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Bug1087_MaskStreamWithShortIndirectLength_IsReadable",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -40957,6 +40935,55 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseReportsTheDecodedBytesItDropped",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseWithoutWaiting_IsBusyWhileADecodeHoldsTheLock_AndReleasesOnceItIsDone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseWithoutWaiting_StillRefusesBytesTheDecoderDidNotWrite",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseLoopingOnAnotherThread_NeverLeavesTheRedactedImageWithTheOriginalSamples",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DeferredImageDecodeTests.cs::DeferredImageDecodeTests.ResolvingAFlateImage_LeavesItUndecoded_AndDecodedDataStillReturnsTheSamples",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -41998,69 +42025,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.UserHuffmanTableBuilder_BuildsEncodedTable",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.UserHuffmanTableBuilder_BuildsOutOfBandLine",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Open_IndirectJbig2Globals_ResolvesReferenceToStream",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Open_SelfReferentialJbig2Globals_TerminatesWithoutRecursion",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Bug631912_JbigImageWithGlobals_DecodesFullImage",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Bug1087_JbigImageWithGlobals_DecodesFullImage",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Bug1087_MaskStreamWithShortIndirectLength_IsReadable",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2PatternAndHalftoneDecoderTests.cs::Jbig2PatternAndHalftoneDecoderTests.PatternDictionary_Arithmetic_DecodesCollectiveBitmapAndSplitsPatterns",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -42385,6 +42349,55 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseReportsTheDecodedBytesItDropped",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseWithoutWaiting_IsBusyWhileADecodeHoldsTheLock_AndReleasesOnceItIsDone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseWithoutWaiting_StillRefusesBytesTheDecoderDidNotWrite",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseLoopingOnAnotherThread_NeverLeavesTheRedactedImageWithTheOriginalSamples",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DeferredImageDecodeTests.cs::DeferredImageDecodeTests.ResolvingAFlateImage_LeavesItUndecoded_AndDecodedDataStillReturnsTheSamples",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -43426,69 +43439,6 @@
         },
         {
           "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.UserHuffmanTableBuilder_BuildsEncodedTable",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2EntropyDecoderTests.cs::Jbig2EntropyDecoderTests.UserHuffmanTableBuilder_BuildsOutOfBandLine",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Open_IndirectJbig2Globals_ResolvesReferenceToStream",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Open_SelfReferentialJbig2Globals_TerminatesWithoutRecursion",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Bug631912_JbigImageWithGlobals_DecodesFullImage",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Bug1087_JbigImageWithGlobals_DecodesFullImage",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2GlobalsResolutionTests.cs::Jbig2GlobalsResolutionTests.Bug1087_MaskStreamWithShortIndirectLength_IsReadable",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Filters/Jbig2/Jbig2PatternAndHalftoneDecoderTests.cs::Jbig2PatternAndHalftoneDecoderTests.PatternDictionary_Arithmetic_DecodesCollectiveBitmapAndSplitsPatterns",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -93147,6 +93097,34 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseLoopingOnAnotherThread_NeverLeavesTheRedactedImageWithTheOriginalSamples",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesAllInfoKeys",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94143,42 +94121,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0WithCharSpacingAndHorizontalScaling_RemovesSecret_KeepsRestInPlace",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_MiddleRunOfMultiRunBtBlock_FollowingKeptRunStaysPut",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.LetterFinder_PopulatesRawBytes_FromTwoByteCode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.Redaction_KeepsCidGlyph_ReencodedWithOriginalCodeNotUnicode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.SimpleFont_StillUsesUnicodePath_NotRegressed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94577,6 +94519,34 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseLoopingOnAnotherThread_NeverLeavesTheRedactedImageWithTheOriginalSamples",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesAllInfoKeys",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95573,42 +95543,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0WithCharSpacingAndHorizontalScaling_RemovesSecret_KeepsRestInPlace",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_MiddleRunOfMultiRunBtBlock_FollowingKeptRunStaysPut",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.LetterFinder_PopulatesRawBytes_FromTwoByteCode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.Redaction_KeepsCidGlyph_ReencodedWithOriginalCodeNotUnicode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.SimpleFont_StillUsesUnicodePath_NotRegressed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96021,6 +95955,34 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseLoopingOnAnotherThread_NeverLeavesTheRedactedImageWithTheOriginalSamples",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesAllInfoKeys",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97017,42 +96979,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0WithCharSpacingAndHorizontalScaling_RemovesSecret_KeepsRestInPlace",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_MiddleRunOfMultiRunBtBlock_FollowingKeptRunStaysPut",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.LetterFinder_PopulatesRawBytes_FromTwoByteCode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.Redaction_KeepsCidGlyph_ReencodedWithOriginalCodeNotUnicode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.SimpleFont_StillUsesUnicodePath_NotRegressed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97493,6 +97419,34 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.AReleaseLoopingOnAnotherThread_NeverLeavesTheRedactedImageWithTheOriginalSamples",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MetadataScrubTests.cs::MetadataScrubTests.ScrubMetadata_RemovesAllInfoKeys",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98489,42 +98443,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_Type0WithCharSpacingAndHorizontalScaling_RemovesSecret_KeepsRestInPlace",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs::CidRedactionEndToEndTests.RedactText_MiddleRunOfMultiRunBtBlock_FollowingKeptRunStaysPut",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.LetterFinder_PopulatesRawBytes_FromTwoByteCode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.Redaction_KeepsCidGlyph_ReencodedWithOriginalCodeNotUnicode",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CidRedactionReconstructionTests.cs::CidRedactionReconstructionTests.SimpleFont_StillUsesUnicodePath_NotRegressed",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -105759,6 +105677,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DeferredImageDecodeTests.cs::DeferredImageDecodeTests.SavedBytes_AreIdentical_WhetherOrNotTheImageWasReadFirst",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -106503,15 +106428,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfPageThumbnailTests.cs::PdfPageThumbnailTests.ThumbnailStream_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -107205,6 +107121,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs::DecodedImageReleaseTests.RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/DeferredImageDecodeTests.cs::DeferredImageDecodeTests.SavedBytes_AreIdentical_WhetherOrNotTheImageWasReadFirst",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -107949,15 +107872,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfPageLabelTests.cs::PdfPageLabelTests.GetPageLabel_RoundTrip_SurvivesSaveAndReopen",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfPageThumbnailTests.cs::PdfPageThumbnailTests.ThumbnailStream_RoundTrip_SurvivesSaveAndReopen",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112667,8 +112581,8 @@
     "gradeImplemented": 197,
     "gradeVerified": 155,
     "gradeUnknown": 546,
-    "testMethods": 6699,
-    "testMethodsWithCapabilityCandidate": 4192,
+    "testMethods": 6739,
+    "testMethodsWithCapabilityCandidate": 4214,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
