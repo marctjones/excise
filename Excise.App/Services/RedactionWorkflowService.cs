@@ -35,14 +35,19 @@ internal sealed class RedactionWorkflowService
         {
             try
             {
+                // #1490: the page comes from the rectangle itself. The request
+                // used to carry the viewer's CurrentPageIndex separately; when
+                // the user had navigated since drawing, the mapper threw on the
+                // page mismatch and the preview was silently empty for an area
+                // that Apply (which uses PageArea.PageNumber) still redacts.
                 previewText = _textExtractionService.ExtractTextFromArea(
                     request.SourcePath,
-                    request.PageIndex,
+                    request.PageArea.PageNumber - 1,
                     request.PageArea);
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
-                _logger.LogWarning(ex, "Could not extract redaction preview text");
+                _logger.LogWarning(ex, "Could not extract redaction preview text for {PageArea}", request.PageArea);
             }
         }
 
@@ -114,9 +119,13 @@ internal sealed class RedactionWorkflowService
         new(redaction.PageNumber, redaction.PageArea, redaction.PreviewText);
 }
 
+/// <summary>
+/// A mark to capture. The page is <see cref="PdfPageRect.PageNumber"/> of
+/// <paramref name="PageArea"/>; there is deliberately no separate page index, so
+/// the preview cannot read a different page than the one Apply redacts (#1490).
+/// </summary>
 internal readonly record struct RedactionMarkRequest(
     string? SourcePath,
-    int PageIndex,
     PdfPageRect PageArea);
 
 internal sealed record RedactionMarkResult(PdfPageRect PageArea, string PreviewText);
