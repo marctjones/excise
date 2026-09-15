@@ -621,7 +621,7 @@ public class PdfViewerHeadlessRenderTests
         // Avalonia Bitmap → PNG bytes → SKBitmap. Lossless (PNG), so pixel-equivalent
         // to the pixels the control hands to the Avalonia renderer.
         using var ms = new MemoryStream();
-        bitmap.Save(ms);
+        bitmap.Save(ms, PngBitmapEncoderOptions.Default);
         ms.Position = 0;
         return SKBitmap.Decode(ms)
             ?? throw new InvalidOperationException(

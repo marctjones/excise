@@ -11,11 +11,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -48,11 +48,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.Controls.ColorPicker",
-      "nugetVersion": "12.0.0",
+      "nugetVersion": "12.1.0",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.0"
+      "version": "12.1.0"
     },
     {
       "authors": "Avalonia Team",
@@ -65,11 +65,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.Controls.DataGrid",
-      "nugetVersion": "12.0.1",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia.Controls.DataGrid",
       "spdx": "MIT",
-      "version": "12.0.1"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -82,11 +82,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.Desktop",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -99,11 +99,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.Fonts.Inter",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -116,11 +116,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.FreeDesktop",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -133,11 +133,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.FreeDesktop.AtSpi",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -150,11 +150,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.HarfBuzz",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -167,11 +167,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.Native",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -184,11 +184,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.Remote.Protocol",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -201,11 +201,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.Skia",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -218,11 +218,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.Themes.Fluent",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -235,11 +235,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.Win32",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Avalonia Team",
@@ -252,11 +252,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Avalonia.X11",
-      "nugetVersion": "12.0.5",
+      "nugetVersion": "12.1.2",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
       "repositoryUrl": "https://github.com/AvaloniaUI/Avalonia/",
       "spdx": "MIT",
-      "version": "12.0.5"
+      "version": "12.1.2"
     },
     {
       "authors": "Bit Miracle",
@@ -344,11 +344,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "FluentAvaloniaUI",
-      "nugetVersion": "3.0.0-preview4",
+      "nugetVersion": "3.1.0",
       "projectUrl": null,
       "repositoryUrl": "https://github.com/amwx/FluentAvalonia",
       "spdx": "MIT",
-      "version": "3.0.0-preview4"
+      "version": "3.1.0"
     },
     {
       "authors": "Microsoft",
@@ -461,11 +461,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "MicroCom.Runtime",
-      "nugetVersion": "0.11.5",
+      "nugetVersion": "0.11.6",
       "projectUrl": null,
       "repositoryUrl": "https://github.com/kekekeks/MicroCom",
       "spdx": "MIT",
-      "version": "0.11.5"
+      "version": "0.11.6"
     },
     {
       "authors": "Microsoft",
@@ -969,11 +969,11 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "Tmds.DBus.Protocol",
-      "nugetVersion": "0.92.0",
+      "nugetVersion": "0.94.1",
       "projectUrl": null,
       "repositoryUrl": "https://github.com/tmds/Tmds.DBus.git",
       "spdx": "MIT",
-      "version": "0.92.0"
+      "version": "0.94.1"
     }
   ],
   "project": "Excise.App/Excise.App.csproj"

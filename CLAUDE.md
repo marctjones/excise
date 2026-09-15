@@ -444,9 +444,9 @@ This conversion happens in `TextBoundsCalculator` and when drawing redaction rec
 Located in `Excise.App/Excise.App.csproj`:
 
 **UI Framework:**
-- Avalonia 12.0.4 (cross-platform XAML UI)
+- Avalonia 12.1.2 (cross-platform XAML UI)
 - ReactiveUI 23.2.27 (MVVM framework)
-- FluentAvaloniaUI 3.0.0-preview2 (Fluent theme/controls)
+- FluentAvaloniaUI 3.1.0 (Fluent theme/controls)
 
 **PDF Stack (excise-owned, pure .NET):**
 - Excise.Core - parser, writer, content streams, fonts, encryption, glyph-level redaction

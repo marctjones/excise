@@ -387,7 +387,7 @@ public sealed class EditModeSwitchReportTests
         using var rt = new RenderTargetBitmap(new PixelSize(w, h));
         rt.Render(viewer);
         using var ms = new MemoryStream();
-        rt.Save(ms);
+        rt.Save(ms, PngBitmapEncoderOptions.Default);
         ms.Position = 0;
         using var whole = SKBitmap.Decode(ms)
             ?? throw new InvalidOperationException("could not decode the viewer capture");

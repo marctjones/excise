@@ -60,7 +60,7 @@ public class DpiStampedBitmapPaintProbeTests
             using var rt = new RenderTargetBitmap(new PixelSize(100, 100));
             rt.Render(img);
             using var ms = new MemoryStream();
-            rt.Save(ms);
+            rt.Save(ms, PngBitmapEncoderOptions.Default);
             ms.Position = 0;
             using var cap = SKBitmap.Decode(ms)!;
 

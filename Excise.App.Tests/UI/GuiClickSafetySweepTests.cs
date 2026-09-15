@@ -331,7 +331,7 @@ public class GuiClickSafetySweepTests
         using var rt = new RenderTargetBitmap(new PixelSize(w, h));
         rt.Render(viewer);
         using var ms = new MemoryStream();
-        rt.Save(ms);
+        rt.Save(ms, PngBitmapEncoderOptions.Default);
         ms.Position = 0;
         return SKBitmap.Decode(ms)
             ?? throw new InvalidOperationException("Could not decode captured viewer surface.");

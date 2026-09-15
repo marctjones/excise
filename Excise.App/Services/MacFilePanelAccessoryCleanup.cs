@@ -15,7 +15,7 @@ namespace Excise.App.Services;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Why the panel outlives the picker.</b> Avalonia 12.0.4/12.0.5
+/// <b>Why the panel outlives the picker.</b> Avalonia 12.0.4 through 12.1.2
 /// <c>native/Avalonia.Native/src/OSX/StorageProvider.mm</c> keeps its
 /// <c>ExtensionDropdownHandler</c> in a <c>__strong</c> ivar on the singleton
 /// <c>StorageProvider</c>. The handler's <c>NSSavePanel* _dialog</c> ivar is

@@ -197,7 +197,7 @@ public static class VisualTraceRunner
         using var rt = new RenderTargetBitmap(new PixelSize(w, h));
         rt.Render(viewer);
         using var ms = new MemoryStream();
-        rt.Save(ms);
+        rt.Save(ms, PngBitmapEncoderOptions.Default);
         ms.Position = 0;
         var bmp = SKBitmap.Decode(ms) ?? new SKBitmap(w, h);
 

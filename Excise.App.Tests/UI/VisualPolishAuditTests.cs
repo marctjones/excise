@@ -213,7 +213,7 @@ public class VisualPolishAuditTests
 
         using var renderTarget = new RenderTargetBitmap(new PixelSize(width, height));
         renderTarget.Render(window);
-        renderTarget.Save(path);
+        renderTarget.Save(path, PngBitmapEncoderOptions.Default);
 
         new FileInfo(path).Length.Should().BeGreaterThan(1024, $"{fileName} should be a real screenshot artifact");
         return new
