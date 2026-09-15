@@ -6,7 +6,7 @@ digraph excise_architecture {
   subgraph cluster_delivery {
     label="delivery";
     color="#cbd5e1";
-    "app" [label="Excise.App project\npartial\n807 retained symbols", fillcolor="#fff3bf"];
+    "app" [label="Excise.App project\npartial\n861 retained symbols", fillcolor="#fff3bf"];
     "cli" [label="Excise.Cli project\npartial\n413 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {
@@ -38,8 +38,8 @@ digraph excise_architecture {
   subgraph cluster_presentation {
     label="presentation";
     color="#cbd5e1";
-    "app-main-window" [label="Main-window orchestration and feature state\npartial\n514 retained symbols", fillcolor="#fff3bf"];
-    "avalonia" [label="Excise.Avalonia project\npartial\n467 retained symbols", fillcolor="#fff3bf"];
+    "app-main-window" [label="Main-window orchestration and feature state\npartial\n518 retained symbols", fillcolor="#fff3bf"];
+    "avalonia" [label="Excise.Avalonia project\npartial\n478 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_verification {
     label="verification";
@@ -47,7 +47,7 @@ digraph excise_architecture {
     "architecture-tooling" [label="Architecture registry, reachability, and derived diagrams\npartial\n149 retained symbols", fillcolor="#fff3bf"];
     "verification" [label="Repository verification system\npartial\n0 retained symbols", fillcolor="#fff3bf"];
   }
-  "app" -> "app-main-window" [label="301 refs / 20 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app" -> "app-main-window" [label="304 refs / 21 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core" [label="33 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-document" [label="317 refs / 54 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "core-encryption" [label="6 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -56,7 +56,7 @@ digraph excise_architecture {
   "app" -> "core-text" [label="43 refs / 12 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "ocr" [label="29 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app" -> "rendering" [label="4 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "app-main-window" -> "app" [label="500 refs / 58 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app-main-window" -> "app" [label="499 refs / 59 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core" [label="8 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core-content" [label="3 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "core-document" [label="308 refs / 44 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
