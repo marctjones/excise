@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "5673d0b42e16cccd6df5746a196211a2461cc02dd5b44ca9f25e22a760e2f8b4",
+  "sourceFingerprint": "1337685ffd46dd1edb81c27e0f74cefe80ddc5ef55bfd344d50edd5d688f7f5a",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6096,6 +6096,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Models/PerformanceSettings.cs",
+      "path": "Excise.App/Models/PerformanceSettings.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Models/SearchMatch.cs",
       "path": "Excise.App/Models/SearchMatch.cs",
       "kind": "source-file",
@@ -7102,6 +7112,16 @@
     {
       "id": "Excise.App/ViewModels/MainWindowViewModel.History.cs",
       "path": "Excise.App/ViewModels/MainWindowViewModel.History.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
+      "path": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -8653,6 +8673,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Avalonia/Controls/PdfViewerControl.CacheLimits.cs",
+      "path": "Excise.Avalonia/Controls/PdfViewerControl.CacheLimits.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Avalonia/Controls/PdfViewerControl.CacheTrim.cs",
       "path": "Excise.Avalonia/Controls/PdfViewerControl.CacheTrim.cs",
       "kind": "source-file",
@@ -8838,7 +8868,7 @@
     }
   ],
   "summary": {
-    "records": 418,
+    "records": 421,
     "facets": {
       "annotations": 10,
       "content-and-graphics": 18,
@@ -8846,7 +8876,7 @@
       "fonts": 28,
       "forms": 8,
       "images": 29,
-      "product-integration-general": 228,
+      "product-integration-general": 231,
       "redaction": 52,
       "safe-save-and-metadata": 19,
       "security-and-encryption": 19,
@@ -8925,7 +8955,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 19,
       "pdfe.product.security.signature-and-permission-warning:write": 19
     },
-    "fallbackRecords": 228,
+    "fallbackRecords": 231,
     "allRecordsMapped": true
   }
 }
