@@ -295,8 +295,12 @@ public class DeferredImageDecodeTests
             catch (Exception ex) { errors.Enqueue(ex); }
         })).ToList();
 
+        workers.ForEach(t => t.IsBackground = true);
         workers.ForEach(t => t.Start());
-        workers.ForEach(t => t.Join());
+        // #1495: a racing read stuck in the decode fails with a message instead
+        // of hanging the test host.
+        foreach (var worker in workers)
+            worker.Join(TimeSpan.FromSeconds(60)).Should().BeTrue("a racing first read must finish within its time budget");
 
         errors.Should().BeEmpty("no racing first read may fail; first: " + errors.FirstOrDefault());
         return results.ToList();
