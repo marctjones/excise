@@ -185,9 +185,12 @@ public class DecodedImageReleaseTests
         redacted.TryReleaseDecoded().Should().BeFalse("the redactor wrote these samples, not a decoder");
         redacted.DecodedData.Should().BeSameAs(redactedSamples);
 
-        image.TryReleaseDecoded().Should().BeTrue(
-            "the ORIGINAL image is untouched by a region redaction (it is replaced, not edited) and stays releasable");
-        image.DecodedData.Should().Equal(Samples);
+        // #1492: the redactor zeroes the ORIGINAL's decoded array in place (the
+        // saved output depends on it), so the original is no longer what its
+        // decoder produced and must never be released back to it.
+        image.TryReleaseDecoded().Should().BeFalse(
+            "the region redaction edited the original's samples in place; releasing would restore the unredacted ones");
+        image.DecodedData.Should().BeSameAs(redactedSamples);
     }
 
     /// <summary>
@@ -413,16 +416,15 @@ public class DecodedImageReleaseTests
     }
 
     /// <summary>
-    /// #1492, the aliasing hazard. A region redaction replaces the image on the
-    /// redacted page with a new XObject; it used to zero the ORIGINAL stream's
-    /// decoded array in place to get there. Another page drawing the same
-    /// image then showed the zeroed region while the saved file (written from
-    /// the unchanged encoded bytes) kept it intact — and a release of that
-    /// decode-owned array flipped the page back. The original must be
-    /// untouched, before and after a release.
+    /// #1492, the aliasing hazard. A region redaction zeroes the ORIGINAL
+    /// image stream's decoded array in place (a later redaction of the same
+    /// image object sees those zeroes, which is the saved output the redactor
+    /// has always produced). That array must stop counting as the decoder's:
+    /// released, the next reader — another page sharing the image, a second
+    /// redaction — would decode the unredacted samples again.
     /// </summary>
     [Fact]
-    public void ARegionRedaction_LeavesTheOriginalImageUntouched_SoAPageSharingItDrawsTheSameBeforeAndAfterARelease()
+    public void ARegionRedaction_LeavesTheEditedOriginalNotReleasable_ByEitherRelease()
     {
         using var doc = PdfDocument.Open(SavedSharedFlateImageDocument());
         var page1 = doc.GetPage(1);
@@ -433,26 +435,65 @@ public class DecodedImageReleaseTests
                 page1, shared, 40, 0, 0, 40, 10, 10, new PdfRectangle(15, 15, 30, 30), out var newName)
             .Should().BeTrue("precondition: the redactor handled this Flate DeviceRGB image");
         var redacted = page1.GetXObject(newName).Should().BeOfType<PdfStream>().Subject;
-        var redactedSamples = redacted.DecodedData;
-        redactedSamples.Should().NotEqual(Samples, "precondition: the region was zeroed");
+        var zeroed = shared.DecodedData;
+        zeroed.Should().NotEqual(Samples, "precondition: the region was zeroed in the original's array");
 
-        shared.DecodedData.Should().Equal(Samples,
-            "page 2 still draws the original image; the redaction replaced it on page 1, it must not edit it");
-        redactedSamples.Should().NotBeSameAs(shared.DecodedData, "the new XObject owns its own samples");
+        shared.TryReleaseDecoded(out long bytes).Should().BeFalse("an in-place edit is not the decoder's output");
+        bytes.Should().Be(0);
+        shared.TryReleaseDecodedWithoutWaiting(out long noWaitBytes).Should().Be(DecodedReleaseOutcome.NotReleasable,
+            "never Released, and never Busy — nothing holds the lock, the answer is final");
+        noWaitBytes.Should().Be(0);
 
-        shared.TryReleaseDecoded().Should().BeTrue("the original's samples are still exactly what its decoder produced");
-        shared.DecodedData.Should().Equal(Samples);
-        redacted.DecodedData.Should().BeSameAs(redactedSamples, "releasing the original never touches the redacted copy");
+        shared.DecodedData.Should().BeSameAs(zeroed, "the edited array stays in place");
+        redacted.DecodedData.Should().Equal(zeroed, "the redacted XObject carries the same zeroed samples");
     }
 
     /// <summary>
-    /// #1492: the copy the redactor now zeroes must not change what is saved.
-    /// The term is gone from every carrier (scanned inside compressed streams),
-    /// the redacted image is zeroed exactly in the region, and the page that
-    /// shares the original image saves it intact.
+    /// #1492: a release racing the redaction never leaves the shared stream (or
+    /// the redacted copy) holding the original samples. The redactor's read and
+    /// its provenance clear happen in one hold of the decode lock; a release
+    /// that lands first only makes the redactor decode again.
     /// </summary>
     [Fact]
-    public void RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesOnlyTheRedactedPagesCopy_AndSavesTheSharedOriginalIntact()
+    public async Task AReleaseLoopingOnAnotherThread_NeverLeavesTheRedactedImageWithTheOriginalSamples()
+    {
+        var source = SavedSharedFlateImageDocument();
+        for (var round = 0; round < 200; round++)
+        {
+            using var doc = PdfDocument.Open(source);
+            var page1 = doc.GetPage(1);
+            var shared = GetImage(doc);
+            shared.DecodedData.Should().Equal(Samples, "precondition: a render decoded the image");
+
+            using var stop = new CancellationTokenSource();
+            var releaser = Task.Run(() =>
+            {
+                while (!stop.IsCancellationRequested)
+                    shared.TryReleaseDecoded();
+            });
+
+            ImageRegionRedactor.TryRegionRedact(
+                    page1, shared, 40, 0, 0, 40, 10, 10, new PdfRectangle(15, 15, 30, 30), out var newName)
+                .Should().BeTrue($"round {round}");
+            var redacted = page1.GetXObject(newName).Should().BeOfType<PdfStream>().Subject;
+
+            stop.Cancel();
+            await releaser.WaitAsync(TimeSpan.FromSeconds(30));
+
+            redacted.DecodedData.Should().NotEqual(Samples, $"round {round}: the redacted copy is zeroed");
+            shared.DecodedData.Should().BeSameAs(redacted.DecodedData,
+                $"round {round}: the shared stream still holds the zeroed array, not a re-decode of the original");
+        }
+    }
+
+    /// <summary>
+    /// #1492: the redaction removes the text from every carrier (scanned inside
+    /// compressed streams) and zeroes the region in the redacted page's image,
+    /// and the page that shares the original image saves it from its unchanged
+    /// encoded bytes.
+    /// </summary>
+    [Fact]
+    public void RedactingAnAreaOverASharedImage_RemovesTheText_ZeroesTheRegion_AndSavesTheSharedOriginalFromItsEncodedBytes()
     {
         const string term = "SECRETNAME";
         byte[] saved;
@@ -463,46 +504,28 @@ public class DecodedImageReleaseTests
 
             doc.GetPage(1).RedactArea(new PdfRectangle(15, 15, 30, 30));
 
-            shared.DecodedData.Should().Equal(Samples, "the live original, which page 2 still draws, is untouched");
+            shared.TryReleaseDecoded().Should().BeFalse("the redaction edited the shared original's samples in place");
             saved = doc.SaveToBytes();
         }
 
         SavedPdfLeakScanner.FindTerm(saved, term).Should().BeEmpty("the redacted text must not survive in any carrier");
 
         using var reopened = PdfDocument.Open(saved);
-        var page1Images = ImagesOf(reopened.GetPage(1));
-        page1Images.Should().ContainSingle("the redacted copy replaced the original on page 1");
-        var zeroed = page1Images[0].DecodedData;
-        zeroed.Should().HaveCount(Samples.Length);
-        // Width 4, height 4, 3 components; the area covers columns 0-1 of rows 2-3.
-        for (var row = 0; row < Height; row++)
-        {
-            for (var col = 0; col < Width; col++)
-            {
-                for (var c = 0; c < 3; c++)
-                {
-                    int i = (row * Width + col) * 3 + c;
-                    zeroed[i].Should().Be(row >= 2 && col <= 1 ? (byte)0 : Samples[i],
-                        $"sample row {row} col {col}: zeroed inside the redacted region only");
-                }
-            }
-        }
-
+        // The area covers columns 0-1 of rows 2-3.
+        AssertZeroedExactly(ImagesOf(reopened.GetPage(1)).Should().ContainSingle().Subject.DecodedData,
+            (row, col) => row >= 2 && col <= 1, "page 1");
         reopened.GetPage(2).GetXObject("Im0").Should().BeOfType<PdfStream>().Subject
-            .DecodedData.Should().Equal(Samples, "page 2's image saves exactly as it was");
+            .DecodedData.Should().Equal(Samples, "page 2's image saves from the original's unchanged encoded bytes");
     }
 
     /// <summary>
-    /// #1492, the one saved-output change of zeroing a copy. Two pages share an
-    /// image and each is region-redacted in its own area. Zeroing the original
-    /// in place made page 2's redacted copy also carry page 1's zeroed region;
-    /// now each page's copy is zeroed in exactly its own area, and both areas
-    /// are still zeroed where they were requested. Measured before the change:
-    /// saved bytes are identical for a single redaction, for text over a shared
-    /// image, and for two areas on one page — only this case moved.
+    /// Pins the redactor's saved output for two pages that share an image, each
+    /// region-redacted in its own area (#1492 keeps it byte-identical to
+    /// before). The first redaction zeroes the shared original in place, so
+    /// page 2's redacted copy carries page 1's zeroed region as well as its own.
     /// </summary>
     [Fact]
-    public void RegionRedactingTwoPagesThatShareAnImage_ZeroesEachPagesCopyInExactlyItsOwnArea()
+    public void RegionRedactingTwoPagesThatShareAnImage_PageTwosCopyCarriesBothZeroedRegions()
     {
         byte[] saved;
         using (var doc = PdfDocument.Open(SavedSharedFlateImageDocument()))
@@ -517,7 +540,7 @@ public class DecodedImageReleaseTests
         AssertZeroedExactly(ImagesOf(reopened.GetPage(1)).Should().ContainSingle().Subject.DecodedData,
             (row, col) => row >= 2 && col <= 1, "page 1");
         AssertZeroedExactly(ImagesOf(reopened.GetPage(2)).Should().ContainSingle().Subject.DecodedData,
-            (row, col) => row <= 1 && col >= 2, "page 2");
+            (row, col) => (row >= 2 && col <= 1) || (row <= 1 && col >= 2), "page 2");
     }
 
     // ---- helpers -------------------------------------------------------
