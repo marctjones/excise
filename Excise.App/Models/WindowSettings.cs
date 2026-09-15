@@ -85,6 +85,55 @@ public class WindowSettings
     /// <summary>Idle delay for <see cref="CacheTrimSoftTriggers"/>, in seconds.</summary>
     public int CacheTrimIdleSeconds { get; set; } = 30;
 
+    // ── Preferences → Performance ────────────────────────────────────────────
+    // Read through PerformanceSettings.FromWindowSettings, written through
+    // PerformanceSettings.WriteTo. Every default below is the Balanced value,
+    // and PerformancePreset defaults to null, so a window.json written before
+    // these fields existed resolves from its values: all defaults read as
+    // Balanced, and a saved CacheTrimSoftTriggers=false is kept (as Custom).
+
+    /// <summary>
+    /// The preset last saved (a <see cref="Models.PerformancePreset"/> name), or
+    /// null. A named preset is re-derived for this machine on load; Custom or
+    /// null uses the individual values below.
+    /// </summary>
+    public string? PerformancePreset { get; set; }
+
+    /// <summary>Continuous-view tile cache budget, MiB.</summary>
+    public int TileCacheBudgetMb { get; set; } = 200;
+
+    /// <summary>Single-page view LRU capacity, in rendered pages.</summary>
+    public int SinglePageCachedPages { get; set; } = 6;
+
+    /// <summary>Background thumbnail pre-render after a document opens.</summary>
+    public bool ThumbnailPrewarm { get; set; } = true;
+
+    /// <summary>Thumbnails kept in memory either side of the visible ones.</summary>
+    public int ThumbnailKeepMargin { get; set; } = 48;
+
+    /// <summary>Concurrent continuous-view band renders.</summary>
+    public int RenderThreads { get; set; } = Math.Clamp(Environment.ProcessorCount - 1, 2, 6);
+
+    private static readonly object StoreLock = new();
+
+    /// <summary>
+    /// The one way to write window.json: load the file as it is NOW, apply
+    /// <paramref name="mutate"/>, save, all under one lock. Every writer
+    /// changes only the fields it owns, so the window-close writer cannot
+    /// revert a Preferences save and the document-state writer cannot revert
+    /// either (before this, each saved a whole snapshot and the last one won).
+    /// </summary>
+    public static void Update(Action<WindowSettings> mutate)
+    {
+        ArgumentNullException.ThrowIfNull(mutate);
+        lock (StoreLock)
+        {
+            var settings = Load();
+            mutate(settings);
+            settings.Save();
+        }
+    }
+
     /// <summary>
     /// Per-document state: file path -> (zoom level, last page index, timestamp).
     /// Limited to 50 most recent documents to avoid unbounded growth.

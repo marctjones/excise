@@ -74,8 +74,15 @@ public partial class PdfViewerControl
     // Cap concurrent cell renders: a grid multiplies the old per-page fan-out by
     // the visible cell count, and SkiaRenderer serializes typeface acquisition
     // process-wide (_typefaceLoadLock) — unbounded Task.Run just thrashes.
-    private readonly SemaphoreSlim _continuousRenderGate =
-        new(Math.Clamp(Environment.ProcessorCount - 1, 2, 6));
+    //
+    // Not readonly: ContinuousRenderConcurrency replaces the gate for renders
+    // that start after the change. A render captures the gate it waited on and
+    // releases that same instance, so in-flight renders finish on the old gate.
+    private SemaphoreSlim _continuousRenderGate = new(DefaultContinuousRenderConcurrency);
+    private int _continuousRenderConcurrency = DefaultContinuousRenderConcurrency;
+
+    /// <summary>The render-gate width a new viewer starts with: clamp(CPU - 1, 2, 6).</summary>
+    internal static int DefaultContinuousRenderConcurrency => Math.Clamp(Environment.ProcessorCount - 1, 2, 6);
     // #615/#848: the cache bounds total resident BYTES, not a flat entry count.
     // Under the content-addressed grid (#848), tiles are now UNIFORM — every
     // interior cell is a full ContinuousTileQuantumDip square, edge cells smaller
@@ -105,8 +112,14 @@ public partial class PdfViewerControl
     /// </summary>
     internal long? ContinuousCacheByteBudgetOverride { get; set; }
 
+    /// <summary>
+    /// The host-configured tile budget (<see cref="ContinuousTileCacheByteBudget"/>);
+    /// starts at <see cref="ContinuousCacheByteBudget"/>.
+    /// </summary>
+    private long _continuousCacheByteBudget = ContinuousCacheByteBudget;
+
     private long EffectiveContinuousCacheByteBudget =>
-        ContinuousCacheByteBudgetOverride ?? ContinuousCacheByteBudget;
+        ContinuousCacheByteBudgetOverride ?? _continuousCacheByteBudget;
 
     // #1466: page COMPOSITES are not in the tile budget above, and cannot be: a
     // composite is bound to an Image while its page is shown, so an LRU could not
@@ -1255,9 +1268,13 @@ public partial class PdfViewerControl
         // thread, before the awaited task completes; read only after that.
         var imageSamples = new List<Excise.Core.Primitives.PdfStream>();
 
+        // Capture the gate: ContinuousRenderConcurrency may replace the field
+        // while this render waits or runs, and the slot must be released on the
+        // semaphore it was taken from.
+        var renderGate = _continuousRenderGate;
         try
         {
-            await _continuousRenderGate.WaitAsync(token);
+            await renderGate.WaitAsync(token);
             try
             {
                 // Scrolled past while this batch waited for the gate — drop the
@@ -1328,7 +1345,7 @@ public partial class PdfViewerControl
             }
             finally
             {
-                _continuousRenderGate.Release();
+                renderGate.Release();
             }
         }
         catch (OperationCanceledException)

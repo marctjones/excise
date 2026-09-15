@@ -54,7 +54,15 @@ public class HiddenDialogCoverageTests
             window,
             "PreferencesWindow",
             "Cancel Preferences",
-            arrowKey: new[] { "ReadingOrderStrategyComboBox", "WhitespaceModeComboBox" });
+            arrowKey: new[]
+            {
+                "ReadingOrderStrategyComboBox", "WhitespaceModeComboBox",
+                // Preferences → Performance
+                "PerformancePresetComboBox", "PerformanceAdvancedExpander",
+                "TileCacheBudgetNumericUpDown", "SinglePageCachedPagesNumericUpDown",
+                "ThumbnailPrewarmCheckBox", "ThumbnailKeepMarginNumericUpDown",
+                "SoftCacheTrimsCheckBox", "IdleTrimSecondsNumericUpDown", "RenderThreadsNumericUpDown",
+            });
     }
 
     [FixedAvaloniaFact]

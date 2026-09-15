@@ -32,7 +32,128 @@
         <ScrollViewer Grid.Row="1" Padding="20">
             <StackPanel Spacing="20">
 
-                <!-- Rendering Settings Section -->
+                <!-- Performance Settings Section -->
+                <Border Background="{DynamicResource CardBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="20">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="Performance"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+                        <TextBlock Text="Trade memory and CPU against how quickly pages you have already seen come back. Saved changes apply at once."
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap"/>
+
+                        <Separator/>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Preset" FontWeight="Medium"/>
+                            <ComboBox x:Name="PerformancePresetComboBox"
+                                      ItemsSource="{Binding PerformancePresetOptions}"
+                                      SelectedItem="{Binding SelectedPerformancePreset}"
+                                      HorizontalAlignment="Stretch"
+                                      AutomationProperties.Name="Performance Preset"
+                                      AutomationProperties.HelpText="Choose how much memory and CPU the viewer may use. Changing an advanced value switches this to Custom."/>
+                            <TextBlock Text="LowMemory: small caches, no background thumbnail rendering, trims after 15 s idle. Balanced (default): today's behaviour. Fast: large caches, more render threads, no background trims."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel x:Name="MemoryReadoutPanel"
+                                    Spacing="4"
+                                    AutomationProperties.Name="Memory Use"
+                                    AutomationProperties.HelpText="Live memory use of excise, refreshed every second while Preferences is open.">
+                            <TextBlock Text="Memory use (live)" FontWeight="Medium"/>
+                            <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}">
+                                <Run Text="App working set: "/><Run Text="{Binding WorkingSetText}"/>
+                            </TextBlock>
+                            <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}">
+                                <Run Text="Managed heap: "/><Run Text="{Binding ManagedHeapText}"/>
+                            </TextBlock>
+                            <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}">
+                                <Run Text="Page tile cache: "/><Run Text="{Binding TileCacheText}"/>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <Expander x:Name="PerformanceAdvancedExpander"
+                                  Header="Advanced"
+                                  HorizontalAlignment="Stretch"
+                                  AutomationProperties.Name="Advanced Performance Settings"
+                                  AutomationProperties.HelpText="Individual cache, thumbnail, trim and render-thread limits.">
+                            <StackPanel Spacing="10">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Page tile cache (MB)" FontWeight="Medium"/>
+                                    <NumericUpDown x:Name="TileCacheBudgetNumericUpDown"
+                                                   Value="{Binding TileCacheBudgetMb}"
+                                                   Minimum="32" Maximum="1024" Increment="16" FormatString="0"
+                                                   HorizontalAlignment="Stretch"
+                                                   AutomationProperties.Name="Page Tile Cache Budget"
+                                                   AutomationProperties.HelpText="Megabytes of rendered continuous-view tiles kept for scrolling back, 32 to 1024."/>
+                                </StackPanel>
+
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Cached pages (single-page view)" FontWeight="Medium"/>
+                                    <NumericUpDown x:Name="SinglePageCachedPagesNumericUpDown"
+                                                   Value="{Binding SinglePageCachedPages}"
+                                                   Minimum="1" Maximum="24" Increment="1" FormatString="0"
+                                                   HorizontalAlignment="Stretch"
+                                                   AutomationProperties.Name="Cached Single Pages"
+                                                   AutomationProperties.HelpText="Rendered pages kept for instant back-navigation in single-page view, 1 to 24."/>
+                                </StackPanel>
+
+                                <CheckBox x:Name="ThumbnailPrewarmCheckBox"
+                                          Content="Render thumbnails in the background"
+                                          IsChecked="{Binding ThumbnailPrewarm}"
+                                          AutomationProperties.Name="Thumbnail Background Rendering"
+                                          AutomationProperties.HelpText="Pre-render every page thumbnail after a document opens."/>
+
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Thumbnails kept around the visible ones" FontWeight="Medium"/>
+                                    <NumericUpDown x:Name="ThumbnailKeepMarginNumericUpDown"
+                                                   Value="{Binding ThumbnailKeepMargin}"
+                                                   Minimum="12" Maximum="500" Increment="4" FormatString="0"
+                                                   HorizontalAlignment="Stretch"
+                                                   AutomationProperties.Name="Thumbnail Keep Margin"
+                                                   AutomationProperties.HelpText="Thumbnails held in memory on each side of the visible ones, 12 to 500."/>
+                                </StackPanel>
+
+                                <CheckBox x:Name="SoftCacheTrimsCheckBox"
+                                          Content="Release caches when excise is in the background or idle"
+                                          IsChecked="{Binding SoftCacheTrims}"
+                                          AutomationProperties.Name="Background Cache Trims"
+                                          AutomationProperties.HelpText="Drop scroll-back caches when the window is deactivated, minimized, or idle."/>
+
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Idle delay before releasing caches (seconds)" FontWeight="Medium"/>
+                                    <NumericUpDown x:Name="IdleTrimSecondsNumericUpDown"
+                                                   Value="{Binding IdleTrimSeconds}"
+                                                   IsEnabled="{Binding SoftCacheTrims}"
+                                                   Minimum="10" Maximum="600" Increment="5" FormatString="0"
+                                                   HorizontalAlignment="Stretch"
+                                                   AutomationProperties.Name="Idle Trim Delay"
+                                                   AutomationProperties.HelpText="Seconds without viewer activity before caches are released, 10 to 600."/>
+                                </StackPanel>
+
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Render threads" FontWeight="Medium"/>
+                                    <NumericUpDown x:Name="RenderThreadsNumericUpDown"
+                                                   Value="{Binding RenderThreads}"
+                                                   Minimum="1" Maximum="{Binding MaxRenderThreads}" Increment="1" FormatString="0"
+                                                   HorizontalAlignment="Stretch"
+                                                   AutomationProperties.Name="Render Threads"
+                                                   AutomationProperties.HelpText="Continuous-view page renders that may run at once, 1 to the CPU count."/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </Border>
+
                 <!-- Text Selection Settings Section (#774) -->
                 <Border Background="{DynamicResource CardBrush}"
                         BorderBrush="{DynamicResource BorderBrush}"

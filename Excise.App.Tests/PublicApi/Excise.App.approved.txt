@@ -87,6 +87,42 @@ namespace Excise.App.Models
         public string PreviewText { get; set; }
         public int RenderDpi { get; set; }
     }
+    public enum PerformancePreset
+    {
+        LowMemory = 0,
+        Balanced = 1,
+        Fast = 2,
+        Custom = 3,
+    }
+    public sealed class PerformanceSettings : System.IEquatable<Excise.App.Models.PerformanceSettings>
+    {
+        public const int MaxIdleTrimSeconds = 600;
+        public const int MaxSinglePageCachedPages = 24;
+        public const int MaxThumbnailKeepMargin = 500;
+        public const int MaxTileCacheBudgetMb = 1024;
+        public const int MinIdleTrimSeconds = 10;
+        public const int MinRenderThreads = 1;
+        public const int MinSinglePageCachedPages = 1;
+        public const int MinThumbnailKeepMargin = 12;
+        public const int MinTileCacheBudgetMb = 32;
+        public PerformanceSettings(int TileCacheBudgetMb, int SinglePageCachedPages, bool ThumbnailPrewarm, int ThumbnailKeepMargin, bool SoftCacheTrims, int IdleTrimSeconds, int RenderThreads) { }
+        public int IdleTrimSeconds { get; init; }
+        public int RenderThreads { get; init; }
+        public int SinglePageCachedPages { get; init; }
+        public bool SoftCacheTrims { get; init; }
+        public int ThumbnailKeepMargin { get; init; }
+        public bool ThumbnailPrewarm { get; init; }
+        public int TileCacheBudgetMb { get; init; }
+        public static Excise.App.Models.PerformanceSettings Balanced { get; }
+        public static Excise.App.Models.PerformanceSettings Fast { get; }
+        public static Excise.App.Models.PerformanceSettings LowMemory { get; }
+        public static int MaxRenderThreads { get; }
+        public Excise.App.Models.PerformanceSettings Clamped() { }
+        public Excise.App.Models.PerformancePreset DetectPreset() { }
+        public void WriteTo(Excise.App.Models.WindowSettings settings) { }
+        public static Excise.App.Models.PerformanceSettings For(Excise.App.Models.PerformancePreset preset) { }
+        public static Excise.App.Models.PerformanceSettings FromWindowSettings(Excise.App.Models.WindowSettings settings) { }
+    }
     public sealed class SearchMatch
     {
         public SearchMatch() { }
@@ -121,9 +157,15 @@ namespace Excise.App.Models
         public bool IsMaximized { get; set; }
         public string LinkUriCarrierPolicy { get; set; }
         public string MetadataCarrierPolicy { get; set; }
+        public string? PerformancePreset { get; set; }
         public string ReadingOrderStrategy { get; set; }
         public bool RedactionWholeWord { get; set; }
         public string RedactionWidthPolicy { get; set; }
+        public int RenderThreads { get; set; }
+        public int SinglePageCachedPages { get; set; }
+        public int ThumbnailKeepMargin { get; set; }
+        public bool ThumbnailPrewarm { get; set; }
+        public int TileCacheBudgetMb { get; set; }
         public string WhitespaceMode { get; set; }
         public double Width { get; set; }
         public double X { get; set; }
@@ -134,6 +176,7 @@ namespace Excise.App.Models
         public void Save() { }
         public void UpdateDocumentState(string filePath, double zoomLevel, int pageIndex) { }
         public static Excise.App.Models.WindowSettings Load() { }
+        public static void Update(System.Action<Excise.App.Models.WindowSettings> mutate) { }
         public class DocumentState
         {
             public DocumentState() { }
@@ -938,6 +981,9 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CancelCommand { get; }
         public Excise.Core.Operations.CarrierScrubMode[] CarrierScrubModeOptions { get; }
         public bool DialogResult { get; }
+        public int IdleTrimSeconds { get; set; }
+        public string ManagedHeapText { get; }
+        public int MaxRenderThreads { get; }
         public int OcrBaseDpi { get; set; }
         public bool OcrBinarize { get; set; }
         public double OcrDenoiseRadius { get; set; }
@@ -945,18 +991,30 @@ namespace Excise.App.ViewModels
         public string OcrLanguages { get; set; }
         public double OcrLowConfidence { get; set; }
         public bool OcrPreprocess { get; set; }
+        public Excise.App.Models.PerformancePreset[] PerformancePresetOptions { get; }
         public Excise.Core.Text.ReadingOrderStrategy[] ReadingOrderStrategyOptions { get; }
         public bool RedactionWholeWord { get; set; }
+        public int RenderThreads { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ResetToDefaultsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveCommand { get; }
         public Excise.Core.Operations.CarrierScrubMode SelectedLinkUriCarrierPolicy { get; set; }
         public Excise.Core.Operations.CarrierScrubMode SelectedMetadataCarrierPolicy { get; set; }
+        public Excise.App.Models.PerformancePreset SelectedPerformancePreset { get; set; }
         public Excise.Core.Text.ReadingOrderStrategy SelectedReadingOrderStrategy { get; set; }
         public Excise.Core.Text.Segmentation.WidthPolicy SelectedRedactionWidthPolicy { get; set; }
         public Excise.Core.Text.WhitespaceMode SelectedWhitespaceMode { get; set; }
+        public int SinglePageCachedPages { get; set; }
+        public bool SoftCacheTrims { get; set; }
+        public int ThumbnailKeepMargin { get; set; }
+        public bool ThumbnailPrewarm { get; set; }
+        public int TileCacheBudgetMb { get; set; }
+        public string TileCacheText { get; }
         public Excise.Core.Text.WhitespaceMode[] WhitespaceModeOptions { get; }
         public Excise.Core.Text.Segmentation.WidthPolicy[] WidthPolicyOptions { get; }
+        public string WorkingSetText { get; }
+        public Excise.App.Models.PerformanceSettings BuildPerformanceSettings() { }
         public void LoadFromMainViewModel(Excise.App.ViewModels.MainWindowViewModel mainViewModel) { }
+        public void RefreshMemoryReadout() { }
         public void SaveToMainViewModel(Excise.App.ViewModels.MainWindowViewModel mainViewModel) { }
     }
     public class RedactionWorkflowManager : ReactiveUI.ReactiveObject

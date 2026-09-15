@@ -48,10 +48,42 @@ public partial class MainWindow : Window
     /// </summary>
     internal (PdfViewerControl? Viewer, Excise.App.Services.CacheTrimPolicy Policy) CacheTrimTarget() =>
         (_pdfViewerControl ??= this.FindControl<PdfViewerControl>("PdfViewerControl"),
-         new Excise.App.Services.CacheTrimPolicy(
-             _windowSettings.CacheTrimOnMemoryPressure,
-             _windowSettings.CacheTrimSoftTriggers,
-             TimeSpan.FromSeconds(Math.Max(1, _windowSettings.CacheTrimIdleSeconds))));
+         CacheTrimPolicyFor(_performanceSettings));
+
+    /// <summary>
+    /// The performance settings last applied to this window's viewer. Starts as
+    /// the persisted values so <see cref="CacheTrimTarget"/> is right even when
+    /// it is read before a DataContext is set.
+    /// </summary>
+    private PerformanceSettings _performanceSettings = PerformanceSettings.Balanced;
+
+    /// <summary>
+    /// Raised on the UI thread when Preferences → Performance changes the soft
+    /// cache-trim policy; App forwards it to the live trim coordinator.
+    /// </summary>
+    internal event Action<Excise.App.Services.CacheTrimPolicy>? CacheTrimPolicyChanged;
+
+    private Excise.App.Services.CacheTrimPolicy CacheTrimPolicyFor(PerformanceSettings settings) =>
+        new(_windowSettings.CacheTrimOnMemoryPressure,
+            settings.SoftCacheTrims,
+            TimeSpan.FromSeconds(Math.Max(1, settings.IdleTrimSeconds)));
+
+    /// <summary>
+    /// Push performance settings into the viewer (UI thread): tile budget,
+    /// single-page cache, render concurrency; then the trim policy to App.
+    /// </summary>
+    private void OnPerformanceSettingsApplied(object? sender, PerformanceSettings settings)
+    {
+        _performanceSettings = settings;
+        _pdfViewerControl ??= this.FindControl<PdfViewerControl>("PdfViewerControl");
+        if (_pdfViewerControl != null)
+        {
+            _pdfViewerControl.ContinuousTileCacheByteBudget = settings.TileCacheBudgetMb * 1024L * 1024L;
+            _pdfViewerControl.SinglePageCacheCapacity = settings.SinglePageCachedPages;
+            _pdfViewerControl.ContinuousRenderConcurrency = settings.RenderThreads;
+        }
+        CacheTrimPolicyChanged?.Invoke(CacheTrimPolicyFor(settings));
+    }
 
     public MainWindow()
     {
@@ -89,6 +121,7 @@ public partial class MainWindow : Window
         // Load and apply window settings (Issue #23)
         _windowSettings = WindowSettings.Load();
         _windowSettings.ApplyTo(this);
+        _performanceSettings = PerformanceSettings.FromWindowSettings(_windowSettings);
 
         // Save settings on close, and guard unsaved document changes (#1233)
         this.Closing += OnWindowClosing;
@@ -176,21 +209,19 @@ public partial class MainWindow : Window
 
     private void PersistWindowStateOnClose()
     {
-        if (DataContext is MainWindowViewModel viewModel)
+        // Through the store, never by saving _windowSettings: that snapshot is
+        // from startup, so saving it would revert a Preferences save and every
+        // document state written since.
+        var viewModel = DataContext as MainWindowViewModel;
+        WindowSettings.Update(settings =>
         {
-            _windowSettings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
-            _windowSettings.ReadingOrderStrategy = viewModel.ReadingOrderStrategy.ToString();
-            _windowSettings.WhitespaceMode = viewModel.WhitespaceMode.ToString();
-            // #1052/#1169/#1189: redaction policy is a preference like any
-            // other. A security choice that silently resets to the less-safe
-            // default on every launch is worse than no choice at all.
-            _windowSettings.RedactionWholeWord = viewModel.RedactionWholeWord;
-            _windowSettings.RedactionWidthPolicy = viewModel.RedactionWidthPolicy.ToString();
-            _windowSettings.LinkUriCarrierPolicy = viewModel.LinkUriCarrierPolicy.ToString();
-            _windowSettings.MetadataCarrierPolicy = viewModel.MetadataCarrierPolicy.ToString();
-        }
-        _windowSettings.CaptureFrom(this);
-        _windowSettings.Save();
+            if (viewModel != null)
+            {
+                settings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
+                viewModel.WritePreferencesTo(settings);
+            }
+            settings.CaptureFrom(this);
+        });
         // Cancel any pending toast auto-dismiss so nothing is left queued on
         // the dispatcher when the window/test tears down.
         _toastTimer?.Stop();
@@ -266,6 +297,12 @@ public partial class MainWindow : Window
                 _windowSettings.RedactionWidthPolicy,
                 _windowSettings.LinkUriCarrierPolicy,
                 _windowSettings.MetadataCarrierPolicy);
+            // Preferences → Performance: subscribe first so the restore below
+            // reaches the viewer through the same path a Save does.
+            viewModel.PerformanceSettingsApplied += OnPerformanceSettingsApplied;
+            viewModel.ViewerTileCacheResidentBytesProvider = () => _pdfViewerControl?.ContinuousTileCacheResidentBytes;
+            viewModel.ApplyPerformanceSettings(
+                PerformanceSettings.FromWindowSettings(_windowSettings), fromPersistedStartup: true);
             SchedulePlatformMenuConfigure();
 
             // Subscribe to toast notifications

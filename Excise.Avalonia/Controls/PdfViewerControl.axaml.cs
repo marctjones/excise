@@ -1770,7 +1770,12 @@ public partial class PdfViewerControl : UserControl
                 {
                     var dip = SinglePageLayoutSize(widthPt, heightPt, logicalDpi);
                     Trace($"SinglePageRender page={pageNumber} RENDERED px={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dip={dip.Width:F0}x{dip.Height:F0}");
-                    _singlePageRenderLifetime.Add(pageNumber, renderDpi, bitmap, dip);
+                    // Keep the bitmap still on screen: at a small
+                    // SinglePageCacheCapacity it is the LRU tail this insert
+                    // would otherwise dispose before the Image moves off it.
+                    var stillShown = _pdfImage?.Source as WriteableBitmap;
+                    _singlePageRenderLifetime.Add(pageNumber, renderDpi, bitmap, dip,
+                        keep: b => ReferenceEquals(b, stillShown));
                     ViewerMetrics.RecordSinglePageRender(renderStart, renderDpi);
                     Trace($"ContVis={_continuousScrollViewer?.IsVisible} SingleVis={_scrollViewer?.IsVisible}");
                     Trace($"ImageSet page={pageNumber} imgWidth={_pdfImage?.Width:F0} srcDip={dip.Width:F0}x{dip.Height:F0} srcPx={bitmap.PixelSize.Width} zoom={ZoomLevel:F3}");

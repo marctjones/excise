@@ -42,7 +42,58 @@ internal sealed class ThumbnailSidebarSession : IDisposable
     internal ObservableCollection<PageThumbnail> Items { get; } = new();
     internal Task? PrefetchTask { get; private set; }
     internal Task? PrewarmTask { get; private set; }
-    internal bool PrewarmEnabled { get; set; } = true;
+
+    private bool _prewarmEnabled = true;
+    private int _keepMarginPages = KeepMargin;
+
+    /// <summary>
+    /// Background pre-render of every thumbnail. Applies to the open document
+    /// at once: turning it off cancels a running pre-render, turning it on
+    /// starts one when a document is open.
+    /// </summary>
+    internal bool PrewarmEnabled
+    {
+        get => _prewarmEnabled;
+        set
+        {
+            if (_prewarmEnabled == value)
+                return;
+            _prewarmEnabled = value;
+            if (!value)
+            {
+                CancelAndDispose(ref _prewarmCancellation);
+                PrewarmTask = null;
+            }
+            else if (_cache != null)
+            {
+                QueuePrewarm(_cache);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Thumbnails kept in memory either side of the visible ones (default
+    /// <see cref="KeepMargin"/>). Lowering it evicts on the next window pass,
+    /// which this setter schedules.
+    /// </summary>
+    internal int KeepMarginPages
+    {
+        get => _keepMarginPages;
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, PrefetchMargin);
+            if (_keepMarginPages == value)
+                return;
+            _keepMarginPages = value;
+            lock (_viewportLock)
+            {
+                if (_visibleIndices.Count == 0 || _windowPassScheduled)
+                    return;
+                _windowPassScheduled = true;
+            }
+            Dispatcher.UIThread.Post(RunWindowPass, DispatcherPriority.Background);
+        }
+    }
     internal long GenerationForTests => Volatile.Read(ref _generation);
 
     internal static (int PrefetchFrom, int PrefetchTo, int KeepFrom, int KeepTo) ComputeWindow(
@@ -227,7 +278,7 @@ internal sealed class ThumbnailSidebarSession : IDisposable
         }
 
         var (prefetchFrom, prefetchTo, keepFrom, keepTo) =
-            ComputeWindow(visibleMin, visibleMax, Items.Count);
+            ComputeWindow(visibleMin, visibleMax, Items.Count, keepMargin: _keepMarginPages);
         if (prefetchTo < prefetchFrom)
             return;
 

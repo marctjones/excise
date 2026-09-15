@@ -133,6 +133,9 @@ namespace Excise.Avalonia.Controls
         public static readonly Avalonia.StyledProperty<double> ZoomLevelProperty;
         public PdfViewerControl() { }
         public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfAnnotation>? Annotations { get; set; }
+        public int ContinuousRenderConcurrency { get; set; }
+        public long ContinuousTileCacheByteBudget { get; set; }
+        public long ContinuousTileCacheResidentBytes { get; }
         public int CurrentPage { get; set; }
         public Excise.Core.Document.PdfDocument? Document { get; set; }
         public string? ErrorMessage { get; }
@@ -149,6 +152,7 @@ namespace Excise.Avalonia.Controls
         public bool ShowAnnotations { get; set; }
         public bool ShowCommentAnnotations { get; set; }
         public bool ShowFieldAndLinkAnnotations { get; set; }
+        public int SinglePageCacheCapacity { get; set; }
         public System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>? TypewriterTextOperations { get; set; }
         public Excise.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
         public Excise.Core.Text.WhitespaceMode WhitespaceMode { get; set; }

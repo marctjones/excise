@@ -130,6 +130,8 @@ public partial class App : Application
                 var cacheTrim = ViewerCacheTrimCoordinator.Attach(
                     mainWindow, trimViewer, trimPolicy, logger, vm.TrimThumbnailCaches,
                     _serviceProvider.GetRequiredService<ReleasedMemoryReclaimer>());
+                // Preferences → Performance changes soft trims live (#1478).
+                mainWindow.CacheTrimPolicyChanged += cacheTrim.UpdatePolicy;
                 mainWindow.Closed += (_, _) => cacheTrim.Dispose();
                 desktop.Exit += (_, _) => cacheTrim.Dispose();
             }
