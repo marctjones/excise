@@ -60,6 +60,11 @@ second implementation-status list.
    or partial regeneration fails as one unit.
    The large topology file is compact generated JSON; query it with `jq`
    instead of reviewing or editing it as prose.
+5. Subsystem designs, read after the system design when working inside one
+   component: [Main-window architecture](main-window-architecture.md) — the
+   member-level target structure for `app-main-window` (owners, contracts,
+   view/behaviour split) and the sequencing constraints its refactor must
+   respect (#1500).
 
 `sourceRevision` records the commit used as the generation base. It is
 provenance, not the freshness key: committing regenerated output necessarily
