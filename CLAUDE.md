@@ -737,7 +737,7 @@ against synthetic trx fixtures.
 ### Build Failures
 
 - Run `dotnet restore` first
-- Ensure .NET 10.0 SDK installed: `dotnet --version` (must satisfy `global.json`: 10.0.400+)
+- Ensure a .NET 10.0 SDK is installed: `dotnet --version` (`global.json` accepts any installed 10.0.x SDK and uses the highest)
 - Clear build artifacts: `dotnet clean`
 
 ⚠️ **Use Microsoft's official SDK, not Homebrew's `dotnet` formula** (#1389/#1390). Homebrew
@@ -747,8 +747,10 @@ builds .NET from source against system libraries, so its NativeAOT runtime pack 
 `LIBRARY_PATH`, and when forced through it produces a binary that dynamically links Homebrew
 dylibs (so it will not run elsewhere) and links Apple's system zlib instead of the vendored
 zlib-ng, making it write **different PDF bytes** than the JIT build. With the official SDK the
-AOT and JIT binaries are byte-identical. `global.json` pins 10.0.400 so a wrong SDK fails
-loudly instead of silently changing output. Install via
+AOT and JIT binaries are byte-identical. `global.json` requires a .NET 10.0 SDK (`version`
+10.0.100 with `rollForward: latestFeature`), so any installed 10.0.x patch or feature band works
+and the highest one is used. A version number cannot tell Microsoft's SDK from Homebrew's, so
+confirm `dotnet --info` reports a Base Path under `~/.dotnet`. Install via
 [dot.net](https://dot.net) or `curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0`.
 Nothing in excise uses OpenSSL — zero symbols bind to it; macOS TLS goes through
 Network.framework.
