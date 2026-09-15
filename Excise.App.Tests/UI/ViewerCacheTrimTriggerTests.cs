@@ -49,7 +49,25 @@ public class ViewerCacheTrimTriggerTests
             off.OnActivity();
             off.IdleTimerArmed.Should().BeFalse("with soft triggers off the idle timer is never armed, so nothing wakes an idle app");
         }
-        trims.Should().BeEmpty("soft triggers are off by default");
+        trims.Should().BeEmpty("with soft triggers off, deactivate and minimize trim nothing");
+    }
+
+    /// <summary>
+    /// #1478 T5 (#1483 L5, 2026-09-14): soft triggers default to ON for a new
+    /// window.json, and a file that already holds false keeps it.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public void SoftTriggers_DefaultOn_ButASavedFalseIsKept()
+    {
+        new Excise.App.Models.WindowSettings().CacheTrimSoftTriggers.Should().BeTrue(
+            "the live T5 run found scroll-back after a Background trim cheap (p50 15 ms, no blank tiles)");
+
+        var saved = System.Text.Json.JsonSerializer.Deserialize<Excise.App.Models.WindowSettings>(
+            """{ "CacheTrimSoftTriggers": false }""");
+        saved!.CacheTrimSoftTriggers.Should().BeFalse("an explicit saved choice outranks the default");
+
+        var legacy = System.Text.Json.JsonSerializer.Deserialize<Excise.App.Models.WindowSettings>("""{ "Width": 1200 }""");
+        legacy!.CacheTrimSoftTriggers.Should().BeTrue("a file written before the setting existed takes the default");
     }
 
     [FixedAvaloniaFact]

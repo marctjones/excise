@@ -72,11 +72,15 @@ public class WindowSettings
     /// <summary>
     /// Trim the viewer's scroll-back caches when the window is deactivated or
     /// minimized, and after <see cref="CacheTrimIdleSeconds"/> without viewer
-    /// activity (#1478). Off by default until a live session has measured
-    /// what it costs: a Background trim makes scrolling back re-render, which
-    /// on a heavy page takes seconds. No UI.
+    /// activity (#1478). On by default since the 2026-09-14 live session
+    /// (#1483 L5, IRS 1040 instructions): scroll-back after a trim rendered
+    /// bands at p50 15 ms / max 32 ms with no blank tiles, and idle CPU stayed
+    /// at 0.08%. What a trim saves shows in the footprint only once the
+    /// allocator returns its empty regions (0 MB after one trim, 195 MB after
+    /// the next), so treat it as a cheap best effort. A window.json that already
+    /// holds false keeps it. No UI.
     /// </summary>
-    public bool CacheTrimSoftTriggers { get; set; }
+    public bool CacheTrimSoftTriggers { get; set; } = true;
 
     /// <summary>Idle delay for <see cref="CacheTrimSoftTriggers"/>, in seconds.</summary>
     public int CacheTrimIdleSeconds { get; set; } = 30;
