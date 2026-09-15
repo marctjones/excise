@@ -67,20 +67,28 @@ public sealed class ReferenceProcessResourcesTests
     [Fact]
     public void Capture_SameProcessHandle_ReflectsGrowthSinceThePreviousCall()
     {
+        // On macOS the counter tracks the CURRENT resident set, so the baseline
+        // must not include garbage the allocation below could get collected and
+        // returned: in a full-suite run (2026-09-15) the "after" reading came in
+        // 26 MiB LOWER than "before" (610 → 584 MiB) while it passed alone.
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+        GC.WaitForPendingFinalizers();
+
         using var process = Process.GetCurrentProcess();
         var before = ReferenceProcessResources.Capture(process);
         before.PeakWorkingSetBytes.Should().NotBeNull();
 
-        // Allocate and touch >150 MiB so the OS-reported resident set
-        // genuinely grows rather than relying on GC/allocator slack.
+        // Allocate and fill >150 MiB so the OS-reported resident set genuinely
+        // grows rather than relying on GC/allocator slack. Random bytes, not one
+        // touched byte per page: mostly-zero pages are exactly what the macOS
+        // memory compressor squeezes out of the resident set under pressure.
         const int chunkCount = 4;
         const int chunkSize = 50_000_000;
         var chunks = new byte[chunkCount][];
         for (var i = 0; i < chunkCount; i++)
         {
             chunks[i] = new byte[chunkSize];
-            for (var offset = 0; offset < chunkSize; offset += 4096)
-                chunks[i][offset] = 1; // touch each page so it is actually resident
+            Random.Shared.NextBytes(chunks[i]);
         }
 
         var after = ReferenceProcessResources.Capture(process);
