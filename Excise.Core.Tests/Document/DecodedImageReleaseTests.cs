@@ -492,7 +492,52 @@ public class DecodedImageReleaseTests
             .DecodedData.Should().Equal(Samples, "page 2's image saves exactly as it was");
     }
 
+    /// <summary>
+    /// #1492, the one saved-output change of zeroing a copy. Two pages share an
+    /// image and each is region-redacted in its own area. Zeroing the original
+    /// in place made page 2's redacted copy also carry page 1's zeroed region;
+    /// now each page's copy is zeroed in exactly its own area, and both areas
+    /// are still zeroed where they were requested. Measured before the change:
+    /// saved bytes are identical for a single redaction, for text over a shared
+    /// image, and for two areas on one page — only this case moved.
+    /// </summary>
+    [Fact]
+    public void RegionRedactingTwoPagesThatShareAnImage_ZeroesEachPagesCopyInExactlyItsOwnArea()
+    {
+        byte[] saved;
+        using (var doc = PdfDocument.Open(SavedSharedFlateImageDocument()))
+        {
+            doc.GetPage(1).RedactArea(new PdfRectangle(15, 15, 30, 30));
+            doc.GetPage(2).RedactArea(new PdfRectangle(35, 35, 48, 48));
+            saved = doc.SaveToBytes();
+        }
+
+        using var reopened = PdfDocument.Open(saved);
+        // Page 1's area covers columns 0-1 of rows 2-3; page 2's covers columns 2-3 of rows 0-1.
+        AssertZeroedExactly(ImagesOf(reopened.GetPage(1)).Should().ContainSingle().Subject.DecodedData,
+            (row, col) => row >= 2 && col <= 1, "page 1");
+        AssertZeroedExactly(ImagesOf(reopened.GetPage(2)).Should().ContainSingle().Subject.DecodedData,
+            (row, col) => row <= 1 && col >= 2, "page 2");
+    }
+
     // ---- helpers -------------------------------------------------------
+
+    private static void AssertZeroedExactly(byte[] samples, Func<int, int, bool> zeroed, string page)
+    {
+        samples.Should().HaveCount(Samples.Length);
+        for (var row = 0; row < Height; row++)
+        {
+            for (var col = 0; col < Width; col++)
+            {
+                for (var c = 0; c < 3; c++)
+                {
+                    int i = (row * Width + col) * 3 + c;
+                    samples[i].Should().Be(zeroed(row, col) ? (byte)0 : Samples[i],
+                        $"{page} sample row {row} col {col}");
+                }
+            }
+        }
+    }
 
     private static List<PdfStream> ImagesOf(PdfPage page)
     {
