@@ -113,6 +113,82 @@ public class Type3RenderingDifferentialTests
     //     poppler and mutool substitute other fallbacks (bbox-derived / 1em),
     //     so only gs corroborates that case.
 
+    // ---- sub-pixel strokes inside a CharProc ----
+    // Glyph space is typically 1/1000 of text space, so a CharProc's default
+    // 1-unit line is ~0.05 px wide at 24 pt / 150 dpi. Every reference engine
+    // draws it as a visible thinnest line; excise handed Skia the true width
+    // and inked almost nothing (poppler tests/encoding.pdf, veraPDF
+    // 6-2-10-t04-fail-b and 6-2-9-t04-fail-b, whose CharProcs only stroke)
+    // until strokes inside a glyph got the tiling-cell hairline rule (#506).
+    [Theory]
+    [InlineData("mutool")]
+    [InlineData("Ghostscript")]
+    [InlineData("pdftocairo")]
+    public void Type3_SubpixelStrokeOnlyGlyph_DrawsAVisibleLine_LikeTheReference(string referenceName)
+    {
+        var (available, render) = referenceName switch
+        {
+            "mutool" => (MutoolReferenceRenderer.IsAvailable,
+                (Func<string, SKBitmap?>)(path => MutoolReferenceRenderer.RenderPage(path, 1, Dpi))),
+            "Ghostscript" => (GhostscriptReferenceRenderer.IsAvailable,
+                path => GhostscriptReferenceRenderer.RenderPage(path, 1, Dpi)),
+            _ => (PdftocairoReferenceRenderer.IsAvailable,
+                path => PdftocairoReferenceRenderer.RenderPage(path, 1, Dpi)),
+        };
+        Assert.SkipUnless(available, $"{referenceName} not installed.");
+
+        // 24 pt glyph at (100,120) whose CharProc strokes one diagonal across
+        // its 750-unit (18 pt) cell at the default 1-unit line width.
+        var pdfData = SkiaRendererTests.CreateType3FixturePdf(
+            "0 0 0 rg 0 0 0 RG BT /F1 24 Tf 100 120 Td <41> Tj ET",
+            new[] { ("A", "1000 0 0 0 750 750 d1 0 0 m 750 750 l S") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [1000] ");
+
+        WithTempPdf(pdfData, path =>
+        {
+            using var reference = render(path);
+            Assert.SkipWhen(reference == null, $"{referenceName} declined to render the fixture.");
+
+            using var doc = PdfDocument.Open(pdfData);
+            using var excise = new SkiaRenderer().RenderPage(
+                doc.GetPage(1),
+                new RenderOptions { Dpi = Dpi, BackgroundColor = SKColors.White });
+
+            // A hairline is antialiased grey, so count any non-white pixel
+            // rather than DarkPixelsInPtRect's < 128 black. Measured on veraPDF
+            // 6-2-10-t04-fail-b at 150 dpi, mutool's thinnest-line pixels are
+            // almost all 200-249 — a < 200 cut read mutool's line as absent.
+            static int Inked(SKBitmap bitmap)
+            {
+                var scale = Dpi / 72f;
+                var left = (int)(99f * scale);
+                var right = Math.Min(bitmap.Width, (int)Math.Ceiling(119f * scale));
+                var top = Math.Max(0, bitmap.Height - (int)Math.Ceiling(139f * scale));
+                var bottom = Math.Min(bitmap.Height, bitmap.Height - (int)(119f * scale));
+                var count = 0;
+                for (var y = top; y < bottom; y++)
+                    for (var x = left; x < right; x++)
+                    {
+                        var p = bitmap.GetPixel(x, y);
+                        if (p.Red < 240 && p.Green < 240 && p.Blue < 240)
+                            count++;
+                    }
+                return count;
+            }
+
+            var referenceInk = Inked(reference!);
+            var exciseInk = Inked(excise);
+            referenceInk.Should().BeGreaterThan(15,
+                $"{referenceName} draws a sub-pixel CharProc stroke as a visible line (fixture sanity)");
+            exciseInk.Should().BeGreaterThan(15,
+                $"excise must draw the sub-pixel CharProc stroke as a visible line, as {referenceName} does " +
+                $"({referenceName} inked {referenceInk} px)");
+            exciseInk.Should().BeLessThan(referenceInk * 4 + 40,
+                $"a thinnest line must stay thin — not a width-inflated stroke ({referenceName} inked {referenceInk} px)");
+        });
+    }
+
     [Fact]
     public void Type3_d1BBoxClip_MatchesPdftocairo()
     {

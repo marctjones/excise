@@ -1270,8 +1270,16 @@ internal partial class RenderContext
 
     private float ResolvePathStrokeWidth()
     {
+        // A stroke narrower than one device pixel draws as a hairline inside a
+        // tiling pattern cell (#506) and inside a Type3 glyph procedure. Glyph
+        // space is typically 1/1000 of text space, so a CharProc's default
+        // 1-unit line at 12 pt is ~0.025 px at 150 dpi: handed to Skia at that
+        // width it antialiases to near-nothing, while mutool, pdftocairo,
+        // Ghostscript, PDFBox and PDFium all draw a visible thinnest line
+        // (poppler tests/encoding.pdf; veraPDF 6-2-10-t04-fail-b and
+        // 6-2-9-t04-fail-b, whose CharProcs only stroke).
         var width = (float)_state.LineWidth;
-        if (width <= 0 || _tilingPatternDepth <= 0)
+        if (width <= 0 || (_tilingPatternDepth <= 0 && _type3GlyphStack.Count == 0))
             return width;
 
         var matrix = _canvas.TotalMatrix;
