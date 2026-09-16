@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1123,
-  "indexedContentSha256": "5908ab622d3d9afcbe9c1390e020de3b170fe7ce4443ecc37da477455aa835cd",
+  "indexedContentSha256": "38d15b114eb824afd71944862b6c2e6045120ce843526b2c76e7f916f906a520",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -3972,7 +3972,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 129
+      "candidateReferenceCount": 132
     },
     {
       "id": "pdf.17.document.navigation",
@@ -20373,6 +20373,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/RedactionCollateralHarness.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "tree"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/PdfViewerHeadlessRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -20382,7 +20390,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 4
+      "candidateReferenceCount": 5
     },
     {
       "id": "pdf.20.renderer.requirement-004",
@@ -66637,6 +66645,24 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/CorpusAppearanceStreamTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "stripping"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "copy",
+            "stripping",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -66655,37 +66681,16 @@
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
+          "path": "Excise.Rendering.Tests/Differential/GroupBAnnotationMeaningTests.cs",
           "kind": "test",
           "matchedTerms": [
-            "metadata",
-            "pdfe",
-            "stripping",
-            "redaction",
-            "security"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
             "copy",
-            "metadata",
-            "redaction"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/StructuralInventory.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "metadata",
+            "stripping",
             "redaction"
           ]
         }
       ],
-      "candidateReferenceCount": 111
+      "candidateReferenceCount": 115
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -67421,6 +67426,24 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/CorpusAppearanceStreamTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "stripping"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "save",
+            "stripping",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -67481,6 +67504,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/ReferenceRedactorComparisonTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "save",
+            "stripping",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/SmallSectionsVerificationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -67524,6 +67556,7 @@
           "matchedTerms": [
             "attachment",
             "save",
+            "stripping",
             "redaction"
           ]
         },
@@ -67712,44 +67745,9 @@
             "redaction",
             "security"
           ]
-        },
-        {
-          "path": "tests/redaction-bench-design.json",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "attachments",
-            "pdfe",
-            "ocr",
-            "redaction"
-          ]
-        },
-        {
-          "path": "tests/unwired-api-baseline.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "attachments",
-            "pdfe",
-            "save",
-            "ocr",
-            "redaction"
-          ]
-        },
-        {
-          "path": "docs/architecture/decisions.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "attachment",
-            "attachments",
-            "pdfe",
-            "save",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 80
+      "candidateReferenceCount": 83
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",

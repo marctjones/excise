@@ -4050,7 +4050,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "SaveRoundTrip_ChangesNothing",
-      "line": 236,
+      "line": 240,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4089,7 +4089,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "AnnotationAdd_DestroysNoPageText",
-      "line": 265,
+      "line": 269,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4130,7 +4130,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "AnnotationRemove_LeavesTextAndOtherAnnotations",
-      "line": 296,
+      "line": 300,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4171,7 +4171,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "PageRotate_DestroysNoLetters",
-      "line": 337,
+      "line": 341,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4210,7 +4210,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "PageMove_IsAPurePermutation",
-      "line": 357,
+      "line": 361,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4249,7 +4249,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "PageRemove_TakesExactlyThatPage",
-      "line": 383,
+      "line": 387,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4288,7 +4288,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "FormFill_DestroysNoExistingText",
-      "line": 409,
+      "line": 413,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4329,7 +4329,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "FormFlatten_DestroysNoExistingText",
-      "line": 433,
+      "line": 437,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4370,7 +4370,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "EncryptRoundTrip_ChangesNoText",
-      "line": 458,
+      "line": 462,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4411,7 +4411,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "Merge_IsExactConcatenation",
-      "line": 476,
+      "line": 480,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4450,7 +4450,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "Split_IsExactPartition",
-      "line": 507,
+      "line": 511,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
