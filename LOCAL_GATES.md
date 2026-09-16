@@ -106,19 +106,37 @@ that delta is the discriminator the 2026-09-10 record lacked — then
 files is exempt from `clean-test-artifacts.sh --keep N`: it is the only
 artifact in the tree that records a hang, and the next run probably passes.
 
-`--blame-hang-timeout` defaults to **60 s**, down from 900 s. The default is
+`--blame-hang-timeout` defaults to **900 s**. The default is
 `RUNNER_BLAME_HANG_DEFAULT` in `scripts/lib-runner.sh` and **only** there —
 until 2026-09-16 each of the three runners carried its own
 `${BLAME_HANG_TIMEOUT:-900000}` and exported it, so the library default could
 never win and the 60 s first claimed in `d1e21572` was dead code. Caught by
 reading a live run's generated command line, not by re-reading the edit; an
 isolated call to `runner_step_cmdline` with the variable unset shows the dead
-default as if it were live. The evidence for 60 s: across three healthy unfiltered `Excise.App.Tests` runs the worst
-inter-test gap was **1.8 s** over 4455 gaps, none above 10 s (trx
-`startTime`/`endTime`). That is a 33x margin, and faster detection means
-blame's Sequence file — which names the tests in flight, and is only written on
-the worker-death path — lands while the evidence is fresh. It remains a
-diagnostics improvement, not the remedy.
+default as if it were live.
+
+⚠️ **A 60 s default replaced it for a few hours on 2026-09-16 and was
+reverted the same night.** It aborted three healthy rows on the merge gate —
+`Excise.Core.Tests` and `redaction-suites` were killed mid-run, and
+`test-count-core` then failed on the tests the aborted host never reported.
+The evidence for 60 s was real but measured on the wrong population: across
+three healthy unfiltered `Excise.App.Tests` runs the worst inter-test gap was
+**1.8 s** over 4455 gaps, none above 10 s. **Blame's timer cannot distinguish a
+stalled worker from one long-running test**, so the binding constraint is the
+longest legitimate SINGLE TEST, not the mean gap — and across every trx in
+`logs/` (12 runs) single tests run 81–277 s and complete, led by
+`Corpus_ParsesWithoutCrash_AllPdfs` at 277 s. App.Tests itself has an 89 s test
+in a run that sample missed. With the 2–3× load factor documented in
+`CLAUDE.md`, 277 s exceeds a 600 s default, so 900 s is the floor.
+
+Two lessons worth keeping. A **margin** measured on one project generalises
+only as far as that project's shape does — App.Tests is the one suite with no
+corpus-wide tests. And the sample was taken from a tree where the corpus rows
+collected nothing (#1527, fixed hours before), so the population was wrong
+twice over. Blame remains diagnostics, never the remedy: it fires on time,
+dumps the testhost relay rather than the worker, and the run continues.
+Shortening it buys no containment. Per-row calibration — a timeout inside
+(longest single test, `budget`) — is #1541.
 
 `scripts/test-run-bounded.sh` (row `run-bounded-selftest`, t0) proves the
 mechanism can still fire: a bound that has never fired is not a bound.

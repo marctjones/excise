@@ -688,17 +688,39 @@ RUNNER_EXIT_BOUND=124        # run-bounded.sh: the row exceeded its wall-clock b
 # it, so the library default below could never win and the 60000 claimed in
 # d1e21572 was dead code. Set it here; the runners only pass it through.
 #
-# 60s not 900s, on measurement: across three healthy unfiltered App.Tests runs
-# the worst gap between consecutive test events was 1.8s over 4455 gaps, none
-# above 10s (trx startTime/endTime, #1283 lane B). A 33x margin.
+# ⚠️ 900s, and 60s is WRONG -- reverted 2026-09-16 the same night it landed,
+# after it aborted three healthy rows on the merge gate (Excise.Core.Tests,
+# redaction-suites, and test-count-core downstream of the first). #1283 lane B
+# set 60s on a real measurement -- across three healthy unfiltered App.Tests
+# runs the worst gap between consecutive test events was 1.8s over 4455 gaps,
+# none above 10s -- and the measurement does not generalise, because
+# **blame's timer cannot tell a stalled worker from ONE long-running test**.
+# The constraint is therefore the LONGEST LEGITIMATE SINGLE TEST, not the mean
+# inter-event gap. Measured over every trx in logs/ (12 runs, several predating
+# tonight): single tests at 81-277s complete normally, led by
+# CorpusConformanceTests.Corpus_ParsesWithoutCrash_AllPdfs (277s) and
+# ReferenceRedactorComparisonTests (271s). Even App.Tests has an 89s test in a
+# run lane B did not sample. 277s x the 2-3x load factor CLAUDE.md documents
+# exceeds 600s, so 900s is the floor a default can safely take: ~3.2x over the
+# worst observed.
+#
+# Lane B sampled the one project with no corpus-wide tests -- AND sampled it
+# from a tree where the corpus rows collected nothing (#1527, fixed hours
+# earlier the same night). A margin measured on the wrong population reads
+# exactly like a margin.
+#
+# A tight timeout is still right PER ROW, in (longest single test, budget);
+# that is #1541, not a global constant.
 #
 # This is DIAGNOSTICS, not the remedy. Measured 2026-09-16: on a STALLED
 # worker blame fires exactly on schedule, dumps the testhost RELAY instead of
 # the worker, and the run keeps going -- 6x past the timeout in the
 # reproduction, nine hours in the real 2026-09-10 incident. The `budget`
 # column and run-bounded.sh are what actually END a hung row. Do not remove
-# the bound on the grounds that blame exists.
-RUNNER_BLAME_HANG_DEFAULT=60000
+# the bound on the grounds that blame exists -- and note this cuts FOR a
+# generous blame timeout: shortening it buys no containment, only an earlier
+# dump of the wrong process, at the price of killing healthy long tests.
+RUNNER_BLAME_HANG_DEFAULT=900000
 BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-$RUNNER_BLAME_HANG_DEFAULT}"
 RUNNER_ROOT="${RUNNER_ROOT:-$PWD}"
 RUNNER_MANIFEST="${RUNNER_MANIFEST:-$RUNNER_ROOT/tests/gates.tsv}"
@@ -893,14 +915,13 @@ runner_plan_expand_trx() {
 # A `budget` of `-` emits the UNWRAPPED command — byte-for-byte today's
 # behaviour, and not even an extra process in the tree (#1187).
 #
-# --blame-hang-timeout defaults to 60s, not the 900s it was until 2026-09-16.
-# Justification is measured, not taste: across three healthy unfiltered
-# App.Tests runs the WORST inter-test gap was 1.8s over 4455 gaps, with none
-# above 10s (trx startTime/endTime; #1283 lane B), so 60s is a 33x margin.
-# Faster detection matters because blame's Sequence file — which names the
-# tests in flight — is only written on the worker-DEATH path, and the sooner
-# it lands the fresher the evidence. It is NOT the thing that ends a stalled
-# run; run-bounded.sh is. Blame fires on time and the run hangs anyway.
+# --blame-hang-timeout defaults to 900s. A 60s default was tried on
+# 2026-09-16 and aborted three healthy rows within hours; blame's timer cannot
+# distinguish a stalled worker from one long-running test, and single tests
+# here run to 277s. See RUNNER_BLAME_HANG_DEFAULT above for the measurement.
+# Blame's Sequence file — which names the tests in flight — is only written on
+# the worker-DEATH path. It is NOT the thing that ends a stalled run;
+# run-bounded.sh is. Blame fires on time and the run hangs anyway.
 runner_step_cmdline() {
     local name="$1" kind="$2" target="$3" filter="${4:--}" hang="${BLAME_HANG_TIMEOUT:-$RUNNER_BLAME_HANG_DEFAULT}"
     local budget bound=""
