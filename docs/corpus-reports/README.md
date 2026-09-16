@@ -165,8 +165,42 @@ The rendering harness deliberately has separate layers:
 | Exhaustive release scan | `./scripts/run-render-quality-scan.sh --page-mode all --oracles all --strict-contracts` | Every page of every contracted corpus PDF with release, quality, pixel-agreement, reference-situation, and root-cause summaries |
 
 Release validation should use `sample` while investigating and `all` before
-declaring rendering quality final. `--strict-contracts` makes uncontracted pages
-show up as `NEEDS_REVIEW` instead of silently inheriting default classifications.
+declaring rendering quality final.
+
+`--strict-contracts` is what makes the scan a **gate** rather than a report
+(#1519). It makes uncontracted pages show up as `NEEDS_REVIEW` instead of
+silently inheriting default classifications, and it makes the command exit
+non-zero when any of these is true:
+
+| the command fails when | why |
+|---|---|
+| a page departs from its pinned `ExpectedRawStatus` | the ratchet. A change is not automatically bad — DIFF → PASS is an improvement. Triage, then re-pin |
+| a scanned page has no contract | a page nobody pinned cannot depart from anything |
+| a scanned page matched no expectation | the contract lookup and the expectation lookup disagreed about it |
+| a contract page was never scanned | an under-downloaded corpus, a timeout, or classifying a filtered report against the whole contract tree |
+| a page's raw status is `EXCISE_SIDE_GAP` | an oracle rendered what excise refused: the one unambiguous excise defect. Fails **even when a contract pins it** — re-pinning it would excuse the defect |
+| `failures` is non-empty (release/quality FAIL) | a backstop, see the caveat below |
+| zero pages were scanned | a scan of nothing is not a passing scan |
+
+Unreviewed `PASS_ONE` is **reported, not gated**: it is a triage backlog rather
+than a rendering defect. `scripts/report_gates.py` prints the count with a
+prior-run delta on the run's IMPROVE line, but that is a number to read, not a
+floor — a growing backlog does not fail the row.
+
+⚠️ The load-bearing term is the expectation departure, **not** `failures`. A
+contract's pinned `QualityStatus` / `ReleaseStatus` overwrite the
+runtime-inferred ones, and every checked-in page contract pins `ReleaseStatus:
+PASS` with no `QualityStatus: FAIL` — so `failures` is empty by construction for
+a contracted page. The expectation comparison survives pinning because there the
+pin *is* the expectation.
+
+Before 2026-09-16 the exit code was `missingContractPages == 0` alone, so the
+`render-quality-scan` row of tier `full` could not go red for any rendering
+defect while its own manifest note claimed it failed on departure. That the
+verdict can now fail is proven by `scripts/test-render-quality-verdict.sh`
+(a `SELFTEST` row in `t0`) and `Excise.Cli.Tests/RenderQualityVerdictTests.cs`.
+Without `--strict-contracts` nothing is gated, which is what keeps the
+investigate-and-look-at-pages runs above usable.
 
 Focused development should still use the contract scanner rather than temporary
 TSV manifests. Use `--contract-root-cause`, `--contract-path-contains`,

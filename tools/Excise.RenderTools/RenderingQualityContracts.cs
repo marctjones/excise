@@ -12,6 +12,18 @@ partial class Program
     private const string PassOneReviewUnreviewed = "UNREVIEWED_PASS_ONE";
     private const string PassOneReviewRejected = "REJECTED_PASS_ONE";
 
+    // #1519. Until 2026-09-16 this flag only relabelled uncontracted pages and
+    // the scan's exit code was `missingContractPages == 0` — so an expectation
+    // departure, a quality FAIL, a MISSING_CONTENT or an EXCISE_SIDE_GAP all
+    // exited 0 while the row's note claimed it "fails on departure". The flag
+    // is now what ARMS the verdict; see EvaluateRenderingQualityVerdict.
+    private const string StrictContractsOptionDescription =
+        "Gate the run on the contracts: a page departing from its pinned " +
+        "ExpectedRawStatus, a scanned page with no contract, a contract page " +
+        "that was never scanned, a release/quality FAIL, or a raw " +
+        "EXCISE_SIDE_GAP each make the command exit non-zero (#1519). " +
+        "Without it the scan only reports.";
+
     static Command CreateRenderQualityScanCommand()
     {
         var corpusArg = new Argument<DirectoryInfo>("corpus") { Description = "Directory of PDFs to scan" };
@@ -78,7 +90,7 @@ partial class Program
         };
         var strictContractsOption = new Option<bool>("--strict-contracts")
         {
-            Description = "Fail the quality report when scanned pages have no contract.",
+            Description = StrictContractsOptionDescription,
             DefaultValueFactory = _ => false,
         };
         var rawOutputOption = new Option<FileInfo?>("--raw-output")
@@ -252,7 +264,7 @@ partial class Program
         };
         var strictContractsOption = new Option<bool>("--strict-contracts")
         {
-            Description = "Mark pages without contracts as NEEDS_REVIEW.",
+            Description = StrictContractsOptionDescription,
             DefaultValueFactory = _ => false,
         };
 
@@ -370,6 +382,11 @@ partial class Program
             return false;
 
         var rawReport = LoadCorpusScanReport(rawPath);
+        // RunCorpusScan already applied these to the live entries, and they
+        // round-trip through the raw JSON. Re-applying keeps the verdict's
+        // inputs computed by the SAME code path as render-quality-classify's,
+        // rather than resting on the raw report's field fidelity (#1519).
+        ApplyCorpusExpectations(rawReport.entries, expectations);
         ApplyRenderingQualityContracts(rawReport.entries, contractSet, strictContracts);
         var report = BuildRenderingQualityReport(rawReport, contractSet, contractsDir, strictContracts);
         var json = JsonSerializer.Serialize(report, RenderingQualityJsonOptions);
@@ -377,7 +394,7 @@ partial class Program
         File.WriteAllText(outputPath, json);
         Console.Out.WriteLine($"  wrote quality report {outputPath}");
         PrintRenderingQualitySummary(report.summary);
-        return !strictContracts || report.summary.missingContractPages == 0;
+        return ReportRenderingQualityVerdict(report, strictContracts);
     }
 
     internal static bool RunRenderQualityClassify(
@@ -396,7 +413,7 @@ partial class Program
         File.WriteAllText(outputPath, json);
         Console.Out.WriteLine($"  wrote quality report {outputPath}");
         PrintRenderingQualitySummary(report.summary);
-        return !strictContracts || report.summary.missingContractPages == 0;
+        return ReportRenderingQualityVerdict(report, strictContracts);
     }
 
     internal static void ApplyRenderingQualityContracts(
@@ -675,6 +692,80 @@ partial class Program
             .Select(RenderingQualityReportEntry.FromCorpusEntry)
             .ToArray();
 
+        // #1519 coverage: which contract pages did this scan actually reach?
+        // Resolved through the contract set's own lookup order so a pdfjs
+        // path-prefix fallback counts as covered rather than reading as both
+        // "scanned page with no contract" and "contract page never scanned".
+        var coveredContractPages = new HashSet<CorpusPageKey>();
+        foreach (var entry in entries)
+        {
+            if (contracts.TryResolvePage(entry.path, entry.pageNumber, out var key, out _))
+                coveredContractPages.Add(key);
+        }
+
+        // A wall-budget timeout emits ONE synthetic TIMEOUT entry for the PDF
+        // and no entry at all for its remaining pages, so a slow machine can
+        // reach the coverage check. That still has to fail (#1527: a page that
+        // did not run must not read as passing, and the TIMEOUT page departs
+        // from its pin anyway) — but it must not look like a stale pin. So the
+        // PDFs that timed out are named, and their unscanned pages say so.
+        var timedOutPdfs = new HashSet<string>(
+            entries
+                .Where(entry => string.Equals(entry.status, "TIMEOUT", StringComparison.Ordinal))
+                .Select(entry => NormalizeManifestPath(entry.path)),
+            StringComparer.Ordinal);
+
+        var unscannedContractPageRefs = contracts.PageKeys
+            .Where(key => !coveredContractPages.Contains(key))
+            .OrderBy(key => key.Path, StringComparer.Ordinal)
+            .ThenBy(key => key.PageNumber)
+            .Select(key => $"{key.Path}#p{key.PageNumber}  pinned but not scanned"
+                           + (timedOutPdfs.Contains(key.Path)
+                               ? " — its PDF hit the per-PDF wall budget, so this is load, not a stale pin"
+                               : " — absent from the corpus, beyond its page count, or a stale pin"))
+            .ToArray();
+
+        var expectationFailures = reportEntries
+            .Where(entry => string.Equals(entry.expectationResult, "FAIL", StringComparison.Ordinal))
+            .ToArray();
+        var missingContracts = reportEntries
+            .Where(entry => string.Equals(entry.contractStatus, "MISSING", StringComparison.Ordinal))
+            .ToArray();
+        // Counted SEPARATELY from missingContracts on purpose: FindPage
+        // normalizes the path (and falls back across the pdfjs/ prefix) while
+        // TryGetCorpusExpectation does not normalize, so the two lookups can
+        // disagree about the same page.
+        //
+        // The 2026-09-15 full run reported exactly one page here and the
+        // mechanism is NOT yet explained. Two theories were checked and BOTH
+        // are ruled out for pdfjs/bug1978317.pdf, the page the session handoff
+        // named: its PDF carries no /Pages, no /Catalog and one object with an
+        // indirect /Length pointing at an object that does not exist, so the
+        // open fails and the entry is emitted at pageNumber 0 (Program.cs's
+        // open-failure path) — SelectCorpusPages' page-0 -> page-1 promotion
+        // needs a successful open with pageCount > 0 and is never reached. And
+        // both lookups then use the same ("pdfjs/bug1978317.pdf", 0) key, with
+        // NormalizeManifestPath a no-op on a macOS-relative path. So do not
+        // "fix" a lookup on this reasoning: read the offending entry's path /
+        // pageNumber / status / contractStatus / expectationResult out of the
+        // raw scan JSON first. Until then both terms fail and each names its
+        // pages, which is the whole point of #1519.
+        // Excludes the MISSING pages on purpose: a page with no contract also
+        // has no expectation, so without the filter every uncontracted page
+        // would fire BOTH terms and the second one's remedy ("the two lookups
+        // disagreed") would be false in the common case.
+        var unpinnedPages = reportEntries
+            .Where(entry => !string.Equals(entry.contractStatus, "MISSING", StringComparison.Ordinal))
+            .Where(entry => string.IsNullOrWhiteSpace(entry.expectationResult)
+                            || string.Equals(entry.expectationResult, RenderingQualityUnknown, StringComparison.Ordinal))
+            .ToArray();
+        var exciseSideGaps = reportEntries
+            .Where(entry => string.Equals(entry.rawStatus, "EXCISE_SIDE_GAP", StringComparison.Ordinal))
+            .ToArray();
+        var unreviewedPassOne = reportEntries
+            .Where(entry => entry.passOneReviewStatus == PassOneReviewUnreviewed)
+            .ToArray();
+
         return new RenderingQualityReport
         {
             generatedUtc = DateTime.UtcNow.ToString("o"),
@@ -686,7 +777,13 @@ partial class Program
                 pagesScanned = entries.Length,
                 pdfsScanned = entries.Select(entry => entry.path).Distinct(StringComparer.Ordinal).Count(),
                 contractFiles = contracts.Contracts.Count,
-                missingContractPages = entries.Count(entry => string.Equals(entry.contractStatus, "MISSING", StringComparison.Ordinal)),
+                contractPages = contracts.PageKeys.Count,
+                missingContractPages = missingContracts.Length,
+                expectationFailurePages = expectationFailures.Length,
+                unpinnedScannedPages = unpinnedPages.Length,
+                unscannedContractPages = unscannedContractPageRefs.Length,
+                exciseSideGapPages = exciseSideGaps.Length,
+                unreviewedPassOnePages = unreviewedPassOne.Length,
                 rawStatusCounts = CountBy(entries.Select(entry => entry.status)),
                 releaseStatusCounts = CountBy(entries.Select(entry => entry.releaseStatus ?? RenderingQualityUnknown)),
                 qualityStatusCounts = CountBy(entries.Select(entry => entry.qualityStatus ?? RenderingQualityUnknown)),
@@ -703,12 +800,15 @@ partial class Program
             failures = reportEntries
                 .Where(entry => entry.releaseStatus is "BLOCKED" or "FAIL" || entry.qualityStatus == "FAIL")
                 .ToArray(),
+            expectationFailures = expectationFailures,
+            missingContracts = missingContracts,
+            unpinnedPages = unpinnedPages,
+            exciseSideGaps = exciseSideGaps,
+            unscannedContractPageRefs = unscannedContractPageRefs,
             needsReview = reportEntries
                 .Where(entry => entry.releaseStatus == "NEEDS_REVIEW" || entry.qualityStatus == "NEEDS_REVIEW")
                 .ToArray(),
-            unreviewedPassOne = reportEntries
-                .Where(entry => entry.passOneReviewStatus == PassOneReviewUnreviewed)
-                .ToArray(),
+            unreviewedPassOne = unreviewedPassOne,
             rejectedPassOne = reportEntries
                 .Where(entry => entry.passOneReviewStatus == PassOneReviewRejected)
                 .ToArray(),
@@ -789,12 +889,200 @@ partial class Program
             _ => 3,
         };
 
+    /// <summary>
+    /// The exit-code rule for <c>render-quality-scan</c> and
+    /// <c>render-quality-classify</c> (#1519).
+    ///
+    /// Before this existed both commands returned
+    /// <c>!strictContracts || summary.missingContractPages == 0</c>: one
+    /// bookkeeping term, so the row could not go red for any rendering defect
+    /// while its manifest note claimed "--strict-contracts fails on departure".
+    /// The report already held every signal; nothing consulted it.
+    ///
+    /// ⚠️ The load-bearing term is <see cref="RenderingQualitySummary.expectationFailurePages"/>,
+    /// NOT <c>failures</c>. A contract's pinned <c>QualityStatus</c> /
+    /// <c>ReleaseStatus</c> OVERWRITE the runtime-inferred ones in
+    /// <see cref="ApplyRenderingQualityContracts"/>, and on 2026-09-16 all
+    /// 4,971 page contracts pinned <c>ReleaseStatus: PASS</c> and none pinned
+    /// <c>QualityStatus: FAIL</c> — so <c>failures</c> is empty by
+    /// construction for every contracted page and gating on it alone would be
+    /// a second gate that cannot go red. The expectation comparison is
+    /// un-maskable because there the pin IS the expectation.
+    ///
+    /// <see cref="RenderingQualitySummary.exciseSideGapPages"/> reads the RAW
+    /// status for the same reason: by the time the quality status is built the
+    /// pin has already replaced it. An EXCISE_SIDE_GAP is the one class that is
+    /// unambiguously an excise defect (an oracle rendered a page excise
+    /// refused), so it fails even when a contract pins it — re-pinning it is
+    /// the one escape CLAUDE.md forbids.
+    /// </summary>
+    internal static RenderingQualityVerdict EvaluateRenderingQualityVerdict(
+        RenderingQualityReport report,
+        bool strictContracts)
+    {
+        if (!strictContracts)
+            return new RenderingQualityVerdict(true, false, Array.Empty<RenderingQualityViolation>());
+
+        var summary = report.summary;
+        var violations = new List<RenderingQualityViolation>();
+
+        void Add(int count, string headline, string remedy, IEnumerable<string> pages)
+        {
+            if (count > 0)
+                violations.Add(new RenderingQualityViolation(count, headline, remedy, pages.ToArray()));
+        }
+
+        // A scan of nothing is not a passing scan (#1527: "the theory data
+        // collapsed" must never read as green). Zero pages with a non-empty
+        // contract set means the corpus did not resolve.
+        if (summary.pagesScanned == 0)
+        {
+            violations.Add(new RenderingQualityViolation(
+                1,
+                "0 pages were scanned",
+                "The corpus did not resolve any of the contracted PDFs. Check --corpus, "
+                + "and remember corpora must be COPIED into a worktree, never symlinked.",
+                Array.Empty<string>()));
+        }
+
+        Add(summary.expectationFailurePages,
+            "page(s) departed from their pinned ExpectedRawStatus",
+            "A status change is not automatically bad — a page moving DIFF -> PASS is an "
+            + "improvement. Triage it, then re-pin the contract to accept it. Never re-pin an "
+            + "EXCISE_SIDE_GAP or an untriaged MISSING_CONTENT: that excuses an excise-side defect.",
+            report.expectationFailures.Select(DescribePageRef));
+
+        Add(summary.missingContractPages,
+            "scanned page(s) have no contract",
+            "Add a contract page for each, or narrow the scan. A scanned page nobody pinned "
+            + "cannot depart from anything, so it is invisible to every other check.",
+            report.missingContracts.Select(DescribePageRef));
+
+        Add(summary.unpinnedScannedPages,
+            "scanned page(s) HAVE a contract but matched no expectation",
+            "The contract lookup found this page and the expectation lookup did not, so its raw "
+            + "status was compared against nothing. Pages with no contract at all are the "
+            + "previous term, not this one.",
+            report.unpinnedPages.Select(DescribePageRef));
+
+        Add(summary.unscannedContractPages,
+            "contract page(s) were never scanned",
+            "The pages that DID run may all have matched, which is why this used to read as a "
+            + "clean sweep. Causes: an under-downloaded corpus (re-run the matching "
+            + "scripts/download-*.sh), a per-PDF timeout that dropped unfinished pages, or "
+            + "classifying a FILTERED raw report against the whole contract directory — in that "
+            + "last case point --contracts at the subset that produced the report.",
+            report.unscannedContractPageRefs);
+
+        Add(summary.exciseSideGapPages,
+            "page(s) classified EXCISE_SIDE_GAP — an oracle rendered what excise refused",
+            "This is the one class that is unambiguously an excise defect. File it and fix it; "
+            + "pinning it is not an option (CLAUDE.md: pinning MISSING_CONTENT/EXCISE_SIDE_GAP "
+            + "would excuse an excise-side gap).",
+            report.exciseSideGaps.Select(DescribePageRef));
+
+        Add(report.failures.Count,
+            "page(s) carry a release or quality FAIL",
+            "Backstop check. Reachable only for a page whose contract pins no QualityStatus / "
+            + "ReleaseStatus, since a pin overwrites the inferred status — so a green here is "
+            + "NOT evidence of quality.",
+            report.failures.Select(DescribePageRef));
+
+        // Reported, deliberately NOT gated: unreviewedPassOne is a triage
+        // backlog, not a rendering defect, and a 2h28m row that reds on
+        // paperwork is a row people learn to accept.
+        //
+        // ⚠️ "Reported" means exactly that. scripts/report_gates.py reads the
+        // count out of this report and prints it with a prior-run delta in the
+        // IMPROVE line — it is NOT a floor and it does NOT fail the row if it
+        // grows. Claiming otherwise would be the same kind of statement #1519
+        // was filed about. Giving it a real floor is a separate mechanism and
+        // a separate decision.
+        return new RenderingQualityVerdict(violations.Count == 0, true, violations);
+    }
+
+    private static string DescribePageRef(RenderingQualityReportEntry entry)
+    {
+        var detail = entry.expectationFailure
+                     ?? (string.IsNullOrWhiteSpace(entry.expectedRawStatus)
+                         ? entry.rawStatus
+                         : $"pinned {entry.expectedRawStatus}, got {entry.rawStatus}");
+        return $"{entry.path}#p{entry.pageNumber}  {detail}";
+    }
+
+    internal static bool ReportRenderingQualityVerdict(
+        RenderingQualityReport report,
+        bool strictContracts)
+    {
+        var verdict = EvaluateRenderingQualityVerdict(report, strictContracts);
+        Console.Out.WriteLine();
+        if (!verdict.Gated)
+        {
+            Console.Out.WriteLine(
+                "Rendering quality verdict: NOT GATED — pass --strict-contracts to make "
+                + "contract departures fail this command (#1519).");
+            return verdict.Ok;
+        }
+
+        if (verdict.Ok)
+        {
+            Console.Out.WriteLine(
+                "✓ Rendering quality verdict: PASS — every scanned page matched its contract, "
+                + "and every contract page was scanned.");
+            Console.Out.WriteLine(
+                "  This means \"no worse than the checked-in pins\", not \"good enough\": the "
+                + "pins were set at whatever the behaviour was.");
+            return true;
+        }
+
+        Console.Error.WriteLine("✗ Rendering quality verdict: FAIL (--strict-contracts)");
+        foreach (var violation in verdict.Violations)
+        {
+            Console.Error.WriteLine();
+            Console.Error.WriteLine($"  ✗ {violation.Count} {violation.Headline}");
+            foreach (var page in violation.Pages.Take(RenderingQualityVerdictPageListCap))
+                Console.Error.WriteLine($"      {page}");
+            if (violation.Pages.Count > RenderingQualityVerdictPageListCap)
+            {
+                Console.Error.WriteLine(
+                    $"      … {violation.Pages.Count - RenderingQualityVerdictPageListCap} more "
+                    + "(the full list is in the report JSON)");
+            }
+            Console.Error.WriteLine($"    {violation.Remedy}");
+        }
+
+        return false;
+    }
+
+    private const int RenderingQualityVerdictPageListCap = 20;
+
+    internal sealed record RenderingQualityViolation(
+        int Count,
+        string Headline,
+        string Remedy,
+        IReadOnlyList<string> Pages);
+
+    internal sealed record RenderingQualityVerdict(
+        bool Ok,
+        bool Gated,
+        IReadOnlyList<RenderingQualityViolation> Violations);
+
     private static void PrintRenderingQualitySummary(RenderingQualitySummary summary)
     {
         Console.Out.WriteLine();
         Console.Out.WriteLine("Rendering quality summary:");
         Console.Out.WriteLine($"  pages scanned: {summary.pagesScanned}");
-        Console.Out.WriteLine($"  missing contract pages: {summary.missingContractPages}");
+        Console.Out.WriteLine($"  contract pages: {summary.contractPages}");
+        // #1519: print the exit code's terms, so a red is readable from the
+        // step log without opening the report JSON.
+        Console.Out.WriteLine(
+            $"  verdict terms: {summary.expectationFailurePages} expectation departure(s), "
+            + $"{summary.missingContractPages} scanned page(s) with no contract, "
+            + $"{summary.unpinnedScannedPages} unpinned, "
+            + $"{summary.unscannedContractPages} contract page(s) not scanned, "
+            + $"{summary.exciseSideGapPages} excise-side gap(s)");
+        Console.Out.WriteLine(
+            $"  reported, not gated: {summary.unreviewedPassOnePages} unreviewed PASS_ONE");
         PrintCountGroup("  quality", summary.qualityStatusCounts);
         PrintCountGroup("  pass-one review", summary.passOneReviewStatusCounts);
         PrintCountGroup("  pixel agreement", summary.pixelAgreementCounts);
@@ -935,26 +1223,48 @@ partial class Program
                 });
         }
 
+        /// <summary>Every page a contract pins, for the #1519 coverage check.</summary>
+        public IReadOnlyCollection<CorpusPageKey> PageKeys => PageContracts.Keys;
+
         public RenderingQualityPageMatch? FindPage(string path, int pageNumber)
+            => TryResolvePage(path, pageNumber, out _, out var match) ? match : null;
+
+        /// <summary>
+        /// The single lookup order shared by <see cref="FindPage"/> and the
+        /// #1519 coverage check, which needs the KEY a scanned page resolved
+        /// to (not just the match) so it can subtract the scanned pages from
+        /// <see cref="PageKeys"/>. Two copies of this fallback chain would be
+        /// exactly the drift CLAUDE.md's "one walk, many sinks" is about.
+        /// </summary>
+        public bool TryResolvePage(
+            string path,
+            int pageNumber,
+            out CorpusPageKey key,
+            out RenderingQualityPageMatch? match)
         {
             var normalized = NormalizeManifestPath(path);
-            if (PageContracts.TryGetValue(new CorpusPageKey(normalized, pageNumber), out var match))
-                return match;
-
-            if (!normalized.Contains('/', StringComparison.Ordinal) &&
-                PageContracts.TryGetValue(new CorpusPageKey("pdfjs/" + normalized, pageNumber), out match))
-            {
-                return match;
-            }
-
             const string pdfjsPrefix = "pdfjs/";
-            if (normalized.StartsWith(pdfjsPrefix, StringComparison.Ordinal) &&
-                PageContracts.TryGetValue(new CorpusPageKey(normalized[pdfjsPrefix.Length..], pageNumber), out match))
+
+            var candidates = new List<string>(3) { normalized };
+            if (!normalized.Contains('/', StringComparison.Ordinal))
+                candidates.Add(pdfjsPrefix + normalized);
+            if (normalized.StartsWith(pdfjsPrefix, StringComparison.Ordinal))
+                candidates.Add(normalized[pdfjsPrefix.Length..]);
+
+            foreach (var candidate in candidates)
             {
-                return match;
+                var probe = new CorpusPageKey(candidate, pageNumber);
+                if (PageContracts.TryGetValue(probe, out var found))
+                {
+                    key = probe;
+                    match = found;
+                    return true;
+                }
             }
 
-            return null;
+            key = new CorpusPageKey(normalized, pageNumber);
+            match = null;
+            return false;
         }
     }
 
@@ -1323,6 +1633,14 @@ partial class Program
         public bool strictContracts { get; set; }
         public RenderingQualitySummary summary { get; set; } = new();
         public IReadOnlyList<RenderingQualityReportEntry> failures { get; set; } = Array.Empty<RenderingQualityReportEntry>();
+        // #1519: the named pages behind each verdict term. missingContractPages
+        // used to be a bare count, which is why a red on it could not be
+        // triaged from the log.
+        public IReadOnlyList<RenderingQualityReportEntry> expectationFailures { get; set; } = Array.Empty<RenderingQualityReportEntry>();
+        public IReadOnlyList<RenderingQualityReportEntry> missingContracts { get; set; } = Array.Empty<RenderingQualityReportEntry>();
+        public IReadOnlyList<RenderingQualityReportEntry> unpinnedPages { get; set; } = Array.Empty<RenderingQualityReportEntry>();
+        public IReadOnlyList<RenderingQualityReportEntry> exciseSideGaps { get; set; } = Array.Empty<RenderingQualityReportEntry>();
+        public IReadOnlyList<string> unscannedContractPageRefs { get; set; } = Array.Empty<string>();
         public IReadOnlyList<RenderingQualityReportEntry> needsReview { get; set; } = Array.Empty<RenderingQualityReportEntry>();
         public IReadOnlyList<RenderingQualityReportEntry> unreviewedPassOne { get; set; } = Array.Empty<RenderingQualityReportEntry>();
         public IReadOnlyList<RenderingQualityReportEntry> rejectedPassOne { get; set; } = Array.Empty<RenderingQualityReportEntry>();
@@ -1337,7 +1655,15 @@ partial class Program
         public int pagesScanned { get; set; }
         public int pdfsScanned { get; set; }
         public int contractFiles { get; set; }
+        public int contractPages { get; set; }
         public int missingContractPages { get; set; }
+        // #1519: the terms the exit code is made of. Each was derivable from
+        // entries[] before and none of them was.
+        public int expectationFailurePages { get; set; }
+        public int unpinnedScannedPages { get; set; }
+        public int unscannedContractPages { get; set; }
+        public int exciseSideGapPages { get; set; }
+        public int unreviewedPassOnePages { get; set; }
         public Dictionary<string, int> rawStatusCounts { get; set; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> releaseStatusCounts { get; set; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> qualityStatusCounts { get; set; } = new(StringComparer.Ordinal);

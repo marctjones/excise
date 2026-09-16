@@ -1256,6 +1256,37 @@ def improve_values(rows, log_dir, extraction_grade):
             cov = (extraction_grade.get("values") or {}).get("aggregateCoverage")
             if cov is not None:
                 entry.update(value=f"{cov:.4f}", number=cov)
+        elif name == "render-quality-scan":
+            # #1519. This row used to fall through to the `(\d+) baselined`
+            # scrape below, which the scan never prints, so value/number stayed
+            # None and no prior-run comparison ever happened — the row's whole
+            # verdict was its (blind) exit code. Read the report it writes.
+            #
+            # `number` is the UNREVIEWED PASS_ONE count on purpose: departures
+            # are 0 on every passing run, so their delta is noise, while the
+            # triage backlog is the quantity that can drift on a green run.
+            # Deliberately NOT part of the exit code — a 2h28m row that reds on
+            # paperwork is a row people learn to accept.
+            rep = read_json(artifact_dir({name: r}, name, log_dir) / "render-quality-report.json")
+            summary = (rep or {}).get("summary") if isinstance(rep, dict) else None
+            if isinstance(summary, dict):
+                unreviewed = summary.get("unreviewedPassOnePages")
+                parts = [
+                    f"{summary.get('pagesScanned', '?')} pages",
+                    f"{summary.get('expectationFailurePages', 0)} departures",
+                ]
+                for label, key in (
+                    ("no contract", "missingContractPages"),
+                    ("unpinned", "unpinnedScannedPages"),
+                    ("not scanned", "unscannedContractPages"),
+                    ("excise-side gap", "exciseSideGapPages"),
+                ):
+                    if summary.get(key):
+                        parts.append(f"{summary[key]} {label}")
+                if unreviewed is not None:
+                    parts.append(f"{unreviewed} unreviewed PASS_ONE")
+                    entry["number"] = unreviewed
+                entry["value"] = ", ".join(parts)
         elif name == "perf-budget":
             rep = read_json(artifact_dir({name: r}, name, log_dir) / "perf-budgets" / "perf-budget-report.json")
             wf = (rep or {}).get("workflows") if isinstance(rep, dict) else None
