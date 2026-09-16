@@ -49,6 +49,7 @@ scripts/create-missing-v1.3.0-issues.sh   # historical one-off
 scripts/curate-pdf20-requirements.py   # registry curation
 scripts/demo-excise-cli.sh   # demo
 scripts/diff-behavior.sh   # ad-hoc behavioural diff between two builds
+scripts/displaylink-preflight.py   # #1497 asks CoreVideo whether a display link can be created right now, so an unattended GUI run refuses to launch into the -6661 state instead of burning launches (AvaloniaUI/Avalonia#18895); invoked by run-gui-perf-scenarios.sh
 scripts/download-dlib-slovenia.sh   # fetches an optional corpus/tool; prerequisites are declared per row
 scripts/download-federal-corpus.sh   # fetches an optional corpus/tool; prerequisites are declared per row
 scripts/download-govdocs1.sh   # fetches an optional corpus/tool; prerequisites are declared per row
@@ -103,6 +104,7 @@ scripts/run-copy-unicode-quality-harness.sh   # convenience over tests already r
 scripts/run-exploratory-corpus-tmux.sh   # tmux wrapper over the corpus-scan rows for humans
 scripts/run-full-suite.sh   # RUNNER: full
 scripts/run-gui-display-sweep.sh   # manual sharded fallback for the 144-page sweep that every full App.Tests pass already runs (PdfViewerHeadlessRenderTests self-shards); docs/RELEASE_CHECKLIST.md
+scripts/run-gui-perf-scenarios.sh   # #1497 live GUI memory/CPU measurement. NOT a gate on purpose: its numbers are absolute footprint on ONE machine under whatever load it had, and tests/reference-performance already records why that cannot be gated (two identical 3-run passes minutes apart moved every fixture 1.27-2.24x in the same direction). It also needs a display (Avalonia -6661) and the altona/smoke corpora. What IS gated is the machine-independent half, in Excise.App.Tests/Automation/PerfScenarioTests.cs (row Excise.App.Tests): the scenario file parses, a typo'd op/id fails loudly, steps run in order, and a wedged step becomes a reported timeout rather than a hang. #1497 says add a GRADE row with a skip prereq only if the harness proves useful first.
 scripts/run-local-real-world-gui-display.sh   # restricted local corpus, self-oracle, >=30 min; the property is already a BLOCK gate on 144 pages
 scripts/run-packaged-gui-smoke.sh   # invoked by release-smoke run_packaged_gui_gate (row packaged-gui)
 scripts/run-pdf-capability-benchmarks.py   # registry evidence collector
@@ -113,6 +115,7 @@ scripts/setup-dev.sh   # one-time machine setup
 scripts/setup-github-labels.sh   # one-time GitHub setup
 scripts/setup-local-real-world-corpus.sh   # one-time restricted-corpus setup
 scripts/show-bench-history.sh   # prints the bench history for humans
+scripts/summarize-gui-perf.py   # body of run-gui-perf-scenarios.sh's summarising step (#1497); joins steps.jsonl + samples.tsv + metrics.jsonl into run.json/summary.md and derives the noise floor every delta is judged against
 scripts/split-pdf-spec-v2.py   # one-off spec splitter (registry authoring)
 scripts/split-pdf-spec-v3.py   # one-off spec splitter (registry authoring)
 scripts/split-pdf-spec.py   # one-off spec splitter (registry authoring)
