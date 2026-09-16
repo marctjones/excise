@@ -653,6 +653,12 @@ run_one() {
             say "  ${R}FAIL${N} (${dur}s) — ZERO tests executed; refusing to checkpoint a vacuous pass"
             say "       filter: $filter"
             OVERALL=1 ;;
+        FAIL_BOUND_EXCEEDED)
+            # The row was killed by its own budget: no test asserted anything,
+            # so this is never checkpointed and never read as a test failure.
+            say "  ${R}BOUND EXCEEDED${N} (${dur}s) — killed by its wall-clock budget, NOT a test failure"
+            say "       worker state + managed stacks: $LOG_DIR/$name.bound-diagnostics.txt"
+            OVERALL=1 ;;
         *)
             say "  ${R}$status${N} rc=$rc (${dur}s) -> $log"
             tail -30 "$log" | sed 's/^/    /'

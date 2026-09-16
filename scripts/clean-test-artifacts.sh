@@ -59,6 +59,15 @@ prune_run_dirs() {
         if [ "$i" -le "$KEEP" ]; then
             continue
         fi
+        # A run whose row hit its wall-clock bound (#1283) keeps its evidence
+        # regardless of age. These are the only artifact in the tree that
+        # records a HANG, they are a few KB, and they cannot be regenerated —
+        # the whole point of the bound is that the next run probably passes and
+        # the stall is gone. Everything else here is reproducible by re-running.
+        if ls "$d"/*.bound-diagnostics.txt >/dev/null 2>&1; then
+            echo "  KEEPING       $(printf '%6s' "$(human "$d")")  $d  (holds bound-exceeded diagnostics, #1283)"
+            continue
+        fi
         if [ "$DRY" = "1" ]; then
             echo "  would remove  $(printf '%6s' "$(human "$d")")  $d"
         else
@@ -80,6 +89,35 @@ for proj in Excise.App.Tests Excise.Rendering.Tests Excise.Core.Tests \
     echo "$proj/TestResults  ($(human "$proj/TestResults"))"
     prune_run_dirs "$proj/TestResults" '*' "TestResults"
 done
+
+# $TMPDIR hang dumps — the directory the 36 GB fix MISSED (#1283).
+#
+# The header above says blame "writes a hang dump of the test host" and prunes
+# <project>/TestResults. Measured 2026-09-16 by fault injection: when blame
+# fires on a STALLED worker it runs `createdump` into
+# $TMPDIR/<guid>/dotnet_<pid>_<stamp>_hangdump.dmp — NOT into TestResults, and
+# not into the log dir either. One SIGSTOP reproduction left a 5.8 GB file
+# there. Nothing pruned it, on the same volume macOS grows swap on, which is
+# the exact failure chain this script was written for. Blame only lands dumps
+# under TestResults on the worker-DEATH path.
+#
+# Only our own dumps, only when they are not from a live run: `dotnet_*` /
+# `<assembly>_*` named `*hangdump.dmp`, older than 60 minutes.
+tmp_root="${TMPDIR:-/tmp}"
+if [ -d "$tmp_root" ]; then
+    dumps="$(find "$tmp_root" -maxdepth 2 -type f -name '*hangdump.dmp' -mmin +60 2>/dev/null)"
+    if [ -n "$dumps" ]; then
+        echo "$tmp_root  (stray blame hang dumps)"
+        printf '%s\n' "$dumps" | while IFS= read -r d; do
+            [ -n "$d" ] || continue
+            echo "    $(human "$d")  $(basename "$d")"
+            [ "$DRY" = "1" ] || rm -f "$d"
+        done
+        # The per-run <guid> directory blame made is then empty; take it too.
+        [ "$DRY" = "1" ] || find "$tmp_root" -maxdepth 1 -type d -empty -name '*-*-*-*-*' -mmin +60 -exec rmdir {} \; 2>/dev/null
+        echo "  (stray hang dumps: removed; see #1283 — blame dumps the RELAY, so these are ~6 GB and diagnostically worthless)"
+    fi
+fi
 
 # Suite/gate logs. resources.tsv and the hotspot history live under logs/ too,
 # so prune run DIRECTORIES only and leave loose files (history) alone.

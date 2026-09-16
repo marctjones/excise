@@ -21,7 +21,7 @@ Inputs
                           name status rc durationSeconds sha treeDirty config recorded and optionally
                           kind target filter log trx testsExecuted class knownIssue prereq reason
                           evidenceFrom evidenceFinished evidenceLog evidenceSha.
-                          status in PASS FAIL FAIL_ZERO_TESTS SKIP_CHECKPOINTED
+                          status in PASS FAIL FAIL_ZERO_TESTS FAIL_BOUND_EXCEEDED SKIP_CHECKPOINTED
                           SKIP_CHECKPOINTED_KNOWN SKIPPED NO_RESULT.
   tests/gates.tsv         only to (1) list every '#N' in the tier's plan for the STALE sweep and
                           (2) fill class/knownIssue for legacy rows (Foo.chunkNN resolves to Foo).
@@ -37,7 +37,7 @@ Row verdicts
   runner_checkpoint_known_failures in lib-runner.sh marks a FAILING row this way once ITS OWN prior
   KNOWN verdict is on record, so a step whose failure is accepted is not silently re-run forever;
   the STALE sweep below still applies to it exactly like any other row citing #N).
-  FAIL / FAIL_ZERO_TESTS, class != GRADE: knownIssue '-' -> NEW; '#N' -> KNOWN while N is OPEN or
+  FAIL / FAIL_ZERO_TESTS / FAIL_BOUND_EXCEEDED, class != GRADE: knownIssue '-' -> NEW; '#N' -> KNOWN while N is OPEN or
   unverified; '#N/Sub' -> KNOWN iff the qualifier matches (test/project/project-chunked rows: at
   least one and EVERY outcome="Failed" testName in the row's trx contains Sub; script rows: the
   row's log contains Sub), else NEW naming the unmatched (max 3 shown); N CLOSED (verified now, or
@@ -146,7 +146,7 @@ GRADE_ROWS = {
 }
 GRADE_ROW_NAMES = {v for v in GRADE_ROWS.values() if v} | {f"corpus-scan-{c}" for c, _ in CORPORA}
 PASSING = ("PASS", "SKIP_CHECKPOINTED")
-FAILING = ("FAIL", "FAIL_ZERO_TESTS")
+FAILING = ("FAIL", "FAIL_ZERO_TESTS", "FAIL_BOUND_EXCEEDED")
 
 
 class ReportError(Exception):
@@ -731,10 +731,21 @@ def _expire(row, n, state, known):
 
 
 def _classify_failure(row, n, sub, known):
-    """FAIL / FAIL_ZERO_TESTS on a non-GRADE row -> NEW or KNOWN (a CLOSED/INVALID cite is applied after)."""
+    """FAIL / FAIL_ZERO_TESTS / FAIL_BOUND_EXCEEDED on a non-GRADE row -> NEW or KNOWN (a CLOSED/INVALID cite is applied after)."""
     kind = row["kind"]
     evidence = ""
-    if kind in ("test", "project", "project-chunked"):
+    if row["status"] == "FAIL_BOUND_EXCEEDED":
+        # The row was killed by its wall-clock budget (#1283). NOTHING asserted
+        # anything, so the trx is absent or partial and must not be used as
+        # evidence either way: a trx qualifier reading a killed run's partial
+        # results could mark a brand-new hang KNOWN. Force the log-based
+        # qualifier path by treating this as a script row.
+        diag = os.path.join(os.path.dirname(row["log"] or ""), f"{row['name']}.bound-diagnostics.txt")
+        evidence = ("BOUND EXCEEDED: killed by its wall-clock budget; no test asserted anything. "
+                    f"Worker state (cputime frozen => stalled; climbing => livelock) and managed "
+                    f"stacks: {diag}")
+        kind = "script"
+    elif kind in ("test", "project", "project-chunked"):
         failed, counters = trx_failed_tests(row["trx"])
         if failed:
             shown = ", ".join(short_test(t) for t in failed[:3])

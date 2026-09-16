@@ -334,6 +334,9 @@ run_step() {
         FAIL_ZERO_TESTS)
             say "  ${R}FAIL${N} (${dur}s) — ZERO tests executed; a vacuous pass is a failure"
             say "       filter: $filter" ;;
+        FAIL_BOUND_EXCEEDED)
+            say "  ${R}BOUND EXCEEDED${N} (${dur}s) — killed by its wall-clock budget, NOT a test failure"
+            say "       worker state + managed stacks: $LOG_DIR/$name.bound-diagnostics.txt" ;;
         *)
             say "  ${R}$status${N} rc=$rc (${dur}s) -> $log"
             tail -40 "$log" | sed 's/^/    /' ;;
