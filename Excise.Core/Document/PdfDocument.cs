@@ -633,11 +633,16 @@ public partial class PdfDocument : IDisposable
             var xmp = GetXmpMetadata();
             if (xmp == null || xmp.Length == 0) return false;
             // pdfaid:part is the identifier ISO 19005 §6.7.11 requires of every
-            // conforming file. Matching the prefix covers both the element
-            // (<pdfaid:part>2</pdfaid:part>) and attribute (pdfaid:part="2")
-            // serialisations XMP permits.
-            return System.Text.Encoding.UTF8.GetString(xmp)
-                .Contains("pdfaid:part", StringComparison.Ordinal);
+            // conforming file, and this is the PRESENCE question: a claim whose
+            // VALUE excise cannot validate must still count as a claim, because
+            // this decides not to EMIT something PDF/A forbids and reading
+            // "pdfaid:part 9" as "not PDF/A" would put it back (#1526).
+            // DeclaresAnyIdentification is that semantic, named, on the one
+            // pdfaid parser (#1524) — it matches the property name, so it
+            // covers both the element (<pdfaid:part>2</pdfaid:part>) and
+            // attribute (pdfaid:part="2") serialisations XMP permits.
+            return Authoring.PdfAIdentityXmp.DeclaresAnyIdentification(
+                System.Text.Encoding.UTF8.GetString(xmp));
         }
     }
 

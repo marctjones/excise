@@ -45,10 +45,18 @@ public static class PdfAStructuralValidator
 
         var results = new List<ValidationResult>();
 
-        // XMP metadata packet with the pdfaid identifier at the expected part/level.
+        // XMP metadata packet with the pdfaid identifier at the expected
+        // part/level. Read through PdfAIdentityXmp — the one pdfaid parser
+        // (#1524/#1526) — not a substring match: this used to test for
+        // "pdfaid:part>{n}", i.e. the ELEMENT spelling only, and so reported
+        // Fail on a file that declares its identification in the attribute
+        // serialisation XMP equally permits. The declared tokens are compared
+        // exactly, so nothing this rule accepted before is accepted now on
+        // weaker evidence.
         string xmp = ReadXmp(document);
-        bool hasPart = xmp.Contains($"pdfaid:part>{expectedPart}", StringComparison.Ordinal);
-        bool hasLevel = xmp.Contains("pdfaid:conformance>B", StringComparison.Ordinal);
+        bool hasPart = PdfAIdentityXmp.ReadDeclaredPart(xmp)
+            == expectedPart.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        bool hasLevel = PdfAIdentityXmp.ReadDeclaredConformance(xmp) == "B";
         results.Add(new ValidationResult(
             "A-XmpPdfaId",
             $"XMP metadata declares pdfaid:part {expectedPart} and conformance B.",

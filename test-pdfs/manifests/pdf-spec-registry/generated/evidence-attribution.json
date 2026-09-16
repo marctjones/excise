@@ -10,6 +10,146 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheElementSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheAttributeSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsASingleQuotedAttribute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAroundTheAttributeEquals",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAndAttributesOnTheElement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullWhenNothingDeclaresAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullForNullXmp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_DoesNotMatchALongerPrefixEndingInPdfaid",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReportsAnUnknownPartVerbatim",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredConformance_ReadsBothSerialisations",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForAClaimTryParseRefuses",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsFalseWithoutAnIdentification",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_ReadsAValidatedIdentityFromEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesAnIdentityWithAnUnknownConformance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_StillSeesPart1WhenTheConformanceIsUnvalidatable",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesARevisionThatIsNotFourDigits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_KeepsAFourDigitRevisionAsFound",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_IsNullWithoutAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.Write_EmitsAnIdentificationThisParserReadsBack",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -1262,186 +1402,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PageTreeWithSelfReferencingKids_DoesNotStackOverflow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PathologicallyDeepPageTree_BailsAtDepthLimit",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.Parse_RadioButton_CapturesFlagsAndWidgetExportValues",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NullAcroForm_ReturnsEmptyFields",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_EmptyFieldsArray_ReturnsEmpty",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesTrue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesFalse_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_TextFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ButtonFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_UnknownFieldType_RecognizedAsUnknown",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithStringValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithNameValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithDefaultValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithOptions_AllOptionsCaptured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithNameOptions_Parsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithPairs_DisplayValueUsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ReadOnlyFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -1479,6 +1439,146 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheElementSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheAttributeSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsASingleQuotedAttribute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAroundTheAttributeEquals",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAndAttributesOnTheElement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullWhenNothingDeclaresAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullForNullXmp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_DoesNotMatchALongerPrefixEndingInPdfaid",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReportsAnUnknownPartVerbatim",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredConformance_ReadsBothSerialisations",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForAClaimTryParseRefuses",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsFalseWithoutAnIdentification",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_ReadsAValidatedIdentityFromEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesAnIdentityWithAnUnknownConformance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_StillSeesPart1WhenTheConformanceIsUnvalidatable",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesARevisionThatIsNotFourDigits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_KeepsAFourDigitRevisionAsFound",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_IsNullWithoutAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.Write_EmitsAnIdentificationThisParserReadsBack",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -2731,186 +2831,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PageTreeWithSelfReferencingKids_DoesNotStackOverflow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PathologicallyDeepPageTree_BailsAtDepthLimit",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.Parse_RadioButton_CapturesFlagsAndWidgetExportValues",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NullAcroForm_ReturnsEmptyFields",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_EmptyFieldsArray_ReturnsEmpty",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesTrue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesFalse_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_TextFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ButtonFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_UnknownFieldType_RecognizedAsUnknown",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithStringValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithNameValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithDefaultValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithOptions_AllOptionsCaptured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithNameOptions_Parsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithPairs_DisplayValueUsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ReadOnlyFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -2948,6 +2868,146 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheElementSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheAttributeSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsASingleQuotedAttribute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAroundTheAttributeEquals",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAndAttributesOnTheElement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullWhenNothingDeclaresAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullForNullXmp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_DoesNotMatchALongerPrefixEndingInPdfaid",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReportsAnUnknownPartVerbatim",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredConformance_ReadsBothSerialisations",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForAClaimTryParseRefuses",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsFalseWithoutAnIdentification",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_ReadsAValidatedIdentityFromEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesAnIdentityWithAnUnknownConformance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_StillSeesPart1WhenTheConformanceIsUnvalidatable",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesARevisionThatIsNotFourDigits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_KeepsAFourDigitRevisionAsFound",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_IsNullWithoutAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.Write_EmitsAnIdentificationThisParserReadsBack",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -4200,186 +4260,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PageTreeWithSelfReferencingKids_DoesNotStackOverflow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PathologicallyDeepPageTree_BailsAtDepthLimit",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.Parse_RadioButton_CapturesFlagsAndWidgetExportValues",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NullAcroForm_ReturnsEmptyFields",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_EmptyFieldsArray_ReturnsEmpty",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesTrue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesFalse_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_TextFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ButtonFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_UnknownFieldType_RecognizedAsUnknown",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithStringValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithNameValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithDefaultValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithOptions_AllOptionsCaptured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithNameOptions_Parsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithPairs_DisplayValueUsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ReadOnlyFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -4417,6 +4297,146 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheElementSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheAttributeSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsASingleQuotedAttribute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAroundTheAttributeEquals",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAndAttributesOnTheElement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullWhenNothingDeclaresAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullForNullXmp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_DoesNotMatchALongerPrefixEndingInPdfaid",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReportsAnUnknownPartVerbatim",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredConformance_ReadsBothSerialisations",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForAClaimTryParseRefuses",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsFalseWithoutAnIdentification",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_ReadsAValidatedIdentityFromEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesAnIdentityWithAnUnknownConformance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_StillSeesPart1WhenTheConformanceIsUnvalidatable",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesARevisionThatIsNotFourDigits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_KeepsAFourDigitRevisionAsFound",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_IsNullWithoutAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.Write_EmitsAnIdentificationThisParserReadsBack",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -5675,186 +5695,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PageTreeWithSelfReferencingKids_DoesNotStackOverflow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PathologicallyDeepPageTree_BailsAtDepthLimit",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.Parse_RadioButton_CapturesFlagsAndWidgetExportValues",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NullAcroForm_ReturnsEmptyFields",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_EmptyFieldsArray_ReturnsEmpty",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesTrue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesFalse_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_TextFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ButtonFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_UnknownFieldType_RecognizedAsUnknown",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithStringValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithNameValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithDefaultValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithOptions_AllOptionsCaptured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithNameOptions_Parsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithPairs_DisplayValueUsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ReadOnlyFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -5885,6 +5725,146 @@
       "mode": "preserve",
       "currentState": "partial",
       "testCandidates": [
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheElementSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheAttributeSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsASingleQuotedAttribute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAroundTheAttributeEquals",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAndAttributesOnTheElement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullWhenNothingDeclaresAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullForNullXmp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_DoesNotMatchALongerPrefixEndingInPdfaid",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReportsAnUnknownPartVerbatim",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredConformance_ReadsBothSerialisations",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForAClaimTryParseRefuses",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsFalseWithoutAnIdentification",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_ReadsAValidatedIdentityFromEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesAnIdentityWithAnUnknownConformance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_StillSeesPart1WhenTheConformanceIsUnvalidatable",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesARevisionThatIsNotFourDigits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_KeepsAFourDigitRevisionAsFound",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_IsNullWithoutAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.Write_EmitsAnIdentificationThisParserReadsBack",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
         {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
           "mappingSources": [
@@ -7138,186 +7118,6 @@
         },
         {
           "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_XObjectOperator_RoundTrip",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_CompletePageContent_RoundTrip",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_MultipleRoundTrips_ProducesSameResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_EmptyContentStream_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NegativeNumbers_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_VerySmallNumbers_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_VeryLargeNumbers_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NameWithSpecialChars_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_TJArrayOperator_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_DictionaryOperand_SerializesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithBackspace_EscapesAsBackspace",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithFormFeed_EscapesAsFormFeed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithHighByteChar_EscapesAsOctal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithLowControlChar_EscapesAsOctal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithMultipleSpecialEscapes_AllEncoded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithMultipleBackslashes_EscapesAll",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithParenthesesOnly_EscapesParens",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithMixedWhitespace_EscapesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithOnlySpecialChars_AllEscaped",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithControlCharacter_EscapedAsOctal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithAllEscapeTypes_RoundTrips",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -8818,6 +8618,146 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheElementSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheAttributeSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsASingleQuotedAttribute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAroundTheAttributeEquals",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAndAttributesOnTheElement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullWhenNothingDeclaresAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullForNullXmp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_DoesNotMatchALongerPrefixEndingInPdfaid",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReportsAnUnknownPartVerbatim",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredConformance_ReadsBothSerialisations",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForAClaimTryParseRefuses",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsFalseWithoutAnIdentification",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_ReadsAValidatedIdentityFromEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesAnIdentityWithAnUnknownConformance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_StillSeesPart1WhenTheConformanceIsUnvalidatable",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesARevisionThatIsNotFourDigits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_KeepsAFourDigitRevisionAsFound",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_IsNullWithoutAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.Write_EmitsAnIdentificationThisParserReadsBack",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -10076,186 +10016,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_CompletePageContent_RoundTrip",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_MultipleRoundTrips_ProducesSameResult",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_EmptyContentStream_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NegativeNumbers_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_VerySmallNumbers_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_VeryLargeNumbers_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_NameWithSpecialChars_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_TJArrayOperator_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_DictionaryOperand_SerializesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithBackspace_EscapesAsBackspace",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithFormFeed_EscapesAsFormFeed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithHighByteChar_EscapesAsOctal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithLowControlChar_EscapesAsOctal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithMultipleSpecialEscapes_AllEncoded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithMultipleBackslashes_EscapesAll",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithParenthesesOnly_EscapesParens",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithMixedWhitespace_EscapesCorrectly",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithOnlySpecialChars_AllEscaped",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithControlCharacter_EscapedAsOctal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Content/ContentStreamWriterTests.cs::ContentStreamWriterTests.Write_StringWithAllEscapeTypes_RoundTrips",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -11352,6 +11112,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11812,15 +11579,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.CloseClick_ClosesTheWindow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -12834,6 +12592,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -13294,15 +13059,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.CloseClick_ClosesTheWindow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -14309,6 +14065,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14769,15 +14532,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.CloseClick_ClosesTheWindow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -15785,6 +15539,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -16251,15 +16012,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -16303,6 +16055,146 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheElementSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheAttributeSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsASingleQuotedAttribute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAroundTheAttributeEquals",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAndAttributesOnTheElement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullWhenNothingDeclaresAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullForNullXmp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_DoesNotMatchALongerPrefixEndingInPdfaid",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReportsAnUnknownPartVerbatim",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredConformance_ReadsBothSerialisations",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForAClaimTryParseRefuses",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsFalseWithoutAnIdentification",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_ReadsAValidatedIdentityFromEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesAnIdentityWithAnUnknownConformance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_StillSeesPart1WhenTheConformanceIsUnvalidatable",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesARevisionThatIsNotFourDigits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_KeepsAFourDigitRevisionAsFound",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_IsNullWithoutAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.Write_EmitsAnIdentificationThisParserReadsBack",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -17555,186 +17447,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::PageCollectionNestedTreeTests.Flattening_MaterializesInheritedAttributesOntoLeaves",
-          "mappingSources": [
-            "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PageTreeWithSelfReferencingKids_DoesNotStackOverflow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PathologicallyDeepPageTree_BailsAtDepthLimit",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.Parse_RadioButton_CapturesFlagsAndWidgetExportValues",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NullAcroForm_ReturnsEmptyFields",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_EmptyFieldsArray_ReturnsEmpty",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesTrue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesFalse_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_TextFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ButtonFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_UnknownFieldType_RecognizedAsUnknown",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithStringValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithNameValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithDefaultValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithOptions_AllOptionsCaptured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithNameOptions_Parsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithPairs_DisplayValueUsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ReadOnlyFlag_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -17772,6 +17484,146 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheElementSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheAttributeSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsASingleQuotedAttribute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAroundTheAttributeEquals",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAndAttributesOnTheElement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullWhenNothingDeclaresAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullForNullXmp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_DoesNotMatchALongerPrefixEndingInPdfaid",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReportsAnUnknownPartVerbatim",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredConformance_ReadsBothSerialisations",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForAClaimTryParseRefuses",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsFalseWithoutAnIdentification",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_ReadsAValidatedIdentityFromEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesAnIdentityWithAnUnknownConformance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_StillSeesPart1WhenTheConformanceIsUnvalidatable",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesARevisionThatIsNotFourDigits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_KeepsAFourDigitRevisionAsFound",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_IsNullWithoutAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.Write_EmitsAnIdentificationThisParserReadsBack",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -19024,186 +18876,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs::PageCollectionNestedTreeTests.InheritedRotateAndResources_SurviveASaveAndReparse_StillResolveOnLeaves",
-          "mappingSources": [
-            "registry-verification-contract"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PageTreeWithSelfReferencingKids_DoesNotStackOverflow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PathologicallyDeepPageTree_BailsAtDepthLimit",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.Parse_RadioButton_CapturesFlagsAndWidgetExportValues",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NullAcroForm_ReturnsEmptyFields",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_EmptyFieldsArray_ReturnsEmpty",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesTrue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesFalse_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_TextFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ButtonFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_UnknownFieldType_RecognizedAsUnknown",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithStringValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithNameValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithDefaultValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithOptions_AllOptionsCaptured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithNameOptions_Parsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithPairs_DisplayValueUsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ReadOnlyFlag_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -19293,6 +18965,146 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheElementSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsTheAttributeSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReadsASingleQuotedAttribute",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAroundTheAttributeEquals",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ToleratesWhitespaceAndAttributesOnTheElement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullWhenNothingDeclaresAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_IsNullForNullXmp",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_DoesNotMatchALongerPrefixEndingInPdfaid",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_ReportsAnUnknownPartVerbatim",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredConformance_ReadsBothSerialisations",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsTrueForAClaimTryParseRefuses",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.DeclaresAnyIdentification_IsFalseWithoutAnIdentification",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_ReadsAValidatedIdentityFromEitherSerialisation",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesAnIdentityWithAnUnknownConformance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.ReadDeclaredPart_StillSeesPart1WhenTheConformanceIsUnvalidatable",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_RefusesARevisionThatIsNotFourDigits",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_KeepsAFourDigitRevisionAsFound",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.TryParse_IsNullWithoutAPart",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs::PdfAIdentificationParserTests.Write_EmitsAnIdentificationThisParserReadsBack",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Authoring/PdfDocumentBuilderTests.cs::PdfDocumentBuilderTests.Create_WithNoContent_ProducesNoPagesUntilContentAdded",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -20545,186 +20357,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.ContentStreamParser_Parse_UnknownOperator",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PageTreeWithSelfReferencingKids_DoesNotStackOverflow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PageCollectionTests.cs::as.Open_PathologicallyDeepPageTree_BailsAtDepthLimit",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.Parse_RadioButton_CapturesFlagsAndWidgetExportValues",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NullAcroForm_ReturnsEmptyFields",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_EmptyFieldsArray_ReturnsEmpty",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesTrue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_NeedsAppearancesFalse_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_TextFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ButtonFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_UnknownFieldType_RecognizedAsUnknown",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithStringValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithNameValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithDefaultValue_Captured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithOptions_AllOptionsCaptured",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithNameOptions_Parsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ChoiceFieldWithPairs_DisplayValueUsed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_ReadOnlyFlag_Recognized",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_RequiredFlag_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95415,6 +95047,48 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnAPdfADocument_KeepsTheIdentification_AndStillStripsEveryCarrier",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.TheReinstatedPacket_CarriesTheIdentificationAndNothingElse",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnANonPdfADocument_StillDropsTheWholeXmpPacket",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnAPdfA4Document_KeepsRev_AddsNoConformance_AndDropsTheEmptiedInfoDict",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_WithAnUnreadableIdentification_WithdrawsTheClaim_RatherThanInventOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.RepeatedAreaRedactions_KeepOneIdentificationPacket",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/RedactTextCarrierScopeTests.cs::RedactTextCarrierScopeTests.RedactText_ByDefault_ClearsPageContentAndEveryDocumentLevelCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95578,6 +95252,20 @@
         },
         {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithARedactedFieldValue_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithAnAreaRedaction_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.AreaRedaction_OnAPdfA1_StillSuppressesObjectStreams",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96067,78 +95755,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_DropsTheEntireUri_SoNoStructureSurvivesToInferFrom",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_ChangesNothing_AndSaysTheCarrierStillHoldsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_WithoutAHit_SaysSo_RatherThanImplyingALeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RefusalOnAnUnnamedCarrier_StillReachesTheReport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.NoRefusalRow_ForACarrierTheDocumentDoesNotHave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DefaultPolicy_ChangesNothingVersusThePreOptionCall",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ScrubTerms_ReportsPerCarrierWhatRan",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DisabledCarrier_IsNotEvenExamined_SoItGetsNoRow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96885,6 +96501,48 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnAPdfADocument_KeepsTheIdentification_AndStillStripsEveryCarrier",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.TheReinstatedPacket_CarriesTheIdentificationAndNothingElse",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnANonPdfADocument_StillDropsTheWholeXmpPacket",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnAPdfA4Document_KeepsRev_AddsNoConformance_AndDropsTheEmptiedInfoDict",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_WithAnUnreadableIdentification_WithdrawsTheClaim_RatherThanInventOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.RepeatedAreaRedactions_KeepOneIdentificationPacket",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/RedactTextCarrierScopeTests.cs::RedactTextCarrierScopeTests.RedactText_ByDefault_ClearsPageContentAndEveryDocumentLevelCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97048,6 +96706,20 @@
         },
         {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithARedactedFieldValue_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithAnAreaRedaction_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.AreaRedaction_OnAPdfA1_StillSuppressesObjectStreams",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97537,78 +97209,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_DropsTheEntireUri_SoNoStructureSurvivesToInferFrom",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_ChangesNothing_AndSaysTheCarrierStillHoldsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_WithoutAHit_SaysSo_RatherThanImplyingALeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RefusalOnAnUnnamedCarrier_StillReachesTheReport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.NoRefusalRow_ForACarrierTheDocumentDoesNotHave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DefaultPolicy_ChangesNothingVersusThePreOptionCall",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ScrubTerms_ReportsPerCarrierWhatRan",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DisabledCarrier_IsNotEvenExamined_SoItGetsNoRow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98369,6 +97969,48 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnAPdfADocument_KeepsTheIdentification_AndStillStripsEveryCarrier",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.TheReinstatedPacket_CarriesTheIdentificationAndNothingElse",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnANonPdfADocument_StillDropsTheWholeXmpPacket",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnAPdfA4Document_KeepsRev_AddsNoConformance_AndDropsTheEmptiedInfoDict",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_WithAnUnreadableIdentification_WithdrawsTheClaim_RatherThanInventOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.RepeatedAreaRedactions_KeepOneIdentificationPacket",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/RedactTextCarrierScopeTests.cs::RedactTextCarrierScopeTests.RedactText_ByDefault_ClearsPageContentAndEveryDocumentLevelCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98532,6 +98174,20 @@
         },
         {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithARedactedFieldValue_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithAnAreaRedaction_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.AreaRedaction_OnAPdfA1_StillSuppressesObjectStreams",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99021,78 +98677,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_DropsTheEntireUri_SoNoStructureSurvivesToInferFrom",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_ChangesNothing_AndSaysTheCarrierStillHoldsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_WithoutAHit_SaysSo_RatherThanImplyingALeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RefusalOnAnUnnamedCarrier_StillReachesTheReport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.NoRefusalRow_ForACarrierTheDocumentDoesNotHave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DefaultPolicy_ChangesNothingVersusThePreOptionCall",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ScrubTerms_ReportsPerCarrierWhatRan",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DisabledCarrier_IsNotEvenExamined_SoItGetsNoRow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99879,6 +99463,48 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnAPdfADocument_KeepsTheIdentification_AndStillStripsEveryCarrier",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.TheReinstatedPacket_CarriesTheIdentificationAndNothingElse",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnANonPdfADocument_StillDropsTheWholeXmpPacket",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_OnAPdfA4Document_KeepsRev_AddsNoConformance_AndDropsTheEmptiedInfoDict",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.AreaRedaction_WithAnUnreadableIdentification_WithdrawsTheClaim_RatherThanInventOne",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Operations/RedactAreaPdfAIdentityTests.cs::RedactAreaPdfAIdentityTests.RepeatedAreaRedactions_KeepOneIdentificationPacket",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Operations/RedactTextCarrierScopeTests.cs::RedactTextCarrierScopeTests.RedactText_ByDefault_ClearsPageContentAndEveryDocumentLevelCarrier",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100042,6 +99668,20 @@
         },
         {
           "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithARedactedFieldValue_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithAnAreaRedaction_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.AreaRedaction_OnAPdfA1_StillSuppressesObjectStreams",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100531,78 +100171,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_DropsTheEntireUri_SoNoStructureSurvivesToInferFrom",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_ChangesNothing_AndSaysTheCarrierStillHoldsTheTerm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ReportOnly_WithoutAHit_SaysSo_RatherThanImplyingALeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RefusalOnAnUnnamedCarrier_StillReachesTheReport",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.NoRefusalRow_ForACarrierTheDocumentDoesNotHave",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DefaultPolicy_ChangesNothingVersusThePreOptionCall",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.ScrubTerms_ReportsPerCarrierWhatRan",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.DisabledCarrier_IsNotEvenExamined_SoItGetsNoRow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -111332,6 +110900,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -111792,15 +111367,6 @@
         },
         {
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.CloseClick_ClosesTheWindow",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112822,6 +112388,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -113284,15 +112857,6 @@
           "test": "Excise.App.Tests/UI/SecurityDialogUiTests.cs::SecurityDialogUiTests.CloseClick_ClosesTheWindow",
           "mappingSources": [
             "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.App.Tests/UI/SignedDocumentEditWarningTests.cs::FakeUserDialogService.SaveFileAsAsync_SignedSource_AsksForConfirmation_AndProceedsWhenConfirmed",
-          "mappingSources": [
-            "registry-verification-contract"
           ],
           "recordedOutcomes": [
             "Passed"
@@ -114289,6 +113853,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs::of.EncryptedPdfA1_StillAvoidsObjectStreams",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Writing/PdfDocumentSaveLifecycleTests.cs::PdfDocumentSaveLifecycleTests.RepeatedEncryptedSaves_KeepTemporaryEncryptionOutOfDocumentIdentity",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -114755,15 +114326,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.App.Tests/Unit/MainWindowViewModelTests.cs::reordered.VerifySignaturesCommand_IsNotNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [],
@@ -114781,8 +114343,8 @@
     "gradeImplemented": 199,
     "gradeVerified": 681,
     "gradeUnknown": 18,
-    "testMethods": 6908,
-    "testMethodsWithCapabilityCandidate": 4318,
+    "testMethods": 6947,
+    "testMethodsWithCapabilityCandidate": 4356,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

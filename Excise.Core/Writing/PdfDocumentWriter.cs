@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text;
+using Excise.Core.Authoring;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
 using Excise.Core.Security;
@@ -67,6 +68,36 @@ public class PdfDocumentWriter
            && VersionAtLeast(SaveSession.Version, 1, 5)
            && !IsPdfA1();
 
+    /// <summary>
+    /// Whether the document being written declares PDF/A-1 — which forbids
+    /// object streams and cross-reference streams (ISO 19005-1 6.1.4, veraPDF
+    /// PDFA-1B 6.1.4#3 <c>containsXRefStream == false</c>), so
+    /// <see cref="ShouldUseCompressedObjects"/> must suppress both.
+    /// </summary>
+    /// <remarks>
+    /// Read through <see cref="PdfAIdentityXmp"/> — the one pdfaid parser
+    /// (#1526) — rather than a substring match. #1524: this greped for the
+    /// ELEMENT spelling <c>&lt;pdfaid:part&gt;1&lt;/pdfaid:part&gt;</c> only, so
+    /// a valid PDF/A-1 file whose XMP uses the equally-legal ATTRIBUTE form
+    /// (<c>pdfaid:part="1"</c>) read as "not PDF/A-1" and excise wrote object
+    /// streams into an archival file. Measured on four fixtures
+    /// (1.4/1.7 × element/attribute): only attribute + a header ≥ 1.5 leaked
+    /// one, because the version gate above saves the ordinary
+    /// <c>%PDF-1.4</c> PDF/A-1 file — and PDFA-1B pins no header version
+    /// (<c>/%PDF-\d\.\d/</c>), so a <c>%PDF-1.7</c> PDF/A-1 file is a file the
+    /// validator is willing to pass.
+    ///
+    /// <para>The DECLARED part is what decides this, not the fully validated
+    /// identity: a file declaring part 1 with a qualifier excise cannot
+    /// validate (say <c>pdfaid:conformance</c> of <c>b</c>) is still claiming
+    /// PDF/A-1, and suppressing compression for it costs a few kilobytes where
+    /// the other answer costs the claim.</para>
+    ///
+    /// <para>The packet comes from the SAVE SESSION, not from
+    /// <c>PdfDocument.GetXmpMetadata()</c>: the session is the object view
+    /// actually being serialised, which is why this does not call
+    /// <c>PdfAIdentityXmp.TryRead(document)</c>.</para>
+    /// </remarks>
     private bool IsPdfA1()
     {
         if (SaveSession.Catalog.GetOptional("Metadata") is not { } metadataRef)
@@ -75,7 +106,7 @@ public class PdfDocumentWriter
             return false;
 
         var xmp = Encoding.UTF8.GetString(metadata.DecodedData);
-        return xmp.Contains("<pdfaid:part>1</pdfaid:part>", StringComparison.Ordinal);
+        return PdfAIdentityXmp.ReadDeclaredPart(xmp) == "1";
     }
 
     private static bool VersionAtLeast(string version, int major, int minor)
