@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1111,
-  "indexedContentSha256": "2bc9a10b1620f5107deb94871eb7c7ea2956bdadd916ee3e982e4972505ecea2",
+  "indexedFileCount": 1117,
+  "indexedContentSha256": "2a712d67b678fcb59e87c4feb860a2af0baacf6f05f7e43815a5b6c39202aaf6",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1811,6 +1811,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decode",
+            "parameters"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -2123,20 +2131,9 @@
             "decode",
             "syntax"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "syntax",
-            "pdfdocumentwriter",
-            "pdfobject",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 92
+      "candidateReferenceCount": 93
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -5233,6 +5230,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "dates",
+            "metadata",
+            "metadata"
+          ]
+        },
+        {
           "path": "Excise.App/App.axaml.cs",
           "kind": "source",
           "matchedTerms": [
@@ -5741,18 +5747,9 @@
             "xmp",
             "metadata"
           ]
-        },
-        {
-          "path": "tests/unwired-api-baseline.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "dates",
-            "xmp",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 82
+      "candidateReferenceCount": 83
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -7672,7 +7669,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 502
+      "candidateReferenceCount": 508
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8510,7 +8507,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 247
+      "candidateReferenceCount": 253
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9217,6 +9214,7 @@
           "kind": "source",
           "matchedTerms": [
             "image",
+            "masks",
             "xobjects",
             "skiarenderer"
           ]
@@ -9492,7 +9490,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 184
+      "candidateReferenceCount": 186
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -10688,6 +10686,8 @@
           "matchedTerms": [
             "color",
             "colour",
+            "transfer",
+            "renderpage",
             "skiarenderer"
           ]
         },
@@ -10945,11 +10945,65 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "conversion",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "conversion",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "conversion",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "conversion",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
           "kind": "test",
           "matchedTerms": [
             "color",
             "colour",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/GhentSoftMaskVectorCellTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "scan",
             "renderpage",
             "skiarenderer"
           ]
@@ -11044,59 +11098,9 @@
             "scan",
             "renderpage"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/RendererRequirementVerificationOperatorTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "conversion",
-            "renderpage",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/ScannedRasterRedactionLeakTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "scan",
-            "renderpage"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/SeparationOverprintDifferentialTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "renderpage",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/ShapeAnnotationSynthesisTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "scan",
-            "renderpage",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/SkiaRasterisationRegisterTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "scan",
-            "renderpage",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 133
+      "candidateReferenceCount": 139
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -13776,6 +13780,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "marked",
+            "property",
+            "contentstream",
+            "textstate"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -14008,7 +14022,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 36
+      "candidateReferenceCount": 37
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -20943,6 +20957,42 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -21115,55 +21165,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/PageGroupBackdropTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "spaces",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/RawSampleImageDecoderTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "spaces"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "spaces",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Visual/IccBasedCmykOverprintTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "spaces",
-            "skiarenderer"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Visual/OverprintRenderingTests.cs",
           "kind": "test",
           "matchedTerms": [
             "color",
@@ -21172,7 +21182,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 97
+      "candidateReferenceCount": 102
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -26886,6 +26896,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "asciihexdecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -26938,7 +26957,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 13
+      "candidateReferenceCount": 14
     },
     {
       "id": "pdf.20.image.requirement-002",
@@ -32280,6 +32299,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "smask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -32313,6 +32341,15 @@
         },
         {
           "path": "Excise.Rendering.Tests/DecodedImageSampleReleaseTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "smask",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
           "kind": "test",
           "matchedTerms": [
             "image",
@@ -32363,7 +32400,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 14
+      "candidateReferenceCount": 16
     },
     {
       "id": "pdf.20.image.requirement-021",
@@ -32712,6 +32749,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -32902,7 +32948,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 51
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -33255,6 +33301,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -33444,7 +33499,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 51
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -34269,7 +34324,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 139
+      "candidateReferenceCount": 140
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -34649,6 +34704,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bitspercomponent",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -34837,7 +34901,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 53
+      "candidateReferenceCount": 54
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -35112,6 +35176,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -35295,6 +35368,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicegray",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -35418,7 +35500,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 42
+      "candidateReferenceCount": 44
     },
     {
       "id": "pdf.20.image.requirement-027",
@@ -35751,6 +35833,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -35965,7 +36056,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 53
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -36194,6 +36285,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicecmyk",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/MisleadingImageFallbackTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36280,7 +36380,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 27
+      "candidateReferenceCount": 28
     },
     {
       "id": "pdf.20.image.requirement-029",
@@ -37323,6 +37423,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -37585,18 +37694,9 @@
             "image",
             "pdfimage"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/GuiClickSafetySweepTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 101
+      "candidateReferenceCount": 102
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -38131,6 +38231,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -38227,6 +38336,15 @@
         },
         {
           "path": "Excise.Rendering.Tests/ContentOperatorRouteTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
           "kind": "test",
           "matchedTerms": [
             "ctm",
@@ -38378,7 +38496,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 41
+      "candidateReferenceCount": 43
     },
     {
       "id": "pdf.20.image.requirement-035",
@@ -50541,10 +50659,10 @@
             "blend",
             "compositing",
             "groups",
+            "masks",
             "modes",
             "soft",
-            "transparency",
-            "blendmode"
+            "transparency"
           ]
         },
         {
@@ -50554,11 +50672,11 @@
             "alpha",
             "blend",
             "compositing",
-            "groups",
             "masks",
             "modes",
             "soft",
-            "transparency"
+            "transparency",
+            "blendmode"
           ]
         },
         {
@@ -50988,23 +51106,30 @@
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/Differential/GlyphWidthAccuracyTests.cs",
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs",
           "kind": "test",
           "matchedTerms": [
+            "alpha",
+            "compositing",
             "groups",
-            "model"
+            "transparency",
+            "transparency"
           ]
         },
         {
-          "path": "Excise.Rendering.Tests/Differential/GraphicsSyntaxContentVerificationTests.cs",
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs",
           "kind": "test",
           "matchedTerms": [
+            "alpha",
+            "blend",
+            "compositing",
             "groups",
-            "model"
+            "transparency",
+            "transparency"
           ]
         }
       ],
-      "candidateReferenceCount": 165
+      "candidateReferenceCount": 171
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -51229,6 +51354,7 @@
           "kind": "source",
           "matchedTerms": [
             "output",
+            "parameters",
             "transparency",
             "blendmode",
             "softmask",
@@ -51458,11 +51584,59 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "preview",
+            "transparency",
+            "transparency"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "preview",
+            "transparency",
+            "transparency"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "preview",
+            "transparency",
+            "softmask",
+            "transparency"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "preview",
+            "transparency",
+            "softmask",
+            "transparency"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/FormOutputFidelityTests.cs",
           "kind": "test",
           "matchedTerms": [
             "flattening",
             "output"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/GhentSoftMaskVectorCellTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "output",
+            "preview",
+            "softmask"
           ]
         },
         {
@@ -51687,27 +51861,9 @@
             "transparency",
             "transparency"
           ]
-        },
-        {
-          "path": "tests/reference-performance/fixtures.json",
-          "kind": "test",
-          "matchedTerms": [
-            "output",
-            "transparency",
-            "transparency"
-          ]
-        },
-        {
-          "path": "docs/architecture/decisions.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "flattening",
-            "output",
-            "preview"
-          ]
         }
       ],
-      "candidateReferenceCount": 77
+      "candidateReferenceCount": 82
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -57010,6 +57166,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "including",
+            "uri",
+            "action"
+          ]
+        },
+        {
           "path": "Excise.Rendering/SkiaRenderer.cs",
           "kind": "source",
           "matchedTerms": [
@@ -57429,21 +57594,9 @@
             "uri",
             "action"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "destinations",
-            "uri",
-            "acroform",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 128
+      "candidateReferenceCount": 129
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -57763,6 +57916,15 @@
         },
         {
           "path": "Excise.Rendering/SkiaRenderer.Paths.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "media",
+            "screen",
+            "media"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
           "kind": "source",
           "matchedTerms": [
             "media",
@@ -58155,6 +58317,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "media",
+            "screen",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/FreeTextContentSynthesisTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58346,28 +58517,9 @@
             "screen",
             "media"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/MouseInputTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "media",
-            "media"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/PdfViewerHeadlessRenderTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "media",
-            "screen",
-            "media"
-          ]
         }
       ],
-      "candidateReferenceCount": 96
+      "candidateReferenceCount": 98
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -60263,6 +60415,7 @@
           "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
           "kind": "source",
           "matchedTerms": [
+            "coordinate",
             "data",
             "measurement",
             "metadata"
@@ -60275,6 +60428,7 @@
             "coordinate",
             "data",
             "dictionaries",
+            "measurement",
             "metadata",
             "outputintent"
           ]
@@ -60603,7 +60757,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 156
+      "candidateReferenceCount": 160
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -62145,7 +62299,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 528
+      "candidateReferenceCount": 534
     },
     {
       "id": "pdf.20.extension.developer",
@@ -65677,6 +65831,14 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "copy",
+            "metadata"
+          ]
+        },
+        {
           "path": "Excise.App/Models/AttachmentEntry.cs",
           "kind": "source",
           "matchedTerms": [
@@ -66105,19 +66267,9 @@
             "copy",
             "stripping"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/EncryptedDocumentSaveWarningTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "copy",
-            "pdfe",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 107
+      "candidateReferenceCount": 108
     },
     {
       "id": "pdfe.product.security.external-links",

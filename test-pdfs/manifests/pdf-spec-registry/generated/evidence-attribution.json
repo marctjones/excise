@@ -82051,6 +82051,118 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs::DeviceCmykKnockoutGroupZeroAlphaTests.ZeroAlphaElement_InAKnockoutGroup_ErasesThePrecedingElement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs::DeviceCmykKnockoutGroupZeroAlphaTests.FullAlphaElement_InAKnockoutGroup_ReplacesThePrecedingElement",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs::DeviceCmykKnockoutGroupZeroAlphaTests.KnockedOutElement_NeverSurvives",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs::DeviceCmykNestedNonIsolatedGroupBlendTests.NestedNonIsolatedScreenGroup_IsUnaffectedByTheEnclosingGroup",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs::DeviceCmykNestedNonIsolatedGroupBlendTests.NestedNonIsolatedScreenGroup_MatchesIndependentRenderers",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs::DeviceCmykNestedNonIsolatedGroupBlendTests.NestedNonIsolatedScreenGroup_ChangesNothingOutsideTheObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs::DeviceCmykNonIsolatedGroupBackdropRemovalTests.NonIsolatedGroup_WithPartialAlphaContent_RendersAsTheIsolatedGroupDoes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs::DeviceCmykNonIsolatedGroupBackdropRemovalTests.NonIsolatedGroup_WithPartialAlphaContent_MatchesIndependentRenderers",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs::DeviceCmykNonIsolatedGroupBackdropRemovalTests.SoftMaskedNonIsolatedGroup_WithPartialAlphaContent_MatchesIndependentRenderers",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs::DeviceCmykNonIsolatedGroupBackdropRemovalTests.IsolatedGroup_WithPartialAlphaContent_IsUnaffectedByRemoval",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs::DeviceCmykNonIsolatedGroupBackdropRemovalTests.NonIsolatedGroup_ChangesNothingOutsideTheObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMaskedGroup_IsMasked_AsIndependentRenderersMaskIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.ConstantAlphaGroup_OnCmykPage_IsHalfTransparent_AsIndependentRenderersDrawIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMask_UsesTheCtmAtGsTime_OnCmykPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMaskedGroup_OnCmykPage_ChangesNothingOutsideTheRevealedHalf",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.ConstantAlphaGroup_OnCmykPage_ChangesNothingOutsideTheObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/DifferentialMetricsTests.cs::DifferentialMetricsTests.Compare_ComputesExpectedMetricsForPacked32Bitmaps",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82431,150 +82543,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_DifferentUserAndOwnerPasswords_BothIndependentlyOpenTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_NonAsciiPassword_ValidatesAsUtf8",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_ShowEncryption_ReportsPermissionsFromOptions",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_EmptyPassword_ExtractsCorrectText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_DifferentUserAndOwnerPasswords_BothExtractTheSameCorrectText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_NonAsciiPassword_ExtractsCorrectText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_WrongPassword_FailsToExtract",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Ghostscript_EmptyPassword_RendersIdenticallyToUnencryptedBaseline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Ghostscript_OwnerPassword_RendersIdenticallyToUnencryptedBaseline",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_R4_EmptyPasswords_ReportsR4AesV2AndBothPasswordsValidate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_R4_Decrypt_WithEmptyPassword_ProducesAReadablePlaintextFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_R4_DifferentUserAndOwnerPasswords_BothIndependentlyOpenTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_R4_NonAsciiPassword_ValidatesAsPdfDocEncoding",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_R4_MultipleObjectsWithIdenticalPlaintext_DecryptToTheSameTextViaDifferentCiphertext",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_R4_ShowEncryption_ReportsPermissionsFromOptions",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.QpdfWrittenR4File_ExciseIndependentlyDecryptsIt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_R4_EmptyPassword_ExtractsCorrectText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -114827,8 +114795,8 @@
     "gradeImplemented": 199,
     "gradeVerified": 681,
     "gradeUnknown": 18,
-    "testMethods": 6840,
-    "testMethodsWithCapabilityCandidate": 4266,
+    "testMethods": 6866,
+    "testMethodsWithCapabilityCandidate": 4287,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

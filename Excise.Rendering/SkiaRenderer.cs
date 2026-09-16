@@ -309,9 +309,7 @@ internal partial class RenderContext
     // native font manager whose cache can corrupt or deadlock when two managed threads
     // call them simultaneously. Visual tests previously failed under xUnit parallelism
     // because of this; we serialize all typeface acquisition with a process-wide lock.
-    // One object, shared with Fonts/AnnotationTypesetter.cs so the shaper and
-    // the fallback lookups serialise against typeface creation here (#1363).
-    private static readonly object _typefaceLoadLock = Fonts.FontManagerLock.Instance;
+    private static readonly object _typefaceLoadLock = new();
 
     private readonly SKCanvas _canvas;
     private readonly SKBitmap? _rootBitmap;
@@ -1169,14 +1167,73 @@ internal partial class RenderContext
             var smaskObj = extGState.GetOptional("SMask");
             if (smaskObj is Excise.Core.Primitives.PdfName n && n.Value == "None")
             {
-                _state.SoftMask = null;
+                _state.ClearSoftMask();
             }
             else if (smaskObj != null)
             {
                 _state.SoftMask = smaskObj;
+                // §11.6.5.1: a soft mask is defined in the CTM in force at gs
+                // time, not when something is later painted through it. Only
+                // the DeviceCMYK group path reads this so far (#1395); the Skia
+                // layer path still uses the paint-time CTM.
+                _state.SoftMaskDeviceMatrix = _canvas.TotalMatrix;
+                _state.SoftMaskOwner = this;
             }
             // Note: full soft mask (transparency group) rendering not yet supported
         }
+    }
+
+    /// <summary>What an <c>/SMask</c> graphics-state value resolves to.</summary>
+    private enum SoftMaskResolution
+    {
+        /// <summary>A mask dictionary with <c>/S /None</c>: no mask applies.</summary>
+        Disabled,
+
+        /// <summary>No <c>/G</c>, or <c>/G</c> is not a stream: nothing can be rendered.</summary>
+        Unusable,
+
+        /// <summary>The mask stream resolved.</summary>
+        Usable,
+    }
+
+    /// <summary>
+    /// Resolve an <c>/SMask</c> value ONCE for both the Skia layer path
+    /// (<see cref="RenderWithCurrentSoftMask"/>) and the DeviceCMYK group path
+    /// (#1395), so the two cannot come to disagree about what a mask is.
+    /// <paramref name="maskLookupObject"/> is the unresolved <c>/G</c> value for a
+    /// mask dictionary, or the resolved object itself otherwise — exactly what
+    /// the soft-mask decoder was handed before this was factored out.
+    /// </summary>
+    private SoftMaskResolution ResolveSoftMask(
+        Excise.Core.Primitives.PdfObject softMaskSource,
+        out Excise.Core.Primitives.PdfObject maskLookupObject,
+        out Excise.Core.Primitives.PdfStream? maskStream,
+        out Excise.Core.Primitives.PdfDictionary? maskDictionary)
+    {
+        var resolvedSoftMask = _page.Document.Resolve(softMaskSource) ?? softMaskSource;
+        maskLookupObject = resolvedSoftMask;
+        maskStream = null;
+        maskDictionary = null;
+        if (resolvedSoftMask is Excise.Core.Primitives.PdfDictionary softMaskDictionary)
+        {
+            maskDictionary = softMaskDictionary;
+            var smaskMode = softMaskDictionary.GetNameOrNull("S");
+            if (string.Equals(smaskMode, "None", StringComparison.Ordinal))
+                return SoftMaskResolution.Disabled;
+
+            var softMaskStreamObj = softMaskDictionary.GetOptional("G");
+            if (softMaskStreamObj == null)
+                return SoftMaskResolution.Unusable;
+
+            resolvedSoftMask = _page.Document.Resolve(softMaskStreamObj) ?? softMaskStreamObj;
+            maskLookupObject = softMaskStreamObj;
+        }
+
+        if (resolvedSoftMask is not Excise.Core.Primitives.PdfStream stream)
+            return SoftMaskResolution.Unusable;
+
+        maskStream = stream;
+        return SoftMaskResolution.Usable;
     }
 
     /// <summary>
@@ -1209,33 +1266,20 @@ internal partial class RenderContext
             return;
         }
 
-        var softMaskSource = _state.SoftMask;
-        var resolvedSoftMask = _page.Document.Resolve(softMaskSource) ?? softMaskSource;
-        Excise.Core.Primitives.PdfObject maskLookupObject = resolvedSoftMask;
-        Excise.Core.Primitives.PdfDictionary? maskDictionary = null;
-        if (resolvedSoftMask is Excise.Core.Primitives.PdfDictionary softMaskDictionary)
+        var resolution = ResolveSoftMask(
+            _state.SoftMask,
+            out var maskLookupObject,
+            out var resolvedMaskStream,
+            out var maskDictionary);
+        if (resolution == SoftMaskResolution.Disabled)
         {
-            maskDictionary = softMaskDictionary;
-            var smaskMode = softMaskDictionary.GetNameOrNull("S");
-            if (string.Equals(smaskMode, "None", StringComparison.Ordinal))
-            {
-                _state.SoftMask = null;
-                drawAction();
-                return;
-            }
-
-            var softMaskStreamObj = softMaskDictionary.GetOptional("G");
-            if (softMaskStreamObj == null)
-            {
-                    drawAction();
-                return;
-            }
-
-            resolvedSoftMask = _page.Document.Resolve(softMaskStreamObj) ?? softMaskStreamObj;
-            maskLookupObject = softMaskStreamObj;
+            _state.ClearSoftMask();
+            drawAction();
+            return;
         }
 
-        if (resolvedSoftMask is not Excise.Core.Primitives.PdfStream maskStream)
+        if (resolution != SoftMaskResolution.Usable ||
+            resolvedMaskStream is not Excise.Core.Primitives.PdfStream maskStream)
         {
             drawAction();
             return;
@@ -1347,31 +1391,63 @@ internal partial class RenderContext
     /// Paint the current page raster into the layer that has just been opened,
     /// so a NON-ISOLATED transparency group's contents blend against the
     /// group's backdrop rather than against nothing (ISO 32000-2 §11.6.6,
-    /// §11.4.6). Skia's <c>SaveLayer</c> starts fully transparent, which is
+    /// §11.4.4). Skia's <c>SaveLayer</c> starts fully transparent, which is
     /// isolated behaviour; without this a <c>/BM</c> set inside the group has
     /// no backdrop to act on.
     ///
     /// <para><b>⚠️ Only the soft-mask branch of
     /// <c>RenderFormXObjectAtInvocation</c> calls this, and that is deliberate.
     /// Do not extend it to the plain layer path.</b> #1394 (CLOSED) covered
-    /// seeding only; the missing §11.4.6 backdrop-REMOVAL step is #1504. It was
-    /// tried and measured on 2026-09-09 and it OVERSHOOTS, because seeding
-    /// without §11.4.6's backdrop-REMOVAL step leaves the backdrop's own
-    /// contribution inside the group's result. On pdf.js issue13520 (20
-    /// explicit <c>/I false</c> groups), warm-pale pixel count in
-    /// <c>RenderPage_PdfjsIssue13520_…</c>'s region:</para>
+    /// seeding only; the §11.4.4 backdrop-REMOVAL step is #1504, and #1504
+    /// implements it for the DeviceCMYK CHILD-CONTEXT path
+    /// (<c>CompositeDeviceCmykGroupBitmap</c>) and NOT here — because on a Skia
+    /// layer removal cannot be expressed at all. Seeding writes the backdrop
+    /// alpha <c>a0</c> into the layer's single alpha channel, and §11.4.4's
+    /// result alpha is the group's OWN accumulated alpha <c>agn</c>, which is
+    /// unrecoverable from <c>an = Union(a0, agn)</c> the moment <c>a0 = 1</c>.
+    /// Recovering it needs a second raster of the same content. The child path
+    /// escapes this because the seed goes into the retained CMYK backdrop while
+    /// the group bitmap's alpha stays <c>agn</c>.</para>
     ///
-    /// <code>
-    /// mutool      887   ghostscript  762   &lt;- two oracles agreeing: the target
-    /// pdftocairo 3048                      &lt;- outlier; shares excise's defect
-    /// excise, seeded                71     &lt;- overshot BELOW both
-    /// excise, isolated (today)    4079     &lt;- overshoots ABOVE both
-    /// </code>
+    /// <para><b>And seeding here does not need removal in the common case.</b>
+    /// For <c>a0 = 1</c> and a Normal invocation blend it is algebraically
+    /// identical to the spec. With group content <c>(Cs, as, B)</c>, mask
+    /// <c>m</c> and layer alpha <c>a</c>, <c>Restore</c> produces
+    /// <c>C0 + a*m*as*(B(C0,Cs) - C0)</c>; §11.4.4 gives <c>Cn = C0 +
+    /// as*(B - C0)</c>, then removal <c>C = Cn + (Cn - C0)*(1/as - 1) = B</c>,
+    /// composited at <c>as*m*a</c> onto <c>C0</c> — the same expression, for any
+    /// content blend. It works because <c>Restore</c> pairs the layer's own
+    /// colour with the layer's own alpha; the CMYK composite pairs <c>Cn</c>
+    /// (backdrop included) with <c>agn</c> (backdrop excluded), and THAT
+    /// inconsistent pair is what double-counts.</para>
     ///
-    /// <para>A synthetic probe cannot see that. On four probes whose group
-    /// paints an opaque rect over the sample point — where removal is a no-op —
-    /// seeding matched Ghostscript and mutool exactly. Real content is where
-    /// the missing removal step shows.</para>
+    /// <para><b>Residual cases on this path</b>, both needing the second raster
+    /// above: a non-Normal invocation <c>/BM</c> (Restore then blends a layer
+    /// that still contains <c>C0</c> against <c>C0</c>), and <c>a0 &lt; 1</c>
+    /// (the layer composites back at <c>an</c>, not <c>agn</c>, so the group
+    /// covers more than its own shape). On a DeviceCMYK page the first now goes
+    /// to the child path — #1504 deleted the routing rule that used to send it
+    /// here — and the second does not arise, since such a page's root bitmap is
+    /// cleared opaque. Both remain live on RGB pages.</para>
+    ///
+    /// <para><b>⚠️ The 2026-09-09 measurement previously quoted here is not
+    /// evidence about removal.</b> It read, in the <c>issue13520</c> test
+    /// region, mutool 887 / ghostscript 762 (two oracles agreeing) against
+    /// excise seeded 71 and excise isolated 4079, and was taken on develop —
+    /// where a DeviceCMYK group's fills escaped the layer entirely (#1395), so
+    /// the layer held the pre-fill page copy and <c>Restore</c> painted it back
+    /// over the escaped fills. The numbers are confounded by that defect and
+    /// say nothing about seeding with or without removal. pdftocairo's 3048 is
+    /// still worth keeping in mind for a different reason: it is the outlier
+    /// that shares excise's isolated-group defect, so agreeing with it is a
+    /// warning, not a result (#1373).</para>
+    ///
+    /// <para>A synthetic probe cannot see any of this. On four probes whose
+    /// group paints an opaque rect over the sample point — <c>agn = 1</c>, where
+    /// removal is a no-op — seeding matched Ghostscript and mutool exactly. A
+    /// discriminating fixture needs PARTIAL alpha inside the group over a
+    /// non-empty backdrop; see
+    /// <c>DeviceCmykNonIsolatedGroupBackdropRemovalTests</c>.</para>
     ///
     /// <para><b>Second known limitation.</b> The seed is the ROOT page raster,
     /// so a non-isolated group nested inside another layer sees the page rather

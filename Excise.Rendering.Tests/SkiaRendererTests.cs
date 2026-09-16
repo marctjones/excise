@@ -754,8 +754,52 @@ public class SkiaRendererTests
 
         CountDarkPixels(bitmap, new SKRectI(70, 25, 140, 55)).Should().BeLessThan(50,
             "DeviceN radial shading tint transforms should produce the light center instead of an all-black overpaint");
-        CountWarmPalePixels(bitmap, new SKRectI(25, 15, 185, 75)).Should().BeGreaterThan(2_500,
-            "transparency-group Form XObjects should apply parent Screen blending and soft masks at the form invocation boundary");
+
+        // #1512: this floor was `> 2_500` and only pdftocairo met it. Measured
+        // on the same region, same dpi, same predicate:
+        //
+        //     pdftocairo   3055      <- the only renderer above 2500
+        //     excise       1638
+        //     mutool        887
+        //     ghostscript   762
+        //
+        // The floor dates to af18d0fc, long before #1395 re-routed these groups,
+        // so it was calibrated on the pre-#1395 renderer and never checked
+        // against an oracle. pdftocairo is specifically the renderer that gets
+        // THIS page wrong: in its right-hand lobe it draws ~104 dark pixels
+        // where mutool and Ghostscript draw 0 (#1505), and on #1505's synthetic
+        // nested-group fixture it is the only renderer whose answer moves when
+        // an /I false group is nested in another. A bound met by it alone is a
+        // bound calibrated on a known defect.
+        //
+        // The new bound is derived from the two agreeing oracles: it sits below
+        // Ghostscript's 762 with wide margin, because the COUNT is a knife edge
+        // even though the RENDERS agree. The binding sub-predicate is `B < 185`
+        // and the region's blues cluster around it, so shifting the threshold
+        // moves the count by multiples while the images barely differ:
+        //
+        //     B < 165     excise  195   mutool   29   gs     0
+        //     B < 185     excise 1638   mutool  887   gs   762
+        //     B < 205     excise 3654   mutool 2693   gs  2505
+        //
+        // Region means are within ~6 levels for all four renderers (excise
+        // 231.5/228.7/204.9, mutool 229.9/227.7/206.8, gs 225.5/223.3/203.0),
+        // and per-pixel excise-vs-mutool is mean 9.3 / p95 24 where
+        // mutool-vs-Ghostscript is mean 7.2 / p95 42 — excise sits inside the
+        // band the oracles span between themselves. So excise reading ~2x the
+        // oracle count is the predicate's sensitivity, not a colour error, and
+        // this stays a LOWER bound only: an upper bound here would be fitting a
+        // threshold artefact.
+        //
+        // TEETH — what a regression produces, so nobody re-tightens or drops it:
+        //   * a collapse to black gives exactly 0 (black fails `R > 165`);
+        //   * a 20-level upward blue shift — the B < 165 row above — takes
+        //     excise to 195, mutool to 29 and Ghostscript to 0, all under this
+        //     bound. It bites on partial regressions, not just total ones.
+        CountWarmPalePixels(bitmap, new SKRectI(25, 15, 185, 75)).Should().BeGreaterThan(300,
+            "the DeviceN tint transform must keep this region warm and pale rather than collapsing "
+            + "toward black; the bound is below mutool's 887 and Ghostscript's 762 with margin for "
+            + "the predicate's threshold sensitivity, and a collapse reads 0 (#1512)");
     }
 
     [Fact(Timeout = 20000)]

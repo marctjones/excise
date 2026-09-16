@@ -1,0 +1,27 @@
+{
+  "Path": "ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG168_Softmasks_Vector_part1_X4.pdf",
+  "Source": "Ghent PDF Output Suite 5.0",
+  "Owner": "rendering:quality",
+  "Issue": 1395,
+  "RootCause": "CMYK_SOFTMASKED_GROUP_ESCAPED_LAYER",
+  "ReviewStatus": "REVIEWED",
+  "ImprovementPriority": "DONE",
+  "Confidence": "HIGH",
+  "QualityReason": "Five vector soft-mask cells invoked on a DeviceCMYK page group. Before #1395 the masked form groups' CMYK paint composited past the Skia layer the mask was applied to, so every cell of the 'Actual test objects' row was wrong (black square with an inverted gradient for the cyan drop shadow, white square for the yellow inner shadow, missing outer glow, near-blank inner glow, grey gradient for the green bevel) while each mask bitmap was individually correct. Per-cell measurement at 144 dpi against mutool AND Ghostscript: 0 of 5 cells matched before, 5 of 5 after.",
+  "Notes": "A page-level diff fraction cannot see these patch-sized features - that is why GWG169 scanned PASS with the same visible defect. The per-cell gate is GhentSoftMaskVectorCellTests (luminance + chroma per 4x4 block, judged only where mutool and Ghostscript agree).",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "QualityReason": "The three engines preview DeviceCMYK through different conversions, so the per-cell gate compares luminance and chroma rather than exact RGB.",
+      "Target": {
+        "Mode": "ACCEPTED_REFERENCE",
+        "Primary": "mutool",
+        "Reason": "mutool and Ghostscript both reproduce the page's own embedded reference-image row, which is the fixture's ground truth."
+      }
+    }
+  }
+}

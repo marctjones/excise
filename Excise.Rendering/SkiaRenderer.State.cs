@@ -53,6 +53,32 @@ internal class GraphicsState
     public int OverprintMode { get; set; }
     public SKBlendMode BlendMode { get; set; } = SKBlendMode.SrcOver;
     public Excise.Core.Primitives.PdfObject? SoftMask { get; set; }
+
+    /// <summary>
+    /// The canvas's total (device) matrix when the <c>gs</c> that set
+    /// <see cref="SoftMask"/> executed. §11.6.5.1: a soft mask's group is
+    /// interpreted in the CTM in force at <c>gs</c> time, not at paint time.
+    /// Null when no mask is set. Only meaningful in the context named by
+    /// <see cref="SoftMaskOwner"/> — a child context's canvas has a different
+    /// device origin — and read only by the DeviceCMYK group path (#1395); the
+    /// Skia soft-mask path still uses the paint-time CTM.
+    /// </summary>
+    public SKMatrix? SoftMaskDeviceMatrix { get; set; }
+
+    /// <summary>The render context whose canvas <see cref="SoftMaskDeviceMatrix"/> was captured from.</summary>
+    public object? SoftMaskOwner { get; set; }
+
+    /// <summary>
+    /// Clear the soft mask together with the gs-time CTM it was captured
+    /// under, so a later mask can never pick up a stale matrix.
+    /// </summary>
+    public void ClearSoftMask()
+    {
+        SoftMask = null;
+        SoftMaskDeviceMatrix = null;
+        SoftMaskOwner = null;
+    }
+
     public SKMatrix CurrentTransform { get; set; } = new(1, 0, 0, 0, 1, 0, 0, 0, 1);
     // Dash pattern (PDF `d` operator): intervals in user-space units and a phase
     // offset. Null/empty means a solid line. ISO 32000-1 §8.4.3.6.
@@ -93,6 +119,8 @@ internal class GraphicsState
             DashArray = DashArray,            // replaced wholesale by `d`, never mutated in place -> safe to share
             DashPhase = DashPhase,
             SoftMask = SoftMask,
+            SoftMaskDeviceMatrix = SoftMaskDeviceMatrix,
+            SoftMaskOwner = SoftMaskOwner,
             SavedTextParameters = SavedTextParameters,
         };
     }

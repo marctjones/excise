@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "8cb2aaa531551f4370cdb8b7e05b34fe957b8208f7d99a99efb4e6250b5ad690",
+  "sourceFingerprint": "6a01146b85d21e1a0ae7f055874e0530e72adca79412de69041043386d8aec32",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -4608,6 +4608,686 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs::DeviceCmykKnockoutGroupZeroAlphaTests.ZeroAlphaElement_InAKnockoutGroup_ErasesThePrecedingElement",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs",
+      "class": "DeviceCmykKnockoutGroupZeroAlphaTests",
+      "method": "ZeroAlphaElement_InAKnockoutGroup_ErasesThePrecedingElement",
+      "line": 70,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs::DeviceCmykKnockoutGroupZeroAlphaTests.FullAlphaElement_InAKnockoutGroup_ReplacesThePrecedingElement",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs",
+      "class": "DeviceCmykKnockoutGroupZeroAlphaTests",
+      "method": "FullAlphaElement_InAKnockoutGroup_ReplacesThePrecedingElement",
+      "line": 100,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs::DeviceCmykKnockoutGroupZeroAlphaTests.KnockedOutElement_NeverSurvives",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykKnockoutGroupZeroAlphaTests.cs",
+      "class": "DeviceCmykKnockoutGroupZeroAlphaTests",
+      "method": "KnockedOutElement_NeverSurvives",
+      "line": 137,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs::DeviceCmykNestedNonIsolatedGroupBlendTests.NestedNonIsolatedScreenGroup_IsUnaffectedByTheEnclosingGroup",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs",
+      "class": "DeviceCmykNestedNonIsolatedGroupBlendTests",
+      "method": "NestedNonIsolatedScreenGroup_IsUnaffectedByTheEnclosingGroup",
+      "line": 116,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs::DeviceCmykNestedNonIsolatedGroupBlendTests.NestedNonIsolatedScreenGroup_MatchesIndependentRenderers",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs",
+      "class": "DeviceCmykNestedNonIsolatedGroupBlendTests",
+      "method": "NestedNonIsolatedScreenGroup_MatchesIndependentRenderers",
+      "line": 142,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs::DeviceCmykNestedNonIsolatedGroupBlendTests.NestedNonIsolatedScreenGroup_ChangesNothingOutsideTheObject",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykNestedNonIsolatedGroupBlendTests.cs",
+      "class": "DeviceCmykNestedNonIsolatedGroupBlendTests",
+      "method": "NestedNonIsolatedScreenGroup_ChangesNothingOutsideTheObject",
+      "line": 176,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs::DeviceCmykNonIsolatedGroupBackdropRemovalTests.NonIsolatedGroup_WithPartialAlphaContent_RendersAsTheIsolatedGroupDoes",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "DeviceCmykNonIsolatedGroupBackdropRemovalTests",
+      "method": "NonIsolatedGroup_WithPartialAlphaContent_RendersAsTheIsolatedGroupDoes",
+      "line": 154,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs::DeviceCmykNonIsolatedGroupBackdropRemovalTests.NonIsolatedGroup_WithPartialAlphaContent_MatchesIndependentRenderers",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "DeviceCmykNonIsolatedGroupBackdropRemovalTests",
+      "method": "NonIsolatedGroup_WithPartialAlphaContent_MatchesIndependentRenderers",
+      "line": 199,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs::DeviceCmykNonIsolatedGroupBackdropRemovalTests.SoftMaskedNonIsolatedGroup_WithPartialAlphaContent_MatchesIndependentRenderers",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "DeviceCmykNonIsolatedGroupBackdropRemovalTests",
+      "method": "SoftMaskedNonIsolatedGroup_WithPartialAlphaContent_MatchesIndependentRenderers",
+      "line": 228,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "images",
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs::DeviceCmykNonIsolatedGroupBackdropRemovalTests.IsolatedGroup_WithPartialAlphaContent_IsUnaffectedByRemoval",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "DeviceCmykNonIsolatedGroupBackdropRemovalTests",
+      "method": "IsolatedGroup_WithPartialAlphaContent_IsUnaffectedByRemoval",
+      "line": 270,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs::DeviceCmykNonIsolatedGroupBackdropRemovalTests.NonIsolatedGroup_ChangesNothingOutsideTheObject",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykNonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "DeviceCmykNonIsolatedGroupBackdropRemovalTests",
+      "method": "NonIsolatedGroup_ChangesNothingOutsideTheObject",
+      "line": 297,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMaskedGroup_IsMasked_AsIndependentRenderersMaskIt",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+      "class": "DeviceCmykSoftMaskedGroupTests",
+      "method": "SoftMaskedGroup_IsMasked_AsIndependentRenderersMaskIt",
+      "line": 97,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "images",
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.ConstantAlphaGroup_OnCmykPage_IsHalfTransparent_AsIndependentRenderersDrawIt",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+      "class": "DeviceCmykSoftMaskedGroupTests",
+      "method": "ConstantAlphaGroup_OnCmykPage_IsHalfTransparent_AsIndependentRenderersDrawIt",
+      "line": 148,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "images",
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMask_UsesTheCtmAtGsTime_OnCmykPage",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+      "class": "DeviceCmykSoftMaskedGroupTests",
+      "method": "SoftMask_UsesTheCtmAtGsTime_OnCmykPage",
+      "line": 177,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "images",
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMaskedGroup_OnCmykPage_ChangesNothingOutsideTheRevealedHalf",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+      "class": "DeviceCmykSoftMaskedGroupTests",
+      "method": "SoftMaskedGroup_OnCmykPage_ChangesNothingOutsideTheRevealedHalf",
+      "line": 209,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "images",
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.ConstantAlphaGroup_OnCmykPage_ChangesNothingOutsideTheObject",
+      "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
+      "class": "DeviceCmykSoftMaskedGroupTests",
+      "method": "ConstantAlphaGroup_OnCmykPage_ChangesNothingOutsideTheObject",
+      "line": 231,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "images",
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/Differential/DifferentialMetricsTests.cs::DifferentialMetricsTests.Compare_ComputesExpectedMetricsForPacked32Bitmaps",
       "path": "Excise.Rendering.Tests/Differential/DifferentialMetricsTests.cs",
       "class": "DifferentialMetricsTests",
@@ -8161,6 +8841,50 @@
         {
           "capability": "pdf.17.transparency.model",
           "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/GhentSoftMaskVectorCellTests.cs::GhentSoftMaskVectorCellTests.Cell_MatchesIndependentRenderers",
+      "path": "Excise.Rendering.Tests/Differential/GhentSoftMaskVectorCellTests.cs",
+      "class": "GhentSoftMaskVectorCellTests",
+      "method": "Cell_MatchesIndependentRenderers",
+      "line": 60,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "images",
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
             "render"
           ]
         }
@@ -23907,6 +24631,142 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs::NonIsolatedGroupBackdropRemovalTests.Removal_InvertsTheClauseComposition_RecoveringTheGroupSourceColour",
+      "path": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "NonIsolatedGroupBackdropRemovalTests",
+      "method": "Removal_InvertsTheClauseComposition_RecoveringTheGroupSourceColour",
+      "line": 48,
+      "xunitKind": "theory",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "renderer-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs::NonIsolatedGroupBackdropRemovalTests.Removal_AgreesWithTheClausesBackdropFractionForm",
+      "path": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "NonIsolatedGroupBackdropRemovalTests",
+      "method": "Removal_AgreesWithTheClausesBackdropFractionForm",
+      "line": 89,
+      "xunitKind": "theory",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "renderer-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs::NonIsolatedGroupBackdropRemovalTests.Removal_DerivesTheBackdropAlphaFromTheChildsOwnAccumulatedAlpha",
+      "path": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "NonIsolatedGroupBackdropRemovalTests",
+      "method": "Removal_DerivesTheBackdropAlphaFromTheChildsOwnAccumulatedAlpha",
+      "line": 138,
+      "xunitKind": "theory",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "transparency"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs::NonIsolatedGroupBackdropRemovalTests.Removal_IsIdentity_WhereThereIsNothingToRemove",
+      "path": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "NonIsolatedGroupBackdropRemovalTests",
+      "method": "Removal_IsIdentity_WhereThereIsNothingToRemove",
+      "line": 177,
+      "xunitKind": "theory",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "renderer-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs::NonIsolatedGroupBackdropRemovalTests.Removal_IsIdentity_WhenTheAccumulatedAlphaIsJustTheGroupAlpha",
+      "path": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "NonIsolatedGroupBackdropRemovalTests",
+      "method": "Removal_IsIdentity_WhenTheAccumulatedAlphaIsJustTheGroupAlpha",
+      "line": 202,
+      "xunitKind": "theory",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "transparency"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs::NonIsolatedGroupBackdropRemovalTests.Removal_ClampsANegativeDerivedBackdropAlpha",
+      "path": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "NonIsolatedGroupBackdropRemovalTests",
+      "method": "Removal_ClampsANegativeDerivedBackdropAlpha",
+      "line": 220,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "transparency"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs::NonIsolatedGroupBackdropRemovalTests.Removal_ClampsToTheGamut",
+      "path": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "NonIsolatedGroupBackdropRemovalTests",
+      "method": "Removal_ClampsToTheGamut",
+      "line": 238,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "renderer-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs::NonIsolatedGroupBackdropRemovalTests.Removal_ErrorReachingThePage_StaysWithinOneQuantisationStep",
+      "path": "Excise.Rendering.Tests/NonIsolatedGroupBackdropRemovalTests.cs",
+      "class": "NonIsolatedGroupBackdropRemovalTests",
+      "method": "Removal_ErrorReachingThePage_StaysWithinOneQuantisationStep",
+      "line": 263,
+      "xunitKind": "theory",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "renderer-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs::OperatorRenderCoverageTests.Sh_AxialShading_PaintsLeftToRightGradient",
       "path": "Excise.Rendering.Tests/OperatorRenderCoverageTests.cs",
       "class": "OperatorRenderCoverageTests",
@@ -29502,7 +30362,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression",
-      "line": 762,
+      "line": 806,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29539,7 +30399,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Ghent16BitDeviceCmykImage_AppliesTiffPredictor",
-      "line": 790,
+      "line": 834,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29577,7 +30437,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_GhentDeviceCmykImageSoftMasks_UpdateTransparencyGroupBackdrop",
-      "line": 819,
+      "line": 863,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29623,7 +30483,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_GhentIccSourceProfile_AppliesSourceAndOutputIntentProfiles",
-      "line": 848,
+      "line": 892,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29652,7 +30512,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_GhentIccBasedCmykOverprint_UsesIccPreviewColor",
-      "line": 876,
+      "line": 920,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29681,7 +30541,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_AltonaDeviceCmykImage_UsesDocumentOutputIntent",
-      "line": 910,
+      "line": 954,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29719,7 +30579,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_AltonaDeviceCmykTransparencyGroupFallback_PreservesInvocationAlpha",
-      "line": 932,
+      "line": 976,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29756,7 +30616,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_AltonaJpxGrayImage_UsesOpenJpegForContinuousToneTiles",
-      "line": 956,
+      "line": 1000,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29794,7 +30654,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_AltonaPatternText_FillsGlyphsWithPatternInsteadOfFallbackBlack",
-      "line": 978,
+      "line": 1022,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29840,7 +30700,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_AltonaTensorPatchMesh_RendersSampledGradient",
-      "line": 1001,
+      "line": 1045,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29869,7 +30729,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_GeneratedRegressionFixtures_RenderWithoutErrors",
-      "line": 1028,
+      "line": 1072,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29898,7 +30758,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_GeneratedIsolatedCmykGroupPatternText_KeepsPatternColor",
-      "line": 1059,
+      "line": 1103,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29935,7 +30795,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_GhentDeviceCmykTransparencyGroup_AppliesInvocationBlendInCmyk",
-      "line": 1082,
+      "line": 1126,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -29972,7 +30832,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_GhentDeviceCmykKnockoutGroup_CompositesNestedGroupInCmyk",
-      "line": 1112,
+      "line": 1156,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30009,7 +30869,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_GhentDeviceCmykIsolatedGroup_CompositesNestedGroupInCmyk",
-      "line": 1163,
+      "line": 1207,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30038,7 +30898,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_GhentOutputIntentIndicator_SyncsLabBackdropForCmykBlendGroup",
-      "line": 1209,
+      "line": 1253,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30075,7 +30935,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_PdfjsBug920426_Type0EncodingCMapRemapsCharacterCodesToGlyphs",
-      "line": 1240,
+      "line": 1284,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30113,7 +30973,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_PdfjsBug1802506_CheckmarkWidgetAppearancePaintsGlyph",
-      "line": 1265,
+      "line": 1309,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30151,7 +31011,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_PdfjsBug1108301_EmbeddedBengaliTrueTypeUsesByteCmap",
-      "line": 1284,
+      "line": 1328,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30189,7 +31049,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_PdfjsBug1308536_SubstitutedCondensedType1UsesPdfWidths",
-      "line": 1303,
+      "line": 1347,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30227,7 +31087,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_PdfjsMalformedStreamFixtures_RenderViaParserRecovery",
-      "line": 1338,
+      "line": 1382,
       "xunitKind": "theory",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30256,7 +31116,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_PdfjsIssue13147_CidTextUsesPdfWidths",
-      "line": 1357,
+      "line": 1401,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30302,7 +31162,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_PdfjsIssue16263_HugeSoftMaskDownsamplesInsteadOfTimingOut",
-      "line": 1375,
+      "line": 1419,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30348,7 +31208,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ZeroSizedMediaBox_UsesBoundedFallbackPage",
-      "line": 1391,
+      "line": 1435,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30377,7 +31237,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExceedsPixelLimit_ThrowsResourceLimit",
-      "line": 1406,
+      "line": 1450,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30406,7 +31266,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_WithClipRect_ReturnsOnlyClippedBitmap",
-      "line": 1419,
+      "line": 1463,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30452,7 +31312,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_WithClipRect_AppliesResourceLimitToTileSize",
-      "line": 1440,
+      "line": 1484,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30489,7 +31349,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPageToPng_WritesValidPngBytes",
-      "line": 1464,
+      "line": 1508,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30518,7 +31378,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_DefaultDpi_Returns150DpiImage",
-      "line": 1480,
+      "line": 1524,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30556,7 +31416,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CustomDpi_ScalesCorrectly",
-      "line": 1500,
+      "line": 1544,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30585,7 +31445,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_FractionalDevicePageSize_UsesCeiling",
-      "line": 1520,
+      "line": 1564,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30614,7 +31474,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_WithCropBox_UsesVisibleBoxSizeAndOrigin",
-      "line": 1534,
+      "line": 1578,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30643,7 +31503,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_WithOversizedCropBox_ClampsToMediaBox",
-      "line": 1553,
+      "line": 1597,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30672,7 +31532,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_WithPartiallyOverlappingCropBox_UsesMediaIntersection",
-      "line": 1572,
+      "line": 1616,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30701,7 +31561,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_WithZeroAreaCropBox_UsesMediaBox",
-      "line": 1591,
+      "line": 1635,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30730,7 +31590,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_WithDisjointCropBox_UsesMediaBox",
-      "line": 1610,
+      "line": 1654,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30759,7 +31619,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_WithHugeCropBox_AppliesResourceLimitAfterClamping",
-      "line": 1629,
+      "line": 1673,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30788,7 +31648,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_WithNoisyCropBox_SnapsNearIntegerDeviceSize",
-      "line": 1647,
+      "line": 1691,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30817,7 +31677,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_WhiteBackground_IsWhite",
-      "line": 1665,
+      "line": 1709,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30846,7 +31706,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_FilledRectangle_ShowsBlackPixel",
-      "line": 1688,
+      "line": 1732,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30875,7 +31735,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Rotation_ProducesVisualDimensions",
-      "line": 1716,
+      "line": 1760,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -30929,7 +31789,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Rotation90_MovesContentBottomLeftToBitmapTopLeft",
-      "line": 1730,
+      "line": 1774,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -30975,7 +31835,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_StrokedRectangle_ShowsOutline",
-      "line": 1748,
+      "line": 1792,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31004,7 +31864,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RectangleOperator_PreservesNegativeDimensionsForPaintAndClip",
-      "line": 1766,
+      "line": 1810,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31041,7 +31901,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CloseAndStroke_sOperator",
-      "line": 1805,
+      "line": 1849,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31078,7 +31938,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CloseFillStroke_bOperator",
-      "line": 1831,
+      "line": 1875,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31115,7 +31975,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CloseFillStrokeEvenOdd_bStarOperator",
-      "line": 1858,
+      "line": 1902,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31152,7 +32012,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_FillStrokeEvenOdd_BStarOperator",
-      "line": 1885,
+      "line": 1929,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31189,7 +32049,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ComplexPath_MultipleWindingRules",
-      "line": 1913,
+      "line": 1957,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31226,7 +32086,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Line_ShowsStroke",
-      "line": 1943,
+      "line": 1987,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31255,7 +32115,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CubicBezierCurve_RendersSmoothCurve",
-      "line": 1962,
+      "line": 2006,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31284,7 +32144,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_BezierV_UsesCurrentPointAsControl",
-      "line": 1985,
+      "line": 2029,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31313,7 +32173,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_BezierY_UsesEndpointAsControl",
-      "line": 2009,
+      "line": 2053,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31342,7 +32202,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ComplexPath_CombinesMultipleCurves",
-      "line": 2033,
+      "line": 2077,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31379,7 +32239,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RedRectangle_ShowsRed",
-      "line": 2062,
+      "line": 2106,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31408,7 +32268,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_GrayscaleRectangle_ShowsGray",
-      "line": 2082,
+      "line": 2126,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31437,7 +32297,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ColorSpace_DeviceGray_SetsGrayscale",
-      "line": 2103,
+      "line": 2147,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31466,7 +32326,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ColorSpace_DeviceRGB_SetsRGBColor",
-      "line": 2125,
+      "line": 2169,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31495,7 +32355,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ColorSpace_Separation_UsesTintTransform",
-      "line": 2147,
+      "line": 2191,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31524,7 +32384,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ColorSpace_DeviceCMYK_SetsCMYKColor",
-      "line": 2168,
+      "line": 2212,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31553,7 +32413,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_DirectCMYKOperator_UsesSharedProcessScreenPreview",
-      "line": 2189,
+      "line": 2233,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31590,7 +32450,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_DefaultCmykOverridesDirectAndPatternDeviceCmyk",
-      "line": 2214,
+      "line": 2258,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31619,7 +32479,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ColorSpace_SeparateFillAndStroke_UsesIndependentSpaces",
-      "line": 2235,
+      "line": 2279,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31648,7 +32508,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ColorSpace_scn_WorksLikeScWithoutPattern",
-      "line": 2259,
+      "line": 2303,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31677,7 +32537,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_FormXObject_UsesFormColorSpaceResources",
-      "line": 2285,
+      "line": 2329,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31714,7 +32574,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_TranslatedRectangle_IsOffset",
-      "line": 2318,
+      "line": 2362,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31743,7 +32603,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RotatedContent_Rotates",
-      "line": 2337,
+      "line": 2381,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31780,7 +32640,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ScaledContent_Scales",
-      "line": 2361,
+      "line": 2405,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31817,7 +32677,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_NonUniformScale_ScalesDifferently",
-      "line": 2385,
+      "line": 2429,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31846,7 +32706,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_SkewedContent_Skews",
-      "line": 2408,
+      "line": 2452,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31883,7 +32743,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CombinedTransformations_AppliesInOrder",
-      "line": 2432,
+      "line": 2476,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31912,7 +32772,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_NestedTransformations_ComposesCorrectly",
-      "line": 2457,
+      "line": 2501,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31941,7 +32801,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_TransformationWithText_TransformsText",
-      "line": 2485,
+      "line": 2529,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -31978,7 +32838,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_IdentityMatrix_NoTransformation",
-      "line": 2511,
+      "line": 2555,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32007,7 +32867,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_SaveRestoreState_WorksCorrectly",
-      "line": 2538,
+      "line": 2582,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32036,7 +32896,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CmykCyan_ShowsCyan",
-      "line": 2558,
+      "line": 2602,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32065,7 +32925,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CmykMagenta_ShowsMagenta",
-      "line": 2578,
+      "line": 2622,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32094,7 +32954,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CmykYellow_ShowsYellow",
-      "line": 2598,
+      "line": 2642,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32123,7 +32983,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CmykBlack_ShowsBlack",
-      "line": 2618,
+      "line": 2662,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32152,7 +33012,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CmykStroke_UsesKOperator",
-      "line": 2638,
+      "line": 2682,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32189,7 +33049,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CmykFillAndStroke_SeparateColors",
-      "line": 2660,
+      "line": 2704,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32218,7 +33078,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ThickLine_ShowsThickStroke",
-      "line": 2686,
+      "line": 2730,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32247,7 +33107,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RoundLineCap_DrawsRoundCaps",
-      "line": 2704,
+      "line": 2748,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32276,7 +33136,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RoundLineJoin_DrawsRoundJoins",
-      "line": 2720,
+      "line": 2764,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32305,7 +33165,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MiterLimit_Applied",
-      "line": 2736,
+      "line": 2780,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32334,7 +33194,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_DashedLine_RendersDashPattern",
-      "line": 2752,
+      "line": 2796,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32363,7 +33223,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_DashPatternWithPhase_RendersWithOffset",
-      "line": 2776,
+      "line": 2820,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32392,7 +33252,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ComplexDashPattern_RendersMultiSegmentPattern",
-      "line": 2799,
+      "line": 2843,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32421,7 +33281,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_SolidLineAfterDashed_ResetsToSolid",
-      "line": 2822,
+      "line": 2866,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32450,7 +33310,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ClippingPath_NonZeroWinding_RestrictsRendering",
-      "line": 2850,
+      "line": 2894,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32487,7 +33347,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ClippingPath_EvenOdd_RestrictsRendering",
-      "line": 2873,
+      "line": 2917,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32524,7 +33384,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_NestedClipping_AppliesIntersection",
-      "line": 2895,
+      "line": 2939,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32561,7 +33421,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ClippingWithFill_FillsOnlyClippedArea",
-      "line": 2922,
+      "line": 2966,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32598,7 +33458,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ClippingWithText_ClipsText",
-      "line": 2943,
+      "line": 2987,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32635,7 +33495,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CircularClippingPath_WorksCorrectly",
-      "line": 2967,
+      "line": 3011,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32672,7 +33532,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_StateRestoreRemovesClipping",
-      "line": 2995,
+      "line": 3039,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32709,7 +33569,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CharacterSpacing_AppliesSpacing",
-      "line": 3024,
+      "line": 3068,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32738,7 +33598,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_WordSpacing_AppliesSpacing",
-      "line": 3051,
+      "line": 3095,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32767,7 +33627,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_HorizontalScaling_ScalesText",
-      "line": 3078,
+      "line": 3122,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32804,7 +33664,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_TextLeading_AffectsLineSpacing",
-      "line": 3108,
+      "line": 3152,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32841,7 +33701,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_TD_MovesAndSetsLeading",
-      "line": 3136,
+      "line": 3180,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32870,7 +33730,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Tm_SetsTextMatrix",
-      "line": 3166,
+      "line": 3210,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32907,7 +33767,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Tm_RotatesTextInk",
-      "line": 3196,
+      "line": 3240,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32944,7 +33804,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_TextRenderMode_AffectsRendering",
-      "line": 3218,
+      "line": 3262,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -32981,7 +33841,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_TextRenderMode7_ClipsFollowingPaintToGlyphOutlines",
-      "line": 3250,
+      "line": 3294,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33027,7 +33887,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_PrePathClipOperator_DefersClipToNextPathPaint",
-      "line": 3280,
+      "line": 3324,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33064,7 +33924,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_TextRise_OffsetText",
-      "line": 3311,
+      "line": 3355,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33101,7 +33961,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CombinedTextState_AppliesAllSettings",
-      "line": 3340,
+      "line": 3384,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33138,7 +33998,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_SingleQuoteOperator_MovesAndShowsText",
-      "line": 3367,
+      "line": 3411,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33175,7 +34035,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_DoubleQuoteOperator_SetsSpacingAndShowsText",
-      "line": 3393,
+      "line": 3437,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33212,7 +34072,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_TJOperator_ShowsTextArrayWithPositionAdjustments",
-      "line": 3420,
+      "line": 3464,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33249,7 +34109,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MixedLineOperators_CombinesTjQuoteAndDoubleQuote",
-      "line": 3446,
+      "line": 3490,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33286,7 +34146,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ImageXObject_RendersImage",
-      "line": 3477,
+      "line": 3521,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33324,7 +34184,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_FormXObject_RendersContent",
-      "line": 3509,
+      "line": 3553,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33361,7 +34221,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_SelfReferentialFormXObject_SkipsRecursiveDoAndKeepsOuterPaint",
-      "line": 3541,
+      "line": 3585,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33398,7 +34258,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ScaledImageXObject_AppliesCTM",
-      "line": 3559,
+      "line": 3603,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33436,7 +34296,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_StrokeAlpha_AppliesTransparency",
-      "line": 3579,
+      "line": 3623,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33473,7 +34333,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_FillAlpha_AppliesTransparency",
-      "line": 3599,
+      "line": 3643,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33510,7 +34370,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_BothAlphas_AppliesBothTransparencies",
-      "line": 3619,
+      "line": 3663,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33547,7 +34407,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_LineWidth_AppliesStrokeWidth",
-      "line": 3639,
+      "line": 3683,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33585,7 +34445,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_LineCap_AppliesCapStyle",
-      "line": 3658,
+      "line": 3702,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33614,7 +34474,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_LineJoin_AppliesJoinStyle",
-      "line": 3678,
+      "line": 3722,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33643,7 +34503,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_MiterLimit_AppliesMiterLimit",
-      "line": 3698,
+      "line": 3742,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33672,7 +34532,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_CombinedParameters_AppliesAll",
-      "line": 3717,
+      "line": 3761,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33701,7 +34561,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_AlphaClampedToValidRange",
-      "line": 3741,
+      "line": 3785,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33738,7 +34598,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_MissingDictionary_ContinuesRendering",
-      "line": 3761,
+      "line": 3805,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33767,7 +34627,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_FormXObjectExtGState_AppliesLocallyAndDoesNotLeak",
-      "line": 3780,
+      "line": 3824,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33804,7 +34664,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_FormXObjectUnbalancedSave_DoesNotLeakCallerGraphicsState",
-      "line": 3801,
+      "line": 3845,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33841,7 +34701,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ExtGState_SMask_AppliesForFilledRect",
-      "line": 3817,
+      "line": 3861,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33879,7 +34739,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Flatness_SetsTolerance",
-      "line": 3848,
+      "line": 3892,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33908,7 +34768,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Flatness_AcceptsValidRange",
-      "line": 3878,
+      "line": 3922,
       "xunitKind": "theory",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33937,7 +34797,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RenderingIntent_AbsoluteColorimetric",
-      "line": 3902,
+      "line": 3946,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33966,7 +34826,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RenderingIntent_RelativeColorimetric",
-      "line": 3924,
+      "line": 3968,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -33995,7 +34855,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RenderingIntent_Saturation",
-      "line": 3945,
+      "line": 3989,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34024,7 +34884,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RenderingIntent_Perceptual",
-      "line": 3966,
+      "line": 4010,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34053,7 +34913,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_RenderingIntent_WithColorSpace",
-      "line": 3987,
+      "line": 4031,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34082,7 +34942,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CombinedFlatnessAndRenderingIntent",
-      "line": 4009,
+      "line": 4053,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34111,7 +34971,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_Grayscale_RendersWithoutError",
-      "line": 4040,
+      "line": 4084,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34149,7 +35009,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_RGB_RendersWithoutError",
-      "line": 4074,
+      "line": 4118,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34187,7 +35047,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_1BitMonochrome_RendersWithoutError",
-      "line": 4103,
+      "line": 4147,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34225,7 +35085,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_WithFilter_RendersWithoutError",
-      "line": 4133,
+      "line": 4177,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34263,7 +35123,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_WithTransformation_AppliesCTM",
-      "line": 4163,
+      "line": 4207,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34301,7 +35161,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MultipleInlineImages_RendersAll",
-      "line": 4192,
+      "line": 4236,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34339,7 +35199,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_InlineImage_MixedWithOtherContent_RendersCorrectly",
-      "line": 4233,
+      "line": 4277,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34385,7 +35245,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ShadingPattern_AxialGradient_RendersWithoutError",
-      "line": 4268,
+      "line": 4312,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34429,7 +35289,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ShadingPattern_WithClipping_RestrictsShading",
-      "line": 4288,
+      "line": 4332,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34481,7 +35341,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ShadingPattern_WithTransformation_AppliesCTM",
-      "line": 4310,
+      "line": 4354,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34525,7 +35385,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_ShadingPattern_MissingResource_ContinuesRendering",
-      "line": 4332,
+      "line": 4376,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34569,7 +35429,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type5MeshShadingPatternFill_RendersInsteadOfNothing",
-      "line": 4365,
+      "line": 4409,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34613,7 +35473,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type7TensorPatchShadingPatternFill_RendersInsteadOfNothing",
-      "line": 4383,
+      "line": 4427,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34657,7 +35517,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_UnsupportedShadingTypeInPatternFill_RecordsDiagnosticInsteadOfSilentFailure",
-      "line": 4402,
+      "line": 4446,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34701,7 +35561,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_UnsupportedShadingTypeInShOperator_RecordsDiagnosticInsteadOfSilentFailure",
-      "line": 4422,
+      "line": 4466,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34753,7 +35613,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_PdfjsIssue18816_Type7TensorPatchPatternFillRendersRealWorldFile",
-      "line": 4440,
+      "line": 4484,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34782,7 +35642,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContentPoint_MP_DoesNotAffectRendering",
-      "line": 4473,
+      "line": 4517,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34819,7 +35679,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContentPoint_DP_WithProperties",
-      "line": 4495,
+      "line": 4539,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34856,7 +35716,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContentSequence_BMC_EMC_WrapsContent",
-      "line": 4516,
+      "line": 4560,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34893,7 +35753,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContentSequence_BDC_EMC_WithProperties",
-      "line": 4538,
+      "line": 4582,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34930,7 +35790,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_NestedMarkedContent_MultipleSequences",
-      "line": 4560,
+      "line": 4604,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34967,7 +35827,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContent_MixedWithGraphics",
-      "line": 4586,
+      "line": 4630,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35004,7 +35864,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_MarkedContent_AllOperatorTypes",
-      "line": 4611,
+      "line": 4655,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35041,7 +35901,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_RendersCharProcPathGlyph",
-      "line": 4643,
+      "line": 4687,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35087,7 +35947,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_NonDefaultFontMatrixScalesGlyphSpace",
-      "line": 4665,
+      "line": 4709,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35125,7 +35985,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_CharProcUsesFontResourcesForImageGlyph",
-      "line": 4682,
+      "line": 4726,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35172,7 +36032,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d0ColoredGlyph_HonorsCharProcColor",
-      "line": 4699,
+      "line": 4743,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35210,7 +36070,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d1UncoloredGlyph_IgnoresCharProcColor_PaintsInTextColor",
-      "line": 4718,
+      "line": 4762,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35256,7 +36116,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d1ImageMaskXObjectGlyph_PaintsInTextFillColor",
-      "line": 4740,
+      "line": 4784,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35311,7 +36171,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d1InlineImageMaskGlyph_PaintsInTextFillColor",
-      "line": 4765,
+      "line": 4809,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35366,7 +36226,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d0ImageMaskGlyph_HonorsCharProcColor",
-      "line": 4789,
+      "line": 4833,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35413,7 +36273,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d0ColoredImageGlyph_KeepsImageOwnColor",
-      "line": 4810,
+      "line": 4854,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35460,7 +36320,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d1BBox_ClipsGlyphDescription",
-      "line": 4830,
+      "line": 4874,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35506,7 +36366,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_d1AllZeroBBox_DoesNotClip",
-      "line": 4857,
+      "line": 4901,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35552,7 +36412,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_MissingWidths_AdvancesByCharProcWx",
-      "line": 4875,
+      "line": 4919,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35590,7 +36450,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_NonzeroWyOperand_IsIgnored_GlyphsStayOnBaseline",
-      "line": 4904,
+      "line": 4948,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35628,7 +36488,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_WidthsOverridesCharProcWx",
-      "line": 4935,
+      "line": 4979,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35666,7 +36526,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_MissingCharProc_SkipsGlyphButStillAdvances",
-      "line": 4961,
+      "line": 5005,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35704,7 +36564,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_RotatedFontMatrix_AdvanceIsMappedXComponent",
-      "line": 4984,
+      "line": 5028,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35742,7 +36602,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_StrayD1InPageStream_DoesNotLockColorOrClipPage",
-      "line": 5012,
+      "line": 5056,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35779,7 +36639,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_ClipsSubsequentPaintToGlyphShape",
-      "line": 5060,
+      "line": 5104,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35825,7 +36685,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_GlyphItselfPaintsNothing",
-      "line": 5082,
+      "line": 5126,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35863,7 +36723,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr4_FillsGlyphAndClipsSubsequentPaint",
-      "line": 5102,
+      "line": 5146,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35909,7 +36769,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr0_DoesNotClipSubsequentPaint",
-      "line": 5126,
+      "line": 5170,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -35955,7 +36815,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_ClipAccumulatesAcrossGlyphs",
-      "line": 5146,
+      "line": 5190,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -36001,7 +36861,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_InternalCmShapesClipCoverage",
-      "line": 5169,
+      "line": 5213,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -36047,7 +36907,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_StrokedCharProcClipsToStrokeOutline",
-      "line": 5192,
+      "line": 5236,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -36093,7 +36953,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_D1BBoxBoundsClipContribution",
-      "line": 5215,
+      "line": 5259,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -36139,7 +36999,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_Type3Font_Tr7_ImageGlyphContributesItsBounds",
-      "line": 5239,
+      "line": 5283,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -36186,7 +37046,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CompatibilitySection_BX_EX_IgnoresUnknown",
-      "line": 5262,
+      "line": 5306,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -36215,7 +37075,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CompatibilitySection_NestedBX_EX",
-      "line": 5287,
+      "line": 5331,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -36244,7 +37104,7 @@
       "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
       "class": "SkiaRendererTests",
       "method": "RenderPage_CompatibilitySection_WithKnownOperators",
-      "line": 5313,
+      "line": 5357,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -36654,7 +37514,7 @@
       "path": "Excise.Rendering.Tests/Visual/CmykTransparencyRegressionTests.cs",
       "class": "CmykTransparencyRegressionTests",
       "method": "RenderPage_Issue13520_DoesNotPaintDarkSoftMaskLobe",
-      "line": 10,
+      "line": 26,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -36680,6 +37540,47 @@
           "modes": [
             "extract",
             "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Visual/CmykTransparencyRegressionTests.cs::CmykTransparencyRegressionTests.RenderPage_Issue13520_RightLobeAgreesWithMutoolAndGhostscript",
+      "path": "Excise.Rendering.Tests/Visual/CmykTransparencyRegressionTests.cs",
+      "class": "CmykTransparencyRegressionTests",
+      "method": "RenderPage_Issue13520_RightLobeAgreesWithMutoolAndGhostscript",
+      "line": 53,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "transparency",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
             "render"
           ]
         },
@@ -39484,24 +40385,24 @@
     }
   ],
   "summary": {
-    "testMethods": 1096,
+    "testMethods": 1122,
     "facets": {
-      "content-streams": 323,
+      "content-streams": 327,
       "content-strings-and-text": 7,
-      "differential-rendering": 559,
+      "differential-rendering": 577,
       "fonts": 203,
       "functions-and-shadings": 51,
       "graphics-state-and-paths": 315,
-      "images": 185,
+      "images": 192,
       "page-group-backdrop": 3,
-      "renderer-integration-general": 26,
+      "renderer-integration-general": 31,
       "renderer-performance-and-lifetime": 12,
-      "transparency": 59
+      "transparency": 79
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 7,
-      "pdf.17.content.streams:parse": 330,
-      "pdf.17.content.streams:render": 704,
+      "pdf.17.content.streams:parse": 334,
+      "pdf.17.content.streams:render": 722,
       "pdf.17.content.text-state:extract": 7,
       "pdf.17.content.text-state:parse": 7,
       "pdf.17.content.text-state:render": 7,
@@ -39509,20 +40410,20 @@
       "pdf.17.graphics.color:render": 51,
       "pdf.17.graphics.fonts:extract": 203,
       "pdf.17.graphics.fonts:parse": 203,
-      "pdf.17.graphics.fonts:render": 701,
-      "pdf.17.graphics.images:extract": 185,
-      "pdf.17.graphics.images:parse": 185,
-      "pdf.17.graphics.images:render": 684,
+      "pdf.17.graphics.fonts:render": 719,
+      "pdf.17.graphics.images:extract": 192,
+      "pdf.17.graphics.images:parse": 192,
+      "pdf.17.graphics.images:render": 702,
       "pdf.17.graphics.paths-painting:parse": 315,
       "pdf.17.graphics.paths-painting:render": 315,
       "pdf.17.graphics.patterns-shadings:parse": 51,
       "pdf.17.graphics.patterns-shadings:render": 51,
       "pdf.17.graphics.state:parse": 315,
       "pdf.17.graphics.state:render": 315,
-      "pdf.17.transparency.model:parse": 59,
-      "pdf.17.transparency.model:render": 590
+      "pdf.17.transparency.model:parse": 79,
+      "pdf.17.transparency.model:render": 611
     },
-    "unclassified": 26,
+    "unclassified": 31,
     "allTestsMapped": true
   }
 }
