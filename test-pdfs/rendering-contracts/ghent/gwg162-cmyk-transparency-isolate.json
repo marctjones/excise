@@ -7,7 +7,7 @@
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
   "QualityReason": "Cold 2026-07-03 verification raw-passes this page and fresh visual review shows excise matches MuPDF on the important isolated DeviceCMYK transparency semantics; Poppler is the visible outlier.",
-  "Notes": "Same 16-swatch grid and same printed failure indicator as GWG160/161 -- 'If an X appears, rendering of Isolated Transparency Groups (a transparency effect) is not performed correctly' -- so the whole-page status below cannot see a single wrong cell (#1515). The per-cell gate is GhentConformanceCellTests over tests/ghent-conformance-cells.json.",
+  "Notes": "Same 16-swatch grid and same printed failure indicator as GWG160/161 -- 'If an X appears, rendering of Isolated Transparency Groups (a transparency effect) is not performed correctly' -- so the whole-page status below cannot see a single wrong cell (#1515). The per-cell gate is GhentConformanceCellTests over tests/ghent-conformance-cells.json. Re-measured 2026-09-16 (--page-mode all --oracles all): raw PASS_ONE, headline diffFraction 0.13006 / MAE 19.01 over 5 oracles, 2 agreeing. 2 of its 16 cells (Lighten, Screen) are DECLARED KNOWN DEFECTS under #1528. Separately, #1522 records that this contract's 'Poppler is the visible outlier' claim is contradicted on the structure measure, where mutool is the outlier on six cells.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",

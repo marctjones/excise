@@ -50,8 +50,8 @@ namespace Excise.Rendering.Tests.Differential;
 ///     cyan drop shadow belongs, a white one for a yellow one, grey for a green
 ///     bevel.</item>
 ///   <item><b>Structure</b> — the fraction of the cell's interior that departs
-///     from the cell's OWN median colour. Catches AN X APPEARS. Each engine is
-///     read against its own median, so the DeviceCMYK-preview differences these
+///     from the cell's OWN MODAL colour. Catches AN X APPEARS. Each engine is
+///     read against its own mode, so the DeviceCMYK-preview differences these
 ///     PDF/X-4 pages provoke (the contracts record
 ///     <c>ReferenceSituation: REFS_DISAGREE</c> for exactly this reason) cancel
 ///     on both sides of the comparison instead of having to be tolerated. Same
@@ -93,13 +93,22 @@ public class GhentConformanceCellTests
     private const double ChromaTolerance = 60;
 
     /// <summary>
-    /// A pixel "departs" from its cell's median when any channel differs by
-    /// more than this. Above per-engine antialiasing fringe and far below the
-    /// signal: an X painted in a Ghent swatch departs by 100+ levels in at
-    /// least one channel (green ink <c>1 0 1 0 k</c> has blue 0 against a
-    /// cyan-ish <c>1 .16 .16 0 k</c> backdrop).
+    /// A pixel "departs" from its cell's modal colour when any channel differs
+    /// by more than this. Above per-engine antialiasing fringe and far below
+    /// the signal: measured at 144 dpi, the two populations of a cell carrying
+    /// an X are tens of levels apart (GWG160 "Color": (17,19,20) against
+    /// (55,55,54), 38 levels) while a flat cell in mutool is a SINGLE colour
+    /// across all 1,521 px of its interior.
     /// </summary>
     private const int StructureDepartureDelta = 24;
+
+    /// <summary>
+    /// Levels per channel the modal-colour search bins to. 8 keeps a 32x32x32
+    /// histogram -- coarse enough that antialiasing fringe lands in the
+    /// background's own bin, fine enough that a Ghent X (tens of levels of
+    /// contrast) never does.
+    /// </summary>
+    private const int ModalBucket = 8;
 
     /// <summary>
     /// How far two oracles may sit apart on the structure measure and still
@@ -111,19 +120,19 @@ public class GhentConformanceCellTests
     /// and taking a margin above the widest gap between two AGREEING oracles.
     /// Never raise it to make an excise render pass.
     ///
-    /// Measured over all 48 cells at 144 dpi: mutool and Ghostscript agree
-    /// exactly (0.0000 both) on every GWG160 and GWG161 cell. GWG162, the
-    /// isolated-group page, is where they genuinely differ — its widest
-    /// agreeing-pair gaps are 0.0848 (Exclusion, mutool 0.0848 vs Ghostscript
-    /// 0.0000) and 0.0592 (Opacity (0%), Ghostscript 0.0072 vs pdftocairo
-    /// 0.0664) — so anything below ~0.09 leaves those cells with no 2-of-3
-    /// consensus and the gate would hard-fail on pages excise renders fine.
+    /// Measured through this gate's own oracles over all 48 cells at 144 dpi
+    /// (2026-09-16): mutool and Ghostscript agree exactly, at 0.0000, on every
+    /// GWG160 and GWG161 cell. GWG162 — the isolated-group page — is where they
+    /// genuinely differ, and the WIDEST SPAN of any winning consensus group
+    /// anywhere in the corpus is 0.1131 (its "Soft Light" cell: mutool 0.1131,
+    /// Ghostscript 0.0533, pdftocairo 0.0000). Every one of the 48 cells
+    /// reaches a 2-of-3 consensus at 0.10; below about 0.09 several GWG162
+    /// cells stop reaching one and the gate would hard-fail on pages excise
+    /// renders correctly.
     ///
-    /// ⚠️ 0.10 is PROVISIONAL: those figures come from a phase-1 prototype
-    /// that invoked the tools directly, and the repo's Ghostscript oracle adds
-    /// <c>-dTextAlphaBits=4 -dGraphicsAlphaBits=4 -dUseCropBox</c>, which the
-    /// prototype did not. Re-derive from the C# dump before treating the
-    /// number as measured (#1515).
+    /// Grouping is anchor-relative rather than transitive (see
+    /// <see cref="TryConsensus"/>), which is why a 0.10 tolerance admits that
+    /// 0.1131 span and why the group's spread is printed in every failure.
     /// </summary>
     private const double StructureConsensusTolerance = 0.10;
 
@@ -134,10 +143,12 @@ public class GhentConformanceCellTests
     /// them" are different questions, and conflating them is how one gets
     /// widened for the other's reason.
     ///
-    /// The signal it has to separate, measured: with #1514's defect present
-    /// excise painted an X across roughly a quarter to a half of the cell,
-    /// while mutool and Ghostscript read 0.0000 in every GWG161 cell. So this
-    /// is a 2.5x-to-5x margin, not a knife edge.
+    /// The signal it has to separate, measured by reverting #1514's one line
+    /// and re-running this gate (2026-09-16): GWG161's "Opacity (0%)" cell went
+    /// to <b>0.5346</b> departing against an oracle consensus of 0.0000 — all
+    /// three references flat — and exactly that one theory row reddened. A
+    /// 5.3x margin, not a knife edge. The ten cells #1528 declares sit at
+    /// 0.47-0.55 against consensuses of 0.0000-0.0125, the same order.
     /// </summary>
     private const double StructureTolerance = 0.10;
 
@@ -473,11 +484,35 @@ public class GhentConformanceCellTests
     /// <summary>
     /// A cell reduced to the numbers this gate judges: per-block
     /// luminance/chroma, and the fraction of the interior that departs from the
-    /// cell's OWN median colour.
+    /// cell's OWN MODAL colour.
     ///
-    /// The MEDIAN (not the mean) stands in for the background: an X can cover a
-    /// quarter of the cell without moving the median off the backdrop, whereas
-    /// it drags a mean with it — which is exactly why a mean cannot see one.
+    /// <para><b>The modal colour, not the mean and not the median — measured,
+    /// after both weaker choices were caught missing a visible X.</b> A mean is
+    /// dragged by the mark itself, which is the whole reason a cell mean cannot
+    /// see one (#1515). A median survives a mark covering a minority of the
+    /// cell, and that is what this measure originally used — but a Ghent X
+    /// covers close to HALF its cell, and at that coverage the median lands
+    /// BETWEEN the two populations and neither is far from it. Measured on
+    /// GWG160's "Color" cell at 144 dpi: excise's interior is 690 px of
+    /// (17,19,20) and 638 px of (55,55,54) — a plainly visible X, 38 levels of
+    /// contrast — yet the median sits at (33,34,34), the largest departure from
+    /// it is 22, and the departing fraction read <b>0.0000</b> while mutool's
+    /// same cell was a single colour across all 1,521 px. The gate called that
+    /// cell clean.</para>
+    ///
+    /// <para>The MODE has no such midpoint: the largest population IS the
+    /// background, whatever fraction of the cell the mark takes. Re-measured
+    /// over all 48 cells x 3 engines, switching median → mode turned three more
+    /// cells red (GWG160 Color, GWG161 Saturation, GWG161 Color — all three
+    /// confirmed by eye against mutool and Ghostscript) and turned NOTHING
+    /// green, while moving no oracle reading by more than 0.02. Strictly more
+    /// sensitive, which is the only direction this measure may ever be
+    /// changed.</para>
+    ///
+    /// <para>Colours are bucketed to <see cref="ModalBucket"/> levels per
+    /// channel before the mode is taken, so antialiasing fringe cannot split
+    /// the background across a thousand singleton colours; the comparison point
+    /// is then the true mean of the winning bucket, not the bucket centre.</para>
     /// </summary>
     private static CellMeasure MeasureCell(
         SKBitmap bitmap, double[] rect, double pageHeightPt, int dpi, double insetPt)
@@ -546,20 +581,62 @@ public class GhentConformanceCellTests
             }
         }
 
-        var mr = Median(reds);
-        var mg = Median(greens);
-        var mb = Median(blues);
+        var (br, bg, bb) = ModalColour(reds, greens, blues);
         var departing = 0;
         for (var p = 0; p < count; p++)
         {
             var delta = Math.Max(
-                Math.Abs(reds[p] - mr),
-                Math.Max(Math.Abs(greens[p] - mg), Math.Abs(blues[p] - mb)));
+                Math.Abs(reds[p] - br),
+                Math.Max(Math.Abs(greens[p] - bg), Math.Abs(blues[p] - bb)));
             if (delta > StructureDepartureDelta)
                 departing++;
         }
 
         return new CellMeasure(blocks, departing / (double)count);
+    }
+
+    /// <summary>
+    /// The cell's background: the mean of the largest colour population, found
+    /// by bucketing to <see cref="ModalBucket"/> levels per channel so
+    /// antialiasing cannot scatter the background into singletons.
+    /// </summary>
+    private static (double R, double G, double B) ModalColour(
+        byte[] reds, byte[] greens, byte[] blues)
+    {
+        var counts = new Dictionary<int, int>();
+        for (var i = 0; i < reds.Length; i++)
+        {
+            var key = BucketKey(reds[i], greens[i], blues[i]);
+            counts.TryGetValue(key, out var n);
+            counts[key] = n + 1;
+        }
+
+        var best = 0;
+        var bestCount = -1;
+        foreach (var (key, n) in counts)
+        {
+            // Ties resolve to the lowest key so the measure is reproducible.
+            if (n > bestCount || (n == bestCount && key < best))
+            {
+                best = key;
+                bestCount = n;
+            }
+        }
+
+        double sr = 0, sg = 0, sb = 0;
+        var members = 0;
+        for (var i = 0; i < reds.Length; i++)
+        {
+            var key = BucketKey(reds[i], greens[i], blues[i]);
+            if (key != best)
+                continue;
+            sr += reds[i];
+            sg += greens[i];
+            sb += blues[i];
+            members++;
+        }
+
+        return members == 0 ? (0, 0, 0) : (sr / members, sg / members, sb / members);
     }
 
     /// <summary>
@@ -626,12 +703,13 @@ public class GhentConformanceCellTests
         return true;
     }
 
-    private static int Median(byte[] values)
-    {
-        var sorted = (byte[])values.Clone();
-        Array.Sort(sorted);
-        return sorted[sorted.Length / 2];
-    }
+    /// <summary>
+    /// Packs a bucketed RGB triple into one histogram key. A proper radix:
+    /// each channel contributes 0..31, so red is scaled by 32*32 and green by
+    /// 32. (The first draft used 256/16/1, where green and blue overlap.)
+    /// </summary>
+    private static int BucketKey(byte r, byte g, byte b)
+        => ((r / ModalBucket) * 1024) + ((g / ModalBucket) * 32) + (b / ModalBucket);
 
     private static string Dump(IReadOnlyList<(string Name, CellMeasure Measure)> measured)
     {

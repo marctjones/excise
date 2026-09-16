@@ -119,7 +119,9 @@
             68.033,
             122.759,
             90.708
-          ]
+          ],
+          "KnownDefect": "#1528",
+          "KnownDefectEvidence": "excise paints the X this page forbids: 0.4724 of the cell interior departs from its own background where mutool and Ghostscript agree on 0.0000 (144 dpi, measured 2026-09-16). DECLARED, NOT ACCEPTED -- delete this entry when #1528 fixes the cell and the gate will hold it."
         },
         {
           "Name": "Saturation",
@@ -128,7 +130,9 @@
             68.031,
             153.85,
             90.709
-          ]
+          ],
+          "KnownDefect": "#1528",
+          "KnownDefectEvidence": "excise paints the X this page forbids: 0.4756 of the cell interior departs from its own background where mutool and Ghostscript agree on 0.0000 (144 dpi, measured 2026-09-16). DECLARED, NOT ACCEPTED -- delete this entry when #1528 fixes the cell and the gate will hold it."
         },
         {
           "Name": "Color",
@@ -137,7 +141,9 @@
             68.031,
             185.527,
             90.707
-          ]
+          ],
+          "KnownDefect": "#1528",
+          "KnownDefectEvidence": "excise paints the X this page forbids: 0.4845 of the cell interior departs from its own background where mutool and Ghostscript agree on 0.0000 (144 dpi, measured 2026-09-16). DECLARED, NOT ACCEPTED -- delete this entry when #1528 fixes the cell and the gate will hold it."
         },
         {
           "Name": "Luminosity",
@@ -146,7 +152,9 @@
             68.033,
             217.205,
             90.708
-          ]
+          ],
+          "KnownDefect": "#1528",
+          "KnownDefectEvidence": "excise paints the X this page forbids: 0.5030 of the cell interior departs from its own background where mutool and Ghostscript agree on 0.0000 (144 dpi, measured 2026-09-16). DECLARED, NOT ACCEPTED -- delete this entry when #1528 fixes the cell and the gate will hold it."
         },
         {
           "Name": "Opacity (0%)",
@@ -272,7 +280,9 @@
             68.031,
             122.788,
             90.709
-          ]
+          ],
+          "KnownDefect": "#1528",
+          "KnownDefectEvidence": "excise paints the X this page forbids: 0.5103 of the cell interior departs from its own background where mutool and Ghostscript agree on 0.0000 (144 dpi, measured 2026-09-16). DECLARED, NOT ACCEPTED -- delete this entry when #1528 fixes the cell and the gate will hold it."
         },
         {
           "Name": "Saturation",
@@ -281,7 +291,9 @@
             68.033,
             154.347,
             90.711
-          ]
+          ],
+          "KnownDefect": "#1528",
+          "KnownDefectEvidence": "excise paints the X this page forbids: 0.4756 of the cell interior departs from its own background where mutool and Ghostscript agree on 0.0000 (144 dpi, measured 2026-09-16). DECLARED, NOT ACCEPTED -- delete this entry when #1528 fixes the cell and the gate will hold it."
         },
         {
           "Name": "Color",
@@ -290,7 +302,9 @@
             68.027,
             185.788,
             90.705
-          ]
+          ],
+          "KnownDefect": "#1528",
+          "KnownDefectEvidence": "excise paints the X this page forbids: 0.4917 of the cell interior departs from its own background where mutool and Ghostscript agree on 0.0000 (144 dpi, measured 2026-09-16). DECLARED, NOT ACCEPTED -- delete this entry when #1528 fixes the cell and the gate will hold it."
         },
         {
           "Name": "Luminosity",
@@ -299,7 +313,9 @@
             68.027,
             217.466,
             90.705
-          ]
+          ],
+          "KnownDefect": "#1528",
+          "KnownDefectEvidence": "excise paints the X this page forbids: 0.4944 of the cell interior departs from its own background where mutool and Ghostscript agree on 0.0000 (144 dpi, measured 2026-09-16). DECLARED, NOT ACCEPTED -- delete this entry when #1528 fixes the cell and the gate will hold it."
         },
         {
           "Name": "Opacity (0%)",
@@ -353,7 +369,9 @@
             102.046,
             122.966,
             124.725
-          ]
+          ],
+          "KnownDefect": "#1528",
+          "KnownDefectEvidence": "excise paints the X this page forbids: 0.5464 of the cell interior departs from its own background where mutool and Ghostscript agree on 0.0125 (144 dpi, measured 2026-09-16). DECLARED, NOT ACCEPTED -- delete this entry when #1528 fixes the cell and the gate will hold it."
         },
         {
           "Name": "Screen",
@@ -362,7 +380,9 @@
             102.041,
             154.165,
             124.719
-          ]
+          ],
+          "KnownDefect": "#1528",
+          "KnownDefectEvidence": "excise paints the X this page forbids: 0.5260 of the cell interior departs from its own background where mutool and Ghostscript agree on 0.0000 (144 dpi, measured 2026-09-16). DECLARED, NOT ACCEPTED -- delete this entry when #1528 fixes the cell and the gate will hold it."
         },
         {
           "Name": "Color dodge",
@@ -495,5 +515,6 @@
       "Name": "GWG184_16Bit_Images_ICCbasedCMYK_x4.pdf",
       "Reason": "Same shape as GWG181 -- reference-cross-over-test-image X indicator. Not mapped yet; tracked by #1523."
     }
-  ]
+  ],
+  "KnownDefectPolicy": "A KnownDefect cell is reported by GhentConformanceCellTests as a DECLARED SKIP with its issue in the reason (#1172), never as a pass. It exists so a real, filed, oracle-corroborated defect does not have to be absorbed by widening StructureTolerance -- which would blind the gate to the next one. Delete the entry as each cell is fixed; nothing re-adds it."
 }
