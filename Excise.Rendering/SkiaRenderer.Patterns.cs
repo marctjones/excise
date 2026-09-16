@@ -410,6 +410,14 @@ internal partial class RenderContext
             var patternMatrix = GetMatrix(pattern.GetOptional("Matrix") as Excise.Core.Primitives.PdfArray);
             _canvas.Concat(in patternMatrix);
 
+            // #1511 gave these three arms a bool ("reached the draw call"). It
+            // is DELIBERATELY discarded here and not propagated: this method's
+            // own bool means "this pattern was handled", and it feeds the
+            // caller's fallbacks (RenderFillPattern -> SkiaRenderer.Paths.cs's
+            // solid-fill fallback, SkiaRenderer.Images.cs's stencil path).
+            // Returning the arm's answer instead would make an arm that bailed
+            // on a degenerate clip fall back to painting a solid colour, which
+            // is a behaviour change this lane does not measure.
             switch (shading.GetInt("ShadingType", 0))
             {
                 case 1:
@@ -831,17 +839,17 @@ internal partial class RenderContext
         return Math.Max(1, colorSpace.Components);
     }
 
-    private void DrawMeshPatches(IReadOnlyList<MeshPatch> patches, bool tensorPatch)
+    private bool DrawMeshPatches(IReadOnlyList<MeshPatch> patches, bool tensorPatch)
     {
         if (patches.Count == 0)
-            return;
+            return false;
 
         var minX = patches.Min(p => p.MinX);
         var minY = patches.Min(p => p.MinY);
         var maxX = patches.Max(p => p.MaxX);
         var maxY = patches.Max(p => p.MaxY);
         if (maxX <= minX || maxY <= minY)
-            return;
+            return false;
 
         var width = Math.Clamp((int)Math.Ceiling(maxX - minX) * 2, 16, 768);
         var height = Math.Clamp((int)Math.Ceiling(maxY - minY) * 2, 16, 768);
@@ -862,19 +870,20 @@ internal partial class RenderContext
 
         bitmap.NotifyPixelsChanged();
         DrawMeshBitmap(bitmap, minX, minY, maxX, maxY);
+        return true;
     }
 
-    private void DrawMeshTriangles(IReadOnlyList<MeshTriangle> triangles)
+    private bool DrawMeshTriangles(IReadOnlyList<MeshTriangle> triangles)
     {
         if (triangles.Count == 0)
-            return;
+            return false;
 
         var minX = triangles.Min(t => t.MinX);
         var minY = triangles.Min(t => t.MinY);
         var maxX = triangles.Max(t => t.MaxX);
         var maxY = triangles.Max(t => t.MaxY);
         if (maxX <= minX || maxY <= minY)
-            return;
+            return false;
 
         var width = Math.Clamp((int)Math.Ceiling(maxX - minX) * 2, 16, 1024);
         var height = Math.Clamp((int)Math.Ceiling(maxY - minY) * 2, 16, 1024);
@@ -888,6 +897,7 @@ internal partial class RenderContext
 
         bitmap.NotifyPixelsChanged();
         DrawMeshBitmap(bitmap, minX, minY, maxX, maxY);
+        return true;
     }
 
     private void DrawMeshBitmap(SKBitmap bitmap, double minX, double minY, double maxX, double maxY)
@@ -1091,6 +1101,33 @@ internal partial class RenderContext
         return new SKMatrix(invA, invC, invE, invB, invD, invF, 0, 0, 1);
     }
 
+    /// <summary>
+    /// The <c>sh</c> operator (§8.7.4.3).
+    ///
+    /// <para><b>#1511.</b> Every arm goes through
+    /// <see cref="MarkDeviceCmykBackdropDirtyWhenRendered"/>, the way
+    /// <see cref="RenderFillPattern"/>'s shading arms already did. A shading is
+    /// painted by Skia as RGB and never touches the retained CMYK backdrop, and
+    /// that flag is the only signal
+    /// <c>DeviceCmykExecutionState.CompleteChildGroup</c> has that a child group
+    /// needs folding in before it is composited. Without the mark, an <c>sh</c>
+    /// inside a pre-#1395 <c>/CS /DeviceCMYK</c> group was never folded in and
+    /// the composite read that pixel's colour out of the backdrop instead — so
+    /// the shading came out as whatever the backdrop held. Measured on a
+    /// <c>/CS /DeviceCMYK</c> group over a CMYK wash: the shading's square came
+    /// out BYTE-IDENTICAL to the wash — normalised dark fraction exactly 0.000
+    /// where mutool and Ghostscript both read 1.000, i.e. the shading entirely
+    /// invisible. With the mark it reads 1.017
+    /// (<c>DeviceCmykExplicitGroupBackdropSyncTests</c>).</para>
+    ///
+    /// <para>The arms return "reached the draw call", not "was dispatched": a
+    /// bail on a missing <c>/Coords</c> or a degenerate clip must not mark
+    /// anything dirty, because the resulting sync is not free — it rewrites
+    /// backdrop pixels. Inside #1395's CONTAINED entries the mark changes
+    /// nothing (those sync unconditionally and hand
+    /// <c>CompleteChildGroup</c> a no-op), and an <c>sh</c> on the PAGE sets a
+    /// flag nothing consumes, since only a child group completes.</para>
+    /// </summary>
     private void RenderShading(string nameOperand)
     {
         // Remove leading / if present
@@ -1106,19 +1143,19 @@ internal partial class RenderContext
         switch (shadingType)
         {
             case 1: // Function-based shading
-                RenderFunctionShading(shading);
+                MarkDeviceCmykBackdropDirtyWhenRendered(RenderFunctionShading(shading));
                 break;
             case 2: // Axial shading (linear gradient)
-                RenderAxialShading(shading);
+                MarkDeviceCmykBackdropDirtyWhenRendered(RenderAxialShading(shading));
                 break;
             case 3: // Radial shading (radial gradient)
-                RenderRadialShading(shading);
+                MarkDeviceCmykBackdropDirtyWhenRendered(RenderRadialShading(shading));
                 break;
             case 4: // Free-form Gouraud triangle mesh
             case 5: // Lattice-form Gouraud triangle mesh
             case 6: // Coons patch mesh
             case 7: // Tensor-product patch mesh
-                RenderMeshShading(shading, shadingType);
+                MarkDeviceCmykBackdropDirtyWhenRendered(RenderMeshShading(shading, shadingType));
                 break;
             default:
                 // #633: ShadingType is only defined 1-7; anything else is
@@ -1129,30 +1166,23 @@ internal partial class RenderContext
         }
     }
 
-    private void RenderMeshShading(Excise.Core.Primitives.PdfDictionary shading, int shadingType)
+    private bool RenderMeshShading(Excise.Core.Primitives.PdfDictionary shading, int shadingType)
     {
         if (shading is not Excise.Core.Primitives.PdfStream stream)
-            return;
+            return false;
 
         _canvas.Save();
         try
         {
             ApplyShadingBoundingBoxClip(shading);
-            switch (shadingType)
+            return shadingType switch
             {
-                case 4:
-                    DrawMeshTriangles(DecodeType4MeshTriangles(stream));
-                    break;
-                case 5:
-                    DrawMeshTriangles(DecodeType5MeshTriangles(stream));
-                    break;
-                case 6:
-                    DrawMeshPatches(DecodeType6MeshPatches(stream, tensorPatch: false), tensorPatch: false);
-                    break;
-                case 7:
-                    DrawMeshPatches(DecodeType6MeshPatches(stream, tensorPatch: true), tensorPatch: true);
-                    break;
-            }
+                4 => DrawMeshTriangles(DecodeType4MeshTriangles(stream)),
+                5 => DrawMeshTriangles(DecodeType5MeshTriangles(stream)),
+                6 => DrawMeshPatches(DecodeType6MeshPatches(stream, tensorPatch: false), tensorPatch: false),
+                7 => DrawMeshPatches(DecodeType6MeshPatches(stream, tensorPatch: true), tensorPatch: true),
+                _ => false,
+            };
         }
         finally
         {
@@ -1160,12 +1190,12 @@ internal partial class RenderContext
         }
     }
 
-    private void RenderAxialShading(Excise.Core.Primitives.PdfDictionary shading)
+    private bool RenderAxialShading(Excise.Core.Primitives.PdfDictionary shading)
     {
         // Get the coordinate array [x0, y0, x1, y1]
         var coords = shading.GetOptional("Coords") as Excise.Core.Primitives.PdfArray;
         if (coords == null || coords.Count < 4)
-            return;
+            return false;
 
         var x0 = (float)coords.GetNumber(0);
         var y0 = (float)coords.GetNumber(1);
@@ -1193,7 +1223,7 @@ internal partial class RenderContext
         try
         {
             ApplyShadingBoundingBoxClip(shading);
-            DrawShaderOverCurrentClip(shader);
+            return DrawShaderOverCurrentClip(shader);
         }
         finally
         {
@@ -1201,12 +1231,12 @@ internal partial class RenderContext
         }
     }
 
-    private void RenderRadialShading(Excise.Core.Primitives.PdfDictionary shading)
+    private bool RenderRadialShading(Excise.Core.Primitives.PdfDictionary shading)
     {
         // Get the coordinate array [x0, y0, r0, x1, y1, r1]
         var coords = shading.GetOptional("Coords") as Excise.Core.Primitives.PdfArray;
         if (coords == null || coords.Count < 6)
-            return;
+            return false;
 
         var x0 = (float)coords.GetNumber(0);
         var y0 = (float)coords.GetNumber(1);
@@ -1238,7 +1268,7 @@ internal partial class RenderContext
         {
             ApplyShadingBoundingBoxClip(shading);
             ApplyRadialShadingDomainClip(x0, y0, r0, x1, y1, r1, extendStart, extendEnd);
-            DrawShaderOverCurrentClip(shader);
+            return DrawShaderOverCurrentClip(shader);
         }
         finally
         {
@@ -1304,11 +1334,11 @@ internal partial class RenderContext
             : null;
     }
 
-    private void DrawShaderOverCurrentClip(SKShader shader)
+    private bool DrawShaderOverCurrentClip(SKShader shader)
     {
         var clipBounds = _canvas.LocalClipBounds;
         if (clipBounds.Width <= 0 || clipBounds.Height <= 0)
-            return;
+            return false;
 
         var alpha = (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255);
         using var paint = new SKPaint
@@ -1321,7 +1351,7 @@ internal partial class RenderContext
         if (alpha == 255)
         {
             _canvas.DrawRect(clipBounds, paint);
-            return;
+            return true;
         }
 
         using var layerPaint = new SKPaint
@@ -1339,9 +1369,11 @@ internal partial class RenderContext
         {
             _canvas.Restore();
         }
+
+        return true;
     }
 
-    private void RenderFunctionShading(Excise.Core.Primitives.PdfDictionary shading)
+    private bool RenderFunctionShading(Excise.Core.Primitives.PdfDictionary shading)
     {
         var funcRef = shading.GetOptional("Function");
         var funcObj = funcRef != null ? _page.Document.Resolve(funcRef) : null;
@@ -1349,12 +1381,12 @@ internal partial class RenderContext
         var domain = GetNumberArray(shading.GetOptional("Domain") as Excise.Core.Primitives.PdfArray)
                      ?? new[] { 0.0, 1.0, 0.0, 1.0 };
         if (domain.Length < 4)
-            return;
+            return false;
 
         var matrix = GetMatrix(shading.GetOptional("Matrix") as Excise.Core.Primitives.PdfArray);
         var inverseMatrix = InvertAffine(matrix);
         if (!inverseMatrix.HasValue)
-            return;
+            return false;
 
         var bounds = _canvas.LocalClipBounds;
         var bbox = GetNumberArray(shading.GetOptional("BBox") as Excise.Core.Primitives.PdfArray);
@@ -1367,11 +1399,11 @@ internal partial class RenderContext
                 (float)Math.Max(bbox[1], bbox[3]));
             bounds.Intersect(bboxRect);
             if (bounds.Width <= 0 || bounds.Height <= 0)
-                return;
+                return false;
         }
 
         if (bounds.Width <= 0 || bounds.Height <= 0)
-            return;
+            return false;
 
         var width = Math.Clamp((int)Math.Ceiling(bounds.Width), 1, 1024);
         var height = Math.Clamp((int)Math.Ceiling(bounds.Height), 1, 1024);
@@ -1412,6 +1444,7 @@ internal partial class RenderContext
             IsAntialias = _options.AntiAlias
         };
         _canvas.DrawImage(image, bounds, paint);
+        return true;
     }
 
     private double[]? GetNumberArray(Excise.Core.Primitives.PdfArray? arr)
