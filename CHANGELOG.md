@@ -10,6 +10,35 @@ Milestones **P1.1 — Redaction correctness: geometry, leaks, and fail-open
 safety** and **P1.5 — Redaction policy and de-redaction side channels**.
 
 ### Fixed
+- **A PDF/A-1 file whose XMP declares `pdfaid:part` as an ATTRIBUTE was not
+  recognised as PDF/A-1, so every save path wrote object streams into it —
+  which ISO 19005-1 forbids** (#1524). The writer decided whether it may use
+  object streams and a cross-reference stream by grepping the XMP packet for
+  one exact spelling, `<pdfaid:part>1</pdfaid:part>`. XMP permits the same
+  simple property as an attribute of the `rdf:Description`
+  (`pdfaid:part="1"`), which Adobe tooling emits, and such a file — valid
+  PDF/A-1, accepted by veraPDF — came out of excise carrying constructs
+  PDFA-1B rejects (ISO 19005-1 6.1.4#3, `containsXRefStream == false`). This
+  was in the WRITER, so it was never specific to redaction: open-and-save,
+  merge, split, form fill and every CLI command inherited it. Measured on four
+  fixtures (`%PDF-1.4`/`%PDF-1.7` × element/attribute), only the attribute form
+  with a header of at least 1.5 leaked one, because the compression gate also
+  requires 1.5 — but that pair is not hypothetical: PDFA-1B pins no version in
+  its header rule (`/%PDF-\d\.\d/`), and excise's own authored documents carry
+  a 1.7 header, so a PDF/A-1 file out of the builder is exactly this shape.
+- **The four independent readers of the PDF/A identification were consolidated
+  onto one parser, with presence and value kept as separate, named questions**
+  (#1526, the cause of #1524). `PdfDocumentWriter.IsPdfA1`,
+  `PdfAStructuralValidator` and `PdfDocument.TargetsPdfA` were each a one-line
+  substring match in a different project, and two of them disagreed about the
+  same file. All three now read through `PdfAIdentityXmp`, which parses both
+  serialisations: `DeclaresAnyIdentification` answers "does this file claim
+  PDF/A at all" (the presence semantics `TargetsPdfA` needs to avoid emitting
+  something PDF/A forbids — a claim excise cannot validate must still count as
+  a claim), `ReadDeclaredPart` answers "which part does it claim", and
+  `TryParse` remains the fully validated read, the only one allowed to re-emit
+  a claim. The structural validator gains the same attribute-form fix as a side
+  effect, and its conformance-level check became exact rather than a substring.
 - **excise signed PDFs with a BER-encoded CMS object where ISO 32000 requires
   DER, and its verifier could not locate that object inside the padded
   `/Contents` value** (#1494) — two halves of one defect, both in the

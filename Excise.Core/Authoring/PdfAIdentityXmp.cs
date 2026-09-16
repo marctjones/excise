@@ -20,7 +20,46 @@ internal readonly record struct PdfAIdentity(string Part, string? Conformance, s
 /// authors the packet for a document excise is CREATING as PDF/A, this one
 /// preserves the identification of a document that already had it. Both must
 /// agree on the serialisation — see <c>PdfAWriter.WriteXmp</c>.
-/// </summary>
+///
+/// <para><b>This is the ONE pdfaid parser (#1526).</b> Every consumer in the
+/// codebase reads the identification through this class, and nobody writes a
+/// substring match of their own. There were FOUR readers before #1524, each a
+/// one-line <c>Contains</c> in a different project, and they disagreed about
+/// the same file: <c>PdfDocumentWriter.IsPdfA1</c> matched only
+/// <c>&lt;pdfaid:part&gt;1&lt;/pdfaid:part&gt;</c>, so a valid PDF/A-1 file
+/// using the equally-legal ATTRIBUTE serialisation (<c>pdfaid:part="1"</c>) read
+/// as "not PDF/A-1" and the writer put object streams — which ISO 19005-1
+/// forbids (veraPDF PDFA-1B 6.1.4#3, <c>containsXRefStream == false</c>) — into
+/// an archival file. Same failure shape as "one walk, many sinks": N copies of
+/// one rule, drifting, none authoritative.</para>
+///
+/// <para><b>Three questions, three entry points.</b> The distinction is the
+/// reason this is not simply "everyone calls <see cref="TryRead"/>":
+/// <list type="table">
+///   <item><term><see cref="DeclaresAnyIdentification"/></term><description>
+///     PRESENCE — "does this file CLAIM PDF/A at all". Used to decide NOT to
+///     emit something PDF/A forbids (<c>/NeedAppearances</c>, #1499), where a
+///     claim excise cannot validate must still count as a claim: being
+///     conservative costs nothing, and reading <c>pdfaid:part&gt;9</c> as "not
+///     PDF/A" would put the forbidden construct back into a file that claims
+///     conformance.</description></item>
+///   <item><term><see cref="ReadDeclaredPart"/> /
+///     <see cref="ReadDeclaredConformance"/></term><description>
+///     The DECLARED TOKEN, exactly as the file spells it, unvalidated — "which
+///     part does this file claim". Used where the answer gates a
+///     conformance-preserving decision about the part in hand (the writer's
+///     object-stream suppression, the structural self-check). Deliberately not
+///     routed through <see cref="TryParse"/>: that returns null when a
+///     QUALIFIER fails validation, so a file declaring
+///     <c>part 1</c> with <c>conformance b</c> (lower case — non-conforming,
+///     but unambiguously claiming PDF/A-1) would read as "not part 1" and get
+///     object streams anyway. A claim is honoured on the strength of the part
+///     alone.</description></item>
+///   <item><term><see cref="TryRead"/> / <see cref="TryParse"/></term><description>
+///     The VALIDATED identity — every value checked against a closed token set.
+///     The only read permitted to feed <see cref="Write"/>, because re-emitting
+///     a claim is a stronger act than respecting one.</description></item>
+/// </list></para></summary>
 /// <remarks>
 /// <para><b>Why this exists.</b> <see cref="PdfDocument.ScrubMetadata"/> removes
 /// the catalog <c>/Metadata</c> stream outright, which is the right answer for a
@@ -63,16 +102,50 @@ internal static class PdfAIdentityXmp
     // element (<pdfaid:part>2</pdfaid:part>) and an attribute
     // (pdfaid:part="2"). The captures are length-bounded and contain no nested
     // quantifier, so these stay linear on hostile input.
+    //
+    // The element alternative tolerates attributes on the start tag
+    // (<pdfaid:part rdf:datatype="...">2</pdfaid:part>) — a strict superset of
+    // #1507's pattern, added with #1524 because the same "one exact spelling"
+    // assumption that hid the attribute form hides this one too. The optional
+    // group requires whitespace before any attribute, so <pdfaid:parts> does
+    // not match "part".
     private static readonly Regex PartPattern = PropertyPattern("part");
     private static readonly Regex ConformancePattern = PropertyPattern("conformance");
     private static readonly Regex RevPattern = PropertyPattern("rev");
 
     private static Regex PropertyPattern(string name) => new(
-        $"<pdfaid:{name}>\\s*(?<v>[^<]{{1,16}}?)\\s*</pdfaid:{name}>"
+        $"<pdfaid:{name}(?:\\s[^>]{{0,256}})?>\\s*(?<v>[^<]{{1,16}}?)\\s*</pdfaid:{name}>"
         + $"|\\bpdfaid:{name}\\s*=\\s*\"(?<v>[^\"]{{1,16}})\""
         + $"|\\bpdfaid:{name}\\s*=\\s*'(?<v>[^']{{1,16}})'",
         RegexOptions.CultureInvariant,
         System.TimeSpan.FromSeconds(2));
+
+    /// <summary>
+    /// Whether <paramref name="xmp"/> declares a PDF/A identification at all,
+    /// without judging its value — the PRESENCE question (see the class
+    /// remarks). Matches the <c>pdfaid:part</c> property name, which covers both
+    /// serialisations, and deliberately stays a bare substring match so that a
+    /// malformed or unknown value still counts as a claim.
+    /// </summary>
+    internal static bool DeclaresAnyIdentification(string? xmp)
+        => xmp != null && xmp.Contains("pdfaid:part", StringComparison.Ordinal);
+
+    /// <summary>
+    /// The <c>pdfaid:part</c> token exactly as <paramref name="xmp"/> spells it
+    /// (trimmed), from either serialisation, or null when there is none.
+    /// UNVALIDATED: the closed-set guarantee belongs to <see cref="TryParse"/>,
+    /// so a value from here must never be written back into a document.
+    /// </summary>
+    internal static string? ReadDeclaredPart(string? xmp)
+        => xmp is null ? null : Read(xmp, PartPattern);
+
+    /// <summary>
+    /// The <c>pdfaid:conformance</c> token exactly as <paramref name="xmp"/>
+    /// spells it (trimmed), from either serialisation, or null when there is
+    /// none. UNVALIDATED — see <see cref="ReadDeclaredPart"/>.
+    /// </summary>
+    internal static string? ReadDeclaredConformance(string? xmp)
+        => xmp is null ? null : Read(xmp, ConformancePattern);
 
     /// <summary>
     /// The PDF/A identification in <paramref name="document"/>'s catalog XMP
@@ -105,6 +178,22 @@ internal static class PdfAIdentityXmp
         string text;
         try { text = Encoding.UTF8.GetString(xmp); }
         catch (System.Exception ex) when (ex is not System.OutOfMemoryException) { return null; }
+
+        return TryParse(text);
+    }
+
+    /// <summary>
+    /// The validated PDF/A identification in an XMP packet's <b>text</b>, or
+    /// null when there is none or any value present fails validation. The core
+    /// <see cref="TryRead(PdfDocument)"/> delegates to, exposed separately
+    /// because a caller does not always hold a <see cref="PdfDocument"/> whose
+    /// catalog is the right source — the writer reads the packet through its
+    /// save session (#1524), which is the view actually being serialised.
+    /// </summary>
+    internal static PdfAIdentity? TryParse(string? xmp)
+    {
+        if (string.IsNullOrEmpty(xmp)) return null;
+        string text = xmp;
 
         var part = Read(text, PartPattern);
         // Part is the identification; without it there is nothing to preserve.
@@ -162,10 +251,17 @@ internal static class PdfAIdentityXmp
     /// <summary>
     /// The identity-only XMP packet. Same shape as <c>PdfAWriter.WriteXmp</c> —
     /// UTF-8, no <c>bytes</c>/<c>encoding</c> attributes on the header (both
-    /// forbidden: veraPDF <c>XMPPackage</c> rules), the ELEMENT serialisation of
-    /// <c>pdfaid:part</c> because <c>PdfDocumentWriter.IsPdfA1</c> greps for
-    /// <c>&lt;pdfaid:part&gt;1&lt;/pdfaid:part&gt;</c> to suppress the object
-    /// streams PDF/A-1 forbids.
+    /// forbidden: veraPDF <c>XMPPackage</c> rules), and the ELEMENT
+    /// serialisation of <c>pdfaid:part</c> because that is what
+    /// <c>PdfAWriter.WriteXmp</c> emits, so excise's own PDF/A output has one
+    /// shape.
+    ///
+    /// <para>This used to say the element form was required because
+    /// <c>PdfDocumentWriter.IsPdfA1</c> grepped for
+    /// <c>&lt;pdfaid:part&gt;1&lt;/pdfaid:part&gt;</c>. That grep was #1524's
+    /// defect and is gone: every consumer now reads through
+    /// <see cref="ReadDeclaredPart"/>, which accepts either serialisation, so
+    /// nothing downstream depends on which one is written here.</para>
     /// </summary>
     /// <remarks>
     /// The three interpolated values need no XML escaping: each is one token from
