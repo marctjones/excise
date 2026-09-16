@@ -253,6 +253,35 @@ def collect_run(directory):
     }
 
 
+def never_rendered(run):
+    """Did this run open a document the viewer never actually rendered?
+
+    The failure this catches, observed on the first live altona-close run: the
+    runner opened the document through the SCRIPTING load path, which does
+    "headless document loading (no thumbnails/rendering)". The file was parsed,
+    the viewer was never driven, every cache counter stayed 0, and the scroll
+    had nothing laid out to scroll -- yet the run emitted a complete row of
+    plausible numbers and a confident verdict about #1461 that was simply not a
+    measurement of it.
+
+    A scenario that opens a document and then records no render measurements
+    and no cache entries at any boundary did not measure what it claims to.
+    That has to be loud, because every individual number still looks fine.
+    """
+    opened = any(s.get("op") == "open" for s in run["steps"])
+    if not opened:
+        return None
+    metrics = run.get("metrics") or {}
+    rendered = (metrics.get("bandRenders", 0) or 0) + (metrics.get("singleRenders", 0) or 0)
+    entries = max((s.get("continuousEntries") or 0) for s in run["steps"])
+    single = max((s.get("singlePageEntries") or 0) for s in run["steps"])
+    if rendered == 0 and entries == 0 and single == 0:
+        return ("opened a document but recorded 0 render measurements and 0 cache "
+                "entries at every boundary - the viewer was never driven, so these "
+                "numbers are NOT a measurement of this scenario")
+    return None
+
+
 def peak_and_final(run, metric):
     values = [s.get(metric) for s in run["steps"] if s.get(metric) is not None]
     if not values:
@@ -738,6 +767,16 @@ def main():
         if any(s["note"] for s in representative["steps"]):
             lines.append("")
 
+        warning = never_rendered(representative)
+        if warning:
+            lines += [
+                f"> 🚨 **THIS RUN DID NOT MEASURE WHAT IT CLAIMS.** It {warning}.",
+                ">",
+                "> Every number below is real, and every number below is about the wrong",
+                "> thing. Do not quote them. Check that the open path actually drives the",
+                "> viewer before re-running.",
+                ""]
+
         # Did it come back down? The question #1461 is about.
         base_fp = baseline_value(representative, "footprintMB")
         peak_fp, final_fp = peak_and_final(representative, "footprintMB")
@@ -786,6 +825,11 @@ def main():
         print(f"floor {metric:<14}: "
               f"{'UNKNOWN' if value is None else fmt(value) + ' ' + unit} "
               f"({entry.get('from', 'UNKNOWN')})")
+    for run in measured_runs:
+        warning = never_rendered(run)
+        if warning:
+            print(f"!! {run['scenario']}: {warning}")
+
     total_failures = sum(r["failures"] for r in measured_runs)
     if total_failures:
         print(f"step failures     : {total_failures}  (see summary.md)")

@@ -66,9 +66,17 @@ internal sealed class AppPerfScenarioTarget : IPerfScenarioTarget
         if (!File.Exists(path))
             throw new FileNotFoundException($"scenario document not found: {path}", path);
 
-        // LoadDocumentCommand is the scripting load path: awaitable, no dialog,
-        // and it carries its own timeout (LoadDocumentTimeoutSeconds).
-        await _viewModel.LoadDocumentCommand(path).ConfigureAwait(true);
+        // ⚠️ LoadDocumentAsync, NOT LoadDocumentCommand. The latter is the
+        // SCRIPTING load, and its own comment says it does "headless document
+        // loading (no thumbnails/rendering)" to avoid dispatcher work. It parses
+        // the file and never drives the viewer: measured on altona-close, every
+        // viewer counter stayed at 0 through the whole scenario, the scroll had
+        // nothing laid out to scroll, and the run still produced a full row of
+        // plausible numbers plus a confident (and wrong) verdict on #1461.
+        // LoadDocumentAsync is the path a real open takes -- the one
+        // App.OpenPathOnUiThread uses -- and the one that emits the
+        // excise.app.document_open.phase.duration metrics.
+        await _viewModel.LoadDocumentAsync(path).ConfigureAwait(true);
         cancellationToken.ThrowIfCancellationRequested();
     }
 
