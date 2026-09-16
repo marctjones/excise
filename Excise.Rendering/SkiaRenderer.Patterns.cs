@@ -1113,9 +1113,12 @@ internal partial class RenderContext
     /// needs folding in before it is composited. Without the mark, an <c>sh</c>
     /// inside a pre-#1395 <c>/CS /DeviceCMYK</c> group was never folded in and
     /// the composite read that pixel's colour out of the backdrop instead — so
-    /// the shading came out as whatever the backdrop held (measured: the page
-    /// wash, i.e. the shading invisible; mutool and Ghostscript both draw
-    /// it).</para>
+    /// the shading came out as whatever the backdrop held. Measured on a
+    /// <c>/CS /DeviceCMYK</c> group over a CMYK wash: the shading's square came
+    /// out BYTE-IDENTICAL to the wash — normalised dark fraction exactly 0.000
+    /// where mutool and Ghostscript both read 1.000, i.e. the shading entirely
+    /// invisible. With the mark it reads 1.017
+    /// (<c>DeviceCmykExplicitGroupBackdropSyncTests</c>).</para>
     ///
     /// <para>The arms return "reached the draw call", not "was dispatched": a
     /// bail on a missing <c>/Coords</c> or a degenerate clip must not mark

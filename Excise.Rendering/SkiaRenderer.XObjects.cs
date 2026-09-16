@@ -38,10 +38,15 @@ internal partial class RenderContext
     /// (<c>SkiaRenderer.RenderPage</c>'s <c>startsInDeviceCmykGroup</c> branch).
     ///
     /// <para>This is the property that decides WHICH backdrop sync is correct
-    /// (#1510): a page bitmap carries alpha 255 everywhere, so resolving
-    /// partial alpha against paper is right and the rare zero-alpha pixel is a
-    /// truth to record; a group bitmap starts empty, so an unpainted pixel
-    /// carries no information at all and must be left alone. Set for EVERY
+    /// (#1510): a page bitmap is cleared to paper and nothing lowers its alpha
+    /// afterwards, so resolving partial alpha against paper is right there and a
+    /// zero-alpha pixel would be a truth to record; a group bitmap starts empty,
+    /// so an unpainted pixel carries no information at all and must be left
+    /// alone. (Measured over the #1510 fixtures: the page-flavoured sync met
+    /// 0 pixels below alpha 255 while running on a page bitmap, against 25,600
+    /// partial and 14,600 zero-alpha pixels when it was wrongly running on a
+    /// group bitmap. On the page the two syncs therefore agree in practice — the
+    /// dispatch is what keeps that from being load-bearing.) Set for EVERY
     /// child that method opens, both the pre-#1395 <c>UnmaskedDeviceCmykGroup</c>
     /// entry and #1395's contained ones — unlike
     /// <see cref="_isContainedGroupChild"/>, which #1505 used as a proxy for it

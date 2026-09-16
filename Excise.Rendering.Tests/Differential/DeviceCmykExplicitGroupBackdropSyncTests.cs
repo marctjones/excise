@@ -63,14 +63,27 @@ public class DeviceCmykExplicitGroupBackdropSyncTests : IDisposable
     private const double FractionTolerance = 0.2;
 
     /// <summary>
-    /// Tolerance in RGB levels for the rows that compare a pixel against a
-    /// CALIBRATION PATCH in the same render. Both oracles put the patch and the
-    /// object within 2 levels of each other; the defect moves the object about
-    /// 45 levels. Deliberately not a fraction: a same-render comparison cancels
-    /// each renderer's own CMYK-to-RGB preview conversion exactly, which a
-    /// fraction between two different inks does not.
+    /// Luminance tolerance for the rows that compare a pixel against a
+    /// CALIBRATION PATCH in the same render. MEASURED: excise lands 4.3 levels
+    /// off the patch with the fix and 61.3 off without it, so this sits an order
+    /// of magnitude below the defect. Deliberately not a fraction between two
+    /// different inks: a same-render comparison cancels each renderer's own
+    /// CMYK-to-RGB preview conversion exactly.
     /// </summary>
-    private const int PatchTolerance = 12;
+    private const double PatchLuminanceTolerance = 15;
+
+    /// <summary>
+    /// The oracles' own object-vs-patch agreement, which the calibration rests
+    /// on. Measured 1.1 (mutool) and 0.0 (Ghostscript).
+    /// </summary>
+    private const double OracleCalibrationTolerance = 4;
+
+    /// <summary>
+    /// A loose per-channel bound kept alongside the luminance one so a gross hue
+    /// shift still fails. Measured: 13 with the fix (the RgbToDeviceCmyk round
+    /// trip on a neutral grey), 62 without it.
+    /// </summary>
+    private const int PatchHueGuard = 25;
 
     // Device pixels at 72 dpi on a 400x200 pt page: x = PDF x, y = 200 - PDF y.
     private static readonly SKPointI InsideObject = new(100, 100);
@@ -79,8 +92,9 @@ public class DeviceCmykExplicitGroupBackdropSyncTests : IDisposable
 
     /// <summary>The <c>0 0 0 0.55 k</c> patch: 50% of full black over the 10%
     /// black wash, composited per §11.3 in the page group's DeviceCMYK space.
-    /// Both oracles render the half-opacity object and this patch within 2
-    /// levels of each other, which is what makes it a calibration.</summary>
+    /// Both oracles render the half-opacity object and this patch within 1.1
+    /// luminance levels of each other (measured), which is what makes it a
+    /// calibration.</summary>
     private static readonly SKPointI CalibrationSample = new(250, 50);
 
     private readonly List<string> _temp = new();
@@ -127,10 +141,11 @@ public class DeviceCmykExplicitGroupBackdropSyncTests : IDisposable
 
         DarkFraction(excise, InsideObject).Should().BeApproximately(target, FractionTolerance,
             "a /BM /Screen non-isolated group nested inside an explicit /CS /DeviceCMYK child "
-            + $"group (oracles {m:F2}/{g:F2}, both about -0.13 — LIGHTER than the wash, which is "
-            + "what Screen against an inky backdrop means). Before #1510 the enclosing child ran "
-            + "the page-flavoured pre-seed sync on its own transparent group bitmap, destroyed the "
-            + "seed, and this read about 1.0 — the nested group's raw ink, unblended");
+            + $"group (oracles {m:F2}/{g:F2}, measured -0.131 and -0.128 — LIGHTER than the wash, "
+            + "which is what Screen against an inky backdrop means; excise reads -0.133). Before "
+            + "#1510 the enclosing child ran the page-flavoured pre-seed sync on its own "
+            + "transparent group bitmap, destroyed the seed, and this read exactly 1.000 — the "
+            + "object came out BYTE-IDENTICAL to the raw-ink reference patch, unblended");
     }
 
     /// <summary>
@@ -159,8 +174,9 @@ public class DeviceCmykExplicitGroupBackdropSyncTests : IDisposable
         DarkFraction(grouped, InsideObject).Should().BeApproximately(ungroupedFraction, FractionTolerance,
             "§11.4.4 NOTE 5: the enclosing /CS /DeviceCMYK group is composited Normal at full "
             + "opacity with no mask, so it is transparent to grouping. mutool and Ghostscript render "
-            + "the two fixtures byte-identically (measured). Before #1510 the grouped variant read "
-            + "the raw ink");
+            + "the two fixtures byte-identically (measured, both at (177,161,182)). Before #1510 "
+            + "the grouped variant read the raw ink at fraction 1.000 while the ungrouped control "
+            + "read -0.133");
     }
 
     /// <summary>
@@ -200,14 +216,28 @@ public class DeviceCmykExplicitGroupBackdropSyncTests : IDisposable
     /// <para>The page-flavoured sync resolved the group bitmap's alpha 127
     /// against paper, halving the ink, and <c>CompositeDeviceCmykGroupBitmap</c>
     /// then applied the same alpha again — a half-opacity result reached the page
-    /// at about a quarter strength.</para>
+    /// at about a quarter strength. MEASURED on this fixture: the object read
+    /// L=193.9 against a calibration patch of L=132.6, i.e. 61.3 luminance
+    /// levels too light; with the fix it reads L=136.9, 4.3 levels off the patch.
+    /// The oracles read L=140.7 (mutool) and L=139.6 (Ghostscript).</para>
     ///
     /// <para><b>The assertion is against a calibration patch in the same
     /// render</b>, <c>0 0 0 0.55 k</c> = 50% of full black over the 10% wash.
-    /// Both oracles render the object within 2 levels of that patch, which the
-    /// test re-derives rather than trusting; comparing two patches inside one
-    /// render cancels that renderer's CMYK-to-RGB preview conversion exactly, so
-    /// the tolerance does not have to absorb it.</para>
+    /// Both oracles render the object within 1.1 luminance levels of that patch,
+    /// which the test re-derives rather than trusting; comparing two patches
+    /// inside one render cancels that renderer's CMYK-to-RGB preview conversion
+    /// exactly, so the tolerance does not have to absorb it.</para>
+    ///
+    /// <para><b>Luminance, not per-channel max</b>, because the two pixels reach
+    /// RGB by different routes: the patch through
+    /// <c>TryPaintDeviceCmykBlendPath</c>, the object through Skia and a
+    /// <c>RgbToDeviceCmyk</c> round trip that does not return a neutral grey
+    /// neutral — measured, excise puts the object 13 levels high on RED while
+    /// its luminance is 4.3 off. Ink DENSITY is what the calibration is about
+    /// and what the doubled alpha changes (61.3 levels), so a per-channel
+    /// tolerance wide enough for the hue drift would have been most of the way
+    /// to the defect. A loose per-channel bound is kept as a guard against a
+    /// gross hue shift.</para>
     ///
     /// <para>The fixture paints an explicit <c>0 0 0 0.1 k</c> wash over the
     /// whole page for a reason: the page's RETAINED backdrop has to carry alpha 1
@@ -228,21 +258,27 @@ public class DeviceCmykExplicitGroupBackdropSyncTests : IDisposable
 
         foreach (var (name, oracle) in new[] { ("mutool", mutool!), ("ghostscript", gs!) })
         {
-            DistanceToCalibrationPatch(oracle, out var oracleObject, out var oraclePatch)
-                .Should().BeLessThanOrEqualTo(3,
-                    $"{name} must render the half-opacity object ({oracleObject}) as the "
-                    + $"0 0 0 0.55 k patch ({oraclePatch}), or the patch is not a calibration "
-                    + "for this fixture and this row proves nothing");
+            LuminanceDistanceToCalibrationPatch(oracle, out var oracleObject, out var oraclePatch)
+                .Should().BeLessThanOrEqualTo(OracleCalibrationTolerance,
+                    $"{name} must render the half-opacity object (L={oracleObject:F1}) as the "
+                    + $"0 0 0 0.55 k patch (L={oraclePatch:F1}), or the patch is not a calibration "
+                    + "for this fixture and this row proves nothing (measured: 1.1 and 0.0)");
         }
 
         using var excise = RenderWithExcise(path);
-        DistanceToCalibrationPatch(excise, out var exciseObject, out var excisePatch)
-            .Should().BeLessThanOrEqualTo(PatchTolerance,
+        LuminanceDistanceToCalibrationPatch(excise, out var exciseObject, out var excisePatch)
+            .Should().BeLessThanOrEqualTo(PatchLuminanceTolerance,
                 $"a /ca 0.5 shading-pattern fill inside an explicit /CS /DeviceCMYK group "
-                + $"({exciseObject}) must composite to the same ink as the 0 0 0 0.55 k patch "
-                + $"({excisePatch}), which both oracles confirm. Before #1510 the post-content "
-                + "fold ran the page-flavoured sync on the child's transparent group bitmap, so "
-                + "the alpha was applied twice and this read about 45 levels lighter");
+                + $"(L={exciseObject:F1}) must composite to the same ink DENSITY as the "
+                + $"0 0 0 0.55 k patch (L={excisePatch:F1}), which both oracles confirm. Before "
+                + "#1510 the post-content fold ran the page-flavoured sync on the child's "
+                + "transparent group bitmap, the alpha was applied twice, and this read L=193.9 "
+                + "against the patch's 132.6 — 61.3 levels too light (measured, both ways)");
+        DistanceToCalibrationPatch(excise, out var exciseObjectRgb, out var excisePatchRgb)
+            .Should().BeLessThanOrEqualTo(PatchHueGuard,
+                $"and the hue must not have drifted grossly either ({exciseObjectRgb} vs "
+                + $"{excisePatchRgb}); measured 13, which is the RgbToDeviceCmyk round trip on a "
+                + "neutral grey and not the doubled alpha (that is 62 on this metric)");
     }
 
     // ---------------------------------------------------------------- site 3
@@ -255,18 +291,20 @@ public class DeviceCmykExplicitGroupBackdropSyncTests : IDisposable
     /// since such a group fails <c>inheritsDeviceCmyk</c> and takes the contained
     /// layer instead of the child path.
     ///
-    /// <para><b>Why this row asserts an inequality and not a match.</b> excise
-    /// stays about 40 levels LIGHTER than the oracles here even with the fix, for
-    /// an unrelated reason: mutool and Ghostscript convert the DeviceRGB group
-    /// into the page group's DeviceCMYK blending space and read the object at
-    /// L≈97, which is neither excise's <c>RgbToDeviceCmyk</c> answer (the
-    /// <c>0 0 0 0.55 k</c> calibration patch, L≈140) nor a plain RGB mix
-    /// (L≈115). Pinning excise to the oracles' number would be pinning a
-    /// colour-conversion difference this lane did not investigate. What the
-    /// oracles DO establish, and what this row asserts, is an inequality: both
-    /// render the object at least as dark as their own calibration patch, so
-    /// excise must too. Before the fix it was lighter than the patch — the
-    /// double-applied alpha — and that is what reddens.</para>
+    /// <para><b>Why this row asserts an inequality and not a match.</b> MEASURED:
+    /// with the fix excise reads the object at L=132.6, which is its
+    /// <c>0 0 0 0.55 k</c> calibration patch to the BYTE (distance 0) — so
+    /// excise composites the DeviceRGB group's black as CMYK K=1 at alpha 0.5
+    /// over the 0.1 wash, exactly 0.55 ink. mutool and Ghostscript read L=98.2
+    /// and L=96.2, i.e. 34-36 levels DARKER, so they do something else with the
+    /// DeviceRGB-into-DeviceCMYK group conversion; it is neither excise's answer
+    /// nor a plain RGB mix (which would be L≈115). Pinning excise to their number
+    /// would pin a colour-conversion difference this lane did not investigate.
+    /// What the oracles DO establish, and what this row asserts, is an
+    /// inequality: both render the object at least as dark as their own
+    /// calibration patch, so excise must too. Before the fix excise read L=188.3,
+    /// 55.7 levels LIGHTER than the patch — the double-applied alpha — and that
+    /// is what reddens.</para>
     /// </summary>
     [Fact]
     public void SiteThree_NonCmykGroupInsideExplicitCmykGroup_IsNotDoubleLightened()
@@ -292,13 +330,14 @@ public class DeviceCmykExplicitGroupBackdropSyncTests : IDisposable
         using var excise = RenderWithExcise(path);
         var exciseObject = Luminance(excise.GetPixel(InsideObject.X, InsideObject.Y));
         var excisePatch = Luminance(excise.GetPixel(CalibrationSample.X, CalibrationSample.Y));
-        exciseObject.Should().BeLessThanOrEqualTo(excisePatch + PatchTolerance,
+        exciseObject.Should().BeLessThanOrEqualTo(excisePatch + PatchLuminanceTolerance,
             $"a /ca 0.5 DeviceRGB group inside an explicit /CS /DeviceCMYK group "
             + $"(L={exciseObject:F1}) must be at least as dark as the 0 0 0 0.55 k patch "
-            + $"(L={excisePatch:F1}), which both oracles bound from below. Before the fix the "
-            + "contained-layer fold-back ran the page-flavoured sync on the enclosing child's "
-            + "transparent group bitmap, applying the layer's alpha twice, and this read clearly "
-            + "lighter than the patch");
+            + $"(L={excisePatch:F1}), which both oracles bound from below (they read 98.2 and "
+            + "96.2, darker still). Before the fix the contained-layer fold-back ran the "
+            + "page-flavoured sync on the enclosing child's transparent group bitmap, applying "
+            + "the layer's alpha twice, and this read L=188.3 — 55.7 levels lighter than the "
+            + "patch (measured, both ways)");
     }
 
     // ------------------------------------------------------------------ #1511
@@ -339,10 +378,11 @@ public class DeviceCmykExplicitGroupBackdropSyncTests : IDisposable
             + $"that same ink, so a correct render is at fraction 1.0 (mutool {m:F2}, gs {g:F2})");
 
         DarkFraction(excise, InsideObject).Should().BeApproximately(target, FractionTolerance,
-            $"an `sh` inside an explicit /CS /DeviceCMYK group (oracles {m:F2}/{g:F2}, both 1.00). "
-            + "Before #1511 `sh` marked nothing dirty, the child's fold never ran, and the "
-            + "composite read the seeded wash as the group's colour — fraction 0.00, the shading "
-            + "invisible");
+            $"an `sh` inside an explicit /CS /DeviceCMYK group (oracles {m:F2}/{g:F2}, both "
+            + "measured 1.00 — the shading reads as its own ink; excise reads 1.017). Before "
+            + "#1511 `sh` marked nothing dirty, the child's fold never ran, and the composite "
+            + "read the seeded wash as the group's colour: fraction exactly 0.000, the object "
+            + "BYTE-IDENTICAL to the wash, i.e. the shading invisible (measured)");
     }
 
     /// <summary>
@@ -376,10 +416,14 @@ public class DeviceCmykExplicitGroupBackdropSyncTests : IDisposable
             + "cannot tell them apart");
         ChannelDistance(obj, wash).Should().BeGreaterThan(40,
             $"the `sh` square ({obj}) must not read as the wash it sits on ({wash}) — that is what "
-            + "a shading that was never folded into the child's CMYK backdrop looks like (#1511)");
+            + "a shading that was never folded into the child's CMYK backdrop looks like, and "
+            + "before #1511 the two were BYTE-IDENTICAL (measured: distance 0)");
         ChannelDistance(obj, ink).Should().BeLessThan(ChannelDistance(obj, wash),
             $"and it must read nearer the shading's own ink ({ink}) than the wash ({wash}), which "
-            + "the page paints as a reference patch in the shading's colour");
+            + "the page paints as a reference patch in the shading's colour. Measured with the "
+            + "fix: 20 from the ink, 164 from the wash — the 20 is the CMYK-RGB-CMYK round trip "
+            + "flattening the 0.1 yellow component, which is why this is a comparison and not a "
+            + "tolerance");
     }
 
     // ------------------------------------------------------------------ setup
@@ -417,6 +461,18 @@ public class DeviceCmykExplicitGroupBackdropSyncTests : IDisposable
         sample = bitmap.GetPixel(InsideObject.X, InsideObject.Y);
         patch = bitmap.GetPixel(CalibrationSample.X, CalibrationSample.Y);
         return ChannelDistance(sample, patch);
+    }
+
+    /// <summary>
+    /// Luminance gap between the object and the calibration patch IN THE SAME
+    /// RENDER, so the renderer's own CMYK-to-RGB conversion cancels.
+    /// </summary>
+    private static double LuminanceDistanceToCalibrationPatch(
+        SKBitmap bitmap, out double sample, out double patch)
+    {
+        sample = Luminance(bitmap.GetPixel(InsideObject.X, InsideObject.Y));
+        patch = Luminance(bitmap.GetPixel(CalibrationSample.X, CalibrationSample.Y));
+        return Math.Abs(sample - patch);
     }
 
     private static double Luminance(SKColor c)
