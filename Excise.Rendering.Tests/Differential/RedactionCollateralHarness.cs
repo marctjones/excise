@@ -399,7 +399,11 @@ public class RedactionCollateralHarness
 
     private static string? Resolve(string rel)
     {
-        for (var up = 0; up < 6; up++)
+        // #1525: 12, not 6 — `up` counts ".." from the test host's working
+        // directory, which is deeper in a git worktree than in the main
+        // checkout. The corpora these rows need exist ONLY in the main
+        // checkout (gitignored), so the walk has to be able to reach it.
+        for (var up = 0; up < 12; up++)
         {
             var p = Path.GetFullPath(Path.Combine(Enumerable.Repeat("..", up).DefaultIfEmpty(".").Aggregate(Path.Combine), rel));
             if (Directory.Exists(p)) return p;
