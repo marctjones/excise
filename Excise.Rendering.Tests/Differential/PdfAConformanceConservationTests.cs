@@ -349,10 +349,32 @@ public class PdfAConformanceConservationTests
         finally { try { File.Delete(output); } catch { /* best effort */ } }
     }
 
+    /// <summary>
+    /// Walk up from the test binary looking for a corpus-relative path.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ The bound was 8, and 8 is one short of a GIT WORKTREE. Measured
+    /// 2026-09-16: from
+    /// <c>&lt;repo&gt;/.claude/worktrees/&lt;branch&gt;/Excise.Rendering.Tests/bin/Debug/net10.0/</c>
+    /// the repo root — the only place <c>test-pdfs/</c> exists — is 8 levels up,
+    /// and the loop's first iteration is spent on
+    /// <c>Path.GetDirectoryName</c> merely stripping BaseDirectory's trailing
+    /// separator, so it stopped at <c>.claude</c>. Every corpus row in this
+    /// class therefore skipped with "veraPDF corpus not present" in any
+    /// worktree-based session — a declared skip (#1172 is satisfied) whose
+    /// stated reason was FALSE: the corpus was there, the search was too
+    /// shallow. 12 clears a worktree with room to spare.
+    ///
+    /// <para>The same bound appears in several other Differential test files,
+    /// which are silently losing their corpus rows in a worktree the same way.
+    /// Fixed here because this class is what #1507 is gated on; the sweep is
+    /// filed separately rather than done blind across files this change does
+    /// not otherwise touch.</para>
+    /// </remarks>
     private static string? Resolve(string rel)
     {
         var dir = AppContext.BaseDirectory;
-        for (var i = 0; i < 8 && dir != null; i++)
+        for (var i = 0; i < 12 && dir != null; i++)
         {
             var c = Path.Combine(dir, rel);
             if (File.Exists(c)) return c;
