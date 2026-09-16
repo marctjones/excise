@@ -153,7 +153,12 @@ public class SkiaRenderer
             resourceScope,
             cancellationToken,
             bitmap,
-            startsInDeviceCmykGroup);
+            startsInDeviceCmykGroup,
+            // The PAGE bitmap, cleared to the paper colour just above when the
+            // page starts in a DeviceCMYK group — so every pixel carries alpha
+            // 255 and the page-flavoured backdrop sync is the correct one
+            // (#1510).
+            rootBitmapIsTransparencyGroupBitmap: false);
         context.Render();
 
         // Paper last. Everything drawn above composited against a transparent
@@ -513,10 +518,15 @@ internal partial class RenderContext
         RenderResourceScope resourceScope,
         CancellationToken cancellationToken = default,
         SKBitmap? rootBitmap = null,
-        bool startsInDeviceCmykTransparencyGroup = false)
+        bool startsInDeviceCmykTransparencyGroup = false,
+        // #1510: WHAT rootBitmap is, not just whether we are in a CMYK group.
+        // It decides which backdrop sync is correct, so it belongs next to the
+        // bitmap it describes rather than being assigned by whoever remembers.
+        bool rootBitmapIsTransparencyGroupBitmap = false)
     {
         _canvas = canvas;
         _rootBitmap = rootBitmap;
+        _isDeviceCmykGroupBitmap = rootBitmapIsTransparencyGroupBitmap;
         _page = page;
         _options = options;
         _resourceScope = resourceScope;

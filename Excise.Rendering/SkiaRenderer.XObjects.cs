@@ -18,7 +18,7 @@ internal partial class RenderContext
     /// refuse, so everything the group draws lands in the layer where its
     /// <c>/SMask</c>, <c>/ca</c> and <c>/BM</c> can act on it. The layer's
     /// composite is folded back into the CMYK backdrop afterwards
-    /// (<see cref="SyncDeviceCmykBackdropFromRootBitmap"/>).
+    /// (<see cref="SyncDeviceCmykBackdropForThisBitmap"/>).
     /// </summary>
     private int _deviceCmykDirectWriteSuppression;
 
@@ -29,6 +29,29 @@ internal partial class RenderContext
     /// the zero-ink guard in <c>TryPaintDeviceCmykBlendPath</c>.
     /// </summary>
     private bool _isContainedGroupChild;
+
+    /// <summary>
+    /// True when this context's <c>_rootBitmap</c> is a transparency-GROUP
+    /// bitmap — one <see cref="TryRenderDeviceCmykFormGroup"/> allocated and
+    /// cleared to <see cref="SKColors.Transparent"/> — rather than the page
+    /// bitmap, which a DeviceCMYK-group page clears to the paper colour
+    /// (<c>SkiaRenderer.RenderPage</c>'s <c>startsInDeviceCmykGroup</c> branch).
+    ///
+    /// <para>This is the property that decides WHICH backdrop sync is correct
+    /// (#1510): a page bitmap carries alpha 255 everywhere, so resolving
+    /// partial alpha against paper is right and the rare zero-alpha pixel is a
+    /// truth to record; a group bitmap starts empty, so an unpainted pixel
+    /// carries no information at all and must be left alone. Set for EVERY
+    /// child that method opens, both the pre-#1395 <c>UnmaskedDeviceCmykGroup</c>
+    /// entry and #1395's contained ones — unlike
+    /// <see cref="_isContainedGroupChild"/>, which #1505 used as a proxy for it
+    /// and which is true for only the latter.</para>
+    ///
+    /// <para>Constructor-set and readonly on purpose: a group bitmap and the
+    /// fact that it is one are two halves of one decision, and #1510 exists
+    /// because they were made in different places.</para>
+    /// </summary>
+    private readonly bool _isDeviceCmykGroupBitmap;
 
     /// <summary>
     /// True when this context composites DeviceCMYK paint straight into
@@ -159,8 +182,15 @@ internal partial class RenderContext
                 _deviceCmykDirectWriteSuppression--;
             }
 
+            // #1510: the fold-back has to match what THIS context's bitmap is.
+            // Reachable from a CHILD group context — a nested group whose /CS is
+            // explicitly not CMYK fails `inheritsDeviceCmyk` and lands here,
+            // where `this` is the enclosing child and _rootBitmap is its
+            // transparent group bitmap. The page-flavoured sync then resolved
+            // the layer's partial alpha against paper, and the composite
+            // applied that alpha a second time.
             if (syncRegion is { } region)
-                SyncDeviceCmykBackdropFromRootBitmap(region.Left, region.Top, region.Width, region.Height);
+                SyncDeviceCmykBackdropForThisBitmap(region.Left, region.Top, region.Width, region.Height);
             return;
         }
 
@@ -401,8 +431,9 @@ internal partial class RenderContext
     /// <see cref="DeviceCmykGroupEntry.PlainGroup"/>) additionally clip the
     /// group region to the device clip and fold Skia-RGB paint inside the child
     /// into the child's CMYK backdrop before the composite. The pre-#1395 entry
-    /// keeps its region and its dirty-flag-only sync, so the gwg160–162
-    /// contracts stay comparable.</para>
+    /// keeps its region and its dirty-flag-gated fold — since #1510 through the
+    /// same group-flavoured sync, since the child's bitmap is a group bitmap
+    /// under every entry.</para>
     ///
     /// <para><b>Non-isolated groups (§11.4.4, #1504).</b> A non-isolated child
     /// is seeded from this context's backdrop, so the child's accumulated
@@ -504,7 +535,10 @@ internal partial class RenderContext
                 _resourceScope,
                 _cancellationToken,
                 groupBitmap,
-                startsInDeviceCmykTransparencyGroup: true);
+                startsInDeviceCmykTransparencyGroup: true,
+                // groupBitmap was just Clear(Transparent)'d, under EVERY entry
+                // — which is what #1510 is about.
+                rootBitmapIsTransparencyGroupBitmap: true);
             child._resourcesStack.Push(_page.Resources);
             child._state = invocationState.Clone();
             // §11.6.6: a group's content starts at blend mode Normal, alpha
@@ -562,30 +596,27 @@ internal partial class RenderContext
             // where the group has painted nothing, and stores straight colour
             // plus the pixel's own alpha where it has.
             //
-            // ⚠️ The discriminator is deliberately _isContainedGroupChild and
-            // NOT "this bitmap is a group bitmap", which is the property that
-            // actually matters. Two consequences, both known:
-            // - it must not become unconditional, because on the page the
-            //   zero-alpha pixels are knockout resets and the page-flavoured
-            //   sync's white/alpha-0 write is the right record of them;
-            // - the pre-#1395 UnmaskedDeviceCmykGroup child (an explicit
-            //   /CS /DeviceCMYK group, _isContainedGroupChild false) is also a
-            //   transparent group bitmap and still takes the page-flavoured
-            //   sync here. That is the same defect one entry over. It is left
-            //   alone in #1505 because #1395's contained entries are what
-            //   created the child-in-child nesting this issue is about, and
-            //   because the same choice was already made deliberately for that
-            //   entry's post-content sync below (see CompleteChildGroup's
-            //   synchronizeDirtyBackdrop, kept page-flavoured so the gwg160-162
-            //   contracts stay comparable). Widening it is a separate,
-            //   contract-moving change with its own measurement.
+            // #1510: the discriminator is _isDeviceCmykGroupBitmap — "this
+            // bitmap is a group bitmap" — which is the property that actually
+            // matters. #1505 used _isContainedGroupChild as a proxy for it and
+            // said so: the pre-#1395 UnmaskedDeviceCmykGroup child (an explicit
+            // /CS /DeviceCMYK group) is _isContainedGroupChild FALSE and still a
+            // transparent group bitmap, so it kept taking the page-flavoured
+            // sync here — the same defect one entry over.
+            //
+            // It still must not become unconditional: on the PAGE bitmap the
+            // page-flavoured sync is the correct one, and that is what the flag
+            // selects.
+            //
+            // Knockout is the case that makes the group flavour more correct
+            // rather than merely different: inside a knockout child,
+            // ResetDeviceCmykKnockoutPixel writes the group's INITIAL backdrop
+            // into the retained backdrop and alpha 0 into the bitmap (§11.4.6).
+            // The group-flavoured sync skips alpha-0 pixels, so that reset
+            // survives to be the backdrop a nested blend acts on; the
+            // page-flavoured sync overwrote it with zero ink at alpha 0.
             if (!isIsolated && invocationState.BlendMode != SKBlendMode.SrcOver)
-            {
-                if (_isContainedGroupChild)
-                    SyncDeviceCmykGroupBackdropFromGroupBitmap(left, top, width, height);
-                else
-                    SyncDeviceCmykBackdropFromRootBitmap(left, top, width, height);
-            }
+                SyncDeviceCmykBackdropForThisBitmap(left, top, width, height);
 
             // The seed source, kept so the composite can remove exactly what
             // was seeded (§11.4.4, #1504) rather than re-deriving C0 from a
@@ -620,12 +651,26 @@ internal partial class RenderContext
                 // GWG168's masked groups contain exactly such nested masked
                 // fills; GWG1610/1611's contain text.
                 //
-                // For those entries the group-bitmap sync SUBSUMES the dirty-flag
-                // sync CompleteChildGroup would otherwise run: that one resolves
-                // partial alpha against paper (right for a page, wrong for a
-                // transparent group bitmap) and, run second, would re-whiten any
-                // pixel whose RGB->CMYK->RGB round trip drifts past its
-                // threshold. So it gets a no-op.
+                // For those entries the unconditional sync SUBSUMES the
+                // dirty-flag one CompleteChildGroup would otherwise run, so it
+                // gets a no-op — running both would visit the same pixels twice.
+                //
+                // #1510: BOTH branches now use the group-flavoured sync, because
+                // `child`'s bitmap is a group bitmap under every entry. The
+                // page-flavoured sync this branch used to run resolved partial
+                // alpha against paper — the composite then applied that alpha a
+                // second time, so a half-opacity result inside a pre-#1395
+                // /CS /DeviceCMYK group reached the page at a quarter strength —
+                // and it re-whitened any pixel whose RGB->CMYK->RGB round trip
+                // drifted past the 12-unit threshold.
+                //
+                // What is left between the branches is the TRIGGER, not the
+                // flavour: this one runs only when BackdropDirtyFromRgbPaint is
+                // set, and the only paint that sets it is a shading or tiling
+                // pattern (plus `sh` since #1511). Text and DeviceGray/RGB fills
+                // in a pre-#1395 /CS /DeviceCMYK group still reach the composite
+                // unfolded and take the backdrop's colour — tracked separately,
+                // deliberately not widened here so #1511 stays observable.
                 Action synchronizeDirtyBackdrop;
                 if (isContainedEntry)
                 {
@@ -634,7 +679,8 @@ internal partial class RenderContext
                 }
                 else
                 {
-                    synchronizeDirtyBackdrop = () => child.SyncDeviceCmykBackdropFromRootBitmap(0, 0, width, height);
+                    synchronizeDirtyBackdrop =
+                        () => child.SyncDeviceCmykGroupBackdropFromGroupBitmap(0, 0, width, height);
                 }
 
                 childResult = child._deviceCmyk.CompleteChildGroup(synchronizeDirtyBackdrop);
@@ -797,6 +843,33 @@ internal partial class RenderContext
         return true;
     }
 
+    /// <summary>
+    /// Fold Skia-RGB paint in THIS context's bitmap into THIS context's
+    /// retained CMYK backdrop, over one region in this context's pixel
+    /// coordinates, choosing the sync that matches what the bitmap IS (#1510).
+    ///
+    /// <para>The two syncs differ only where the bitmap's alpha is below 255 —
+    /// at alpha 255 they store the same colour and the same alpha — so this
+    /// choice is exactly the choice of what a partially or fully transparent
+    /// pixel MEANS. On the page bitmap it means "partly covered paper", which
+    /// <see cref="SyncDeviceCmykBackdropFromRootBitmap"/> resolves; in a group
+    /// bitmap it means "the group has not painted here", which
+    /// <see cref="SyncDeviceCmykGroupBackdropFromGroupBitmap(int,int,int,int)"/>
+    /// leaves alone.</para>
+    ///
+    /// <para>Every caller is a context whose bitmap it does not choose — the
+    /// page context and a #1395 child context run the same code — which is why
+    /// the dispatch lives here rather than at the three call sites, two of
+    /// which got it wrong.</para>
+    /// </summary>
+    private void SyncDeviceCmykBackdropForThisBitmap(int left, int top, int width, int height)
+    {
+        if (_isDeviceCmykGroupBitmap)
+            SyncDeviceCmykGroupBackdropFromGroupBitmap(left, top, width, height);
+        else
+            SyncDeviceCmykBackdropFromRootBitmap(left, top, width, height);
+    }
+
     private void SyncDeviceCmykBackdropFromRootBitmap(int left, int top, int width, int height)
     {
         if (_rootBitmap == null || _deviceCmyk.Backdrop == null)
@@ -876,7 +949,16 @@ internal partial class RenderContext
     /// non-isolated group's seeded backdrop alone where the group did not
     /// paint. That last property is what makes this — and not
     /// <see cref="SyncDeviceCmykBackdropFromRootBitmap"/> — the sync a child
-    /// context may run BEFORE seeding a nested group (#1505).</para>
+    /// context may run BEFORE seeding a nested group (#1505), and since #1510
+    /// the sync a child context runs in EVERY position, chosen by
+    /// <see cref="SyncDeviceCmykBackdropForThisBitmap"/>.</para>
+    ///
+    /// <para>⚠️ <c>Set</c> replaces colour AND alpha, so a partially
+    /// transparent pixel is recorded at its own alpha rather than at the union
+    /// with the backdrop it overwrites. That is the right shape for the
+    /// pre-composite call (the composite applies the alpha exactly once) and a
+    /// known approximation where the value is consumed AS a backdrop — #1513,
+    /// which #1510 gives two more call sites and does not change.</para>
     /// </summary>
     private void SyncDeviceCmykGroupBackdropFromGroupBitmap()
     {
