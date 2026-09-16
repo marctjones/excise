@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using AwesomeAssertions;
+using Excise.TestSupport;
 using SkiaSharp;
 using Xunit;
 
@@ -147,24 +148,31 @@ public class JpxSoftMaskRenderTests
         }
     }
 
+    /// <summary>
+    /// ⚠️ <b>BUILD OUTPUT — local checkout only, never an upward search.</b>
+    /// The CLI is a build-order <c>ProjectReference</c>, so it exists inside
+    /// every checkout by construction. Letting this reach the MAIN checkout from
+    /// a git worktree — which is the right thing for read-only corpus data
+    /// (#1527) — would silently run the wrong build's binary and PASS, which is
+    /// worse than not finding it. #1525 declined to sweep this locator for
+    /// exactly that reason; the bound is gone, the local-only scope is
+    /// deliberate and load-bearing.
+    /// </summary>
     private static string? FindCliAssembly()
     {
-        var dir = Directory.GetCurrentDirectory();
-        for (var up = 0; up < 8 && dir != null; up++)
+        foreach (var config in new[] { "Debug", "Release" })
         {
-            foreach (var config in new[] { "Debug", "Release" })
+            // The CLI project emits "excise.dll" (AssemblyName), not
+            // Excise.Cli.dll — an earlier version of this finder looked for
+            // the project name and silently skipped the whole test.
+            foreach (var assembly in new[] { "excise.dll", "Excise.Cli.dll" })
             {
-                // The CLI project emits "excise.dll" (AssemblyName), not
-                // Excise.Cli.dll — an earlier version of this finder looked for
-                // the project name and silently skipped the whole test.
-                foreach (var assembly in new[] { "excise.dll", "Excise.Cli.dll" })
-                {
-                    var candidate = Path.Combine(dir, "Excise.Cli", "bin", config, "net10.0", assembly);
-                    if (File.Exists(candidate)) return candidate;
-                }
+                var candidate = TestRepoLayout.FindFileInLocalCheckout(
+                    "Excise.Cli", "bin", config, "net10.0", assembly);
+                if (candidate != null) return candidate;
             }
-            dir = Path.GetDirectoryName(dir);
         }
+
         return null;
     }
 }

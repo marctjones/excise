@@ -188,6 +188,65 @@ RC7B=0
 [[ "$RC7B" -ne 0 ]] || { echo "FAIL: a union with a zero-byte part was accepted as the whole run"; cat "$OUT7B"; FAIL=1; }
 grep -qF "no trx produced at $WORK/empty-part.trx" "$OUT7B" || { echo "FAIL: the empty part of the union was not named"; cat "$OUT7B"; FAIL=1; }
 
+# ---------------------------------------------------------------------------
+# 8. #1527: a DECLARED reason that is NOT TRUE fails. A reason carrying an
+#    "[excise-searched: ...]" absence claim is re-checked against the
+#    filesystem, and a claimed-absent path that EXISTS is a lie, not a skip.
+#    This is the case #1172 could not see: three redaction gates skipped every
+#    corpus row for a month behind "smoke corpus not present" while the corpus
+#    sat seven directory levels above a bounded locator's reach.
+# ---------------------------------------------------------------------------
+PRESENT_DIR="$WORK/present-corpus"
+mkdir -p "$PRESENT_DIR"
+ABSENT_DIR="$WORK/absent-corpus"
+
+TRX_LIE="$WORK/untrue-claim.trx"
+cat > "$TRX_LIE" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo.Tests.A.LyingSkip" outcome="NotExecuted" executionId="e1">
+      <Output><ErrorInfo><Message>smoke corpus not present [excise-searched: $PRESENT_DIR]</Message></ErrorInfo></Output>
+    </UnitTestResult>
+  </Results>
+</TestRun>
+EOF
+
+OUT8="$WORK/lie.log"
+RC8=0
+"$GATE" "$PROJECT" --trx "$TRX_LIE" >"$OUT8" 2>&1 || RC8=$?
+[[ "$RC8" -ne 0 ]] || { echo "FAIL: gate accepted a skip claiming a path is absent that EXISTS"; cat "$OUT8"; FAIL=1; }
+grep -qF -- '+ Demo.Tests.A.LyingSkip' "$OUT8" || { echo "FAIL: gate did not name the lying skip"; cat "$OUT8"; FAIL=1; }
+grep -qF "EXISTS:  $PRESENT_DIR" "$OUT8" || { echo "FAIL: gate did not name the path that exists"; cat "$OUT8"; FAIL=1; }
+
+# ---------------------------------------------------------------------------
+# 9. A TRUE absence claim passes, and is counted as checked. The corpus really
+#    is not there, so the skip is honest and must not be flagged.
+# ---------------------------------------------------------------------------
+TRX_TRUE="$WORK/true-claim.trx"
+cat > "$TRX_TRUE" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo.Tests.A.HonestSkip" outcome="NotExecuted" executionId="e1">
+      <Output><ErrorInfo><Message>smoke corpus not present [excise-searched: $ABSENT_DIR | $ABSENT_DIR/federal]</Message></ErrorInfo></Output>
+    </UnitTestResult>
+    <UnitTestResult testName="Demo.Tests.A.NoClaim" outcome="NotExecuted" executionId="e2">
+      <Output><ErrorInfo><Message>mutool not installed</Message></ErrorInfo></Output>
+    </UnitTestResult>
+    <UnitTestResult testName="Demo.Tests.A.NoRootAtAll" outcome="NotExecuted" executionId="e3">
+      <Output><ErrorInfo><Message>corpus not present [excise-searched: (none)]</Message></ErrorInfo></Output>
+    </UnitTestResult>
+  </Results>
+</TestRun>
+EOF
+
+OUT9="$WORK/true.log"
+RC9=0
+"$GATE" "$PROJECT" --trx "$TRX_TRUE" >"$OUT9" 2>&1 || RC9=$?
+[[ "$RC9" -eq 0 ]] || { echo "FAIL: gate rejected a TRUE absence claim"; cat "$OUT9"; FAIL=1; }
+grep -qF "1 absence claim(s) re-checked" "$OUT9" || { echo "FAIL: gate did not report the absence-claim check count (a '(none)' claim has nothing to check, and a reason with no claim is not one)"; cat "$OUT9"; FAIL=1; }
+
 if [[ $FAIL -ne 0 ]]; then
   exit 1
 fi
@@ -197,3 +256,6 @@ echo "      non-empty in-code reason and fails on any that has none — no"
 echo "      <Output> at all, a blank <Message>, mixed in with a good one, or"
 echo "      missing entirely across a chunked (--trx, repeated) union — and"
 echo "      on a union with one part missing or empty."
+echo "PASS: (#1527) a declared reason that CLAIMS absence is re-checked against"
+echo "      the filesystem: a claimed-absent path that exists fails and is named;"
+echo "      a genuinely absent one passes."

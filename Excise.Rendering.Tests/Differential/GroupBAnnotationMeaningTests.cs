@@ -514,20 +514,15 @@ public class GroupBAnnotationMeaningTests
         return Encoding.Latin1.GetBytes(sb.ToString());
     }
 
-    private static string? Resolve(string fixture)
-    {
-        var dir = AppContext.BaseDirectory;
-        // #1525: 12, not 8 — a git worktree sits two directories deeper
-        // than the main checkout and the first iteration is spent stripping
-        // BaseDirectory's trailing separator, so 8 stopped one level short of
-        // the repo root and every gitignored-corpus row skipped with a
-        // "corpus not present" reason that was false.
-        for (var i = 0; i < 12 && dir != null; i++)
-        {
-            var c = Path.Combine(dir, "test-pdfs", "pdfjs", fixture);
-            if (File.Exists(c)) return c;
-            dir = Path.GetDirectoryName(dir);
-        }
-        return null;
-    }
+    /// <summary>
+    /// Repository fixture lookup. Delegates to the ONE shared locator
+    /// (<see cref="TestRepoLayout"/>), which reaches the MAIN checkout from a git
+    /// worktree by reading the worktree's <c>.git</c> file. This used to walk
+    /// upward from <c>AppContext.BaseDirectory</c> bounded at 8 — from a worktree
+    /// the corpora are 7 levels up and the first iteration is spent stripping a
+    /// trailing separator, so every corpus row in this class skipped with a
+    /// declared reason that was false (#1527/#1525).
+    /// </summary>
+    private static string? Resolve(string fixture) =>
+        TestRepoLayout.FindFile("test-pdfs", "pdfjs", fixture);
 }

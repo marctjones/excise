@@ -60,18 +60,23 @@ public sealed class FlattenOcrRedactionTests
         return directory?.FullName ?? throw new InvalidOperationException("repository root unavailable");
     }
 
+    /// <summary>
+    /// ⚠️ <b>BUILD OUTPUT — local checkout only, never an upward search.</b>
+    /// Same reasoning as <c>JpxSoftMaskRenderTests.FindCliAssembly</c>: reaching
+    /// the MAIN checkout from a git worktree is correct for read-only corpus data
+    /// (#1527) and wrong here, because it would run another build's binary and
+    /// pass. #1525 declined to sweep this locator for that reason; the bound is
+    /// gone, the local-only scope stays.
+    /// </summary>
     private static string? FindCliAssembly()
     {
-        var directory = Directory.GetCurrentDirectory();
-        for (var up = 0; up < 8 && directory != null; up++)
+        foreach (var configuration in new[] { "Debug", "Release" })
         {
-            foreach (var configuration in new[] { "Debug", "Release" })
-            {
-                var candidate = Path.Combine(directory, "Excise.Cli", "bin", configuration, "net10.0", "excise.dll");
-                if (File.Exists(candidate)) return candidate;
-            }
-            directory = Path.GetDirectoryName(directory);
+            var candidate = TestRepoLayout.FindFileInLocalCheckout(
+                "Excise.Cli", "bin", configuration, "net10.0", "excise.dll");
+            if (candidate != null) return candidate;
         }
+
         return null;
     }
 }

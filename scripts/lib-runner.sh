@@ -951,8 +951,37 @@ runner_zero_tests_executed() {
     [ "${executed:-0}" = "0" ]
 }
 
+# runner_fixture_fingerprint — hash of HOW tests find their fixtures.
+#
+# #1527: a checkpoint marker validates a hash of the row's command (kind,
+# target, filter), and none of those change when fixture RESOLUTION changes.
+# So a resumed run could skip a corpus row on a marker written when the row
+# collected 88 rows instead of 101 — a vacuous green inherited by a row that
+# is not itself a redaction gate (those are checkpoint=never and re-run
+# regardless, which is the design working). Folding the locator and the
+# collected-row floor registry into the hash makes every marker invalid the
+# moment either changes, which is the only point at which the count can be
+# known to have moved. Cheap: two small files, cached per process.
+runner_fixture_fingerprint() {
+    if [ -z "${RUNNER_FIXTURE_FP:-}" ]; then
+        # RUNNER_ROOT may be unset when only part of this library is sourced
+        # (scripts/test-runner-plan-expand.sh does that); an absent pair of
+        # files hashes to a stable value, so the fingerprint degrades to a
+        # constant rather than breaking the hash under `set -u`.
+        local _r="${RUNNER_ROOT:-.}"
+        RUNNER_FIXTURE_FP="$(
+            cat "$_r/Excise.Core.Tests/TestSupport/TestRepoLayout.cs" \
+                "$_r/Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs" \
+                2>/dev/null | shasum -a 256 | cut -c1-16
+        )"
+    fi
+    printf '%s' "$RUNNER_FIXTURE_FP"
+}
+
 # runner_target_hash <kind> <target> <filter>
-runner_target_hash() { printf '%s|%s|%s' "$1" "$2" "$3" | shasum -a 256 | cut -c1-16; }
+runner_target_hash() {
+    printf '%s|%s|%s|%s' "$1" "$2" "$3" "$(runner_fixture_fingerprint)" | shasum -a 256 | cut -c1-16
+}
 
 # runner_marker_value <name> <key> — one line of a step's marker, or nothing.
 runner_marker_value() {

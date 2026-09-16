@@ -8,6 +8,7 @@ using Excise.Core.Operations;
 using Excise.Core.Security;
 using Excise.Rendering.Differential;
 using Xunit;
+using Excise.TestSupport;
 
 namespace Excise.Rendering.Tests.Differential;
 
@@ -127,19 +128,15 @@ public class ConservationGateTests
         }
     }
 
-    private static string? Resolve(string rel)
-    {
-        // #1525: 12, not 6 — `up` counts ".." from the test host's working
-        // directory, which is deeper in a git worktree than in the main
-        // checkout. The corpora these rows need exist ONLY in the main
-        // checkout (gitignored), so the walk has to be able to reach it.
-        for (var up = 0; up < 12; up++)
-        {
-            var p = Path.GetFullPath(Path.Combine(Enumerable.Repeat("..", up).DefaultIfEmpty(".").Aggregate(Path.Combine), rel));
-            if (Directory.Exists(p)) return p;
-        }
-        return null;
-    }
+    /// <summary>
+    /// Repository fixture lookup. Delegates to the ONE shared locator
+    /// (<see cref="TestRepoLayout"/>), which reaches the MAIN checkout from a git
+    /// worktree by reading the worktree's <c>.git</c> file. This used to count
+    /// '..' upward from the test host's WORKING directory, bounded at 6 — from a worktree the corpora are 7
+    /// levels up, so the rows this class needs were never collected (#1527/#1525).
+    /// </summary>
+    private static string? Resolve(string rel) =>
+        TestRepoLayout.FindDirectory(rel);
 
     private static string RequireFixture(string fixtureName)
     {
