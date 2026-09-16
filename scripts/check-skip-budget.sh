@@ -93,11 +93,30 @@ fi
 # [Fact(Skip="...")] and for a dynamic Assert.SkipWhen/SkipUnless/Skip,
 # verified empirically against a real xunit.v3 + vstest-trx-logger run
 # (#1172): both land there identically.
+# #1527 adds one check on top: a declared reason is not the same as a TRUE
+# reason. "smoke corpus not present" satisfied #1172 for a month while the
+# corpus sat seven directory levels above a bounded locator's reach — a skip
+# whose reason asserted the absence of something that was present. So a reason
+# that CLAIMS absence must name the absolute paths it searched
+# (TestRepoLayout.AbsenceReason emits "[excise-searched: /abs/a | /abs/b]") and
+# this gate re-tests every one of them. If a claimed-absent path exists, the
+# skip is a lie and the gate fails.
+#
+# Note the checker does NO path resolution of its own, deliberately: resolving
+# "test-pdfs/smoke" from this script's own directory in a worktree would
+# reproduce the exact blindness being checked for, and agree with the lie.
+# The test emits absolute paths; the checker only asks whether they exist.
 python3 - "$TMP"/r*.trx <<'PY'
+import os
+import re
 import sys
 import xml.etree.ElementTree as ET
 
+SEARCHED = re.compile(r"excise-searched:(?P<paths>[^\]]*)")
+
 undeclared = []
+untrue = []
+claims_checked = 0
 declared = 0
 seen = set()
 
@@ -128,6 +147,39 @@ for path in sys.argv[1:]:
             declared += 1
         else:
             undeclared.append(name)
+            continue
+
+        # The absence claim, if the reason carries one.
+        found = SEARCHED.search(message)
+        if not found:
+            continue
+        paths = [p.strip() for p in found.group("paths").split("|")]
+        paths = [p for p in paths if p and p != "(none)"]
+        if not paths:
+            continue
+        claims_checked += 1
+        present = [p for p in paths if os.path.exists(p)]
+        if present:
+            untrue.append((name, message, present))
+
+if untrue:
+    print()
+    print("FAIL: tests are skipping with a reason that is NOT TRUE.")
+    print("      The reason claims something is absent. It is present. This is #1527:")
+    print("      three redaction gates skipped every corpus row for a month behind")
+    print('      "smoke corpus not present", while the corpus sat seven directory levels')
+    print("      above a bounded locator's reach. #1172's gate was satisfied — a reason")
+    print("      existed — and a redaction gate ran 2 of 195 assertions.")
+    print()
+    print("      Fix the LOCATOR, not the message. Repository fixtures and corpora are")
+    print("      found with Excise.TestSupport.TestRepoLayout, which resolves the main")
+    print("      checkout from a worktree's .git file; nothing should be counting '..'.")
+    for n, msg, present in sorted(set((n, m, tuple(p)) for n, m, p in untrue)):
+        print(f"        + {n}")
+        print(f"          reason:  {msg}")
+        for p in present:
+            print(f"          EXISTS:  {p}")
+    sys.exit(1)
 
 if undeclared:
     print()
@@ -143,5 +195,6 @@ if undeclared:
         print(f"        + {n}")
     sys.exit(1)
 
-print(f"==> skip budget OK ({declared} skip(s), every one with a declared in-code reason)")
+print(f"==> skip budget OK ({declared} skip(s), every one with a declared in-code reason; "
+      f"{claims_checked} absence claim(s) re-checked against the filesystem)")
 PY

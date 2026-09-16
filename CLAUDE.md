@@ -696,6 +696,62 @@ reason is a declared reason regardless of what corpus or tool is present.
 passes, undeclared/blank skip fails, mixed and chunked-`--trx`-union cases)
 against synthetic trx fixtures.
 
+### ⚠️ A declared reason is not a TRUE reason, and a skip is not the worst case (#1527)
+
+#1172 checks that a reason EXISTS. It cannot check that the reason is true, and
+a reason asserting the absence of something PRESENT satisfied it for a month:
+`RedactionCollateralHarness`, `ConservationGateTests`,
+`RedactionRemoteCollateralTests` and `ReferenceRedactorComparisonTests` skipped
+their corpus rows behind "smoke corpus not present" while the corpus sat seven
+directory levels above a bounded locator's reach. Measured, same machine and
+commit, only the bound differing: **39 rows collected / 2 passing** at the
+shipped bound 6 against **1110 / 195** at bound 12. Suite-wide across the
+bound-6 and bound-8 families: 152 → 1236 rows, **22 → 319 passing**. All 319
+pass, so that is recovered verification, not a discovered regression — but
+"there is no flag to skip the redaction gates" was silently false. There was no
+flag. There was a path depth.
+
+**Two things follow, and both are gates now.**
+
+1. **Fixtures and corpora resolve through ONE locator**:
+   `Excise.Core.Tests/TestSupport/TestRepoLayout.cs`, linked into the test
+   projects the way `SavedPdfLeakScanner.cs` is. It reads git's own worktree
+   plumbing — the worktree `.git` FILE's `gitdir:` and that directory's
+   `commondir` — to find the MAIN checkout, which is where the gitignored
+   corpora live. ⚠️ A bigger depth bound is **not** the fix (it works only
+   because this repo's worktrees happen to sit inside the main checkout), and
+   neither is anchoring on `.git` or `excise.sln` (both mark the *worktree*
+   root). Build output is the exception: use `FindFileInLocalCheckout`, because
+   a worktree resolving the main checkout's `excise.dll` would test the wrong
+   binary and pass. `scripts/check-fixture-locators.sh` (t0) fails on any
+   bounded upward walk or hand-rolled `..` counting in test code, with no
+   allowlist.
+
+2. **A corpus-gated theory must COLLECT its rows.** This is the load-bearing
+   half, because the failure was *not* a skip: the `MemberData` sources
+   enumerate the corpus at discovery, so 1,071 rows were never collected at
+   all — no `NotExecuted` row for #1172 to read, nothing for #894 to count, and
+   `Passed! Failed: 0` on 39 rows is byte-identical to the same line on 1,110.
+   What actually caught it was somebody thinking 24 skips looked like too many;
+   at 2 it would have shipped. `CorpusRowFloorGateTests` therefore resolves each
+   corpus INDEPENDENTLY and fails when a reachable corpus yields no rows — and
+   `check-fixture-locators.sh` DERIVES the population of corpus-gated classes
+   rather than trusting that registry, which is what turned up the fourth gate
+   the first hand-written list missed.
+
+`check-skip-budget.sh` additionally re-checks absence claims: a reason built by
+`TestRepoLayout.AbsenceReason` carries the absolute paths it searched
+(`[excise-searched: /a | /b]`) and the gate `test -e`s each one, failing a skip
+whose claimed-absent path exists. The checker does no path resolution of its
+own on purpose — resolving a relative path from a worktree would reproduce the
+blindness it is checking for and agree with the lie.
+
+⚠️ Checkpoint hazard: a marker hashes the row's command (kind, target, filter),
+none of which change when fixture resolution does, so `runner_target_hash` now
+also folds in a fingerprint of the locator and the floor registry — any change
+to either invalidates every marker. Markers written before that change carry
+the old hash and re-run once.
+
 ## Common Development Workflows
 
 ### Adding a New PDF Operation Type
