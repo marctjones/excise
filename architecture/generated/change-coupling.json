@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "dc15451e3afc1d726bc403731551c214d7ff0ed3",
+  "sourceRevision": "d365ad6da5ec2b4cf256dcf17406576b893c8bf8",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -21,8 +21,8 @@
     "commitsRequested": 200,
     "commitsObserved": 198,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "dd751a85afa2cec220ec91731e21243b0bcae63a",
-    "oldestProductionCommit": "ec0a13a6a116fc654255bfce4f896dfd74a11911"
+    "newestProductionCommit": "4e7e8d8d80d2c884f973a76a40e91f49f3960236",
+    "oldestProductionCommit": "efa47d2bc53f1fabc2a07b0ff2ebd73cbfc0c6ca"
   },
   "files": [
     {
@@ -222,6 +222,10 @@
       "commits": 4
     },
     {
+      "path": "Excise.Core/Document/AcroFormAuthoring.cs",
+      "commits": 4
+    },
+    {
       "path": "Excise.Core/Redaction/ImageRegionRedactor.cs",
       "commits": 4
     },
@@ -282,15 +286,19 @@
       "commits": 3
     },
     {
-      "path": "Excise.Core/Document/AcroFormAuthoring.cs",
-      "commits": 3
-    },
-    {
       "path": "Excise.Core/Document/PdfDocumentObjectStore.cs",
       "commits": 3
     },
     {
+      "path": "Excise.Core/Document/PdfField.cs",
+      "commits": 3
+    },
+    {
       "path": "Excise.Core/Document/PdfPage.cs",
+      "commits": 3
+    },
+    {
+      "path": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
       "commits": 3
     },
     {
@@ -474,6 +482,14 @@
       "commits": 2
     },
     {
+      "path": "Excise.Core/Authoring/PdfA.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
+      "commits": 2
+    },
+    {
       "path": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
       "commits": 2
     },
@@ -483,10 +499,6 @@
     },
     {
       "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.Core/Document/PdfField.cs",
       "commits": 2
     },
     {
@@ -515,10 +527,6 @@
     },
     {
       "path": "Excise.Core/Redaction/ImageRedactor.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
       "commits": 2
     },
     {
@@ -851,14 +859,6 @@
     },
     {
       "path": "Excise.Cli/Commands/ValidationHandler.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Core/Authoring/PdfA.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
       "commits": 1
     },
     {
@@ -1682,12 +1682,6 @@
       "jaccard": 1.0
     },
     {
-      "source": "Excise.Core/Redaction/AppearanceStreamRedactor.cs",
-      "target": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
-      "cochanges": 2,
-      "jaccard": 1.0
-    },
-    {
       "source": "Excise.Rendering/Differential/MutoolReferenceRenderer.cs",
       "target": "Excise.Rendering/Differential/PdfBoxReferenceRenderer.cs",
       "cochanges": 2,
@@ -1725,12 +1719,12 @@
     },
     {
       "source": "Excise.Core/Redaction/AppearanceStreamRedactor.cs",
-      "target": "Excise.Core/Redaction/RedactionReport.cs",
+      "target": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
       "cochanges": 2,
       "jaccard": 0.6667
     },
     {
-      "source": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
+      "source": "Excise.Core/Redaction/AppearanceStreamRedactor.cs",
       "target": "Excise.Core/Redaction/RedactionReport.cs",
       "cochanges": 2,
       "jaccard": 0.6667
@@ -1808,6 +1802,12 @@
       "jaccard": 0.5
     },
     {
+      "source": "Excise.Core/Authoring/PdfDocumentBuilder.cs",
+      "target": "Excise.Core/Document/AcroFormAuthoring.cs",
+      "cochanges": 2,
+      "jaccard": 0.5
+    },
+    {
       "source": "Excise.Core/Content/ContentStream.cs",
       "target": "Excise.Core/Content/ContentStreamParser.cs",
       "cochanges": 2,
@@ -1857,19 +1857,7 @@
     },
     {
       "source": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
-      "target": "Excise.Core/Redaction/RedactedCopySafetyContract.cs",
-      "cochanges": 2,
-      "jaccard": 0.5
-    },
-    {
-      "source": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
-      "target": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
-      "cochanges": 2,
-      "jaccard": 0.5
-    },
-    {
-      "source": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
-      "target": "Excise.Core/Redaction/RedactionOptions.cs",
+      "target": "Excise.Core/Redaction/RedactionReport.cs",
       "cochanges": 2,
       "jaccard": 0.5
     },
@@ -1912,6 +1900,30 @@
     {
       "source": "Excise.Core/Content/ContentStreamWriter.cs",
       "target": "Excise.Core/Redaction/ObstructionStripper.cs",
+      "cochanges": 2,
+      "jaccard": 0.4
+    },
+    {
+      "source": "Excise.Core/Document/AcroFormAuthoring.cs",
+      "target": "Excise.Core/Document/PdfField.cs",
+      "cochanges": 2,
+      "jaccard": 0.4
+    },
+    {
+      "source": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
+      "target": "Excise.Core/Redaction/RedactedCopySafetyContract.cs",
+      "cochanges": 2,
+      "jaccard": 0.4
+    },
+    {
+      "source": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
+      "target": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
+      "cochanges": 2,
+      "jaccard": 0.4
+    },
+    {
+      "source": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
+      "target": "Excise.Core/Redaction/RedactionOptions.cs",
       "cochanges": 2,
       "jaccard": 0.4
     },
@@ -2180,12 +2192,6 @@
       "jaccard": 0.25
     },
     {
-      "source": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
-      "target": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
-      "cochanges": 2,
-      "jaccard": 0.25
-    },
-    {
       "source": "Excise.App/Composition/ApplicationComposition.cs",
       "target": "Excise.App/Services/DocumentImageExportWorkflowService.cs",
       "cochanges": 2,
@@ -2264,6 +2270,12 @@
       "jaccard": 0.2222
     },
     {
+      "source": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
+      "target": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
+      "cochanges": 2,
+      "jaccard": 0.2222
+    },
+    {
       "source": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
       "target": "Excise.Core/Redaction/RedactionReport.cs",
       "cochanges": 2,
@@ -2318,6 +2330,12 @@
       "jaccard": 0.2
     },
     {
+      "source": "Excise.Core/Authoring/PdfA.cs",
+      "target": "Excise.Core/Document/PdfDocument.cs",
+      "cochanges": 2,
+      "jaccard": 0.2
+    },
+    {
       "source": "Excise.Core/Document/PdfDocument.cs",
       "target": "Excise.Core/Writing/PdfDocumentWritingFacade.cs",
       "cochanges": 2,
@@ -2331,12 +2349,6 @@
     },
     {
       "source": "Excise.Core/Redaction/ImageRedactor.cs",
-      "target": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
-      "cochanges": 2,
-      "jaccard": 0.2
-    },
-    {
-      "source": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
       "target": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
       "cochanges": 2,
       "jaccard": 0.2
@@ -2385,7 +2397,19 @@
     },
     {
       "source": "Excise.Core/Document/PdfDocument.cs",
+      "target": "Excise.Core/Document/PdfField.cs",
+      "cochanges": 2,
+      "jaccard": 0.1818
+    },
+    {
+      "source": "Excise.Core/Document/PdfDocument.cs",
       "target": "Excise.Core/Document/PdfPage.cs",
+      "cochanges": 2,
+      "jaccard": 0.1818
+    },
+    {
+      "source": "Excise.Core/Redaction/InteractiveRedactionScrubber.cs",
+      "target": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
       "cochanges": 2,
       "jaccard": 0.1818
     },
@@ -2440,6 +2464,12 @@
     {
       "source": "Excise.Core/Content/ContentStreamWriter.cs",
       "target": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
+      "cochanges": 2,
+      "jaccard": 0.1667
+    },
+    {
+      "source": "Excise.Core/Document/AcroFormAuthoring.cs",
+      "target": "Excise.Core/Document/PdfDocument.cs",
       "cochanges": 2,
       "jaccard": 0.1667
     },

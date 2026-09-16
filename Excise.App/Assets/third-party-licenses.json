@@ -280,23 +280,23 @@
     },
     {
       "authors": "Legion of the Bouncy Castle Inc.",
-      "copyright": "Copyright \u00a9 Legion of the Bouncy Castle Inc. 2000-2025",
+      "copyright": "Copyright \u00a9 Legion of the Bouncy Castle Inc. 2000-2026",
       "description": "BouncyCastle.NET is a popular cryptography library for .NET",
       "id": "BouncyCastle.Cryptography",
       "licenseFileName": "license.md",
-      "licenseFileSha1": "ccf2dabe8e625a38e45e53b744acf1833cc05dd6",
+      "licenseFileSha1": "c3b49684a01baea9b96b296ce09406ac2f29a114",
       "licenseKind": "expression",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html",
-      "licenseText": "Copyright (c) 2000-2025 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org).\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and\nassociated documentation files (the \"Software\"), to deal in the Software without restriction,\nincluding without limitation the rights to use, copy, modify, merge, publish, distribute,\nsub license, and/or sell copies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions: The above copyright notice and this\npermission notice shall be included in all copies or substantial portions of the Software.\n\n**THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT\nNOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,\nDAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT\nOF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.**\n",
+      "licenseText": "MIT License (https://opensource.org/licenses/MIT)\n\nCopyright (c) 2000-2026 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org).\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and\nassociated documentation files (the \"Software\"), to deal in the Software without restriction,\nincluding without limitation the rights to use, copy, modify, merge, publish, distribute,\nsub license, and/or sell copies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions: The above copyright notice and this\npermission notice shall be included in all copies or substantial portions of the Software.\n\n**THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT\nNOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,\nDAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT\nOF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.**\n",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "licenseValue": "MIT",
       "nugetId": "BouncyCastle.Cryptography",
-      "nugetVersion": "2.6.2",
+      "nugetVersion": "2.7.0",
       "projectUrl": "https://www.bouncycastle.org/stable/nuget/csharp/website",
       "repositoryUrl": "https://github.com/bcgit/bc-csharp",
       "spdx": "MIT",
-      "version": "2.6.2"
+      "version": "2.7.0"
     },
     {
       "authors": "Anders Gustafsson, Jason S. Clary, JJ2000 Partners",
