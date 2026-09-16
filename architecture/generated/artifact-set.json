@@ -2,32 +2,32 @@
   "$schema": "../schemas/artifact-set.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/architecture_artifacts.py",
-  "sourceRevision": "2c243ea9d8b1429ea568c2eef1299664258fe5b9",
+  "sourceRevision": "dc15451e3afc1d726bc403731551c214d7ff0ed3",
   "revisionSemantics": "provenance-only; normalized content and hashes determine freshness",
   "artifacts": [
     {
       "path": "architecture/inventory.generated.json",
       "format": "json",
       "schema": "architecture/schemas/inventory.schema.json",
-      "sha256": "97fa7821c170071cb1f5bd690e6d20ff3b8ed3f5c5b3f30a100c7f11ee3f425f"
+      "sha256": "908a9744b7bdf3f5b977d2b2f74dc61aef140b47087f435789fe567aef7633b0"
     },
     {
       "path": "architecture/generated/code-topology.json",
       "format": "json",
       "schema": "architecture/schemas/topology.schema.json",
-      "sha256": "922452c0c495d0d1105e967ba7220e29e1b74f069a6dfa7d55a540a3524a5cc4"
+      "sha256": "9c8d024d87bae9985665d7d3964e090c5877b65c1b2fa2e146dc95f1297e7931"
     },
     {
       "path": "architecture/generated/change-coupling.json",
       "format": "json",
       "schema": "architecture/schemas/change-coupling.schema.json",
-      "sha256": "96404519279e2e8644ad4c210dcafd55be99d0a4910de92f74a56f665161292c"
+      "sha256": "9b822483ae2ec50110ebd2f9efb09e4f4fea37133134c81d3769250a06fe093d"
     },
     {
       "path": "architecture/generated/architecture-conformance.json",
       "format": "json",
       "schema": "architecture/schemas/architecture-conformance.schema.json",
-      "sha256": "8fa662b3c897f7ccfd85ea9f715fe53071a50a2a52e0f2c9828e2eb5318aa47a"
+      "sha256": "cf437d9df15fd23011a46470c792ff504294598844481b926ac2381691628114"
     },
     {
       "path": "architecture/generated/current-projects.dot",
@@ -42,12 +42,12 @@
     {
       "path": "architecture/generated/current-component-types.dot",
       "format": "dot",
-      "sha256": "afa552ec381618b0e677eeefd8a34049b79c22b6526fff03e35419bc0e70581b"
+      "sha256": "27cc996412643e4fb607149999db8457f864c90fcddcee0b1ecb4a7400017c3c"
     },
     {
       "path": "architecture/generated/current-vs-target.dot",
       "format": "dot",
-      "sha256": "c68a3ccaa652b55e78ed59c921ce10fd8d01ab30ee3fdbee1e227fa77ee69c48"
+      "sha256": "76cb8d6badde7fb6fab55e1e7857d2b73f44ed88fab78eb757b5c40973d3bd9d"
     }
   ]
 }

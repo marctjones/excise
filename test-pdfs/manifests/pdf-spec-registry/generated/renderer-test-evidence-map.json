@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "6a01146b85d21e1a0ae7f055874e0530e72adca79412de69041043386d8aec32",
+  "sourceFingerprint": "d2211e9cceb3427744cba386c9b3679bbfd5cea0b1090a716d90424447aa5d6f",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -13079,6 +13079,47 @@
         {
           "capability": "pdf.17.content.streams",
           "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/RedactedFormFieldOracleTests.cs::RedactedFormFieldOracleTests.RedactedFormFieldValue_IsGoneFromAnIndependentExtractor_AndFromTheSavedBytes",
+      "path": "Excise.Rendering.Tests/Differential/RedactedFormFieldOracleTests.cs",
+      "class": "RedactedFormFieldOracleTests",
+      "method": "RedactedFormFieldValue_IsGoneFromAnIndependentExtractor_AndFromTheSavedBytes",
+      "line": 44,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
             "render"
           ]
         },
@@ -40385,11 +40426,11 @@
     }
   ],
   "summary": {
-    "testMethods": 1122,
+    "testMethods": 1123,
     "facets": {
-      "content-streams": 327,
+      "content-streams": 328,
       "content-strings-and-text": 7,
-      "differential-rendering": 577,
+      "differential-rendering": 578,
       "fonts": 203,
       "functions-and-shadings": 51,
       "graphics-state-and-paths": 315,
@@ -40401,8 +40442,8 @@
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 7,
-      "pdf.17.content.streams:parse": 334,
-      "pdf.17.content.streams:render": 722,
+      "pdf.17.content.streams:parse": 335,
+      "pdf.17.content.streams:render": 723,
       "pdf.17.content.text-state:extract": 7,
       "pdf.17.content.text-state:parse": 7,
       "pdf.17.content.text-state:render": 7,
@@ -40410,10 +40451,10 @@
       "pdf.17.graphics.color:render": 51,
       "pdf.17.graphics.fonts:extract": 203,
       "pdf.17.graphics.fonts:parse": 203,
-      "pdf.17.graphics.fonts:render": 719,
+      "pdf.17.graphics.fonts:render": 720,
       "pdf.17.graphics.images:extract": 192,
       "pdf.17.graphics.images:parse": 192,
-      "pdf.17.graphics.images:render": 702,
+      "pdf.17.graphics.images:render": 703,
       "pdf.17.graphics.paths-painting:parse": 315,
       "pdf.17.graphics.paths-painting:render": 315,
       "pdf.17.graphics.patterns-shadings:parse": 51,
@@ -40421,7 +40462,7 @@
       "pdf.17.graphics.state:parse": 315,
       "pdf.17.graphics.state:render": 315,
       "pdf.17.transparency.model:parse": 79,
-      "pdf.17.transparency.model:render": 611
+      "pdf.17.transparency.model:render": 612
     },
     "unclassified": 31,
     "allTestsMapped": true

@@ -91,6 +91,13 @@ public static class AcroFormAuthoring
     /// optional <paramref name="tooltip"/> (<c>/TU</c>) accessible name.
     /// <paramref name="format"/> is an Acrobat date mask, e.g. <c>"mm/dd/yyyy"</c>
     /// or <c>"yyyy-mm-dd"</c>.
+    ///
+    /// <para>⚠️ <b>PDF/A strips the JavaScript</b> (#1498). PDF/A forbids
+    /// JavaScript actions outright (ISO 19005-1 §6.6.1), so a document saved
+    /// through <see cref="Authoring.PdfDocumentBuilder.PdfA"/> keeps the field
+    /// but not the format or keystroke enforcement — it becomes an ordinary
+    /// text field. Before #1498 the actions were written anyway and the output
+    /// claimed a conformance veraPDF rejected.</para>
     /// </summary>
     public static PdfField AddDateField(
         this PdfDocument document,
@@ -318,6 +325,34 @@ public static class AcroFormAuthoring
 
     private static void WriteEmptyAppearance(PdfDocument document, PdfDictionary widget, PdfRectangle rect) =>
         SetNormalAppearance(widget, AddFormXObject(document, Math.Abs(rect.Width), Math.Abs(rect.Height), string.Empty, resources: null));
+
+    /// <summary>
+    /// #1499 — give <paramref name="widget"/> an <c>/AP /N</c> that draws
+    /// NOTHING, sized to its own <c>/Rect</c>. Returns false when the widget has
+    /// no readable rect, or a zero-size one.
+    ///
+    /// <para>Used by the redaction field scrub: a widget whose appearance had to
+    /// be dropped is left with no <c>/AP</c> at all, which PDF/A rejects
+    /// (ISO 19005-2 6.3.3#1 requires one on every widget with a non-empty
+    /// <c>/Rect</c>; ISO 19005-1 6.9#2 requires one unconditionally) and which
+    /// the old fallback papered over with <c>/NeedAppearances</c> — forbidden by
+    /// 19005-2 6.4.1#3 and 19005-1 6.9#1. An empty appearance is the
+    /// honest substitute: this branch is by definition the one where excise
+    /// could NOT read the appearance's text (#637), so it has no verified value
+    /// to redraw, and a redacted field has nothing it is entitled to draw
+    /// anyway.</para>
+    ///
+    /// <para>A zero-size rect is refused deliberately: that is the
+    /// invisible-signature shape #623/#1444 keep appearance-LESS, and a 0×0 form
+    /// XObject both breaks it and gives the viewer nothing to draw.</para>
+    /// </summary>
+    internal static bool TryWriteEmptyAppearance(PdfDocument document, PdfDictionary widget)
+    {
+        if (!TryReadRect(document, widget, out var rect)) return false;
+        if (Math.Abs(rect.Width) <= 0 || Math.Abs(rect.Height) <= 0) return false;
+        WriteEmptyAppearance(document, widget, rect);
+        return true;
+    }
 
     /// <summary>
     /// Redraw the appearance of a widget authored by this class in this session

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "2c243ea9d8b1429ea568c2eef1299664258fe5b9",
+  "sourceRevision": "dc15451e3afc1d726bc403731551c214d7ff0ed3",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,7 +22,7 @@
     "commitsObserved": 198,
     "broadCommitsExcluded": 0,
     "newestProductionCommit": "dd751a85afa2cec220ec91731e21243b0bcae63a",
-    "oldestProductionCommit": "89a7eeb0365c71412368128d460d5dce504930ef"
+    "oldestProductionCommit": "ec0a13a6a116fc654255bfce4f896dfd74a11911"
   },
   "files": [
     {
@@ -134,6 +134,10 @@
       "commits": 6
     },
     {
+      "path": "Excise.App/Excise.App.csproj",
+      "commits": 5
+    },
+    {
       "path": "Excise.App/ViewModels/MainWindowViewModel.Redaction.cs",
       "commits": 5
     },
@@ -168,10 +172,6 @@
     {
       "path": "Excise.Core/Content/PdfPageContentFacade.cs",
       "commits": 5
-    },
-    {
-      "path": "Excise.App/Excise.App.csproj",
-      "commits": 4
     },
     {
       "path": "Excise.App/Models/WindowSettings.cs",
@@ -387,6 +387,14 @@
     },
     {
       "path": "Excise.App/Services/ReleasedMemoryReclaimer.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.App/Services/SignatureApplicationService.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.App/Services/SignatureVerificationSummaryFormatter.cs",
       "commits": 2
     },
     {
@@ -654,11 +662,11 @@
       "commits": 1
     },
     {
-      "path": "Excise.App/Services/SignatureApplicationService.cs",
+      "path": "Excise.App/Services/SignatureContentsReader.cs",
       "commits": 1
     },
     {
-      "path": "Excise.App/Services/SignatureVerificationSummaryFormatter.cs",
+      "path": "Excise.App/Services/SignatureVerificationService.cs",
       "commits": 1
     },
     {
@@ -1079,10 +1087,6 @@
     },
     {
       "path": "Excise.Core/Text/Segmentation/GlyphRemover.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Core/Text/Segmentation/ImageRegionRedactor.cs",
       "commits": 1
     },
     {
@@ -1762,12 +1766,6 @@
       "jaccard": 0.6667
     },
     {
-      "source": "Excise.App/Excise.App.csproj",
-      "target": "Excise.Cli/Excise.Cli.csproj",
-      "cochanges": 2,
-      "jaccard": 0.5
-    },
-    {
       "source": "Excise.App/Services/AppMetrics.cs",
       "target": "Excise.App/Services/MacMallocPressureRelief.cs",
       "cochanges": 2,
@@ -1884,6 +1882,12 @@
     {
       "source": "Excise.App/Controls/PriorityToolbarPanel.cs",
       "target": "Excise.App/Views/MacNativeMenuBuilder.cs",
+      "cochanges": 2,
+      "jaccard": 0.4
+    },
+    {
+      "source": "Excise.App/Excise.App.csproj",
+      "target": "Excise.Cli/Excise.Cli.csproj",
       "cochanges": 2,
       "jaccard": 0.4
     },

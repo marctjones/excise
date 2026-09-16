@@ -606,6 +606,50 @@ public partial class PdfDocument : IDisposable
     }
 
     /// <summary>
+    /// Whether this document is meant to be PDF/A (#1498, #1499). Consulted
+    /// before emitting a construct PDF/A forbids — notably
+    /// <c>/NeedAppearances</c> (ISO 19005-2 6.4.1#3, ISO 19005-1 6.9#1), which
+    /// the redaction field
+    /// scrub used to set unconditionally and which silently turned a redacted
+    /// PDF/A form into a non-conformant file (#1499).
+    ///
+    /// <para>Two sources, because neither alone covers the cases that matter:
+    /// <see cref="Authoring.PdfDocumentBuilder.PdfA"/> declares the intent up
+    /// front but the XMP that records it is only written at save time, so a
+    /// document still being authored has no <c>pdfaid</c> to read; a document
+    /// opened from bytes conversely carries the intent ONLY in its XMP, since
+    /// nothing in this session declared it.</para>
+    ///
+    /// <para>Read from the XMP on every call rather than memoized: XMP is the
+    /// one metadata projection this class deliberately does not cache (see the
+    /// remarks on <see cref="InvalidateDerivedState"/>), and a stale "not
+    /// PDF/A" answer here would quietly re-introduce #1499.</para>
+    /// </summary>
+    internal bool TargetsPdfA
+    {
+        get
+        {
+            if (_declaredPdfATarget) return true;
+            var xmp = GetXmpMetadata();
+            if (xmp == null || xmp.Length == 0) return false;
+            // pdfaid:part is the identifier ISO 19005 §6.7.11 requires of every
+            // conforming file. Matching the prefix covers both the element
+            // (<pdfaid:part>2</pdfaid:part>) and attribute (pdfaid:part="2")
+            // serialisations XMP permits.
+            return System.Text.Encoding.UTF8.GetString(xmp)
+                .Contains("pdfaid:part", StringComparison.Ordinal);
+        }
+    }
+
+    private bool _declaredPdfATarget;
+
+    /// <summary>
+    /// Record that this document is being authored as PDF/A, before the XMP
+    /// that says so exists (#1498, #1499). Idempotent.
+    /// </summary>
+    internal void DeclarePdfATarget() => _declaredPdfATarget = true;
+
+    /// <summary>
     /// Bake all current AcroForm field values into static page content and
     /// remove the interactive form. After flattening:
     ///   • Each text/choice field's /V is rendered as page content at the

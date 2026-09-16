@@ -95583,6 +95583,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithARedactedFieldValue_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Primitives/IndirectResourceResolutionTests.cs::IndirectResourceResolutionTests.TextInsideAFormReachedByAnIndirectXObject_IsRedacted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96138,15 +96145,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_EmptiesTheWholeInfoField_RatherThanCuttingTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97055,6 +97053,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithARedactedFieldValue_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Primitives/IndirectResourceResolutionTests.cs::IndirectResourceResolutionTests.TextInsideAFormReachedByAnIndirectXObject_IsRedacted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97610,15 +97615,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_EmptiesTheWholeInfoField_RatherThanCuttingTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98541,6 +98537,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithARedactedFieldValue_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Primitives/IndirectResourceResolutionTests.cs::IndirectResourceResolutionTests.TextInsideAFormReachedByAnIndirectXObject_IsRedacted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -99096,15 +99099,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_EmptiesTheWholeInfoField_RatherThanCuttingTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100053,6 +100047,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/PdfATests.cs::PdfATests.PdfA_WithARedactedFieldValue_StaysConformant_AndLeaksNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Primitives/IndirectResourceResolutionTests.cs::IndirectResourceResolutionTests.TextInsideAFormReachedByAnIndirectXObject_IsRedacted",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100608,15 +100609,6 @@
         },
         {
           "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_OnXfa_IsRefusedWithAReason_NotSilentlyDowngraded",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs::CarrierScrubPolicyTests.RemoveWhole_EmptiesTheWholeInfoField_RatherThanCuttingTheTerm",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -114795,8 +114787,8 @@
     "gradeImplemented": 199,
     "gradeVerified": 681,
     "gradeUnknown": 18,
-    "testMethods": 6886,
-    "testMethodsWithCapabilityCandidate": 4307,
+    "testMethods": 6893,
+    "testMethodsWithCapabilityCandidate": 4313,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

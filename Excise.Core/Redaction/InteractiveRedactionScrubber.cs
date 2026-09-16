@@ -52,6 +52,14 @@ internal static class InteractiveRedactionScrubber
     /// <c>/NeedAppearances</c>. It falls back to dropping <c>/AP</c> (the old
     /// leak-safe move) only when the appearance is not text-extractable — a
     /// subsetted font with no ToUnicode, the #637 limitation.</para>
+    ///
+    /// <para><b>/NeedAppearances is no longer set just because something changed
+    /// (#1499).</b> It used to be, at the end of every scrub — which contradicted
+    /// the paragraph above (the flag tells the viewer to discard the appearance
+    /// #1098 had just rewritten) and, because PDF/A forbids the flag
+    /// (ISO 19005-2 6.4.1#3, ISO 19005-1 6.9#1), silently cost a redacted PDF/A
+    /// form its conformance.
+    /// <see cref="SettleWidgetAppearances"/> now decides per widget.</para>
     /// </summary>
     public static bool ScrubTerm(
         PdfPage page, PdfRectangle area, string term, bool caseSensitive,
@@ -227,6 +235,11 @@ internal static class InteractiveRedactionScrubber
         // Rewriting removes the term the first time; the second pass would find
         // no match and drop the appearance we just fixed. Process each /AP once.
         var processedAp = new HashSet<PdfDictionary>();
+        // #1499: every widget this scrub ran over, so its appearance can be
+        // accounted for ONCE at the end (see SettleWidgetAppearances). A
+        // HashSet<PdfDictionary> is reference-keyed — PdfDictionary does not
+        // override Equals — which is what dedupes the merged field/widget dict.
+        var touchedWidgets = new HashSet<PdfDictionary>();
         foreach (var field in fields)
         {
             var widgets = field.Widgets.Count > 0
@@ -305,12 +318,114 @@ internal static class InteractiveRedactionScrubber
                     ? RewriteOrDropAppearance(page, widget, defaultResources, term, caseSensitive, processedAp, wholeWord)
                     : widget.Remove("AP");
             }
+
+            // #1499: the widgets whose appearance this field's scrub just
+            // settled. A field that is its own widget has it in
+            // WidgetDictionaries already (PdfAcroFormParser adds the field dict
+            // for /Subtype /Widget); a field with neither is the odd
+            // rect-derived case handled above, where RawDictionary is the only
+            // holder there is.
+            if (field.WidgetDictionaries.Count > 0)
+            {
+                foreach (var widget in field.WidgetDictionaries)
+                    touchedWidgets.Add(widget);
+            }
+            else
+            {
+                touchedWidgets.Add(field.RawDictionary);
+            }
         }
 
         if (changed)
-            page.Document.SetAcroFormNeedAppearances();
+            changed |= SettleWidgetAppearances(page.Document, touchedWidgets);
 
         return changed;
+    }
+
+    /// <summary>
+    /// #1499 — decide, PER WIDGET, what the scrubbed form still needs.
+    ///
+    /// <para><b>What this replaces.</b> The scrub used to end with
+    /// <c>SetAcroFormNeedAppearances()</c> whenever ANYTHING changed. That is
+    /// wrong twice over. It contradicts #1098 — the appearance stream was just
+    /// rewritten to remove the term's glyphs, and the flag asks the viewer to
+    /// throw that away and re-typeset from <c>/V</c>. And
+    /// <c>/NeedAppearances</c> is forbidden by PDF/A (ISO 19005-2 6.4.1#3,
+    /// ISO 19005-1 6.9#1), so redacting one field silently cost the whole
+    /// output file its conformance.</para>
+    ///
+    /// <para>The rule now:</para>
+    /// <list type="bullet">
+    ///   <item>Widget still has an <c>/AP /N</c> — #1098 rewrote it, or it was
+    ///     never dropped. It is accurate for the scrubbed value. Nothing to
+    ///     do, and no flag: this is the common path and it is now PDF/A-clean
+    ///     for every document, not only archival ones.</item>
+    ///   <item>Widget has no appearance and the document targets PDF/A — write
+    ///     an EMPTY one. An appearance is required (19005-2 6.3.3#1, 19005-1
+    ///     6.9#2) and the flag that used to stand in for it is forbidden
+    ///     (19005-2 6.4.1#3, 19005-1 6.9#1). ⚠️ 19005-1 has no zero-size
+    ///     exemption where 19005-2 does, so a degenerate widget that
+    ///     <see cref="AcroFormAuthoring.TryWriteEmptyAppearance"/> refuses stays
+    ///     non-conformant under PDF/A-1b — the #623 invisible-signature shape,
+    ///     unchanged by this fix.</item>
+    ///   <item>Widget has no appearance and the document is not PDF/A — set the
+    ///     flag exactly as before, so a viewer that honours it still draws the
+    ///     remaining value. #1499's acceptance: non-PDF/A behaves as
+    ///     before.</item>
+    /// </list>
+    ///
+    /// <para>⚠️ An already-set <c>/NeedAppearances</c> on the INPUT is left
+    /// alone. Clearing it would change how fields this redaction never touched
+    /// are rendered, which is outside the requested delta.</para>
+    /// </summary>
+    private static bool SettleWidgetAppearances(PdfDocument document, IEnumerable<PdfDictionary> widgets)
+    {
+        var changed = false;
+        var needAppearances = false;
+        // Hoisted: the getter inflates and decodes the XMP packet, and this runs
+        // once per widget, per page, per term.
+        var targetsPdfA = document.TargetsPdfA;
+
+        foreach (var widget in widgets)
+        {
+            if (HasNormalAppearance(document, widget))
+                continue;
+
+            if (targetsPdfA)
+            {
+                // No fallback to the flag here — PDF/A forbids it. When even an
+                // empty appearance cannot be written (no readable /Rect, or the
+                // zero-size invisible-signature shape #623 deliberately keeps
+                // appearance-less), leaving the widget as it is is the only move
+                // that does not break conformance by itself.
+                changed |= AcroFormAuthoring.TryWriteEmptyAppearance(document, widget);
+                continue;
+            }
+
+            needAppearances = true;
+        }
+
+        if (needAppearances)
+        {
+            document.SetAcroFormNeedAppearances();
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    /// <summary>
+    /// Does <paramref name="widget"/> still carry a resolvable <c>/AP /N</c>?
+    /// <c>/N</c> is a stream for text and choice widgets and a state dictionary
+    /// for buttons (§12.5.5) — <see cref="PdfStream"/> derives from
+    /// <see cref="PdfDictionary"/>, so one check covers both. An <c>/AP</c>
+    /// whose <c>/N</c> resolves to neither is as good as absent.
+    /// </summary>
+    private static bool HasNormalAppearance(PdfDocument document, PdfDictionary widget)
+    {
+        if (document.Resolve(widget.GetOptional("AP") ?? PdfNull.Instance) is not PdfDictionary ap)
+            return false;
+        return document.Resolve(ap.GetOptional("N") ?? PdfNull.Instance) is PdfDictionary;
     }
 
     /// <summary>The AcroForm default resources (/DR) — the fonts a producer may

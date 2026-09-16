@@ -302,6 +302,15 @@ public sealed class PdfField
     /// for any other widget (every document opened from bytes, including one
     /// excise authored earlier) set NeedAppearances as before, so the reader
     /// regenerates it.
+    ///
+    /// <para>⚠️ On a PDF/A document that fallback costs conformance
+    /// (ISO 19005-2 6.4.1#3, ISO 19005-1 6.9#1) — tracked by #1508. #1499 fixed
+    /// the same fallback in the REDACTION scrub by substituting an empty
+    /// appearance, and deliberately did not do that here: a redacted field has
+    /// nothing it is entitled to draw, a filled one does, and an empty
+    /// appearance here would be silent data loss. The real fix is to regenerate
+    /// from the widget's own <c>/DA</c> and the AcroForm <c>/DR</c> so no
+    /// session state is needed at all (#1508).</para>
     /// </summary>
     private void RefreshAppearances(string? value)
     {
