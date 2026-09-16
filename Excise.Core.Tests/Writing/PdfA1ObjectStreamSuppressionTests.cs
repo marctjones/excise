@@ -38,7 +38,12 @@ namespace Excise.Core.Tests.Writing;
 /// </summary>
 public class PdfA1ObjectStreamSuppressionTests
 {
-    internal enum Serialisation
+    // Public, not internal: a [Theory] method must be public for xUnit to
+    // discover it, and CS0051 forbids a public method taking a less accessible
+    // parameter type. This is not public API surface — the baseline gate
+    // (PublicApiApprovalTests) snapshots typeof(PdfDocument).Assembly, i.e.
+    // Excise.Core, and never a test assembly.
+    public enum Serialisation
     {
         /// <summary><c>&lt;pdfaid:part&gt;1&lt;/pdfaid:part&gt;</c> — what excise emits.</summary>
         Element,
