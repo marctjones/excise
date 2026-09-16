@@ -183,7 +183,15 @@ public sealed record RedactedCopySafetyReport(
     int RemainingRasterOverlapCount,
     IReadOnlyList<RedactedCopySafetyFailureStage> FailedStages,
     IReadOnlyList<string> Warnings,
-    int UnresolvedRedactAnnotationCount = 0)
+    int UnresolvedRedactAnnotationCount = 0,
+    // #1507 — the document arrived identifying itself as PDF/A and the metadata
+    // scrub KEPT that identification (pdfaid part/conformance/rev) while
+    // removing everything else in the XMP packet. Reported rather than left
+    // implicit: a caller telling a user "XMP metadata removed" would be
+    // overstating what happened, since a small packet survives by design
+    // because PDF/A conformance requires it. Overstating a scrub is the same
+    // class of problem as a carrier that silently keeps a term.
+    bool PdfAIdentificationPreserved = false)
 {
     public bool HasWarnings =>
         Warnings.Count > 0 ||

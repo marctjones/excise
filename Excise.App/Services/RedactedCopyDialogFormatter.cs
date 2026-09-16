@@ -53,6 +53,15 @@ internal sealed class RedactedCopyDialogFormatter
                 "not checked; captured previews were too short for reliable matching"
         };
 
+    /// <summary>
+    /// ⚠️ #1507 — say what actually happened. On a PDF/A document the scrub
+    /// removes every property in the XMP packet EXCEPT the <c>pdfaid</c>
+    /// identification, which PDF/A conformance requires the file to keep. A flat
+    /// "XMP metadata removed" would then be a claim excise no longer meets, and
+    /// a redaction dialog is the last place to be loosely worded. The report
+    /// carries the fact (<c>PdfAIdentificationPreserved</c>) precisely so this
+    /// line can be accurate rather than reassuring.
+    /// </summary>
     private static string FormatMetadataScrub(RedactedCopySafetyReport report)
     {
         if (report.FailedStages.Contains(RedactedCopySafetyFailureStage.MetadataScrub))
@@ -60,7 +69,14 @@ internal sealed class RedactedCopyDialogFormatter
         if (!report.MetadataScrubbed)
             return "not requested";
 
-        var xmp = report.HadXmpMetadata ? "XMP metadata removed" : "no XMP metadata found";
+        var xmp = report switch
+        {
+            { PdfAIdentificationPreserved: true } =>
+                "XMP metadata removed except the PDF/A identification (pdfaid), which is kept so " +
+                "the file remains PDF/A",
+            { HadXmpMetadata: true } => "XMP metadata removed",
+            _ => "no XMP metadata found",
+        };
         return $"{report.InfoFieldsScrubbed} Info field(s) removed; {xmp}";
     }
 

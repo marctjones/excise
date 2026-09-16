@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "d2211e9cceb3427744cba386c9b3679bbfd5cea0b1090a716d90424447aa5d6f",
+  "sourceFingerprint": "7f9b13447a70a7ef1abef73ea8c5ccee5d1c24f527155f1a986eadead53cb97a",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -4050,7 +4050,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "SaveRoundTrip_ChangesNothing",
-      "line": 236,
+      "line": 240,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4089,7 +4089,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "AnnotationAdd_DestroysNoPageText",
-      "line": 265,
+      "line": 269,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4130,7 +4130,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "AnnotationRemove_LeavesTextAndOtherAnnotations",
-      "line": 296,
+      "line": 300,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4171,7 +4171,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "PageRotate_DestroysNoLetters",
-      "line": 337,
+      "line": 341,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4210,7 +4210,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "PageMove_IsAPurePermutation",
-      "line": 357,
+      "line": 361,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4249,7 +4249,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "PageRemove_TakesExactlyThatPage",
-      "line": 383,
+      "line": 387,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4288,7 +4288,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "FormFill_DestroysNoExistingText",
-      "line": 409,
+      "line": 413,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4329,7 +4329,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "FormFlatten_DestroysNoExistingText",
-      "line": 433,
+      "line": 437,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4370,7 +4370,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "EncryptRoundTrip_ChangesNoText",
-      "line": 458,
+      "line": 462,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4411,7 +4411,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "Merge_IsExactConcatenation",
-      "line": 476,
+      "line": 480,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4450,7 +4450,7 @@
       "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
       "class": "ConservationGateTests",
       "method": "Split_IsExactPartition",
-      "line": 507,
+      "line": 511,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -12235,7 +12235,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
       "class": "PdfAConformanceConservationTests",
       "method": "SavingAConformingDocument_DoesNotLoseItsConformance",
-      "line": 71,
+      "line": 74,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -12274,7 +12274,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
       "class": "PdfAConformanceConservationTests",
       "method": "Merge_SingleInput_DoesNotLoseConformance",
-      "line": 117,
+      "line": 120,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -12313,7 +12313,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
       "class": "PdfAConformanceConservationTests",
       "method": "Split_SinglePages_DoesNotLoseConformance",
-      "line": 128,
+      "line": 131,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -12352,7 +12352,7 @@
       "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
       "class": "PdfAConformanceConservationTests",
       "method": "Encrypt_WithdrawsConformance",
-      "line": 139,
+      "line": 142,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -12391,8 +12391,86 @@
       "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
       "class": "PdfAConformanceConservationTests",
       "method": "Redact_DoesNotLoseConformance",
-      "line": 152,
+      "line": 155,
       "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs::PdfAConformanceConservationTests.RedactArea_DoesNotLoseConformance",
+      "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
+      "class": "PdfAConformanceConservationTests",
+      "method": "RedactArea_DoesNotLoseConformance",
+      "line": 184,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs::PdfAConformanceConservationTests.RedactArea_OnAnAuthoredPdfA_KeepsConformance_AndTheTermIsGonePerMutool",
+      "path": "Excise.Rendering.Tests/Differential/PdfAConformanceConservationTests.cs",
+      "class": "PdfAConformanceConservationTests",
+      "method": "RedactArea_OnAnAuthoredPdfA_KeepsConformance_AndTheTermIsGonePerMutool",
+      "line": 214,
+      "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
         "differential-rendering"
@@ -40426,11 +40504,11 @@
     }
   ],
   "summary": {
-    "testMethods": 1123,
+    "testMethods": 1125,
     "facets": {
       "content-streams": 328,
       "content-strings-and-text": 7,
-      "differential-rendering": 578,
+      "differential-rendering": 580,
       "fonts": 203,
       "functions-and-shadings": 51,
       "graphics-state-and-paths": 315,
@@ -40443,7 +40521,7 @@
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 7,
       "pdf.17.content.streams:parse": 335,
-      "pdf.17.content.streams:render": 723,
+      "pdf.17.content.streams:render": 725,
       "pdf.17.content.text-state:extract": 7,
       "pdf.17.content.text-state:parse": 7,
       "pdf.17.content.text-state:render": 7,
@@ -40451,10 +40529,10 @@
       "pdf.17.graphics.color:render": 51,
       "pdf.17.graphics.fonts:extract": 203,
       "pdf.17.graphics.fonts:parse": 203,
-      "pdf.17.graphics.fonts:render": 720,
+      "pdf.17.graphics.fonts:render": 722,
       "pdf.17.graphics.images:extract": 192,
       "pdf.17.graphics.images:parse": 192,
-      "pdf.17.graphics.images:render": 703,
+      "pdf.17.graphics.images:render": 705,
       "pdf.17.graphics.paths-painting:parse": 315,
       "pdf.17.graphics.paths-painting:render": 315,
       "pdf.17.graphics.patterns-shadings:parse": 51,
@@ -40462,7 +40540,7 @@
       "pdf.17.graphics.state:parse": 315,
       "pdf.17.graphics.state:render": 315,
       "pdf.17.transparency.model:parse": 79,
-      "pdf.17.transparency.model:render": 612
+      "pdf.17.transparency.model:render": 614
     },
     "unclassified": 31,
     "allTestsMapped": true

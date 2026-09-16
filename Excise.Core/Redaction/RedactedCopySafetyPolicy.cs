@@ -87,12 +87,23 @@ public static class RedactedCopySafetyPolicy
             : 0;
         var metadataScrubbed = false;
         var attachmentsScrubbed = false;
+        var pdfAIdentificationPreserved = false;
 
         if (options.ScrubMetadata)
         {
             try
             {
-                document.ScrubMetadata(scrubAttachments: options.ScrubAttachments);
+                // #1507: the same wholesale strip, except that a document which
+                // arrived identifying itself as PDF/A keeps that identification.
+                // Without this the GUI's redacted-copy flow undid the fix at the
+                // engine level — RedactArea preserves the identification and
+                // this pass, which runs after it and is on by default, deleted
+                // the packet again. Every text carrier still goes; what survives
+                // is at most pdfaid part/conformance/rev — and the report says
+                // so, because "XMP metadata removed" would then overstate what
+                // this pass did.
+                pdfAIdentificationPreserved =
+                    document.ScrubMetadataPreservingPdfAIdentity(options.ScrubAttachments);
                 metadataScrubbed = true;
                 attachmentsScrubbed = options.ScrubAttachments;
             }
@@ -206,7 +217,8 @@ public static class RedactedCopySafetyPolicy
             RemainingRasterOverlapCount: remainingRasterOverlapCount,
             FailedStages: failedStages,
             Warnings: warnings,
-            UnresolvedRedactAnnotationCount: unresolvedRedactMarks);
+            UnresolvedRedactAnnotationCount: unresolvedRedactMarks,
+            PdfAIdentificationPreserved: pdfAIdentificationPreserved);   // #1507
     }
 
     /// <summary>

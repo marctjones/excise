@@ -87,6 +87,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Mark-then-apply workflow with red dashed previews and a Clipboard History sidebar showing what was removed
 - Original protection — defaults the save dialog to `filename_REDACTED.pdf`
 - Safe-to-share save path — `RedactedCopySafetyService` scrubs Info metadata, XMP metadata, and embedded files/attachments by default, then reports content-removal, metadata, attachment, and hidden-text audit status without repeating removed text
+- Archival documents stay archival — a redaction of a PDF/A file keeps the `pdfaid` identification PDF/A requires (and nothing else from the XMP packet), so the output still validates with veraPDF instead of silently ceasing to be PDF/A
 - `PdfDocument.ScrubMetadata(scrubAttachments: true)` strips Info dict, XMP, and embedded files in one call — important when redacted documents may carry the data they were redacted of in attachments (ZUGFeRD, Factur-X)
 - OCG-aware — `RedactText` defaults to `includeHiddenLayers=true` so hidden optional content groups don't slip past
 - Verified against real-world fixtures (CT birth certificate, government forms) at the pixel and content-stream level

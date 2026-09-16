@@ -55,7 +55,9 @@ public static class PdfPageRedactionExtensions
     /// carriers that have no position — <c>/Info</c> and the XMP
     /// <c>/Metadata</c> packet — on by default (#897). See the remarks for why
     /// this is a WHOLESALE strip and not the term-based scrub
-    /// <see cref="PdfDocumentRedactionExtensions.RedactText"/> uses.</param>
+    /// <see cref="PdfDocumentRedactionExtensions.RedactText"/> uses, and for the
+    /// one thing the strip puts back (a PDF/A file's <c>pdfaid</c>
+    /// identification, #1507).</param>
     /// <remarks>
     /// Side-effect: the page's <c>/Contents</c> stream is rewritten.
     /// Subsequent calls to <see cref="PdfPage.Letters"/> will re-extract
@@ -78,6 +80,24 @@ public static class PdfPageRedactionExtensions
     /// it has one; RedactArea strips wholesale because it does not.</b> You
     /// cannot name what was in the box, so remove the carriers rather than
     /// guess at their contents (#897).
+    /// </para>
+    /// <para>
+    /// <b>The one exception, and why it is not a hole (#1507).</b> If the
+    /// document identifies itself as PDF/A, the XMP packet is still removed —
+    /// every schema in it, including the ones excise has never heard of — and an
+    /// identification-only packet is written in its place, carrying at most
+    /// <c>pdfaid:part</c>, <c>pdfaid:conformance</c> and <c>pdfaid:rev</c>. Those
+    /// three are validated against a closed set of tokens before they are
+    /// re-emitted, so no text from the old packet can ride back into the
+    /// document. Without this, area redaction could never produce a PDF/A file:
+    /// PDF/A requires the <c>/Metadata</c> stream to be there and to carry the
+    /// identification, so every archival document came out of a click-to-redact
+    /// no longer conforming — silently, with nothing in the file to say so.
+    /// The asymmetry worth stating plainly: with no term, the strip buys
+    /// security against a carrier whose contents excise cannot name, while the
+    /// identification it also deleted is not a carrier at all — a part number
+    /// and a letter cannot hold a redacted name.
+    /// See <c>PdfDocument.ScrubMetadataPreservingPdfAIdentity</c>.
     /// </para>
     /// <para>
     /// <b>Not covered here.</b> Outline (bookmark) titles are left alone —
@@ -142,10 +162,15 @@ public static class PdfPageRedactionExtensions
         imageArea = imageArea.Normalize();
 
         // Positionless document-level carriers (#897). Idempotent — RedactAreas
-        // applies it once per rectangle — because both underlying operations
-        // are removals of keys that may already be absent.
+        // applies it once per rectangle — because the underlying operations are
+        // removals of keys that may already be absent, and the #1507 PDF/A
+        // identification is re-read from the packet this call itself wrote.
+        //
+        // Runs BEFORE the scrubbers below on purpose: #1499's per-widget
+        // appearance decision reads PdfDocument.TargetsPdfA, which is answered
+        // from the XMP this strip rewrites.
         if (scrubDocumentCarriers)
-            page.Document.ScrubMetadata(scrubAttachments: false);
+            page.Document.ScrubMetadataPreservingPdfAIdentity(scrubAttachments: false);
         InteractiveRedactionScrubber.ScrubArea(page, area);
 
         // Structure-tree carriers (#636). Must run BEFORE the content stream is
@@ -275,7 +300,7 @@ public static class PdfPageRedactionExtensions
         }
 
         if (scrubDocumentCarriers)
-            page.Document.ScrubMetadata(scrubAttachments: false);
+            page.Document.ScrubMetadataPreservingPdfAIdentity(scrubAttachments: false);   // #1507
         foreach (var area in list)
         {
             InteractiveRedactionScrubber.ScrubArea(page, area);

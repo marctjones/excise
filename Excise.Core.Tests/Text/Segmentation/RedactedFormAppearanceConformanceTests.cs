@@ -143,12 +143,14 @@ public class RedactedFormAppearanceConformanceTests
     /// verified text to redraw, and a redacted field has nothing it is entitled
     /// to draw.
     ///
-    /// <para><c>scrubDocumentCarriers: false</c> is deliberate:
-    /// <c>RedactArea</c>'s default is the WHOLESALE carrier strip, which removes
-    /// the catalog <c>/Metadata</c> — i.e. the pdfaid XMP this document is
-    /// recognised by. That is a separate defect (#1507: area redaction cannot
-    /// produce PDF/A output at all today); pinning it here would only measure
-    /// it.</para>
+    /// <para>This runs the DEFAULT call — carrier strip included — and that is
+    /// the point. Until #1507 it could not: the default strip deleted the
+    /// catalog <c>/Metadata</c>, so by the time this branch asked
+    /// <c>TargetsPdfA</c> the document no longer identified itself as PDF/A and
+    /// the test had to pass <c>scrubDocumentCarriers: false</c> to reach the
+    /// branch at all. The strip now keeps the <c>pdfaid</c> identification, so
+    /// the two fixes compose: the identification survives the strip, and the
+    /// widget decision that reads it sees the truth.</para>
     /// </summary>
     [Fact]
     public void AreaRedaction_OnAPdfADocument_WritesAnEmptyAppearance_InsteadOfNeedAppearances()
@@ -156,7 +158,11 @@ public class RedactedFormAppearanceConformanceTests
         using var doc = PdfDocument.Open(BuildFieldWithAppearance(declaresPdfA: true));
         doc.TargetsPdfA.Should().BeTrue("the fixture's XMP carries the pdfaid identifier");
 
-        doc.GetPage(1).RedactArea(new PdfRectangle(20, 40, 220, 60), scrubDocumentCarriers: false);
+        doc.GetPage(1).RedactArea(new PdfRectangle(20, 40, 220, 60));
+
+        doc.TargetsPdfA.Should().BeTrue(
+            "#1507: the default carrier strip must leave the pdfaid identification in place — " +
+            "otherwise the PDF/A branch below is unreachable from a plain RedactArea call");
 
         using var after = SaveAndReopen(doc);
 
@@ -184,7 +190,9 @@ public class RedactedFormAppearanceConformanceTests
         using var doc = PdfDocument.Open(BuildFieldWithAppearance(declaresPdfA: false));
         doc.TargetsPdfA.Should().BeFalse();
 
-        doc.GetPage(1).RedactArea(new PdfRectangle(20, 40, 220, 60), scrubDocumentCarriers: false);
+        // Default call, exactly like the PDF/A sibling above, so the only
+        // difference between the two tests is the document's own declaration.
+        doc.GetPage(1).RedactArea(new PdfRectangle(20, 40, 220, 60));
 
         using var after = SaveAndReopen(doc);
 

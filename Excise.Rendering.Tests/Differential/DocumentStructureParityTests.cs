@@ -509,7 +509,12 @@ public class DocumentStructureParityTests
     private static string? Resolve(string rel)
     {
         var dir = AppContext.BaseDirectory;
-        for (var i = 0; i < 8 && dir != null; i++)
+        // #1525: 12, not 8 — a git worktree sits two directories deeper
+        // than the main checkout and the first iteration is spent stripping
+        // BaseDirectory's trailing separator, so 8 stopped one level short of
+        // the repo root and every gitignored-corpus row skipped with a
+        // "corpus not present" reason that was false.
+        for (var i = 0; i < 12 && dir != null; i++)
         {
             var c = Path.Combine(dir, rel);
             if (File.Exists(c)) return c;
