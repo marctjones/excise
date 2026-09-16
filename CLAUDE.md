@@ -622,28 +622,44 @@ Peak RSS per testhost varies enormously by project, and an early note here
 claimed it did not — that claim was made from a partial sample (Core and one
 Rendering chunk) and was **wrong**. Measured over a full run:
 
-| step | peak RSS (2026-07) | re-measured 2026-08-16 |
-|---|---:|---:|
-| `Excise.App.Tests` unchunked (one process) | **8536 MB** | **3862 MB** |
-| `Excise.App.Tests` heaviest chunk | 6576 MB (chunk05) | 3323 MB (chunk06) |
-| `Excise.Rendering.Tests` heaviest chunk | 2389 MB (chunk02) | 2006 MB (chunk04) |
-| `Excise.Core.Tests.*` (all 17 chunks) | ≤ 450 MB | not re-run (checkpointed) |
-| `corpus-scan-verapdf` (2694 pages) | — | 3446 MB |
-| `corpus-scan-pdfjs` (685 pages) | — | 3780 MB |
+| step | peak RSS (2026-07) | re-measured 2026-08-16 | re-measured 2026-09-15/16 |
+|---|---:|---:|---:|
+| `Excise.App.Tests` unchunked (one process) | **8536 MB** | **3862 MB** | **7338 MB** (6339 / 6364 / 7338 over three consecutive runs) |
+| `Excise.App.Tests` heaviest chunk | 6576 MB (chunk05) | 3323 MB (chunk06) | not re-run (`--no-chunking`) |
+| `Excise.Rendering.Tests` heaviest chunk | 2389 MB (chunk02) | 2006 MB (chunk04) | not re-run |
+| `Excise.Core.Tests.*` (all 17 chunks) | ≤ 450 MB | not re-run (checkpointed) | not re-run |
+| `Excise.Core.Tests` UNCHUNKED (one process) | — | — | **847 MB** |
+| `corpus-scan-verapdf` (2694 pages) | — | 3446 MB | not re-run |
+| `corpus-scan-pdfjs` (685 pages) | — | 3780 MB | not re-run |
 
 The 2026-08-16 column is the first full `--everything` run
 (`logs/full-suite_Debug_20260815_203507/resources.tsv`; App.Tests unchunked =
-1329 tests, no filter, 8m38s — the same step, not a subset). App.Tests has more
-than halved since #861's chunking and bitmap work, so the old numbers are kept
-side by side rather than overwritten: the LESSON (a single `dotnet test` can
+1329 tests, no filter, 8m38s — the same step, not a subset). The 2026-09-15/16
+column is three consecutive `app-tests-unchunked-evidence` rows (1493 results,
+no filter, 871–913 s wall, 732–749 s CPU;
+`logs/full-suite_Debug_20260915_222810`, `_20260916_000404`, `_20260916_002001`)
+plus one unchunked `Excise.Core.Tests` row
+(`logs/full-suite_Debug_20260915_224657`). The old numbers are kept side by
+side rather than overwritten, because the LESSON (a single `dotnet test` can
 take a large fraction of a 24 GB machine, so do not run it alongside other heavy
 work — this is also why it is serial by design and why CPU contention produces
-false reds here) survives the improvement, and the biggest single consumer is
-now a corpus scan, not App.Tests. Tracked as #861.
+false reds here) is what survives, not any one figure. Tracked as #861.
 
-⚠️ Both columns are measurements with a date, not properties. Re-run the suite
-and read `resources.tsv` before quoting either — the 2026-07 numbers were 2.2×
-high within one month.
+⚠️ **"App.Tests has more than halved since #861" was true on 2026-08-16 and is
+false now** — it is back to 7338 MB, 1.9× the 2026-08-16 figure, and it rose
+across the three consecutive runs measured. That sentence stood here until
+2026-09-16 and is exactly the drift this table's own warning is about. The
+biggest single consumer on the last full run was a corpus scan; on a
+`--no-chunking` App-only run it is App.Tests again.
+
+⚠️ The `Excise.Core.Tests` 847 MB row is the **unchunked** project, and is NOT
+comparable to the "≤ 450 MB" figure above it — that one is per-chunk across 17
+chunks. Do not read the pair as a regression; they measure different things.
+
+⚠️ Every column is a measurement with a date, not a property. Re-run the suite
+and read `resources.tsv` before quoting any of them — the 2026-07 numbers were
+2.2× high within one month, and the 2026-08 App.Tests number was 1.9× low
+within one month.
 
 What bounds memory during a suite run is therefore structural:
 exactly one dotnet process at a time (this runner is strictly serial),

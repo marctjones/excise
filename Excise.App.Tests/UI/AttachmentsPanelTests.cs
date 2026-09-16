@@ -84,10 +84,21 @@ public class AttachmentsPanelTests : IDisposable
             UseShellExecute = false,
         };
         using var process = Process.Start(psi)!;
-        var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit(30000);
-        return stdout + stderr;
+        // #925/#1516: drain both redirected pipes CONCURRENTLY. Reading stdout
+        // to EOF and only then stderr is a two-pipe deadlock: if qpdf fills the
+        // ~64 KB stderr buffer while we block on stdout, neither side can make
+        // progress and the WaitForExit below is never reached. This body runs
+        // on the single Avalonia headless dispatcher thread, so one blocked
+        // read wedges every remaining Avalonia test in the process.
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(30000))
+        {
+            try { process.Kill(entireProcessTree: true); } catch { /* gone */ }
+            throw new TimeoutException(
+                "qpdf --list-attachments did not exit within 30s; killed it rather than hanging the suite (#1516).");
+        }
+        return stdoutTask.GetAwaiter().GetResult() + stderrTask.GetAwaiter().GetResult();
     }
 
     private static bool QpdfAvailable()
