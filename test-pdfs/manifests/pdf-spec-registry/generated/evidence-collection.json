@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1121,
-  "indexedContentSha256": "4a35055980b817d4b77927d17d72fcd7d2d611a0fc55d2d49884f7ed3ac21580",
+  "indexedFileCount": 1122,
+  "indexedContentSha256": "73dd4bb6fc3dade84498ec41dee76f708274821714e4b6c3f2776f54b4c98c6d",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7686,7 +7686,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 508
+      "candidateReferenceCount": 509
     },
     {
       "id": "pdf.17.graphics.color",
@@ -12299,7 +12299,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 132
+      "candidateReferenceCount": 133
     },
     {
       "id": "pdf.20.content.operators",
@@ -66450,7 +66450,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 108
+      "candidateReferenceCount": 109
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -67378,6 +67378,14 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/Unit/SubprocessDrainDisciplineTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "attachments"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/BatchAutomationCommandTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -67497,21 +67505,9 @@
             "ocr",
             "redaction"
           ]
-        },
-        {
-          "path": "docs/architecture/decisions.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "attachment",
-            "attachments",
-            "pdfe",
-            "save",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 80
+      "candidateReferenceCount": 81
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
