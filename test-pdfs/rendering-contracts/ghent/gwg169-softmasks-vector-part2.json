@@ -1,0 +1,27 @@
+{
+  "Path": "ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG169_Softmasks_Vector_part2_X4.pdf",
+  "Source": "Ghent PDF Output Suite 5.0",
+  "Owner": "rendering:quality",
+  "Issue": 1395,
+  "RootCause": "CMYK_SOFTMASKED_GROUP_ESCAPED_LAYER",
+  "ReviewStatus": "REVIEWED",
+  "ImprovementPriority": "DONE",
+  "Confidence": "HIGH",
+  "QualityReason": "Four vector soft-mask cells (Satin, Basic Feather, Directional Feather, Gradient Feather) on a DeviceCMYK page group; the masked groups contain CMYK fills, DeviceGray-masked images and an sh shading. Before #1395 the feathered cells rendered as hard-edged solid squares because the groups' CMYK paint escaped the masked layer. Per-cell measurement at 144 dpi against mutool AND Ghostscript: 0 of 4 cells matched before, 4 of 4 after.",
+  "Notes": "This page scanned PASS while visibly wrong - the 0.10 page-level diff fraction cannot see a patch-sized feature failure. Do not read a page-level PASS here as evidence; GhentSoftMaskVectorCellTests is the per-cell evidence.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "QualityReason": "The three engines preview DeviceCMYK through different conversions, so the per-cell gate compares luminance and chroma rather than exact RGB.",
+      "Target": {
+        "Mode": "ACCEPTED_REFERENCE",
+        "Primary": "mutool",
+        "Reason": "mutool and Ghostscript both reproduce the page's own embedded reference-image row, which is the fixture's ground truth."
+      }
+    }
+  }
+}

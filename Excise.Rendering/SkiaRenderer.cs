@@ -1167,14 +1167,73 @@ internal partial class RenderContext
             var smaskObj = extGState.GetOptional("SMask");
             if (smaskObj is Excise.Core.Primitives.PdfName n && n.Value == "None")
             {
-                _state.SoftMask = null;
+                _state.ClearSoftMask();
             }
             else if (smaskObj != null)
             {
                 _state.SoftMask = smaskObj;
+                // §11.6.5.1: a soft mask is defined in the CTM in force at gs
+                // time, not when something is later painted through it. Only
+                // the DeviceCMYK group path reads this so far (#1395); the Skia
+                // layer path still uses the paint-time CTM.
+                _state.SoftMaskDeviceMatrix = _canvas.TotalMatrix;
+                _state.SoftMaskOwner = this;
             }
             // Note: full soft mask (transparency group) rendering not yet supported
         }
+    }
+
+    /// <summary>What an <c>/SMask</c> graphics-state value resolves to.</summary>
+    private enum SoftMaskResolution
+    {
+        /// <summary>A mask dictionary with <c>/S /None</c>: no mask applies.</summary>
+        Disabled,
+
+        /// <summary>No <c>/G</c>, or <c>/G</c> is not a stream: nothing can be rendered.</summary>
+        Unusable,
+
+        /// <summary>The mask stream resolved.</summary>
+        Usable,
+    }
+
+    /// <summary>
+    /// Resolve an <c>/SMask</c> value ONCE for both the Skia layer path
+    /// (<see cref="RenderWithCurrentSoftMask"/>) and the DeviceCMYK group path
+    /// (#1395), so the two cannot come to disagree about what a mask is.
+    /// <paramref name="maskLookupObject"/> is the unresolved <c>/G</c> value for a
+    /// mask dictionary, or the resolved object itself otherwise — exactly what
+    /// the soft-mask decoder was handed before this was factored out.
+    /// </summary>
+    private SoftMaskResolution ResolveSoftMask(
+        Excise.Core.Primitives.PdfObject softMaskSource,
+        out Excise.Core.Primitives.PdfObject maskLookupObject,
+        out Excise.Core.Primitives.PdfStream? maskStream,
+        out Excise.Core.Primitives.PdfDictionary? maskDictionary)
+    {
+        var resolvedSoftMask = _page.Document.Resolve(softMaskSource) ?? softMaskSource;
+        maskLookupObject = resolvedSoftMask;
+        maskStream = null;
+        maskDictionary = null;
+        if (resolvedSoftMask is Excise.Core.Primitives.PdfDictionary softMaskDictionary)
+        {
+            maskDictionary = softMaskDictionary;
+            var smaskMode = softMaskDictionary.GetNameOrNull("S");
+            if (string.Equals(smaskMode, "None", StringComparison.Ordinal))
+                return SoftMaskResolution.Disabled;
+
+            var softMaskStreamObj = softMaskDictionary.GetOptional("G");
+            if (softMaskStreamObj == null)
+                return SoftMaskResolution.Unusable;
+
+            resolvedSoftMask = _page.Document.Resolve(softMaskStreamObj) ?? softMaskStreamObj;
+            maskLookupObject = softMaskStreamObj;
+        }
+
+        if (resolvedSoftMask is not Excise.Core.Primitives.PdfStream stream)
+            return SoftMaskResolution.Unusable;
+
+        maskStream = stream;
+        return SoftMaskResolution.Usable;
     }
 
     /// <summary>
@@ -1207,33 +1266,20 @@ internal partial class RenderContext
             return;
         }
 
-        var softMaskSource = _state.SoftMask;
-        var resolvedSoftMask = _page.Document.Resolve(softMaskSource) ?? softMaskSource;
-        Excise.Core.Primitives.PdfObject maskLookupObject = resolvedSoftMask;
-        Excise.Core.Primitives.PdfDictionary? maskDictionary = null;
-        if (resolvedSoftMask is Excise.Core.Primitives.PdfDictionary softMaskDictionary)
+        var resolution = ResolveSoftMask(
+            _state.SoftMask,
+            out var maskLookupObject,
+            out var resolvedMaskStream,
+            out var maskDictionary);
+        if (resolution == SoftMaskResolution.Disabled)
         {
-            maskDictionary = softMaskDictionary;
-            var smaskMode = softMaskDictionary.GetNameOrNull("S");
-            if (string.Equals(smaskMode, "None", StringComparison.Ordinal))
-            {
-                _state.SoftMask = null;
-                drawAction();
-                return;
-            }
-
-            var softMaskStreamObj = softMaskDictionary.GetOptional("G");
-            if (softMaskStreamObj == null)
-            {
-                    drawAction();
-                return;
-            }
-
-            resolvedSoftMask = _page.Document.Resolve(softMaskStreamObj) ?? softMaskStreamObj;
-            maskLookupObject = softMaskStreamObj;
+            _state.ClearSoftMask();
+            drawAction();
+            return;
         }
 
-        if (resolvedSoftMask is not Excise.Core.Primitives.PdfStream maskStream)
+        if (resolution != SoftMaskResolution.Usable ||
+            resolvedMaskStream is not Excise.Core.Primitives.PdfStream maskStream)
         {
             drawAction();
             return;

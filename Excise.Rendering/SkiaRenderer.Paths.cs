@@ -485,8 +485,7 @@ internal partial class RenderContext
         float miterLimit,
         SKPathEffect? pathEffect)
     {
-        if (_rootBitmap == null ||
-            !_deviceCmyk.IsInTransparencyGroup ||
+        if (!CanWriteDeviceCmykDirectly ||
             sourceCmyk == null ||
             _state.SoftMask != null)
         {
@@ -567,6 +566,16 @@ internal partial class RenderContext
                         PdfSeparableBlendMode.Screen or
                         PdfSeparableBlendMode.ColorDodge;
                 if (IsZeroInk(source) &&
+                    // #1395: "zero ink under a retained-backdrop blend changes
+                    // nothing" holds when the destination IS the backdrop — the
+                    // page. It does NOT hold inside a group buffer, which starts
+                    // empty: the paint still contributes the group's SHAPE, and
+                    // skipping it leaves the group with alpha 0 everywhere, so
+                    // the whole group disappears. Measured on Ghent GWG168's
+                    // "Outer Glow" cell (Fm4: `0 0 0 0 k` under /BM /Screen):
+                    // group bitmap alphaMin=alphaMax=0, and the pale inner
+                    // square both oracles draw was missing entirely.
+                    !_isContainedGroupChild &&
                     !_deviceCmyk.IsInKnockoutGroup &&
                     !useDirectBlendFunctions &&
                     !isNormalBlend &&

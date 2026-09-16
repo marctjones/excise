@@ -80113,6 +80113,41 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMaskedGroup_IsMasked_AsIndependentRenderersMaskIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.ConstantAlphaGroup_OnCmykPage_IsHalfTransparent_AsIndependentRenderersDrawIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMask_UsesTheCtmAtGsTime_OnCmykPage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMaskedGroup_OnCmykPage_ChangesNothingOutsideTheRevealedHalf",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.ConstantAlphaGroup_OnCmykPage_ChangesNothingOutsideTheObject",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/DifferentialMetricsTests.cs::DifferentialMetricsTests.Compare_ComputesExpectedMetricsForPacked32Bitmaps",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -80572,51 +80607,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_R4_DifferentUserAndOwnerPasswords_BothIndependentlyOpenTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_R4_NonAsciiPassword_ValidatesAsPdfDocEncoding",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_R4_MultipleObjectsWithIdenticalPlaintext_DecryptToTheSameTextViaDifferentCiphertext",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Qpdf_R4_ShowEncryption_ReportsPermissionsFromOptions",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.QpdfWrittenR4File_ExciseIndependentlyDecryptsIt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs::EncryptionWriterInteropTests.Mutool_R4_EmptyPassword_ExtractsCorrectText",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112553,8 +112543,8 @@
     "gradeImplemented": 197,
     "gradeVerified": 155,
     "gradeUnknown": 546,
-    "testMethods": 6775,
-    "testMethodsWithCapabilityCandidate": 4225,
+    "testMethods": 6781,
+    "testMethodsWithCapabilityCandidate": 4231,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

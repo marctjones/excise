@@ -872,8 +872,7 @@ internal partial class RenderContext
 
     private void CompositeImageIntoDeviceCmykBackdrop(SKBitmap image, int imageWidth, int imageHeight, SKPaint imagePaint)
     {
-        if (_rootBitmap == null ||
-            !_deviceCmyk.IsInTransparencyGroup ||
+        if (!CanWriteDeviceCmykDirectly ||
             image.Width <= 0 ||
             image.Height <= 0 ||
             imageWidth <= 0 ||
@@ -1035,29 +1034,68 @@ internal partial class RenderContext
             targetWidth,
             targetHeight);
 
-        var bitmap = new SKBitmap(targetWidth, targetHeight, SKColorType.Rgba8888, SKAlphaType.Opaque);
+        var scaleX = targetWidth / maskBounds.Width;
+        var scaleY = targetHeight / maskBounds.Height;
+        var matrix = new SKMatrix(
+            scaleX,
+            0,
+            -maskBounds.Left * scaleX,
+            0,
+            scaleY,
+            -maskBounds.Top * scaleY,
+            0,
+            0,
+            1);
+
+        return RenderFormSoftMaskIntoBitmap(
+            maskStream,
+            targetWidth,
+            targetHeight,
+            matrix,
+            _state,
+            maskDictionary,
+            alphaSubtype: false);
+    }
+
+    /// <summary>
+    /// The shared core of soft-mask group rasterisation: render <paramref name="maskStream"/>
+    /// through <paramref name="matrix"/> into a <paramref name="width"/>x<paramref name="height"/>
+    /// bitmap, in a child context that has NO root bitmap (so no DeviceCMYK
+    /// direct-write path can run while a mask is built) and none of the
+    /// caller's compositing parameters (§11.6.5.2, #1393).
+    ///
+    /// <para>A luminosity mask (<paramref name="alphaSubtype"/> false) is
+    /// rendered over its opaque <c>/BC</c> backdrop, exactly as before this was
+    /// factored out. An alpha mask is rendered over a transparent backdrop so
+    /// the group's own alpha survives to be read (#1395's DeviceCMYK group
+    /// path; the Skia layer path still treats every mask as luminosity).</para>
+    /// </summary>
+    private SKBitmap? RenderFormSoftMaskIntoBitmap(
+        Excise.Core.Primitives.PdfStream maskStream,
+        int width,
+        int height,
+        SKMatrix matrix,
+        GraphicsState callerState,
+        Excise.Core.Primitives.PdfDictionary? maskDictionary,
+        bool alphaSubtype)
+    {
+        var bitmap = new SKBitmap(
+            width,
+            height,
+            SKColorType.Rgba8888,
+            alphaSubtype ? SKAlphaType.Premul : SKAlphaType.Opaque);
         try
         {
             using var canvas = new SKCanvas(bitmap);
-            canvas.Clear(ResolveSoftMaskBackdropColor(maskStream, maskDictionary));
-
-            var scaleX = targetWidth / maskBounds.Width;
-            var scaleY = targetHeight / maskBounds.Height;
-            canvas.SetMatrix(new SKMatrix(
-                scaleX,
-                0,
-                -maskBounds.Left * scaleX,
-                0,
-                scaleY,
-                -maskBounds.Top * scaleY,
-                0,
-                0,
-                1));
+            canvas.Clear(alphaSubtype
+                ? SKColors.Transparent
+                : ResolveSoftMaskBackdropColor(maskStream, maskDictionary));
+            canvas.SetMatrix(matrix);
 
             var child = new RenderContext(canvas, _page, _options, _resourceScope, _cancellationToken);
             child._resourcesStack.Push(_page.Resources);
-            child._state = _state.Clone();
-            child._state.SoftMask = null;
+            child._state = callerState.Clone();
+            child._state.ClearSoftMask();
             // §11.6.5.2 — the caller's compositing parameters are NOT part of
             // producing the mask (#1393). Same reset the form-group path
             // already does in SkiaRenderer.XObjects.cs's DrawFormContent.
