@@ -525,8 +525,67 @@ internal partial class RenderContext
             var isIsolated = group.GetBool("I");
             var isKnockout = group.GetBool("K");
 
+            // A non-isolated group composited with a non-Normal invocation /BM
+            // needs THIS context's retained CMYK backdrop to agree with what is
+            // actually in THIS context's bitmap before the seed is taken: the
+            // blend runs against the seeded backdrop, so RGB paint that landed
+            // in the bitmap without reaching the CMYK backdrop has to be folded
+            // in first. WHICH sync does that depends on what the bitmap IS
+            // (#1505).
+            //
+            // On the page, _rootBitmap is the page bitmap, and a page that
+            // starts in a DeviceCMYK group is cleared to the PAPER colour
+            // (SkiaRenderer.RenderPage's startsInDeviceCmykGroup branch), so
+            // every pixel carries alpha 255 and the page-flavoured sync is
+            // right: it resolves partial alpha against paper, and the only
+            // zero-alpha pixels it meets are knockout resets
+            // (ResetDeviceCmykKnockoutPixel), where "no backdrop here" is the
+            // truth it must record.
+            //
+            // In a CHILD group context (#1395) _rootBitmap is the group bitmap,
+            // and that one starts Clear(Transparent). The page-flavoured sync
+            // then reads raw alpha 0 / straight RGB (0,0,0) on every pixel the
+            // group has not painted yet, finds it 500+ units away from the
+            // seeded backdrop's own RGB, and OVERWRITES the seed with zero ink
+            // at alpha 0 — destroying the non-isolated seed precisely over the
+            // region the nested group's blend is about to act on.
+            // BlendDeviceCmykWithBackdropAlpha then sees backdrop alpha 0 and
+            // returns the source UNBLENDED (correct for a genuinely transparent
+            // backdrop, §11.3.6's Cs weighting), so the nested group's raw
+            // colour lands on the page at full strength. Measured on pdf.js
+            // issue13520 (#1505): 439 dark pixels where mutool and Ghostscript
+            // both draw 0, with the group's accumulated colour arriving as the
+            // raw shading ink (1, 1, 0, 0.85) instead of the Screen result.
+            //
+            // The group-flavoured sync is the one written for a buffer that
+            // starts transparent: it SKIPS alpha-0 pixels, so the seed survives
+            // where the group has painted nothing, and stores straight colour
+            // plus the pixel's own alpha where it has.
+            //
+            // ⚠️ The discriminator is deliberately _isContainedGroupChild and
+            // NOT "this bitmap is a group bitmap", which is the property that
+            // actually matters. Two consequences, both known:
+            // - it must not become unconditional, because on the page the
+            //   zero-alpha pixels are knockout resets and the page-flavoured
+            //   sync's white/alpha-0 write is the right record of them;
+            // - the pre-#1395 UnmaskedDeviceCmykGroup child (an explicit
+            //   /CS /DeviceCMYK group, _isContainedGroupChild false) is also a
+            //   transparent group bitmap and still takes the page-flavoured
+            //   sync here. That is the same defect one entry over. It is left
+            //   alone in #1505 because #1395's contained entries are what
+            //   created the child-in-child nesting this issue is about, and
+            //   because the same choice was already made deliberately for that
+            //   entry's post-content sync below (see CompleteChildGroup's
+            //   synchronizeDirtyBackdrop, kept page-flavoured so the gwg160-162
+            //   contracts stay comparable). Widening it is a separate,
+            //   contract-moving change with its own measurement.
             if (!isIsolated && invocationState.BlendMode != SKBlendMode.SrcOver)
-                SyncDeviceCmykBackdropFromRootBitmap(left, top, width, height);
+            {
+                if (_isContainedGroupChild)
+                    SyncDeviceCmykGroupBackdropFromGroupBitmap(left, top, width, height);
+                else
+                    SyncDeviceCmykBackdropFromRootBitmap(left, top, width, height);
+            }
 
             // The seed source, kept so the composite can remove exactly what
             // was seeded (§11.4.4, #1504) rather than re-deriving C0 from a
@@ -794,9 +853,29 @@ internal partial class RenderContext
     /// (within the same 12-unit tolerance), so CMYK-exact colour is kept; fully
     /// transparent pixels carry nothing and are skipped, which leaves a
     /// non-isolated group's seeded backdrop alone where the group did not
-    /// paint.</para>
+    /// paint. That last property is what makes this — and not
+    /// <see cref="SyncDeviceCmykBackdropFromRootBitmap"/> — the sync a child
+    /// context may run BEFORE seeding a nested group (#1505).</para>
     /// </summary>
     private void SyncDeviceCmykGroupBackdropFromGroupBitmap()
+    {
+        if (_rootBitmap == null || _deviceCmyk.Backdrop == null)
+            return;
+
+        SyncDeviceCmykGroupBackdropFromGroupBitmap(
+            0,
+            0,
+            Math.Min(_rootBitmap.Width, _deviceCmyk.Backdrop.Width),
+            Math.Min(_rootBitmap.Height, _deviceCmyk.Backdrop.Height));
+    }
+
+    /// <summary>
+    /// <see cref="SyncDeviceCmykGroupBackdropFromGroupBitmap()"/> over one
+    /// region of the group bitmap, in this context's pixel coordinates. The
+    /// whole-bitmap overload delegates here with the full extent, so both paths
+    /// visit the same pixels in the same order (#1505).
+    /// </summary>
+    private void SyncDeviceCmykGroupBackdropFromGroupBitmap(int left, int top, int width, int height)
     {
         if (_rootBitmap == null || _deviceCmyk.Backdrop == null)
             return;
@@ -804,13 +883,15 @@ internal partial class RenderContext
         _canvas.Flush();
         var rowBytes = _rootBitmap.RowBytes;
         var pixels = GetRootPixelSpan();
-        var width = Math.Min(_rootBitmap.Width, _deviceCmyk.Backdrop.Width);
-        var height = Math.Min(_rootBitmap.Height, _deviceCmyk.Backdrop.Height);
+        var right = Math.Min(left + width, Math.Min(_rootBitmap.Width, _deviceCmyk.Backdrop.Width));
+        var bottom = Math.Min(top + height, Math.Min(_rootBitmap.Height, _deviceCmyk.Backdrop.Height));
+        left = Math.Max(left, 0);
+        top = Math.Max(top, 0);
 
-        for (var y = 0; y < height; y++)
+        for (var y = top; y < bottom; y++)
         {
             var rowStart = y * rowBytes;
-            for (var x = 0; x < width; x++)
+            for (var x = left; x < right; x++)
             {
                 var offset = rowStart + (x * 4);
                 var rawAlpha = pixels[offset + 3];
