@@ -4,20 +4,20 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "cf5a3720683e91a22da2042b9d6edd2661dc7c30",
+  "sourceRevision": "39b6db658ac881166581def287a048c7dd8206c7",
   "summary": {
-    "interactions": 159,
-    "menuItems": 105,
+    "interactions": 160,
+    "menuItems": 106,
     "buttons": 45,
     "mouseGestures": 9,
     "keyboardShortcuts": 28,
-    "declaredCommandIds": 100,
-    "commandIdsReachableFromTheGui": 91,
+    "declaredCommandIds": 108,
+    "commandIdsReachableFromTheGui": 99,
     "commandIdsWithNoGuiPath": 0,
     "cliOnlyCommandIds": 9,
     "controlsWithNoCommandId": 0,
     "duplicateShortcuts": 0,
-    "parameterisedCommandIds": 5
+    "parameterisedCommandIds": 12
   },
   "interactions": [
     {
@@ -86,24 +86,6 @@
     {
       "kind": "button",
       "path": "",
-      "label": "Black",
-      "command": "SetTypewriterColorCommand",
-      "commandParameter": "#000000",
-      "shortcut": null,
-      "commandId": "typewriter.setColor"
-    },
-    {
-      "kind": "button",
-      "path": "",
-      "label": "Blue",
-      "command": "SetTypewriterColorCommand",
-      "commandParameter": "#1565C0",
-      "shortcut": null,
-      "commandId": "typewriter.setColor"
-    },
-    {
-      "kind": "button",
-      "path": "",
       "label": "Clear All",
       "command": "ClearAllRedactionsCommand",
       "commandParameter": null,
@@ -167,24 +149,6 @@
     {
       "kind": "button",
       "path": "",
-      "label": "Gray",
-      "command": "SetTypewriterColorCommand",
-      "commandParameter": "#555555",
-      "shortcut": null,
-      "commandId": "typewriter.setColor"
-    },
-    {
-      "kind": "button",
-      "path": "",
-      "label": "Green",
-      "command": "SetTypewriterColorCommand",
-      "commandParameter": "#2E7D32",
-      "shortcut": null,
-      "commandId": "typewriter.setColor"
-    },
-    {
-      "kind": "button",
-      "path": "",
       "label": "Heuristically add form fields where the page has underline placeholders or empty squares",
       "command": "AutoDetectFieldsCommand",
       "commandParameter": null,
@@ -217,33 +181,6 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "app.open"
-    },
-    {
-      "kind": "button",
-      "path": "",
-      "label": "Orange",
-      "command": "SetTypewriterColorCommand",
-      "commandParameter": "#F5A623",
-      "shortcut": null,
-      "commandId": "typewriter.setColor"
-    },
-    {
-      "kind": "button",
-      "path": "",
-      "label": "Purple",
-      "command": "SetTypewriterColorCommand",
-      "commandParameter": "#6A1B9A",
-      "shortcut": null,
-      "commandId": "typewriter.setColor"
-    },
-    {
-      "kind": "button",
-      "path": "",
-      "label": "Red",
-      "command": "SetTypewriterColorCommand",
-      "commandParameter": "#D0021B",
-      "shortcut": null,
-      "commandId": "typewriter.setColor"
     },
     {
       "kind": "button",
@@ -316,15 +253,6 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "edit.typewriterMode"
-    },
-    {
-      "kind": "button",
-      "path": "",
-      "label": "White",
-      "command": "SetTypewriterColorCommand",
-      "commandParameter": "#FFFFFF",
-      "shortcut": null,
-      "commandId": "typewriter.setColor"
     },
     {
       "kind": "button",
@@ -424,6 +352,78 @@
       "commandParameter": null,
       "shortcut": null,
       "commandId": "view.toggleThumbnails"
+    },
+    {
+      "kind": "button",
+      "path": "TypewriterColorSwatchBlack",
+      "label": "",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#000000",
+      "shortcut": null,
+      "commandId": "typewriter.setColor.black"
+    },
+    {
+      "kind": "button",
+      "path": "TypewriterColorSwatchBlue",
+      "label": "",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#1565C0",
+      "shortcut": null,
+      "commandId": "typewriter.setColor.blue"
+    },
+    {
+      "kind": "button",
+      "path": "TypewriterColorSwatchGray",
+      "label": "",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#555555",
+      "shortcut": null,
+      "commandId": "typewriter.setColor.gray"
+    },
+    {
+      "kind": "button",
+      "path": "TypewriterColorSwatchGreen",
+      "label": "",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#2E7D32",
+      "shortcut": null,
+      "commandId": "typewriter.setColor.green"
+    },
+    {
+      "kind": "button",
+      "path": "TypewriterColorSwatchOrange",
+      "label": "",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#F5A623",
+      "shortcut": null,
+      "commandId": "typewriter.setColor.orange"
+    },
+    {
+      "kind": "button",
+      "path": "TypewriterColorSwatchPurple",
+      "label": "",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#6A1B9A",
+      "shortcut": null,
+      "commandId": "typewriter.setColor.purple"
+    },
+    {
+      "kind": "button",
+      "path": "TypewriterColorSwatchRed",
+      "label": "",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#D0021B",
+      "shortcut": null,
+      "commandId": "typewriter.setColor.red"
+    },
+    {
+      "kind": "button",
+      "path": "TypewriterColorSwatchWhite",
+      "label": "",
+      "command": "SetTypewriterColorCommand",
+      "commandParameter": "#FFFFFF",
+      "shortcut": null,
+      "commandId": "typewriter.setColor.white"
     },
     {
       "kind": "menu",
@@ -1003,12 +1003,21 @@
     },
     {
       "kind": "menu",
+      "path": "Edit > Typewriter Text Color",
+      "label": "Typewriter Text Color",
+      "command": null,
+      "commandParameter": null,
+      "shortcut": null,
+      "commandId": "typewriter.setColor"
+    },
+    {
+      "kind": "menu",
       "path": "Edit > Typewriter Text Color > Black",
       "label": "Black",
       "command": "SetTypewriterColorCommand",
       "commandParameter": "#000000",
       "shortcut": null,
-      "commandId": "typewriter.setColor"
+      "commandId": "typewriter.setColor.black"
     },
     {
       "kind": "menu",
@@ -1017,7 +1026,7 @@
       "command": "SetTypewriterColorCommand",
       "commandParameter": "#1565C0",
       "shortcut": null,
-      "commandId": "typewriter.setColor"
+      "commandId": "typewriter.setColor.blue"
     },
     {
       "kind": "menu",
@@ -1026,7 +1035,7 @@
       "command": "SetTypewriterColorCommand",
       "commandParameter": "#555555",
       "shortcut": null,
-      "commandId": "typewriter.setColor"
+      "commandId": "typewriter.setColor.gray"
     },
     {
       "kind": "menu",
@@ -1035,7 +1044,7 @@
       "command": "SetTypewriterColorCommand",
       "commandParameter": "#2E7D32",
       "shortcut": null,
-      "commandId": "typewriter.setColor"
+      "commandId": "typewriter.setColor.green"
     },
     {
       "kind": "menu",
@@ -1044,7 +1053,7 @@
       "command": "SetTypewriterColorCommand",
       "commandParameter": "#F5A623",
       "shortcut": null,
-      "commandId": "typewriter.setColor"
+      "commandId": "typewriter.setColor.orange"
     },
     {
       "kind": "menu",
@@ -1053,7 +1062,7 @@
       "command": "SetTypewriterColorCommand",
       "commandParameter": "#6A1B9A",
       "shortcut": null,
-      "commandId": "typewriter.setColor"
+      "commandId": "typewriter.setColor.purple"
     },
     {
       "kind": "menu",
@@ -1062,7 +1071,7 @@
       "command": "SetTypewriterColorCommand",
       "commandParameter": "#D0021B",
       "shortcut": null,
-      "commandId": "typewriter.setColor"
+      "commandId": "typewriter.setColor.red"
     },
     {
       "kind": "menu",
@@ -1071,7 +1080,7 @@
       "command": "SetTypewriterColorCommand",
       "commandParameter": "#FFFFFF",
       "shortcut": null,
-      "commandId": "typewriter.setColor"
+      "commandId": "typewriter.setColor.white"
     },
     {
       "kind": "menu",
@@ -1619,14 +1628,28 @@
     "search.jumpToMatch": [
       "{Binding}"
     ],
-    "typewriter.setColor": [
-      "#000000",
-      "#1565C0",
-      "#2E7D32",
-      "#555555",
-      "#6A1B9A",
-      "#D0021B",
-      "#F5A623",
+    "typewriter.setColor.black": [
+      "#000000"
+    ],
+    "typewriter.setColor.blue": [
+      "#1565C0"
+    ],
+    "typewriter.setColor.gray": [
+      "#555555"
+    ],
+    "typewriter.setColor.green": [
+      "#2E7D32"
+    ],
+    "typewriter.setColor.orange": [
+      "#F5A623"
+    ],
+    "typewriter.setColor.purple": [
+      "#6A1B9A"
+    ],
+    "typewriter.setColor.red": [
+      "#D0021B"
+    ],
+    "typewriter.setColor.white": [
       "#FFFFFF"
     ],
     "view.goToPage": [

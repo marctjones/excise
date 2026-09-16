@@ -3,8 +3,10 @@
 
 WHY THIS EXISTS
 ---------------
-`PdfCommandIds` lists 91 command identifiers and `PdfCommandRegistry` describes
-them for automation, but neither says how a human reaches one. A command with no
+`PdfCommandIds` declares the command identifiers and `PdfCommandRegistry`
+describes them for automation, but neither says how a human reaches one. (The
+count lives in this file's own `summary.declaredCommandIds`, not in this
+sentence — the number that used to be here went stale twice.) A command with no
 menu item, no shortcut and no button is unreachable; a menu item with no command
 id cannot be driven by any automation surface. Both have shipped. #1308's Sign
 Document existed, was tested, and no production code could reach it.

@@ -23,7 +23,11 @@ namespace Excise.App.Tests.UI;
 /// <para>Row: <c>[a p10] [b p20] | [c p30] [d p40] [e p50]</c>, spacing 4. Each item
 /// is a 16 px icon plus a 40 px label; the styles hide the label at
 /// <c>:icon-only</c> and make the icon 8 px at <c>:compact</c>. Row widths: Full 301,
-/// IconOnly 101, Compact 61.</para>
+/// IconOnly 101, Compact 61 — and Dense 101 as well, because this fixture
+/// declares no <c>:dense</c> style, so Dense equals IconOnly and is never the
+/// stage the planner settles on. The intermediate stage is pinned in
+/// <see cref="PriorityToolbarLayoutTests"/> and, with the real styles, in
+/// <c>ToolbarWidthTests</c>.</para>
 /// </summary>
 [Collection("AvaloniaTests")]
 public class PriorityToolbarPanelTests

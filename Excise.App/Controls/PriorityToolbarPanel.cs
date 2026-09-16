@@ -12,13 +12,16 @@ namespace Excise.App.Controls;
 /// instead of scrolling or wrapping (#1476).
 ///
 /// <para><b>Stages.</b> Each measure pass tries <see cref="ToolbarStage.Full"/>,
-/// then <see cref="ToolbarStage.IconOnly"/>, then <see cref="ToolbarStage.Compact"/>,
-/// and stops at the first that fits. The panel does not know what a label or an
-/// icon is: it sets the <c>:icon-only</c> pseudo-class (IconOnly and Compact) and
-/// <c>:compact</c> (Compact), and styles in the host decide what those mean,
-/// e.g. <c>PriorityToolbarPanel:icon-only TextBlock.toolbar-label</c>. If the row
-/// still does not fit at Compact, whole <see cref="PriorityProperty"/> groups are
-/// hidden, lowest first. <see cref="PriorityToolbarLayout"/> holds the decision.</para>
+/// then <see cref="ToolbarStage.IconOnly"/>, then <see cref="ToolbarStage.Dense"/>,
+/// then <see cref="ToolbarStage.Compact"/>, and stops at the first that fits. The
+/// panel does not know what a label or an icon is: it sets the pseudo-classes
+/// CUMULATIVELY — <c>:icon-only</c> from IconOnly down, <c>:dense</c> from Dense
+/// down, <c>:compact</c> at Compact — and styles in the host decide what those
+/// mean, e.g. <c>PriorityToolbarPanel:icon-only TextBlock.toolbar-label</c>.
+/// Cumulative is what makes "each stage keeps everything the previous stage
+/// removed" true without restating the earlier setters. If the row still does not
+/// fit at Compact, whole <see cref="PriorityProperty"/> groups are hidden, lowest
+/// first. <see cref="PriorityToolbarLayout"/> holds the decision.</para>
 ///
 /// <para><b>The panel owns its direct children's <see cref="Visual.IsVisible"/>.</b>
 /// An item that should only appear in some state (redaction Apply, the typewriter
@@ -37,10 +40,11 @@ namespace Excise.App.Controls;
 /// through <c>ChildDesiredSizeChanged</c>, which Avalonia ignores during a
 /// measure, so the pass does not re-invalidate itself.</para>
 /// </summary>
-[PseudoClasses(IconOnlyPseudoClass, CompactPseudoClass)]
+[PseudoClasses(IconOnlyPseudoClass, DensePseudoClass, CompactPseudoClass)]
 internal sealed class PriorityToolbarPanel : Panel
 {
     internal const string IconOnlyPseudoClass = ":icon-only";
+    internal const string DensePseudoClass = ":dense";
     internal const string CompactPseudoClass = ":compact";
 
     public static readonly StyledProperty<double> SpacingProperty =
@@ -199,8 +203,11 @@ internal sealed class PriorityToolbarPanel : Panel
     private void ApplyStage(ToolbarStage stage)
     {
         Stage = stage;
-        PseudoClasses.Set(IconOnlyPseudoClass, stage != ToolbarStage.Full);
-        PseudoClasses.Set(CompactPseudoClass, stage == ToolbarStage.Compact);
+        // Cumulative: a later stage keeps every earlier stage's pseudo-class, so
+        // the host's styles only have to describe what each stage ADDS.
+        PseudoClasses.Set(IconOnlyPseudoClass, stage >= ToolbarStage.IconOnly);
+        PseudoClasses.Set(DensePseudoClass, stage >= ToolbarStage.Dense);
+        PseudoClasses.Set(CompactPseudoClass, stage >= ToolbarStage.Compact);
     }
 
     /// <summary>

@@ -16,8 +16,16 @@ internal enum ToolbarStage
     /// <summary>Text labels hidden; tooltips and automation names still carry them.</summary>
     IconOnly = 1,
 
-    /// <summary>Icon-only with smaller icons and tighter padding. Only this stage hides items.</summary>
-    Compact = 2,
+    /// <summary>
+    /// First icon shrink: slightly smaller icons and tighter padding. Nothing
+    /// hides here — this stage exists so that a window narrower than
+    /// <see cref="IconOnly"/> fits keeps every action one click away for longer
+    /// (#1476 follow-up).
+    /// </summary>
+    Dense = 2,
+
+    /// <summary>Smallest icons and tightest padding. Only this stage hides items.</summary>
+    Compact = 3,
 }
 
 /// <summary>One participating toolbar child, as the planner sees it.</summary>
@@ -46,7 +54,8 @@ internal sealed record ToolbarPlan(
 /// each item is at each stage, which stage to use and which items to hide.
 ///
 /// <para>The order is the product requirement from #1476, applied strictly:
-/// drop the text labels; then shrink the icons; then hide items, lowest
+/// drop the text labels; then shrink the icons (twice — <see cref="ToolbarStage.Dense"/>
+/// then <see cref="ToolbarStage.Compact"/>); then hide items, lowest
 /// <see cref="ToolbarItem.Priority"/> first. Items that share a priority hide
 /// together (rotate left/right, Open/Save), so a pair never loses one half.
 /// Nothing wraps and nothing scrolls.</para>
@@ -59,8 +68,14 @@ internal static class PriorityToolbarLayout
     /// <summary>Sub-pixel slack so a row that fits exactly is not treated as overflowing.</summary>
     internal const double Epsilon = 0.01;
 
+    /// <summary>
+    /// Widest first, and every stage must be strictly narrower than the one
+    /// before it for a given row — otherwise a narrower window could show MORE
+    /// than a wider one. The host's styles own that: see the <c>:dense</c> and
+    /// <c>:compact</c> setters in <c>MainWindow.axaml</c>.
+    /// </summary>
     private static readonly ToolbarStage[] StagesWidestFirst =
-        [ToolbarStage.Full, ToolbarStage.IconOnly, ToolbarStage.Compact];
+        [ToolbarStage.Full, ToolbarStage.IconOnly, ToolbarStage.Dense, ToolbarStage.Compact];
 
     /// <param name="items">Participating items, in layout order.</param>
     /// <param name="measure">Width of every item at a stage, same order as <paramref name="items"/>.

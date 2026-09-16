@@ -13,8 +13,8 @@ namespace Excise.App.Tests.Unit;
 /// of fonts, themes and the window.
 ///
 /// <para>Fixture row: <c>[a p10] [b p20] | [c p30] [d p40] [e p50]</c>, spacing 4.
-/// Each item is 56 wide with its label, 16 icon-only and 8 compact; the
-/// separator is 1. Row widths: Full 301, IconOnly 101, Compact 61.</para>
+/// Each item is 56 wide with its label, 16 icon-only, 12 dense and 8 compact; the
+/// separator is 1. Row widths: Full 301, IconOnly 101, Dense 81, Compact 61.</para>
 /// </summary>
 public class PriorityToolbarLayoutTests
 {
@@ -32,6 +32,7 @@ public class PriorityToolbarLayoutTests
                 {
                     ToolbarStage.Full => 56.0,
                     ToolbarStage.IconOnly => 16.0,
+                    ToolbarStage.Dense => 12.0,
                     _ => 8.0,
                 })
             .ToArray();
@@ -69,7 +70,9 @@ public class PriorityToolbarLayoutTests
     [Theory]
     [InlineData(300, (int)ToolbarStage.IconOnly)]
     [InlineData(101, (int)ToolbarStage.IconOnly)]
-    [InlineData(100, (int)ToolbarStage.Compact)]
+    [InlineData(100, (int)ToolbarStage.Dense)]
+    [InlineData(81, (int)ToolbarStage.Dense)]
+    [InlineData(80, (int)ToolbarStage.Compact)]
     [InlineData(61, (int)ToolbarStage.Compact)]
     public void LabelsGoBeforeIconsShrink_AndIconsShrinkBeforeAnythingHides(double available, int expectedStage)
     {
@@ -80,12 +83,61 @@ public class PriorityToolbarLayoutTests
 
         plan.Stage.Should().Be(expected);
         plan.Overflowed.Should().AllBeEquivalentTo(false, "nothing hides while a smaller stage still fits");
-        measured.Should().Equal(
-            expected == ToolbarStage.IconOnly
-                ? [ToolbarStage.Full, ToolbarStage.IconOnly]
-                : [ToolbarStage.Full, ToolbarStage.IconOnly, ToolbarStage.Compact],
+        ToolbarStage[] expectedMeasured = expected switch
+        {
+            ToolbarStage.IconOnly => [ToolbarStage.Full, ToolbarStage.IconOnly],
+            ToolbarStage.Dense => [ToolbarStage.Full, ToolbarStage.IconOnly, ToolbarStage.Dense],
+            _ => [ToolbarStage.Full, ToolbarStage.IconOnly, ToolbarStage.Dense, ToolbarStage.Compact],
+        };
+        measured.Should().Equal(expectedMeasured,
             "stages are measured widest first and only as far as needed");
         plan.Width.Should().BeLessThanOrEqualTo(available);
+    }
+
+    /// <summary>
+    /// The intermediate stage is the whole point of #1476's follow-up: between
+    /// "icons at full size" and "icons at their smallest" there is now a step
+    /// that keeps every action visible at widths that used to start hiding them.
+    /// Exact widths, so a style change that inverts the order fails here rather
+    /// than showing a user a narrower toolbar with MORE on it.
+    /// </summary>
+    [Fact]
+    public void TheDenseStage_SitsStrictlyBetweenIconOnlyAndCompact()
+    {
+        var (plan, measured) = Plan(90);
+
+        plan.Stage.Should().Be(ToolbarStage.Dense);
+        plan.Width.Should().Be(81);
+        plan.Overflowed.Should().AllBeEquivalentTo(false, "the dense stage never hides anything");
+        plan.Shown.Should().AllBeEquivalentTo(true);
+        measured.Should().Equal(ToolbarStage.Full, ToolbarStage.IconOnly, ToolbarStage.Dense);
+
+        plan.StageWidths[ToolbarStage.Full].Should().Be(301);
+        plan.StageWidths[ToolbarStage.IconOnly].Should().Be(101);
+        plan.StageWidths[ToolbarStage.Dense].Should().Be(81);
+        plan.StageWidths.Should().NotContainKey(ToolbarStage.Compact,
+            "a stage the planner did not need must not be measured");
+    }
+
+    /// <summary>
+    /// The stage ORDER, as a property of the enum rather than of one fixture: a
+    /// stage added or renumbered out of order would let the planner return a
+    /// wider row for a narrower window.
+    /// </summary>
+    [Fact]
+    public void EveryStage_IsNarrowerThanTheOneBeforeIt()
+    {
+        ToolbarStage[] widestFirst =
+            [ToolbarStage.Full, ToolbarStage.IconOnly, ToolbarStage.Dense, ToolbarStage.Compact];
+
+        widestFirst.Select(s => (int)s).Should().BeInAscendingOrder(
+            "PriorityToolbarLayout probes stages in enum order, so the enum must be ordered widest first");
+
+        var widths = widestFirst.Select(stage => PriorityToolbarLayout.RowWidth(
+            RowWidths(stage), Enumerable.Repeat(true, Row.Length).ToArray(), Spacing)).ToArray();
+
+        widths.Should().Equal(301, 101, 81, 61);
+        widths.Should().BeInDescendingOrder("a later stage must never be wider than an earlier one");
     }
 
     [Fact]
