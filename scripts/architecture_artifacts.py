@@ -12,7 +12,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from typing import Any
+from typing import Any, Callable
 
 import check_architecture_registry as registry
 import generate_change_coupling as coupling
@@ -39,6 +39,53 @@ ARTIFACTS = (
 REVISION_SEMANTICS = (
     "provenance-only; normalized content and hashes determine freshness"
 )
+
+# #1506. change-coupling.json is derived from GIT HISTORY, not from the tree, so
+# it cannot be hash-pinned in the same commit that changes it: the commit that
+# carries a regeneration is itself a new commit in the `git log --no-merges
+# -n200 -- <shipping roots>` window the generator reads, which changes `files`,
+# `pairs` and `window`, which changes the sha256 recorded here. A merge is the
+# loud case — it brings a branch's whole run of .cs commits into the window at
+# once — and an artifacts-only commit is the quiet one, touching no .cs file and
+# so shifting nothing. That asymmetry is why the staling looked intermittent,
+# and intermittent reads as flaky, which is worse than reliably red.
+#
+# So a history-derived artifact is verified, but not by "regenerate and diff":
+# it must exist, parse, satisfy its schema, and still describe the CURRENT
+# shipping scope (see HISTORY_VALIDATORS). That is the contract the code can
+# actually own. Coupling strength itself is evidence for a reviewer, not a
+# contract the tree must reproduce byte for byte.
+#
+# ⚠️ Rejected alternatives, so they are not re-proposed: comparing against HEAD~
+# (arbitrary the moment HEAD is not the commit that carried the artifacts, and
+# wrong for the artifacts-only commit, which must compare against HEAD), and
+# documenting the two-commit dance (it teaches a habit of running --update twice,
+# which is exactly what hides a real staleness).
+HISTORY_DERIVED = ("architecture/generated/change-coupling.json",)
+HISTORY_VERIFICATION = (
+    "schema-and-scope; derived from git history, deliberately not hash-pinned"
+)
+HISTORY_VALIDATORS = {
+    "architecture/generated/change-coupling.json": (
+        lambda documents, value: registry.validate_change_coupling(
+            documents["inventory"], value
+        )
+    ),
+}
+
+
+def is_history_derived(relative: Path) -> bool:
+    return relative.as_posix() in HISTORY_DERIVED
+
+
+def hashed_artifacts() -> tuple[tuple[Path, str, str | None], ...]:
+    """The artifacts whose exact bytes the manifest pins (structural)."""
+    return tuple(item for item in ARTIFACTS if not is_history_derived(item[0]))
+
+
+def history_artifacts() -> tuple[tuple[Path, str, str | None], ...]:
+    """The artifacts verified by schema and scope instead of by hash."""
+    return tuple(item for item in ARTIFACTS if is_history_derived(item[0]))
 
 
 def git_revision() -> str:
@@ -79,6 +126,41 @@ def preserved_revision(relative: Path, keys: tuple[str, ...], fallback: str) -> 
         return value if isinstance(value, str) else fallback
     except (OSError, json.JSONDecodeError, KeyError, TypeError):
         return fallback
+
+
+def build_manifest(revision: str, sha_for: Callable[[Path], str]) -> dict[str, Any]:
+    """The artifact-set manifest: hashes for structural artifacts, and a
+    separate, deliberately unhashed record of the history-derived ones (#1506).
+
+    Split out from generate_set so the self-test can build a manifest with
+    stand-in hashes and validate its SHAPE without a whole-solution run — the
+    t1 row is the only thing that exercised the real one.
+    """
+    return {
+        "$schema": "../schemas/artifact-set.schema.json",
+        "schemaVersion": 2,
+        "generator": "scripts/architecture_artifacts.py",
+        "sourceRevision": revision,
+        "revisionSemantics": REVISION_SEMANTICS,
+        "artifacts": [
+            {
+                "path": relative.as_posix(),
+                "format": artifact_format,
+                **({"schema": f"architecture/schemas/{schema}"} if schema else {}),
+                "sha256": sha_for(relative),
+            }
+            for relative, artifact_format, schema in hashed_artifacts()
+        ],
+        "historyArtifacts": [
+            {
+                "path": relative.as_posix(),
+                "format": artifact_format,
+                **({"schema": f"architecture/schemas/{schema}"} if schema else {}),
+                "verification": HISTORY_VERIFICATION,
+            }
+            for relative, artifact_format, schema in history_artifacts()
+        ],
+    }
 
 
 def generate_set(stage: Path, *, preserve_revisions: bool) -> dict[str, Any]:
@@ -170,24 +252,12 @@ def generate_set(stage: Path, *, preserve_revisions: bool) -> dict[str, Any]:
     manifest_revision = preserved_revision(
         MANIFEST_PATH, ("sourceRevision",), revision
     ) if preserve_revisions else revision
-    manifest = {
-        "$schema": "../schemas/artifact-set.schema.json",
-        "schemaVersion": 1,
-        "generator": "scripts/architecture_artifacts.py",
-        "sourceRevision": manifest_revision,
-        "revisionSemantics": REVISION_SEMANTICS,
-        "artifacts": [
-            {
-                "path": relative.as_posix(),
-                "format": artifact_format,
-                **({"schema": f"architecture/schemas/{schema}"} if schema else {}),
-                "sha256": hashlib.sha256(
-                    staged_path(stage, relative).read_bytes()
-                ).hexdigest(),
-            }
-            for relative, artifact_format, schema in ARTIFACTS
-        ],
-    }
+    manifest = build_manifest(
+        manifest_revision,
+        lambda relative: hashlib.sha256(
+            staged_path(stage, relative).read_bytes()
+        ).hexdigest(),
+    )
     write_text(staged_path(stage, MANIFEST_PATH), json_text(manifest))
     return {
         "design": design,
@@ -274,9 +344,41 @@ def first_difference(expected: Any, actual: Any, path: str = "$") -> str | None:
     return None
 
 
-def check_set(stage: Path) -> list[str]:
+def history_artifact_errors(
+    relative: Path, documents: dict[str, Any]
+) -> list[str]:
+    """Verify a checked-in history-derived artifact WITHOUT comparing content.
+
+    Tolerance is not blindness: the file must exist, parse as an object, satisfy
+    its schema, and agree with the CURRENT shipping scope. Adding a shipping
+    project without regenerating still fails here — what no longer fails is a
+    coupling window that moved because a commit was made.
+    """
+    path = ROOT / relative
+    if not path.is_file():
+        return [f"missing artifact: {relative}"]
+    validator = HISTORY_VALIDATORS.get(relative.as_posix())
+    if validator is None:
+        # A history-derived artifact with no validator would be verified by
+        # nothing at all, which is the failure mode this split must not create.
+        return [
+            f"{relative}: declared history-derived with no validator in "
+            "HISTORY_VALIDATORS"
+        ]
+    try:
+        checked_in = load_object(path)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return [f"{relative}: unreadable: {exc}"]
+    return [f"{relative}: {error}" for error in validator(documents, checked_in)]
+
+
+def check_set(stage: Path, documents: dict[str, Any]) -> list[str]:
     errors: list[str] = []
-    for relative, artifact_format, _ in (*ARTIFACTS, (MANIFEST_PATH, "json", None)):
+    for relative, _, _ in history_artifacts():
+        errors.extend(history_artifact_errors(relative, documents))
+    for relative, artifact_format, _ in (
+        *hashed_artifacts(), (MANIFEST_PATH, "json", None)
+    ):
         expected_path = staged_path(stage, relative)
         actual_path = ROOT / relative
         if not actual_path.is_file():
@@ -378,11 +480,127 @@ def self_test() -> int:
     if stale_difference is None or "sha256" not in stale_difference:
         print("FAIL: stale artifact hash mutation was not detected", file=sys.stderr)
         return 1
+
+    if history_split_self_test() != 0:
+        return 1
+
     print(
         "PASS: unified architecture artifact gate rejects cycle, fan, order, "
-        "scope, broad-commit, schema, and stale-hash mutations; "
-        f"stale diagnostic: {stale_difference}"
+        "scope, broad-commit, schema, and stale-hash mutations, hash-pins "
+        f"{len(hashed_artifacts())} structural artifacts, and verifies "
+        f"{len(history_artifacts())} history-derived artifact(s) by schema and "
+        f"scope; stale diagnostic: {stale_difference}"
     )
+    return 0
+
+
+def history_split_self_test() -> int:
+    """#1506. Prove the split does the two things it must do.
+
+    1. The manifest hash-pins every STRUCTURAL artifact and hash-pins the
+       history-derived one nowhere — otherwise the self-staling loop is back.
+    2. Verifying the history-derived artifact by schema and scope instead of by
+       content is still a real check: a content shift (the thing a commit
+       causes) passes, while a scope drift or a schema break FAILS.
+    """
+    manifest = build_manifest("0" * 40, lambda relative: "a" * 64)
+    schema = load_object(ROOT / "architecture/schemas/artifact-set.schema.json")
+    schema_failures = validate_json_schema(manifest, schema)
+    if schema_failures:
+        print(
+            "FAIL: generated manifest does not satisfy artifact-set.schema.json: "
+            f"{schema_failures}",
+            file=sys.stderr,
+        )
+        return 1
+
+    hashed_paths = {item["path"] for item in manifest["artifacts"]}
+    history_paths = {item["path"] for item in manifest["historyArtifacts"]}
+    if hashed_paths & history_paths:
+        print("FAIL: an artifact is both hash-pinned and history-derived", file=sys.stderr)
+        return 1
+    if hashed_paths | history_paths != {
+        relative.as_posix() for relative, _, _ in ARTIFACTS
+    }:
+        print("FAIL: the manifest does not account for every artifact", file=sys.stderr)
+        return 1
+    if history_paths != set(HISTORY_DERIVED):
+        print(
+            f"FAIL: history artifacts {sorted(history_paths)} != "
+            f"{sorted(HISTORY_DERIVED)}",
+            file=sys.stderr,
+        )
+        return 1
+    if any("sha256" in item for item in manifest["historyArtifacts"]):
+        print(
+            "FAIL: a history-derived artifact is hash-pinned, which is the "
+            "#1506 self-staling loop",
+            file=sys.stderr,
+        )
+        return 1
+    if any(relative.as_posix() not in HISTORY_VALIDATORS for relative in
+           (Path(path) for path in HISTORY_DERIVED)):
+        print("FAIL: a history-derived artifact has no validator", file=sys.stderr)
+        return 1
+
+    roots = ("Excise.App", "Excise.Core")
+    inventory = {
+        "projects": [
+            {"sourceRoot": root, "classification": "shipping"} for root in roots
+        ] + [{"sourceRoot": "Excise.App.Tests", "classification": "test"}],
+    }
+    documents = {"inventory": inventory}
+    report = coupling.analyze(
+        [
+            ("a" * 40, ["Excise.App/A.cs", "Excise.App/B.cs"]),
+            ("b" * 40, ["Excise.App/A.cs", "Excise.App/B.cs", "Excise.Core/C.cs"]),
+        ],
+        200,
+        "d" * 40,
+        roots,
+    )
+    validator = HISTORY_VALIDATORS[HISTORY_DERIVED[0]]
+    if validator(documents, report):
+        print(
+            "FAIL: a well-formed in-scope coupling report was rejected: "
+            f"{validator(documents, report)}",
+            file=sys.stderr,
+        )
+        return 1
+
+    # The #1506 property: the window moving is NOT staleness.
+    moved_window = copy.deepcopy(report)
+    moved_window["window"]["commitsObserved"] += 1
+    moved_window["files"][0]["commits"] += 1
+    moved_window["pairs"][0]["cochanges"] += 1
+    moved_window["window"]["newestProductionCommit"] = "e" * 40
+    moved_window["sourceRevision"] = "f" * 40
+    if validator(documents, moved_window):
+        print(
+            "FAIL: a shifted history window was reported as an error, so the "
+            "self-staling loop is not actually fixed",
+            file=sys.stderr,
+        )
+        return 1
+
+    # ...but drifting off the current shipping scope, or off the schema, is.
+    tolerance_mutations = {
+        "scope-roots": lambda value: value["scope"]["sourceRoots"].append("Excise.Gone"),
+        "out-of-scope-file": lambda value: value["files"].append(
+            {"path": "Excise.App.Tests/T.cs", "commits": 3}
+        ),
+        "schema-break": lambda value: value.update({"schemaVersion": 1}),
+    }
+    for name, mutate in tolerance_mutations.items():
+        mutated = copy.deepcopy(report)
+        mutate(mutated)
+        if not validator(documents, mutated):
+            print(
+                f"FAIL: {name} mutation of the history-derived artifact was "
+                "not detected; schema-and-scope verification is blind",
+                file=sys.stderr,
+            )
+            return 1
     return 0
 
 
@@ -409,7 +627,7 @@ def main() -> int:
             if not errors and args.update:
                 transactional_replace(stage)
             elif not errors:
-                errors.extend(check_set(stage))
+                errors.extend(check_set(stage, documents))
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
         print(f"FAIL: architecture artifact generation failed: {exc}", file=sys.stderr)
         return 1
@@ -420,7 +638,11 @@ def main() -> int:
             print(f"  - {error}", file=sys.stderr)
         return 1
     action = "updated" if args.update else "current"
-    print(f"PASS: coherent architecture artifact set is {action} ({len(ARTIFACTS)} artifacts)")
+    print(
+        f"PASS: coherent architecture artifact set is {action} "
+        f"({len(hashed_artifacts())} hash-pinned, "
+        f"{len(history_artifacts())} verified by schema and scope)"
+    )
     return 0
 
 
