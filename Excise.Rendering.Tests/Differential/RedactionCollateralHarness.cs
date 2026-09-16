@@ -215,6 +215,10 @@ public class RedactionCollateralHarness
                 measured[term] = collateral;
 
                 var key = $"{fixtureName}|{term}";
+                // ⚠️ An ABSENT key applies no ceiling at all — see issue #1530.
+                // The term-still-present and count-vs-oracle assertions above
+                // still run, so such a row is not vacuous; it is the COLLATERAL
+                // property specifically that goes unbounded.
                 if (baseline.TryGetValue(key, out var allowed))
                 {
                     // Headroom absorbs extractor jitter; anything larger is a

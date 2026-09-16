@@ -113,6 +113,11 @@ fi
 # 4. Every class that enumerates a GITIGNORED corpus into a theory must have a
 #    declared collected-row floor.
 #
+#    ⚠️ Detection is a SAME-FILE heuristic and its limits are #1531: a theory
+#    whose enumeration sits behind a helper in another file, a corpus not in
+#    the list below, or a corpus-gated theory in a project with no floor
+#    registry all escape it. Accepted for now; it already earned its keep.
+#
 #    Population DERIVED, not listed: a file that (a) builds a TheoryData,
 #    (b) enumerates a directory, and (c) names one of the gitignored corpora is
 #    a class whose rows vanish when the corpus is unreachable. That is the

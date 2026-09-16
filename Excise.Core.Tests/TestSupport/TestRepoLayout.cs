@@ -54,6 +54,13 @@ namespace Excise.TestSupport;
 ///   Equal to the local root outside a worktree.</item>
 /// </list>
 ///
+/// <para>⚠️ 31 private one-off locators in the test projects still walk upward
+/// UNBOUNDED. They are not broken — a walk that keeps going re-enters the main
+/// checkout, because this repo's worktrees are nested inside it — but that is
+/// incidental to the layout, and an unbounded walk can also leave the repo
+/// entirely (a stray <c>~/test-pdfs</c> would match). Converting them onto this
+/// class is issue #1529.</para>
+///
 /// <para>⚠️ <b>Upward search is right for read-only repository data and wrong
 /// for build output.</b> A test that needs <c>Excise.Cli/bin/**/excise.dll</c>
 /// must use <see cref="FindFileInLocalCheckout"/>: the CLI is a build-order
