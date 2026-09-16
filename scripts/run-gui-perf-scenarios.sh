@@ -344,11 +344,15 @@ launch_one() {
   # config, data and cache under $HOME/Library, so a per-launch HOME isolates
   # all three. Without this the app restored the previous launch's window.json,
   # and two things went wrong (2026-09-16):
-  #   - measurement: a launch that STARTED in continuous mode never scrolled.
-  #     The first calibration's 10 Altona scroll runs all rendered 3 bands where
-  #     the one run that started in single-page mode rendered 17.
-  #   - the user's real settings: every scenario's viewMode switch, zoom and
-  #     window geometry was written into ~/Library/Application Support/Excise.App.
+  #   - measurement: window.json's DocumentStates restores each document's
+  #     LAST PAGE and zoom. An earlier harness run left Altona at page 15 of 17
+  #     (LastPageIndex 14, zoom 0.85), so the next launch opened near the end
+  #     and "scroll forward 17 pages" hit the bottom at once. The first
+  #     calibration's 10 Altona scroll runs rendered 3 bands instead of 17.
+  #     (Not the view mode, as first written: the DEFAULT is continuous, and
+  #     isolated continuous launches scroll fine.)
+  #   - the user's real settings: DocumentStates, zoom.txt, recent.txt and
+  #     window geometry were written into ~/Library/Application Support/Excise.App.
   # A cold thumbnail/tile cache on every launch is also the reproducible choice.
   local app_home="$dir/home"
   rm -rf "$app_home"; mkdir -p "$app_home"
