@@ -7,7 +7,7 @@
   "ImprovementPriority": "DONE",
   "Confidence": "HIGH",
   "QualityReason": "DeviceCMYK non-knockout blend-mode chart now renders through pdfe's retained CMYK backdrop path rather than lossy RGB reconstruction.",
-  "Notes": "Contract covers the non-knockout page. Related knockout and isolate pages have separate contracts because each exercises a different group flag.",
+  "Notes": "Contract covers the non-knockout page. Related knockout and isolate pages have separate contracts because each exercises a different group flag. All three carry the same 16-swatch grid and the same printed failure indicator -- 'If an X appears, rendering of Non-knockout Transparency Groups (a transparency effect) is not performed correctly' here -- and a whole-page PIXEL_EXACT/diffFraction verdict cannot see one wrong cell of sixteen (#1515). The per-cell gate is GhentConformanceCellTests over tests/ghent-conformance-cells.json, judged against mutool, Ghostscript and pdftocairo. Re-measured 2026-09-16 (--page-mode all --oracles all): raw PASS, headline diffFraction 0.11123 / MAE 18.41 over 5 oracles, 3 agreeing. 4 of its 16 cells (Hue, Saturation, Color, Luminosity) are DECLARED KNOWN DEFECTS under #1528 -- excise paints the X the page forbids and all THREE references render flat, pdftocairo included. The page-level PIXEL_EXACT status below cannot see that.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS",
