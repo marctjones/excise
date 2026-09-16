@@ -61,11 +61,14 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-# A calibration pass is ~40 launches. A sleeping display makes the app die at
-# startup with -6661, which would abort the run, so hold the machine awake.
+# A calibration pass is ~64 launches, ~25 min. A sleeping DISPLAY makes the app
+# die at startup with -6661, so hold the DISPLAY awake (-d), not just the
+# system (-i). `-i` alone was the first version, and the first calibration
+# aborted after 13 launches: displaysleep is 10 min on this machine,
+# PreventUserIdleDisplaySleep was 0, and the preflight read activeDisplays=0.
 if [ -z "${EXCISE_GUI_PERF_CAFFEINATED:-}" ] && command -v caffeinate >/dev/null 2>&1; then
   export EXCISE_GUI_PERF_CAFFEINATED=1
-  exec caffeinate -i "$0" "$@"
+  exec caffeinate -d -i "$0" "$@"
 fi
 
 SCENARIO_FILE="$ROOT/tests/gui-perf-scenarios.json"
@@ -321,6 +324,15 @@ launch_one() {
   mkdir -p "$dir"
   printf 'time\tseq\tstep\tkind\trssMB\tfootprintMB\tcpuSec\tload1\n' > "$dir/samples.tsv"
 
+  if ! python3 "$ROOT/scripts/displaylink-preflight.py" > "$dir/preflight.txt" 2>&1 \
+     && grep -q 'CGMainDisplayID=[1-9].*activeDisplays=0 ' "$dir/preflight.txt"; then
+    # A display that is merely ASLEEP (a main display exists, none active) is
+    # not the #18895 wedge (CGMainDisplayID=0). `-d` stops idle sleep but does
+    # not wake a display that already slept, so assert user activity ONCE and
+    # re-check. One wake, never a loop: if it is still down, it is a wedge.
+    echo "    display asleep (activeDisplays=0); waking it once"
+    caffeinate -u -t 2; sleep 3
+  fi
   if ! python3 "$ROOT/scripts/displaylink-preflight.py" > "$dir/preflight.txt" 2>&1; then
     cat "$dir/preflight.txt"
     echo "ABORTING: -6661 display state. Do not retry in a loop; log out and back in." >&2
