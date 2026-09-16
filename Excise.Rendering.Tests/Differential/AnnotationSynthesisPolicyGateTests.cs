@@ -190,6 +190,16 @@ public class AnnotationSynthesisPolicyGateTests
                              "structural abstention as a 'draws nothing' vote — the error that " +
                              "made #987 read 1-of-3.");
             }
+
+            // A row whose evidence has not been measured cannot pass (#1363).
+            // The majority arithmetic above only proves the table agrees with
+            // itself, and placeholder votes agree by construction.
+            if (row.TryGetProperty("evidenceStatus", out var evidenceStatus))
+            {
+                failures.Add($"{id}: evidenceStatus says '{evidenceStatus.GetString()}'. Measure every " +
+                             "evidence entry with EveryRowsEvidence_StillHoldsAgainstTheOracles, record what " +
+                             "it measures, and delete the key: a placeholder vote is not evidence");
+            }
         }
 
         // The header's own count, pinned so a hand-added row cannot leave the

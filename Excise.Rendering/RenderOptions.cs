@@ -147,4 +147,13 @@ public record RenderOptions
     /// malformed page content skipped on best-effort viewer paths.
     /// </summary>
     internal ICollection<string>? Diagnostics { get; init; }
+
+    /// <summary>
+    /// Test seam (#1363): turns off system-font fallback in the synthesised
+    /// FreeText typesetter. With it set, only the <c>/DA</c> typeface is tried,
+    /// so the "no font covers this script, draw nothing" branch can be tested
+    /// on a machine whose system fonts cover every script. No product path
+    /// sets it.
+    /// </summary>
+    internal bool DisableSystemFontFallback { get; init; }
 }

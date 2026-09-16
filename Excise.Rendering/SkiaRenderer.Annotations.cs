@@ -700,9 +700,12 @@ internal partial class RenderContext
     ///     agreement, and this method now follows it.</item>
     ///   <item><b>Multi-line / complex script</b> — pdf.js
     ///     <c>freetext_no_appearance.pdf</c> (multi-line RTL Arabic in a
-    ///     UTF-16BE /Contents): mutool 6067 px, pdftocairo 24. THIS is where
-    ///     there is no answer to copy, and it is deliberately not chased —
-    ///     a best-effort single line is drawn and clipped.</item>
+    ///     UTF-16BE /Contents). At 150 dpi mutool inks 20,152 px and pdfium
+    ///     4,926, both clipped to /Rect; Ghostscript inks 21,318 and overflows
+    ///     it; poppler inks 63. That is 3 of 4 engines drawing. Since #1363 such
+    ///     /Contents are shaped and typeset over every line
+    ///     (<see cref="TypesetFreeTextContents"/>). Contents that need no shaping
+    ///     still draw only their first line.</item>
     /// </list>
     ///
     /// <para>Why it matters that the text appears at all: a FreeText is the one
@@ -769,42 +772,255 @@ internal partial class RenderContext
         var contents = annot.RawDictionary.GetStringOrNull("Contents");
         if (string.IsNullOrEmpty(contents)) return;
 
-        // Case 3: only the first line is drawn. Multi-line layout is where the
-        // oracles diverge by 250x, so this takes the conservative half rather
-        // than picking a winner.
+        // #1363: a /Contents that needs complex-script shaping (Arabic joining,
+        // Hebrew and Arabic RTL, Indic reordering) goes through the typesetter.
+        // Every line is shaped with HarfBuzz, with font fallback per run, then
+        // wrapped to /Rect and clipped to it (policy row
+        // freetext.complex-script-contents).
+        //
+        // The test runs on the WHOLE string, not only the first line, so a
+        // Latin first line over an Arabic second line is typeset as one block
+        // instead of silently dropping the Arabic.
+        //
+        // Why this branch used to draw nothing. Measured on pdf.js
+        // freetext_no_appearance.pdf (/Border [0 0 0], no /C, 14 lines of RTL
+        // Arabic) at 150 dpi: mutool 20,152 inked px clipped to /Rect,
+        // Ghostscript 21,318 overflowing /Rect by 133 px, pdfium 4,926 inside
+        // /Rect, poppler 63, excise 0. An early cut drew a row of tofu, which is
+        // worse than the empty box it replaced: an empty box reads as "an
+        // annotation is here", tofu reads as "this document is corrupt". So
+        // the typesetter still FAILS CLOSED. With no covering font, a .notdef
+        // from the shaper, or no native HarfBuzz, nothing is drawn.
+        //
+        // ⚠️ #1381 is why this guard no longer tests `ch > 0xFF`. With
+        // /Border [0 0 0] the border is legitimately suppressed above, so
+        // suppressing the text too made the annotation vanish ENTIRELY. On
+        // pdf.js bug1865341.pdf ("Załącznik") one Polish ł removed the whole
+        // annotation. Latin Extended, Greek, Cyrillic and CJK need no shaping
+        // and stay on the single-line path below, whose layout is unchanged.
+        if (RequiresComplexShaping(contents!))
+        {
+            TypesetFreeTextContents(annot, rect, contents!);
+            return;
+        }
+
+        // Single-line path. Only the first line is drawn: multi-line layout
+        // for scripts that need no shaping has not been measured against the
+        // oracles, and #1363 changed only the complex-script branch.
         var firstLine = contents!.Split('\r', '\n')[0];
         if (firstLine.Length == 0) return;
 
-        // ⚠️ And only when the glyphs can actually be LAID OUT. Complex-script
-        // shaping (Arabic joining, Indic reordering) is out of scope — case 3
-        // above — so a string that needs it is left to the /Contents the reader
-        // can already reach, rather than drawn as a row of unjoined letters.
-        //
-        // Measured on pdf.js freetext_no_appearance.pdf (multi-line RTL Arabic
-        // in a UTF-16BE /Contents) at 100 dpi: mutool shapes and draws the
-        // Arabic; an early cut drew a line of tofu instead. That is WORSE than
-        // the empty box it replaced — an empty box reads as "an annotation is
-        // here", tofu reads as "this document is corrupt".
-        //
-        // ⚠️ This test used to be `ch > 0xFF`, and #1381 is what that cost.
-        // The comment above it claimed "the box and border still draw", and
-        // with /Border [0 0 0] they do NOT — the border is legitimately
-        // suppressed twenty lines up. Two individually-correct behaviours
-        // composed into an annotation that vanished ENTIRELY: pdf.js
-        // bug1865341.pdf, whose /Contents is UTF-16BE "Załącznik", inked
-        // 0.00000 where the same fixture with "aécè" inked 0.00354. ONE
-        // character above U+00FF — the Polish ł — removed the whole
-        // annotation, and excise's own tests/annotation-synthesis-policy.json
-        // row freetext.without-color says "draw".
-        //
-        // Latin Extended (Polish, Czech, Turkish, Vietnamese), Greek, Cyrillic
-        // and CJK need no shaping and now draw. The Latin-1 byte round-trip
-        // that made them unrepresentable is gone from RenderTextFieldValue.
-        if (RequiresComplexShaping(firstLine))
-            return;
-
         RenderTextFieldValue(annot, rect, firstLine,
             useAcroFormDaFallback: false, topAlign: true);
+    }
+
+    /// <summary>
+    /// Leading for the complex-script FreeText path. mutool's trace of
+    /// freetext_no_appearance.pdf steps baselines 12 units for
+    /// <c>/DA (/Helv 10 Tf)</c>.
+    /// </summary>
+    private const float ComplexScriptLeading = 1.2f;
+
+    /// <summary>
+    /// Size used for <c>0 Tf</c> on the complex-script path. §12.7.4.3's
+    /// auto-size fits ONE line to the field, which has no defined meaning for
+    /// a wrapped block, so this is a fixed default rather than a fit.
+    /// </summary>
+    private const float ComplexScriptAutoSize = 12f;
+
+    /// <summary>
+    /// Draws a FreeText <c>/Contents</c> that needs complex-script shaping
+    /// (#1363), using <see cref="Fonts.AnnotationTypesetter"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>The setup matches <see cref="RenderTextFieldValue"/>. The AcroForm
+    /// <c>/DR</c> is pushed so a <c>/DA</c> font name resolves. <c>/DA</c> runs
+    /// against a fresh text state, and the text state, colours and font are
+    /// restored afterwards. Everything is clipped to <c>/Rect</c>. The glyphs do
+    /// NOT go through <c>RenderText</c>: it lays out one code point per glyph,
+    /// and shaped glyph IDs from a fallback face have no PDF encoding behind
+    /// them.</para>
+    ///
+    /// <para>Placement follows mutool's trace of the same fixture. Leading is
+    /// <see cref="ComplexScriptLeading"/>. Lines honour <c>/Q</c> as written, so
+    /// an RTL paragraph under <c>/Q 0</c> is LEFT-aligned (ragged right), which
+    /// is how mutool draws it. The first baseline uses the single-line path's
+    /// top-aligned rule.</para>
+    ///
+    /// <para>A negative <c>/DA</c> size (a mirrored block) is not handled on
+    /// this path and draws nothing, with a diagnostic.</para>
+    ///
+    /// <para>Render-only. Nothing is written back to the annotation, so no
+    /// synthesised <c>/AP</c> can reach a saved file as a new text
+    /// carrier.</para>
+    /// </remarks>
+    private void TypesetFreeTextContents(Excise.Core.Document.PdfAnnotation annot, SKRect rect, string contents)
+    {
+        if (IsOptionalContentSuppressed || _type3ClipOnlyPass)
+            return;
+
+        var da = annot.RawDictionary.GetStringOrNull("DA") ?? "";
+        _resourcesStack.Push(AcroFormDefaults.Resources);
+        _canvas.Save();
+        var savedTextState = CloneTextState();
+        var savedFillColor = _state.FillColor;
+        var savedStrokeColor = _state.StrokeColor;
+        var savedFont = _currentFont;
+        try
+        {
+            _canvas.ClipRect(rect, SKClipOperation.Intersect, _options.AntiAlias);
+
+            _textState = new TextState();
+            ExecuteContentBytes(Encoding.Latin1.GetBytes(da));
+            if (_currentFont?.Typeface == null)
+                _currentFont = ResolveRenderFont("Helvetica", null);
+            var primary = _currentFont?.Typeface;
+            if (primary == null)
+                return;
+
+            float statedSize = _textState.FontSize;
+            if (statedSize < 0f)
+            {
+                AddDiagnostic("FreeText /Contents not drawn: a negative /DA font size is not " +
+                              "supported on the complex-script path (#1363).");
+                return;
+            }
+
+            float fontSize = statedSize > 0.001f ? statedSize : ComplexScriptAutoSize;
+            var mode = _textState.RenderMode;
+            bool fill = TextRenderModeFills(mode);
+            bool stroke = TextRenderModeStrokes(mode);
+            if (!fill && !stroke)
+                return;
+
+            const float pad = 2f;
+            IReadOnlyList<Fonts.AnnotationTypesetter.TypesetLine>? lines;
+            string? failure;
+
+            // The whole typeset runs under the process-wide typeface lock:
+            // SKShaper opens the typeface's font data and the fallback asks the
+            // font manager, and neither is safe under concurrent typeface work.
+            lock (_typefaceLoadLock)
+            {
+                Func<int, SKTypeface?> fallback;
+                if (_options.DisableSystemFontFallback)
+                {
+                    fallback = static _ => null;
+                }
+                else
+                {
+                    var family = primary.FamilyName;
+                    fallback = codepoint => SKFontManager.Default.MatchCharacter(family, codepoint);
+                }
+
+                lines = Fonts.AnnotationTypesetter.Typeset(
+                    contents, primary, fontSize, Math.Max(rect.Width - 2f * pad, 1f), fallback, out failure);
+            }
+
+            if (lines == null)
+            {
+                AddDiagnostic($"FreeText /Contents not drawn: {failure} (#1363).");
+                return;
+            }
+
+            using var fillPaint = fill ? CreateTextPaint(SKPaintStyle.Fill, _state.FillColor, _state.FillAlpha) : null;
+            using var strokePaint = stroke ? CreateTextPaint(SKPaintStyle.Stroke, _state.StrokeColor, _state.StrokeAlpha) : null;
+
+            int q = annot.RawDictionary.GetInt("Q", 0);
+            float baseline = BaselineForTopAlignedLineBox(rect, primary, fontSize, pad);
+            float leading = fontSize * ComplexScriptLeading;
+            foreach (var line in lines)
+            {
+                // rect.Top is the LOW edge in this Y-up space. Once a line's em
+                // box is wholly below it, it and every later line are clipped.
+                if (baseline + fontSize < rect.Top)
+                    break;
+
+                if (line.Runs.Count > 0)
+                {
+                    float x = q switch
+                    {
+                        1 => rect.Left + (rect.Width - line.Width) * 0.5f,
+                        2 => rect.Right - pad - line.Width,
+                        _ => rect.Left + pad,
+                    };
+                    DrawTypesetLine(line, x, baseline, fontSize, fillPaint, strokePaint);
+                }
+
+                baseline -= leading;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // A malformed /DA or a shaping failure must not kill the page.
+            AddDiagnostic($"FreeText /Contents not drawn: {ex.GetType().Name}: {ex.Message} (#1363).");
+        }
+        finally
+        {
+            _textState = savedTextState;
+            _state.FillColor = savedFillColor;
+            _state.StrokeColor = savedStrokeColor;
+            _currentFont = savedFont;
+            _canvas.Restore();
+            _resourcesStack.Pop();
+        }
+    }
+
+    /// <summary>
+    /// Fills (and strokes) one typeset line from its glyph OUTLINES, through
+    /// the current soft mask, as <see cref="FillTextUsingGlyphPath"/> does for
+    /// page text (#710). A run whose face has no outlines (bitmap-only) is drawn
+    /// as a positioned glyph blob instead.
+    /// </summary>
+    private void DrawTypesetLine(
+        Fonts.AnnotationTypesetter.TypesetLine line, float x, float baseline, float fontSize,
+        SKPaint? fillPaint, SKPaint? strokePaint)
+    {
+        _canvas.Save();
+        try
+        {
+            // The canvas is PDF space with Y up. Glyph outlines and HarfBuzz
+            // offsets are Y down, so flip about the baseline.
+            _canvas.Translate(x, baseline);
+            _canvas.Scale(1f, -1f);
+
+            foreach (var run in line.Runs)
+            {
+                using var font = CreateTextFont(run.Typeface, fontSize);
+                using var path = new SKPath();
+                for (int g = 0; g < run.Glyphs.Length; g++)
+                {
+                    using var glyphPath = font.GetGlyphPath(run.Glyphs[g]);
+                    if (glyphPath != null && !glyphPath.IsEmpty)
+                        path.AddPath(glyphPath, run.Positions[g].X, run.Positions[g].Y, SKPathAddMode.Append);
+                }
+
+                if (!path.IsEmpty)
+                {
+                    if (fillPaint != null)
+                        RenderWithCurrentSoftMask(() => _canvas.DrawPath(path, fillPaint), fillPaint);
+                    if (strokePaint != null)
+                        RenderWithCurrentSoftMask(() => _canvas.DrawPath(path, strokePaint), strokePaint);
+                    continue;
+                }
+
+                using var blob = BuildPositionedGlyphBlob(run.Glyphs, run.Positions, font);
+                if (blob == null)
+                    continue;
+                if (fillPaint != null)
+                    RenderWithCurrentSoftMask(() => _canvas.DrawText(blob, 0, 0, fillPaint), fillPaint);
+                if (strokePaint != null)
+                    RenderWithCurrentSoftMask(() => _canvas.DrawText(blob, 0, 0, strokePaint), strokePaint);
+            }
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
     }
 
     /// <summary>

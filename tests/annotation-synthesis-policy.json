@@ -68,7 +68,7 @@
     "horizontal-band": "a line spanning the quad's width, a small fraction of its height"
   },
   "howToUpdate": "By hand, from the gate's failure message, which prints what it measured. There is deliberately no --update flag: this file records decisions and the evidence they rest on, and a regenerator would let a behaviour change rewrite its own justification. That is the failure mode scripts/update-corpus-expectations.sh has already caused twice.",
-  "rowCount": 46,
+  "rowCount": 47,
   "rows": [
     {
       "id": "link.explicit-width-positive",
@@ -4892,6 +4892,87 @@
         "#1381",
         "#1363"
       ]
+    },
+    {
+      "id": "freetext.complex-script-contents",
+      "subtype": "FreeText",
+      "state": null,
+      "condition": "/FreeText with /Border [0 0 0], no /C, and a /Contents in a script that needs shaping (Arabic)",
+      "decision": "draw",
+      "shape": "text-value-inside-rect",
+      "rendererSite": "RenderFreeTextDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /FreeText /F 4 /DA (/Helv 10 Tf 0 g) /Border [0 0 0] /Contents <FEFF06450631062D0628062700200628062706440639062706440645> /Rect [50 100 150 150] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          100
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 132,
+          "bbox": [
+            50,
+            52,
+            94,
+            62
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "abstention": "duplicate-engine",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 124,
+          "bbox": [
+            53,
+            55,
+            142,
+            71
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 2,
+        "blank": 1,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#1363"
+      ],
+      "measurementNote": "Measured 2026-09-15 at 72 dpi, ink = any channel < 240, the same rule this gate uses. mutool's numbers come from the gate itself; ghostscript's and pdftoppm's were measured by running the binaries directly on this row's fixture, because GhostscriptReferenceRenderer reports unavailable to this gate on this machine and a null oracle is skipped rather than failed. pdfbox and pdfium are OMITTED rather than recorded blank: neither was reachable from the gate here, and a structural absence must not be counted as a 'draws nothing' vote (the misreading that made #987 read 1-of-3). Poppler declines this fixture entirely - 0 px from both of its rasterisers - which is the same 'effectively declines' behaviour it shows on pdf.js freetext_no_appearance.pdf (63 px against mutool's 20,152)."
     }
   ]
 }

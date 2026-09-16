@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "5bdb9196e9d3e12c09473f7a92e7808738e7ad4d3b48aa9c5b294eafef088d59",
+  "sourceFingerprint": "0bfe63e06b878a9f881c042c30a318267f85a544d62265320c0a27ee82e87807",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -5472,6 +5472,53 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering/Fonts/AnnotationTypesetter.cs",
+      "path": "Excise.Rendering/Fonts/AnnotationTypesetter.cs",
+      "kind": "source-file",
+      "facets": [
+        "annotations",
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.redaction-annotations",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering/Fonts/CffToOpenType.cs",
       "path": "Excise.Rendering/Fonts/CffToOpenType.cs",
       "kind": "source-file",
@@ -5496,6 +5543,28 @@
     {
       "id": "Excise.Rendering/Fonts/CmapFormat0Table.cs",
       "path": "Excise.Rendering/Fonts/CmapFormat0Table.cs",
+      "kind": "source-file",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering/Fonts/FontManagerLock.cs",
+      "path": "Excise.Rendering/Fonts/FontManagerLock.cs",
       "kind": "source-file",
       "facets": [
         "fonts"
@@ -8888,12 +8957,12 @@
     }
   ],
   "summary": {
-    "records": 423,
+    "records": 425,
     "facets": {
-      "annotations": 10,
+      "annotations": 11,
       "content-and-graphics": 18,
       "document-structure": 32,
-      "fonts": 28,
+      "fonts": 30,
       "forms": 8,
       "images": 29,
       "product-integration-general": 233,
@@ -8917,9 +8986,9 @@
       "pdf.17.graphics.color:preserve": 1,
       "pdf.17.graphics.color:render": 1,
       "pdf.17.graphics.color:write": 1,
-      "pdf.17.graphics.fonts:extract": 28,
-      "pdf.17.graphics.fonts:parse": 28,
-      "pdf.17.graphics.fonts:render": 28,
+      "pdf.17.graphics.fonts:extract": 30,
+      "pdf.17.graphics.fonts:parse": 30,
+      "pdf.17.graphics.fonts:render": 30,
       "pdf.17.graphics.images:extract": 29,
       "pdf.17.graphics.images:parse": 29,
       "pdf.17.graphics.images:render": 29,
@@ -8934,18 +9003,18 @@
       "pdf.17.graphics.state:preserve": 1,
       "pdf.17.graphics.state:render": 19,
       "pdf.17.graphics.state:write": 19,
-      "pdf.17.interactive.annotations:mutate": 10,
-      "pdf.17.interactive.annotations:parse": 10,
-      "pdf.17.interactive.annotations:preserve": 10,
-      "pdf.17.interactive.annotations:render": 10,
+      "pdf.17.interactive.annotations:mutate": 11,
+      "pdf.17.interactive.annotations:parse": 11,
+      "pdf.17.interactive.annotations:preserve": 11,
+      "pdf.17.interactive.annotations:render": 11,
       "pdf.17.interactive.forms:mutate": 8,
       "pdf.17.interactive.forms:parse": 8,
       "pdf.17.interactive.forms:render": 8,
       "pdf.17.interactive.forms:write": 8,
-      "pdf.17.interactive.redaction-annotations:mutate": 10,
-      "pdf.17.interactive.redaction-annotations:parse": 10,
-      "pdf.17.interactive.redaction-annotations:preserve": 10,
-      "pdf.17.interactive.redaction-annotations:render": 10,
+      "pdf.17.interactive.redaction-annotations:mutate": 11,
+      "pdf.17.interactive.redaction-annotations:parse": 11,
+      "pdf.17.interactive.redaction-annotations:preserve": 11,
+      "pdf.17.interactive.redaction-annotations:render": 11,
       "pdf.17.security.redaction-content-removal:extract": 52,
       "pdf.17.security.redaction-content-removal:mutate": 52,
       "pdf.17.security.redaction-content-removal:render": 52,

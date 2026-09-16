@@ -309,7 +309,9 @@ internal partial class RenderContext
     // native font manager whose cache can corrupt or deadlock when two managed threads
     // call them simultaneously. Visual tests previously failed under xUnit parallelism
     // because of this; we serialize all typeface acquisition with a process-wide lock.
-    private static readonly object _typefaceLoadLock = new();
+    // One object, shared with Fonts/AnnotationTypesetter.cs so the shaper and
+    // the fallback lookups serialise against typeface creation here (#1363).
+    private static readonly object _typefaceLoadLock = Fonts.FontManagerLock.Instance;
 
     private readonly SKCanvas _canvas;
     private readonly SKBitmap? _rootBitmap;
