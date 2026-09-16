@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Rendering.Differential;
@@ -157,6 +158,8 @@ public class GhentConformanceCellTests
     private static readonly object RenderLock = new();
     private static readonly Dictionary<string, SKBitmap?> Renders = new();
 
+    private static readonly Regex KnownDefectIssue = new(@"^#\d+$", RegexOptions.Compiled);
+
     private static readonly (string Name, Func<string, int, int, SKBitmap?> Render)[] Engines =
     {
         ("excise", (path, page, dpi) => RenderWithExcise(path, page, dpi)),
@@ -178,13 +181,10 @@ public class GhentConformanceCellTests
         using var manifest = LoadManifest();
         var (fixtureNode, cellNode) = FindCell(manifest, fixture, cell);
 
-        if (cellNode.TryGetProperty("KnownDefect", out var known))
-        {
-            // An accepted red states its issue, in code, where the skip
-            // happens (#1172) — never by widening StructureTolerance until the
-            // cell passes.
-            Assert.Skip($"{fixture} '{cell}': known defect {known.GetString()}");
-        }
+        // A declared defect is still MEASURED — see the decision at the bottom
+        // of this method. Skipping before rendering would make the declaration
+        // permanent, which is an acceptance, not a declaration.
+        var hasKnownDefect = cellNode.TryGetProperty("KnownDefect", out var known);
 
         var dpi = manifest.RootElement.GetProperty("Dpi").GetInt32();
         var inset = manifest.RootElement.GetProperty("CellInsetPt").GetDouble();
@@ -263,6 +263,33 @@ public class GhentConformanceCellTests
                     : "excise is MISSING something the references draw"));
         }
 
+        // ── declared defects expire by themselves ───────────────────────────
+        // The register convention (SkiaRasterisationRegisterTests): a row that
+        // stops reproducing FAILS and must be deleted, rather than standing as
+        // a permanent skip that excuses a future defect. Without this the ten
+        // #1528 entries would keep skipping after #1528 is fixed and closed,
+        // and nothing in the repo would notice — report_gates.py's STALE check
+        // reads the knownIssue COLUMN of tests/gates.tsv, never a manifest
+        // field. That is #1527's lesson applied to this gate: a skip nobody
+        // re-examines is a vacuous green with a date on it.
+        if (hasKnownDefect)
+        {
+            var issue = known.GetString();
+            failures.Should().NotBeEmpty(
+                "{0} '{1}' carries KnownDefect {2} but now renders the way the references do — "
+                + "delete its KnownDefect/KnownDefectEvidence from {3} so the cell is gated again. "
+                + "A declaration that outlives the defect is an acceptance.\n{4}",
+                fixture, cell, issue, ManifestRelativePath, Dump(measured));
+
+            var evidence = cellNode.TryGetProperty("KnownDefectEvidence", out var e)
+                ? e.GetString()
+                : null;
+            Assert.Skip(
+                $"{fixture} '{cell}': declared defect {issue}"
+                + (evidence is null ? string.Empty : $" — {evidence}")
+                + $" (still reproducing: {string.Join("; ", failures)})");
+        }
+
         failures.Should().BeEmpty(
             "{0} '{1}' must render the way mutool, Ghostscript and pdftocairo render it (#1515). "
             + "The fixture's own verdict line: \"{2}\"\n{3}",
@@ -312,6 +339,27 @@ public class GhentConformanceCellTests
                 var cellName = cell.GetProperty("Name").GetString()!;
                 if (!seen.Add(cellName))
                     failures.Add($"{name}: duplicate cell name '{cellName}'");
+
+                // A declared defect has to be traceable to an issue and to a
+                // measurement, or it is just a cell that stopped being gated.
+                if (cell.TryGetProperty("KnownDefect", out var known))
+                {
+                    var issue = known.GetString();
+                    if (issue is null || !KnownDefectIssue.IsMatch(issue))
+                    {
+                        failures.Add(
+                            $"{name}/{cellName}: KnownDefect must be an issue reference like '#1528', "
+                            + $"not '{issue}'");
+                    }
+
+                    if (!cell.TryGetProperty("KnownDefectEvidence", out var evidence) ||
+                        string.IsNullOrWhiteSpace(evidence.GetString()))
+                    {
+                        failures.Add(
+                            $"{name}/{cellName}: KnownDefect {issue} needs KnownDefectEvidence — "
+                            + "the measurement that made it a declaration rather than a shrug");
+                    }
+                }
 
                 var rect = ReadRect(cell);
                 if (rect.Length != 4)
