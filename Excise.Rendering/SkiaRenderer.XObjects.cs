@@ -113,8 +113,10 @@ internal partial class RenderContext
         // ⚠️ This layer is ISOLATED, and §11.6.6 says it should not be: /I
         // defaults to FALSE, so a group is non-isolated unless it says
         // otherwise, and a /BM used inside it must act on the group's backdrop.
-        // Skia's SaveLayer starts fully transparent, so it does not. That is
-        // #1394, and it is still OPEN.
+        // Skia's SaveLayer starts fully transparent, so it does not. #1394
+        // filed that and is CLOSED, but it covered only the SEEDING half; the
+        // §11.4.6 backdrop-REMOVAL step the numbers below are about is #1504,
+        // which is OPEN.
         //
         // Do NOT "fix" it by painting the backdrop into the layer the way the
         // soft-mask branch above does. That was tried and measured (2026-09-09)

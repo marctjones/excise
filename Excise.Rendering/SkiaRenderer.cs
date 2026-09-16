@@ -1351,7 +1351,8 @@ internal partial class RenderContext
     ///
     /// <para><b>⚠️ Only the soft-mask branch of
     /// <c>RenderFormXObjectAtInvocation</c> calls this, and that is deliberate.
-    /// Do not extend it to the plain layer path to close #1394.</b> It was
+    /// Do not extend it to the plain layer path.</b> #1394 (CLOSED) covered
+    /// seeding only; the missing §11.4.6 backdrop-REMOVAL step is #1504. It was
     /// tried and measured on 2026-09-09 and it OVERSHOOTS, because seeding
     /// without §11.4.6's backdrop-REMOVAL step leaves the backdrop's own
     /// contribution inside the group's result. On pdf.js issue13520 (20
