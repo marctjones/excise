@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AwesomeAssertions;
@@ -57,13 +58,13 @@ public class CorpusRowFloorGateTests
         EveryFixture,
 
         /// <summary>
-        /// The class drops some fixtures for a declared content reason, so an
-        /// exact floor is not derivable. Half is far above any plausible yield
-        /// loss and far below the collapse this gate exists to catch.
-        /// ⚠️ The exact measured ratchet is OWED from #1527's first
-        /// main-checkout run; this is deliberately loose, not calibrated.
+        /// The class drops some fixtures for a declared content reason, so the
+        /// floor is the fixture count minus <c>ExcludedFixtures</c> — still
+        /// exact, with the allowance named and measured rather than guessed.
+        /// A corpus that gains another excludable fixture turns this red, and
+        /// the number may only be raised with a fresh measurement.
         /// </summary>
-        AtLeastHalfTheFixtures,
+        EveryFixtureExceptDeclared,
     }
 
     private sealed record CorpusGate(
@@ -71,7 +72,8 @@ public class CorpusRowFloorGateTests
         string[] Corpora,
         Func<TheoryData<string>> Rows,
         Floor RowFloor,
-        string Why);
+        string Why,
+        int ExcludedFixtures = 0);
 
     /// <summary>
     /// Every corpus-gated redaction gate, with the corpora it needs and the
@@ -91,11 +93,16 @@ public class CorpusRowFloorGateTests
         new("ConservationGateTests",
             new[] { "test-pdfs/smoke" },
             ConservationGateTests.Fixtures,
-            // EnumerateFixtures keeps only fixtures of 1..20 pages (MaxPages),
-            // so its yield is below the file count by however many long
-            // fixtures the corpus holds. 80 rows were unexercised.
-            Floor.AtLeastHalfTheFixtures,
-            "content conservation across page ops, form fill, flatten, merge and split"),
+            Floor.EveryFixtureExceptDeclared,
+            "content conservation across page ops, form fill, flatten, merge and split",
+            // MEASURED 2026-09-16 from the worktree, after the locator fix:
+            // Fixtures() yields 8 of the 10 files in test-pdfs/smoke, and the
+            // two it drops are exactly the two the class's own MaxPages
+            // docstring names — irs-1040-instructions.pdf (126 pages) and
+            // scotus-trump-v-us.pdf (~100), both over the 20-page cap. So the
+            // floor is exact at available-2, not the loose "half the fixtures"
+            // this row carried while the number was still owed (#1527).
+            ExcludedFixtures: 2),
 
         new("RedactionRemoteCollateralTests",
             new[] { "test-pdfs/smoke", "test-pdfs/federal" },
@@ -141,11 +148,21 @@ public class CorpusRowFloorGateTests
         Assert.SkipWhen(reachable.Length == 0,
             TestRepoLayout.AbsenceReason($"{gate.Name}: required corpus", gate.Corpora));
 
-        var available = reachable
+        // ⚠️ The fixtures OF THE REQUIRED CORPORA, by name — not a count.
+        // The first version of this gate compared the TOTAL row count against a
+        // floor derived from these, and a class substituted rows from an
+        // entirely different corpus to clear it: at bound 6 the collateral
+        // harness reached the TRACKED test-pdfs/pdf20 inside the worktree (4
+        // levels up), collected its 25 fixtures, and satisfied a floor of 12
+        // while collecting ZERO rows from smoke/federal. Measured, not
+        // hypothesised. A number standing in for the property is the same
+        // mistake #1527 is about, one level up — so match on identity.
+        var required = reachable
             .SelectMany(c => Directory.EnumerateFiles(c.Full!, "*.pdf"))
             .Select(p => Path.GetFileName(p)!)
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Count();
+            .ToArray();
+        var available = required.Length;
 
         Assert.SkipWhen(available == 0,
             $"{gate.Name}: required corpus directories exist but hold no *.pdf " +
@@ -159,33 +176,45 @@ public class CorpusRowFloorGateTests
         var real = rows.Where(r => !r.StartsWith("(", StringComparison.Ordinal)).ToArray();
         var sentinels = rows.Except(real, StringComparer.Ordinal).ToArray();
 
+        // Only rows that ARE a required-corpus fixture count toward the floor.
+        var collected = new HashSet<string>(real, StringComparer.OrdinalIgnoreCase);
+        var fromRequired = required.Where(collected.Contains).ToArray();
+        var missing = required.Where(n => !collected.Contains(n)).ToArray();
+
         var floor = gate.RowFloor switch
         {
             Floor.EveryFixture => available,
-            Floor.AtLeastHalfTheFixtures => Math.Max(1, available / 2),
+            Floor.EveryFixtureExceptDeclared => Math.Max(1, available - gate.ExcludedFixtures),
             _ => throw new InvalidOperationException($"unhandled floor {gate.RowFloor}"),
         };
 
         var evidence =
-            $"\n  gate            {gate.Name} — {gate.Why}" +
-            $"\n  corpora wanted  {string.Join(", ", gate.Corpora)}" +
-            $"\n  corpora found   {string.Join(", ", reachable.Select(c => c.Full))}" +
-            $"\n  fixture files   {available}" +
-            $"\n  rows collected  {real.Length}" +
-            (sentinels.Length == 0 ? "" : $"\n  sentinel rows   {string.Join(", ", sentinels)}") +
-            $"\n  floor required  {floor} ({gate.RowFloor})" +
-            $"\n  search roots    {string.Join(", ", TestRepoLayout.SearchRoots)}" +
+            $"\n  gate                 {gate.Name} — {gate.Why}" +
+            $"\n  corpora wanted       {string.Join(", ", gate.Corpora)}" +
+            $"\n  corpora found        {string.Join(", ", reachable.Select(c => c.Full))}" +
+            $"\n  fixture files there  {available}" +
+            $"\n  rows collected       {real.Length} total" +
+            $"\n  ... OF THOSE FILES   {fromRequired.Length}   <- what the floor counts" +
+            $"\n  floor required       {floor} ({gate.RowFloor}" + (gate.ExcludedFixtures == 0 ? ")" : $", minus {gate.ExcludedFixtures} declared exclusions)") +
+            (missing.Length == 0 ? "" :
+                $"\n  fixtures MISSING     {missing.Length}: " +
+                string.Join(", ", missing.Take(8)) + (missing.Length > 8 ? ", …" : "")) +
+            (sentinels.Length == 0 ? "" : $"\n  sentinel rows        {string.Join(", ", sentinels)}") +
+            $"\n  search roots         {string.Join(", ", TestRepoLayout.SearchRoots)}" +
             "\n\n  A corpus this gate needs IS reachable from here, and the gate did not " +
-            "collect\n  rows for it. That is #1527: the class resolves the corpus differently " +
-            "from\n  TestRepoLayout and loses. Rows that are never COLLECTED are not skipped " +
-            "and\n  not counted — nothing else in the suite can see them go missing, and the\n  " +
-            "run reports itself green. Fix the class's locator (it must use\n  " +
-            "TestRepoLayout); do NOT lower this floor.";
+            "collect\n  rows for its fixtures. That is #1527: the class resolves the corpus " +
+            "differently\n  from TestRepoLayout and loses. Rows that are never COLLECTED are " +
+            "not skipped and\n  not counted — nothing else in the suite can see them go " +
+            "missing, and the run\n  reports itself green. Fix the class's locator (it must " +
+            "use TestRepoLayout); do\n  NOT lower this floor, and note that rows from some " +
+            "OTHER corpus do not count." +
+            "\n";
 
         real.Should().NotBeEmpty("a reachable corpus must produce rows." + evidence);
 
-        real.Length.Should().BeGreaterThanOrEqualTo(floor,
-            "a reachable corpus must produce close to as many rows as it has fixtures." + evidence);
+        fromRequired.Length.Should().BeGreaterThanOrEqualTo(floor,
+            "the rows must be THE REQUIRED CORPUS'S fixtures, matched by name — a count " +
+            "alone can be satisfied by rows from a different corpus entirely." + evidence);
 
         sentinels.Should().BeEmpty(
             "the \"no corpus\" sentinel row exists so an absent corpus skips instead of " +

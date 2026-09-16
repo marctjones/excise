@@ -4528,7 +4528,7 @@
       "path": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs",
       "class": "defects",
       "method": "ACorpusGatedRedactionGate_CollectsItsRows_WheneverItsCorpusIsReachable",
-      "line": 130,
+      "line": 137,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4567,7 +4567,7 @@
       "path": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs",
       "class": "half",
       "method": "TheCollateralRatchet_IsReadFromTheCheckoutUnderTest",
-      "line": 220,
+      "line": 249,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -4606,7 +4606,7 @@
       "path": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs",
       "class": "half",
       "method": "TheGateRegistry_IsWellFormed",
-      "line": 250,
+      "line": 279,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [

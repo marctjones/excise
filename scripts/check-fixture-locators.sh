@@ -123,7 +123,12 @@ fi
 #    a class whose rows vanish when the corpus is unreachable. That is the
 #    #1527 shape exactly, and it is the one thing no other gate can see.
 # ---------------------------------------------------------------------------
-GITIGNORED='test-pdfs/(smoke|federal|pdfjs|pdfium|verapdf-corpus|pdf20|itext|poppler|isartor)'
+# Measured with `git check-ignore`, not assumed: test-pdfs/pdf20,
+# generated-regressions, manifests, rendering-contracts and sample-pdfs are
+# TRACKED and present in every worktree. pdf20 was in this list until it was
+# checked, and being wrong here over-reports classes as corpus-gated.
+# Deriving the list from git is #1531.
+GITIGNORED='test-pdfs/(smoke|federal|pdfjs|pdfium|verapdf-corpus|itext|poppler|isartor|altona|ghent|pdfua|samples|local-real-world|redaction-adversarial|redaction-synthetic|baselines)'
 MISSING=""
 FOUND=0
 while IFS= read -r f; do
