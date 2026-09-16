@@ -249,8 +249,14 @@ fi
 echo "▶ Verifying the bundle has no dependencies outside the system"
 EXTERNAL=""
 while IFS= read -r lib; do
+    # `|| true` is load-bearing. Managed .dll files are u+x in the publish
+    # output, so this loop runs otool on them, and otool answers a non-Mach-O
+    # file with "<path>: is not an object file". With an ABSOLUTE --output that
+    # line starts with "/" and grep matches it by accident; with a RELATIVE one
+    # grep matches nothing, exits 1, and pipefail ends the build with no message
+    # (#1497's harness hit this). A file with no install name is not an error.
     selfids="$(otool -D "$lib" 2>/dev/null | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
-        | grep -E '^/' | sort -u)"
+        | grep -E '^/' | sort -u || true)"
     deps="$(otool -L "$lib" 2>/dev/null \
         | grep -E '^[[:space:]]+/' \
         | awk '{print $1}' \
