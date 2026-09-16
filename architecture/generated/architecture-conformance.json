@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "dc15451e3afc1d726bc403731551c214d7ff0ed3",
+  "sourceRevision": "b0abcea21c0b7cb6411df10bd38119a06f955ffd",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 12,
-    "retainedSymbols": 6495,
+    "retainedSymbols": 6534,
     "observedComponentDependencies": 83,
     "declaredDependencies": 82,
     "acceptedExceptions": 1,
@@ -24,8 +24,8 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 309,
-      "typeDependencyCount": 21,
+      "references": 307,
+      "typeDependencyCount": 20,
       "classification": "declared",
       "evidence": [
         {
@@ -66,8 +66,8 @@
     {
       "source": "app",
       "target": "core-document",
-      "references": 317,
-      "typeDependencyCount": 54,
+      "references": 298,
+      "typeDependencyCount": 51,
       "classification": "declared",
       "evidence": [
         {
@@ -164,14 +164,14 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 499,
-      "typeDependencyCount": 59,
+      "references": 662,
+      "typeDependencyCount": 76,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.App.Services.PdfDocumentService",
-          "references": 105
+          "references": 114
         }
       ]
     },
@@ -220,14 +220,14 @@
     {
       "source": "app-main-window",
       "target": "core-document",
-      "references": 309,
-      "typeDependencyCount": 45,
+      "references": 328,
+      "typeDependencyCount": 46,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 63
+          "references": 72
         }
       ]
     },

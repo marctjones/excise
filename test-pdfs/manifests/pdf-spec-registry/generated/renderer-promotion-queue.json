@@ -4093,6 +4093,7 @@
         "Excise.Rendering/SkiaRenderer.Paths.cs",
         "Excise.App/Models/ClipboardEntry.cs",
         "Excise.App/Services/AppPaths.cs",
+        "Excise.App/Services/Host/ITextClipboard.cs",
         "Excise.App/ViewModels/PathAnnotationKind.cs"
       ],
       "directTestCandidates": [
@@ -4677,6 +4678,7 @@
         "Excise.Rendering/SkiaRenderer.Paths.cs",
         "Excise.App/Models/ClipboardEntry.cs",
         "Excise.App/Services/AppPaths.cs",
+        "Excise.App/Services/Host/ITextClipboard.cs",
         "Excise.App/ViewModels/PathAnnotationKind.cs"
       ],
       "directTestCandidates": [
@@ -6048,6 +6050,7 @@
         "Excise.Rendering/SkiaRenderer.Paths.cs",
         "Excise.App/Models/ClipboardEntry.cs",
         "Excise.App/Services/AppPaths.cs",
+        "Excise.App/Services/Host/ITextClipboard.cs",
         "Excise.App/ViewModels/PathAnnotationKind.cs"
       ],
       "directTestCandidates": [],
@@ -6086,6 +6089,7 @@
         "Excise.Rendering/SkiaRenderer.Paths.cs",
         "Excise.App/Models/ClipboardEntry.cs",
         "Excise.App/Services/AppPaths.cs",
+        "Excise.App/Services/Host/ITextClipboard.cs",
         "Excise.App/ViewModels/PathAnnotationKind.cs"
       ],
       "directTestCandidates": [],

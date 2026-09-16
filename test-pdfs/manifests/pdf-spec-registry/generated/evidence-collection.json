@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1121,
-  "indexedContentSha256": "4a35055980b817d4b77927d17d72fcd7d2d611a0fc55d2d49884f7ed3ac21580",
+  "indexedFileCount": 1133,
+  "indexedContentSha256": "d8e9cd6441771d54360e36f92067efa918735cae09c005e7e7b885a33fd19907",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1859,6 +1859,22 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decode",
+            "filters"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "filters",
+            "parameters"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Content/ContentStreamTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -2128,26 +2144,9 @@
             "syntax",
             "xref"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "syntax"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/TextExtractorEncodingTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "syntax",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 94
+      "candidateReferenceCount": 96
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -2544,7 +2543,8 @@
           "kind": "source",
           "matchedTerms": [
             "crypt",
-            "encryption"
+            "encryption",
+            "filters"
           ]
         },
         {
@@ -2552,7 +2552,8 @@
           "kind": "source",
           "matchedTerms": [
             "crypt",
-            "encryption"
+            "encryption",
+            "filters"
           ]
         },
         {
@@ -2586,7 +2587,16 @@
           "matchedTerms": [
             "crypt",
             "encryption",
+            "filters",
             "pdfdocumentwriter"
+          ]
+        },
+        {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "crypt",
+            "filters"
           ]
         },
         {
@@ -2595,6 +2605,7 @@
           "matchedTerms": [
             "crypt",
             "encryption",
+            "filters",
             "permissions"
           ]
         },
@@ -2994,19 +3005,9 @@
             "crypt",
             "encryption"
           ]
-        },
-        {
-          "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "encryption",
-            "filters",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 95
+      "candidateReferenceCount": 96
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -3439,6 +3440,15 @@
             "tree",
             "metadata",
             "pdfdocument"
+          ]
+        },
+        {
+          "path": "Excise.App/Views/MainWindow.axaml.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "geometry",
+            "tree",
+            "metadata"
           ]
         },
         {
@@ -3931,19 +3941,9 @@
             "metadata",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/TextMatrixLineSteppingTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "catalog",
-            "geometry",
-            "catalog",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 127
+      "candidateReferenceCount": 128
     },
     {
       "id": "pdf.17.document.navigation",
@@ -6069,6 +6069,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "collections",
+            "embedded",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -6546,7 +6555,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 71
+      "candidateReferenceCount": 72
     },
     {
       "id": "pdf.17.graphics.state",
@@ -7686,7 +7695,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 508
+      "candidateReferenceCount": 513
     },
     {
       "id": "pdf.17.graphics.color",
@@ -9262,6 +9271,14 @@
           ]
         },
         {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "images"
+          ]
+        },
+        {
           "path": "Excise.App/Services/RedactionService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -9490,18 +9507,9 @@
             "image",
             "inline"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Filters/Jbig2/Jbig2ArithmeticRegionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decoding",
-            "image",
-            "inline"
-          ]
         }
       ],
-      "candidateReferenceCount": 186
+      "candidateReferenceCount": 188
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -37180,25 +37188,16 @@
           ]
         },
         {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.App/Services/RedactedCopyDialogFormatter.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
           "kind": "source",
           "matchedTerms": [
             "image",
@@ -37700,6 +37699,15 @@
             "lab",
             "image",
             "pdfimage"
+          ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/GuiClickSafetySweepTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
           ]
         }
       ],
@@ -52776,6 +52784,7 @@
             "annotation",
             "annotations",
             "appearances",
+            "geometry",
             "acroform",
             "action",
             "annotation",
@@ -56378,6 +56387,15 @@
           ]
         },
         {
+          "path": "Excise.App/Services/Host/ISettingsStore.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "fields",
+            "policy",
+            "action"
+          ]
+        },
+        {
           "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -56767,22 +56785,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "acroform",
-            "policy",
-            "xfa",
-            "acroform",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 139
+      "candidateReferenceCount": 140
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -60889,7 +60894,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 161
+      "candidateReferenceCount": 162
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -61642,7 +61647,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 154
+      "candidateReferenceCount": 155
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -62646,6 +62651,22 @@
           ]
         },
         {
+          "path": "Excise.App/Services/Host/AvaloniaFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/ITextClipboard.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "extension",
+            "extensions"
+          ]
+        },
+        {
           "path": "Excise.App/Services/MacFilePanelAccessoryCleanup.cs",
           "kind": "source",
           "matchedTerms": [
@@ -63108,26 +63129,9 @@
             "extension",
             "extensions"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Integration/ThumbnailCacheTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/AnnotateAndDialogCommandTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "extension",
-            "extensions",
-            "pdfa"
-          ]
         }
       ],
-      "candidateReferenceCount": 132
+      "candidateReferenceCount": 134
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -66028,6 +66032,23 @@
           ]
         },
         {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "copy"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/IWindowHost.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "copy",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -66430,27 +66451,9 @@
             "pdfe",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/AccessibilityRegressionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "copy",
-            "metadata",
-            "redaction"
-          ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/AttachmentsPanelTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "copy",
-            "stripping"
-          ]
         }
       ],
-      "candidateReferenceCount": 108
+      "candidateReferenceCount": 110
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -66890,6 +66893,24 @@
             "attachments",
             "pdfe",
             "save"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "save"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/IWindowHost.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "security"
           ]
         },
         {
@@ -67485,33 +67506,9 @@
             "ocr",
             "redaction"
           ]
-        },
-        {
-          "path": "tests/unwired-api-baseline.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "attachments",
-            "pdfe",
-            "save",
-            "ocr",
-            "redaction"
-          ]
-        },
-        {
-          "path": "docs/architecture/decisions.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "attachment",
-            "attachments",
-            "pdfe",
-            "save",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 80
+      "candidateReferenceCount": 82
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -67621,6 +67618,15 @@
             "signature",
             "redaction",
             "security"
+          ]
+        },
+        {
+          "path": "Excise.App/Composition/ApplicationComposition.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "override",
+            "signature",
+            "redaction"
           ]
         },
         {
@@ -67898,7 +67904,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 34
+      "candidateReferenceCount": 35
     },
     {
       "id": "pdfe.product.ocr.scanned-documents",
@@ -68746,6 +68752,22 @@
           ]
         },
         {
+          "path": "Excise.App/Services/Host/AvaloniaFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "local",
+            "log"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/Host/IFilePicker.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "local",
+            "log"
+          ]
+        },
+        {
           "path": "Excise.App/Services/PdfDocumentService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -68803,23 +68825,6 @@
           ]
         },
         {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Annotations.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log",
-            "redaction"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Attachments.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log"
-          ]
-        },
-        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Commands.cs",
           "kind": "source",
           "matchedTerms": [
@@ -68833,7 +68838,6 @@
           "path": "Excise.App/ViewModels/MainWindowViewModel.DocumentOpen.cs",
           "kind": "source",
           "matchedTerms": [
-            "local",
             "log",
             "pdfe",
             "redaction"
@@ -68848,15 +68852,6 @@
           ]
         },
         {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log",
-            "redaction"
-          ]
-        },
-        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.HiddenText.cs",
           "kind": "source",
           "matchedTerms": [
@@ -68867,30 +68862,12 @@
           ]
         },
         {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Redaction.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log",
-            "redaction"
-          ]
-        },
-        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
           "kind": "source",
           "matchedTerms": [
-            "local",
             "log",
             "pdfe",
             "security"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "local",
-            "log"
           ]
         },
         {
@@ -69252,9 +69229,34 @@
             "local",
             "log"
           ]
+        },
+        {
+          "path": "Excise.App.Tests/Controls/PdfViewerSelectionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "local",
+            "log"
+          ]
+        },
+        {
+          "path": "Excise.App.Tests/Integration/HeapRetentionReportTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "local",
+            "log"
+          ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/AnnotationDisplayControlTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "audit",
+            "log",
+            "redaction"
+          ]
         }
       ],
-      "candidateReferenceCount": 115
+      "candidateReferenceCount": 112
     },
     {
       "id": "pdfe.product.platform.printing",

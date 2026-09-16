@@ -1,6 +1,13 @@
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+// Load-bearing: Avalonia 12's SetTextAsync is an EXTENSION method
+// (Avalonia.Input.Platform.ClipboardExtensions) on IClipboard, not an instance
+// member, so it is unresolvable without this namespace in scope. Removing it as
+// "unused" is a compile error, which is one more reason this file's own
+// interface is ITextClipboard: with Avalonia.Input.Platform imported, a
+// locally-declared IClipboard would be ambiguous.
+using Avalonia.Input.Platform;
 
 namespace Excise.App.Services.Host;
 
