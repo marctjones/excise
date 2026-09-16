@@ -128,12 +128,41 @@ public static class PdfCommandIds
     public const string SignDocument = "app.signDocument";
 
     // #1375 — controls that existed with no automation identity, so no scripting
-    // surface could reach them. The two parameterised ones take their value from
-    // the control's CommandParameter rather than getting one id per swatch.
+    // surface could reach them.
     public const string Undo = "edit.undo";
     public const string Redo = "edit.redo";
     public const string Exit = "app.exit";
+
+    /// <summary>
+    /// The parameterised typewriter-colour command: takes any hex colour. Still
+    /// the id the scripting and batch surfaces use to set an arbitrary colour,
+    /// and the id on the Typewriter Text Color submenu itself. The eight PRESETS
+    /// below each have their own id — see the note there.
+    /// </summary>
     public const string TypewriterSetColor = "typewriter.setColor";
+
+    // #1476 follow-up: one id PER COLOUR PRESET.
+    //
+    // Until now all eight swatches and all eight menu items carried
+    // `typewriter.setColor`, and CommandAccessibility derives the accessible
+    // NAME from the id's registry label — so a screen reader announced eight
+    // identical "Set Typewriter Color" buttons with no way to tell which was
+    // which. The visible affordance is a colour, which a screen reader cannot
+    // read at all, so the name was the only signal and it carried no
+    // information. That is an accessibility defect, not a naming preference.
+    //
+    // The generic id above is deliberately kept: it is the scripting entry
+    // point for a colour that is not one of the eight, and it stays reachable
+    // from the GUI on the submenu that hosts the presets.
+    public const string TypewriterSetColorBlack = "typewriter.setColor.black";
+    public const string TypewriterSetColorGray = "typewriter.setColor.gray";
+    public const string TypewriterSetColorRed = "typewriter.setColor.red";
+    public const string TypewriterSetColorOrange = "typewriter.setColor.orange";
+    public const string TypewriterSetColorGreen = "typewriter.setColor.green";
+    public const string TypewriterSetColorBlue = "typewriter.setColor.blue";
+    public const string TypewriterSetColorPurple = "typewriter.setColor.purple";
+    public const string TypewriterSetColorWhite = "typewriter.setColor.white";
+
     public const string TypewriterDiscardPendingEdits = "typewriter.discardPendingEdits";
     public const string TypewriterGoToNextPendingEdit = "typewriter.goToNextPendingEdit";
     public const string JumpToSearchMatch = "search.jumpToMatch";

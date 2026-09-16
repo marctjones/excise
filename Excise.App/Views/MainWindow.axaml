@@ -29,8 +29,10 @@
 
     <Window.Styles>
         <!-- #1476: what the main toolbar's degradation stages mean. The panel
-             (ToolbarActionsPanel, PriorityToolbarPanel) only sets :icon-only and
-             :compact; these styles decide what they do. Declared on the window,
+             (ToolbarActionsPanel, PriorityToolbarPanel) only sets :icon-only,
+             :dense and :compact, cumulatively; these styles decide what they do
+             and each one only has to describe what its stage ADDS to the stage
+             before it. Declared on the window,
              not in Controls.axaml, so the headless test app (which loads only
              FluentTheme) lays the toolbar out the same way. Padding and the rotate
              glyph size live here rather than as local values on the buttons,
@@ -46,13 +48,44 @@
         <Style Selector="toolbar|PriorityToolbarPanel Button.toolbar-glyph">
             <Setter Property="FontSize" Value="16"/>
         </Style>
+        <!-- The same 16 px Controls.axaml already gives PathIcon.toolbar-icon,
+             restated here for the same reason as the padding above: the headless
+             test app loads only FluentTheme, so without this the shrink ladder's
+             TOP rung would be whatever Fluent happens to default a PathIcon to,
+             and 16 -> 14 -> 12 could not be asserted. Same value, so the running
+             app is unchanged. -->
+        <Style Selector="toolbar|PriorityToolbarPanel PathIcon.toolbar-icon">
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+        </Style>
         <!-- Stage 1: labels go. Tooltips and CommandAccessibility's automation
              names still carry them. -->
         <Style Selector="toolbar|PriorityToolbarPanel:icon-only TextBlock.toolbar-label">
             <Setter Property="IsVisible" Value="False"/>
         </Style>
-        <!-- Stage 2: icons shrink and padding tightens. The row keeps its height;
-             the panel sizes it from the full stage. -->
+        <!-- Stage 2 (:dense) and stage 3 (:compact): icons shrink twice before
+             anything hides. The row keeps its height; the panel sizes it from the
+             full stage.
+
+             ⚠️ Each step must make an icon-only button STRICTLY narrower, or a
+             narrower window could show more than a wider one and
+             PriorityToolbarLayout's widest-first order would be a lie. Per
+             icon-only button, horizontal padding + icon:
+                 :icon-only  10+10 + 16 = 36   (labelled: 12+12 + 16 = 40)
+                 :dense       8+8  + 14 = 30
+                 :compact     6+6  + 12 = 24
+             (An earlier sketch used 4 px padding with a 14 px icon: 4+4+14 = 22,
+             NARROWER than :compact's 24, which inverts the order.) -->
+        <Style Selector="toolbar|PriorityToolbarPanel:dense Button.toolbar-button">
+            <Setter Property="Padding" Value="8,6"/>
+        </Style>
+        <Style Selector="toolbar|PriorityToolbarPanel:dense PathIcon.toolbar-icon">
+            <Setter Property="Width" Value="14"/>
+            <Setter Property="Height" Value="14"/>
+        </Style>
+        <Style Selector="toolbar|PriorityToolbarPanel:dense Button.toolbar-glyph">
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
         <Style Selector="toolbar|PriorityToolbarPanel:compact Button.toolbar-button">
             <Setter Property="Padding" Value="6,6"/>
         </Style>
@@ -63,7 +96,7 @@
         <Style Selector="toolbar|PriorityToolbarPanel:compact Button.toolbar-glyph">
             <Setter Property="FontSize" Value="13"/>
         </Style>
-        <!-- Stage 3, hiding by priority, is the panel's own IsVisible handling. -->
+        <!-- Stage 4, hiding by priority, is the panel's own IsVisible handling. -->
     </Window.Styles>
 
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
@@ -136,24 +169,35 @@
                 <!-- #1476: the toolbar's colour swatches can be hidden on a narrow
                      window, so the same eight presets live here. Setting a colour
                      with no active box sets the colour of the next box drawn. -->
+                <!-- Each preset carries its OWN command id, so the accessible
+                     name CommandAccessibility derives from the registry says
+                     WHICH colour. Sharing typewriter.setColor across all eight
+                     made a screen reader announce eight identical items over a
+                     visible affordance (a colour) it cannot read at all.
+                     The submenu keeps the generic id: it is still the scripting
+                     entry point for an arbitrary hex, and the registry gate
+                     requires every declared id to be GUI-reachable. Its tooltip
+                     is suppressed — a submenu header does not want one. -->
                 <MenuItem Header="Typewriter Text Co_lor"
-                          IsEnabled="{Binding IsDocumentLoaded}">
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="typewriter.setColor"
+                          access:CommandAccessibility.ShowToolTip="False">
                     <MenuItem Header="Black" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#000000"
-                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                              access:CommandAccessibility.CommandId="typewriter.setColor.black"/>
                     <MenuItem Header="Gray" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#555555"
-                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                              access:CommandAccessibility.CommandId="typewriter.setColor.gray"/>
                     <MenuItem Header="Red" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#D0021B"
-                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                              access:CommandAccessibility.CommandId="typewriter.setColor.red"/>
                     <MenuItem Header="Orange" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#F5A623"
-                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                              access:CommandAccessibility.CommandId="typewriter.setColor.orange"/>
                     <MenuItem Header="Green" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#2E7D32"
-                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                              access:CommandAccessibility.CommandId="typewriter.setColor.green"/>
                     <MenuItem Header="Blue" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#1565C0"
-                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                              access:CommandAccessibility.CommandId="typewriter.setColor.blue"/>
                     <MenuItem Header="Purple" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#6A1B9A"
-                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                              access:CommandAccessibility.CommandId="typewriter.setColor.purple"/>
                     <MenuItem Header="White" Command="{Binding SetTypewriterColorCommand}" CommandParameter="#FFFFFF"
-                              access:CommandAccessibility.CommandId="typewriter.setColor"/>
+                              access:CommandAccessibility.CommandId="typewriter.setColor.white"/>
                 </MenuItem>
                 <!-- #1476: Form Authoring is a mode like Typewriter; the toolbar
                      toggle is among the first actions a narrow window hides. -->
@@ -523,20 +567,24 @@
 
         <!-- Main toolbar (#1476). It never scrolls and never wraps: as it narrows,
              PriorityToolbarPanel drops the text labels, then shrinks the icons
-             (the :icon-only / :compact styles in Window.Styles), then hides
-             whole priority groups, lowest first. Everything it can hide is also
+             twice (the :icon-only / :dense / :compact styles in Window.Styles),
+             then hides whole priority groups, lowest first. Everything it can hide is also
              in the menu (MainMenuBar here, MacNativeMenuBuilder on macOS), so
              hiding only decides what stays one click away. ToolbarWidthTests
              pins all of this.
 
              Priorities (higher stays longer; equal values hide together):
-               97  typewriter size + alignment  (no command, so no menu entry;
-                                                 shown only while styling a box)
+               97  typewriter style flyout      (size + alignment + the eight
+                                                 colour presets, in one flyout;
+                                                 the button has no command of its
+                                                 own, so no menu entry stands in
+                                                 for it; shown only while styling
+                                                 a box. The colours inside it ARE
+                                                 in Edit > Typewriter Text Color)
                95  Redact, Apply
                90  Open, Save; form field type (no command; form mode only)
                85  Find
                80  Select Text, Type
-               70  typewriter colour            (Edit > Typewriter Text Color)
                60  outline + thumbnails sidebars
                55  continuous scroll
                50  highlight, sticky note
@@ -680,108 +728,145 @@
                          Available only in typewriter mode with a box active.
                          Every control routes through WithStyle on the active
                          PdfTypewriterTextOperation (MainWindowViewModel.TypewriterStyle.cs).
-                         #1476: split into separate panel children so the colour
-                         picker (which has a menu equivalent) can hide before
-                         size and alignment (which have none). -->
-                    <StackPanel x:Name="TypewriterFontSizeGroup"
-                                toolbar:PriorityToolbarPanel.Priority="97"
-                                toolbar:PriorityToolbarPanel.IsAvailable="{Binding IsTypewriterStyleInspectorVisible}"
-                                Orientation="Horizontal" Spacing="6"
-                                VerticalAlignment="Center">
-                        <TextBlock Classes="toolbar-label" Text="Size" VerticalAlignment="Center" FontSize="11"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <NumericUpDown x:Name="TypewriterFontSizeUpDown"
-                                       Value="{Binding TypewriterFontSize}"
-                                       Minimum="4" Maximum="96" Increment="1"
-                                       FormatString="0" Width="104"
-                                       VerticalAlignment="Center"
-                                       AutomationProperties.Name="Typewriter Font Size"
-                                       AutomationProperties.HelpText="Font size of the active type-over text box"
-                                       ToolTip.Tip="Font size of the active text box"/>
-                    </StackPanel>
 
-                    <ComboBox x:Name="TypewriterAlignmentComboBox"
-                              toolbar:PriorityToolbarPanel.Priority="97"
-                              toolbar:PriorityToolbarPanel.IsAvailable="{Binding IsTypewriterStyleInspectorVisible}"
-                              SelectedIndex="{Binding TypewriterAlignmentIndex}"
-                              MinWidth="92" VerticalAlignment="Center"
-                              AutomationProperties.Name="Typewriter Text Alignment"
-                              AutomationProperties.HelpText="Text alignment of the active type-over text box"
-                              ToolTip.Tip="Text alignment of the active text box">
-                        <ComboBoxItem Content="Left"/>
-                        <ComboBoxItem Content="Center"/>
-                        <ComboBoxItem Content="Right"/>
-                    </ComboBox>
+                         #1476 follow-up: the WHOLE inspector — size, alignment
+                         AND the eight colour presets — lives in ONE FLYOUT.
+                         Inline, the three controls cost the toolbar ~330 px
+                         whenever a type-over box was active, which pushed the
+                         whole row past icon-only even on a 1600 px window: the
+                         user lost every unrelated label for the duration of a
+                         text edit. One button costs ~50 px instead. The flyout
+                         content keeps the old inline layout, the old x:Names and
+                         the old automation names.
 
-                    <Button x:Name="TypewriterColorFlyoutButton"
-                            toolbar:PriorityToolbarPanel.Priority="70"
+                         The button shows the active colour beside the glyph, so
+                         the one piece of state the inspector used to display on
+                         the toolbar is still visible without opening anything.
+
+                         ⚠️ Do NOT put Classes="toolbar-label" on anything inside
+                         the flyout: flyout content is logically parented to the
+                         toolbar, so the :icon-only style would hide it while the
+                         flyout is open. -->
+                    <Button x:Name="TypewriterStyleFlyoutButton"
+                            toolbar:PriorityToolbarPanel.Priority="97"
                             toolbar:PriorityToolbarPanel.IsAvailable="{Binding IsTypewriterStyleInspectorVisible}"
                             Classes="modern-button toolbar-button"
                             VerticalAlignment="Center"
-                            AutomationProperties.Name="Typewriter Text Color"
-                            AutomationProperties.HelpText="Text colour of the active type-over text box"
-                            ToolTip.Tip="Text color of the active text box">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Border Width="16" Height="16" CornerRadius="2"
+                            AutomationProperties.Name="Typewriter Text Style"
+                            AutomationProperties.HelpText="Font size, alignment and colour of the active type-over text box"
+                            ToolTip.Tip="Text size, alignment and color of the active text box">
+                        <!-- Deliberately NOT Classes="…labelled": that class only
+                             widens the padding to 12,6, and the 4 px it adds at
+                             :icon-only would put the typewriter row within a
+                             pixel of the 1024 px boundary (measured: icon-only
+                             row 842 against 846 available). The label itself is
+                             free at every stage below Full, where it is hidden. -->
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <PathIcon Classes="toolbar-icon" Data="{StaticResource IconTextStyle}"/>
+                            <Border Width="10" Height="16" CornerRadius="2"
                                     BorderThickness="1"
                                     BorderBrush="{DynamicResource DividerBrush}"
-                                    Background="{Binding TypewriterColorBrush}"/>
-                            <TextBlock Classes="toolbar-label" Text="Color" VerticalAlignment="Center"/>
+                                    Background="{Binding TypewriterColorBrush}"
+                                    AutomationProperties.Name="Active Typewriter Text Color"/>
+                            <TextBlock Classes="toolbar-label" Text="Style" VerticalAlignment="Center"/>
                         </StackPanel>
                         <Button.Flyout>
                             <Flyout>
-                                <!-- #1476: the same eight presets are in Edit > Typewriter
-                                     Text Color and in MacNativeMenuBuilder; a test keeps the
-                                     three lists equal. -->
-                                <StackPanel Spacing="6" Width="152">
-                                    <TextBlock Text="Text color" FontWeight="Medium" FontSize="11"/>
+                                <StackPanel Spacing="8" Width="184">
+                                    <TextBlock Text="Text style" FontWeight="Medium" FontSize="11"/>
+                                    <StackPanel x:Name="TypewriterFontSizeGroup"
+                                                Orientation="Horizontal" Spacing="6"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="Size" VerticalAlignment="Center" FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <NumericUpDown x:Name="TypewriterFontSizeUpDown"
+                                                       Value="{Binding TypewriterFontSize}"
+                                                       Minimum="4" Maximum="96" Increment="1"
+                                                       FormatString="0" Width="130"
+                                                       VerticalAlignment="Center"
+                                                       AutomationProperties.Name="Typewriter Font Size"
+                                                       AutomationProperties.HelpText="Font size of the active type-over text box"
+                                                       ToolTip.Tip="Font size of the active text box"/>
+                                    </StackPanel>
+                                    <ComboBox x:Name="TypewriterAlignmentComboBox"
+                                              SelectedIndex="{Binding TypewriterAlignmentIndex}"
+                                              HorizontalAlignment="Stretch"
+                                              MinWidth="92" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Typewriter Text Alignment"
+                                              AutomationProperties.HelpText="Text alignment of the active type-over text box"
+                                              ToolTip.Tip="Text alignment of the active text box">
+                                        <ComboBoxItem Content="Left"/>
+                                        <ComboBoxItem Content="Center"/>
+                                        <ComboBoxItem Content="Right"/>
+                                    </ComboBox>
+                                    <TextBlock Text="Color" FontWeight="Medium" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <!-- #1476: the same eight presets are in Edit > Typewriter Text
+                                         Color and in MacNativeMenuBuilder; TypewriterColorPresetAccessibilityTests
+                                         keeps the three lists equal AND keeps each one named.
+
+                                         Each swatch carries its OWN command id, so CommandAccessibility
+                                         gives it a distinct accessible name and tooltip from the registry
+                                         — do NOT add AutomationProperties.Name or ToolTip.Tip here: they
+                                         are overwritten at runtime and would drift from the registry
+                                         silently. The x:Name is what identifies the swatch in
+                                         tests/gui-interaction-registry.json, which reads the XAML rather
+                                         than the runtime tree and so cannot see the registry's label. -->
                                     <WrapPanel>
-                                        <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                CommandParameter="#000000"
-                                                ToolTip.Tip="Black">
+                                        <Button x:Name="TypewriterColorSwatchBlack"
+                                                Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}"
+                                                access:CommandAccessibility.CommandId="typewriter.setColor.black"
+                                                CommandParameter="#000000">
                                             <Border Background="#000000" CornerRadius="2"/>
                                         </Button>
-                                        <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                CommandParameter="#555555"
-                                                ToolTip.Tip="Gray">
+                                        <Button x:Name="TypewriterColorSwatchGray"
+                                                Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}"
+                                                access:CommandAccessibility.CommandId="typewriter.setColor.gray"
+                                                CommandParameter="#555555">
                                             <Border Background="#555555" CornerRadius="2"/>
                                         </Button>
-                                        <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                CommandParameter="#D0021B"
-                                                ToolTip.Tip="Red">
+                                        <Button x:Name="TypewriterColorSwatchRed"
+                                                Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}"
+                                                access:CommandAccessibility.CommandId="typewriter.setColor.red"
+                                                CommandParameter="#D0021B">
                                             <Border Background="#D0021B" CornerRadius="2"/>
                                         </Button>
-                                        <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                CommandParameter="#F5A623"
-                                                ToolTip.Tip="Orange">
+                                        <Button x:Name="TypewriterColorSwatchOrange"
+                                                Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}"
+                                                access:CommandAccessibility.CommandId="typewriter.setColor.orange"
+                                                CommandParameter="#F5A623">
                                             <Border Background="#F5A623" CornerRadius="2"/>
                                         </Button>
-                                        <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                CommandParameter="#2E7D32"
-                                                ToolTip.Tip="Green">
+                                        <Button x:Name="TypewriterColorSwatchGreen"
+                                                Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}"
+                                                access:CommandAccessibility.CommandId="typewriter.setColor.green"
+                                                CommandParameter="#2E7D32">
                                             <Border Background="#2E7D32" CornerRadius="2"/>
                                         </Button>
-                                        <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                CommandParameter="#1565C0"
-                                                ToolTip.Tip="Blue">
+                                        <Button x:Name="TypewriterColorSwatchBlue"
+                                                Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}"
+                                                access:CommandAccessibility.CommandId="typewriter.setColor.blue"
+                                                CommandParameter="#1565C0">
                                             <Border Background="#1565C0" CornerRadius="2"/>
                                         </Button>
-                                        <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                CommandParameter="#6A1B9A"
-                                                ToolTip.Tip="Purple">
+                                        <Button x:Name="TypewriterColorSwatchPurple"
+                                                Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}"
+                                                access:CommandAccessibility.CommandId="typewriter.setColor.purple"
+                                                CommandParameter="#6A1B9A">
                                             <Border Background="#6A1B9A" CornerRadius="2"/>
                                         </Button>
-                                        <Button Width="28" Height="28" Padding="2" Margin="2"
-                                                Command="{Binding SetTypewriterColorCommand}" access:CommandAccessibility.CommandId="typewriter.setColor"
-                                                CommandParameter="#FFFFFF"
-                                                ToolTip.Tip="White">
+                                        <Button x:Name="TypewriterColorSwatchWhite"
+                                                Width="28" Height="28" Padding="2" Margin="2"
+                                                Command="{Binding SetTypewriterColorCommand}"
+                                                access:CommandAccessibility.CommandId="typewriter.setColor.white"
+                                                CommandParameter="#FFFFFF">
                                             <Border Background="#FFFFFF" CornerRadius="2"/>
                                         </Button>
                                     </WrapPanel>

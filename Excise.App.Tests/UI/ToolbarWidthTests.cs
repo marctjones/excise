@@ -25,8 +25,16 @@ namespace Excise.App.Tests.UI;
 /// <summary>
 /// #1476: the main toolbar must never show a scroll bar and never wrap. As its
 /// width shrinks it must, in this order: drop the button labels, shrink the
-/// icons, then hide items lowest priority first. Everything it can hide must be
-/// reachable from the menu.
+/// icons (twice — Dense then Compact), then hide items lowest priority first.
+/// Everything it can hide must be reachable from the menu.
+///
+/// <para>⚠️ <b>Labels do not survive 1280 px in any mode, and that is not a
+/// defect.</b> A 1280 px window leaves the panel about 1102 px once the border
+/// padding, the reserved zoom column and the margin are taken; the DEFAULT
+/// labelled row is about 1187 px. So 1280 is icon-only before any mode adds
+/// anything. What is pinned instead is that a mode does not degrade the toolbar
+/// EARLIER than the default mode does — see
+/// <see cref="CheckTypewriterInspectorCostsOneButton"/>.</para>
 ///
 /// <para>History. #589 put the strip in a horizontal ScrollViewer, which overflowed
 /// at every width short of full screen (extent 1187 px against a 1102 px viewport at
@@ -56,8 +64,12 @@ public class ToolbarWidthTests
     /// </summary>
     private static readonly IReadOnlyDictionary<string, string> NoMenuEquivalent = new Dictionary<string, string>
     {
-        ["TypewriterFontSizeGroup"] = "two-way binding to TypewriterFontSize; there is no command to put in a menu",
-        ["TypewriterAlignmentComboBox"] = "two-way binding to TypewriterAlignmentIndex; there is no command",
+        // The colours inside its flyout DO have menu entries (Edit > Typewriter
+        // Text Color), but the button itself runs no command: it opens a flyout
+        // whose size and alignment controls are two-way bindings with no command
+        // at all, so no menu item can stand in for the button.
+        ["TypewriterStyleFlyoutButton"] =
+            "opens a flyout of two-way bindings (TypewriterFontSize, TypewriterAlignmentIndex) plus the colour presets; the button runs no command",
         ["FormFieldTypeComboBox"] = "SelectionChanged code-behind sets FormAuthoringFieldType; there is no command",
     };
 
@@ -92,6 +104,18 @@ public class ToolbarWidthTests
 
             var problems = new List<string>();
             double? fullIconWidth = null;
+            // Icon size per stage, accumulated across every mode and width, so the
+            // ladder Full = IconOnly > Dense > Compact can be checked as a whole
+            // rather than one observation at a time.
+            var iconWidthByStage = new Dictionary<ToolbarStage, double>();
+            // Which adjacent stage pairs were ever compared, so "the ordering was
+            // never actually observed" fails instead of passing vacuously.
+            var stagesOrdered = new HashSet<(ToolbarStage Wider, ToolbarStage Narrower)>();
+            // Full-stage row width per mode, for the typewriter-inspector budget below.
+            var fullRowByMode = new Dictionary<string, double>(StringComparer.Ordinal);
+            var stageByModeAndWidth = new Dictionary<(string Mode, double Width), ToolbarStage>();
+            var hiddenByModeAndWidth = new Dictionary<(string Mode, double Width), int>();
+            var panelChildrenByMode = new Dictionary<string, int>(StringComparer.Ordinal);
 
             foreach (var (mode, enter, leave) in Modes(vm))
             {
@@ -127,9 +151,40 @@ public class ToolbarWidthTests
                     bool Fits(ToolbarStage stage) => Required(stage) <= available + PriorityToolbarLayout.Epsilon;
 
                     _out.WriteLine(
-                        $"{label}: stage {panel.Stage}, available {available:F0}, rows full/icon/compact " +
-                        $"{Required(ToolbarStage.Full):F0}/{Required(ToolbarStage.IconOnly):F0}/{Required(ToolbarStage.Compact):F0}, " +
+                        $"{label}: stage {panel.Stage}, available {available:F0}, rows full/icon/dense/compact " +
+                        $"{Required(ToolbarStage.Full):F0}/{Required(ToolbarStage.IconOnly):F0}/" +
+                        $"{Required(ToolbarStage.Dense):F0}/{Required(ToolbarStage.Compact):F0}, " +
                         $"toolbar height {toolbar.Bounds.Height:F0}, hidden [{string.Join(", ", hidden.Select(Describe))}]");
+
+                    // Every stage the planner measured must be strictly narrower
+                    // than the stage before it. This is checked wherever it is
+                    // observable — at the narrow widths the planner probes all
+                    // four — rather than only at whichever width happens to
+                    // SELECT a given stage.
+                    ToolbarStage[] ladder =
+                        [ToolbarStage.Full, ToolbarStage.IconOnly, ToolbarStage.Dense, ToolbarStage.Compact];
+                    for (var s = 1; s < ladder.Length; s++)
+                    {
+                        if (!plan.StageWidths.TryGetValue(ladder[s - 1], out var wider) ||
+                            !plan.StageWidths.TryGetValue(ladder[s], out var narrower))
+                        {
+                            continue;
+                        }
+
+                        stagesOrdered.Add((ladder[s - 1], ladder[s]));
+                        if (narrower >= wider - PriorityToolbarLayout.Epsilon)
+                        {
+                            problems.Add(
+                                $"{label}: the {ladder[s]} row is {narrower:F0} px and the {ladder[s - 1]} row is {wider:F0} px; " +
+                                "each stage must be strictly narrower, or a narrower window could show more than a wider one");
+                        }
+                    }
+
+                    stageByModeAndWidth[(mode, width)] = panel.Stage;
+                    hiddenByModeAndWidth[(mode, width)] = hidden.Count;
+                    if (!double.IsNaN(Required(ToolbarStage.Full)))
+                        fullRowByMode.TryAdd(mode, Required(ToolbarStage.Full));
+                    panelChildrenByMode.TryAdd(mode, items.Count);
 
                     // 1. The stage is the widest one that fits, in the required order.
                     switch (panel.Stage)
@@ -143,8 +198,14 @@ public class ToolbarWidthTests
                         case ToolbarStage.IconOnly when !Fits(ToolbarStage.IconOnly):
                             problems.Add($"{label}: icon-only stage kept although it does not fit");
                             break;
-                        case ToolbarStage.Compact when Fits(ToolbarStage.Full) || Fits(ToolbarStage.IconOnly):
+                        case ToolbarStage.Dense when Fits(ToolbarStage.Full) || Fits(ToolbarStage.IconOnly):
                             problems.Add($"{label}: icons shrunk although a larger stage fits");
+                            break;
+                        case ToolbarStage.Dense when !Fits(ToolbarStage.Dense):
+                            problems.Add($"{label}: dense stage kept although it does not fit");
+                            break;
+                        case ToolbarStage.Compact when Fits(ToolbarStage.Full) || Fits(ToolbarStage.IconOnly) || Fits(ToolbarStage.Dense):
+                            problems.Add($"{label}: icons shrunk to their smallest although a larger stage fits");
                             break;
                         case ToolbarStage.Compact when hidden.Count > 0 && Fits(ToolbarStage.Compact):
                             problems.Add($"{label}: items hidden although the compact row fits");
@@ -160,18 +221,34 @@ public class ToolbarWidthTests
                     if (labelsVisible != (panel.Stage == ToolbarStage.Full))
                         problems.Add($"{label}: labels {(labelsVisible ? "visible" : "hidden")} at stage {panel.Stage}");
 
-                    // 3. Icons shrink only at the compact stage.
+                    // 3. Icons keep their full size until the labels have gone, and
+                    //    then shrink once per shrink stage (Dense, then Compact).
                     var icons = panel.GetVisualDescendants().OfType<PathIcon>()
                         .Where(i => i.Classes.Contains("toolbar-icon") && i.IsEffectivelyVisible)
                         .ToList();
-                    if (panel.Stage == ToolbarStage.Full && icons.Count > 0)
-                        fullIconWidth ??= icons.Max(i => i.Bounds.Width);
-                    if (fullIconWidth is double fullIcon)
+                    if (icons.Count > 0)
                     {
-                        if (panel.Stage == ToolbarStage.Compact && icons.Any(i => i.Bounds.Width >= fullIcon - 0.5))
-                            problems.Add($"{label}: compact stage but an icon is still {fullIcon:F0} px");
-                        if (panel.Stage != ToolbarStage.Compact && icons.Any(i => Math.Abs(i.Bounds.Width - fullIcon) > 0.5))
-                            problems.Add($"{label}: an icon shrank before the compact stage");
+                        var iconWidth = icons.Max(i => i.Bounds.Width);
+                        if (panel.Stage == ToolbarStage.Full)
+                            fullIconWidth ??= iconWidth;
+                        if (iconWidthByStage.TryGetValue(panel.Stage, out var seen))
+                        {
+                            if (Math.Abs(seen - iconWidth) > 0.5)
+                                problems.Add($"{label}: icons are {iconWidth:F0} px at stage {panel.Stage}, {seen:F0} px elsewhere at the same stage");
+                        }
+                        else
+                        {
+                            iconWidthByStage[panel.Stage] = iconWidth;
+                        }
+
+                        if (fullIconWidth is double fullIcon)
+                        {
+                            var shouldBeFullSize = panel.Stage <= ToolbarStage.IconOnly;
+                            if (shouldBeFullSize && Math.Abs(iconWidth - fullIcon) > 0.5)
+                                problems.Add($"{label}: an icon is {iconWidth:F0} px before the icons were allowed to shrink ({fullIcon:F0} px)");
+                            if (!shouldBeFullSize && iconWidth >= fullIcon - 0.5)
+                                problems.Add($"{label}: stage {panel.Stage} but an icon is still {iconWidth:F0} px");
+                        }
                     }
 
                     // 4. What is hidden is exactly the lowest priorities.
@@ -236,12 +313,153 @@ public class ToolbarWidthTests
             if (fullIconWidth is null)
                 problems.Add("no mode reached the full stage at any width, so the icon-size ordering was never checked");
 
+            foreach (var pair in new[]
+                     {
+                         (ToolbarStage.Full, ToolbarStage.IconOnly),
+                         (ToolbarStage.IconOnly, ToolbarStage.Dense),
+                         (ToolbarStage.Dense, ToolbarStage.Compact),
+                     })
+            {
+                if (!stagesOrdered.Contains(pair))
+                    problems.Add($"{pair.Item1} was never measured against {pair.Item2}, so their ordering is unproven");
+            }
+
+            CheckIconSizeLadder(iconWidthByStage, problems);
+            CheckTypewriterInspectorCostsOneButton(
+                fullRowByMode, panelChildrenByMode, stageByModeAndWidth, hiddenByModeAndWidth, problems);
+
             problems.Should().BeEmpty();
         }
         finally
         {
             window.Close();
             TestPdfGenerator.CleanupTestFile(pdfPath);
+        }
+    }
+
+    /// <summary>
+    /// There are now two icon-shrinking stages, so "icons shrink before anything
+    /// hides" is no longer a single before/after: it is a ladder. Icons must be
+    /// full size at <see cref="ToolbarStage.Full"/> and
+    /// <see cref="ToolbarStage.IconOnly"/>, smaller at <see cref="ToolbarStage.Dense"/>,
+    /// and smaller again at <see cref="ToolbarStage.Compact"/>. A stage no width
+    /// in the sweep SELECTED is not checked here — the row-width ordering above
+    /// covers it from the planner's own probes either way.
+    /// </summary>
+    private static void CheckIconSizeLadder(
+        IReadOnlyDictionary<ToolbarStage, double> iconWidthByStage, List<string> problems)
+    {
+        ToolbarStage[] ladder =
+            [ToolbarStage.Full, ToolbarStage.IconOnly, ToolbarStage.Dense, ToolbarStage.Compact];
+        for (var i = 1; i < ladder.Length; i++)
+        {
+            if (!iconWidthByStage.TryGetValue(ladder[i - 1], out var wider) ||
+                !iconWidthByStage.TryGetValue(ladder[i], out var narrower))
+            {
+                continue;
+            }
+
+            var mustBeEqual = ladder[i] == ToolbarStage.IconOnly;
+            if (mustBeEqual && Math.Abs(wider - narrower) > 0.5)
+                problems.Add($"icons are {narrower:F0} px at {ladder[i]} but {wider:F0} px at {ladder[i - 1]}: labels must go before icons shrink");
+            if (!mustBeEqual && narrower >= wider - 0.5)
+                problems.Add($"icons are {narrower:F0} px at {ladder[i]} and {wider:F0} px at {ladder[i - 1]}: every shrink stage must be strictly smaller");
+        }
+    }
+
+    /// <summary>
+    /// #1476 follow-up: turning on typewriter mode must not degrade the rest of
+    /// the toolbar. The style inspector used to be three inline controls costing
+    /// ~331 px, which pushed the row past icon-only at 1600 px — the user lost
+    /// every unrelated label for the duration.
+    ///
+    /// <para>Note what is NOT asserted: that labels survive at 1280 px. They
+    /// cannot, in ANY mode. At a 1280 px window the panel gets ~1102 px and the
+    /// DEFAULT labelled row is ~1187 px, so 1280 is already icon-only before the
+    /// inspector exists. The property that matters, and the one pinned here, is
+    /// that typewriter mode degrades no earlier than the default mode does.</para>
+    /// </summary>
+    private static void CheckTypewriterInspectorCostsOneButton(
+        IReadOnlyDictionary<string, double> fullRowByMode,
+        IReadOnlyDictionary<string, int> panelChildrenByMode,
+        IReadOnlyDictionary<(string Mode, double Width), ToolbarStage> stageByModeAndWidth,
+        IReadOnlyDictionary<(string Mode, double Width), int> hiddenByModeAndWidth,
+        List<string> problems)
+    {
+        const string inspector = "typewriter-inspector";
+
+        if (!fullRowByMode.TryGetValue("default", out var defaultRow) ||
+            !fullRowByMode.TryGetValue(inspector, out var inspectorRow))
+        {
+            problems.Add("the default and typewriter-inspector rows were not both measured");
+            return;
+        }
+
+        // One toolbar child's worth. MEASURED 2026-09-15: the inspector adds
+        // 109 px (typewriter Full 1240 vs default 1131) — a labelled button
+        // with an icon, a colour chip and the word "Style", plus its separator
+        // and two spacings. Inline, the three controls cost 331 px.
+        //
+        // The threshold is 150, not 110: it exists to catch a regression back
+        // towards inline, and every realistic one clears it — putting the
+        // alignment combo back on the toolbar is +92 (→ ~201) and pulling the
+        // colour button back out is +79 (→ ~188). A tighter bound would instead
+        // be measuring the font, and would redden on a theme change that cost
+        // the toolbar nothing.
+        const double InspectorWidthBudget = 150;
+        var delta = inspectorRow - defaultRow;
+        if (delta > InspectorWidthBudget)
+        {
+            problems.Add(
+                $"the typewriter style inspector adds {delta:F0} px to the labelled row " +
+                $"({inspectorRow:F0} vs {defaultRow:F0}); it must cost at most {InspectorWidthBudget:F0} px");
+        }
+
+        if (panelChildrenByMode.TryGetValue("default", out var defaultChildren) &&
+            panelChildrenByMode.TryGetValue(inspector, out var inspectorChildren) &&
+            inspectorChildren - defaultChildren > 1)
+        {
+            problems.Add(
+                $"the inspector adds {inspectorChildren - defaultChildren} toolbar children; " +
+                "size, alignment and colour belong in ONE flyout, so it may add exactly one button " +
+                "(the separator is a separator and does not count)");
+        }
+
+        // 1600 px: the labels survive. This is the regression the flyout exists
+        // to fix — before it, typewriter mode was icon-only at 1600.
+        if (stageByModeAndWidth.TryGetValue((inspector, 1600), out var at1600) && at1600 != ToolbarStage.Full)
+        {
+            problems.Add(
+                $"typewriter-inspector @ 1600px is at stage {at1600}; the labels must survive there " +
+                $"(row {inspectorRow:F0} px)");
+        }
+
+        // Stage parity at the two widths where the whole toolbar still fits
+        // comfortably. It is deliberately NOT asserted at 1024: there the
+        // inspector's ~100 px really does cost a stage, and demanding parity
+        // would mean demanding the inspector be free.
+        foreach (var width in new[] { 1600.0, 1280 })
+        {
+            if (!stageByModeAndWidth.TryGetValue((inspector, width), out var inspectorStage) ||
+                !stageByModeAndWidth.TryGetValue(("default", width), out var defaultStage))
+            {
+                continue;
+            }
+
+            if (inspectorStage > defaultStage)
+            {
+                problems.Add(
+                    $"typewriter-inspector @ {width:F0}px degrades to {inspectorStage} while the default mode is at " +
+                    $"{defaultStage}: styling a text box must not cost the rest of the toolbar a stage");
+            }
+        }
+
+        foreach (var width in new[] { 1600.0, 1280, 1024 })
+        {
+            if (stageByModeAndWidth.TryGetValue((inspector, width), out var stage) && stage > ToolbarStage.Dense)
+                problems.Add($"typewriter-inspector @ {width:F0}px is already at {stage}; the smallest icons must be a narrower-window measure");
+            if (hiddenByModeAndWidth.TryGetValue((inspector, width), out var hidden) && hidden > 0)
+                problems.Add($"typewriter-inspector @ {width:F0}px hides {hidden} item(s); nothing may hide at these widths");
         }
     }
 
@@ -261,7 +479,7 @@ public class ToolbarWidthTests
                      PriorityToolbarPanel.GetIsAvailable(c) && !PriorityToolbarPanel.GetIsSeparator(c)))
         {
             var name = $"{mode}: {Describe(child)}";
-            var commands = ToolbarCommands(child, vm);
+            var commands = ToolbarCommands(child);
 
             if (commands.Count == 0)
             {
@@ -290,14 +508,13 @@ public class ToolbarWidthTests
         }
     }
 
-    private static IReadOnlyList<ICommand> ToolbarCommands(Control child, MainWindowViewModel vm) => child switch
+    // A flyout host runs no command of its own; what is inside it is checked by
+    // TypewriterStyleFlyoutTests and TypewriterColorPresetAccessibilityTests,
+    // which open the flyout (its content is not in the tree until then, so its
+    // bindings cannot be read from here).
+    private static IReadOnlyList<ICommand> ToolbarCommands(Control child) => child switch
     {
         Button { Command: { } command } => [command],
-        // The colour picker opens a flyout of swatches bound to this command. The
-        // flyout's content is not in the tree until it opens, so its bindings are
-        // unresolved here; the swatches are compared with the menus in
-        // ToolbarOverflowMenuEntriesTests.
-        Button { Name: "TypewriterColorFlyoutButton" } => [vm.SetTypewriterColorCommand],
         _ => [],
     };
 

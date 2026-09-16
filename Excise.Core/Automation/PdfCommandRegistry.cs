@@ -18,6 +18,26 @@ public static class PdfCommandRegistry
         App(PdfCommandIds.Exit, "Exit", "Close excise.", "Alt+F4"),
         App(PdfCommandIds.TypewriterSetColor, "Set Typewriter Color",
             "Set the typewriter text colour. Takes the colour as a hex value, e.g. #000000.", requiresDocument: true),
+        // #1476 follow-up: one entry per colour preset, because
+        // CommandAccessibility derives the accessible NAME from the label and
+        // eight swatches sharing one label announce identically. The label is
+        // what a screen reader reads; the menu keeps its short visible header.
+        App(PdfCommandIds.TypewriterSetColorBlack, "Typewriter Text Color: Black",
+            "Set the typewriter text colour to black (#000000).", requiresDocument: true),
+        App(PdfCommandIds.TypewriterSetColorGray, "Typewriter Text Color: Gray",
+            "Set the typewriter text colour to gray (#555555).", requiresDocument: true),
+        App(PdfCommandIds.TypewriterSetColorRed, "Typewriter Text Color: Red",
+            "Set the typewriter text colour to red (#D0021B).", requiresDocument: true),
+        App(PdfCommandIds.TypewriterSetColorOrange, "Typewriter Text Color: Orange",
+            "Set the typewriter text colour to orange (#F5A623).", requiresDocument: true),
+        App(PdfCommandIds.TypewriterSetColorGreen, "Typewriter Text Color: Green",
+            "Set the typewriter text colour to green (#2E7D32).", requiresDocument: true),
+        App(PdfCommandIds.TypewriterSetColorBlue, "Typewriter Text Color: Blue",
+            "Set the typewriter text colour to blue (#1565C0).", requiresDocument: true),
+        App(PdfCommandIds.TypewriterSetColorPurple, "Typewriter Text Color: Purple",
+            "Set the typewriter text colour to purple (#6A1B9A).", requiresDocument: true),
+        App(PdfCommandIds.TypewriterSetColorWhite, "Typewriter Text Color: White",
+            "Set the typewriter text colour to white (#FFFFFF).", requiresDocument: true),
         App(PdfCommandIds.TypewriterDiscardPendingEdits, "Discard Pending Typewriter Edits",
             "Discard every unapplied typewriter edit.", requiresDocument: true),
         App(PdfCommandIds.TypewriterGoToNextPendingEdit, "Go To Next Pending Typewriter Edit",

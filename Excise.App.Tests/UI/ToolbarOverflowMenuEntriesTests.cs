@@ -89,7 +89,9 @@ public class ToolbarOverflowMenuEntriesTests
             vm.OnTypewriterTextCreated(new PdfRectangle(72, 620, 300, 660), 1);
             await KeyboardTestHelpers.FlushDispatcherAsync();
 
-            var red = MenuItemFor(window, "typewriter.setColor", "#D0021B");
+            // Per-preset command id since #1476's follow-up; the shared
+            // typewriter.setColor now names the submenu that hosts them.
+            var red = MenuItemFor(window, "typewriter.setColor.red", "#D0021B");
             await ClickAsync(red, window);
 
             vm.TypewriterColor.Should().Be(Color.Parse("#D0021B"));
@@ -104,26 +106,36 @@ public class ToolbarOverflowMenuEntriesTests
         }
     }
 
+    /// <summary>
+    /// The three preset lists must stay equal. Since #1476's follow-up the
+    /// swatches live in the typewriter STYLE flyout (there is no separate colour
+    /// button any more) and each carries its own command id, so they are
+    /// collected by the command they run rather than by a shared id.
+    /// <see cref="TypewriterColorPresetAccessibilityTests"/> owns the per-preset
+    /// naming; this test owns "the same eight colours in all three places".
+    /// </summary>
     [FixedAvaloniaFact]
     public async Task TypewriterColorPresets_AreTheSameInTheFlyoutTheWindowMenuAndTheMacMenu()
     {
         var (vm, window, pdf) = await OpenAsync();
         try
         {
-            var flyout = window.FindControl<Button>("TypewriterColorFlyoutButton")!.Flyout as Flyout;
-            flyout.Should().NotBeNull();
+            var flyout = window.FindControl<Button>("TypewriterStyleFlyoutButton")!.Flyout as Flyout;
+            flyout.Should().NotBeNull("the colour presets moved into the typewriter style flyout");
             var flyoutPresets = ((Control)flyout!.Content!).GetLogicalDescendants().OfType<Button>()
-                .Select(b => b.CommandParameter as string)
+                .Where(b => b.CommandParameter is string)
+                .Select(b => (string)b.CommandParameter!)
                 .ToList();
 
             var menuPresets = MenuItems(window)
-                .Where(m => CommandAccessibility.GetCommandId(m) == "typewriter.setColor" && m.CommandParameter is string)
+                .Where(m => CommandAccessibility.GetCommandId(m)?.StartsWith("typewriter.setColor.", StringComparison.Ordinal) == true
+                            && m.CommandParameter is string)
                 .Select(m => (string)m.CommandParameter!)
                 .ToList();
 
             var nativePresets = NativeLeaves(MacNativeMenuBuilder.Create(vm))
                 .Where(n => ReferenceEquals(n.Command, vm.SetTypewriterColorCommand))
-                .Select(n => n.CommandParameter as string)
+                .Select(n => (string)n.CommandParameter!)
                 .ToList();
 
             flyoutPresets.Should().HaveCount(8);

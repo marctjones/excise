@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Excise.App.ViewModels;
+using Excise.Core.Automation;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -11,6 +12,31 @@ namespace Excise.App.Views;
 
 internal static class MacNativeMenuBuilder
 {
+    /// <summary>
+    /// #1476: the typewriter colour presets, in the order the toolbar's style
+    /// flyout and Edit &gt; Typewriter Text Color list them in MainWindow.axaml.
+    ///
+    /// <para><c>CommandId</c> is the per-preset semantic id (#1476 follow-up).
+    /// A <see cref="NativeMenuItem"/> has nowhere to attach
+    /// <c>CommandAccessibility</c> — on macOS the item's TITLE is what
+    /// VoiceOver reads, and the titles here are already distinct — so the id
+    /// travels with the preset instead, and
+    /// <c>TypewriterColorPresetAccessibilityTests</c> uses it to hold this
+    /// list, the window menu and the flyout swatches to the same eight
+    /// presets with the same eight registry labels.</para>
+    /// </summary>
+    internal static readonly (string Name, string Hex, string CommandId)[] TypewriterColorPresets =
+    [
+        ("Black", "#000000", PdfCommandIds.TypewriterSetColorBlack),
+        ("Gray", "#555555", PdfCommandIds.TypewriterSetColorGray),
+        ("Red", "#D0021B", PdfCommandIds.TypewriterSetColorRed),
+        ("Orange", "#F5A623", PdfCommandIds.TypewriterSetColorOrange),
+        ("Green", "#2E7D32", PdfCommandIds.TypewriterSetColorGreen),
+        ("Blue", "#1565C0", PdfCommandIds.TypewriterSetColorBlue),
+        ("Purple", "#6A1B9A", PdfCommandIds.TypewriterSetColorPurple),
+        ("White", "#FFFFFF", PdfCommandIds.TypewriterSetColorWhite),
+    ];
+
     public static NativeMenu Create(MainWindowViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
@@ -48,23 +74,6 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _revealRasterizedHiddenItem;
         private readonly NativeMenuItem _formAuthoringItem;
         private IReadOnlyList<string>? _recentFilesSnapshot;
-
-        /// <summary>
-        /// #1476: the typewriter colour presets, in the order the toolbar flyout
-        /// and Edit &gt; Typewriter Text Color list them in MainWindow.axaml.
-        /// ToolbarOverflowMenuEntriesTests keeps the three lists equal.
-        /// </summary>
-        private static readonly (string Name, string Hex)[] TypewriterColorPresets =
-        [
-            ("Black", "#000000"),
-            ("Gray", "#555555"),
-            ("Red", "#D0021B"),
-            ("Orange", "#F5A623"),
-            ("Green", "#2E7D32"),
-            ("Blue", "#1565C0"),
-            ("Purple", "#6A1B9A"),
-            ("White", "#FFFFFF"),
-        ];
 
         public MenuState(MainWindowViewModel viewModel)
         {
@@ -403,7 +412,7 @@ internal static class MacNativeMenuBuilder
         /// </summary>
         private NativeMenuItem TypewriterColorSubmenu() =>
             Submenu("Typewriter Text Color",
-                TypewriterColorPresets
+                MacNativeMenuBuilder.TypewriterColorPresets
                     .Select(preset => TrackDocumentItem(
                         ParameterItem(preset.Name, _viewModel.SetTypewriterColorCommand, preset.Hex)))
                     .ToArray());
