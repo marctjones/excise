@@ -241,7 +241,8 @@ mkdir -p "$LOG_DIR"
 CONFIG="Debug"
 RUNNER_BUILD_ARGS=""
 RUNNER_OPTS=""
-BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-900000}"
+# BLAME_HANG_TIMEOUT default lives in lib-runner.sh (RUNNER_BLAME_HANG_DEFAULT, #1283):
+# a per-runner default here pre-empted it and made the library value dead code.
 export CONFIG LOG_DIR RUNNER_BUILD_ARGS RUNNER_OPTS BLAME_HANG_TIMEOUT
 runner_identify_tree "$CONFIG"
 if [ "$RESUME" = "1" ]; then

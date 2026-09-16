@@ -202,7 +202,8 @@ runner_export_lean_env
 # The environment every row may reference (tests/gates.tsv "target").
 RUNNER_BUILD_ARGS="-m:1"          # #861: one MSBuild node
 RUNNER_OPTS="aot"                 # opt:aot rows run in full
-BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-900000}"
+# BLAME_HANG_TIMEOUT default lives in lib-runner.sh (RUNNER_BLAME_HANG_DEFAULT, #1283):
+# a per-runner default here pre-empted it and made the library value dead code.
 export CONFIG LOG_DIR RUNNER_BUILD_ARGS RUNNER_OPTS BLAME_HANG_TIMEOUT
 runner_export_oracle_env
 runner_export_release_env

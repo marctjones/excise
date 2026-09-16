@@ -681,6 +681,25 @@ runner_reclaim() {
 # listed. File order is execution order.
 RUNNER_EXIT_SKIP=77          # a gate's "prerequisite missing" — never 0. prereqPolicy decides what it means.
 RUNNER_EXIT_BOUND=124        # run-bounded.sh: the row exceeded its wall-clock budget (#1283). GNU timeout's code.
+
+# --blame-hang-timeout, in ms: how long NO test event may pass before blame
+# collects and kills. THE one source of truth -- until 2026-09-16 each of the
+# three runners carried its own `${BLAME_HANG_TIMEOUT:-900000}` and exported
+# it, so the library default below could never win and the 60000 claimed in
+# d1e21572 was dead code. Set it here; the runners only pass it through.
+#
+# 60s not 900s, on measurement: across three healthy unfiltered App.Tests runs
+# the worst gap between consecutive test events was 1.8s over 4455 gaps, none
+# above 10s (trx startTime/endTime, #1283 lane B). A 33x margin.
+#
+# This is DIAGNOSTICS, not the remedy. Measured 2026-09-16: on a STALLED
+# worker blame fires exactly on schedule, dumps the testhost RELAY instead of
+# the worker, and the run keeps going -- 6x past the timeout in the
+# reproduction, nine hours in the real 2026-09-10 incident. The `budget`
+# column and run-bounded.sh are what actually END a hung row. Do not remove
+# the bound on the grounds that blame exists.
+RUNNER_BLAME_HANG_DEFAULT=60000
+BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-$RUNNER_BLAME_HANG_DEFAULT}"
 RUNNER_ROOT="${RUNNER_ROOT:-$PWD}"
 RUNNER_MANIFEST="${RUNNER_MANIFEST:-$RUNNER_ROOT/tests/gates.tsv}"
 RUNNER_MANIFEST_HEADER=$'name\tclass\ttiers\tkind\ttarget\tfilter\tratchet\tknownIssue\tprereq\tprereqPolicy\tcheckpoint\toracle\tbudget\tnote'
@@ -883,7 +902,7 @@ runner_plan_expand_trx() {
 # it lands the fresher the evidence. It is NOT the thing that ends a stalled
 # run; run-bounded.sh is. Blame fires on time and the run hangs anyway.
 runner_step_cmdline() {
-    local name="$1" kind="$2" target="$3" filter="${4:--}" hang="${BLAME_HANG_TIMEOUT:-60000}"
+    local name="$1" kind="$2" target="$3" filter="${4:--}" hang="${BLAME_HANG_TIMEOUT:-$RUNNER_BLAME_HANG_DEFAULT}"
     local budget bound=""
     case "$kind" in
         test|project|project-chunked)

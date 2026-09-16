@@ -106,8 +106,14 @@ that delta is the discriminator the 2026-09-10 record lacked — then
 files is exempt from `clean-test-artifacts.sh --keep N`: it is the only
 artifact in the tree that records a hang, and the next run probably passes.
 
-`--blame-hang-timeout` now defaults to **60 s**, down from 900 s, on measured
-evidence: across three healthy unfiltered `Excise.App.Tests` runs the worst
+`--blame-hang-timeout` defaults to **60 s**, down from 900 s. The default is
+`RUNNER_BLAME_HANG_DEFAULT` in `scripts/lib-runner.sh` and **only** there —
+until 2026-09-16 each of the three runners carried its own
+`${BLAME_HANG_TIMEOUT:-900000}` and exported it, so the library default could
+never win and the 60 s first claimed in `d1e21572` was dead code. Caught by
+reading a live run's generated command line, not by re-reading the edit; an
+isolated call to `runner_step_cmdline` with the variable unset shows the dead
+default as if it were live. The evidence for 60 s: across three healthy unfiltered `Excise.App.Tests` runs the worst
 inter-test gap was **1.8 s** over 4455 gaps, none above 10 s (trx
 `startTime`/`endTime`). That is a 33x margin, and faster detection means
 blame's Sequence file — which names the tests in flight, and is only written on
