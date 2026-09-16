@@ -340,7 +340,26 @@ launch_one() {
   fi
   cat "$dir/preflight.txt"
 
-  local -a env_args=("EXCISE_TRACE_VIEWER=$dir/metrics.jsonl")
+  # Every launch gets its OWN, EMPTY app state. On macOS AppPaths resolves
+  # config, data and cache under $HOME/Library, so a per-launch HOME isolates
+  # all three. Without this the app restored the previous launch's window.json,
+  # and two things went wrong (2026-09-16):
+  #   - measurement: a launch that STARTED in continuous mode never scrolled.
+  #     The first calibration's 10 Altona scroll runs all rendered 3 bands where
+  #     the one run that started in single-page mode rendered 17.
+  #   - the user's real settings: every scenario's viewMode switch, zoom and
+  #     window geometry was written into ~/Library/Application Support/Excise.App.
+  # A cold thumbnail/tile cache on every launch is also the reproducible choice.
+  local app_home="$dir/home"
+  rm -rf "$app_home"; mkdir -p "$app_home"
+  # EXCISE_GUI_PERF_SEED_WINDOW_JSON=<file> starts the launch from a RESTORED
+  # window state instead of defaults -- how the hollow-scroll case above is
+  # reproduced on purpose.
+  if [ -n "${EXCISE_GUI_PERF_SEED_WINDOW_JSON:-}" ]; then
+    mkdir -p "$app_home/Library/Application Support/Excise.App"
+    cp "$EXCISE_GUI_PERF_SEED_WINDOW_JSON" "$app_home/Library/Application Support/Excise.App/window.json"
+  fi
+  local -a env_args=("HOME=$app_home" "EXCISE_TRACE_VIEWER=$dir/metrics.jsonl")
   if [ "$mode" = "runner" ]; then
     env_args+=(
       "EXCISE_PERF_SCENARIO=$SCENARIO_FILE"
@@ -388,8 +407,12 @@ launch_one() {
     echo "   LEFTOVER PROCESS $pid — recording and killing" >&2
     echo "leftover=$pid" >> "$dir/notes.txt"
     kill -9 "$pid" 2>/dev/null
+    rm -rf "$app_home"
     return 1
   fi
+  # The isolated state holds this launch's caches; the evidence is already in
+  # $dir (journal, samples, metrics), and 64 launches of caches add up.
+  rm -rf "$app_home"
 
   if grep -q -- "-6661" "$dir/app.log" 2>/dev/null; then
     echo "ABORTING: -6661 in the app log." >&2
