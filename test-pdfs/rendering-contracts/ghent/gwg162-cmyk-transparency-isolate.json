@@ -6,7 +6,8 @@
   "RootCause": "CMYK_TRANSPARENCY_GROUP_ISOLATION",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "QualityReason": "Cold 2026-07-03 verification raw-passes this page and fresh visual review shows pdfe matches MuPDF on the important isolated DeviceCMYK transparency semantics; Poppler is the visible outlier.",
+  "QualityReason": "Cold 2026-07-03 verification raw-passes this page and fresh visual review shows excise matches MuPDF on the important isolated DeviceCMYK transparency semantics; Poppler is the visible outlier.",
+  "Notes": "Same 16-swatch grid and same printed failure indicator as GWG160/161 -- 'If an X appears, rendering of Isolated Transparency Groups (a transparency effect) is not performed correctly' -- so the whole-page status below cannot see a single wrong cell (#1515). The per-cell gate is GhentConformanceCellTests over tests/ghent-conformance-cells.json.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",

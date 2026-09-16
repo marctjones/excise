@@ -6,7 +6,8 @@
   "RootCause": "CMYK_TRANSPARENCY_GROUP_KNOCKOUT",
   "ImprovementPriority": "DONE",
   "Confidence": "HIGH",
-  "QualityReason": "DeviceCMYK knockout group compositing now honors PDF nonseparable blend formulas and previews retained CMYK group pixels through the document output intent. Current focused comparison tracks MuPDF/Ghent semantics with only low residual antialias/text differences.",
+  "QualityReason": "DeviceCMYK knockout group compositing honors PDF nonseparable blend formulas and previews retained CMYK group pixels through the document output intent.",
+  "Notes": "A whole-page diffFraction/MAE CANNOT gate this page, and this contract proved it (#1515). Each of its 16 swatch cells is 22.676 x 22.678 pt, i.e. 0.7% of a 255 x 142 pt page, so a cell painted wrong end to end fits inside any page-level budget this page could plausibly carry; with #1514's defect present -- a /ca 0 element painting at full strength and drawing the very X the page forbids -- the contract-driven scan reported byte-identical category counts before and after the fix. The per-cell gate is GhentConformanceCellTests over tests/ghent-conformance-cells.json (48 cells across GWG160/161/162), judged against mutool, Ghostscript AND pdftocairo on two measures: per-block luminance/chroma for flat-but-wrong cells, and per-cell departure from the cell's own median colour for the 'an X appears' failure this page announces in its own caption. The second measure exists because the first is blind here too: #1514's defect read luminance 109.3 / chroma 160.3 against an oracle consensus of 108.4 / 193.5, inside the +/-40 and +/-60 tolerances GWG168/169's per-cell gate uses.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -14,11 +15,11 @@
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "QualityReason": "Focused 150 DPI comparison against MuPDF after the ICC/output-intent CMYK transparency fix: 1.27% differing pixels, MAE 8.20, with remaining differences concentrated in antialiased text/linework and small residual X edges.",
+      "QualityReason": "Page-level agreement with MuPDF on a page whose engines preview DeviceCMYK differently; the CELL-level verdicts are owned by GhentConformanceCellTests, not by this number. This field previously read '1.27% differing pixels, MAE 8.20, with remaining differences concentrated in antialiased text/linework and small residual X edges' -- STALE AND MISLEADING on both counts: the figures were measured before #1514, i.e. against a render that was drawing the forbidden X, and 'small residual X edges' named that defect while the status said MATCHES. On a Ghent knockout patch page a visible X is not antialiasing noise, it IS the failure the page is designed to announce. Re-measure the page-level figures from a current scan before quoting any here again (#1515).",
       "Target": {
         "Mode": "ACCEPTED_REFERENCE",
         "Primary": "mutool",
-        "Reason": "MuPDF is the best available reference for this Ghent knockout page; pdfe now follows its output-intent CMYK preview and knockout transparency behavior closely instead of claiming to be better than the references."
+        "Reason": "MuPDF is the best available reference for this Ghent knockout page; excise follows its output-intent CMYK preview and knockout transparency behavior closely instead of claiming to be better than the references. Per-cell judgements additionally require Ghostscript and pdftocairo to corroborate, so no single renderer is the target for a cell."
       }
     }
   }

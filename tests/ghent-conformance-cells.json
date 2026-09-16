@@ -1,0 +1,499 @@
+{
+  "Description": "Per-CELL conformance expectations for Ghent Output Suite patch pages (#1515). Every number a Ghent patch page was previously gated on was an AGGREGATE OVER AREA (page diffFraction/MAE, cell mean RGB, cell luminance/chroma), and the failure these pages announce in their own caption is STRUCTURAL: an X appears inside an otherwise flat cell. A mean absorbs an X in a cell exactly as it absorbs a cell in a page, so no threshold on a mean can see it. Measured on #1514's defect: the Opacity (0%) cell read luminance 109.3 / chroma 160.3 against an oracle consensus of 108.4 / 193.5 -- INSIDE GhentSoftMaskVectorCellTests' own +/-40 and +/-60 tolerances. Hence two measures per cell, not a wider or narrower one.",
+  "Gate": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
+  "Issue": 1515,
+  "Dpi": 144,
+  "CellInsetPt": 1.5,
+  "RectOrigin": "Rect is [llx, lly, urx, ury] in PDF points, bottom-left origin -- the fixture's own content-stream coordinates. Read with `mutool trace`, keeping only page-level (transform 1 0 0 -1 0 141.732) 22.676 x 22.678 pt swatch rectangles, NOT back-derived from any excise render. CellInsetPt drops the swatch's own 0.25 pt black `B` stroke frame, whose antialiasing differs per engine and would otherwise dominate the structure measure.",
+  "Fixtures": [
+    {
+      "Name": "GWG160",
+      "Path": "test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG160_Transp_Basic_BM_DeviceCMYK_Non-knockout_X4.pdf",
+      "Page": 1,
+      "PageHeightPt": 141.732,
+      "FailureIndicator": "If an 'X' appears, rendering of Non-knockout Transparency Groups (a transparency effect) is not performed correctly.",
+      "Cells": [
+        {
+          "Name": "Darken",
+          "Rect": [
+            5.906,
+            102.047,
+            28.583,
+            124.725
+          ]
+        },
+        {
+          "Name": "Multiply",
+          "Rect": [
+            37.229,
+            102.047,
+            59.906,
+            124.725
+          ]
+        },
+        {
+          "Name": "Color Burn",
+          "Rect": [
+            68.906,
+            102.047,
+            91.583,
+            124.725
+          ]
+        },
+        {
+          "Name": "Lighten",
+          "Rect": [
+            100.228,
+            102.047,
+            122.906,
+            124.725
+          ]
+        },
+        {
+          "Name": "Screen",
+          "Rect": [
+            131.55,
+            102.048,
+            154.228,
+            124.725
+          ]
+        },
+        {
+          "Name": "Color dodge",
+          "Rect": [
+            163.227,
+            102.048,
+            185.905,
+            124.725
+          ]
+        },
+        {
+          "Name": "Overlay",
+          "Rect": [
+            194.905,
+            102.047,
+            217.583,
+            124.725
+          ]
+        },
+        {
+          "Name": "Soft Light",
+          "Rect": [
+            226.227,
+            102.048,
+            248.905,
+            124.725
+          ]
+        },
+        {
+          "Name": "Hard Light",
+          "Rect": [
+            5.526,
+            68.031,
+            28.204,
+            90.708
+          ]
+        },
+        {
+          "Name": "Difference",
+          "Rect": [
+            36.85,
+            67.73,
+            59.528,
+            90.408
+          ]
+        },
+        {
+          "Name": "Exclusion",
+          "Rect": [
+            68.527,
+            67.73,
+            91.205,
+            90.408
+          ]
+        },
+        {
+          "Name": "Hue",
+          "Rect": [
+            100.081,
+            68.033,
+            122.759,
+            90.708
+          ]
+        },
+        {
+          "Name": "Saturation",
+          "Rect": [
+            131.172,
+            68.031,
+            153.85,
+            90.709
+          ]
+        },
+        {
+          "Name": "Color",
+          "Rect": [
+            162.849,
+            68.031,
+            185.527,
+            90.707
+          ]
+        },
+        {
+          "Name": "Luminosity",
+          "Rect": [
+            194.527,
+            68.033,
+            217.205,
+            90.708
+          ]
+        },
+        {
+          "Name": "Opacity (0%)",
+          "Rect": [
+            225.849,
+            68.031,
+            248.527,
+            90.709
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "GWG161",
+      "Path": "test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG161_Transp_Basic_BM_DeviceCMYK_Knockout_X4.pdf",
+      "Page": 1,
+      "PageHeightPt": 141.732,
+      "FailureIndicator": "If an 'X' appears, rendering of Knockout Transparency Groups (a transparency effect) is not performed correctly.",
+      "Cells": [
+        {
+          "Name": "Darken",
+          "Rect": [
+            5.907,
+            102.047,
+            28.582,
+            124.725
+          ]
+        },
+        {
+          "Name": "Multiply",
+          "Rect": [
+            37.35,
+            102.047,
+            60.026,
+            124.725
+          ]
+        },
+        {
+          "Name": "Color Burn",
+          "Rect": [
+            68.906,
+            102.046,
+            91.582,
+            124.724
+          ]
+        },
+        {
+          "Name": "Lighten",
+          "Rect": [
+            100.228,
+            102.046,
+            122.905,
+            124.724
+          ]
+        },
+        {
+          "Name": "Screen",
+          "Rect": [
+            131.55,
+            102.047,
+            154.226,
+            124.725
+          ]
+        },
+        {
+          "Name": "Color dodge",
+          "Rect": [
+            163.35,
+            102.045,
+            186.026,
+            124.723
+          ]
+        },
+        {
+          "Name": "Overlay",
+          "Rect": [
+            195.028,
+            102.044,
+            217.704,
+            124.722
+          ]
+        },
+        {
+          "Name": "Soft Light",
+          "Rect": [
+            226.229,
+            102.042,
+            248.905,
+            124.72
+          ]
+        },
+        {
+          "Name": "Hard Light",
+          "Rect": [
+            5.91,
+            68.029,
+            28.586,
+            90.707
+          ]
+        },
+        {
+          "Name": "Difference",
+          "Rect": [
+            37.112,
+            68.031,
+            59.788,
+            90.709
+          ]
+        },
+        {
+          "Name": "Exclusion",
+          "Rect": [
+            68.789,
+            68.029,
+            91.465,
+            90.707
+          ]
+        },
+        {
+          "Name": "Hue",
+          "Rect": [
+            100.111,
+            68.031,
+            122.788,
+            90.709
+          ]
+        },
+        {
+          "Name": "Saturation",
+          "Rect": [
+            131.671,
+            68.033,
+            154.347,
+            90.711
+          ]
+        },
+        {
+          "Name": "Color",
+          "Rect": [
+            163.112,
+            68.027,
+            185.788,
+            90.705
+          ]
+        },
+        {
+          "Name": "Luminosity",
+          "Rect": [
+            194.79,
+            68.027,
+            217.466,
+            90.705
+          ]
+        },
+        {
+          "Name": "Opacity (0%)",
+          "Rect": [
+            226.229,
+            68.027,
+            248.905,
+            90.705
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "GWG162",
+      "Path": "test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG162_Transp_Basic_BM_DeviceCMYK_Isolate_X4.pdf",
+      "Page": 1,
+      "PageHeightPt": 141.732,
+      "FailureIndicator": "If an 'X' appears, rendering of Isolated Transparency Groups (a transparency effect) is not performed correctly.",
+      "Cells": [
+        {
+          "Name": "Darken",
+          "Rect": [
+            5.846,
+            102.045,
+            28.521,
+            124.723
+          ]
+        },
+        {
+          "Name": "Multiply",
+          "Rect": [
+            37.29,
+            102.045,
+            59.965,
+            124.723
+          ]
+        },
+        {
+          "Name": "Color Burn",
+          "Rect": [
+            68.846,
+            102.041,
+            91.521,
+            124.719
+          ]
+        },
+        {
+          "Name": "Lighten",
+          "Rect": [
+            100.29,
+            102.046,
+            122.966,
+            124.725
+          ]
+        },
+        {
+          "Name": "Screen",
+          "Rect": [
+            131.489,
+            102.041,
+            154.165,
+            124.719
+          ]
+        },
+        {
+          "Name": "Color dodge",
+          "Rect": [
+            164.567,
+            102.047,
+            187.243,
+            124.725
+          ]
+        },
+        {
+          "Name": "Overlay",
+          "Rect": [
+            194.968,
+            102.047,
+            217.644,
+            124.725
+          ]
+        },
+        {
+          "Name": "Soft Light",
+          "Rect": [
+            226.29,
+            102.047,
+            248.966,
+            124.725
+          ]
+        },
+        {
+          "Name": "Hard Light",
+          "Rect": [
+            5.789,
+            68.031,
+            28.465,
+            90.709
+          ]
+        },
+        {
+          "Name": "Difference",
+          "Rect": [
+            37.11,
+            68.031,
+            59.786,
+            90.709
+          ]
+        },
+        {
+          "Name": "Exclusion",
+          "Rect": [
+            68.91,
+            68.031,
+            91.586,
+            90.709
+          ]
+        },
+        {
+          "Name": "Hue",
+          "Rect": [
+            100.112,
+            68.031,
+            122.788,
+            90.709
+          ]
+        },
+        {
+          "Name": "Saturation",
+          "Rect": [
+            131.61,
+            68.03,
+            154.287,
+            90.708
+          ]
+        },
+        {
+          "Name": "Color",
+          "Rect": [
+            164.511,
+            68.031,
+            187.187,
+            90.709
+          ]
+        },
+        {
+          "Name": "Luminosity",
+          "Rect": [
+            194.79,
+            68.031,
+            217.466,
+            90.709
+          ]
+        },
+        {
+          "Name": "Opacity (0%)",
+          "Rect": [
+            226.29,
+            68.031,
+            248.966,
+            90.709
+          ]
+        }
+      ]
+    }
+  ],
+  "NotCellGated": [
+    {
+      "Name": "GWG168_Softmasks_Vector_part1_X4.pdf",
+      "Reason": "Already gated per cell by GhentSoftMaskVectorCellTests (#1395). Its printed criterion is 'should look like the reference images', not an X indicator, so its cells are judged on luminance/chroma alone. Consolidating the two gates is deliberately deferred until the dual metric is measured against its 9 passing cells."
+    },
+    {
+      "Name": "GWG169_Softmasks_Vector_part2_X4.pdf",
+      "Reason": "Same as GWG168 -- gated by GhentSoftMaskVectorCellTests (#1395)."
+    },
+    {
+      "Name": "GWG130_ICC_Source_Profile_x4.pdf",
+      "Reason": "X-indicator page ('If a red X appears, then the Source ICC Profile is not respected', plus a second faint-green-X rendering-intent indicator) with a 4-cell grid. Cells are not mapped yet; tracked by #1523."
+    },
+    {
+      "Name": "GWG132_ICCbasedCMYK_OverPrint_x4.pdf",
+      "Reason": "X-indicator page ('In case of an X, the CMYK color was converted...') with a 2-cell grid. Cells are not mapped yet; tracked by #1523."
+    },
+    {
+      "Name": "GWG152_OptionalContent-OCMD_X4.pdf",
+      "Reason": "X-indicator page ('If a X can be seen, Optional Content is not handled right'). Its cells are optional-content views rather than a fixed swatch grid. Not mapped yet; tracked by #1523."
+    },
+    {
+      "Name": "GWG181_16Bit_DeviceCMYK_x4.pdf",
+      "Reason": "X-indicator page ('No X must be visible when rendered correctly') built from a reference 8-bit cross image over a 16-bit test image, so the cell is the whole image area rather than a grid. Not mapped yet; tracked by #1523."
+    },
+    {
+      "Name": "GWG184_16Bit_Images_ICCbasedCMYK_x4.pdf",
+      "Reason": "Same shape as GWG181 -- reference-cross-over-test-image X indicator. Not mapped yet; tracked by #1523."
+    }
+  ]
+}
