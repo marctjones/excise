@@ -481,6 +481,7 @@ namespace Excise.App.Services
         public string StatusMessage { get; set; }
         public string TrustDetails { get; set; }
         public Excise.App.Services.SignatureTrustStatus TrustStatus { get; set; }
+        public int UnsignedTrailingContentBytes { get; set; }
     }
     public class SignatureVerificationService
     {
