@@ -146,6 +146,30 @@ expect() {
     fi
 }
 
+# An exit code cannot say WHICH rule fired, and seven rules share one exit
+# code. A case that only checks "exit 1" passes just as well when the wrong
+# violation fires — a number standing in for the property, which is the shape
+# of defect this whole gate exists to stop. So every case names its rule.
+fired()     { grep -qF "$1" "$CASE_DIR/out.log"; }
+assert_fired() {
+    if fired "$1"; then ok "  └ fired: $2"
+    else bad "  └ expected the '$2' rule to fire; it did not"
+         sed 's/^/        /' "$CASE_DIR/out.log" | tail -30 >&2; fi
+}
+assert_not_fired() {
+    if fired "$1"; then
+        bad "  └ the '$2' rule ALSO fired — one page must not read as two violations"
+        sed 's/^/        /' "$CASE_DIR/out.log" | tail -30 >&2
+    else ok "  └ did not fire: $2"; fi
+}
+
+R_DEPARTURE="departed from their pinned ExpectedRawStatus"
+R_NO_CONTRACT="scanned page(s) have no contract"
+R_UNPINNED="HAVE a contract but matched no expectation"
+R_NOT_SCANNED="contract page(s) were never scanned"
+R_SIDE_GAP="classified EXCISE_SIDE_GAP"
+R_ZERO_PAGES="0 pages were scanned"
+
 # ---------------------------------------------------------------------------
 # 1. The baseline. A clean scan must still pass, or every case below is
 #    meaningless: a gate that fails on everything is not a gate either.
@@ -154,6 +178,7 @@ setup_case clean
 write_contract "$CASE_DIR/contracts/one.json" "synthetic/one.pdf"
 write_raw "$CASE_DIR/raw.json" "$(entry synthetic/one.pdf 1 PASS)"
 classify --strict-contracts; expect 0 "clean scan passes" "$?"
+assert_not_fired "Rendering quality verdict: FAIL" "any violation"
 
 # ---------------------------------------------------------------------------
 # 2. THE bug. A page pinned PASS comes back DIFF. This exited 0 before #1519
@@ -163,10 +188,11 @@ setup_case departure
 write_contract "$CASE_DIR/contracts/one.json" "synthetic/one.pdf"
 write_raw "$CASE_DIR/raw.json" "$(entry synthetic/one.pdf 1 DIFF)"
 classify --strict-contracts; expect 1 "planted expectation departure fails" "$?"
+assert_fired "$R_DEPARTURE" "expectation departure"
 if grep -q "synthetic/one.pdf#p1" "$CASE_DIR/out.log"; then
-    ok "the failure NAMES the offending page"
+    ok "  └ the failure NAMES the offending page"
 else
-    bad "the failure did not name the page — a bare count on a 2h28m row is a red people accept"
+    bad "  └ the failure did not name the page — a bare count on a 2h28m row is a red people accept"
 fi
 
 # ---------------------------------------------------------------------------
@@ -177,6 +203,8 @@ setup_case departure-unarmed
 write_contract "$CASE_DIR/contracts/one.json" "synthetic/one.pdf"
 write_raw "$CASE_DIR/raw.json" "$(entry synthetic/one.pdf 1 DIFF)"
 classify; expect 0 "the same departure is not gated without --strict-contracts" "$?"
+assert_fired "NOT GATED" "the not-gated notice"
+assert_not_fired "$R_DEPARTURE" "expectation departure"
 
 # ---------------------------------------------------------------------------
 # 4. A scanned page nobody pinned. It cannot depart from anything, so it is
@@ -187,6 +215,13 @@ write_contract "$CASE_DIR/contracts/one.json" "synthetic/one.pdf"
 write_raw "$CASE_DIR/raw.json" \
     "$(entry synthetic/one.pdf 1 PASS)" "$(entry synthetic/extra.pdf 1 PASS)"
 classify --strict-contracts; expect 1 "a scanned page with no contract fails" "$?"
+assert_fired "$R_NO_CONTRACT" "scanned page with no contract"
+assert_not_fired "$R_UNPINNED" "unpinned (a page with no contract has no expectation either)"
+if grep -q "synthetic/extra.pdf#p1" "$CASE_DIR/out.log"; then
+    ok "  └ names the uncontracted page"
+else
+    bad "  └ did not name the uncontracted page"
+fi
 
 # ---------------------------------------------------------------------------
 # 5. Coverage — a pinned page that was never scanned. #1527's lesson: the
@@ -198,6 +233,13 @@ write_contract "$CASE_DIR/contracts/one.json" "synthetic/one.pdf"
 write_contract "$CASE_DIR/contracts/two.json" "synthetic/two.pdf"
 write_raw "$CASE_DIR/raw.json" "$(entry synthetic/one.pdf 1 PASS)"
 classify --strict-contracts; expect 1 "a contract page that was never scanned fails" "$?"
+assert_fired "$R_NOT_SCANNED" "contract page never scanned"
+assert_not_fired "$R_DEPARTURE" "expectation departure (the page that DID run matched)"
+if grep -q "synthetic/two.pdf#p1" "$CASE_DIR/out.log"; then
+    ok "  └ names the unscanned page"
+else
+    bad "  └ did not name the unscanned page"
+fi
 
 # ---------------------------------------------------------------------------
 # 6. A scan of nothing is not a passing scan.
@@ -206,6 +248,7 @@ setup_case empty
 write_contract "$CASE_DIR/contracts/one.json" "synthetic/one.pdf"
 write_raw "$CASE_DIR/raw.json"
 classify --strict-contracts; expect 1 "zero scanned pages fails" "$?"
+assert_fired "$R_ZERO_PAGES" "zero pages scanned"
 
 # ---------------------------------------------------------------------------
 # 7. EXCISE_SIDE_GAP — an oracle rendered a page excise refused. The one class
@@ -216,6 +259,8 @@ setup_case pinned-gap
 write_contract "$CASE_DIR/contracts/one.json" "synthetic/one.pdf" "EXCISE_SIDE_GAP"
 write_raw "$CASE_DIR/raw.json" "$(entry synthetic/one.pdf 1 EXCISE_SIDE_GAP)"
 classify --strict-contracts; expect 1 "an EXCISE_SIDE_GAP fails even when the contract pins it" "$?"
+assert_fired "$R_SIDE_GAP" "excise-side gap"
+assert_not_fired "$R_DEPARTURE" "expectation departure (the pin MATCHES; only the gap rule may fire)"
 
 # ---------------------------------------------------------------------------
 # 8. The measurement behind the rule: a pinned QualityStatus OVERWRITES the
@@ -231,8 +276,15 @@ classify --strict-contracts
 if python3 - "$CASE_DIR/quality.json" <<'PY'
 import json, sys
 d = json.load(open(sys.argv[1]))
-assert len(d["failures"]) == 0, f"expected failures to be masked by the pin, got {len(d['failures'])}"
-assert d["summary"]["expectationFailurePages"] == 1, d["summary"]["expectationFailurePages"]
+# Identity, not counts: name the pages on both sides. A count assertion here
+# would pass for the wrong page, and a count standing in for the property is
+# the exact defect shape this gate exists to stop.
+masked = [f"{e['path']}#p{e['pageNumber']}" for e in d["failures"]]
+assert masked == [], f"the pin should have masked report.failures; it names {masked}"
+surviving = [f"{e['path']}#p{e['pageNumber']}" for e in d["expectationFailures"]]
+assert surviving == ["synthetic/one.pdf#p1"], f"expected the departing page by name, got {surviving}"
+pinned = d["entries"][0]["qualityStatus"]
+assert pinned == "PIXEL_EXACT", f"expected the contract's pin to have overwritten the inferred FAIL, got {pinned}"
 PY
 then
     ok "a pinned QualityStatus masks report.failures; the expectation term is what survives"
