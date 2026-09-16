@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Excise.App.Services;
@@ -58,6 +59,13 @@ internal sealed class AppPerfScenarioTarget : IPerfScenarioTarget
 
     public async Task OpenAsync(string path, CancellationToken cancellationToken)
     {
+        // Fail loudly on a missing fixture. A scenario that silently fails to
+        // open still emits a full row of plausible-looking numbers, which is
+        // worse than no row at all; the runner turns this into a reported step
+        // failure naming the path it tried.
+        if (!File.Exists(path))
+            throw new FileNotFoundException($"scenario document not found: {path}", path);
+
         // LoadDocumentCommand is the scripting load path: awaitable, no dialog,
         // and it carries its own timeout (LoadDocumentTimeoutSeconds).
         await _viewModel.LoadDocumentCommand(path).ConfigureAwait(true);

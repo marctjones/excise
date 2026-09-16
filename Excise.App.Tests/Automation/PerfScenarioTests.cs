@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Excise.App.Automation;
-using FluentAssertions;
+using AwesomeAssertions;
 using Xunit;
 
 namespace Excise.App.Tests.Automation;
@@ -121,38 +121,38 @@ public class PerfScenarioTests
 
     [Fact]
     public void Parse_WrongSchemaVersion_Throws() =>
-        FluentActions.Invoking(() => PerfScenarioFile.Parse(
+        Throwing(() => PerfScenarioFile.Parse(
                 """{"schemaVersion": 99, "scenarios": []}"""))
             .Should().Throw<InvalidOperationException>().WithMessage("*schemaVersion*");
 
     [Fact]
     public void Parse_NoScenarios_Throws() =>
-        FluentActions.Invoking(() => PerfScenarioFile.Parse(
+        Throwing(() => PerfScenarioFile.Parse(
                 """{"schemaVersion": 1, "scenarios": []}"""))
             .Should().Throw<InvalidOperationException>();
 
     [Fact]
     public void Parse_ScenarioWithNoSteps_Throws() =>
-        FluentActions.Invoking(() => PerfScenarioFile.Parse(
+        Throwing(() => PerfScenarioFile.Parse(
                 """{"schemaVersion":1,"scenarios":[{"id":"a","why":"w","steps":[]}]}"""))
             .Should().Throw<InvalidOperationException>().WithMessage("*no steps*");
 
     [Fact]
     public void Parse_MissingWhy_Throws() =>
-        FluentActions.Invoking(() => PerfScenarioFile.Parse(
+        Throwing(() => PerfScenarioFile.Parse(
                 """{"schemaVersion":1,"scenarios":[{"id":"a","steps":[{"op":"mark"}]}]}"""))
             .Should().Throw<InvalidOperationException>();
 
     [Fact]
     public void Parse_UnknownOp_ThrowsAndListsTheKnownOnes() =>
-        FluentActions.Invoking(() => PerfScenarioFile.Parse(
+        Throwing(() => PerfScenarioFile.Parse(
                 """{"schemaVersion":1,"scenarios":[{"id":"a","why":"w","steps":[{"op":"teleport"}]}]}"""))
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("*teleport*").And.Message.Should().Contain("scrollpages");
+            .WithMessage("*teleport*").Which.Message.Should().Contain("scrollpages");
 
     [Fact]
     public void Parse_DuplicateScenarioId_Throws() =>
-        FluentActions.Invoking(() => PerfScenarioFile.Parse(
+        Throwing(() => PerfScenarioFile.Parse(
                 """
                 {"schemaVersion":1,"scenarios":[
                   {"id":"a","why":"w","steps":[{"op":"mark"}]},
@@ -173,7 +173,7 @@ public class PerfScenarioTests
     [InlineData("""{"op":"redactText"}""", "text")]
     [InlineData("""{"op":"trim"}""", "background|warn|critical")]
     public void Parse_StepMissingItsRequiredArgument_ThrowsAtParseTime(string step, string expected) =>
-        FluentActions.Invoking(() => PerfScenarioFile.Parse(
+        Throwing(() => PerfScenarioFile.Parse(
                 $$"""{"schemaVersion":1,"scenarios":[{"id":"a","why":"w","steps":[{{step}}]}]}"""))
             .Should().Throw<InvalidOperationException>().WithMessage($"*{expected}*");
 
@@ -184,9 +184,9 @@ public class PerfScenarioTests
             """{"schemaVersion":1,"scenarios":[{"id":"real","why":"w","steps":[{"op":"mark"}]}]}""");
 
         // A name that matches nothing is a TYPO, not "run everything".
-        FluentActions.Invoking(() => PerfScenarioFile.Select(scenarios, "typo"))
+        Throwing(() => PerfScenarioFile.Select(scenarios, "typo"))
             .Should().Throw<InvalidOperationException>()
-            .WithMessage("*typo*").And.Message.Should().Contain("real");
+            .WithMessage("*typo*").Which.Message.Should().Contain("real");
     }
 
     // ------------------------------------------------------------- inertness
@@ -317,6 +317,27 @@ public class PerfScenarioTests
         records.First().GetProperty("step").GetString().Should().Be("baseline");
         records.Select(r => r.GetProperty("step").GetString())
             .Should().Equal("baseline", "pre-open", "open", "waitidle", "scrollpages", "trim", "close");
+    }
+
+    [Fact]
+    public async Task Runner_ResolvesDocumentsAgainstTheRepo_NotTheProcessWorkingDirectory()
+    {
+        var target = new FakeTarget();
+        var scenario = PerfScenarioFile.Parse(
+            """
+            {"schemaVersion":1,"scenarios":[{"id":"s","why":"w","steps":[
+              {"op":"open","document":"test-pdfs/smoke/irs-w9.pdf"}]}]}
+            """)[0];
+
+        await RunAsync(target, scenario);
+
+        // The scenario writes a repo-relative path. It must NOT depend on the
+        // launcher having cd'd to the repo root first: a scenario that silently
+        // fails to open still emits a full row of plausible numbers.
+        target.OpenedPaths.Should().ContainSingle();
+        Path.IsPathRooted(target.OpenedPaths[0]).Should().BeTrue(
+            "the runner resolves documents against the scenario file's repository, "
+            + "so the measurement does not depend on the process working directory");
     }
 
     [Fact]
@@ -452,6 +473,14 @@ public class PerfScenarioTests
         catch (IOException) { }
     }
 
+
+    /// <summary>
+    /// Wrap a call so it can be asserted on. `Action act = () =&gt; ...` is the
+    /// convention elsewhere in this suite; this keeps the one-line expression
+    /// bodies readable without inventing a new idiom.
+    /// </summary>
+    private static Action Throwing(Action action) => action;
+
     private static string? TryFindRepoFile(params string[] relativeParts)
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
@@ -482,9 +511,16 @@ public class PerfScenarioTests
 
         internal bool CloseHangs { get; init; }
 
+        /// <summary>Every path the runner handed to <see cref="OpenAsync"/>, verbatim.</summary>
+        internal List<string> OpenedPaths { get; } = new();
+
         public Task OpenAsync(string path, CancellationToken cancellationToken)
         {
-            Calls.Add("open:" + path);
+            OpenedPaths.Add(path);
+            // Record the basename: the runner resolves documents to absolute
+            // paths, which is asserted separately rather than baked into every
+            // sequencing expectation.
+            Calls.Add("open:" + Path.GetFileName(path));
             if (OpenThrows) throw new InvalidOperationException("boom");
             return Task.CompletedTask;
         }

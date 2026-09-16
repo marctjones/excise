@@ -209,10 +209,11 @@ internal static class PerfScenarioRunner
                 return null;
 
             case PerfStepOp.Open:
-                var document = options.ResolveDocument(step.Document!);
-                if (!File.Exists(document))
-                    return $"document not found: {document}";
-                await target.OpenAsync(document, cancellationToken).ConfigureAwait(true);
+                // Resolve here (configuration), but let the TARGET decide whether
+                // the file exists (filesystem). Keeping the runner off the disk is
+                // what lets the whole step sequence be tested without fixtures.
+                await target.OpenAsync(options.ResolveDocument(step.Document!), cancellationToken)
+                    .ConfigureAwait(true);
                 return null;
 
             case PerfStepOp.Close:
