@@ -1,0 +1,425 @@
+{
+  "schemaVersion": 1,
+  "_comment": [
+    "Live GUI performance scenarios (#1497), from the #1483 runbook.",
+    "Each is driven IN PROCESS by Excise.App/Automation/PerfScenarioRunner.cs and",
+    "sampled from outside by scripts/run-gui-perf-scenarios.sh.",
+    "",
+    "Every scenario carries a 'why'. A scenario nobody can explain is a scenario",
+    "nobody will maintain, and the same rule already applies to",
+    "tests/reference-performance/fixtures.json.",
+    "",
+    "The first step of every scenario is a mark, and the runner writes its own",
+    "baseline boundary before that: 'after close' needs a floor to come back",
+    "down TO, and without one #1461's headline defect is unmeasurable.",
+    "",
+    "NOTE: no scenario closes a MUTATED document. The close path calls",
+    "ConfirmDiscardUnsavedChangesAsync, which shows a modal dialog when the",
+    "document is dirty, and nobody is there to answer it. The runner's per-step",
+    "timeout turns that into a reported failure rather than a wedged run, but a",
+    "scenario should not walk into it deliberately.",
+    "",
+    "Every scenario that opens a document PINS its view mode right after the",
+    "open. The mode persists in window.json, so without this an unattended run",
+    "inherits whatever was last used interactively - and in single-page mode",
+    "TryScrollViewportBy scrolls within ONE page, so an 'altona-scroll' run",
+    "would measure nothing like #1461 while still producing a full row of",
+    "plausible numbers."
+  ],
+  "scenarios": [
+    {
+      "id": "null",
+      "why": "CALIBRATION BASELINE. Launch, settle, idle, quit, with no document ever opened. Subtracted from every other scenario, and compared against a plain launch with the runner switched off to price the runner itself.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "launched"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-launch"
+        },
+        {
+          "op": "idle",
+          "label": "idle-10s",
+          "seconds": 10
+        }
+      ]
+    },
+    {
+      "id": "w9-launch-idle",
+      "why": "The fixed floor: a one-page form with nothing heavy in it. #1496 measured 336 MB footprint / 120 MB committed heap here, and every other number in the family is read against it.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-w9",
+          "document": "test-pdfs/smoke/irs-w9.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "idle",
+          "label": "idle-20s",
+          "seconds": 20
+        }
+      ]
+    },
+    {
+      "id": "irs-page30",
+      "why": "#1469: ~650-710 MB after opening a 4 MB text-only document with zero image XObjects. Paging 30 pages is the same interaction the 09-11..09-14 hand-driven readings used (1104 -> 838 -> 720 MB footprint), so this scenario is what makes those comparable.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-irs",
+          "document": "test-pdfs/smoke/irs-1040-instructions.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-single",
+          "level": "single"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "pageBy",
+          "label": "page-30",
+          "count": 30
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-paging"
+        },
+        {
+          "op": "idle",
+          "label": "idle-20s",
+          "seconds": 20
+        }
+      ]
+    },
+    {
+      "id": "irs-zoom",
+      "why": "Zoom changes the render DPI, so it is the axis that multiplies tile bytes without touching page count. 25/100/500% brackets the range a reader actually uses.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-irs",
+          "document": "test-pdfs/smoke/irs-1040-instructions.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "zoom",
+          "label": "zoom-25",
+          "value": 0.25
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-zoom-25"
+        },
+        {
+          "op": "zoom",
+          "label": "zoom-100",
+          "value": 1.0
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-zoom-100"
+        },
+        {
+          "op": "zoom",
+          "label": "zoom-500",
+          "value": 5.0
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-zoom-500"
+        },
+        {
+          "op": "idle",
+          "label": "idle-10s",
+          "seconds": 10
+        }
+      ]
+    },
+    {
+      "id": "altona-scroll",
+      "why": "excise's worst measured metric against a native viewer: #1461 recorded 1440-2432 MB RSS after a full scroll against Preview's 446 MB on the same file. 122 MB, 17 pages, image-heavy.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-altona",
+          "document": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "scrollPages",
+          "label": "scroll-17",
+          "count": 17
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-scroll"
+        },
+        {
+          "op": "idle",
+          "label": "idle-20s",
+          "seconds": 20
+        }
+      ]
+    },
+    {
+      "id": "altona-close",
+      "why": "#1461's HEADLINE claim, stated as a measurement: does the footprint come back down? Close is the strictly stronger test than replace, because nothing legitimately stays resident afterwards. This is the scenario the whole harness exists for.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-altona",
+          "document": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "scrollPages",
+          "label": "scroll-17",
+          "count": 17
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-scroll"
+        },
+        {
+          "op": "close",
+          "label": "close-altona"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-close"
+        },
+        {
+          "op": "idle",
+          "label": "idle-30s",
+          "seconds": 30
+        }
+      ]
+    },
+    {
+      "id": "altona-replace-w9",
+      "why": "#1481: replacing a document runs ReleasedMemoryReclaimer (aggressive, blocking, compacting) and dropped footprint to 421 MB in 18 ms by hand. This is that path, repeatable.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-altona",
+          "document": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "scrollPages",
+          "label": "scroll-17",
+          "count": 17
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-scroll"
+        },
+        {
+          "op": "open",
+          "label": "replace-with-w9",
+          "document": "test-pdfs/smoke/irs-w9.pdf"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-replace"
+        },
+        {
+          "op": "idle",
+          "label": "idle-20s",
+          "seconds": 20
+        }
+      ]
+    },
+    {
+      "id": "soft-trim-cycle",
+      "why": "#1478 and #1496 together: trim at Warn then Critical on a scrolled Altona, then scroll back. The trim is requested IN PROCESS through ViewerCacheTrimCoordinator, which is what removes `sudo memory_pressure` (and therefore the human) from the loop. The scroll-back step is there because #1496's own risk list names re-inflation churn: freed samples decode again.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-altona",
+          "document": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "scrollPages",
+          "label": "scroll-17",
+          "count": 17
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-scroll"
+        },
+        {
+          "op": "trim",
+          "label": "trim-background",
+          "level": "background"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-background-trim"
+        },
+        {
+          "op": "trim",
+          "label": "trim-warn",
+          "level": "warn"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-warn-trim"
+        },
+        {
+          "op": "trim",
+          "label": "trim-critical",
+          "level": "critical"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-critical-trim"
+        },
+        {
+          "op": "scrollPages",
+          "label": "scroll-back-17",
+          "count": -17
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-scroll-back"
+        },
+        {
+          "op": "idle",
+          "label": "idle-20s",
+          "seconds": 20
+        }
+      ]
+    },
+    {
+      "id": "irs-search-redact",
+      "why": "The redaction path's live memory cost, which no headless harness measures with a real compositor attached. Deliberately does NOT close afterwards: a redacted document is dirty, and closing it would wait on the unsaved-changes dialog.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-irs",
+          "document": "test-pdfs/smoke/irs-1040-instructions.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "search",
+          "label": "search-income",
+          "text": "income"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-search"
+        },
+        {
+          "op": "redactText",
+          "label": "redact-income",
+          "text": "income"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-redact"
+        },
+        {
+          "op": "idle",
+          "label": "idle-20s",
+          "seconds": 20
+        }
+      ]
+    }
+  ]
+}

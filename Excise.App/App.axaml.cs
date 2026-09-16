@@ -126,6 +126,7 @@ public partial class App : Application
             // the real application only: headless tests build their windows
             // under TestApp, so no test installs a live OS pressure source.
             var (trimViewer, trimPolicy) = mainWindow.CacheTrimTarget();
+            ViewerCacheTrimCoordinator? scenarioCacheTrim = null;
             if (trimViewer != null)
             {
                 // #1481: the same reclaimer the view model uses for
@@ -133,6 +134,11 @@ public partial class App : Application
                 var cacheTrim = ViewerCacheTrimCoordinator.Attach(
                     mainWindow, trimViewer, trimPolicy, logger, vm.TrimThumbnailCaches,
                     _serviceProvider.GetRequiredService<ReleasedMemoryReclaimer>());
+                // #1497: the performance-scenario runner drives a trim in
+                // process instead of asking a human for `sudo memory_pressure`,
+                // so it needs the live coordinator — this local was previously
+                // unreachable from anywhere else.
+                scenarioCacheTrim = cacheTrim;
                 // Preferences → Performance changes soft trims live (#1478).
                 mainWindow.CacheTrimPolicyChanged += cacheTrim.UpdatePolicy;
                 mainWindow.Closed += (_, _) => cacheTrim.Dispose();
@@ -191,6 +197,27 @@ public partial class App : Application
                             DispatcherPriority.Background);
                     };
                 }
+            }
+
+            // #1497: the in-app performance-scenario runner. Deliberately wired
+            // OUTSIDE the `path != null` block above, unlike VisualTraceRunner:
+            // a scenario opens (and closes, and replaces) its own documents, and
+            // the calibration baseline is a launch with NO document at all — so
+            // gating it on a startup argument would make the null scenario and
+            // every open-from-scratch measurement impossible. A no-op unless
+            // EXCISE_PERF_SCENARIO names a scenario file.
+            if (Automation.PerfScenarioOptions.IsRequested)
+            {
+                logger.LogInformation("Performance scenario requested; running after startup");
+                var trimForScenario = scenarioCacheTrim;
+                desktop.Startup += (_, _) =>
+                {
+                    DispatcherTimer.RunOnce(
+                        () => _ = Automation.PerfScenarioHost.RunAsync(
+                            desktop.MainWindow!, vm, trimForScenario, trimPolicy, logger),
+                        TimeSpan.FromMilliseconds(1200),
+                        DispatcherPriority.Background);
+                };
             }
 
             if (pendingActivationPath != null)

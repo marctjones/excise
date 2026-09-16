@@ -57,6 +57,19 @@ internal static class AppMetrics
         "excise.app.heap_reclaim.heap_size", "By",
         "GC.GetTotalMemory around that collection, tagged by trigger and phase (before, after) (#1481).");
 
+    internal static readonly Histogram<double> ScenarioStepDuration = Meter.CreateHistogram<double>(
+        "excise.app.perf_scenario.step.duration", "ms",
+        "Wall time of one in-app performance-scenario step, tagged by scenario, step and op (#1497). " +
+        "Recorded only while EXCISE_PERF_SCENARIO names a scenario file; the marker's purpose is to " +
+        "segment the metrics JSONL by step, so band render times and cache bytes can be attributed to " +
+        "the interaction that caused them.");
+
+    internal static readonly Histogram<double> ScenarioSampleWindowDuration = Meter.CreateHistogram<double>(
+        "excise.app.perf_scenario.sample_window.duration", "ms",
+        "Wall time the scenario runner held still at a step boundary so the outer harness could take " +
+        "its footprint/vmmap samples off a quiescent process (#1497). Reported separately and never " +
+        "charged to the step it follows — the harness's own cost has to be visible, not hidden in a step.");
+
     private static WeakReference<DocumentTextIndex>? _textIndex;
 
     private static readonly object ThumbnailGate = new();
@@ -99,6 +112,34 @@ internal static class AppMetrics
         CacheTrimRequests.Add(1,
             new KeyValuePair<string, object?>("trigger", triggerTag),
             new KeyValuePair<string, object?>("level", levelTag));
+    }
+
+    /// <summary>
+    /// Mark a performance-scenario step boundary in the metrics JSONL (#1497).
+    /// </summary>
+    /// <remarks>
+    /// A <c>Histogram.Record</c> invokes the <c>MeterListener</c> callback
+    /// synchronously on the calling thread, so the line is written and flushed
+    /// at the boundary rather than on the sink's next interval tick. That is
+    /// what makes the marker usable as a segmentation point for the
+    /// <c>measurement</c> lines around it.
+    /// </remarks>
+    internal static void RecordScenarioStep(string scenario, string step, string op, double wallMs)
+    {
+        if (!ScenarioStepDuration.Enabled) return;
+        ScenarioStepDuration.Record(wallMs,
+            new KeyValuePair<string, object?>("scenario", scenario),
+            new KeyValuePair<string, object?>("step", step),
+            new KeyValuePair<string, object?>("op", op));
+    }
+
+    /// <summary>Mark how long a boundary held still for the outer sampler (#1497).</summary>
+    internal static void RecordScenarioSampleWindow(string scenario, string step, double wallMs)
+    {
+        if (!ScenarioSampleWindowDuration.Enabled) return;
+        ScenarioSampleWindowDuration.Record(wallMs,
+            new KeyValuePair<string, object?>("scenario", scenario),
+            new KeyValuePair<string, object?>("step", step));
     }
 
     internal static void RecordHeapReclaim(

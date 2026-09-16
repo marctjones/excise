@@ -222,6 +222,41 @@ internal sealed class ViewerCacheTrimCoordinator : IDisposable
     internal void PostPressure(MemoryPressureLevel level) =>
         Dispatcher.UIThread.Post(() => OnPressure(level));
 
+    /// <summary>
+    /// UI thread. Like <see cref="OnPressure"/>, but says whether the request
+    /// was actually made (#1497).
+    /// </summary>
+    /// <remarks>
+    /// The in-app performance scenario runner uses this instead of
+    /// <c>sudo memory_pressure</c>. <see cref="OnPressure"/> drops a request
+    /// silently when the user's Preferences → Performance policy has pressure
+    /// trims switched off, and a measurement harness that cannot tell "trimmed"
+    /// from "silently did nothing" would report a trim step that never
+    /// happened. Behaviour is otherwise identical — no policy is bypassed;
+    /// the refusal is reported instead of swallowed.
+    /// </remarks>
+    internal bool TryRequestPressure(MemoryPressureLevel level)
+    {
+        if (_disposed || !_policy.OnMemoryPressure || level == MemoryPressureLevel.Normal)
+            return false;
+
+        OnPressure(level);
+        return true;
+    }
+
+    /// <summary>
+    /// UI thread. Request a background-level soft trim and say whether the
+    /// policy allowed it (#1497) — the #1478/#1496 soft-trim path.
+    /// </summary>
+    internal bool TryRequestBackgroundTrim()
+    {
+        if (_disposed || !_policy.SoftTriggers)
+            return false;
+
+        Request(CacheTrimTrigger.Idle, PdfViewerCacheTrimLevel.Background);
+        return true;
+    }
+
     private void SoftTrim(CacheTrimTrigger trigger)
     {
         if (_disposed)

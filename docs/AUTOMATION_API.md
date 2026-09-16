@@ -279,6 +279,66 @@ CPU and allocation rate. dotnet-counters attaches over EventPipe, and a Native
 AOT publish omits EventSource support unless it is built with
 `-p:EventSourceSupport=true`. On the AOT lane, use the JSONL file instead.
 
+## In-app performance scenarios (#1497)
+
+The GUI can drive a scripted interaction sequence against itself and quit,
+so a live memory or CPU measurement needs nobody sitting in front of the app.
+
+```bash
+scripts/run-gui-perf-scenarios.sh --scenario altona-close --repeats 5
+scripts/run-gui-perf-scenarios.sh --calibrate     # measure this machine's noise floor first
+scripts/run-gui-perf-scenarios.sh --list          # the plan, runs nothing
+```
+
+Scenarios are declared in `tests/gui-perf-scenarios.json`
+(`schemaVersion` 1; each carries an `id`, a mandatory `why`, and a list of
+`steps`). Steps drive the view model and the viewer's public APIs — never
+synthetic input and never accessibility, because an accessibility
+`entire contents` query pegs the app at ~96% CPU and would perturb the numbers
+being taken.
+
+Environment variables, all read only by the outer harness's launch:
+
+| Variable | Meaning |
+| --- | --- |
+| `EXCISE_PERF_SCENARIO` | path to the scenario file; **presence alone enables the runner** |
+| `EXCISE_PERF_SCENARIO_ID` | which scenario to run; an id that matches nothing is an error, not "run everything" |
+| `EXCISE_PERF_SCENARIO_OUT` | output directory for `steps.jsonl`, `scenario-result.json` and the step-boundary handshake files |
+| `EXCISE_PERF_SCENARIO_REPEAT` | repeat number, recorded in every journal row |
+| `EXCISE_PERF_SCENARIO_SAMPLE_MS` | how long a step boundary waits for the outer sampler (default 20000) |
+
+Two instruments are added to the `Excise.App` meter, so the markers land in the
+same JSONL as everything else and segment it by step:
+`excise.app.perf_scenario.step.duration` (tags `scenario`, `step`, `op`) and
+`excise.app.perf_scenario.sample_window.duration` (tags `scenario`, `step`).
+The sample-window instrument is reported separately and never charged to the
+step it follows: the harness's own cost has to be visible rather than hidden
+inside a measurement.
+
+At every step boundary the runner writes a journal row, publishes
+`step.marker`, and waits for `step.ack` before continuing. That handshake
+exists because `vmmap` suspends the process it inspects — a sampler polling on
+a timer would sometimes land mid-scroll and silently corrupt that step's render
+timings. The wait is bounded, so a run with no harness attached simply times
+out at each boundary and records that the boundary has no outer sample.
+
+**Security posture.** This is not an exception to the Security Boundary above.
+The runner starts no listener and opens no port; it reads one local file whose
+path the user supplied through the environment, performs the steps in it, and
+quits. Without `EXCISE_PERF_SCENARIO` the code is inert — the same posture as
+`EXCISE_VISUAL_TRACE_OUT`.
+
+**What the output supports, and what it does not.** The harness reports every
+number beside a floor of
+`max(noise spread, runner overhead, sampler overhead)`, and prints a delta at
+or below that floor as `BELOW-FLOOR` rather than as an improvement. A run with
+no calibration reports the floor as `UNKNOWN`, never as zero. It cannot tell
+you whether scrolling *feels* smooth (that stays human; band render p50/p99 and
+blank tiles are proxies), and driving through the view model is not a user's
+input path — it skips input dispatch and hit testing, and the driving-fidelity
+calibration bounds that residual rather than removing it. There is no gate on
+these numbers: they are absolute footprint on one machine under one load.
+
 ## Platform Examples
 
 - macOS AppleScript:
