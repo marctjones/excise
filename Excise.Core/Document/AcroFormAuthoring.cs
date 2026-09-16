@@ -228,8 +228,14 @@ public static class AcroFormAuthoring
         widget.SetString("T", fieldName);
         SetTooltip(widget, tooltip);
         // An unsigned placeholder still needs an appearance: PDF/A requires one
-        // on every widget with a non-empty /Rect (ISO 19005-2 6.3.3).
-        WriteEmptyAppearance(document, widget, rect);
+        // on every widget with a NON-EMPTY /Rect (ISO 19005-2 6.3.3) — and only
+        // then. A zero-size /Rect is the invisible-signature default that
+        // SignatureApplicationService.FindOrCreateSignatureField authors, and
+        // #623 keeps such a signature valid and appearance-LESS; writing a 0x0
+        // form XObject there both breaks that and gives the viewer nothing to
+        // draw.
+        if (Math.Abs(rect.Width) > 0 && Math.Abs(rect.Height) > 0)
+            WriteEmptyAppearance(document, widget, rect);
         return AttachWidget(document, pageNumber, widget, fieldName);
     }
 
