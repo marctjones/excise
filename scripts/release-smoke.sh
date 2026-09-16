@@ -175,7 +175,8 @@ _opts=""
 [ -n "$ONLY" ]              && _opts="$_opts,$(printf '%s' "$ONLY" | tr 'A-Z' 'a-z')"
 RUNNER_OPTS="${_opts#,}"
 RUNNER_BUILD_ARGS=""
-BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-900000}"
+# BLAME_HANG_TIMEOUT default lives in lib-runner.sh (RUNNER_BLAME_HANG_DEFAULT, #1283):
+# a per-runner default here pre-empted it and made the library value dead code.
 export CONFIG LOG_DIR RUNNER_OPTS RUNNER_BUILD_ARGS BLAME_HANG_TIMEOUT
 runner_identify_tree "$CONFIG"
 if [ "$RESUME" = "1" ]; then
@@ -220,6 +221,10 @@ finish_gate() {
             say "  ${Y}NO RESULT${N} (GRADE, rc=$rc) -> $log" ;;
         FAIL_ZERO_TESTS)
             say "  ${R}FAIL${N} (${dur}s) — ZERO tests executed; a vacuous pass is a failure"
+            overall=1 ;;
+        FAIL_BOUND_EXCEEDED)
+            say "  ${R}BOUND EXCEEDED${N} (${dur}s) — killed by its wall-clock budget, NOT a test failure"
+            say "       worker state + managed stacks: $LOG_DIR/$name.bound-diagnostics.txt"
             overall=1 ;;
         *)
             say "  ${R}$status${N} rc=$rc (${dur}s) -> $log"

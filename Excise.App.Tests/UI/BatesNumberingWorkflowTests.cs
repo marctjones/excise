@@ -76,9 +76,23 @@ public class BatesNumberingWorkflowTests : IDisposable
             UseShellExecute = false,
         };
         using var process = Process.Start(psi)!;
-        var stdout = process.StandardOutput.ReadToEnd();
-        process.WaitForExit(30000);
-        return stdout;
+        // #925/#1516: drain both redirected pipes concurrently and bound the
+        // WAIT, not just the process. A synchronous ReadToEnd() here blocks
+        // forever if the pipe never reaches EOF (a surviving grandchild
+        // inherits the write handle — the #1068 mechanism), and it runs BEFORE
+        // WaitForExit, so the timeout below is unreachable. This body runs on
+        // the single Avalonia headless dispatcher thread, so one blocked read
+        // wedges every remaining Avalonia test in the process.
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(30000))
+        {
+            try { process.Kill(entireProcessTree: true); } catch { /* gone */ }
+            throw new TimeoutException(
+                "pdftotext did not exit within 30s; killed it rather than hanging the suite (#1516).");
+        }
+        _ = stderrTask.GetAwaiter().GetResult();
+        return stdoutTask.GetAwaiter().GetResult();
     }
 
     // ------------------------------------------------------------- dialog VM

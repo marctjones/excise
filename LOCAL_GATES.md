@@ -58,7 +58,7 @@ manifest, and runs nothing — including the CKPT and KNOWN-ISSUE columns, which
 are the live answer to "what is never checkpointed" and "what is accepted red
 today".
 
-Thirteen tab-separated columns; `-` is the mandatory empty-cell placeholder
+Fourteen tab-separated columns; `-` is the mandatory empty-cell placeholder
 (`read` strips an empty trailing field, which once turned an absent filter
 into a csproj path that matched zero tests and exited 0):
 
@@ -76,7 +76,52 @@ into a csproj path that matched zero tests and exited 0):
 | `prereqPolicy` | `fail` or `skip` — what a missing prerequisite (the column, or exit 77 from the gate) becomes. |
 | `checkpoint` | `ok` or `never` — may `--resume` skip this row. `never` today (the CKPT column of `--list` is the live list): the redaction family (`redaction-architecture`, `redaction-oracles`, `redaction-oracles-selftest`, `redaction-suites`), `extraction-parity`, `build` and `gui-coverage-reset`. The validator refuses `checkpoint=ok` on any name matching `RUNNER_NEVER_CHECKPOINT` (`redaction|true-redaction|glyph|extraction-parity`) unless the row is a GRADE — `redaction-bench` is that one exemption, because a bench guarantees nothing. |
 | `oracle` | `independent`, `spec`, `self`, `none` or `na` — who vouches for the verdict. |
+| `budget` | wall-clock seconds after which the row is KILLED, or `-` for unbounded. Only `test`/`project`/`project-chunked` rows may carry one (a `script` row is its own process tree). Derive it from measured `durationSeconds` in a ledger, say which runs in the `note`, and size it as roughly 2x the worst observed **clean** run **plus contention headroom** — the measured penalty on this machine was **+48%** (a loaded box ran an 913 s row in 1355 s), not the ~30% first guessed. Err generous: the bound exists to end an unbounded stall (#1283's was nine hours), not to police quiet-vs-loaded variance, and a false fire teaches people to disregard BOUND EXCEEDED — the only signal this gate has. **`-` is unbounded and is byte-for-byte the pre-#1283 behaviour**, so a row without a measurement stays as it was. See "The wall-clock bound" below. |
 | `note` | why this class and tier, and the measured cost with its date. Mandatory. |
+
+### The wall-clock bound (#1283)
+
+`--blame-hang-timeout` is **not** a bound. Measured 2026-09-16 by fault
+injection: when the xUnit v3 worker STALLS (alive, not progressing), blame's
+inactivity timer fires exactly on schedule, runs `createdump` on the *testhost
+relay* rather than the stalled worker, writes ~6 GB into `$TMPDIR`, and
+`dotnet test` keeps running — still alive at 6x the timeout in the
+reproduction, and for NINE HOURS in the real 2026-09-10 instance. Worker
+*death* is bounded correctly (xUnit reports "Test process crashed with exit
+code 137"); worker *stall* was not bounded at all.
+
+So a row's `budget` cell is the thing that actually ends the run.
+`scripts/run-bounded.sh` wraps the row, kills the whole **process group** (a
+`dotnet test` is a 5-process tree and the worker held 7.3 GB), and exits 124.
+That becomes the distinct status `FAIL_BOUND_EXCEEDED`, which the report prints
+as **BOUND EXCEEDED** and never treats as a test failure — nothing asserted
+anything, and the trx is absent or partial, so a `#N/Substring` qualifier is
+deliberately matched against the LOG and never against that trx.
+
+Before the kill it writes `$LOG_DIR/<row>.bound-diagnostics.txt`: the process
+tree, then **the worker's %CPU + state + cputime sampled twice** — cputime
+frozen means stalled or deadlocked, climbing means livelock or a slow test;
+that delta is the discriminator the 2026-09-10 record lacked — then
+`dotnet-stack report` for managed frames. A run directory holding one of those
+files is exempt from `clean-test-artifacts.sh --keep N`: it is the only
+artifact in the tree that records a hang, and the next run probably passes.
+
+`--blame-hang-timeout` defaults to **60 s**, down from 900 s. The default is
+`RUNNER_BLAME_HANG_DEFAULT` in `scripts/lib-runner.sh` and **only** there —
+until 2026-09-16 each of the three runners carried its own
+`${BLAME_HANG_TIMEOUT:-900000}` and exported it, so the library default could
+never win and the 60 s first claimed in `d1e21572` was dead code. Caught by
+reading a live run's generated command line, not by re-reading the edit; an
+isolated call to `runner_step_cmdline` with the variable unset shows the dead
+default as if it were live. The evidence for 60 s: across three healthy unfiltered `Excise.App.Tests` runs the worst
+inter-test gap was **1.8 s** over 4455 gaps, none above 10 s (trx
+`startTime`/`endTime`). That is a 33x margin, and faster detection means
+blame's Sequence file — which names the tests in flight, and is only written on
+the worker-death path — lands while the evidence is fresh. It remains a
+diagnostics improvement, not the remedy.
+
+`scripts/test-run-bounded.sh` (row `run-bounded-selftest`, t0) proves the
+mechanism can still fire: a bound that has never fired is not a bound.
 
 ### The four classes, and what each means for you
 
@@ -90,7 +135,7 @@ into a csproj path that matched zero tests and exited 0):
 ### Adding a gate
 
 1. Pick the tier by blast radius (above), not by how long the gate takes.
-2. Append one 13-column row. `note` says why this class and tier and the
+2. Append one 14-column row. `note` says why this class and tier and the
    measured cost with its date. A `script` row's script must be executable
    and must **exit 77** when a prerequisite is missing — and declare that
    prerequisite in `prereq` so the runner can skip the run entirely. An

@@ -98,6 +98,7 @@ scripts/report-hotspots.sh   # invoked at the end of run-full-suite
 scripts/report-save-size-ratios.sh   # measurement helper
 scripts/rescan-all-corpora.sh   # manual re-scan helper
 scripts/rescan-all-pages.sh   # manual re-scan helper
+scripts/run-bounded.sh   # wall-clock bound + worker diagnostics wrapped around a gate row by runner_step_cmdline; not a gate itself (#1283)
 scripts/run-conformance.sh   # dispatcher over conformance suites for humans; the gates it wraps are rows
 scripts/run-copy-unicode-quality-harness.sh   # convenience over tests already run by Excise.Core.Tests / Excise.Avalonia.Tests / app-tests-unchunked-evidence; its --parity lane IS row copy-whitespace-parity
 scripts/run-exploratory-corpus-tmux.sh   # tmux wrapper over the corpus-scan rows for humans

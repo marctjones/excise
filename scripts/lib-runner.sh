@@ -680,9 +680,29 @@ runner_reclaim() {
 # manifest could not describe. Chain semantics: t0 ⊂ t1 ⊂ full; t2 only when
 # listed. File order is execution order.
 RUNNER_EXIT_SKIP=77          # a gate's "prerequisite missing" — never 0. prereqPolicy decides what it means.
+RUNNER_EXIT_BOUND=124        # run-bounded.sh: the row exceeded its wall-clock budget (#1283). GNU timeout's code.
+
+# --blame-hang-timeout, in ms: how long NO test event may pass before blame
+# collects and kills. THE one source of truth -- until 2026-09-16 each of the
+# three runners carried its own `${BLAME_HANG_TIMEOUT:-900000}` and exported
+# it, so the library default below could never win and the 60000 claimed in
+# d1e21572 was dead code. Set it here; the runners only pass it through.
+#
+# 60s not 900s, on measurement: across three healthy unfiltered App.Tests runs
+# the worst gap between consecutive test events was 1.8s over 4455 gaps, none
+# above 10s (trx startTime/endTime, #1283 lane B). A 33x margin.
+#
+# This is DIAGNOSTICS, not the remedy. Measured 2026-09-16: on a STALLED
+# worker blame fires exactly on schedule, dumps the testhost RELAY instead of
+# the worker, and the run keeps going -- 6x past the timeout in the
+# reproduction, nine hours in the real 2026-09-10 incident. The `budget`
+# column and run-bounded.sh are what actually END a hung row. Do not remove
+# the bound on the grounds that blame exists.
+RUNNER_BLAME_HANG_DEFAULT=60000
+BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-$RUNNER_BLAME_HANG_DEFAULT}"
 RUNNER_ROOT="${RUNNER_ROOT:-$PWD}"
 RUNNER_MANIFEST="${RUNNER_MANIFEST:-$RUNNER_ROOT/tests/gates.tsv}"
-RUNNER_MANIFEST_HEADER=$'name\tclass\ttiers\tkind\ttarget\tfilter\tratchet\tknownIssue\tprereq\tprereqPolicy\tcheckpoint\toracle\tnote'
+RUNNER_MANIFEST_HEADER=$'name\tclass\ttiers\tkind\ttarget\tfilter\tratchet\tknownIssue\tprereq\tprereqPolicy\tcheckpoint\toracle\tbudget\tnote'
 RUNNER_TESTS_EXECUTED=""
 
 runner_manifest_fingerprint() { shasum -a 256 "$RUNNER_MANIFEST" | cut -c1-16; }
@@ -724,9 +744,9 @@ runner_manifest_plan() {
     /^#/ || /^[ \t]*$/ { next }
     !seen { seen = 1; if ($0 != hdr) bad("header must be exactly: " hdr); next }
     {
-        if (NF != 13) { bad("expected 13 columns, got " NF); next }
+        if (NF != 14) { bad("expected 14 columns, got " NF); next }
         name = $1; class = $2; tiers = $3; kind = $4; target = $5; filter = $6; ratchet = $7
-        known = $8; prereq = $9; policy = $10; ckpt = $11; oracle = $12; note = $13
+        known = $8; prereq = $9; policy = $10; ckpt = $11; oracle = $12; budget = $13; note = $14
         if (name !~ /^[A-Za-z0-9][A-Za-z0-9._-]*$/) bad("name must be a slug: " name)
         if (name in names) bad("duplicate name " name)
         names[name] = NR
@@ -737,6 +757,14 @@ runner_manifest_plan() {
         if (policy !~ /^(fail|skip)$/) bad("prereqPolicy " policy)
         if (ckpt !~ /^(ok|never)$/) bad("checkpoint " ckpt)
         if (oracle !~ /^(independent|spec|self|none|na)$/) bad("oracle " oracle)
+        # budget: wall-clock seconds, or - for unbounded (prior behaviour).
+        # Only rows the runner turns into a dotnet test can carry one; a
+        # script row is its own process tree and bounds itself (#1283).
+        # NOTE: no apostrophes or backticks in this awk program -- it is inside
+        # a single-quoted shell string and an apostrophe terminates it.
+        if (budget !~ /^(-|[1-9][0-9]*)$/) bad("budget must be seconds or '-': " budget)
+        if (budget != "-" && kind !~ /^(test|project|project-chunked)$/) bad("only dotnet-test rows carry a budget; " kind " rows bound themselves")
+        if (budget != "-" && budget + 0 < 60) bad("budget under 60s will false-fire; measured worst inter-test gap is 1.8s but startup is not free: " budget)
         if (note == "-" || note == "") bad("every row carries a note")
         if (kind == "fn" && tiers != "t2") bad("fn rows are release-smoke (t2) only")
         if (kind == "fn" && target !~ /^run_[a-z_]+_gate$/) bad("fn target must be a run_*_gate function")
@@ -858,20 +886,44 @@ runner_plan_expand_trx() {
 # project, so the collision this guards against cannot happen there, and
 # check-test-count.sh's --no-build freshness/consumer code expects the exact
 # $LOG_DIR/$name.trx path for those kinds.
+#
+# BOTH dotnet-test branches carry the wall-clock bound, not just `project`:
+# the row that was mid-flight while #1283 was being diagnosed was a `test` row
+# in --filter/--results-directory mode, and a stall there is just as unbounded.
+# A `budget` of `-` emits the UNWRAPPED command — byte-for-byte today's
+# behaviour, and not even an extra process in the tree (#1187).
+#
+# --blame-hang-timeout defaults to 60s, not the 900s it was until 2026-09-16.
+# Justification is measured, not taste: across three healthy unfiltered
+# App.Tests runs the WORST inter-test gap was 1.8s over 4455 gaps, with none
+# above 10s (trx startTime/endTime; #1283 lane B), so 60s is a 33x margin.
+# Faster detection matters because blame's Sequence file — which names the
+# tests in flight — is only written on the worker-DEATH path, and the sooner
+# it lands the fresher the evidence. It is NOT the thing that ends a stalled
+# run; run-bounded.sh is. Blame fires on time and the run hangs anyway.
 runner_step_cmdline() {
-    local name="$1" kind="$2" target="$3" filter="${4:--}" hang="${BLAME_HANG_TIMEOUT:-900000}"
+    local name="$1" kind="$2" target="$3" filter="${4:--}" hang="${BLAME_HANG_TIMEOUT:-$RUNNER_BLAME_HANG_DEFAULT}"
+    local budget bound=""
+    case "$kind" in
+        test|project|project-chunked)
+            budget="$(runner_manifest_field "$name" budget 2>/dev/null)"
+            case "${budget:--}" in
+                -|"") bound="" ;;
+                *) bound="$(printf 'scripts/run-bounded.sh %s "%s" "%s" ' "$budget" "$LOG_DIR" "$name")" ;;
+            esac ;;
+    esac
     case "$kind" in
         script|fn) printf '%s\n' "$target" ;;
         project|project-chunked)
-            printf 'dotnet test "%s" --no-build -c "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
-                "$target" "$CONFIG" "$hang" "$LOG_DIR" "$name" ;;
+            printf '%sdotnet test "%s" --no-build -c "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
+                "$bound" "$target" "$CONFIG" "$hang" "$LOG_DIR" "$name" ;;
         test)
             if [ "${target%.sln}" != "$target" ]; then
-                printf 'dotnet test "%s" --no-build -c "%s" --filter "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx" --results-directory "%s/%s"\n' \
-                    "$target" "$CONFIG" "$filter" "$hang" "$LOG_DIR" "$name"
+                printf '%sdotnet test "%s" --no-build -c "%s" --filter "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx" --results-directory "%s/%s"\n' \
+                    "$bound" "$target" "$CONFIG" "$filter" "$hang" "$LOG_DIR" "$name"
             else
-                printf 'dotnet test "%s" --no-build -c "%s" --filter "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
-                    "$target" "$CONFIG" "$filter" "$hang" "$LOG_DIR" "$name"
+                printf '%sdotnet test "%s" --no-build -c "%s" --filter "%s" --blame-hang-timeout %s --logger "console;verbosity=minimal" --logger "trx;LogFileName=%s/%s.trx"\n' \
+                    "$bound" "$target" "$CONFIG" "$filter" "$hang" "$LOG_DIR" "$name"
             fi ;;
     esac
 }
@@ -953,13 +1005,21 @@ runner_prereq_missing() {
 }
 
 # runner_step_status <kind> <class> <policy> <rc> <log> <cmdline>
-#   → PASS | FAIL | FAIL_ZERO_TESTS | SKIPPED | NO_RESULT
+#   → PASS | FAIL | FAIL_ZERO_TESTS | FAIL_BOUND_EXCEEDED | SKIPPED | NO_RESULT
 # Exit 77 is a gate saying "prerequisite missing"; prereqPolicy decides what
 # that means. A GRADE row's failure is NO_RESULT: it never sets a verdict.
 runner_step_status() {
     local kind="$1" class="$2" policy="$3" rc="$4" log="$5" cmdline="$6"
     if [ "$rc" = "$RUNNER_EXIT_SKIP" ]; then
         [ "$policy" = skip ] && echo SKIPPED || echo FAIL
+        return
+    fi
+    # A row killed by its own wall-clock bound is NOT a test failure, and must
+    # never be read as one: no test asserted anything, the trx is absent or
+    # partial, and the cause is upstream of the assertions (#1283). Distinct
+    # status so report-gates can say so and point at the diagnostics.
+    if [ "$rc" = "$RUNNER_EXIT_BOUND" ] && grep -q "BOUND EXCEEDED" "$log" 2>/dev/null; then
+        echo FAIL_BOUND_EXCEEDED
         return
     fi
     if [ "$rc" = "0" ]; then
