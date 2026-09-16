@@ -1,6 +1,6 @@
 {
   "$schema": "../schemas/artifact-set.schema.json",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "generator": "scripts/architecture_artifacts.py",
   "sourceRevision": "30a8fc0d295b67a8b155ba5188edcf52bba9c472",
   "revisionSemantics": "provenance-only; normalized content and hashes determine freshness",
@@ -16,12 +16,6 @@
       "format": "json",
       "schema": "architecture/schemas/topology.schema.json",
       "sha256": "78dbaf8314a88ba801b91e586b89c377461d7f8935e735c76f892465a91a2a42"
-    },
-    {
-      "path": "architecture/generated/change-coupling.json",
-      "format": "json",
-      "schema": "architecture/schemas/change-coupling.schema.json",
-      "sha256": "c7cb24a9def6a7afa7d779a2bce215708fa433beb7c53f881398940ed1c1016b"
     },
     {
       "path": "architecture/generated/architecture-conformance.json",
@@ -48,6 +42,14 @@
       "path": "architecture/generated/current-vs-target.dot",
       "format": "dot",
       "sha256": "76cb8d6badde7fb6fab55e1e7857d2b73f44ed88fab78eb757b5c40973d3bd9d"
+    }
+  ],
+  "historyArtifacts": [
+    {
+      "path": "architecture/generated/change-coupling.json",
+      "format": "json",
+      "schema": "architecture/schemas/change-coupling.schema.json",
+      "verification": "schema-and-scope; derived from git history, deliberately not hash-pinned"
     }
   ]
 }

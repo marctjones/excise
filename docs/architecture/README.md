@@ -56,15 +56,27 @@ second implementation-status list.
    records fixed-window shipping files that repeatedly change together; its
    roots come from the generated inventory rather than a second source list.
    [`artifact-set.json`](../../architecture/generated/artifact-set.json) hashes
-   the complete inventory/topology/coupling/conformance/diagram set so a mixed
-   or partial regeneration fails as one unit.
+   the STRUCTURAL set — inventory, topology, conformance and the diagrams — so a
+   mixed or partial regeneration fails as one unit. It records
+   [`change-coupling.json`](../../architecture/generated/change-coupling.json)
+   separately, under `historyArtifacts`, with no hash: that file derives from git
+   history rather than from the tree, so the commit that carries a regeneration
+   is itself a new commit in the window it describes, and pinning its bytes made
+   the gate demand a second regeneration commit after every merge (#1506). It is
+   verified instead by its schema and by agreement with the current shipping
+   scope, which still fails on a coupling report that predates a shipping-project
+   change. Coupling strength is reviewer evidence, not a contract the tree must
+   reproduce byte for byte.
    The large topology file is compact generated JSON; query it with `jq`
    instead of reviewing or editing it as prose.
 
 `sourceRevision` records the commit used as the generation base. It is
 provenance, not the freshness key: committing regenerated output necessarily
 changes `HEAD`. Checks therefore preserve that field while comparing all other
-normalized content, then verify exact artifact bytes through the set manifest.
+normalized content, then verify exact artifact bytes through the set manifest —
+for the structural artifacts. Preserving a revision FIELD cannot rescue an
+artifact whose whole CONTENT is a function of history, which is why
+`change-coupling.json` is verified by schema and scope instead (#1506).
 
 ## Authority matrix
 

@@ -7,29 +7,46 @@ namespace Excise.Rendering.Tests.Differential;
 
 /// <summary>
 /// #1381 — a FreeText annotation with no <c>/AP</c> must not become completely invisible.
+/// <b>Regression pins</b>: the defect below shipped fixed in <c>3ffc4e3e</c> (2026-09-09).
 ///
-/// <para><b>The defect.</b> <c>RenderFreeTextDefault</c> holds two deliberate, separately
+/// <para><b>The defect.</b> <c>RenderFreeTextDefault</c> held two deliberate, separately
 /// measured behaviours that were never measured together:</para>
 /// <list type="number">
 /// <item><c>/Border [0 0 0]</c> suppresses the border — correct, and measured on
 /// <c>bug1871353.pdf</c>, where forcing width 1 drew a box the file explicitly declined.</item>
-/// <item>A codepoint above U+00FF suppresses the text — correct in intent, and measured on
+/// <item>A codepoint above U+00FF suppressed the text — correct in intent, and measured on
 /// <c>freetext_no_appearance.pdf</c>, where drawing it produced a row of tofu that reads
 /// as "this document is corrupt" rather than "an annotation is here".</item>
 /// </list>
 ///
-/// <para>The guard's own comment claims "the box and border still draw". With
-/// <c>/Border [0 0 0]</c> they do not, and the annotation vanishes entirely — which is
-/// what <c>bug1865341.pdf#p1</c> does today: zero ink on a page whose only content is one
-/// FreeText carrying the Polish word <c>Załącznik</c>.</para>
+/// <para>The guard's own comment claimed "the box and border still draw". With
+/// <c>/Border [0 0 0]</c> they do not, so the annotation vanished entirely — which is what
+/// <c>bug1865341.pdf#p1</c> did: zero ink on a page whose only content is one FreeText
+/// carrying the Polish word <c>Załącznik</c>. <c>3ffc4e3e</c> made the guard a SCRIPT
+/// question (<c>RequiresComplexShaping</c>) instead of a code-point one, and stopped
+/// <c>RenderTextFieldValue</c> forcing the value through Latin-1 when it does not survive
+/// the round trip.</para>
 ///
-/// <para><b>These tests are skipped until #1381 is fixed.</b> They verify nothing in the
-/// meantime; that is stated plainly rather than papered over with an assertion of current
-/// behaviour, which would pin the defect in place. The allow-list entries in
-/// <c>tests/skip-allowlist/Excise.Rendering.Tests.txt</c> cite the issue.</para>
+/// <para><b>Why these were skipped, and why they no longer are</b> (#1503). Both carried
+/// <c>[Fact(Skip = "#1381 …")]</c>, and #1381 closed — so they satisfied #1172's gate
+/// (which requires that a reason EXISTS, not that it is still TRUE) while verifying
+/// nothing. An earlier revision of this comment also pointed at
+/// <c>tests/skip-allowlist/Excise.Rendering.Tests.txt</c>; #1172 deleted that directory.</para>
 ///
 /// <para>The bar is <b>mutool</b>, never excise's own prior output — a fixture excise
 /// grades itself against cannot see an error excise holds consistently.</para>
+///
+/// <para><b>Overlap, stated so it is not mistaken for independent corroboration.</b>
+/// <c>3ffc4e3e</c> shipped its own pin for the corpus page — the
+/// <c>pdfjs/bug1865341.pdf</c> row of <c>BlankPageRecoveryTests</c>, which holds excise
+/// inside 0.60–1.40 of the same-page-box oracle ink — and the policy row
+/// <c>freetext.non-latin1-contents-without-border</c> in
+/// <c>tests/annotation-synthesis-policy.json</c>. <see
+/// cref="Bug1865341_InksSomethingWhereMutoolDraws"/> is strictly weaker than that ratio
+/// pin and is kept as a cheap "did it vanish again" check.
+/// <see cref="FreeTextWithNonLatin1Contents_IsStillVisible"/> is the part nothing else
+/// covers: two synthetic fixtures differing by ONE character, which isolates the code
+/// point as the cause rather than anything else about the corpus page.</para>
 /// </summary>
 public class FreeTextNonLatin1VisibilityTests
 {
@@ -37,10 +54,21 @@ public class FreeTextNonLatin1VisibilityTests
 
     /// <summary>
     /// The isolated case. Two fixtures identical but for one character: an annotation
-    /// whose text is all Latin-1 draws; the same annotation with U+0142 draws nothing.
-    /// Measured 2026-09-06 at 150 dpi — 0.00354 ink vs 0.00000.
+    /// whose text is all Latin-1 draws; before <c>3ffc4e3e</c> the same annotation with
+    /// U+0142 drew nothing. Measured 2026-09-06 at 150 dpi, BEFORE the fix — 0.00354 ink
+    /// for "aécè" vs 0.00000 for "ałcè" (and 0.00328 for plain "abcd").
+    ///
+    /// <para>U+0142 is Latin Extended-A, which <c>RequiresComplexShaping</c> excludes, so
+    /// the fixture stays on the single-line <c>RenderTextFieldValue</c> path.</para>
+    ///
+    /// <para>⚠️ The two assertions fail for different reasons and must not be read as one.
+    /// <c>beyondInk &gt; 0</c> failing means the annotation vanished again — a live
+    /// rendering defect. The <c>BeApproximately</c> comparison failing while ink is
+    /// non-zero means the glyph drew but at a different weight than "aécè" (a <c>.notdef</c>
+    /// box, or a fallback face with different coverage), which is a calibration question
+    /// about this fixture pair, not a vanished annotation.</para>
     /// </summary>
-    [Fact(Skip = "#1381: a codepoint above U+00FF drops the whole FreeText when /Border is 0.")]
+    [Fact]
     public void FreeTextWithNonLatin1Contents_IsStillVisible()
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
@@ -59,11 +87,17 @@ public class FreeTextNonLatin1VisibilityTests
     }
 
     /// <summary>
-    /// The real-world page. Excise's own synthesis policy row
-    /// <c>freetext.without-color</c> says "draw"; today excise inks nothing while mutool
-    /// draws the word.
+    /// The real-world page. Excise's own synthesis policy rows
+    /// <c>freetext.without-color</c> and (since #1381)
+    /// <c>freetext.non-latin1-contents-without-border</c> both say "draw"; before
+    /// <c>3ffc4e3e</c> excise inked nothing while mutool drew the word. <c>3ffc4e3e</c>
+    /// measured 0 → 628 inked px at 150 dpi against mutool's 697.
+    ///
+    /// <para>Deliberately weaker than <c>BlankPageRecoveryTests</c>' 0.60–1.40 ratio pin on
+    /// the same fixture: this one only asks whether the annotation is still there at all,
+    /// and it asks mutool first so a fixture that stops testing the thing says so.</para>
     /// </summary>
-    [Fact(Skip = "#1381: bug1865341.pdf renders zero ink; see FreeTextWithNonLatin1Contents_IsStillVisible.")]
+    [Fact]
     public void Bug1865341_InksSomethingWhereMutoolDraws()
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,

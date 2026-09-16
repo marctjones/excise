@@ -390,7 +390,7 @@
         "architecture/generated/artifact-set.json"
       ],
       "gaps": [
-        "The coherent artifact gate now schema-validates and hash-binds inventory, topology, coupling, conformance, and diagrams, while coupling scope is derived from shipping inventory. All observed component edges are classified with no remaining Core direction/ownership exception; unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
+        "The coherent artifact gate schema-validates inventory, topology, coupling, conformance, and diagrams, and hash-binds all of them EXCEPT the history-derived change-coupling report, which #1506 moved to schema-and-scope verification because hash-pinning a file derived from git history made every merge need a second regeneration commit; coupling scope is still derived from shipping inventory, so a report that predates a shipping-project change still fails. All observed component edges are classified with no remaining Core direction/ownership exception; unresolved type edges remain confined to explicit non-shipping ownership gaps. XAML reports zero untyped first-party binding paths and zero unresolved typed member segments after #1305."
       ],
       "issueIds": [
         940,

@@ -42,8 +42,10 @@ The libraries are usable independently — embed `Excise.Core` if you only need 
 ### Reusable libraries (NuGet-packable)
 
 `Excise.Core`, `Excise.Rendering`, and `Excise.Avalonia` are packable as a dependency-light,
-pure-managed, MIT-licensed stack — a niche the .NET/Avalonia ecosystem largely lacks (the
-alternatives are native PDFium or commercial SDKs):
+MIT-licensed stack — a niche the .NET/Avalonia ecosystem largely lacks (the alternatives
+embed PDFium or are commercial SDKs). `Excise.Core` is managed code with no native
+dependency; `Excise.Rendering` and `Excise.Avalonia` are managed code over the SkiaSharp
+and HarfBuzz native libraries (both MIT, restored by NuGet), and embed no PDF engine:
 
 - **`Excise.Avalonia`** — `<pdf:PdfViewerControl Document="…" CurrentPage="…" ZoomLevel="…" />`.
   Depends only on `Excise.Core` + `Excise.Rendering` + Avalonia + SkiaSharp. See
@@ -261,7 +263,7 @@ dotnet restore
 dotnet run --project Excise.App
 ```
 
-`dotnet 10.0` SDK required. No additional native dependencies — the renderer is pure SkiaSharp, the OCR auditor shells out to the system `tesseract` binary if installed (skipped gracefully if not).
+`dotnet 10.0` SDK required. Nothing extra to install — the renderer's native libraries (SkiaSharp and HarfBuzz, both MIT) come down with `dotnet restore`, and the OCR auditor shells out to the system `tesseract` binary if installed (skipped gracefully if not).
 
 ## Usage
 
