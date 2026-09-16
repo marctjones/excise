@@ -144,8 +144,16 @@
     <!-- Supporting libraries. BouncyCastle.Cryptography is the official
          continuation of the C# port — Portable.BouncyCastle has been
          unmaintained since 2020. Same Org.BouncyCastle.* namespaces, so
-         this is a drop-in replacement. -->
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
+         this is a drop-in replacement.
+
+         2.7.0 tightened CmsSignedData's byte[] constructors: they now route
+         through Asn1Object.FromByteArray, which throws "extra data found after
+         object" on trailing bytes, where 2.6.2 read the first ASN.1 object and
+         ignored the rest. A PDF signature's /Contents is a zero-padded
+         fixed-width placeholder, so the CMS object must be sized exactly before
+         it reaches BouncyCastle — SignatureContentsReader does that with an
+         ASN.1 reader. See #1494; do NOT pin back to 2.6.2. -->
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
     <PackageReference Include="SkiaSharp" Version="3.119.4" /> <!-- MIT License -->
 
     <!-- MVVM and Utilities. ReactiveUI on the 23.2.x line; the Avalonia

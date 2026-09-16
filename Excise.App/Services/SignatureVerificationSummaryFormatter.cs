@@ -40,6 +40,17 @@ public sealed class SignatureVerificationSummaryFormatter
                 summary.AppendLine($"Details: {Safe(result.StatusMessage)}");
             }
 
+            if (result.UnsignedTrailingContentBytes > 0)
+            {
+                // #1494: ISO 32000-2 12.8.3.3.1 requires /Contents to be zero-padded.
+                // Anything else sits inside the signature field, authenticated by neither
+                // the ByteRange digest nor the CMS object — a place to carry data that a
+                // "valid signature" verdict says nothing about.
+                summary.AppendLine(
+                    $"  ⚠ {result.UnsignedTrailingContentBytes} bytes of non-zero data follow the " +
+                    "signature object inside /Contents. They are not covered by the signature.");
+            }
+
             summary.AppendLine($"ByteRange structure: {FormatByteRangeStructureStatus(result)}");
             summary.AppendLine($"Signed byte-range digest: {FormatByteRangeDigestStatus(result)}");
             summary.AppendLine($"Covers whole document: {(result.CoversWholeDocument ? "yes" : "no")}");

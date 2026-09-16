@@ -516,7 +516,11 @@ public class SignatureVerificationServiceTests
             results[0].ByteRangeStructureValid.Should().BeTrue();
             results[0].ByteRangeIntegrityChecked.Should().BeFalse();
             results[0].ByteRangeIntegrityValid.Should().BeFalse();
-            results[0].StatusMessage.Should().Contain("BouncyCastle verification failed");
+            // #1494: the bytes are rejected by the ASN.1 reader before any CMS parse, and the
+            // message now names that instead of the opaque "BouncyCastle verification failed"
+            // this asserted before. Same verdict, same unchecked integrity — a specific reason.
+            results[0].StatusMessage.Should().Contain("Invalid signature content");
+            results[0].State.Should().Be(SignatureVerificationState.Indeterminate);
         }
         finally
         {
@@ -809,6 +813,146 @@ public class SignatureVerificationServiceTests
             results[0].SigningTime.Should().NotBe(default(DateTime),
                 "BouncyCastle's default signed attributes include pkcs#9 signingTime");
             results[0].SigningTime.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(10));
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // CMS extent inside the zero-padded /Contents placeholder (#1494)
+    // ------------------------------------------------------------------------
+
+    [Fact]
+    public void VerifySignatures_BerIndefiniteLengthCms_VerifiesTheSameAsDer()
+    {
+        // BouncyCastle's generator defaults to BER, so every signature excise applied
+        // before #1494 starts `30 80` with an end-of-contents marker and no length
+        // header. Those documents exist; the verifier must still read them. This is the
+        // regression that hid behind BouncyCastle 2.6.2's lenient byte[] parsing: the
+        // hand-rolled DER length trimmer gave up on indefinite length and handed
+        // BouncyCastle the whole padded 8 KiB value.
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature(
+            TestCertificateFactory.CreateSelfSigned(), definiteLength: false);
+        var pdfPath = WriteTempPdf(pdfBytes);
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeTrue(
+                "a BER indefinite-length CMS object is still a valid detached signature");
+            results[0].ByteRangeIntegrityChecked.Should().BeTrue();
+            results[0].ByteRangeIntegrityValid.Should().BeTrue();
+            results[0].SignedBy.Should().Contain("PDFe Test Signer");
+            results[0].UnsignedTrailingContentBytes.Should().Be(0);
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_TamperedBerIndefiniteLengthCms_StillDetectsTheDigestMismatch()
+    {
+        // The indefinite-length path must not become a way to bypass integrity: the
+        // signature has to be really verified, not merely parsed.
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature(
+            TestCertificateFactory.CreateSelfSigned(), definiteLength: false);
+        ReplaceAsciiMarker(pdfBytes, "ORIGINAL", "TAMPERED");
+        var pdfPath = WriteTempPdf(pdfBytes);
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeFalse();
+            results[0].ByteRangeIntegrityChecked.Should().BeTrue();
+            results[0].ByteRangeIntegrityValid.Should().BeFalse();
+            results[0].State.Should().Be(SignatureVerificationState.Invalid);
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_NonZeroBytesAfterTheCmsObject_AreReportedWithoutInvalidatingTheSignature()
+    {
+        // ISO 32000-2 12.8.3.3.1 requires /Contents to be "padded with zeros". Bytes that
+        // are not zero are authenticated by neither /ByteRange nor the CMS object, so they
+        // are somewhere to hide data — but they say nothing about whether the signature
+        // itself is sound. Surface them; do not silently drop them, and do not manufacture
+        // a verification failure out of them.
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature(
+            TestCertificateFactory.CreateSelfSigned(), padCharacter: 'A');
+        var pdfPath = WriteTempPdf(pdfBytes);
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeTrue(
+                "non-zero padding is a conformance defect in the writer, not a broken signature");
+            results[0].ByteRangeIntegrityValid.Should().BeTrue();
+            results[0].UnsignedTrailingContentBytes.Should().BeGreaterThan(0,
+                "the unauthenticated trailing bytes must be reported to the caller");
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_CertificateNotYetValidAtSigningTime_IsIndeterminateNotADigestMismatch()
+    {
+        // BouncyCastle checks the signer certificate against the signingTime attribute and
+        // throws BEFORE computing any digest. Reporting that as "ByteRange digest mismatch"
+        // would claim the document had been modified, which was never tested for (#1494).
+        var identity = TestCertificateFactory.CreateSelfSigned(
+            "CN=PDFe Not Yet Valid Signer", notBefore: DateTime.UtcNow.AddDays(1));
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature(identity);
+        var pdfPath = WriteTempPdf(pdfBytes);
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeFalse();
+            results[0].StatusMessage.Should().Contain("not valid at the claimed signing time");
+            results[0].ByteRangeIntegrityChecked.Should().BeFalse(
+                "the digest was never computed, so integrity is unknown, not failed");
+            results[0].ByteRangeStructureValid.Should().BeTrue();
+            results[0].State.Should().Be(SignatureVerificationState.Indeterminate,
+                "an unusable certificate is not proof the document was modified");
+            results[0].TrustStatus.Should().Be(SignatureTrustStatus.NotEvaluated);
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_ZeroPaddedContents_ReportsNoUnsignedTrailingBytes()
+    {
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature();
+        var pdfPath = WriteTempPdf(pdfBytes);
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].UnsignedTrailingContentBytes.Should().Be(0);
         }
         finally
         {
@@ -1219,15 +1363,16 @@ public class SignatureVerificationServiceTests
     private static byte[] MakePdfWithValidDetachedCmsSignature() =>
         MakePdfWithValidDetachedCmsSignature(TestCertificateFactory.CreateSelfSigned());
 
-    private static byte[] MakePdfWithValidDetachedCmsSignature(TestSigningIdentity identity)
+    private static byte[] MakePdfWithValidDetachedCmsSignature(
+        TestSigningIdentity identity, bool definiteLength = true, char padCharacter = '0')
     {
         var pdfWithByteRange = FillByteRange(MakePdfWithSignaturePlaceholder());
         var signedContent = ExtractSignedContent(Encoding.Latin1.GetBytes(pdfWithByteRange));
-        var cmsSignature = CreateDetachedCmsSignature(signedContent, identity);
+        var cmsSignature = CreateDetachedCmsSignature(signedContent, identity, definiteLength);
         var signatureHex = Convert.ToHexString(cmsSignature);
         signatureHex.Length.Should().BeLessThan(SignaturePlaceholderHexLength);
 
-        var paddedSignatureHex = signatureHex.PadRight(SignaturePlaceholderHexLength, '0');
+        var paddedSignatureHex = signatureHex.PadRight(SignaturePlaceholderHexLength, padCharacter);
         return Encoding.Latin1.GetBytes(
             pdfWithByteRange.Replace(SignaturePlaceholderHex, paddedSignatureHex, StringComparison.Ordinal));
     }
@@ -1332,7 +1477,15 @@ public class SignatureVerificationServiceTests
         return signedContent;
     }
 
-    private static byte[] CreateDetachedCmsSignature(byte[] signedContent, TestSigningIdentity identity)
+    /// <summary>
+    /// Mirrors <c>SignatureApplicationService.CreateDetachedCmsSignature</c>. With
+    /// <paramref name="definiteLength"/> true this is what excise signs with today: DER, as
+    /// ISO 32000-2 12.8.3.3.1 requires. With it false it is BouncyCastle's default BER
+    /// indefinite-length encoding (<c>30 80 … 00 00</c>) — what excise emitted before #1494,
+    /// and therefore what already-signed documents in the wild carry.
+    /// </summary>
+    private static byte[] CreateDetachedCmsSignature(
+        byte[] signedContent, TestSigningIdentity identity, bool definiteLength = true)
     {
         var random = new SecureRandom();
 
@@ -1341,7 +1494,7 @@ public class SignatureVerificationServiceTests
                 new Asn1SignatureFactory("SHA256WITHRSA", identity.KeyPair.Private, random),
                 identity.Certificate);
 
-        var generator = new CmsSignedDataGenerator();
+        var generator = new CmsSignedDataGenerator { UseDefiniteLength = definiteLength };
         generator.AddSignerInfoGenerator(signerInfoGenerator);
         generator.AddCertificate(identity.Certificate);
         foreach (var chainCertificate in identity.ChainCertificates)
@@ -1350,7 +1503,9 @@ public class SignatureVerificationServiceTests
         }
 
         var cms = generator.Generate(new CmsProcessableByteArray(signedContent), encapsulate: false);
-        return cms.GetEncoded();
+        return definiteLength
+            ? cms.GetEncoded(Org.BouncyCastle.Asn1.Asn1Encodable.Der)
+            : cms.GetEncoded();
     }
 
     private static string FillByteRange(string pdf)

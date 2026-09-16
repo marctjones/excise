@@ -489,7 +489,18 @@ public class SignatureApplicationService
         var signerInfoGenerator = new SignerInfoGeneratorBuilder()
             .Build(new Asn1SignatureFactory(signatureAlgorithm, privateKey), signerCertificate);
 
-        var generator = new CmsSignedDataGenerator();
+        var generator = new CmsSignedDataGenerator
+        {
+            // ISO 32000-1 12.8.3.3.1 / ISO 32000-2 12.8.3.3.1: the value of /Contents
+            // "shall be a DER-encoded" PKCS#7 / CMS binary data object. BouncyCastle's
+            // generator defaults to BER: its certificate and signerInfo SETs are BerSet,
+            // which makes SignedData and the enclosing ContentInfo BerSequence, and the
+            // object then starts `30 80` with indefinite length and an end-of-contents
+            // marker. That is a spec violation, and it is what #1494 surfaced — an
+            // indefinite-length object has no length header to read, so the verifier
+            // could not tell where it ended inside the zero-padded /Contents value.
+            UseDefiniteLength = true
+        };
         generator.AddSignerInfoGenerator(signerInfoGenerator);
         generator.AddCertificate(signerCertificate);
 
@@ -503,7 +514,7 @@ public class SignatureApplicationService
         }
 
         var cms = generator.Generate(new CmsProcessableByteArray(signedContent), encapsulate: false);
-        return cms.GetEncoded();
+        return cms.GetEncoded(Org.BouncyCastle.Asn1.Asn1Encodable.Der);
     }
 
     private static (AsymmetricKeyParameter PrivateKey, Org.BouncyCastle.X509.X509Certificate Certificate, string Algorithm)

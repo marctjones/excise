@@ -47,6 +47,14 @@ public class SignatureVerificationResult
     public bool ByteRangeIntegrityChecked { get; set; }
     public bool ByteRangeIntegrityValid { get; set; }
 
+    /// <summary>
+    /// Bytes inside the signature's <c>/Contents</c> value that follow the CMS object and are not
+    /// zero padding. ISO 32000-2 12.8.3.3.1 requires zero padding, and these bytes are authenticated
+    /// by neither <c>/ByteRange</c> nor the CMS object, so they are reported rather than ignored.
+    /// Zero for a conforming signature (#1494).
+    /// </summary>
+    public int UnsignedTrailingContentBytes { get; set; }
+
     /// <summary>Signer certificate chain trust. Independent of, and additional to, cryptographic validity (#466).</summary>
     public SignatureTrustStatus TrustStatus { get; set; } = SignatureTrustStatus.NotEvaluated;
     public string TrustDetails { get; set; } = string.Empty;
@@ -228,8 +236,6 @@ public class SignatureVerificationService
                 return;
             }
 
-            byte[] signatureBytes = TrimDerPadding(contents.Bytes);
-
             var fileBytes = File.ReadAllBytes(pdfPath);
             var byteRangeValidation = SignatureByteRangeValidator.Validate(byteRangeArray, fileBytes);
             result.ByteRangeStructureChecked = true;
@@ -248,10 +254,36 @@ public class SignatureVerificationService
 
             result.CoversWholeDocument = byteRangeValidation.CoversWholeDocument;
 
-            // 3. Verify the detached CMS signature over the exact document
+            // 3. Size the CMS object exactly. ISO 32000-2 12.8.3.3.1 makes /Contents a
+            // fixed-width placeholder that "shall be padded with zeros at the end of the
+            // string", so the value is longer than the CMS object inside it, and an ASN.1
+            // reader — not hand-decoded tag/length bytes — owns finding where it ends
+            // (#1494). This runs after the ByteRange checks so a document with a broken
+            // signature blob still reports what its ByteRange structure looked like.
+            var contentsRead = SignatureContentsReader.Read(contents.Bytes);
+            if (!contentsRead.IsValid)
+            {
+                result.IsValid = false;
+                result.StatusMessage = $"Invalid signature content: {contentsRead.Error}";
+                results.Add(result);
+                return;
+            }
+
+            if (!contentsRead.PaddingIsAllZero)
+            {
+                // Those bytes are covered by neither /ByteRange nor the CMS object, so
+                // nothing has authenticated them. Report rather than reject: the signature
+                // itself may still be perfectly valid (#1494).
+                _logger.LogWarning(
+                    "Signature {Name}: {Count} bytes of non-zero data follow the CMS object inside /Contents",
+                    name, contentsRead.PaddingLength);
+                result.UnsignedTrailingContentBytes = contentsRead.PaddingLength;
+            }
+
+            // 4. Verify the detached CMS signature over the exact document
             // bytes specified by /ByteRange. This checks both the signer
             // signature and the message digest for those byte ranges.
-            VerifySignatureBytes(signatureBytes, byteRangeValidation.SignedContent, result);
+            VerifySignatureBytes(contentsRead.CmsBytes, byteRangeValidation.SignedContent, result);
 
         }
         catch (Exception ex)
@@ -292,6 +324,17 @@ public class SignatureVerificationService
                     try
                     {
                         signatureValid = signer.Verify(cert);
+                    }
+                    catch (CmsVerifierCertificateNotValidException ex)
+                    {
+                        // The signer certificate was outside its validity window at the
+                        // signingTime attribute, so BouncyCastle never computed the digest.
+                        // Reporting this as a digest mismatch would claim tampering that was
+                        // never tested for, so integrity stays UNCHECKED (#1494).
+                        result.IsValid = false;
+                        result.StatusMessage =
+                            "Signing certificate was not valid at the claimed signing time: " + ex.Message;
+                        return;
                     }
                     catch (Exception ex)
                     {
@@ -339,7 +382,11 @@ public class SignatureVerificationService
         }
         catch (Exception ex)
         {
-            throw new Exception("BouncyCastle verification failed", ex);
+            // Keep the underlying reason in the message. It used to be dropped, so a
+            // caller saw only "BouncyCastle verification failed" — which is what made
+            // #1494 ("extra data found after object") look like a mystery rather than a
+            // parse error with a precise cause.
+            throw new InvalidOperationException($"CMS verification failed: {ex.Message}", ex);
         }
     }
 
@@ -383,46 +430,5 @@ public class SignatureVerificationService
         {
             _logger.LogDebug(ex, "Could not extract signing time for {Signer}", result.SignedBy);
         }
-    }
-
-    private static byte[] TrimDerPadding(byte[] signatureBytes)
-    {
-        if (signatureBytes.Length < 2 || signatureBytes[0] != 0x30)
-        {
-            return signatureBytes;
-        }
-
-        var lengthByte = signatureBytes[1];
-        int lengthOffset;
-        int contentLength;
-
-        if ((lengthByte & 0x80) == 0)
-        {
-            lengthOffset = 2;
-            contentLength = lengthByte;
-        }
-        else
-        {
-            var lengthByteCount = lengthByte & 0x7F;
-            if (lengthByteCount == 0 || lengthByteCount > 4 || signatureBytes.Length < 2 + lengthByteCount)
-            {
-                return signatureBytes;
-            }
-
-            lengthOffset = 2 + lengthByteCount;
-            contentLength = 0;
-            for (var i = 0; i < lengthByteCount; i++)
-            {
-                contentLength = (contentLength << 8) | signatureBytes[2 + i];
-            }
-        }
-
-        var totalLength = lengthOffset + contentLength;
-        if (totalLength <= 0 || totalLength > signatureBytes.Length || totalLength == signatureBytes.Length)
-        {
-            return signatureBytes;
-        }
-
-        return signatureBytes.Take(totalLength).ToArray();
     }
 }

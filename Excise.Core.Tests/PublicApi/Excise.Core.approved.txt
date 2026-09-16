@@ -221,6 +221,14 @@ namespace Excise.Core.Automation
         public const string TypewriterGoToNextPendingEdit = "typewriter.goToNextPendingEdit";
         public const string TypewriterMode = "edit.typewriterMode";
         public const string TypewriterSetColor = "typewriter.setColor";
+        public const string TypewriterSetColorBlack = "typewriter.setColor.black";
+        public const string TypewriterSetColorBlue = "typewriter.setColor.blue";
+        public const string TypewriterSetColorGray = "typewriter.setColor.gray";
+        public const string TypewriterSetColorGreen = "typewriter.setColor.green";
+        public const string TypewriterSetColorOrange = "typewriter.setColor.orange";
+        public const string TypewriterSetColorPurple = "typewriter.setColor.purple";
+        public const string TypewriterSetColorRed = "typewriter.setColor.red";
+        public const string TypewriterSetColorWhite = "typewriter.setColor.white";
         public const string Undo = "edit.undo";
         public const string VerifySignatures = "tools.verifySignatures";
         public const string ZoomActualSize = "view.zoomActualSize";
